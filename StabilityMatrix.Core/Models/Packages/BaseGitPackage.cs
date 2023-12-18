@@ -36,8 +36,7 @@ public abstract class BaseGitPackage : BasePackage
 
     public override string GithubUrl => $"https://github.com/{Author}/{Name}";
 
-    public string DownloadLocation =>
-        Path.Combine(SettingsManager.LibraryDir, "Packages", $"{Name}.zip");
+    public string DownloadLocation => Path.Combine(SettingsManager.LibraryDir, "Packages", $"{Name}.zip");
 
     protected string GetDownloadUrl(DownloadPackageVersionOptions versionOptions)
     {
@@ -72,9 +71,7 @@ public abstract class BaseGitPackage : BasePackage
         PrerequisiteHelper = prerequisiteHelper;
     }
 
-    public override async Task<DownloadPackageVersionOptions> GetLatestVersion(
-        bool includePrerelease = false
-    )
+    public override async Task<DownloadPackageVersionOptions> GetLatestVersion(bool includePrerelease = false)
     {
         if (ShouldIgnoreReleases)
         {
@@ -87,9 +84,7 @@ public abstract class BaseGitPackage : BasePackage
         }
 
         var releases = await GithubApi.GetAllReleases(Author, Name).ConfigureAwait(false);
-        var latestRelease = includePrerelease
-            ? releases.First()
-            : releases.First(x => !x.Prerelease);
+        var latestRelease = includePrerelease ? releases.First() : releases.First(x => !x.Prerelease);
 
         return new DownloadPackageVersionOptions
         {
@@ -99,11 +94,7 @@ public abstract class BaseGitPackage : BasePackage
         };
     }
 
-    public override Task<IEnumerable<GitCommit>?> GetAllCommits(
-        string branch,
-        int page = 1,
-        int perPage = 10
-    )
+    public override Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10)
     {
         return GithubApi.GetAllCommits(Author, Name, branch, page, perPage);
     }
@@ -181,6 +172,14 @@ public abstract class BaseGitPackage : BasePackage
         IProgress<ProgressReport>? progress = null
     )
     {
+        const long fiveGigs = 5 * SystemInfo.Gibibyte;
+        if (SystemInfo.GetDiskFreeSpaceBytes(installLocation) is < fiveGigs)
+        {
+            throw new ApplicationException(
+                $"Not enough space to download {Name} to {installLocation}, need at least 5GB"
+            );
+        }
+
         await PrerequisiteHelper
             .RunGit(
                 new[]
@@ -223,10 +222,7 @@ public abstract class BaseGitPackage : BasePackage
                     zipDirName = entry.FullName;
                 }
 
-                var folderPath = Path.Combine(
-                    installLocation,
-                    entry.FullName.Replace(zipDirName, string.Empty)
-                );
+                var folderPath = Path.Combine(installLocation, entry.FullName.Replace(zipDirName, string.Empty));
                 Directory.CreateDirectory(folderPath);
                 continue;
             }
@@ -237,10 +233,7 @@ public abstract class BaseGitPackage : BasePackage
             entry.ExtractToFile(destinationPath, true);
 
             progress?.Report(
-                new ProgressReport(
-                    current: Convert.ToUInt64(currentEntry),
-                    total: Convert.ToUInt64(totalEntries)
-                )
+                new ProgressReport(current: Convert.ToUInt64(currentEntry), total: Convert.ToUInt64(totalEntries))
             );
         }
 
@@ -264,16 +257,12 @@ public abstract class BaseGitPackage : BasePackage
         {
             if (currentVersion.IsReleaseMode)
             {
-                var latestVersion = await GetLatestVersion(currentVersion.IsPrerelease)
-                    .ConfigureAwait(false);
-                UpdateAvailable =
-                    latestVersion.VersionTag != currentVersion.InstalledReleaseVersion;
+                var latestVersion = await GetLatestVersion(currentVersion.IsPrerelease).ConfigureAwait(false);
+                UpdateAvailable = latestVersion.VersionTag != currentVersion.InstalledReleaseVersion;
                 return UpdateAvailable;
             }
 
-            var allCommits = (
-                await GetAllCommits(currentVersion.InstalledBranch!).ConfigureAwait(false)
-            )?.ToList();
+            var allCommits = (await GetAllCommits(currentVersion.InstalledBranch!).ConfigureAwait(false))?.ToList();
 
             if (allCommits == null || !allCommits.Any())
             {
@@ -305,18 +294,10 @@ public abstract class BaseGitPackage : BasePackage
         if (!Directory.Exists(Path.Combine(installedPackage.FullPath!, ".git")))
         {
             Logger.Info("not a git repo, initializing...");
-            progress?.Report(
-                new ProgressReport(-1f, "Initializing git repo", isIndeterminate: true)
-            );
+            progress?.Report(new ProgressReport(-1f, "Initializing git repo", isIndeterminate: true));
+            await PrerequisiteHelper.RunGit("init", onConsoleOutput, installedPackage.FullPath).ConfigureAwait(false);
             await PrerequisiteHelper
-                .RunGit("init", onConsoleOutput, installedPackage.FullPath)
-                .ConfigureAwait(false);
-            await PrerequisiteHelper
-                .RunGit(
-                    new[] { "remote", "add", "origin", GithubUrl },
-                    onConsoleOutput,
-                    installedPackage.FullPath
-                )
+                .RunGit(new[] { "remote", "add", "origin", GithubUrl }, onConsoleOutput, installedPackage.FullPath)
                 .ConfigureAwait(false);
         }
 
@@ -328,11 +309,7 @@ public abstract class BaseGitPackage : BasePackage
                 .ConfigureAwait(false);
 
             progress?.Report(
-                new ProgressReport(
-                    -1f,
-                    $"Checking out {versionOptions.VersionTag}",
-                    isIndeterminate: true
-                )
+                new ProgressReport(-1f, $"Checking out {versionOptions.VersionTag}", isIndeterminate: true)
             );
             await PrerequisiteHelper
                 .RunGit(
@@ -361,9 +338,7 @@ public abstract class BaseGitPackage : BasePackage
 
         // fetch
         progress?.Report(new ProgressReport(-1f, "Fetching data...", isIndeterminate: true));
-        await PrerequisiteHelper
-            .RunGit("fetch", onConsoleOutput, installedPackage.FullPath)
-            .ConfigureAwait(false);
+        await PrerequisiteHelper.RunGit("fetch", onConsoleOutput, installedPackage.FullPath).ConfigureAwait(false);
 
         if (versionOptions.IsLatest)
         {
@@ -387,13 +362,7 @@ public abstract class BaseGitPackage : BasePackage
             progress?.Report(new ProgressReport(-1f, "Pulling changes...", isIndeterminate: true));
             await PrerequisiteHelper
                 .RunGit(
-                    new[]
-                    {
-                        "pull",
-                        "--autostash",
-                        "origin",
-                        installedPackage.Version.InstalledBranch!
-                    },
+                    new[] { "pull", "--autostash", "origin", installedPackage.Version.InstalledBranch! },
                     onConsoleOutput,
                     installedPackage.FullPath!
                 )
@@ -436,51 +405,39 @@ public abstract class BaseGitPackage : BasePackage
         };
     }
 
-    public override Task SetupModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
+    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
     {
         if (sharedFolderMethod == SharedFolderMethod.Symlink && SharedFolders is { } folders)
         {
-            return StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(
-                folders,
-                SettingsManager.ModelsDirectory,
-                installDirectory
-            );
+            return StabilityMatrix
+                .Core
+                .Helper
+                .SharedFolders
+                .UpdateLinksForPackage(folders, SettingsManager.ModelsDirectory, installDirectory);
         }
 
         return Task.CompletedTask;
     }
 
-    public override Task UpdateModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
+    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
     {
         if (sharedFolderMethod == SharedFolderMethod.Symlink && SharedFolders is { } sharedFolders)
         {
-            return StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(
-                sharedFolders,
-                SettingsManager.ModelsDirectory,
-                installDirectory
-            );
+            return StabilityMatrix
+                .Core
+                .Helper
+                .SharedFolders
+                .UpdateLinksForPackage(sharedFolders, SettingsManager.ModelsDirectory, installDirectory);
         }
 
         return Task.CompletedTask;
     }
 
-    public override Task RemoveModelFolderLinks(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
     {
         if (SharedFolders is not null && sharedFolderMethod == SharedFolderMethod.Symlink)
         {
-            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(
-                SharedFolders,
-                installDirectory
-            );
+            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(SharedFolders, installDirectory);
         }
         return Task.CompletedTask;
     }
@@ -489,12 +446,16 @@ public abstract class BaseGitPackage : BasePackage
     {
         if (SharedOutputFolders is { } sharedOutputFolders)
         {
-            return StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(
-                sharedOutputFolders,
-                SettingsManager.ImagesDirectory,
-                installDirectory,
-                recursiveDelete: true
-            );
+            return StabilityMatrix
+                .Core
+                .Helper
+                .SharedFolders
+                .UpdateLinksForPackage(
+                    sharedOutputFolders,
+                    SettingsManager.ImagesDirectory,
+                    installDirectory,
+                    recursiveDelete: true
+                );
         }
 
         return Task.CompletedTask;
@@ -504,10 +465,7 @@ public abstract class BaseGitPackage : BasePackage
     {
         if (SharedOutputFolders is { } sharedOutputFolders)
         {
-            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(
-                sharedOutputFolders,
-                installDirectory
-            );
+            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(sharedOutputFolders, installDirectory);
         }
         return Task.CompletedTask;
     }

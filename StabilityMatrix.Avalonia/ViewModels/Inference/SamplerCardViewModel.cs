@@ -115,8 +115,6 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             e.Builder.Connections.PrimarySize = new Size(Width, Height);
         }
 
-        DenoiseStrength = IsDenoiseStrengthEnabled ? DenoiseStrength : 1.0d;
-
         // Provide temp values
         e.Temp.Conditioning = (
             e.Builder.Connections.BaseConditioning!,

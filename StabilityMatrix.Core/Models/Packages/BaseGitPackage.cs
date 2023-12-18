@@ -173,7 +173,7 @@ public abstract class BaseGitPackage : BasePackage
     )
     {
         const long fiveGigs = 5 * SystemInfo.Gigabyte;
-        if (SystemInfo.GetDiskFreeSpaceBytes(installLocation) < fiveGigs)
+        if (SystemInfo.GetDiskFreeSpaceBytes(installLocation) is < fiveGigs)
         {
             throw new ApplicationException(
                 $"Not enough space to download {Name} to {installLocation}, need at least 5GB"

@@ -650,7 +650,7 @@ public class SettingsManager : ISettingsManager
             if (!isLoaded)
                 return;
 
-            if (SystemInfo.GetDiskFreeSpaceBytes(SettingsPath) < 1024 * 1024)
+            if (SystemInfo.GetDiskFreeSpaceBytes(SettingsPath) is < 1 * SystemInfo.Megabyte)
             {
                 Logger.Warn("Not enough disk space to save settings");
                 return;

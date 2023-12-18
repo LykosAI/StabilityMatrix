@@ -70,8 +70,10 @@ public class DownloadService : IDownloadService
         if (contentLength > 0)
         {
             // check free space
-            var freeSpace = SystemInfo.GetDiskFreeSpaceBytes(Path.GetDirectoryName(downloadPath));
-            if (freeSpace < contentLength)
+            if (
+                SystemInfo.GetDiskFreeSpaceBytes(Path.GetDirectoryName(downloadPath)) is { } freeSpace
+                && freeSpace < contentLength
+            )
             {
                 throw new ApplicationException(
                     $"Not enough free space to download file. Free: {freeSpace} bytes, Required: {contentLength} bytes"

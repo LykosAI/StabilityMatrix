@@ -351,7 +351,7 @@
       "config.json",
       "model.safetensors"
     ],
-    "Subfolder": "ip_adapter_sd_image_encoder",
+    "Subfolder": "ip_adapter_sdxl_image_encoder",
     "LicenseType": "Apache 2.0"
   },
   {

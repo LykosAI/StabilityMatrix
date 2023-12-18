@@ -113,12 +113,13 @@ public partial class FilePath : FileSystemPath, IPathObject
     }
 
     /// <summary> Write text </summary>
-    public void WriteAllText(string text) => File.WriteAllText(FullPath, text, Encoding.UTF8);
+    public void WriteAllText(string text, Encoding? encoding = null) =>
+        File.WriteAllText(FullPath, text, encoding ?? new UTF8Encoding(false));
 
     /// <summary> Write text asynchronously </summary>
-    public Task WriteAllTextAsync(string text, CancellationToken ct = default)
+    public Task WriteAllTextAsync(string text, CancellationToken ct = default, Encoding? encoding = null)
     {
-        return File.WriteAllTextAsync(FullPath, text, Encoding.UTF8, ct);
+        return File.WriteAllTextAsync(FullPath, text, encoding ?? new UTF8Encoding(false), ct);
     }
 
     /// <summary> Read bytes </summary>
@@ -144,19 +145,14 @@ public partial class FilePath : FileSystemPath, IPathObject
     /// </summary>
     public FilePath Rename(string fileName)
     {
-        if (
-            Path.GetDirectoryName(FullPath) is { } directory
-            && !string.IsNullOrWhiteSpace(directory)
-        )
+        if (Path.GetDirectoryName(FullPath) is { } directory && !string.IsNullOrWhiteSpace(directory))
         {
             var target = Path.Combine(directory, fileName);
             Info.MoveTo(target, true);
             return new FilePath(target);
         }
 
-        throw new InvalidOperationException(
-            "Cannot rename a file path that is empty or has no directory"
-        );
+        throw new InvalidOperationException("Cannot rename a file path that is empty or has no directory");
     }
 
     /// <summary>
@@ -193,10 +189,7 @@ public partial class FilePath : FileSystemPath, IPathObject
     /// Move the file to a target path with auto increment if the file already exists.
     /// </summary>
     /// <returns>The new path, possibly with incremented file name</returns>
-    public async Task<FilePath> MoveToWithIncrementAsync(
-        FilePath destinationFile,
-        int maxTries = 100
-    )
+    public async Task<FilePath> MoveToWithIncrementAsync(FilePath destinationFile, int maxTries = 100)
     {
         await Task.Yield();
 
@@ -214,9 +207,7 @@ public partial class FilePath : FileSystemPath, IPathObject
             );
         }
 
-        throw new IOException(
-            $"Could not move file to {destinationFile} because it already exists."
-        );
+        throw new IOException($"Could not move file to {destinationFile} because it already exists.");
     }
 
     /// <summary>

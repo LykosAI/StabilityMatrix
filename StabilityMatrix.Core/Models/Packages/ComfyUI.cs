@@ -264,31 +264,16 @@ public class ComfyUI(
 
     private async Task SetupModelFoldersSymlink(DirectoryPath installDirectory)
     {
-        // Migration for `controlnet` -> `controlnet/ControlNet` and `controlnet/T2IAdapter`
-        // If the original link exists, delete it first
-        if (installDirectory.JoinDir("models/controlnet") is { IsSymbolicLink: true } controlnetOldLink)
-        {
-            Logger.Info("Migration: Removing old controlnet link {Path}", controlnetOldLink);
-            await controlnetOldLink.DeleteAsync(false).ConfigureAwait(false);
-        }
-
-        // and also ipadapter links
-        if (installDirectory.JoinDir("models/ipadapter") is { IsSymbolicLink: true } oldIpAdapterLink)
-        {
-            Logger.Info("Migration: Removing old ipadapter link {Path}", oldIpAdapterLink);
-            await oldIpAdapterLink.DeleteAsync(false).ConfigureAwait(false);
-        }
-
-        // also fix broken links in models dir
+        // fix duplicate links in models dir
         var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory);
         string[] links = ["base", "sd15", "sdxl"];
         foreach (var link in links)
         {
-            var oldLink = modelsDir.JoinDir($"IpAdapter{Path.DirectorySeparatorChar}{link}");
+            var oldLink = modelsDir.JoinDir("ipadapter", link);
             if (!oldLink.IsSymbolicLink)
                 continue;
 
-            Logger.Info("Fixing broken IPadapter links {Path}", oldLink);
+            Logger.Info("Removing duplicate junctions in {Path}", oldLink.ToString());
             await oldLink.DeleteAsync(false).ConfigureAwait(false);
         }
 

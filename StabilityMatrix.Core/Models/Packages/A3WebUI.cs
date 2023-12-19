@@ -271,12 +271,17 @@ public class A3WebUI(
     /// <inheritdoc />
     public override async Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
     {
-        // Migration for `controlnet` -> `controlnet/ControlNet` and `controlnet/T2IAdapter`
-        // If the original link exists, delete it first
-        if (installDirectory.JoinDir("models/controlnet") is { IsSymbolicLink: true } controlnetOldLink)
+        // fix duplicate links in models dir
+        var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory);
+        string[] links = ["ControlNet"];
+        foreach (var link in links)
         {
-            Logger.Info("Migration: Removing old controlnet link {Path}", controlnetOldLink);
-            await controlnetOldLink.DeleteAsync(false).ConfigureAwait(false);
+            var oldLink = modelsDir.JoinDir("controlnet", link);
+            if (!oldLink.IsSymbolicLink)
+                continue;
+
+            Logger.Info("Removing duplicate junctions in {Path}", oldLink.ToString());
+            await oldLink.DeleteAsync(false).ConfigureAwait(false);
         }
 
         // Resume base setup

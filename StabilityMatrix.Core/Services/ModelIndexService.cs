@@ -49,8 +49,7 @@ public class ModelIndexService : IModelIndexService
     public async Task<IReadOnlyList<LocalModelFile>> GetModelsOfType(SharedFolderType type)
     {
         return await liteDbContext
-            .LocalModelFiles
-            .Query()
+            .LocalModelFiles.Query()
             .Where(m => m.SharedFolderType == type)
             .ToArrayAsync()
             .ConfigureAwait(false);
@@ -89,8 +88,7 @@ public class ModelIndexService : IModelIndexService
         var newIndex = new Dictionary<SharedFolderType, List<LocalModelFile>>();
         foreach (
             var file in modelsDir
-                .Info
-                .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                .Info.EnumerateFiles("*.*", SearchOption.AllDirectories)
                 .Select(info => new FilePath(info))
         )
         {
@@ -125,10 +123,16 @@ public class ModelIndexService : IModelIndexService
                 continue;
             }
 
-            var localModel = new LocalModelFile { RelativePath = relativePath, SharedFolderType = sharedFolderType, };
+            var localModel = new LocalModelFile
+            {
+                RelativePath = relativePath,
+                SharedFolderType = sharedFolderType
+            };
 
             // Try to find a connected model info
-            var jsonPath = file.Directory!.JoinFile(new FilePath($"{file.NameWithoutExtension}.cm-info.json"));
+            var jsonPath = file.Directory!.JoinFile(
+                new FilePath($"{file.NameWithoutExtension}.cm-info.json")
+            );
 
             if (jsonPath.Exists)
             {
@@ -141,8 +145,9 @@ public class ModelIndexService : IModelIndexService
 
             // Try to find a preview image
             var previewImagePath = LocalModelFile
-                .SupportedImageExtensions
-                .Select(ext => file.Directory!.JoinFile($"{file.NameWithoutExtension}.preview{ext}"))
+                .SupportedImageExtensions.Select(
+                    ext => file.Directory!.JoinFile($"{file.NameWithoutExtension}.preview{ext}")
+                )
                 .FirstOrDefault(path => path.Exists);
 
             if (previewImagePath != null)

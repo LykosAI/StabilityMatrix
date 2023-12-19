@@ -11,6 +11,7 @@
 
     <ItemGroup>
         <PackageReference Include="Avalonia.Headless.XUnit" Version="11.0.5" />
+        <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
         <PackageReference Include="NSubstitute" Version="5.1.0" />
         <PackageReference Include="Verify" Version="22.4.1" />

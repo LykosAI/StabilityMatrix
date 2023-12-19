@@ -92,7 +92,7 @@ public static class ProcessRunner
         else if (Compat.IsMacOS)
         {
             using var process = new Process();
-            process.StartInfo.FileName = "explorer";
+            process.StartInfo.FileName = "open";
             process.StartInfo.Arguments = $"-R {Quote(filePath)}";
             process.Start();
             await process.WaitForExitAsync().ConfigureAwait(false);

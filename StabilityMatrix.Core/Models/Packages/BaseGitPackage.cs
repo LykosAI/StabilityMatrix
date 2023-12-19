@@ -431,7 +431,6 @@ public abstract class BaseGitPackage : BasePackage
                 continue;
 
             Logger.Info("Removing duplicate junction at {Path}", linkDir.ToString());
-
             await linkDir.DeleteAsync(false).ConfigureAwait(false);
         }
 

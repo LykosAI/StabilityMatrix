@@ -5,11 +5,14 @@ using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 using Hardware.Info;
 using Microsoft.Win32;
+using NLog;
 
 namespace StabilityMatrix.Core.Helper.HardwareInfo;
 
 public static partial class HardwareHelper
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     private static IReadOnlyList<GpuInfo>? cachedGpuInfos;
 
     private static readonly Lazy<IHardwareInfo> HardwareInfoLazy = new(() => new Hardware.Info.HardwareInfo());
@@ -148,6 +151,25 @@ public static partial class HardwareHelper
 
     // Set DirectML for default if AMD and Windows
     public static bool PreferDirectML() => !HasNvidiaGpu() && HasAmdGpu() && Compat.IsWindows;
+
+    private static readonly Lazy<bool> IsMemoryInfoAvailableLazy = new(() => TryGetMemoryInfo(out _));
+    public static bool IsMemoryInfoAvailable => IsMemoryInfoAvailableLazy.Value;
+
+    public static bool TryGetMemoryInfo(out MemoryInfo memoryInfo)
+    {
+        try
+        {
+            memoryInfo = GetMemoryInfo();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn(ex, "Failed to get memory info");
+
+            memoryInfo = default;
+            return false;
+        }
+    }
 
     /// <summary>
     /// Gets the total and available physical memory in bytes.

@@ -37,16 +37,19 @@ public class LocalModelFile
     /// <summary>
     /// File name of the relative path.
     /// </summary>
+    [BsonIgnore]
     public string FileName => Path.GetFileName(RelativePath);
 
     /// <summary>
     /// File name of the relative path without extension.
     /// </summary>
+    [BsonIgnore]
     public string FileNameWithoutExtension => Path.GetFileNameWithoutExtension(RelativePath);
 
     /// <summary>
     /// Relative file path from the shared folder type model directory.
     /// </summary>
+    [BsonIgnore]
     public string RelativePathFromSharedFolder => Path.GetRelativePath(SharedFolderType.GetStringValue(), RelativePath);
 
     public string GetFullPath(string rootModelDirectory)
@@ -62,15 +65,20 @@ public class LocalModelFile
         return PreviewImageRelativePath == null ? null : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
 
+    [BsonIgnore]
     public string FullPathGlobal => GetFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
 
+    [BsonIgnore]
     public string? PreviewImageFullPathGlobal =>
         PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
 
+    [BsonIgnore]
     public string DisplayModelName => ConnectedModelInfo?.ModelName ?? FileNameWithoutExtension;
 
+    [BsonIgnore]
     public string DisplayModelVersion => ConnectedModelInfo?.VersionName ?? string.Empty;
 
+    [BsonIgnore]
     public string DisplayModelFileName => FileName;
 
     protected bool Equals(LocalModelFile other)

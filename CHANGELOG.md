@@ -5,6 +5,24 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.7.4
+### Changed
+- Improved low disk space handling
+### Fixed
+- Fixed denoise strength in Inference Text to Image
+- Fixed PathTooLongException for IPAdapter folders when using ComfyUI in Symlink mode
+- Fixed configs and symlinks not being cleaned up when switched to the opposite mode
+- Fixed model indexing stopping when encountering paths longer than 1021 bytes in length
+- Fixed repeated nested folders being created in `Models/ControlNet` when using ComfyUI in Symlink mode. Existing folders will be repaired to their original structure on launch.
+
+## v2.7.3
+### Added
+- Added missing IPAdapter and CLIP Vision folder links for ComfyUI
+### Fixed
+- Fixed UnicodeDecodeError when using extra_model_paths.yaml in ComfyUI on certain locales
+- Fixed SDXL CLIP Vision model directory name conflict
+- Fixed [#334](https://github.com/LykosAI/StabilityMatrix/issues/334) - Win32Exception if Settings are opened
+
 ## v2.7.2
 ### Changed
 - Changed Symlink shared folder link targets for Automatic1111 and ComfyUI. From `ControlNet -> models/controlnet` to `ControlNet -> models/controlnet/ControlNet` and `T2IAdapter -> models/controlnet/T2IAdapter`.
@@ -18,7 +36,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.7.1
 ### Added
-- Added Turkish UI language option, thanks to Progresor for the translation
+- Added Turkish UI language option, thanks to Progesor for the translation
 ### Fixed
 - Fixed Inference Image to Image projects missing denoise strength setting
 

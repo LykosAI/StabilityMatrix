@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
@@ -18,8 +19,7 @@ public class ModelIndexService : IModelIndexService
     private readonly ILiteDbContext liteDbContext;
     private readonly ISettingsManager settingsManager;
 
-    public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; private set; } =
-        new();
+    public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; private set; } = new();
 
     public ModelIndexService(
         ILogger<ModelIndexService> logger,
@@ -48,7 +48,8 @@ public class ModelIndexService : IModelIndexService
     /// <inheritdoc />
     public async Task<IReadOnlyList<LocalModelFile>> GetModelsOfType(SharedFolderType type)
     {
-        return await liteDbContext.LocalModelFiles
+        return await liteDbContext
+            .LocalModelFiles
             .Query()
             .Where(m => m.SharedFolderType == type)
             .ToArrayAsync()
@@ -87,7 +88,8 @@ public class ModelIndexService : IModelIndexService
 
         var newIndex = new Dictionary<SharedFolderType, List<LocalModelFile>>();
         foreach (
-            var file in modelsDir.Info
+            var file in modelsDir
+                .Info
                 .EnumerateFiles("*.*", SearchOption.AllDirectories)
                 .Select(info => new FilePath(info))
         )
@@ -111,16 +113,22 @@ public class ModelIndexService : IModelIndexService
                 continue;
             }
 
-            var localModel = new LocalModelFile
+            // Since RelativePath is the database key, for LiteDB this is limited to 1021 bytes
+            if (Encoding.Unicode.GetByteCount(relativePath) is var byteCount and > 1021)
             {
-                RelativePath = relativePath,
-                SharedFolderType = sharedFolderType,
-            };
+                logger.LogWarning(
+                    "Skipping model {Path} because it's path is too long ({Length} bytes)",
+                    relativePath,
+                    byteCount
+                );
+
+                continue;
+            }
+
+            var localModel = new LocalModelFile { RelativePath = relativePath, SharedFolderType = sharedFolderType, };
 
             // Try to find a connected model info
-            var jsonPath = file.Directory!.JoinFile(
-                new FilePath($"{file.NameWithoutExtension}.cm-info.json")
-            );
+            var jsonPath = file.Directory!.JoinFile(new FilePath($"{file.NameWithoutExtension}.cm-info.json"));
 
             if (jsonPath.Exists)
             {
@@ -132,18 +140,14 @@ public class ModelIndexService : IModelIndexService
             }
 
             // Try to find a preview image
-            var previewImagePath = LocalModelFile.SupportedImageExtensions
-                .Select(
-                    ext => file.Directory!.JoinFile($"{file.NameWithoutExtension}.preview{ext}")
-                )
+            var previewImagePath = LocalModelFile
+                .SupportedImageExtensions
+                .Select(ext => file.Directory!.JoinFile($"{file.NameWithoutExtension}.preview{ext}"))
                 .FirstOrDefault(path => path.Exists);
 
             if (previewImagePath != null)
             {
-                localModel.PreviewImageRelativePath = Path.GetRelativePath(
-                    modelsDir,
-                    previewImagePath
-                );
+                localModel.PreviewImageRelativePath = Path.GetRelativePath(modelsDir, previewImagePath);
             }
 
             // Insert into database

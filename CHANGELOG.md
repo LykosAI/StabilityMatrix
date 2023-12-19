@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed denoise strength in Inference Text to Image
 - Fixed PathTooLongException for IPAdapter folders when using ComfyUI in Symlink mode
 - Fixed configs and symlinks not being cleaned up when switched to the opposite mode
+- Fixed model indexing stopping when encountering paths longer than 1021 bytes in length
 
 ## v2.7.3
 ### Added

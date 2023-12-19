@@ -267,23 +267,4 @@ public class A3WebUI(
 
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
     }
-
-    /// <inheritdoc />
-    public override async Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
-    {
-        // Migration for `controlnet` -> `controlnet/ControlNet` and `controlnet/T2IAdapter`
-        // If the original link exists, delete it first
-        if (installDirectory.JoinDir("models/controlnet") is { IsSymbolicLink: true } controlnetOldLink)
-        {
-            Logger.Info("Migration: Removing old controlnet link {Path}", controlnetOldLink);
-            await controlnetOldLink.DeleteAsync(false).ConfigureAwait(false);
-        }
-
-        // Resume base setup
-        await base.SetupModelFolders(installDirectory, sharedFolderMethod).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc />
-    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
-        SetupModelFolders(installDirectory, sharedFolderMethod);
 }

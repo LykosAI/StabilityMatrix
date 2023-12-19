@@ -114,7 +114,7 @@ public class ModelIndexService : IModelIndexService
             }
 
             // Since RelativePath is the database key, for LiteDB this is limited to 1021 bytes
-            if (Encoding.Unicode.GetByteCount(relativePath) is var byteCount and > 1021)
+            if (Encoding.UTF8.GetByteCount(relativePath) is var byteCount and > 1021)
             {
                 logger.LogWarning(
                     "Skipping model {Path} because it's path is too long ({Length} bytes)",

@@ -8,6 +8,7 @@
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     x:DataType="inference:ModelCardViewModel">
     <Design.PreviewWith>
         <Panel Width="400" Height="200">
@@ -22,11 +23,14 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card Padding="12">
-                    <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="*,*,*,*">
+                    <sg:SpacedGrid
+                        ColumnSpacing="8"
+                        RowSpacing="0"
+                        ColumnDefinitions="Auto,*,Auto" 
+                        RowDefinitions="*,*,*,*">
                         <!--  Model  -->
                         <TextBlock
                             Grid.Column="0"
-                            MinWidth="60"
                             VerticalAlignment="Center"
                             Text="{x:Static lang:Resources.Label_Model}"
                             TextAlignment="Left" />
@@ -34,7 +38,7 @@
                         <controls:BetterComboBox
                             Grid.Row="0"
                             Grid.Column="1"
-                            Padding="10,6,4,6"
+                            Padding="8,6,4,6"
                             Theme="{StaticResource  BetterComboBoxHybridModelTheme}"
                             HorizontalAlignment="Stretch"
                             ItemsSource="{Binding ClientManager.Models}"
@@ -45,7 +49,7 @@
                             Grid.Column="2"
                             VerticalAlignment="Stretch"
                             HorizontalAlignment="Stretch"
-                            Margin="8,0,0,0">
+                            Margin="0,0,0,0">
                             <ui:SymbolIcon FontSize="16" Symbol="Setting" />
                             <Button.Flyout>
                                 <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
@@ -60,7 +64,6 @@
                         <TextBlock
                             Grid.Row="1"
                             Grid.Column="0"
-                            MinWidth="60"
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
                             IsVisible="{Binding IsRefinerSelectionEnabled}"
@@ -72,7 +75,7 @@
                             Grid.Column="1"
                             Grid.ColumnSpan="2"
                             Margin="0,8,0,0"
-                            Padding="10,6,4,6"
+                            Padding="8,6,4,6"
                             IsVisible="{Binding IsRefinerSelectionEnabled}"
                             Theme="{StaticResource  BetterComboBoxHybridModelTheme}"
                             HorizontalAlignment="Stretch"
@@ -83,7 +86,6 @@
                         <TextBlock
                             Grid.Row="2"
                             Grid.Column="0"
-                            MinWidth="60"
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
                             IsVisible="{Binding IsVaeSelectionEnabled}"
@@ -106,7 +108,7 @@
                         <TextBlock
                             Grid.Row="3"
                             Grid.Column="0"
-                            Margin="0,8,7,0"
+                            Margin="0,8,0,0"
                             VerticalAlignment="Center"
                             IsVisible="{Binding IsClipSkipEnabled}"
                             Text="{x:Static lang:Resources.Label_CLIPSkip}"
@@ -127,7 +129,7 @@
                             Value="{Binding ClipSkip, Converter={x:Static converters:NullableDefaultNumericConverters.IntToDecimal}}"
                             ClipValueToMinMax="True"/>
 
-                    </Grid>
+                    </sg:SpacedGrid>
                 </controls:Card>
             </ControlTemplate>
         </Setter>

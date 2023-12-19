@@ -212,7 +212,6 @@ public partial class MainSettingsViewModel : PageViewModelBase
         base.OnLoaded();
 
         hardwareInfoUpdateTimer.Start();
-        OnHardwareInfoUpdateTimerTick(null, null!);
     }
 
     /// <inheritdoc />
@@ -236,7 +235,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     private void OnHardwareInfoUpdateTimerTick(object? sender, EventArgs e)
     {
-        MemoryInfo = HardwareHelper.GetMemoryInfo();
+        if (HardwareHelper.IsMemoryInfoAvailable && HardwareHelper.TryGetMemoryInfo(out var newMemoryInfo))
+        {
+            MemoryInfo = newMemoryInfo;
+        }
     }
 
     partial void OnSelectedThemeChanged(string? value)

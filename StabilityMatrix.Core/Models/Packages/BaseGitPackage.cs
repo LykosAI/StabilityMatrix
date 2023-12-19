@@ -405,33 +405,46 @@ public abstract class BaseGitPackage : BasePackage
         };
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
+    public override async Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
     {
-        if (sharedFolderMethod == SharedFolderMethod.Symlink && SharedFolders is { } folders)
+        if (sharedFolderMethod != SharedFolderMethod.Symlink || SharedFolders is not { } sharedFolders)
         {
-            return StabilityMatrix
-                .Core
-                .Helper
-                .SharedFolders
-                .UpdateLinksForPackage(folders, SettingsManager.ModelsDirectory, installDirectory);
+            return;
         }
 
-        return Task.CompletedTask;
-    }
+        // fix duplicate links in models dir
+        // see https://github.com/LykosAI/StabilityMatrix/issues/338
+        var modelsDir = new DirectoryPath(SettingsManager.ModelsDirectory);
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
-    {
-        if (sharedFolderMethod == SharedFolderMethod.Symlink && SharedFolders is { } sharedFolders)
+        string[] duplicatePaths =
+        [
+            Path.Combine("ControlNet", "ControlNet"),
+            Path.Combine("IPAdapter", "base"),
+            Path.Combine("IPAdapter", "sd15"),
+            Path.Combine("IPAdapter", "sdxl")
+        ];
+
+        foreach (var duplicatePath in duplicatePaths)
         {
-            return StabilityMatrix
-                .Core
-                .Helper
-                .SharedFolders
-                .UpdateLinksForPackage(sharedFolders, SettingsManager.ModelsDirectory, installDirectory);
+            var linkDir = modelsDir.JoinDir(duplicatePath);
+            if (!linkDir.IsSymbolicLink)
+                continue;
+
+            Logger.Info("Removing duplicate junction at {Path}", linkDir.ToString());
+
+            await linkDir.DeleteAsync(false).ConfigureAwait(false);
         }
 
-        return Task.CompletedTask;
+        await StabilityMatrix
+            .Core
+            .Helper
+            .SharedFolders
+            .UpdateLinksForPackage(sharedFolders, SettingsManager.ModelsDirectory, installDirectory)
+            .ConfigureAwait(false);
     }
+
+    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
+        SetupModelFolders(installDirectory, sharedFolderMethod);
 
     public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
     {

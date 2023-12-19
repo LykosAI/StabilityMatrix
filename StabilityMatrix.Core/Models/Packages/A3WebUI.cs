@@ -267,28 +267,4 @@ public class A3WebUI(
 
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
     }
-
-    /// <inheritdoc />
-    public override async Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
-    {
-        // fix duplicate links in models dir
-        var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory);
-        string[] links = ["ControlNet"];
-        foreach (var link in links)
-        {
-            var oldLink = modelsDir.JoinDir("controlnet", link);
-            if (!oldLink.IsSymbolicLink)
-                continue;
-
-            Logger.Info("Removing duplicate junctions in {Path}", oldLink.ToString());
-            await oldLink.DeleteAsync(false).ConfigureAwait(false);
-        }
-
-        // Resume base setup
-        await base.SetupModelFolders(installDirectory, sharedFolderMethod).ConfigureAwait(false);
-    }
-
-    /// <inheritdoc />
-    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
-        SetupModelFolders(installDirectory, sharedFolderMethod);
 }

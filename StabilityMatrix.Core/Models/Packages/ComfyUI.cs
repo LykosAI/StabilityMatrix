@@ -242,14 +242,11 @@ public class ComfyUI(
     public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
         sharedFolderMethod switch
         {
-            SharedFolderMethod.Symlink => SetupModelFoldersSymlink(installDirectory),
+            SharedFolderMethod.Symlink => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
             SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
             SharedFolderMethod.None => Task.CompletedTask,
             _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
         };
-
-    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
-        SetupModelFolders(installDirectory, sharedFolderMethod);
 
     public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
     {
@@ -260,25 +257,6 @@ public class ComfyUI(
             SharedFolderMethod.None => Task.CompletedTask,
             _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
         };
-    }
-
-    private async Task SetupModelFoldersSymlink(DirectoryPath installDirectory)
-    {
-        // fix duplicate links in models dir
-        var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory);
-        string[] links = ["base", "sd15", "sdxl"];
-        foreach (var link in links)
-        {
-            var oldLink = modelsDir.JoinDir("ipadapter", link);
-            if (!oldLink.IsSymbolicLink)
-                continue;
-
-            Logger.Info("Removing duplicate junctions in {Path}", oldLink.ToString());
-            await oldLink.DeleteAsync(false).ConfigureAwait(false);
-        }
-
-        // Resume base setup
-        await base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink).ConfigureAwait(false);
     }
 
     private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)

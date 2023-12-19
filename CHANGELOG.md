@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Improved low disk space handling
 ### Fixed
 - Fixed denoise strength in Inference Text to Image
+- Fixed PathTooLongException for IPAdapter folders when using ComfyUI in Symlink mode
+- Fixed configs and symlinks not being cleaned up when switched to the opposite mode
 
 ## v2.7.3
 ### Added

@@ -97,10 +97,7 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (string.IsNullOrWhiteSpace(value?.PackageName))
             return;
 
-        if (
-            value.PackageName == UnknownPackage.Key
-            || packageFactory.FindPackageByName(value.PackageName) is null
-        )
+        if (value.PackageName == UnknownPackage.Key || packageFactory.FindPackageByName(value.PackageName) is null)
         {
             IsUnknownPackage = true;
             CardImageSource = "";
@@ -114,11 +111,9 @@ public partial class PackageCardViewModel : ProgressViewModel
             CardImageSource = basePackage?.PreviewImageUri.ToString() ?? Assets.NoImage.ToString();
             InstalledVersion = value.Version?.DisplayVersion ?? "Unknown";
             CanUseConfigMethod =
-                basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Configuration)
-                ?? false;
+                basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Configuration) ?? false;
             CanUseSymlinkMethod =
-                basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Symlink)
-                ?? false;
+                basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Symlink) ?? false;
             UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
             CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
         }
@@ -126,22 +121,13 @@ public partial class PackageCardViewModel : ProgressViewModel
 
     public override async Task OnLoadedAsync()
     {
-        if (
-            Design.IsDesignMode
-            || !settingsManager.IsLibraryDirSet
-            || Package is not { } currentPackage
-        )
+        if (Design.IsDesignMode || !settingsManager.IsLibraryDirSet || Package is not { } currentPackage)
             return;
 
-        if (
-            packageFactory.FindPackageByName(currentPackage.PackageName)
-            is { } basePackage
-                and not UnknownPackage
-        )
+        if (packageFactory.FindPackageByName(currentPackage.PackageName) is { } basePackage and not UnknownPackage)
         {
             // Migrate old packages with null preferred shared folder method
-            currentPackage.PreferredSharedFolderMethod ??=
-                basePackage.RecommendedSharedFolderMethod;
+            currentPackage.PreferredSharedFolderMethod ??= basePackage.RecommendedSharedFolderMethod;
 
             switch (currentPackage.PreferredSharedFolderMethod)
             {
@@ -199,18 +185,11 @@ public partial class PackageCardViewModel : ProgressViewModel
             var packagePath = new DirectoryPath(settingsManager.LibraryDir, Package.LibraryPath);
             var deleteTask = packagePath.DeleteVerboseAsync(logger);
 
-            var taskResult = await notificationService.TryAsync(
-                deleteTask,
-                Resources.Text_SomeFilesCouldNotBeDeleted
-            );
+            var taskResult = await notificationService.TryAsync(deleteTask, Resources.Text_SomeFilesCouldNotBeDeleted);
             if (taskResult.IsSuccessful)
             {
                 notificationService.Show(
-                    new Notification(
-                        Resources.Label_PackageUninstalled,
-                        Package.DisplayName,
-                        NotificationType.Success
-                    )
+                    new Notification(Resources.Label_PackageUninstalled, Package.DisplayName, NotificationType.Success)
                 );
 
                 if (!IsUnknownPackage)
@@ -238,10 +217,7 @@ public partial class PackageCardViewModel : ProgressViewModel
         var basePackage = packageFactory[Package.PackageName!];
         if (basePackage == null)
         {
-            logger.LogWarning(
-                "Could not find package {SelectedPackagePackageName}",
-                Package.PackageName
-            );
+            logger.LogWarning("Could not find package {SelectedPackagePackageName}", Package.PackageName);
             notificationService.Show(
                 Resources.Label_InvalidPackageType,
                 Package.PackageName.ToRepr(),
@@ -278,12 +254,7 @@ public partial class PackageCardViewModel : ProgressViewModel
                 versionOptions.CommitHash = latest.Sha;
             }
 
-            var updatePackageStep = new UpdatePackageStep(
-                settingsManager,
-                Package,
-                versionOptions,
-                basePackage
-            );
+            var updatePackageStep = new UpdatePackageStep(settingsManager, Package, versionOptions, basePackage);
             var steps = new List<IPackageStep> { updatePackageStep };
 
             EventManager.Instance.OnPackageInstallProgressAdded(runner);
@@ -321,9 +292,7 @@ public partial class PackageCardViewModel : ProgressViewModel
 
         var viewModel = vmFactory.Get<PackageImportViewModel>(vm =>
         {
-            vm.PackagePath = new DirectoryPath(
-                Package?.FullPath ?? throw new InvalidOperationException()
-            );
+            vm.PackagePath = new DirectoryPath(Package?.FullPath ?? throw new InvalidOperationException());
         });
 
         var dialog = new TaskDialog
@@ -349,9 +318,7 @@ public partial class PackageCardViewModel : ProgressViewModel
 
                 await using (new MinimumDelay(200, 300))
                 {
-                    var result = await notificationService.TryAsync(
-                        viewModel.AddPackageWithCurrentInputs()
-                    );
+                    var result = await notificationService.TryAsync(viewModel.AddPackageWithCurrentInputs());
                     if (result.IsSuccessful)
                     {
                         EventManager.Instance.OnInstalledPackagesChanged();
@@ -398,10 +365,7 @@ public partial class PackageCardViewModel : ProgressViewModel
         var basePackage = packageFactory[Package.PackageName!];
         if (basePackage == null)
         {
-            logger.LogWarning(
-                "Could not find package {SelectedPackagePackageName}",
-                Package.PackageName
-            );
+            logger.LogWarning("Could not find package {SelectedPackagePackageName}", Package.PackageName);
             return;
         }
 
@@ -417,9 +381,7 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (basePackage == null)
             return false;
 
-        var canCheckUpdate =
-            Package.LastUpdateCheck == null
-            || Package.LastUpdateCheck < DateTime.Now.AddMinutes(-15);
+        var canCheckUpdate = Package.LastUpdateCheck == null || Package.LastUpdateCheck < DateTime.Now.AddMinutes(-15);
 
         if (!canCheckUpdate)
         {
@@ -482,13 +444,6 @@ public partial class PackageCardViewModel : ProgressViewModel
 
         if (newValue != Package!.PreferredSharedFolderMethod is SharedFolderMethod.Symlink)
         {
-            if (!newValue)
-            {
-                var basePackage = packageFactory[Package!.PackageName!];
-                basePackage!.RemoveModelFolderLinks(Package.FullPath!, SharedFolderMethod.Symlink);
-                return;
-            }
-
             using var st = settingsManager.BeginTransaction();
             Package.PreferredSharedFolderMethod = SharedFolderMethod.Symlink;
         }
@@ -497,6 +452,11 @@ public partial class PackageCardViewModel : ProgressViewModel
         {
             IsSharedModelConfig = false;
             IsSharedModelDisabled = false;
+        }
+        else
+        {
+            var basePackage = packageFactory[Package!.PackageName!];
+            basePackage!.RemoveModelFolderLinks(Package.FullPath!, SharedFolderMethod.Symlink);
         }
     }
 
@@ -507,16 +467,6 @@ public partial class PackageCardViewModel : ProgressViewModel
 
         if (newValue != Package!.PreferredSharedFolderMethod is SharedFolderMethod.Configuration)
         {
-            if (!newValue)
-            {
-                var basePackage = packageFactory[Package!.PackageName!];
-                basePackage!.RemoveModelFolderLinks(
-                    Package.FullPath!,
-                    SharedFolderMethod.Configuration
-                );
-                return;
-            }
-
             using var st = settingsManager.BeginTransaction();
             Package.PreferredSharedFolderMethod = SharedFolderMethod.Configuration;
         }
@@ -525,6 +475,11 @@ public partial class PackageCardViewModel : ProgressViewModel
         {
             IsSharedModelSymlink = false;
             IsSharedModelDisabled = false;
+        }
+        else
+        {
+            var basePackage = packageFactory[Package!.PackageName!];
+            basePackage!.RemoveModelFolderLinks(Package.FullPath!, SharedFolderMethod.Configuration);
         }
     }
 

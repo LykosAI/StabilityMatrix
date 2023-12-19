@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using AvaloniaEdit.Utils;
@@ -789,6 +790,43 @@ The gallery images are often inpainted, but you will get something very similar 
             return list;
         }
     }
+
+    public static IEnumerable<HybridModelFile> SampleHybridModels { get; } =
+
+        [
+            HybridModelFile.FromLocal(
+                new LocalModelFile
+                {
+                    SharedFolderType = SharedFolderType.StableDiffusion,
+                    RelativePath = "art_shaper_v8.safetensors",
+                    PreviewImageFullPath =
+                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512",
+                    ConnectedModelInfo = new ConnectedModelInfo
+                    {
+                        ModelName = "Art Shaper (very long name example)",
+                        VersionName = "Style v8 (very long name)"
+                    }
+                }
+            ),
+            HybridModelFile.FromLocal(
+                new LocalModelFile
+                {
+                    SharedFolderType = SharedFolderType.StableDiffusion,
+                    RelativePath = "background_arts.safetensors",
+                    PreviewImageFullPath =
+                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/71c81ddf-d8c3-46b4-843d-9f8f20a9254a/width=512",
+                    ConnectedModelInfo = new ConnectedModelInfo
+                    {
+                        ModelName = "Background Arts",
+                        VersionName = "Anime Style v10"
+                    }
+                }
+            ),
+            HybridModelFile.FromRemote("v1-5-pruned-emaonly.safetensors"),
+            HybridModelFile.FromRemote("sample-model.pt"),
+        ];
+
+    public static HybridModelFile SampleHybridModel => SampleHybridModels.First();
 
     public static ImageViewerViewModel ImageViewerViewModel =>
         DialogFactory.Get<ImageViewerViewModel>(vm =>

@@ -134,7 +134,9 @@ public class SettingsManager : ISettingsManager
     {
         if (expression.Body is not MemberExpression memberExpression)
         {
-            throw new ArgumentException($"Expression must be a member expression, not {expression.Body.NodeType}");
+            throw new ArgumentException(
+                $"Expression must be a member expression, not {expression.Body.NodeType}"
+            );
         }
 
         var propertyInfo = memberExpression.Member as PropertyInfo;
@@ -226,7 +228,10 @@ public class SettingsManager : ISettingsManager
             }
 
             // Invoke property changed event, passing along sender
-            SettingsPropertyChanged?.Invoke(sender, new RelayPropertyChangedEventArgs(targetPropertyName, true));
+            SettingsPropertyChanged?.Invoke(
+                sender,
+                new RelayPropertyChangedEventArgs(targetPropertyName, true)
+            );
         };
 
         // Set initial value if requested
@@ -331,7 +336,10 @@ public class SettingsManager : ISettingsManager
         var libraryJsonFile = Compat.AppDataHome.JoinFile("library.json");
 
         var library = new LibrarySettings { LibraryPath = path };
-        var libraryJson = JsonSerializer.Serialize(library, new JsonSerializerOptions { WriteIndented = true });
+        var libraryJson = JsonSerializer.Serialize(
+            library,
+            new JsonSerializerOptions { WriteIndented = true }
+        );
         libraryJsonFile.WriteAllText(libraryJson);
 
         // actually create the LibraryPath directory
@@ -481,7 +489,9 @@ public class SettingsManager : ISettingsManager
 
     public string? GetActivePackageHost()
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackageId);
+        var package = Settings.InstalledPackages.FirstOrDefault(
+            x => x.Id == Settings.ActiveInstalledPackageId
+        );
         if (package == null)
             return null;
         var hostOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "host");
@@ -494,7 +504,9 @@ public class SettingsManager : ISettingsManager
 
     public string? GetActivePackagePort()
     {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == Settings.ActiveInstalledPackageId);
+        var package = Settings.InstalledPackages.FirstOrDefault(
+            x => x.Id == Settings.ActiveInstalledPackageId
+        );
         if (package == null)
             return null;
         var portOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "port");
@@ -619,7 +631,8 @@ public class SettingsManager : ISettingsManager
             }
 
             if (
-                JsonSerializer.Deserialize(fileStream, SettingsSerializerContext.Default.Settings) is { } loadedSettings
+                JsonSerializer.Deserialize(fileStream, SettingsSerializerContext.Default.Settings) is
+                { } loadedSettings
             )
             {
                 Settings = loadedSettings;
@@ -650,7 +663,16 @@ public class SettingsManager : ISettingsManager
             if (!isLoaded)
                 return;
 
-            var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(Settings, SettingsSerializerContext.Default.Settings);
+            if (SystemInfo.GetDiskFreeSpaceBytes(SettingsPath) is < 1 * SystemInfo.Mebibyte)
+            {
+                Logger.Warn("Not enough disk space to save settings");
+                return;
+            }
+
+            var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(
+                Settings,
+                SettingsSerializerContext.Default.Settings
+            );
 
             File.WriteAllBytes(SettingsPath, jsonBytes);
         }

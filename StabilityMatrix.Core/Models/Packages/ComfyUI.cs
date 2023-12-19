@@ -51,6 +51,7 @@ public class ComfyUI(
             [SharedFolderType.Diffusers] = new[] { "models/diffusers" },
             [SharedFolderType.Lora] = new[] { "models/loras" },
             [SharedFolderType.CLIP] = new[] { "models/clip" },
+            [SharedFolderType.InvokeClipVision] = new[] { "models/clip_vision" },
             [SharedFolderType.TextualInversion] = new[] { "models/embeddings" },
             [SharedFolderType.VAE] = new[] { "models/vae" },
             [SharedFolderType.ApproxVAE] = new[] { "models/vae_approx" },
@@ -58,7 +59,9 @@ public class ComfyUI(
             [SharedFolderType.GLIGEN] = new[] { "models/gligen" },
             [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
-            [SharedFolderType.IpAdapter] = new[] { "models/ipadapter" },
+            [SharedFolderType.IpAdapter] = new[] { "models/ipadapter/base" },
+            [SharedFolderType.InvokeIpAdapters15] = new[] { "models/ipadapter/sd15" },
+            [SharedFolderType.InvokeIpAdaptersXl] = new[] { "models/ipadapter/sdxl" },
             [SharedFolderType.T2IAdapter] = new[] { "models/controlnet/T2IAdapter" },
         };
 
@@ -139,7 +142,14 @@ public class ComfyUI(
     public override string MainBranch => "master";
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm, TorchVersion.Mps };
+        new[]
+        {
+            TorchVersion.Cpu,
+            TorchVersion.Cuda,
+            TorchVersion.DirectMl,
+            TorchVersion.Rocm,
+            TorchVersion.Mps
+        };
 
     public override async Task InstallPackage(
         string installLocation,
@@ -158,7 +168,9 @@ public class ComfyUI(
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
-        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true));
+        progress?.Report(
+            new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
+        );
 
         var pipArgs = new PipInstallArgs();
 
@@ -178,7 +190,12 @@ public class ComfyUI(
                             TorchVersion.Cpu => "cpu",
                             TorchVersion.Cuda => "cu121",
                             TorchVersion.Rocm => "rocm5.6",
-                            _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                            _
+                                => throw new ArgumentOutOfRangeException(
+                                    nameof(torchVersion),
+                                    torchVersion,
+                                    null
+                                )
                         }
                     )
         };
@@ -236,19 +253,23 @@ public class ComfyUI(
         }
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
+    public override Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    ) =>
         sharedFolderMethod switch
         {
-            SharedFolderMethod.Symlink => SetupModelFoldersSymlink(installDirectory),
+            SharedFolderMethod.Symlink
+                => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
             SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
             SharedFolderMethod.None => Task.CompletedTask,
             _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
         };
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
-        SetupModelFolders(installDirectory, sharedFolderMethod);
-
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
+    public override Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
     {
         return sharedFolderMethod switch
         {
@@ -257,20 +278,6 @@ public class ComfyUI(
             SharedFolderMethod.None => Task.CompletedTask,
             _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
         };
-    }
-
-    private async Task SetupModelFoldersSymlink(DirectoryPath installDirectory)
-    {
-        // Migration for `controlnet` -> `controlnet/ControlNet` and `controlnet/T2IAdapter`
-        // If the original link exists, delete it first
-        if (installDirectory.JoinDir("models/controlnet") is { IsSymbolicLink: true } controlnetOldLink)
-        {
-            Logger.Info("Migration: Removing old controlnet link {Path}", controlnetOldLink);
-            await controlnetOldLink.DeleteAsync(false).ConfigureAwait(false);
-        }
-
-        // Resume base setup
-        await base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink).ConfigureAwait(false);
     }
 
     private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)
@@ -300,7 +307,9 @@ public class ComfyUI(
             throw new Exception("Invalid extra_model_paths.yaml");
         }
         // check if we have a child called "stability_matrix"
-        var stabilityMatrixNode = mappingNode.Children.FirstOrDefault(c => c.Key.ToString() == "stability_matrix");
+        var stabilityMatrixNode = mappingNode.Children.FirstOrDefault(
+            c => c.Key.ToString() == "stability_matrix"
+        );
 
         if (stabilityMatrixNode.Key != null)
         {
@@ -323,9 +332,16 @@ public class ComfyUI(
                 Path.Combine(modelsDir, "T2IAdapter")
             );
             nodeValue.Children["clip"] = Path.Combine(modelsDir, "CLIP");
+            nodeValue.Children["clip_vision"] = Path.Combine(modelsDir, "InvokeClipVision");
             nodeValue.Children["diffusers"] = Path.Combine(modelsDir, "Diffusers");
             nodeValue.Children["gligen"] = Path.Combine(modelsDir, "GLIGEN");
             nodeValue.Children["vae_approx"] = Path.Combine(modelsDir, "ApproxVAE");
+            nodeValue.Children["ipadapter"] = string.Join(
+                '\n',
+                Path.Combine(modelsDir, "IpAdapter"),
+                Path.Combine(modelsDir, "InvokeIpAdapters15"),
+                Path.Combine(modelsDir, "InvokeIpAdaptersXl")
+            );
         }
         else
         {
@@ -344,12 +360,26 @@ public class ComfyUI(
                     { "hypernetworks", Path.Combine(modelsDir, "Hypernetwork") },
                     {
                         "controlnet",
-                        string.Join('\n', Path.Combine(modelsDir, "ControlNet"), Path.Combine(modelsDir, "T2IAdapter"))
+                        string.Join(
+                            '\n',
+                            Path.Combine(modelsDir, "ControlNet"),
+                            Path.Combine(modelsDir, "T2IAdapter")
+                        )
                     },
                     { "clip", Path.Combine(modelsDir, "CLIP") },
+                    { "clip_vision", Path.Combine(modelsDir, "InvokeClipVision") },
                     { "diffusers", Path.Combine(modelsDir, "Diffusers") },
                     { "gligen", Path.Combine(modelsDir, "GLIGEN") },
-                    { "vae_approx", Path.Combine(modelsDir, "ApproxVAE") }
+                    { "vae_approx", Path.Combine(modelsDir, "ApproxVAE") },
+                    {
+                        "ipadapter",
+                        string.Join(
+                            '\n',
+                            Path.Combine(modelsDir, "IpAdapter"),
+                            Path.Combine(modelsDir, "InvokeIpAdapters15"),
+                            Path.Combine(modelsDir, "InvokeIpAdaptersXl")
+                        )
+                    }
                 }
             );
         }
@@ -398,7 +428,9 @@ public class ComfyUI(
 
         mappingNode.Children.Remove("stability_matrix");
 
-        var serializer = new SerializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
+        var serializer = new SerializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .Build();
         var yamlData = serializer.Serialize(mappingNode);
 
         await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);

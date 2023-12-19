@@ -39,9 +39,7 @@ public class DownloadService : IDownloadService
             : httpClientFactory.CreateClient(httpClientName);
 
         client.Timeout = TimeSpan.FromMinutes(10);
-        client.DefaultRequestHeaders.UserAgent.Add(
-            new ProductInfoHeaderValue("StabilityMatrix", "2.0")
-        );
+        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "2.0"));
 
         await AddConditionalHeaders(client, new Uri(downloadUrl)).ConfigureAwait(false);
 
@@ -59,10 +57,7 @@ public class DownloadService : IDownloadService
             .ConfigureAwait(false);
         contentLength = response.Content.Headers.ContentLength ?? 0;
 
-        var delays = Backoff.DecorrelatedJitterBackoffV2(
-            TimeSpan.FromMilliseconds(50),
-            retryCount: 3
-        );
+        var delays = Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromMilliseconds(50), retryCount: 3);
 
         foreach (var delay in delays)
         {
@@ -77,8 +72,22 @@ public class DownloadService : IDownloadService
         }
         var isIndeterminate = contentLength == 0;
 
-        await using var stream = await response.Content
-            .ReadAsStreamAsync(cancellationToken)
+        if (contentLength > 0)
+        {
+            // check free space
+            if (
+                SystemInfo.GetDiskFreeSpaceBytes(Path.GetDirectoryName(downloadPath)) is { } freeSpace
+                && freeSpace < contentLength
+            )
+            {
+                throw new ApplicationException(
+                    $"Not enough free space to download file. Free: {freeSpace} bytes, Required: {contentLength} bytes"
+                );
+            }
+        }
+
+        await using var stream = await response
+            .Content.ReadAsStreamAsync(cancellationToken)
             .ConfigureAwait(false);
         var totalBytesRead = 0L;
         var buffer = new byte[BufferSize];
@@ -87,8 +96,7 @@ public class DownloadService : IDownloadService
             var bytesRead = await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
             if (bytesRead == 0)
                 break;
-            await file.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken)
-                .ConfigureAwait(false);
+            await file.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
 
             totalBytesRead += bytesRead;
 
@@ -130,9 +138,7 @@ public class DownloadService : IDownloadService
         using var noRedirectClient = httpClientFactory.CreateClient("DontFollowRedirects");
 
         client.Timeout = TimeSpan.FromMinutes(10);
-        client.DefaultRequestHeaders.UserAgent.Add(
-            new ProductInfoHeaderValue("StabilityMatrix", "2.0")
-        );
+        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "2.0"));
 
         await AddConditionalHeaders(client, new Uri(downloadUrl)).ConfigureAwait(false);
         await AddConditionalHeaders(noRedirectClient, new Uri(downloadUrl)).ConfigureAwait(false);
@@ -140,10 +146,7 @@ public class DownloadService : IDownloadService
         // Create file if it doesn't exist
         if (!File.Exists(downloadPath))
         {
-            logger.LogInformation(
-                "Resume file doesn't exist, creating file {DownloadPath}",
-                downloadPath
-            );
+            logger.LogInformation("Resume file doesn't exist, creating file {DownloadPath}", downloadPath);
             File.Create(downloadPath).Close();
         }
 
@@ -166,23 +169,14 @@ public class DownloadService : IDownloadService
 
         HttpResponseMessage? response = null;
         foreach (
-            var delay in Backoff.DecorrelatedJitterBackoffV2(
-                TimeSpan.FromMilliseconds(50),
-                retryCount: 4
-            )
+            var delay in Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromMilliseconds(50), retryCount: 4)
         )
         {
             var noRedirectResponse = await noRedirectClient
-                .SendAsync(
-                    noRedirectRequest,
-                    HttpCompletionOption.ResponseHeadersRead,
-                    cancellationToken
-                )
+                .SendAsync(noRedirectRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (
-                (int)noRedirectResponse.StatusCode > 299 && (int)noRedirectResponse.StatusCode < 400
-            )
+            if ((int)noRedirectResponse.StatusCode > 299 && (int)noRedirectResponse.StatusCode < 400)
             {
                 var redirectUrl = noRedirectResponse.Headers.Location?.ToString();
                 if (redirectUrl != null && redirectUrl.Contains("reason=download-auth"))
@@ -197,16 +191,11 @@ public class DownloadService : IDownloadService
             redirectRequest.Headers.Range = new RangeHeaderValue(existingFileSize, null);
 
             response = await client
-                .SendAsync(
-                    redirectRequest,
-                    HttpCompletionOption.ResponseHeadersRead,
-                    cancellationToken
-                )
+                .SendAsync(redirectRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
                 .ConfigureAwait(false);
 
             remainingContentLength = response.Content.Headers.ContentLength ?? 0;
-            originalContentLength =
-                response.Content.Headers.ContentRange?.Length.GetValueOrDefault() ?? 0;
+            originalContentLength = response.Content.Headers.ContentRange?.Length.GetValueOrDefault() ?? 0;
 
             if (remainingContentLength > 0)
                 break;
@@ -222,8 +211,8 @@ public class DownloadService : IDownloadService
 
         var isIndeterminate = remainingContentLength == 0;
 
-        await using var stream = await response.Content
-            .ReadAsStreamAsync(cancellationToken)
+        await using var stream = await response
+            .Content.ReadAsStreamAsync(cancellationToken)
             .ConfigureAwait(false);
         var totalBytesRead = 0L;
         var buffer = new byte[BufferSize];
@@ -234,8 +223,7 @@ public class DownloadService : IDownloadService
             var bytesRead = await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
             if (bytesRead == 0)
                 break;
-            await file.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken)
-                .ConfigureAwait(false);
+            await file.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
 
             totalBytesRead += bytesRead;
 
@@ -274,19 +262,14 @@ public class DownloadService : IDownloadService
             : httpClientFactory.CreateClient(httpClientName);
 
         client.Timeout = TimeSpan.FromMinutes(10);
-        client.DefaultRequestHeaders.UserAgent.Add(
-            new ProductInfoHeaderValue("StabilityMatrix", "2.0")
-        );
+        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "2.0"));
 
         await AddConditionalHeaders(client, new Uri(downloadUrl)).ConfigureAwait(false);
 
         var contentLength = 0L;
 
         foreach (
-            var delay in Backoff.DecorrelatedJitterBackoffV2(
-                TimeSpan.FromMilliseconds(50),
-                retryCount: 3
-            )
+            var delay in Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromMilliseconds(50), retryCount: 3)
         )
         {
             var response = await client
@@ -308,9 +291,7 @@ public class DownloadService : IDownloadService
     {
         using var client = httpClientFactory.CreateClient();
         client.Timeout = TimeSpan.FromSeconds(10);
-        client.DefaultRequestHeaders.UserAgent.Add(
-            new ProductInfoHeaderValue("StabilityMatrix", "2.0")
-        );
+        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "2.0"));
         await AddConditionalHeaders(client, new Uri(url)).ConfigureAwait(false);
         try
         {
@@ -333,9 +314,7 @@ public class DownloadService : IDownloadService
         if (url.Host.Equals("civitai.com", StringComparison.OrdinalIgnoreCase))
         {
             // Add auth if we have it
-            if (
-                await secretsManager.LoadAsync().ConfigureAwait(false) is { CivitApi: { } civitApi }
-            )
+            if (await secretsManager.LoadAsync().ConfigureAwait(false) is { CivitApi: { } civitApi })
             {
                 logger.LogTrace(
                     "Adding Civit auth header {Signature} for download {Url}",

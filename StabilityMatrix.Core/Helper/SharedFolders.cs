@@ -70,9 +70,7 @@ public class SharedFolders : ISharedFolders
                 // If link is already the same, just skip
                 if (destinationDir.Info.LinkTarget == sourceDir)
                 {
-                    Logger.Info(
-                        $"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})"
-                    );
+                    Logger.Info($"Skipped updating matching folder link ({destinationDir} -> ({sourceDir})");
                     return;
                 }
 
@@ -113,9 +111,7 @@ public class SharedFolders : ISharedFolders
         var sharedFolders = basePackage.SharedFolders;
         if (sharedFolders == null)
             return;
-        UpdateLinksForPackage(sharedFolders, modelsDirectory, installDirectory)
-            .GetAwaiter()
-            .GetResult();
+        UpdateLinksForPackage(sharedFolders, modelsDirectory, installDirectory).GetAwaiter().GetResult();
     }
 
     /// <summary>
@@ -137,11 +133,18 @@ public class SharedFolders : ISharedFolders
                 var sourceDir = new DirectoryPath(modelsDirectory, folderType.GetStringValue());
                 var destinationDir = installDirectory.JoinDir(relativePath);
 
-                await CreateOrUpdateLink(
-                        sourceDir,
-                        destinationDir,
-                        recursiveDelete: recursiveDelete
-                    )
+                // Check and remove destinationDir parent if it's a link
+                if (destinationDir.Parent is { IsSymbolicLink: true } parentLink)
+                {
+                    Logger.Info("Deleting parent junction at target {Path}", parentLink.ToString());
+
+                    await parentLink.DeleteAsync(false).ConfigureAwait(false);
+
+                    // Recreate
+                    parentLink.Create();
+                }
+
+                await CreateOrUpdateLink(sourceDir, destinationDir, recursiveDelete: recursiveDelete)
                     .ConfigureAwait(false);
             }
         }
@@ -189,8 +192,7 @@ public class SharedFolders : ISharedFolders
                 }
 
                 var sharedFolderMethod =
-                    package.PreferredSharedFolderMethod
-                    ?? basePackage.RecommendedSharedFolderMethod;
+                    package.PreferredSharedFolderMethod ?? basePackage.RecommendedSharedFolderMethod;
                 basePackage
                     .RemoveModelFolderLinks(package.FullPath, sharedFolderMethod)
                     .GetAwaiter()

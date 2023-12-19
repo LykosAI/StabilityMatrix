@@ -172,6 +172,14 @@ public abstract class BaseGitPackage : BasePackage
         IProgress<ProgressReport>? progress = null
     )
     {
+        const long fiveGigs = 5 * SystemInfo.Gibibyte;
+        if (SystemInfo.GetDiskFreeSpaceBytes(installLocation) is < fiveGigs)
+        {
+            throw new ApplicationException(
+                $"Not enough space to download {Name} to {installLocation}, need at least 5GB"
+            );
+        }
+
         await PrerequisiteHelper
             .RunGit(
                 new[]
@@ -214,7 +222,10 @@ public abstract class BaseGitPackage : BasePackage
                     zipDirName = entry.FullName;
                 }
 
-                var folderPath = Path.Combine(installLocation, entry.FullName.Replace(zipDirName, string.Empty));
+                var folderPath = Path.Combine(
+                    installLocation,
+                    entry.FullName.Replace(zipDirName, string.Empty)
+                );
                 Directory.CreateDirectory(folderPath);
                 continue;
             }
@@ -225,7 +236,10 @@ public abstract class BaseGitPackage : BasePackage
             entry.ExtractToFile(destinationPath, true);
 
             progress?.Report(
-                new ProgressReport(current: Convert.ToUInt64(currentEntry), total: Convert.ToUInt64(totalEntries))
+                new ProgressReport(
+                    current: Convert.ToUInt64(currentEntry),
+                    total: Convert.ToUInt64(totalEntries)
+                )
             );
         }
 
@@ -254,7 +268,9 @@ public abstract class BaseGitPackage : BasePackage
                 return UpdateAvailable;
             }
 
-            var allCommits = (await GetAllCommits(currentVersion.InstalledBranch!).ConfigureAwait(false))?.ToList();
+            var allCommits = (
+                await GetAllCommits(currentVersion.InstalledBranch!).ConfigureAwait(false)
+            )?.ToList();
 
             if (allCommits == null || !allCommits.Any())
             {
@@ -287,9 +303,15 @@ public abstract class BaseGitPackage : BasePackage
         {
             Logger.Info("not a git repo, initializing...");
             progress?.Report(new ProgressReport(-1f, "Initializing git repo", isIndeterminate: true));
-            await PrerequisiteHelper.RunGit("init", onConsoleOutput, installedPackage.FullPath).ConfigureAwait(false);
             await PrerequisiteHelper
-                .RunGit(new[] { "remote", "add", "origin", GithubUrl }, onConsoleOutput, installedPackage.FullPath)
+                .RunGit("init", onConsoleOutput, installedPackage.FullPath)
+                .ConfigureAwait(false);
+            await PrerequisiteHelper
+                .RunGit(
+                    new[] { "remote", "add", "origin", GithubUrl },
+                    onConsoleOutput,
+                    installedPackage.FullPath
+                )
                 .ConfigureAwait(false);
         }
 
@@ -330,7 +352,9 @@ public abstract class BaseGitPackage : BasePackage
 
         // fetch
         progress?.Report(new ProgressReport(-1f, "Fetching data...", isIndeterminate: true));
-        await PrerequisiteHelper.RunGit("fetch", onConsoleOutput, installedPackage.FullPath).ConfigureAwait(false);
+        await PrerequisiteHelper
+            .RunGit("fetch", onConsoleOutput, installedPackage.FullPath)
+            .ConfigureAwait(false);
 
         if (versionOptions.IsLatest)
         {
@@ -397,35 +421,96 @@ public abstract class BaseGitPackage : BasePackage
         };
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
+    private async Task FixInfinityFolders(DirectoryPath rootDirectory, string infinityFolderName)
     {
-        if (sharedFolderMethod == SharedFolderMethod.Symlink && SharedFolders is { } folders)
+        // Skip if first infinity not found
+        if (
+            rootDirectory.JoinDir(infinityFolderName)
+            is not { Exists: true, IsSymbolicLink: false } firstInfinity
+        )
         {
-            return StabilityMatrix
-                .Core
-                .Helper
-                .SharedFolders
-                .UpdateLinksForPackage(folders, SettingsManager.ModelsDirectory, installDirectory);
+            return;
         }
 
-        return Task.CompletedTask;
-    }
+        var depth = 0;
+        var currentDir = rootDirectory;
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
-    {
-        if (sharedFolderMethod == SharedFolderMethod.Symlink && SharedFolders is { } sharedFolders)
+        while (currentDir.JoinDir(infinityFolderName) is { Exists: true, IsSymbolicLink: false } newInfinity)
         {
-            return StabilityMatrix
-                .Core
-                .Helper
-                .SharedFolders
-                .UpdateLinksForPackage(sharedFolders, SettingsManager.ModelsDirectory, installDirectory);
+            depth++;
+            currentDir = newInfinity;
         }
 
-        return Task.CompletedTask;
+        Logger.Info("Found {Depth} infinity folders from {FirstPath}", depth, firstInfinity.ToString());
+
+        // Move all items in infinity folder to root
+        Logger.Info("Moving infinity folders content to root: {Path}", currentDir.ToString());
+        await FileTransfers.MoveAllFilesAndDirectories(currentDir, rootDirectory).ConfigureAwait(false);
+
+        // Move any files from first infinity by enumeration just in case
+        foreach (var file in firstInfinity.EnumerateFiles())
+        {
+            await file.MoveToDirectoryAsync(rootDirectory).ConfigureAwait(false);
+        }
+
+        // Delete infinity folders chain from first
+        Logger.Info("Deleting infinity folders: {Path}", currentDir.ToString());
+        await firstInfinity.DeleteAsync(true).ConfigureAwait(false);
     }
 
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
+    public override async Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
+    {
+        if (sharedFolderMethod != SharedFolderMethod.Symlink || SharedFolders is not { } sharedFolders)
+        {
+            return;
+        }
+
+        var modelsDir = new DirectoryPath(SettingsManager.ModelsDirectory);
+
+        // fix infinity controlnet folders
+        await FixInfinityFolders(modelsDir.JoinDir("ControlNet"), "ControlNet").ConfigureAwait(false);
+
+        // fix duplicate links in models dir
+        // see https://github.com/LykosAI/StabilityMatrix/issues/338
+        string[] duplicatePaths =
+        [
+            Path.Combine("ControlNet", "ControlNet"),
+            Path.Combine("IPAdapter", "base"),
+            Path.Combine("IPAdapter", "sd15"),
+            Path.Combine("IPAdapter", "sdxl")
+        ];
+
+        foreach (var duplicatePath in duplicatePaths)
+        {
+            var linkDir = modelsDir.JoinDir(duplicatePath);
+            if (!linkDir.IsSymbolicLink)
+                continue;
+
+            Logger.Info("Removing duplicate junction at {Path}", linkDir.ToString());
+            await linkDir.DeleteAsync(false).ConfigureAwait(false);
+        }
+
+        await StabilityMatrix
+            .Core.Helper.SharedFolders.UpdateLinksForPackage(
+                sharedFolders,
+                SettingsManager.ModelsDirectory,
+                installDirectory
+            )
+            .ConfigureAwait(false);
+    }
+
+    public override Task UpdateModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    ) => SetupModelFolders(installDirectory, sharedFolderMethod);
+
+    public override Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
     {
         if (SharedFolders is not null && sharedFolderMethod == SharedFolderMethod.Symlink)
         {
@@ -438,16 +523,12 @@ public abstract class BaseGitPackage : BasePackage
     {
         if (SharedOutputFolders is { } sharedOutputFolders)
         {
-            return StabilityMatrix
-                .Core
-                .Helper
-                .SharedFolders
-                .UpdateLinksForPackage(
-                    sharedOutputFolders,
-                    SettingsManager.ImagesDirectory,
-                    installDirectory,
-                    recursiveDelete: true
-                );
+            return StabilityMatrix.Core.Helper.SharedFolders.UpdateLinksForPackage(
+                sharedOutputFolders,
+                SettingsManager.ImagesDirectory,
+                installDirectory,
+                recursiveDelete: true
+            );
         }
 
         return Task.CompletedTask;
@@ -457,7 +538,10 @@ public abstract class BaseGitPackage : BasePackage
     {
         if (SharedOutputFolders is { } sharedOutputFolders)
         {
-            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(sharedOutputFolders, installDirectory);
+            StabilityMatrix.Core.Helper.SharedFolders.RemoveLinksForPackage(
+                sharedOutputFolders,
+                installDirectory
+            );
         }
         return Task.CompletedTask;
     }

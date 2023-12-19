@@ -75,7 +75,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
     public SharedState SharedState { get; }
 
     public override string Title => "Settings";
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
 
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public string AppVersion =>
@@ -132,7 +133,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private MemoryInfo memoryInfo;
 
-    private readonly DispatcherTimer hardwareInfoUpdateTimer = new() { Interval = TimeSpan.FromSeconds(2.627) };
+    private readonly DispatcherTimer hardwareInfoUpdateTimer =
+        new() { Interval = TimeSpan.FromSeconds(2.627) };
 
     public Task<CpuInfo> CpuInfoAsync => HardwareHelper.GetCpuInfoAsync();
 
@@ -198,8 +200,16 @@ public partial class MainSettingsViewModel : PageViewModelBase
             true
         );
 
-        settingsManager.RelayPropertyFor(this, vm => vm.SelectedAnimationScale, settings => settings.AnimationScale);
-        settingsManager.RelayPropertyFor(this, vm => vm.HolidayModeSetting, settings => settings.HolidayModeSetting);
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedAnimationScale,
+            settings => settings.AnimationScale
+        );
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.HolidayModeSetting,
+            settings => settings.HolidayModeSetting
+        );
 
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 
@@ -212,7 +222,6 @@ public partial class MainSettingsViewModel : PageViewModelBase
         base.OnLoaded();
 
         hardwareInfoUpdateTimer.Start();
-        OnHardwareInfoUpdateTimerTick(null, null!);
     }
 
     /// <inheritdoc />
@@ -236,7 +245,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     private void OnHardwareInfoUpdateTimerTick(object? sender, EventArgs e)
     {
-        MemoryInfo = HardwareHelper.GetMemoryInfo();
+        if (HardwareHelper.IsMemoryInfoAvailable && HardwareHelper.TryGetMemoryInfo(out var newMemoryInfo))
+        {
+            MemoryInfo = newMemoryInfo;
+        }
     }
 
     partial void OnSelectedThemeChanged(string? value)
@@ -275,16 +287,14 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 CloseButtonText = Resources.Action_RelaunchLater
             };
 
-            Dispatcher
-                .UIThread
-                .InvokeAsync(async () =>
+            Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                if (await dialog.ShowAsync() == ContentDialogResult.Primary)
                 {
-                    if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-                    {
-                        Process.Start(Compat.AppCurrentPath);
-                        App.Shutdown();
-                    }
-                });
+                    Process.Start(Compat.AppCurrentPath);
+                    App.Shutdown();
+                }
+            });
         }
         else
         {
@@ -311,16 +321,14 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [RelayCommand]
     private void NavigateToSubPage(Type viewModelType)
     {
-        Dispatcher
-            .UIThread
-            .Post(
-                () =>
-                    settingsNavigationService.NavigateTo(
-                        viewModelType,
-                        BetterSlideNavigationTransition.PageSlideFromRight
-                    ),
-                DispatcherPriority.Send
-            );
+        Dispatcher.UIThread.Post(
+            () =>
+                settingsNavigationService.NavigateTo(
+                    viewModelType,
+                    BetterSlideNavigationTransition.PageSlideFromRight
+                ),
+            DispatcherPriority.Send
+        );
     }
 
     #region Package Environment
@@ -348,8 +356,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         {
             // Save settings
             var newEnvVars = viewModel
-                .EnvVars
-                .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
+                .EnvVars.Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
                 .GroupBy(kvp => kvp.Key, StringComparer.Ordinal)
                 .ToDictionary(g => g.Key, g => g.First().Value, StringComparer.Ordinal);
             settingsManager.Transaction(s => s.EnvironmentVariables = newEnvVars);
@@ -403,7 +410,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         await using var _ = new MinimumDelay(200, 300);
 
-        var shortcutDir = new DirectoryPath(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs");
+        var shortcutDir = new DirectoryPath(
+            Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
+            "Programs"
+        );
         var shortcutLink = shortcutDir.JoinFile("Stability Matrix.lnk");
 
         var appPath = Compat.AppCurrentPath;

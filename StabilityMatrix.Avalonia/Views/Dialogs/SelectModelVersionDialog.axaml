@@ -11,6 +11,7 @@
              xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
              xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+             xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
              d:DataContext="{x:Static designData:DesignData.SelectModelVersionViewModel}"
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.SelectModelVersionDialog">
     
@@ -190,6 +191,8 @@
                 Content="{x:Static lang:Resources.Action_Import}"
                 Command="{Binding Import}"
                 IsEnabled="{Binding IsImportEnabled}"
+                ToolTip.Tip="{Binding ImportTooltip}"
+                markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
                 Classes="accent" />
         </StackPanel>
 

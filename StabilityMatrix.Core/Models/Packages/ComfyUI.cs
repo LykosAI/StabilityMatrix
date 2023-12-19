@@ -242,14 +242,11 @@ public class ComfyUI(
     public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
         sharedFolderMethod switch
         {
-            SharedFolderMethod.Symlink => SetupModelFoldersSymlink(installDirectory),
+            SharedFolderMethod.Symlink => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
             SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
             SharedFolderMethod.None => Task.CompletedTask,
             _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
         };
-
-    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
-        SetupModelFolders(installDirectory, sharedFolderMethod);
 
     public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
     {
@@ -260,20 +257,6 @@ public class ComfyUI(
             SharedFolderMethod.None => Task.CompletedTask,
             _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
         };
-    }
-
-    private async Task SetupModelFoldersSymlink(DirectoryPath installDirectory)
-    {
-        // Migration for `controlnet` -> `controlnet/ControlNet` and `controlnet/T2IAdapter`
-        // If the original link exists, delete it first
-        if (installDirectory.JoinDir("models/controlnet") is { IsSymbolicLink: true } controlnetOldLink)
-        {
-            Logger.Info("Migration: Removing old controlnet link {Path}", controlnetOldLink);
-            await controlnetOldLink.DeleteAsync(false).ConfigureAwait(false);
-        }
-
-        // Resume base setup
-        await base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink).ConfigureAwait(false);
     }
 
     private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)

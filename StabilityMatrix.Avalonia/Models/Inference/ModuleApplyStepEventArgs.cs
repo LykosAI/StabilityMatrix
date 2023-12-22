@@ -36,15 +36,12 @@ public class ModuleApplyStepEventArgs : EventArgs
         /// <summary>
         /// Temporary conditioning apply step, used by samplers to apply control net.
         /// </summary>
-        public (ConditioningNodeConnection Positive, ConditioningNodeConnection Negative)? Conditioning { get; set; }
+        public ConditioningConnections? Conditioning { get; set; }
 
         /// <summary>
         /// Temporary refiner conditioning apply step, used by samplers to apply control net.
         /// </summary>
-        public (
-            ConditioningNodeConnection Positive,
-            ConditioningNodeConnection Negative
-        )? RefinerConditioning { get; set; }
+        public ConditioningConnections? RefinerConditioning { get; set; }
 
         /// <summary>
         /// Temporary model apply step, used by samplers to apply control net.

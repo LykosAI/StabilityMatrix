@@ -24,14 +24,12 @@ public class ImgToVidModelCardViewModel : ModelCardViewModel
             new ComfyNodeBuilder.ImageOnlyCheckpointLoader
             {
                 Name = "ImageOnlyCheckpointLoader",
-                CkptName =
-                    SelectedModel?.RelativePath
-                    ?? throw new ValidationException("Model not selected")
+                CkptName = SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected")
             }
         );
 
-        e.Builder.Connections.BaseModel = imgToVidLoader.Output1;
+        e.Builder.Connections.Base.Model = imgToVidLoader.Output1;
         e.Builder.Connections.BaseClipVision = imgToVidLoader.Output2;
-        e.Builder.Connections.BaseVAE = imgToVidLoader.Output3;
+        e.Builder.Connections.Base.VAE = imgToVidLoader.Output3;
     }
 }

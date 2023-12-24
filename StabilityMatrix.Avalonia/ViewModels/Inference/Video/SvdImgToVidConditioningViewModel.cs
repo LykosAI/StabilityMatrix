@@ -7,6 +7,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 
@@ -60,12 +61,12 @@ public partial class SvdImgToVidConditioningViewModel
             {
                 Name = e.Nodes.GetUniqueName("LinearCfgGuidance"),
                 Model =
-                    e.Builder.Connections.BaseModel ?? throw new ValidationException("Model not selected"),
+                    e.Builder.Connections.Base.Model ?? throw new ValidationException("Model not selected"),
                 MinCfg = MinCfg
             }
         );
 
-        e.Builder.Connections.BaseModel = cfgGuidanceNode.Output;
+        e.Builder.Connections.Base.Model = cfgGuidanceNode.Output;
 
         // then do the SVD stuff
         var svdImgToVidConditioningNode = e.Nodes.AddTypedNode(
@@ -73,7 +74,7 @@ public partial class SvdImgToVidConditioningViewModel
             {
                 ClipVision = e.Builder.Connections.BaseClipVision!,
                 InitImage = e.Builder.GetPrimaryAsImage(),
-                Vae = e.Builder.Connections.BaseVAE!,
+                Vae = e.Builder.Connections.Base.VAE!,
                 Name = e.Nodes.GetUniqueName("SvdImgToVidConditioning"),
                 Width = Width,
                 Height = Height,
@@ -84,8 +85,10 @@ public partial class SvdImgToVidConditioningViewModel
             }
         );
 
-        e.Builder.Connections.BaseConditioning = svdImgToVidConditioningNode.Output1;
-        e.Builder.Connections.BaseNegativeConditioning = svdImgToVidConditioningNode.Output2;
+        e.Builder.Connections.Base.Conditioning = new ConditioningConnections(
+            svdImgToVidConditioningNode.Output1,
+            svdImgToVidConditioningNode.Output2
+        );
         e.Builder.Connections.Primary = svdImgToVidConditioningNode.Output3;
     }
 }

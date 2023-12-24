@@ -55,8 +55,8 @@ public partial class VideoOutputSettingsCardViewModel
             _ =>
                 e.Builder.GetPrimaryAsImage(
                     e.Builder.Connections.PrimaryVAE
-                        ?? e.Builder.Connections.RefinerVAE
-                        ?? e.Builder.Connections.BaseVAE
+                        ?? e.Builder.Connections.Refiner.VAE
+                        ?? e.Builder.Connections.Base.VAE
                         ?? throw new ArgumentException("No Primary, Refiner, or Base VAE")
                 ),
             image => image

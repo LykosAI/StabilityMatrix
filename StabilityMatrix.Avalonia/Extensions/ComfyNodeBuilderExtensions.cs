@@ -104,8 +104,8 @@ public static class ComfyNodeBuilderExtensions
                 _ =>
                     builder.GetPrimaryAsImage(
                         builder.Connections.PrimaryVAE
-                            ?? builder.Connections.RefinerVAE
-                            ?? builder.Connections.BaseVAE
+                            ?? builder.Connections.Refiner.VAE
+                            ?? builder.Connections.Base.VAE
                             ?? throw new ArgumentException("No Primary, Refiner, or Base VAE")
                     ),
                 image => image

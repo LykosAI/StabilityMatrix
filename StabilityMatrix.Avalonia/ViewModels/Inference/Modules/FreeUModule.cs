@@ -1,7 +1,9 @@
-﻿using StabilityMatrix.Avalonia.Models.Inference;
+﻿using System.Linq;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
@@ -25,34 +27,17 @@ public class FreeUModule : ModuleBase
     {
         var card = GetCard<FreeUCardViewModel>();
 
-        // Currently applies to both base and refiner model
+        // Currently applies to all models
         // TODO: Add option to apply to either base or refiner
 
-        if (e.Builder.Connections.BaseModel is not null)
+        foreach (var modelConnections in e.Builder.Connections.Models.Values.Where(m => m.Model is not null))
         {
-            e.Builder.Connections.BaseModel = e.Nodes
+            modelConnections.Model = e.Nodes
                 .AddTypedNode(
                     new ComfyNodeBuilder.FreeU
                     {
-                        Name = e.Nodes.GetUniqueName("FreeU"),
-                        Model = e.Builder.Connections.BaseModel,
-                        B1 = card.B1,
-                        B2 = card.B2,
-                        S1 = card.S1,
-                        S2 = card.S2
-                    }
-                )
-                .Output;
-        }
-
-        if (e.Builder.Connections.RefinerModel is not null)
-        {
-            e.Builder.Connections.RefinerModel = e.Nodes
-                .AddTypedNode(
-                    new ComfyNodeBuilder.FreeU
-                    {
-                        Name = e.Nodes.GetUniqueName("Refiner_FreeU"),
-                        Model = e.Builder.Connections.RefinerModel,
+                        Name = e.Nodes.GetUniqueName($"FreeU_{modelConnections.Name}"),
+                        Model = modelConnections.Model!,
                         B1 = card.B1,
                         B2 = card.B2,
                         S1 = card.S1,

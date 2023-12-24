@@ -23,15 +23,15 @@ using NLog;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services;
 using TextMateSharp.Grammars;
 using Process = FuzzySharp.Process;
-using StabilityMatrix.Avalonia.Languages;
-using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia;
 
@@ -48,11 +48,7 @@ public static class DialogHelper
         IReadOnlyList<TextBoxField> textFields
     )
     {
-        return CreateTextEntryDialog(
-            title,
-            new MarkdownScrollViewer { Markdown = description },
-            textFields
-        );
+        return CreateTextEntryDialog(title, new MarkdownScrollViewer { Markdown = description }, textFields);
     }
 
     /// <summary>
@@ -80,11 +76,7 @@ public static class DialogHelper
 
         var grid = new Grid
         {
-            RowDefinitions =
-            {
-                new RowDefinition(GridLength.Star),
-                new RowDefinition(GridLength.Auto)
-            },
+            RowDefinitions = { new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto) },
             Children = { markdown, image }
         };
 
@@ -109,18 +101,14 @@ public static class DialogHelper
 
         var grid = new Grid
         {
-            RowDefinitions =
-            {
-                new RowDefinition(GridLength.Auto),
-                new RowDefinition(GridLength.Star)
-            },
+            RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star) },
             Children = { content, stackPanel }
         };
         grid.Loaded += (_, _) =>
         {
             // Focus first TextBox
-            var firstTextBox = stackPanel.Children
-                .OfType<StackPanel>()
+            var firstTextBox = stackPanel
+                .Children.OfType<StackPanel>()
                 .FirstOrDefault()
                 .FindDescendantOfType<TextBox>();
             firstTextBox!.Focus();
@@ -254,16 +242,16 @@ public static class DialogHelper
             Content = viewer,
             CloseButtonText = Resources.Action_Close,
             IsPrimaryButtonEnabled = false,
+            MinDialogWidth = 800,
+            MaxDialogHeight = 1000,
+            MaxDialogWidth = 1000
         };
     }
 
     /// <summary>
     /// Create a dialog for displaying an ApiException
     /// </summary>
-    public static BetterContentDialog CreateApiExceptionDialog(
-        ApiException exception,
-        string? title = null
-    )
+    public static BetterContentDialog CreateApiExceptionDialog(ApiException exception, string? title = null)
     {
         Dispatcher.UIThread.VerifyAccess();
 
@@ -275,9 +263,7 @@ public static class DialogHelper
             Options = { ShowColumnRulers = false, AllowScrollBelowDocument = false }
         };
         var registryOptions = new RegistryOptions(ThemeName.DarkPlus);
-        textEditor
-            .InstallTextMate(registryOptions)
-            .SetGrammar(registryOptions.GetScopeByLanguageId("json"));
+        textEditor.InstallTextMate(registryOptions).SetGrammar(registryOptions.GetScopeByLanguageId("json"));
 
         var mainGrid = new StackPanel
         {
@@ -354,9 +340,7 @@ public static class DialogHelper
             Options = { ShowColumnRulers = false, AllowScrollBelowDocument = false }
         };
         var registryOptions = new RegistryOptions(ThemeName.DarkPlus);
-        textEditor
-            .InstallTextMate(registryOptions)
-            .SetGrammar(registryOptions.GetScopeByLanguageId("json"));
+        textEditor.InstallTextMate(registryOptions).SetGrammar(registryOptions.GetScopeByLanguageId("json"));
 
         var mainGrid = new StackPanel
         {
@@ -437,8 +421,7 @@ public static class DialogHelper
     {
         Dispatcher.UIThread.VerifyAccess();
 
-        var title =
-            exception is PromptSyntaxError ? "Prompt Syntax Error" : "Prompt Validation Error";
+        var title = exception is PromptSyntaxError ? "Prompt Syntax Error" : "Prompt Validation Error";
 
         // Get the index of the error
         var errorIndex = exception.TextOffset;

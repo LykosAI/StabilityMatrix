@@ -30,6 +30,11 @@ public class LocalModelFile
     public string? PreviewImageRelativePath { get; set; }
 
     /// <summary>
+    /// Optional preview image full path. Takes priority over <see cref="PreviewImageRelativePath"/>.
+    /// </summary>
+    public string? PreviewImageFullPath { get; set; }
+
+    /// <summary>
     /// File name of the relative path.
     /// </summary>
     [BsonIgnore]
@@ -55,9 +60,10 @@ public class LocalModelFile
 
     public string? GetPreviewImageFullPath(string rootModelDirectory)
     {
-        return PreviewImageRelativePath == null
-            ? null
-            : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
+        if (PreviewImageFullPath != null)
+            return PreviewImageFullPath;
+
+        return PreviewImageRelativePath == null ? null : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
 
     [BsonIgnore]
@@ -65,7 +71,16 @@ public class LocalModelFile
 
     [BsonIgnore]
     public string? PreviewImageFullPathGlobal =>
-        GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+        PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+
+    [BsonIgnore]
+    public string DisplayModelName => ConnectedModelInfo?.ModelName ?? FileNameWithoutExtension;
+
+    [BsonIgnore]
+    public string DisplayModelVersion => ConnectedModelInfo?.VersionName ?? string.Empty;
+
+    [BsonIgnore]
+    public string DisplayModelFileName => FileName;
 
     protected bool Equals(LocalModelFile other)
     {

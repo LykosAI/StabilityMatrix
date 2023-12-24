@@ -27,6 +27,7 @@
       <PackageReference Include="DeviceId.Windows.Wmi" Version="6.5.1" />
       <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
       <PackageReference Include="DynamicData" Version="8.1.1" />
+      <PackageReference Include="ExifLibNet" Version="2.1.4" />
       <PackageReference Include="Hardware.Info" Version="100.0.0.1" />
       <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
       <PackageReference Include="KGySoft.Drawing.Core" Version="8.0.0" />

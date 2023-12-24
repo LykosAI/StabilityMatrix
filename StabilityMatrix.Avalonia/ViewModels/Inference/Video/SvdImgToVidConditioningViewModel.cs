@@ -41,13 +41,15 @@ public partial class SvdImgToVidConditioningViewModel
 
     public void LoadStateFromParameters(GenerationParameters parameters)
     {
-        // TODO
+        Width = parameters.Width;
+        Height = parameters.Height;
+        // TODO: add more metadata
     }
 
     public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
     {
-        // TODO
-        return parameters;
+        // TODO: add more metadata
+        return parameters with { Width = Width, Height = Height, };
     }
 
     public void ApplyStep(ModuleApplyStepEventArgs e)
@@ -58,8 +60,7 @@ public partial class SvdImgToVidConditioningViewModel
             {
                 Name = e.Nodes.GetUniqueName("LinearCfgGuidance"),
                 Model =
-                    e.Builder.Connections.BaseModel
-                    ?? throw new ValidationException("Model not selected"),
+                    e.Builder.Connections.BaseModel ?? throw new ValidationException("Model not selected"),
                 MinCfg = MinCfg
             }
         );

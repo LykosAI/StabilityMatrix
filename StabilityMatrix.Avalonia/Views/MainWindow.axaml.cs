@@ -4,6 +4,9 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Threading;
 using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
@@ -34,8 +37,11 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Services;
+using TeachingTip = FluentAvalonia.UI.Controls.TeachingTip;
 #if DEBUG
 using StabilityMatrix.Avalonia.Diagnostics.Views;
 #endif
@@ -48,6 +54,7 @@ public partial class MainWindow : AppWindowBase
 {
     private readonly INotificationService notificationService;
     private readonly INavigationService<MainWindowViewModel> navigationService;
+    private readonly ISettingsManager settingsManager;
 
     private FlyoutBase? progressFlyout;
 
@@ -61,11 +68,13 @@ public partial class MainWindow : AppWindowBase
 
     public MainWindow(
         INotificationService notificationService,
-        INavigationService<MainWindowViewModel> navigationService
+        INavigationService<MainWindowViewModel> navigationService,
+        ISettingsManager settingsManager
     )
     {
         this.notificationService = notificationService;
         this.navigationService = navigationService;
+        this.settingsManager = settingsManager;
 
         InitializeComponent();
 
@@ -82,6 +91,47 @@ public partial class MainWindow : AppWindowBase
         EventManager.Instance.ToggleProgressFlyout += (_, _) => progressFlyout?.Hide();
         EventManager.Instance.CultureChanged += (_, _) => SetDefaultFonts();
         EventManager.Instance.UpdateAvailable += OnUpdateAvailable;
+
+        Observable
+            .FromEventPattern<SizeChangedEventArgs>(this, nameof(SizeChanged))
+            .Where(x => x.EventArgs.PreviousSize != x.EventArgs.NewSize)
+            .Throttle(TimeSpan.FromMilliseconds(100))
+            .Select(x => x.EventArgs.NewSize)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe(newSize =>
+            {
+                var validWindowPosition = Screens.All.Any(screen => screen.Bounds.Contains(Position));
+
+                settingsManager.Transaction(
+                    s =>
+                    {
+                        s.WindowSettings = new WindowSettings(
+                            newSize.Width,
+                            newSize.Height,
+                            validWindowPosition ? Position.X : 0,
+                            validWindowPosition ? Position.Y : 0
+                        );
+                    },
+                    ignoreMissingLibraryDir: true
+                );
+            });
+
+        Observable
+            .FromEventPattern<PixelPointEventArgs>(this, nameof(PositionChanged))
+            .Where(x => Screens.All.Any(screen => screen.Bounds.Contains(x.EventArgs.Point)))
+            .Throttle(TimeSpan.FromMilliseconds(100))
+            .Select(x => x.EventArgs.Point)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe(position =>
+            {
+                settingsManager.Transaction(
+                    s =>
+                    {
+                        s.WindowSettings = new WindowSettings(Width, Height, position.X, position.Y);
+                    },
+                    ignoreMissingLibraryDir: true
+                );
+            });
     }
 
     /// <inheritdoc />
@@ -132,15 +182,16 @@ public partial class MainWindow : AppWindowBase
             return;
 
         // Navigate to first page
-        Dispatcher
-            .UIThread
-            .Post(
-                () =>
-                    navigationService.NavigateTo(
-                        vm.Pages[0],
-                        new BetterSlideNavigationTransition { Effect = SlideNavigationTransitionEffect.FromBottom }
-                    )
-            );
+        Dispatcher.UIThread.Post(
+            () =>
+                navigationService.NavigateTo(
+                    vm.Pages[0],
+                    new BetterSlideNavigationTransition
+                    {
+                        Effect = SlideNavigationTransitionEffect.FromBottom
+                    }
+                )
+        );
 
         // Check show update teaching tip
         if (vm.UpdateViewModel.IsUpdateAvailable)
@@ -165,27 +216,24 @@ public partial class MainWindow : AppWindowBase
         var mainViewModel = (MainWindowViewModel)DataContext!;
 
         mainViewModel.SelectedCategory = mainViewModel
-            .Pages
-            .Concat(mainViewModel.FooterPages)
+            .Pages.Concat(mainViewModel.FooterPages)
             .FirstOrDefault(x => x.GetType() == e.ViewModelType);
     }
 
     private void OnUpdateAvailable(object? sender, UpdateInfo? updateInfo)
     {
-        Dispatcher
-            .UIThread
-            .Post(() =>
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (DataContext is MainWindowViewModel vm && vm.ShouldShowUpdateAvailableTeachingTip(updateInfo))
             {
-                if (DataContext is MainWindowViewModel vm && vm.ShouldShowUpdateAvailableTeachingTip(updateInfo))
-                {
-                    var target = this.FindControl<NavigationViewItem>("FooterUpdateItem")!;
-                    var tip = this.FindControl<TeachingTip>("UpdateAvailableTeachingTip")!;
+                var target = this.FindControl<NavigationViewItem>("FooterUpdateItem")!;
+                var tip = this.FindControl<TeachingTip>("UpdateAvailableTeachingTip")!;
 
-                    tip.Target = target;
-                    tip.Subtitle = $"{Compat.AppVersion.ToDisplayString()} -> {updateInfo.Version}";
-                    tip.IsOpen = true;
-                }
-            });
+                tip.Target = target;
+                tip.Subtitle = $"{Compat.AppVersion.ToDisplayString()} -> {updateInfo.Version}";
+                tip.IsOpen = true;
+            }
+        });
     }
 
     public void SetDefaultFonts()
@@ -282,18 +330,16 @@ public partial class MainWindow : AppWindowBase
 
     private void OnImageLoadFailed(object? sender, ImageLoadFailedEventArgs e)
     {
-        Dispatcher
-            .UIThread
-            .Post(() =>
-            {
-                var fileName = Path.GetFileName(e.Url);
-                var displayName = string.IsNullOrEmpty(fileName) ? e.Url : fileName;
-                notificationService.ShowPersistent(
-                    "Failed to load image",
-                    $"Could not load '{displayName}'\n({e.Exception.Message})",
-                    NotificationType.Warning
-                );
-            });
+        Dispatcher.UIThread.Post(() =>
+        {
+            var fileName = Path.GetFileName(e.Url);
+            var displayName = string.IsNullOrEmpty(fileName) ? e.Url : fileName;
+            notificationService.ShowPersistent(
+                "Failed to load image",
+                $"Could not load '{displayName}'\n({e.Exception.Message})",
+                NotificationType.Warning
+            );
+        });
     }
 
     private void TryEnableMicaEffect()
@@ -319,7 +365,11 @@ public partial class MainWindow : AppWindowBase
         else if (ActualThemeVariant == ThemeVariant.Light)
         {
             // Similar effect here
-            var color = this.TryFindResource("SolidBackgroundFillColorBase", ThemeVariant.Light, out var value)
+            var color = this.TryFindResource(
+                "SolidBackgroundFillColorBase",
+                ThemeVariant.Light,
+                out var value
+            )
                 ? (Color2)(Color)value!
                 : new Color2(243, 243, 243);
 

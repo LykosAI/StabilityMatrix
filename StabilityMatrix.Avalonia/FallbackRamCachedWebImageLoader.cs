@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader.Loaders;
 using Avalonia.Media.Imaging;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia;
 
@@ -42,6 +45,11 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
         {
             try
             {
+                if (url.EndsWith("png", StringComparison.OrdinalIgnoreCase))
+                {
+                    return await LoadPngAsync(url);
+                }
+
                 return new Bitmap(url);
             }
             catch (Exception e)
@@ -97,5 +105,15 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
                 cache.TryRemove(key, out _);
             }
         }
+    }
+
+    private async Task<Bitmap> LoadPngAsync(string url)
+    {
+        using var fileStream = new BinaryReader(File.OpenRead(url));
+        var imageBytes = ImageMetadata.BuildImageWithoutMetadata(fileStream).ToArray();
+        using var memoryStream = new MemoryStream();
+        await memoryStream.WriteAsync(imageBytes, 0, imageBytes.Length);
+        memoryStream.Position = 0;
+        return new Bitmap(memoryStream);
     }
 }

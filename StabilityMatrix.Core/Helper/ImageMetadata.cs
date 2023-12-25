@@ -1,10 +1,7 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
-using ExifLibrary;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Png;
-using Microsoft.VisualBasic;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -16,12 +13,9 @@ public class ImageMetadata
 {
     private IReadOnlyList<Directory>? Directories { get; set; }
 
-    private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+    private static readonly byte[] PngHeader = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
     private static readonly byte[] Idat = "IDAT"u8.ToArray();
     private static readonly byte[] Text = "tEXt"u8.ToArray();
-
-    private static readonly byte[] Riff = "RIFF"u8.ToArray();
-    private static readonly byte[] Webp = "WEBP"u8.ToArray();
 
     public static ImageMetadata ParseFile(FilePath path)
     {
@@ -186,21 +180,24 @@ public class ImageMetadata
         return string.Empty;
     }
 
-    public static IEnumerable<byte> BuildImageWithoutMetadata(BinaryReader byteStream)
+    public static MemoryStream? BuildImageWithoutMetadata(FilePath imagePath)
     {
-        var bytes = new List<byte>();
+        using var byteStream = new BinaryReader(File.OpenRead(imagePath));
         byteStream.BaseStream.Position = 0;
 
-        // Read first 8 bytes and make sure they match the png header
         if (!byteStream.ReadBytes(8).SequenceEqual(PngHeader))
         {
-            return Array.Empty<byte>();
+            return null;
         }
-        bytes.AddRange(PngHeader);
 
+        var memoryStream = new MemoryStream();
+        memoryStream.Write(PngHeader);
+
+        // add the IHDR chunk
         var ihdrStuff = byteStream.ReadBytes(25);
-        bytes.AddRange(ihdrStuff);
+        memoryStream.Write(ihdrStuff);
 
+        // find IDATs
         while (byteStream.BaseStream.Position < byteStream.BaseStream.Length - 4)
         {
             var chunkSizeBytes = byteStream.ReadBytes(4);
@@ -217,84 +214,17 @@ public class ImageMetadata
                 continue;
             }
 
-            bytes.AddRange(chunkSizeBytes);
-            bytes.AddRange(chunkTypeBytes);
+            memoryStream.Write(chunkSizeBytes);
+            memoryStream.Write(chunkTypeBytes);
             var idatBytes = byteStream.ReadBytes(chunkSize);
-            bytes.AddRange(idatBytes);
+            memoryStream.Write(idatBytes);
             var crcBytes = byteStream.ReadBytes(4);
-            bytes.AddRange(crcBytes);
+            memoryStream.Write(crcBytes);
         }
 
         // Add IEND chunk
-        bytes.AddRange([0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]);
-
-        return bytes;
-    }
-
-    public static async Task<string> ReadTextChunkFromWebp(FilePath filePath, ExifTag exifTag)
-    {
-        var sw = Stopwatch.StartNew();
-        try
-        {
-            await using var memoryStream = Utilities.GetMemoryStreamFromFile(filePath);
-            if (memoryStream is null)
-                return string.Empty;
-
-            var exifChunks = GetExifChunks(memoryStream);
-            if (exifChunks.Length == 0)
-                return string.Empty;
-
-            // write exifChunks to new memoryStream but skip first 6 bytes
-            using var newMemoryStream = new MemoryStream(exifChunks[6..]);
-            newMemoryStream.Seek(0, SeekOrigin.Begin);
-
-            var img = new MyTiffFile(newMemoryStream, Encoding.UTF8);
-            return img.Properties[exifTag]?.Value?.ToString() ?? string.Empty;
-        }
-        finally
-        {
-            sw.Stop();
-            Console.WriteLine($"ReadTextChunkFromWebp took {sw.ElapsedMilliseconds}ms");
-        }
-    }
-
-    private static byte[] GetExifChunks(MemoryStream memoryStream)
-    {
-        using var byteStream = new BinaryReader(memoryStream);
-        byteStream.BaseStream.Position = 0;
-
-        // Read first 8 bytes and make sure they match the RIFF header
-        if (!byteStream.ReadBytes(4).SequenceEqual(Riff))
-        {
-            return Array.Empty<byte>();
-        }
-
-        // skip 4 bytes then read next 4 for webp header
-        byteStream.BaseStream.Position += 4;
-        if (!byteStream.ReadBytes(4).SequenceEqual(Webp))
-        {
-            return Array.Empty<byte>();
-        }
-
-        while (byteStream.BaseStream.Position < byteStream.BaseStream.Length - 4)
-        {
-            var chunkType = Encoding.UTF8.GetString(byteStream.ReadBytes(4));
-            var chunkSize = BitConverter.ToInt32(byteStream.ReadBytes(4).ToArray());
-
-            if (chunkType != "EXIF")
-            {
-                // skip chunk data
-                byteStream.BaseStream.Position += chunkSize;
-                continue;
-            }
-
-            var exifStart = byteStream.BaseStream.Position;
-            var exifBytes = byteStream.ReadBytes(chunkSize);
-            var exif = Encoding.UTF8.GetString(exifBytes);
-            Debug.WriteLine($"Found exif chunk of size {chunkSize}");
-            return exifBytes;
-        }
-
-        return Array.Empty<byte>();
+        memoryStream.Write([0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]);
+        memoryStream.Position = 0;
+        return memoryStream;
     }
 }

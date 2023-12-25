@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -18,7 +17,10 @@ public class MetadataImportService(
     ModelFinder modelFinder
 ) : IMetadataImportService
 {
-    public async Task ScanDirectoryForMissingInfo(DirectoryPath directory, IProgress<ProgressReport>? progress = null)
+    public async Task ScanDirectoryForMissingInfo(
+        DirectoryPath directory,
+        IProgress<ProgressReport>? progress = null
+    )
     {
         progress?.Report(new ProgressReport(-1f, "Scanning directory...", isIndeterminate: true));
 
@@ -54,7 +56,9 @@ public class MetadataImportService(
             }
 
             var fileNameWithoutExtension = checkpointFilePath.NameWithoutExtension;
-            var cmInfoPath = checkpointFilePath.Directory?.JoinFile($"{fileNameWithoutExtension}.cm-info.json");
+            var cmInfoPath = checkpointFilePath.Directory?.JoinFile(
+                $"{fileNameWithoutExtension}.cm-info.json"
+            );
             var cmInfoExists = File.Exists(cmInfoPath);
             if (cmInfoExists)
                 continue;
@@ -70,43 +74,57 @@ public class MetadataImportService(
                 );
             });
 
-            var blake3 = await GetBlake3Hash(cmInfoPath, checkpointFilePath, hashProgress).ConfigureAwait(false);
-            if (string.IsNullOrWhiteSpace(blake3))
+            try
             {
-                logger.LogWarning($"Blake3 hash was null for {checkpointFilePath}");
-                scanned++;
-                continue;
-            }
+                var blake3 = await GetBlake3Hash(cmInfoPath, checkpointFilePath, hashProgress)
+                    .ConfigureAwait(false);
+                if (string.IsNullOrWhiteSpace(blake3))
+                {
+                    logger.LogWarning($"Blake3 hash was null for {checkpointFilePath}");
+                    scanned++;
+                    continue;
+                }
 
-            var modelInfo = await modelFinder.RemoteFindModel(blake3).ConfigureAwait(false);
-            if (modelInfo == null)
-            {
-                logger.LogWarning($"Could not find model for {blake3}");
-                scanned++;
-                continue;
-            }
+                var modelInfo = await modelFinder.RemoteFindModel(blake3).ConfigureAwait(false);
+                if (modelInfo == null)
+                {
+                    logger.LogWarning($"Could not find model for {blake3}");
+                    scanned++;
+                    continue;
+                }
 
-            var (model, modelVersion, modelFile) = modelInfo.Value;
+                var (model, modelVersion, modelFile) = modelInfo.Value;
 
-            var updatedCmInfo = new ConnectedModelInfo(model, modelVersion, modelFile, DateTimeOffset.UtcNow);
-            await updatedCmInfo
-                .SaveJsonToDirectory(checkpointFilePath.Directory, fileNameWithoutExtension)
-                .ConfigureAwait(false);
+                var updatedCmInfo = new ConnectedModelInfo(
+                    model,
+                    modelVersion,
+                    modelFile,
+                    DateTimeOffset.UtcNow
+                );
+                await updatedCmInfo
+                    .SaveJsonToDirectory(checkpointFilePath.Directory, fileNameWithoutExtension)
+                    .ConfigureAwait(false);
 
-            var image = modelVersion
-                .Images
-                ?.FirstOrDefault(img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url)));
-            if (image == null)
-            {
+                var image = modelVersion.Images?.FirstOrDefault(
+                    img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+                );
+                if (image == null)
+                {
+                    scanned++;
+                    success++;
+                    continue;
+                }
+
+                await DownloadImage(image, checkpointFilePath, progress).ConfigureAwait(false);
+
                 scanned++;
                 success++;
-                continue;
             }
-
-            await DownloadImage(image, checkpointFilePath, progress).ConfigureAwait(false);
-
-            scanned++;
-            success++;
+            catch (Exception e)
+            {
+                logger.LogError(e, "Error while scanning {checkpointFilePath}", checkpointFilePath);
+                scanned++;
+            }
         }
 
         progress?.Report(
@@ -124,7 +142,10 @@ public class MetadataImportService(
             && !File.Exists(file.Directory?.JoinFile($"{file.NameWithoutExtension}.cm-info.json"));
     }
 
-    public async Task UpdateExistingMetadata(DirectoryPath directory, IProgress<ProgressReport>? progress = null)
+    public async Task UpdateExistingMetadata(
+        DirectoryPath directory,
+        IProgress<ProgressReport>? progress = null
+    )
     {
         progress?.Report(new ProgressReport(-1f, "Scanning directory...", isIndeterminate: true));
 
@@ -151,33 +172,47 @@ public class MetadataImportService(
                 )
             );
 
-            var hash = cmInfoValue.Hashes.BLAKE3;
-            if (string.IsNullOrWhiteSpace(hash))
-                continue;
-
-            var modelInfo = await modelFinder.RemoteFindModel(hash).ConfigureAwait(false);
-            if (modelInfo == null)
+            try
             {
-                logger.LogWarning($"Could not find model for {hash}");
-                continue;
+                var hash = cmInfoValue.Hashes.BLAKE3;
+                if (string.IsNullOrWhiteSpace(hash))
+                    continue;
+
+                var modelInfo = await modelFinder.RemoteFindModel(hash).ConfigureAwait(false);
+                if (modelInfo == null)
+                {
+                    logger.LogWarning($"Could not find model for {hash}");
+                    continue;
+                }
+
+                var (model, modelVersion, modelFile) = modelInfo.Value;
+
+                var updatedCmInfo = new ConnectedModelInfo(
+                    model,
+                    modelVersion,
+                    modelFile,
+                    DateTimeOffset.UtcNow
+                );
+
+                var nameWithoutCmInfo = filePath.NameWithoutExtension.Replace(".cm-info", string.Empty);
+                await updatedCmInfo
+                    .SaveJsonToDirectory(filePath.Directory, nameWithoutCmInfo)
+                    .ConfigureAwait(false);
+
+                var image = modelVersion.Images?.FirstOrDefault(
+                    img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+                );
+                if (image == null)
+                    continue;
+
+                await DownloadImage(image, filePath, progress).ConfigureAwait(false);
+
+                success++;
             }
-
-            var (model, modelVersion, modelFile) = modelInfo.Value;
-
-            var updatedCmInfo = new ConnectedModelInfo(model, modelVersion, modelFile, DateTimeOffset.UtcNow);
-
-            var nameWithoutCmInfo = filePath.NameWithoutExtension.Replace(".cm-info", string.Empty);
-            await updatedCmInfo.SaveJsonToDirectory(filePath.Directory, nameWithoutCmInfo).ConfigureAwait(false);
-
-            var image = modelVersion
-                .Images
-                ?.FirstOrDefault(img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url)));
-            if (image == null)
-                continue;
-
-            await DownloadImage(image, filePath, progress).ConfigureAwait(false);
-
-            success++;
+            catch (Exception e)
+            {
+                logger.LogError(e, "Error while updating {filePath}", filePath);
+            }
         }
     }
 
@@ -223,11 +258,13 @@ public class MetadataImportService(
         var (model, modelVersion, modelFile) = modelInfo.Value;
 
         var updatedCmInfo = new ConnectedModelInfo(model, modelVersion, modelFile, DateTimeOffset.UtcNow);
-        await updatedCmInfo.SaveJsonToDirectory(filePath.Directory, fileNameWithoutExtension).ConfigureAwait(false);
+        await updatedCmInfo
+            .SaveJsonToDirectory(filePath.Directory, fileNameWithoutExtension)
+            .ConfigureAwait(false);
 
-        var image = modelVersion
-            .Images
-            ?.FirstOrDefault(img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url)));
+        var image = modelVersion.Images?.FirstOrDefault(
+            img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+        );
 
         if (image == null)
             return updatedCmInfo;

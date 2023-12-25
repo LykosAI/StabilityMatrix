@@ -135,7 +135,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             delay: TimeSpan.FromMilliseconds(250)
         );
 
-        RefreshCategories();
+        RefreshCategories(false);
     }
 
     public override void OnLoaded()
@@ -211,12 +211,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
         var vm = new ImageViewerViewModel { ImageSource = image, LocalImageFile = item.ImageFile };
 
         using var onNext = Observable
-            .FromEventPattern<DirectionalNavigationEventArgs>(vm, nameof(ImageViewerViewModel.NavigationRequested))
+            .FromEventPattern<DirectionalNavigationEventArgs>(
+                vm,
+                nameof(ImageViewerViewModel.NavigationRequested)
+            )
             .Subscribe(ctx =>
             {
                 Dispatcher
-                    .UIThread
-                    .InvokeAsync(async () =>
+                    .UIThread.InvokeAsync(async () =>
                     {
                         var sender = (ImageViewerViewModel)ctx.Sender!;
                         var newIndex = currentIndex + (ctx.EventArgs.IsNext ? 1 : -1);
@@ -224,7 +226,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
                         if (newIndex >= 0 && newIndex < Outputs.Count)
                         {
                             var newImage = Outputs[newIndex];
-                            var newImageSource = new ImageSource(new FilePath(newImage.ImageFile.AbsolutePath));
+                            var newImageSource = new ImageSource(
+                                new FilePath(newImage.ImageFile.AbsolutePath)
+                            );
 
                             // Preload
                             await newImageSource.GetBitmapAsync();
@@ -251,7 +255,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public void Refresh()
     {
-        Dispatcher.UIThread.Post(RefreshCategories);
+        Dispatcher.UIThread.Post(() => RefreshCategories());
         Dispatcher.UIThread.Post(OnLoaded);
     }
 
@@ -376,16 +380,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
     public async Task ConsolidateImages()
     {
         var stackPanel = new StackPanel();
-        stackPanel
-            .Children
-            .Add(
-                new TextBlock
-                {
-                    Text = Resources.Label_ConsolidateExplanation,
-                    TextWrapping = TextWrapping.Wrap,
-                    Margin = new Thickness(0, 8, 0, 16)
-                }
-            );
+        stackPanel.Children.Add(
+            new TextBlock
+            {
+                Text = Resources.Label_ConsolidateExplanation,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 8, 0, 16)
+            }
+        );
         foreach (var category in Categories)
         {
             if (category.Name == "Shared Output Folder")
@@ -393,17 +395,15 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 continue;
             }
 
-            stackPanel
-                .Children
-                .Add(
-                    new CheckBox
-                    {
-                        Content = $"{category.Name} ({category.Path})",
-                        IsChecked = true,
-                        Margin = new Thickness(0, 8, 0, 0),
-                        Tag = category.Path
-                    }
-                );
+            stackPanel.Children.Add(
+                new CheckBox
+                {
+                    Content = $"{category.Name} ({category.Path})",
+                    IsChecked = true,
+                    Margin = new Thickness(0, 8, 0, 0),
+                    Tag = category.Path
+                }
+            );
         }
 
         var confirmationDialog = new BetterContentDialog
@@ -426,7 +426,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         foreach (var category in stackPanel.Children.OfType<CheckBox>().Where(c => c.IsChecked == true))
         {
-            if (string.IsNullOrWhiteSpace(category.Tag?.ToString()) || !Directory.Exists(category.Tag?.ToString()))
+            if (
+                string.IsNullOrWhiteSpace(category.Tag?.ToString())
+                || !Directory.Exists(category.Tag?.ToString())
+            )
                 continue;
 
             var directory = category.Tag.ToString();
@@ -482,7 +485,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         if (
             !Directory.Exists(directory)
-            && (SelectedCategory.Path != settingsManager.ImagesDirectory || SelectedOutputType != SharedOutputType.All)
+            && (
+                SelectedCategory.Path != settingsManager.ImagesDirectory
+                || SelectedOutputType != SharedOutputType.All
+            )
         )
         {
             Directory.CreateDirectory(directory);
@@ -504,7 +510,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         }
     }
 
-    private void RefreshCategories()
+    private void RefreshCategories(bool updateProperty = true)
     {
         if (Design.IsDesignMode)
             return;
@@ -515,9 +521,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         var previouslySelectedCategory = SelectedCategory;
 
         var packageCategories = settingsManager
-            .Settings
-            .InstalledPackages
-            .Where(x => !x.UseSharedOutputFolder)
+            .Settings.InstalledPackages.Where(x => !x.UseSharedOutputFolder)
             .Select(packageFactory.GetPackagePair)
             .WhereNotNull()
             .Where(p => p.BasePackage.SharedOutputFolders != null && p.BasePackage.SharedOutputFolders.Any())
@@ -525,7 +529,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 pair =>
                     new PackageOutputCategory
                     {
-                        Path = Path.Combine(pair.InstalledPackage.FullPath!, pair.BasePackage.OutputFolderName),
+                        Path = Path.Combine(
+                            pair.InstalledPackage.FullPath!,
+                            pair.BasePackage.OutputFolderName
+                        ),
                         Name = pair.InstalledPackage.DisplayName ?? ""
                     }
             )
@@ -533,7 +540,11 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         packageCategories.Insert(
             0,
-            new PackageOutputCategory { Path = settingsManager.ImagesDirectory, Name = "Shared Output Folder" }
+            new PackageOutputCategory
+            {
+                Path = settingsManager.ImagesDirectory,
+                Name = "Shared Output Folder"
+            }
         );
 
         packageCategories.Insert(
@@ -542,7 +553,18 @@ public partial class OutputsPageViewModel : PageViewModelBase
         );
 
         Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
-        SelectedCategory =
-            Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name) ?? Categories.First();
+
+        if (updateProperty)
+        {
+            SelectedCategory =
+                Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
+                ?? Categories.First();
+        }
+        else
+        {
+            selectedCategory =
+                Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
+                ?? Categories.First();
+        }
     }
 }

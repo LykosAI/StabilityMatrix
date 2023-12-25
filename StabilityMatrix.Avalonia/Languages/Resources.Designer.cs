@@ -834,6 +834,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CLIP Skip.
+        /// </summary>
+        public static string Label_CLIPSkip {
+            get {
+                return ResourceManager.GetString("Label_CLIPSkip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close dialog when finished.
         /// </summary>
         public static string Label_CloseDialogWhenFinished {

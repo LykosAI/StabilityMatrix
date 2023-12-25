@@ -62,7 +62,7 @@ public class UriHandler
         {
             RegisterUriSchemeWin();
         }
-        else
+        else if (Compat.IsLinux)
         {
             // Try to register on unix but ignore errors
             // Library does not support some distros

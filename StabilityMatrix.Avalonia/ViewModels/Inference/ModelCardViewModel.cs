@@ -11,7 +11,6 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
-using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -38,6 +37,14 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
     [ObservableProperty]
     private bool isVaeSelectionEnabled;
 
+    [ObservableProperty]
+    private bool isClipSkipEnabled;
+
+    [NotifyDataErrorInfo]
+    [ObservableProperty]
+    [Range(1, 24)]
+    private int clipSkip = 1;
+
     public IInferenceClientManager ClientManager { get; } = clientManager;
 
     /// <inheritdoc />
@@ -47,49 +54,67 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
         var baseLoader = e.Nodes.AddTypedNode(
             new ComfyNodeBuilder.CheckpointLoaderSimple
             {
-                Name = "CheckpointLoader",
-                CkptName =
-                    SelectedModel?.RelativePath
-                    ?? throw new ValidationException("Model not selected")
+                Name = "CheckpointLoader_Base",
+                CkptName = SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected")
             }
         );
 
-        e.Builder.Connections.BaseModel = baseLoader.Output1;
-        e.Builder.Connections.BaseClip = baseLoader.Output2;
-        e.Builder.Connections.BaseVAE = baseLoader.Output3;
+        e.Builder.Connections.Base.Model = baseLoader.Output1;
+        e.Builder.Connections.Base.Clip = baseLoader.Output2;
+        e.Builder.Connections.Base.VAE = baseLoader.Output3;
 
-        // Load refiner
+        // Load refiner if enabled
         if (IsRefinerSelectionEnabled && SelectedRefiner is { IsNone: false })
         {
             var refinerLoader = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.CheckpointLoaderSimple
                 {
-                    Name = "Refiner_CheckpointLoader",
+                    Name = "CheckpointLoader_Refiner",
                     CkptName =
                         SelectedRefiner?.RelativePath
                         ?? throw new ValidationException("Refiner Model enabled but not selected")
                 }
             );
 
-            e.Builder.Connections.RefinerModel = refinerLoader.Output1;
-            e.Builder.Connections.RefinerClip = refinerLoader.Output2;
-            e.Builder.Connections.RefinerVAE = refinerLoader.Output3;
+            e.Builder.Connections.Refiner.Model = refinerLoader.Output1;
+            e.Builder.Connections.Refiner.Clip = refinerLoader.Output2;
+            e.Builder.Connections.Refiner.VAE = refinerLoader.Output3;
         }
 
-        // Load custom VAE
+        // Load VAE override if enabled
         if (IsVaeSelectionEnabled && SelectedVae is { IsNone: false, IsDefault: false })
         {
             var vaeLoader = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.VAELoader
                 {
                     Name = "VAELoader",
-                    VaeName =
-                        SelectedVae?.RelativePath
-                        ?? throw new ValidationException("VAE enabled but not selected")
+                    VaeName = SelectedVae?.RelativePath ?? throw new ValidationException("VAE enabled but not selected")
                 }
             );
 
             e.Builder.Connections.PrimaryVAE = vaeLoader.Output;
+        }
+
+        // Clip skip all models if enabled
+        if (IsClipSkipEnabled)
+        {
+            foreach (var (modelName, model) in e.Builder.Connections.Models)
+            {
+                if (model.Clip is not { } modelClip)
+                    continue;
+
+                var clipSetLastLayer = e.Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.CLIPSetLastLayer
+                    {
+                        Name = $"CLIP_Skip_{modelName}",
+                        Clip = modelClip,
+                        // Need to convert to negative indexing from (1 to 24) to (-1 to -24)
+                        StopAtClipLayer = -ClipSkip
+                    }
+                );
+
+                model.Clip = clipSetLastLayer.Output;
+            }
         }
     }
 
@@ -102,8 +127,10 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
                 SelectedModelName = SelectedModel?.RelativePath,
                 SelectedVaeName = SelectedVae?.RelativePath,
                 SelectedRefinerName = SelectedRefiner?.RelativePath,
+                ClipSkip = ClipSkip,
                 IsVaeSelectionEnabled = IsVaeSelectionEnabled,
-                IsRefinerSelectionEnabled = IsRefinerSelectionEnabled
+                IsRefinerSelectionEnabled = IsRefinerSelectionEnabled,
+                IsClipSkipEnabled = IsClipSkipEnabled
             }
         );
     }
@@ -125,8 +152,11 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
             ? HybridModelFile.None
             : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedRefinerName);
 
+        ClipSkip = model.ClipSkip;
+
         IsVaeSelectionEnabled = model.IsVaeSelectionEnabled;
         IsRefinerSelectionEnabled = model.IsRefinerSelectionEnabled;
+        IsClipSkipEnabled = model.IsClipSkipEnabled;
     }
 
     /// <inheritdoc />
@@ -145,19 +175,14 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
             model = currentModels.FirstOrDefault(
                 m =>
                     m.Local?.ConnectedModelInfo?.Hashes.SHA256 is { } sha256
-                    && sha256.StartsWith(
-                        parameters.ModelHash,
-                        StringComparison.InvariantCultureIgnoreCase
-                    )
+                    && sha256.StartsWith(parameters.ModelHash, StringComparison.InvariantCultureIgnoreCase)
             );
         }
         else
         {
             // Name matches
             model = currentModels.FirstOrDefault(m => m.RelativePath.EndsWith(paramsModelName));
-            model ??= currentModels.FirstOrDefault(
-                m => m.ShortDisplayName.StartsWith(paramsModelName)
-            );
+            model ??= currentModels.FirstOrDefault(m => m.ShortDisplayName.StartsWith(paramsModelName));
         }
 
         if (model is not null)
@@ -181,8 +206,10 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
         public string? SelectedModelName { get; init; }
         public string? SelectedRefinerName { get; init; }
         public string? SelectedVaeName { get; init; }
+        public int ClipSkip { get; init; } = 1;
 
         public bool IsVaeSelectionEnabled { get; init; }
         public bool IsRefinerSelectionEnabled { get; init; }
+        public bool IsClipSkipEnabled { get; init; }
     }
 }

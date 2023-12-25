@@ -119,6 +119,14 @@ public class ComfyNodeBuilder
         public required int Width { get; init; }
     }
 
+    public record CLIPSetLastLayer : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required ClipNodeConnection Clip { get; init; }
+
+        [Range(-24, -1)]
+        public int StopAtClipLayer { get; init; } = -1;
+    }
+
     public static NamedComfyNode<LatentNodeConnection> LatentFromBatch(
         string name,
         LatentNodeConnection samples,
@@ -725,18 +733,16 @@ public class ComfyNodeBuilder
         public int BatchSize { get; set; } = 1;
         public int? BatchIndex { get; set; }
 
-        public ModelNodeConnection? BaseModel { get; set; }
-        public VAENodeConnection? BaseVAE { get; set; }
-        public ClipNodeConnection? BaseClip { get; set; }
+        public Dictionary<string, ModelConnections> Models { get; } =
+            new() { ["Base"] = new ModelConnections("Base"), ["Refiner"] = new ModelConnections("Refiner") };
 
-        public ConditioningNodeConnection? BaseConditioning { get; set; }
-        public ConditioningNodeConnection? BaseNegativeConditioning { get; set; }
+        /// <summary>
+        /// ModelConnections from <see cref="Models"/> with <see cref="ModelConnections.Model"/> set
+        /// </summary>
+        public IEnumerable<ModelConnections> LoadedModels => Models.Values.Where(m => m.Model is not null);
 
-        public ModelNodeConnection? RefinerModel { get; set; }
-        public VAENodeConnection? RefinerVAE { get; set; }
-        public ClipNodeConnection? RefinerClip { get; set; }
-        public ConditioningNodeConnection? RefinerConditioning { get; set; }
-        public ConditioningNodeConnection? RefinerNegativeConditioning { get; set; }
+        public ModelConnections Base => Models["Base"];
+        public ModelConnections Refiner => Models["Refiner"];
 
         public PrimaryNodeConnection? Primary { get; set; }
         public VAENodeConnection? PrimaryVAE { get; set; }
@@ -751,24 +757,19 @@ public class ComfyNodeBuilder
 
         public ModelNodeConnection GetRefinerOrBaseModel()
         {
-            return RefinerModel ?? BaseModel ?? throw new NullReferenceException("No Model");
+            return Refiner.Model ?? Base.Model ?? throw new NullReferenceException("No Refiner or Base Model");
         }
 
-        public ConditioningNodeConnection GetRefinerOrBaseConditioning()
+        public ConditioningConnections GetRefinerOrBaseConditioning()
         {
-            return RefinerConditioning ?? BaseConditioning ?? throw new NullReferenceException("No Conditioning");
-        }
-
-        public ConditioningNodeConnection GetRefinerOrBaseNegativeConditioning()
-        {
-            return RefinerNegativeConditioning
-                ?? BaseNegativeConditioning
-                ?? throw new NullReferenceException("No Negative Conditioning");
+            return Refiner.Conditioning
+                ?? Base.Conditioning
+                ?? throw new NullReferenceException("No Refiner or Base Conditioning");
         }
 
         public VAENodeConnection GetDefaultVAE()
         {
-            return PrimaryVAE ?? RefinerVAE ?? BaseVAE ?? throw new NullReferenceException("No VAE");
+            return PrimaryVAE ?? Refiner.VAE ?? Base.VAE ?? throw new NullReferenceException("No VAE");
         }
     }
 

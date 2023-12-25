@@ -709,7 +709,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         if (files.Count == 0)
             return;
 
-        var data = await ImageMetadata.ReadTextChunkFromWebp(files[0].TryGetLocalPath(), ExifTag.Model);
+        var data = ImageMetadata.ReadTextChunkFromWebp(files[0].TryGetLocalPath(), ExifTag.ImageDescription);
 
         return;
 

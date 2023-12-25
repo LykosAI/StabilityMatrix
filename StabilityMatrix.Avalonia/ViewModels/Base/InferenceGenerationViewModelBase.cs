@@ -420,6 +420,22 @@ public abstract partial class InferenceGenerationViewModelBase
                 outputImages.Add(new ImageSource(filePath));
                 EventManager.Instance.OnImageFileAdded(filePath);
             }
+            else if (comfyImage.FileName.EndsWith(".webp"))
+            {
+                var bytesWithMetadata = ImageMetadata.AddMetadataToWebp(imageArray, parameters);
+
+                // Write using generated name
+                var filePath = await WriteOutputImageAsync(
+                    new MemoryStream(bytesWithMetadata.ToArray()),
+                    args,
+                    i + 1,
+                    images.Count,
+                    fileExtension: Path.GetExtension(comfyImage.FileName).Replace(".", "")
+                );
+
+                outputImages.Add(new ImageSource(filePath));
+                EventManager.Instance.OnImageFileAdded(filePath);
+            }
             else
             {
                 // Write using generated name

@@ -63,7 +63,9 @@ public class LocalModelFile
         if (PreviewImageFullPath != null)
             return PreviewImageFullPath;
 
-        return PreviewImageRelativePath == null ? null : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
+        return PreviewImageRelativePath == null
+            ? null
+            : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
 
     [BsonIgnore]
@@ -113,6 +115,6 @@ public class LocalModelFile
         ".pth",
         ".bin"
     ];
-    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".gif"];
+    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".webp"];
     public static readonly HashSet<string> SupportedMetadataExtensions = [".json"];
 }

@@ -685,6 +685,8 @@ public class SettingsManager : ISettingsManager
             if (fs.CanWrite)
             {
                 fs.Write(jsonBytes, 0, jsonBytes.Length);
+                fs.Flush();
+                fs.SetLength(jsonBytes.Length);
             }
             fs.Close();
         }

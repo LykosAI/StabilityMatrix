@@ -7,6 +7,7 @@ using AsyncAwaitBestPractices;
 using AsyncImageLoader.Loaders;
 using Avalonia.Media.Imaging;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia;
 
@@ -42,7 +43,11 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
         {
             try
             {
-                return new Bitmap(url);
+                if (!url.EndsWith("png", StringComparison.OrdinalIgnoreCase))
+                    return new Bitmap(url);
+
+                using var stream = ImageMetadata.BuildImageWithoutMetadata(url);
+                return stream == null ? new Bitmap(url) : new Bitmap(stream);
             }
             catch (Exception e)
             {

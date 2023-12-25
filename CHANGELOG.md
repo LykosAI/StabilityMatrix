@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.7.5
 ### Fixed
 - Fixed Python Packages manager crash when pip list returns warnings in json
+- Fixed slowdown when loading PNGs with large amounts of metadata
+- Fixed crash when scanning directories for missing metadata
 
 ## v2.7.4
 ### Changed

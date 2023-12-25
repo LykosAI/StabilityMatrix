@@ -135,7 +135,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             delay: TimeSpan.FromMilliseconds(250)
         );
 
-        RefreshCategories();
+        RefreshCategories(false);
     }
 
     public override void OnLoaded()
@@ -255,7 +255,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public void Refresh()
     {
-        Dispatcher.UIThread.Post(RefreshCategories);
+        Dispatcher.UIThread.Post(() => RefreshCategories());
         Dispatcher.UIThread.Post(OnLoaded);
     }
 
@@ -510,7 +510,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         }
     }
 
-    private void RefreshCategories()
+    private void RefreshCategories(bool updateProperty = true)
     {
         if (Design.IsDesignMode)
             return;
@@ -553,7 +553,18 @@ public partial class OutputsPageViewModel : PageViewModelBase
         );
 
         Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
-        selectedCategory =
-            Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name) ?? Categories.First();
+
+        if (updateProperty)
+        {
+            SelectedCategory =
+                Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
+                ?? Categories.First();
+        }
+        else
+        {
+            selectedCategory =
+                Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
+                ?? Categories.First();
+        }
     }
 }

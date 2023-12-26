@@ -30,7 +30,9 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(InferenceImageToVideoView), persistent: true)]
 [ManagedService]
 [Transient]
-public partial class InferenceImageToVideoViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
+public partial class InferenceImageToVideoViewModel
+    : InferenceGenerationViewModelBase,
+        IParametersLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -60,14 +62,6 @@ public partial class InferenceImageToVideoViewModel : InferenceGenerationViewMod
 
     [JsonPropertyName("VideoOutput")]
     public VideoOutputSettingsCardViewModel VideoOutputSettingsCardViewModel { get; }
-
-    [ObservableProperty]
-    [JsonIgnore]
-    private string outputUri;
-
-    [ObservableProperty]
-    [JsonIgnore]
-    private bool isGenerating;
 
     public InferenceImageToVideoViewModel(
         INotificationService notificationService,
@@ -118,24 +112,6 @@ public partial class InferenceImageToVideoViewModel : InferenceGenerationViewMod
         );
     }
 
-    public override void OnLoaded()
-    {
-        EventManager.Instance.ImageFileAdded += OnImageFileAdded;
-    }
-
-    public override void OnUnloaded()
-    {
-        EventManager.Instance.ImageFileAdded -= OnImageFileAdded;
-    }
-
-    private void OnImageFileAdded(object? sender, FilePath e)
-    {
-        if (!e.Extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
-            return;
-
-        OutputUri = e;
-    }
-
     /// <inheritdoc />
     protected override void BuildPrompt(BuildPromptEventArgs args)
     {
@@ -153,17 +129,15 @@ public partial class InferenceImageToVideoViewModel : InferenceGenerationViewMod
         ModelCardViewModel.ApplyStep(args);
 
         // Setup latent from image
-        var imageLoad = builder
-            .Nodes
-            .AddTypedNode(
-                new ComfyNodeBuilder.LoadImage
-                {
-                    Name = builder.Nodes.GetUniqueName("ControlNet_LoadImage"),
-                    Image =
-                        SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
-                        ?? throw new ValidationException()
-                }
-            );
+        var imageLoad = builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.LoadImage
+            {
+                Name = builder.Nodes.GetUniqueName("ControlNet_LoadImage"),
+                Image =
+                    SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
+                    ?? throw new ValidationException()
+            }
+        );
         builder.Connections.Primary = imageLoad.Output1;
         builder.Connections.PrimarySize = SelectImageCardViewModel.CurrentBitmapSize;
 
@@ -190,7 +164,10 @@ public partial class InferenceImageToVideoViewModel : InferenceGenerationViewMod
     }
 
     /// <inheritdoc />
-    protected override async Task GenerateImageImpl(GenerateOverrides overrides, CancellationToken cancellationToken)
+    protected override async Task GenerateImageImpl(
+        GenerateOverrides overrides,
+        CancellationToken cancellationToken
+    )
     {
         if (!await CheckClientConnectedWithPrompt() || !ClientManager.IsConnected)
         {
@@ -229,15 +206,11 @@ public partial class InferenceImageToVideoViewModel : InferenceGenerationViewMod
             batchArgs.Add(generationArgs);
         }
 
-        IsGenerating = true;
-
         // Run batches
         foreach (var args in batchArgs)
         {
             await RunGeneration(args, cancellationToken);
         }
-
-        IsGenerating = false;
     }
 
     /// <inheritdoc />

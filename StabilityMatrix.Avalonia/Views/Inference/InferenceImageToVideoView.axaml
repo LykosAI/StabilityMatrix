@@ -96,14 +96,7 @@
                                     DataContext="{Binding ElementName=Dock, Path=DataContext}">
                                     <controls:ImageGalleryCard
                                         Grid.Row="0"
-                                        IsVisible="{Binding ElementName=Dock, Path=DataContext.IsGenerating}"
                                         DataContext="{Binding ImageGalleryCardViewModel}"/>
-                                    <controls:Card Grid.Row="0" VerticalAlignment="Stretch"
-                                                   IsVisible="{Binding ElementName=Dock, Path=!DataContext.IsGenerating}">
-                                        <gif:GifImage
-                                            SourceUri="{Binding OutputUri}" 
-                                            Stretch="Uniform" />
-                                    </controls:Card>
                                     
                                     <StackPanel
                                         DataContext="{Binding OutputProgress}"

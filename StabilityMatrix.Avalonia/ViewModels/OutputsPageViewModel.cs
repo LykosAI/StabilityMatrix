@@ -315,6 +315,18 @@ public partial class OutputsPageViewModel : PageViewModelBase
         EventManager.Instance.OnInferenceUpscaleRequested(vm.ImageFile);
     }
 
+    public void SendToImageToImage(OutputImageViewModel vm)
+    {
+        navigationService.NavigateTo<InferenceViewModel>();
+        EventManager.Instance.OnInferenceImageToImageRequested(vm.ImageFile);
+    }
+
+    public void SendToImageToVideo(OutputImageViewModel vm)
+    {
+        navigationService.NavigateTo<InferenceViewModel>();
+        EventManager.Instance.OnInferenceImageToVideoRequested(vm.ImageFile);
+    }
+
     public void ClearSelection()
     {
         foreach (var output in Outputs)

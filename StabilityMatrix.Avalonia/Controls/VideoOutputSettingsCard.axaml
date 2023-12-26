@@ -34,7 +34,7 @@
                             Grid.Column="0"
                             Margin="0,0,8,0"
                             VerticalAlignment="Center"
-                            Text="Frames Per Second" />
+                            Text="{x:Static lang:Resources.Label_Fps}" />
                         <controls1:NumberBox
                             Grid.Row="1"
                             Grid.Column="1"
@@ -51,7 +51,7 @@
                             Grid.Column="0"
                             Margin="0,8,8,0"
                             VerticalAlignment="Center"
-                            Text="Lossless" />
+                            Text="{x:Static lang:Resources.Label_Lossless}" />
                         <CheckBox
                             Grid.Row="2"
                             Grid.Column="1"
@@ -64,7 +64,7 @@
                             Grid.Column="0"
                             Margin="0,8,8,0"
                             VerticalAlignment="Center"
-                            Text="Quality" />
+                            Text="{x:Static lang:Resources.Label_VideoQuality}" />
                         <controls1:NumberBox
                             Margin="8,8,0,0"
                             Grid.Row="3"
@@ -82,7 +82,7 @@
                             Grid.Row="4"
                             Grid.Column="0"
                             VerticalAlignment="Center"
-                            Text="Method" />
+                            Text="{x:Static lang:Resources.Label_VideoOutputMethod}" />
                         <ComboBox
                             Grid.Row="4"
                             Grid.Column="1"

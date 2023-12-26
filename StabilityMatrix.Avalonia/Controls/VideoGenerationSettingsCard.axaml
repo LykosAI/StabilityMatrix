@@ -24,7 +24,7 @@
                             Grid.Column="0"
                             Margin="0,0,8,0"
                             VerticalAlignment="Center"
-                            Text="Frames" />
+                            Text="{x:Static lang:Resources.Label_Frames}" />
                         <controls1:NumberBox
                             Grid.Row="0"
                             Grid.Column="1"
@@ -41,7 +41,7 @@
                                 Grid.Column="0"
                                 Margin="0,8,8,0"
                                 VerticalAlignment="Center"
-                                Text="Frames Per Second" />
+                                Text="{x:Static lang:Resources.Label_Fps}" />
                             <controls1:NumberBox
                                 Grid.Row="1"
                                 Grid.Column="1"
@@ -58,7 +58,7 @@
                                 Grid.Column="0"
                                 Margin="0,8,8,0"
                                 VerticalAlignment="Center"
-                                Text="Min CFG" />
+                                Text="{x:Static lang:Resources.Label_MinCfg}" />
                             <controls1:NumberBox
                                 Margin="8,8,0,0"
                                 Grid.Row="2"
@@ -75,7 +75,7 @@
                                 Grid.Row="3"
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
-                                Text="Motion Bucket ID" />
+                                Text="{x:Static lang:Resources.Label_MotionBucketId}" />
                             <controls1:NumberBox
                                 Margin="8,8,0,0"
                                 Grid.Row="3"
@@ -94,7 +94,7 @@
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock 
                                     VerticalAlignment="Center"
-                                    Text="Augmentation Level"/>
+                                    Text="{x:Static lang:Resources.Label_AugmentationLevel}" />
                                 <controls1:NumberBox
                                     Grid.Column="1"
                                     Margin="4,0,0,0"

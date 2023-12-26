@@ -83,7 +83,7 @@ public record LocalImageFile
         // TODO: Support other types
         const LocalImageFileType imageType = LocalImageFileType.Inference | LocalImageFileType.TextToImage;
 
-        if (filePath.Extension.Contains("webp"))
+        if (filePath.Extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
         {
             var paramsJson = ImageMetadata.ReadTextChunkFromWebp(
                 filePath,

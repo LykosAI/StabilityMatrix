@@ -900,4 +900,31 @@
   <data name="Label_CLIPSkip" xml:space="preserve">
     <value>CLIP Skip</value>
   </data>
+  <data name="Label_ImageToVideo" xml:space="preserve">
+    <value>Image to Video</value>
+  </data>
+  <data name="Label_Fps" xml:space="preserve">
+    <value>Frames Per Second</value>
+  </data>
+  <data name="Label_MinCfg" xml:space="preserve">
+    <value>Min CFG</value>
+  </data>
+  <data name="Label_Lossless" xml:space="preserve">
+    <value>Lossless</value>
+  </data>
+  <data name="Label_Frames" xml:space="preserve">
+    <value>Frames</value>
+  </data>
+  <data name="Label_MotionBucketId" xml:space="preserve">
+    <value>Motion Bucket ID</value>
+  </data>
+  <data name="Label_AugmentationLevel" xml:space="preserve">
+    <value>Augmentation Level</value>
+  </data>
+  <data name="Label_VideoOutputMethod" xml:space="preserve">
+    <value>Method</value>
+  </data>
+  <data name="Label_VideoQuality" xml:space="preserve">
+    <value>Quality</value>
+  </data>
 </root>

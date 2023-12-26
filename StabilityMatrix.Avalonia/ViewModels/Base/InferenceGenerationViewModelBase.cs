@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Management;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +14,8 @@ using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
+using ExifLibrary;
+using MetadataExtractor.Formats.Exif;
 using NLog;
 using Refit;
 using SkiaSharp;
@@ -422,7 +426,20 @@ public abstract partial class InferenceGenerationViewModelBase
             }
             else if (comfyImage.FileName.EndsWith(".webp"))
             {
-                var bytesWithMetadata = ImageMetadata.AddMetadataToWebp(imageArray, parameters);
+                var opts = new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    Converters = { new JsonStringEnumConverter() }
+                };
+                var paramsJson = JsonSerializer.Serialize(parameters, opts);
+                var smProject = JsonSerializer.Serialize(project, opts);
+                var metadata = new Dictionary<ExifTag, string>
+                {
+                    { ExifTag.ImageDescription, paramsJson },
+                    { ExifTag.Software, smProject }
+                };
+
+                var bytesWithMetadata = ImageMetadata.AddMetadataToWebp(imageArray, metadata);
 
                 // Write using generated name
                 var filePath = await WriteOutputImageAsync(

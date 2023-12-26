@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Drawing;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -22,8 +21,6 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
-
-#pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -218,6 +215,8 @@ public partial class InferenceImageToVideoViewModel
     {
         SamplerCardViewModel.LoadStateFromParameters(parameters);
         ModelCardViewModel.LoadStateFromParameters(parameters);
+        SvdImgToVidConditioningViewModel.LoadStateFromParameters(parameters);
+        VideoOutputSettingsCardViewModel.LoadStateFromParameters(parameters);
 
         SeedCardViewModel.Seed = Convert.ToInt64(parameters.Seed);
     }
@@ -227,6 +226,8 @@ public partial class InferenceImageToVideoViewModel
     {
         parameters = SamplerCardViewModel.SaveStateToParameters(parameters);
         parameters = ModelCardViewModel.SaveStateToParameters(parameters);
+        parameters = SvdImgToVidConditioningViewModel.SaveStateToParameters(parameters);
+        parameters = VideoOutputSettingsCardViewModel.SaveStateToParameters(parameters);
 
         parameters.Seed = (ulong)SeedCardViewModel.Seed;
 

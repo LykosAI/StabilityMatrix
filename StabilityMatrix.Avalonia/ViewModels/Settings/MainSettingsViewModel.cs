@@ -26,6 +26,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using ExifLibrary;
 using FluentAvalonia.UI.Controls;
+using MetadataExtractor.Formats.Exif;
 using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Animations;
@@ -708,10 +709,6 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         if (files.Count == 0)
             return;
-
-        var data = ImageMetadata.ReadTextChunkFromWebp(files[0].TryGetLocalPath(), ExifTag.ImageDescription);
-
-        return;
 
         var metadata = ImageMetadata.ParseFile(files[0].TryGetLocalPath()!);
         var textualTags = metadata.GetTextualData()?.ToArray();

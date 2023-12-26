@@ -3,7 +3,9 @@ using System.Text;
 using System.Text.Json;
 using ExifLibrary;
 using MetadataExtractor;
+using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.Png;
+using MetadataExtractor.Formats.WebP;
 using Microsoft.VisualBasic;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
@@ -79,6 +81,14 @@ public class ImageMetadata
         string? ComfyNodes
     ) GetAllFileMetadata(FilePath filePath)
     {
+        if (filePath.Extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
+        {
+            var paramsJson = ReadTextChunkFromWebp(filePath, ExifDirectoryBase.TagImageDescription);
+            var smProj = ReadTextChunkFromWebp(filePath, ExifDirectoryBase.TagSoftware);
+
+            return (null, paramsJson, smProj, null);
+        }
+
         using var stream = filePath.Info.OpenRead();
         using var reader = new BinaryReader(stream);
 
@@ -234,32 +244,21 @@ public class ImageMetadata
         return memoryStream;
     }
 
-    public static string ReadTextChunkFromWebp(FilePath filePath, ExifTag exifTag)
+    /// <summary>
+    /// Reads an EXIF tag from a webp file and returns the value as string
+    /// </summary>
+    /// <param name="filePath">The webp file to read EXIF data from</param>
+    /// <param name="exifTag">Use <see cref="ExifDirectoryBase"/> constants for the tag you'd like to search for</param>
+    /// <returns></returns>
+    public static string ReadTextChunkFromWebp(FilePath filePath, int exifTag)
     {
-        var sw = Stopwatch.StartNew();
-        try
-        {
-            var exifChunks = GetExifChunks(filePath);
-            if (exifChunks.Length == 0)
-                return string.Empty;
-
-            // write exifChunks to new memoryStream but skip first 6 bytes
-            using var newMemoryStream = new MemoryStream(exifChunks[6..]);
-            newMemoryStream.Seek(0, SeekOrigin.Begin);
-
-            var img = new MyTiffFile(newMemoryStream, Encoding.UTF8);
-            return img.Properties[exifTag]?.Value?.ToString() ?? string.Empty;
-        }
-        finally
-        {
-            sw.Stop();
-            Console.WriteLine($"ReadTextChunkFromWebp took {sw.ElapsedMilliseconds}ms");
-        }
+        var exifDirs = WebPMetadataReader.ReadMetadata(filePath).OfType<ExifIfd0Directory>().FirstOrDefault();
+        return exifDirs is null ? string.Empty : exifDirs.GetString(exifTag) ?? string.Empty;
     }
 
     public static IEnumerable<byte> AddMetadataToWebp(
         byte[] inputImage,
-        GenerationParameters generationParameters
+        Dictionary<ExifTag, string> exifTagData
     )
     {
         using var byteStream = new BinaryReader(new MemoryStream(inputImage));
@@ -296,7 +295,11 @@ public class ImageMetadata
 
             using var stream = new MemoryStream(exifBytes[6..]);
             var img = new MyTiffFile(stream, Encoding.UTF8);
-            img.Properties.Set(ExifTag.ImageDescription, JsonSerializer.Serialize(generationParameters));
+
+            foreach (var (key, value) in exifTagData)
+            {
+                img.Properties.Set(key, value);
+            }
 
             using var newStream = new MemoryStream();
             img.Save(newStream);
@@ -315,6 +318,7 @@ public class ImageMetadata
                 newImage = newImage.Concat(new byte[] { 0x00 }).ToArray();
             }
 
+            // no clue why the minus 8 is needed but it is
             var newImageSize = BitConverter.GetBytes(newImage.Length - 8);
             newImage[4] = newImageSize[0];
             newImage[5] = newImageSize[1];

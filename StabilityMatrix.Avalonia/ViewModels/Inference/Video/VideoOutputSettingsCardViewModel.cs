@@ -37,13 +37,27 @@ public partial class VideoOutputSettingsCardViewModel
 
     public void LoadStateFromParameters(GenerationParameters parameters)
     {
-        // TODO
+        Fps = parameters.OutputFps;
+        Lossless = parameters.Lossless;
+        Quality = parameters.VideoQuality;
+
+        if (string.IsNullOrWhiteSpace(parameters.VideoOutputMethod))
+            return;
+
+        SelectedMethod = Enum.TryParse<VideoOutputMethod>(parameters.VideoOutputMethod, true, out var method)
+            ? method
+            : VideoOutputMethod.Default;
     }
 
     public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
     {
-        // TODO
-        return parameters;
+        return parameters with
+        {
+            OutputFps = Fps,
+            Lossless = Lossless,
+            VideoQuality = Quality,
+            VideoOutputMethod = SelectedMethod.ToString(),
+        };
     }
 
     public void ApplyStep(ModuleApplyStepEventArgs e)

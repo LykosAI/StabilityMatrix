@@ -44,13 +44,23 @@ public partial class SvdImgToVidConditioningViewModel
     {
         Width = parameters.Width;
         Height = parameters.Height;
-        // TODO: add more metadata
+        NumFrames = parameters.FrameCount;
+        MotionBucketId = parameters.MotionBucketId;
+        Fps = parameters.Fps;
+        AugmentationLevel = parameters.AugmentationLevel;
+        MinCfg = parameters.MinCfg;
     }
 
     public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
     {
-        // TODO: add more metadata
-        return parameters with { Width = Width, Height = Height, };
+        return parameters with
+        {
+            FrameCount = NumFrames,
+            MotionBucketId = MotionBucketId,
+            Fps = Fps,
+            AugmentationLevel = AugmentationLevel,
+            MinCfg = MinCfg,
+        };
     }
 
     public void ApplyStep(ModuleApplyStepEventArgs e)

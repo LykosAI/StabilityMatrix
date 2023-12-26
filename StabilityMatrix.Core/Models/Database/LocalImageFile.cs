@@ -1,4 +1,5 @@
 ﻿using DynamicData.Tests;
+using MetadataExtractor.Formats.Exif;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using JsonSerializer = System.Text.Json.JsonSerializer;
@@ -50,6 +51,17 @@ public record LocalImageFile
 
     public (string? Parameters, string? ParametersJson, string? SMProject, string? ComfyNodes) ReadMetadata()
     {
+        if (AbsolutePath.EndsWith("webp"))
+        {
+            var paramsJson = ImageMetadata.ReadTextChunkFromWebp(
+                AbsolutePath,
+                ExifDirectoryBase.TagImageDescription
+            );
+            var smProj = ImageMetadata.ReadTextChunkFromWebp(AbsolutePath, ExifDirectoryBase.TagSoftware);
+
+            return (null, paramsJson, smProj, null);
+        }
+
         using var stream = new FileStream(AbsolutePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         using var reader = new BinaryReader(stream);
 
@@ -70,6 +82,29 @@ public record LocalImageFile
     {
         // TODO: Support other types
         const LocalImageFileType imageType = LocalImageFileType.Inference | LocalImageFileType.TextToImage;
+
+        if (filePath.Extension.Contains("webp"))
+        {
+            var paramsJson = ImageMetadata.ReadTextChunkFromWebp(
+                filePath,
+                ExifDirectoryBase.TagImageDescription
+            );
+            var parameters = string.IsNullOrWhiteSpace(paramsJson)
+                ? null
+                : JsonSerializer.Deserialize<GenerationParameters>(paramsJson);
+
+            filePath.Info.Refresh();
+
+            return new LocalImageFile
+            {
+                AbsolutePath = filePath,
+                ImageType = imageType,
+                CreatedAt = filePath.Info.CreationTimeUtc,
+                LastModifiedAt = filePath.Info.LastWriteTimeUtc,
+                GenerationParameters = parameters,
+                ImageSize = new Size(parameters?.Width ?? 0, parameters?.Height ?? 0)
+            };
+        }
 
         // Get metadata
         using var stream = filePath.Info.OpenRead();
@@ -104,5 +139,12 @@ public record LocalImageFile
         };
     }
 
-    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
+    public static readonly HashSet<string> SupportedImageExtensions =
+    [
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".webp"
+    ];
 }

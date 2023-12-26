@@ -179,4 +179,52 @@ public class ImageMetadata
 
         return string.Empty;
     }
+
+    public static MemoryStream? BuildImageWithoutMetadata(FilePath imagePath)
+    {
+        using var byteStream = new BinaryReader(File.OpenRead(imagePath));
+        byteStream.BaseStream.Position = 0;
+
+        if (!byteStream.ReadBytes(8).SequenceEqual(PngHeader))
+        {
+            return null;
+        }
+
+        var memoryStream = new MemoryStream();
+        memoryStream.Write(PngHeader);
+
+        // add the IHDR chunk
+        var ihdrStuff = byteStream.ReadBytes(25);
+        memoryStream.Write(ihdrStuff);
+
+        // find IDATs
+        while (byteStream.BaseStream.Position < byteStream.BaseStream.Length - 4)
+        {
+            var chunkSizeBytes = byteStream.ReadBytes(4);
+            var chunkSize = BitConverter.ToInt32(chunkSizeBytes.Reverse().ToArray());
+            var chunkTypeBytes = byteStream.ReadBytes(4);
+            var chunkType = Encoding.UTF8.GetString(chunkTypeBytes);
+
+            if (chunkType != Encoding.UTF8.GetString(Idat))
+            {
+                // skip chunk data
+                byteStream.BaseStream.Position += chunkSize;
+                // skip crc
+                byteStream.BaseStream.Position += 4;
+                continue;
+            }
+
+            memoryStream.Write(chunkSizeBytes);
+            memoryStream.Write(chunkTypeBytes);
+            var idatBytes = byteStream.ReadBytes(chunkSize);
+            memoryStream.Write(idatBytes);
+            var crcBytes = byteStream.ReadBytes(4);
+            memoryStream.Write(crcBytes);
+        }
+
+        // Add IEND chunk
+        memoryStream.Write([0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]);
+        memoryStream.Position = 0;
+        return memoryStream;
+    }
 }

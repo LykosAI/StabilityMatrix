@@ -54,11 +54,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private readonly ILogger<OutputsPageViewModel> logger;
     public override string Title => Resources.Label_OutputsPageTitle;
 
-    public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Grid, IsFilled = true };
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Grid, IsFilled = true };
 
-    public SourceCache<LocalImageFile, string> OutputsCache { get; } =
-        new(file => file.AbsolutePath);
+    public SourceCache<LocalImageFile, string> OutputsCache { get; } = new(file => file.AbsolutePath);
 
     public IObservableCollection<OutputImageViewModel> Outputs { get; set; } =
         new ObservableCollectionExtended<OutputImageViewModel>();
@@ -88,8 +86,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isConsolidating;
 
-    public bool CanShowOutputTypes =>
-        SelectedCategory?.Name?.Equals("Shared Output Folder") ?? false;
+    public bool CanShowOutputTypes => SelectedCategory?.Name?.Equals("Shared Output Folder") ?? false;
 
     public string NumImagesSelected =>
         NumItemsSelected == 1
@@ -138,7 +135,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             delay: TimeSpan.FromMilliseconds(250)
         );
 
-        RefreshCategories();
+        RefreshCategories(false);
     }
 
     public override void OnLoaded()
@@ -163,10 +160,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         GetOutputs(path);
     }
 
-    partial void OnSelectedCategoryChanged(
-        PackageOutputCategory? oldValue,
-        PackageOutputCategory? newValue
-    )
+    partial void OnSelectedCategoryChanged(PackageOutputCategory? oldValue, PackageOutputCategory? newValue)
     {
         if (oldValue == newValue || newValue == null)
             return;
@@ -223,8 +217,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
             )
             .Subscribe(ctx =>
             {
-                Dispatcher.UIThread
-                    .InvokeAsync(async () =>
+                Dispatcher
+                    .UIThread.InvokeAsync(async () =>
                     {
                         var sender = (ImageViewerViewModel)ctx.Sender!;
                         var newIndex = currentIndex + (ctx.EventArgs.IsNext ? 1 : -1);
@@ -261,7 +255,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public void Refresh()
     {
-        Dispatcher.UIThread.Post(RefreshCategories);
+        Dispatcher.UIThread.Post(() => RefreshCategories());
         Dispatcher.UIThread.Post(OnLoaded);
     }
 
@@ -430,9 +424,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         Directory.CreateDirectory(settingsManager.ConsolidatedImagesDirectory);
 
-        foreach (
-            var category in stackPanel.Children.OfType<CheckBox>().Where(c => c.IsChecked == true)
-        )
+        foreach (var category in stackPanel.Children.OfType<CheckBox>().Where(c => c.IsChecked == true))
         {
             if (
                 string.IsNullOrWhiteSpace(category.Tag?.ToString())
@@ -442,13 +434,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
             var directory = category.Tag.ToString();
 
-            foreach (
-                var path in Directory.EnumerateFiles(
-                    directory,
-                    "*.png",
-                    SearchOption.AllDirectories
-                )
-            )
+            foreach (var path in Directory.EnumerateFiles(directory, "*.png", SearchOption.AllDirectories))
             {
                 try
                 {
@@ -524,7 +510,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         }
     }
 
-    private void RefreshCategories()
+    private void RefreshCategories(bool updateProperty = true)
     {
         if (Design.IsDesignMode)
             return;
@@ -534,15 +520,11 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         var previouslySelectedCategory = SelectedCategory;
 
-        var packageCategories = settingsManager.Settings.InstalledPackages
-            .Where(x => !x.UseSharedOutputFolder)
+        var packageCategories = settingsManager
+            .Settings.InstalledPackages.Where(x => !x.UseSharedOutputFolder)
             .Select(packageFactory.GetPackagePair)
             .WhereNotNull()
-            .Where(
-                p =>
-                    p.BasePackage.SharedOutputFolders != null
-                    && p.BasePackage.SharedOutputFolders.Any()
-            )
+            .Where(p => p.BasePackage.SharedOutputFolders != null && p.BasePackage.SharedOutputFolders.Any())
             .Select(
                 pair =>
                     new PackageOutputCategory
@@ -567,16 +549,22 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         packageCategories.Insert(
             1,
-            new PackageOutputCategory
-            {
-                Path = settingsManager.ImagesInferenceDirectory,
-                Name = "Inference"
-            }
+            new PackageOutputCategory { Path = settingsManager.ImagesInferenceDirectory, Name = "Inference" }
         );
 
         Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
-        SelectedCategory =
-            Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
-            ?? Categories.First();
+
+        if (updateProperty)
+        {
+            SelectedCategory =
+                Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
+                ?? Categories.First();
+        }
+        else
+        {
+            selectedCategory =
+                Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
+                ?? Categories.First();
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -119,13 +120,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         RootPath.Create();
 
         // Create venv (copy mode if windows)
-        var args = new string[]
-        {
-            "-m",
-            "virtualenv",
-            Compat.IsWindows ? "--always-copy" : "",
-            RootPath
-        };
+        var args = new string[] { "-m", "virtualenv", Compat.IsWindows ? "--always-copy" : "", RootPath };
 
         var venvProc = ProcessRunner.StartAnsiProcess(
             PyRunner.PythonExePath,
@@ -323,24 +318,28 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             );
         }
 
-        // Use only first line, since there might be pip update messages later
-        if (
-            result.StandardOutput
-                ?.SplitLines(StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-                .FirstOrDefault()
-            is not { } firstLine
-        )
+        // There may be warning lines before the Json line, or update messages after
+        // Filter to find the first line that starts with [
+        var jsonLine = result
+            .StandardOutput?.SplitLines(
+                StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
+            )
+            .Select(line => line.Trim())
+            .FirstOrDefault(
+                line =>
+                    line.StartsWith("[", StringComparison.OrdinalIgnoreCase)
+                    && line.EndsWith("]", StringComparison.OrdinalIgnoreCase)
+            );
+
+        if (jsonLine is null)
         {
-            return new List<PipPackageInfo>();
+            return [];
         }
 
         return JsonSerializer.Deserialize<List<PipPackageInfo>>(
-                firstLine,
-                new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower
-                }
-            ) ?? new List<PipPackageInfo>();
+                jsonLine,
+                PipPackageInfoSerializerContext.Default.Options
+            ) ?? [];
     }
 
     /// <summary>
@@ -408,12 +407,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         }
 
         var result = await ProcessRunner
-            .GetProcessResultAsync(
-                PythonPath,
-                args,
-                WorkingDirectory?.FullPath,
-                EnvironmentVariables
-            )
+            .GetProcessResultAsync(PythonPath, args, WorkingDirectory?.FullPath, EnvironmentVariables)
             .ConfigureAwait(false);
 
         // Check return code
@@ -426,8 +420,8 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
 
         if (
             string.IsNullOrEmpty(result.StandardOutput)
-            || result.StandardOutput!
-                .SplitLines()
+            || result
+                .StandardOutput!.SplitLines()
                 .Any(l => l.StartsWith("ERROR: No matching distribution found"))
         )
         {
@@ -498,11 +492,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         );
         await process.WaitForExitAsync().ConfigureAwait(false);
 
-        return new ProcessResult
-        {
-            ExitCode = process.ExitCode,
-            StandardOutput = output.ToString()
-        };
+        return new ProcessResult { ExitCode = process.ExitCode, StandardOutput = output.ToString() };
     }
 
     [MemberNotNull(nameof(Process))]
@@ -642,9 +632,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             Process.Kill(true);
             try
             {
-                await Process
-                    .WaitForExitAsync(new CancellationTokenSource(5000).Token)
-                    .ConfigureAwait(false);
+                await Process.WaitForExitAsync(new CancellationTokenSource(5000).Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException e)
             {

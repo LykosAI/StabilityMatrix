@@ -10,4 +10,5 @@ public readonly record struct PipPackageInfo(
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.SnakeCaseLower)]
 [JsonSerializable(typeof(PipPackageInfo))]
+[JsonSerializable(typeof(List<PipPackageInfo>))]
 internal partial class PipPackageInfoSerializerContext : JsonSerializerContext;

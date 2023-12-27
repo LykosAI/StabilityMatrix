@@ -169,7 +169,7 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
         var files = await storage.OpenFilePickerAsync(
             new FilePickerOpenOptions
             {
-                FileTypeFilter = new List<FilePickerFileType> { new("CSV") { Patterns =  ["*.csv"] } }
+                FileTypeFilter = new List<FilePickerFileType> { new("CSV") { Patterns = ["*.csv"] } }
             }
         );
 

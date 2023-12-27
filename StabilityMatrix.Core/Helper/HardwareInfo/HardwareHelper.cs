@@ -15,7 +15,8 @@ public static partial class HardwareHelper
 
     private static IReadOnlyList<GpuInfo>? cachedGpuInfos;
 
-    private static readonly Lazy<IHardwareInfo> HardwareInfoLazy = new(() => new Hardware.Info.HardwareInfo());
+    private static readonly Lazy<IHardwareInfo> HardwareInfoLazy =
+        new(() => new Hardware.Info.HardwareInfo());
 
     public static IHardwareInfo HardwareInfo => HardwareInfoLazy.Value;
 
@@ -222,9 +223,10 @@ public static partial class HardwareHelper
     {
         var info = new CpuInfo();
 
-        using var processorKey = Registry
-            .LocalMachine
-            .OpenSubKey(@"Hardware\Description\System\CentralProcessor\0", RegistryKeyPermissionCheck.ReadSubTree);
+        using var processorKey = Registry.LocalMachine.OpenSubKey(
+            @"Hardware\Description\System\CentralProcessor\0",
+            RegistryKeyPermissionCheck.ReadSubTree
+        );
 
         if (processorKey?.GetValue("ProcessorNameString") is string processorName)
         {
@@ -240,7 +242,10 @@ public static partial class HardwareHelper
         {
             HardwareInfo.RefreshCPUList();
 
-            return new CpuInfo { ProcessorCaption = HardwareInfo.CpuList.FirstOrDefault()?.Caption.Trim() ?? "" };
+            return new CpuInfo
+            {
+                ProcessorCaption = HardwareInfo.CpuList.FirstOrDefault()?.Caption.Trim() ?? ""
+            };
         });
     }
 

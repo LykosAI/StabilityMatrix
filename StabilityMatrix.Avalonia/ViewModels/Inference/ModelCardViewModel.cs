@@ -11,6 +11,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -38,6 +39,9 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
     private bool isVaeSelectionEnabled;
 
     [ObservableProperty]
+    private bool disableSettings;
+
+    [ObservableProperty]
     private bool isClipSkipEnabled;
 
     [NotifyDataErrorInfo]
@@ -48,7 +52,7 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
     public IInferenceClientManager ClientManager { get; } = clientManager;
 
     /// <inheritdoc />
-    public void ApplyStep(ModuleApplyStepEventArgs e)
+    public virtual void ApplyStep(ModuleApplyStepEventArgs e)
     {
         // Load base checkpoint
         var baseLoader = e.Nodes.AddTypedNode(
@@ -88,7 +92,9 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
                 new ComfyNodeBuilder.VAELoader
                 {
                     Name = "VAELoader",
-                    VaeName = SelectedVae?.RelativePath ?? throw new ValidationException("VAE enabled but not selected")
+                    VaeName =
+                        SelectedVae?.RelativePath
+                        ?? throw new ValidationException("VAE enabled but not selected")
                 }
             );
 

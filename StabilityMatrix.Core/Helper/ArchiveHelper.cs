@@ -85,12 +85,9 @@ public static partial class ArchiveHelper
 
     public static async Task<ArchiveInfo> Extract7Z(string archivePath, string extractDirectory)
     {
-        var args =
-            $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y";
+        var args = $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y";
 
-        var result = await ProcessRunner
-            .GetProcessResultAsync(SevenZipPath, args)
-            .ConfigureAwait(false);
+        var result = await ProcessRunner.GetProcessResultAsync(SevenZipPath, args).ConfigureAwait(false);
 
         result.EnsureSuccessExitCode();
 
@@ -130,27 +127,17 @@ public static partial class ArchiveHelper
                 var percent = int.Parse(match.Groups[1].Value);
                 var currentFile = match.Groups[2].Value;
                 progress.Report(
-                    new ProgressReport(
-                        percent / (float)100,
-                        "Extracting",
-                        currentFile,
-                        type: ProgressType.Extract
-                    )
+                    new ProgressReport(percent / (float)100, "Extracting", currentFile, type: ProgressType.Extract)
                 );
             }
         });
         progress.Report(new ProgressReport(-1, isIndeterminate: true, type: ProgressType.Extract));
 
         // Need -bsp1 for progress reports
-        var args =
-            $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y -bsp1";
+        var args = $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y -bsp1";
         Logger.Debug($"Starting process '{SevenZipPath}' with arguments '{args}'");
 
-        using var process = ProcessRunner.StartProcess(
-            SevenZipPath,
-            args,
-            outputDataReceived: onOutput
-        );
+        using var process = ProcessRunner.StartProcess(SevenZipPath, args, outputDataReceived: onOutput);
         await ProcessRunner.WaitForExitConditionAsync(process).ConfigureAwait(false);
 
         progress.Report(new ProgressReport(1f, "Finished extracting", type: ProgressType.Extract));
@@ -269,11 +256,7 @@ public static partial class ArchiveHelper
             .StartNew(
                 () =>
                 {
-                    var extractOptions = new ExtractionOptions
-                    {
-                        Overwrite = true,
-                        ExtractFullPath = true,
-                    };
+                    var extractOptions = new ExtractionOptions { Overwrite = true, ExtractFullPath = true, };
                     using var stream = File.OpenRead(archivePath);
                     using var archive = ReaderFactory.Open(stream);
 
@@ -373,9 +356,7 @@ public static partial class ArchiveHelper
                     }
                     catch (IOException e)
                     {
-                        Logger.Warn(
-                            $"Could not extract symbolic link, copying file instead: {e.Message}"
-                        );
+                        Logger.Warn($"Could not extract symbolic link, copying file instead: {e.Message}");
                     }
                 }
 

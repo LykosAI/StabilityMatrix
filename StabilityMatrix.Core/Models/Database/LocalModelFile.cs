@@ -50,7 +50,8 @@ public class LocalModelFile
     /// Relative file path from the shared folder type model directory.
     /// </summary>
     [BsonIgnore]
-    public string RelativePathFromSharedFolder => Path.GetRelativePath(SharedFolderType.GetStringValue(), RelativePath);
+    public string RelativePathFromSharedFolder =>
+        Path.GetRelativePath(SharedFolderType.GetStringValue(), RelativePath);
 
     public string GetFullPath(string rootModelDirectory)
     {
@@ -62,7 +63,9 @@ public class LocalModelFile
         if (PreviewImageFullPath != null)
             return PreviewImageFullPath;
 
-        return PreviewImageRelativePath == null ? null : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
+        return PreviewImageRelativePath == null
+            ? null
+            : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
 
     [BsonIgnore]
@@ -112,6 +115,6 @@ public class LocalModelFile
         ".pth",
         ".bin"
     ];
-    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".gif"];
+    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".webp"];
     public static readonly HashSet<string> SupportedMetadataExtensions = [".json"];
 }

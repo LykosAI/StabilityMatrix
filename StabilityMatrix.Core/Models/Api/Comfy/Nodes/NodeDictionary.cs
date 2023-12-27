@@ -25,9 +25,7 @@ public class NodeDictionary : Dictionary<string, ComfyNode>
         // Ensure new name does not exist
         if (ContainsKey(nameBase))
         {
-            throw new InvalidOperationException(
-                $"Initial unique name already exists for base {nameBase}"
-            );
+            throw new InvalidOperationException($"Initial unique name already exists for base {nameBase}");
         }
 
         _baseNameIndex.Add(nameBase, 1);

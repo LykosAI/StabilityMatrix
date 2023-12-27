@@ -60,6 +60,8 @@
         <StyleInclude Source="Controls/SelectableImageCard/SelectableImageButton.axaml"/>
         <StyleInclude Source="Controls/SettingsAccountLinkExpander.axaml"/>
         <StyleInclude Source="Controls/StarsRating.axaml"/>
+        <StyleInclude Source="Controls/VideoGenerationSettingsCard.axaml"/>
+        <StyleInclude Source="Controls/VideoOutputSettingsCard.axaml"/>
         <StyleInclude Source="Controls/Inference/StackCard.axaml"/>
         <StyleInclude Source="Controls/Inference/StackEditableCard.axaml"/>
         <StyleInclude Source="Controls/Inference/StackExpander.axaml"/>

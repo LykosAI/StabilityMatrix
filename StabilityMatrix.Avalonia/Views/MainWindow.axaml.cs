@@ -132,15 +132,16 @@ public partial class MainWindow : AppWindowBase
             return;
 
         // Navigate to first page
-        Dispatcher
-            .UIThread
-            .Post(
-                () =>
-                    navigationService.NavigateTo(
-                        vm.Pages[0],
-                        new BetterSlideNavigationTransition { Effect = SlideNavigationTransitionEffect.FromBottom }
-                    )
-            );
+        Dispatcher.UIThread.Post(
+            () =>
+                navigationService.NavigateTo(
+                    vm.Pages[0],
+                    new BetterSlideNavigationTransition
+                    {
+                        Effect = SlideNavigationTransitionEffect.FromBottom
+                    }
+                )
+        );
 
         // Check show update teaching tip
         if (vm.UpdateViewModel.IsUpdateAvailable)
@@ -165,27 +166,24 @@ public partial class MainWindow : AppWindowBase
         var mainViewModel = (MainWindowViewModel)DataContext!;
 
         mainViewModel.SelectedCategory = mainViewModel
-            .Pages
-            .Concat(mainViewModel.FooterPages)
+            .Pages.Concat(mainViewModel.FooterPages)
             .FirstOrDefault(x => x.GetType() == e.ViewModelType);
     }
 
     private void OnUpdateAvailable(object? sender, UpdateInfo? updateInfo)
     {
-        Dispatcher
-            .UIThread
-            .Post(() =>
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (DataContext is MainWindowViewModel vm && vm.ShouldShowUpdateAvailableTeachingTip(updateInfo))
             {
-                if (DataContext is MainWindowViewModel vm && vm.ShouldShowUpdateAvailableTeachingTip(updateInfo))
-                {
-                    var target = this.FindControl<NavigationViewItem>("FooterUpdateItem")!;
-                    var tip = this.FindControl<TeachingTip>("UpdateAvailableTeachingTip")!;
+                var target = this.FindControl<NavigationViewItem>("FooterUpdateItem")!;
+                var tip = this.FindControl<TeachingTip>("UpdateAvailableTeachingTip")!;
 
-                    tip.Target = target;
-                    tip.Subtitle = $"{Compat.AppVersion.ToDisplayString()} -> {updateInfo.Version}";
-                    tip.IsOpen = true;
-                }
-            });
+                tip.Target = target;
+                tip.Subtitle = $"{Compat.AppVersion.ToDisplayString()} -> {updateInfo.Version}";
+                tip.IsOpen = true;
+            }
+        });
     }
 
     public void SetDefaultFonts()
@@ -282,18 +280,16 @@ public partial class MainWindow : AppWindowBase
 
     private void OnImageLoadFailed(object? sender, ImageLoadFailedEventArgs e)
     {
-        Dispatcher
-            .UIThread
-            .Post(() =>
-            {
-                var fileName = Path.GetFileName(e.Url);
-                var displayName = string.IsNullOrEmpty(fileName) ? e.Url : fileName;
-                notificationService.ShowPersistent(
-                    "Failed to load image",
-                    $"Could not load '{displayName}'\n({e.Exception.Message})",
-                    NotificationType.Warning
-                );
-            });
+        Dispatcher.UIThread.Post(() =>
+        {
+            var fileName = Path.GetFileName(e.Url);
+            var displayName = string.IsNullOrEmpty(fileName) ? e.Url : fileName;
+            notificationService.Show(
+                "Failed to load image",
+                $"Could not load '{displayName}'\n({e.Exception.Message})",
+                NotificationType.Warning
+            );
+        });
     }
 
     private void TryEnableMicaEffect()
@@ -319,7 +315,11 @@ public partial class MainWindow : AppWindowBase
         else if (ActualThemeVariant == ThemeVariant.Light)
         {
             // Similar effect here
-            var color = this.TryFindResource("SolidBackgroundFillColorBase", ThemeVariant.Light, out var value)
+            var color = this.TryFindResource(
+                "SolidBackgroundFillColorBase",
+                ThemeVariant.Light,
+                out var value
+            )
                 ? (Color2)(Color)value!
                 : new Color2(243, 243, 243);
 

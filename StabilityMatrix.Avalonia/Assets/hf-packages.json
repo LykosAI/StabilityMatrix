@@ -39,6 +39,26 @@
     "LicensePath": "LICENSE.md"
   },
   {
+    "ModelCategory": "BaseModel",
+    "ModelName": "SDXL Turbo",
+    "RepositoryPath": "stabilityai/sdxl-turbo",
+    "Files": [
+      "sd_xl_turbo_1.0_fp16.safetensors"
+    ],
+    "LicenseType": "SAI-NC-Community",
+    "LicensePath": "LICENSE.TXT"
+  },
+  {
+    "ModelCategory": "BaseModel",
+    "ModelName": "Stable Video Diffusion",
+    "RepositoryPath": "stabilityai/stable-video-diffusion-img2vid",
+    "Files": [
+      "svd.safetensors"
+    ],
+    "LicenseType": "Stable-Video-Diffusion-NC-Community",
+    "LicensePath": "LICENSE"
+  },
+  {
     "ModelCategory": "ControlNet",
     "ModelName": "Canny",
     "RepositoryPath": "lllyasviel/ControlNet-v1-1",

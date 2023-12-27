@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Models;
 
@@ -67,7 +68,27 @@ public record HybridModelFile
                 return "Default";
             }
 
-            return Path.GetFileNameWithoutExtension(RelativePath);
+            var fileName = Path.GetFileNameWithoutExtension(RelativePath);
+
+            if (
+                !fileName.Equals("diffusion_pytorch_model", StringComparison.OrdinalIgnoreCase)
+                && !fileName.Equals("ip_adapter", StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                return Path.GetFileNameWithoutExtension(RelativePath);
+            }
+
+            // show a friendlier name when models have the same name like ip_adapter or diffusion_pytorch_model
+            var directoryName = Path.GetDirectoryName(RelativePath);
+            if (directoryName is null)
+                return Path.GetFileNameWithoutExtension(RelativePath);
+
+            var lastIndex = directoryName.LastIndexOf(Path.DirectorySeparatorChar);
+            if (lastIndex < 0)
+                return $"{fileName} ({directoryName})";
+
+            var parentDirectoryName = directoryName.Substring(lastIndex + 1);
+            return $"{fileName} ({parentDirectoryName})";
         }
     }
 
@@ -83,11 +104,7 @@ public record HybridModelFile
 
     public static HybridModelFile FromDownloadable(RemoteResource resource)
     {
-        return new HybridModelFile
-        {
-            DownloadableResource = resource,
-            Type = HybridModelType.Downloadable
-        };
+        return new HybridModelFile { DownloadableResource = resource, Type = HybridModelType.Downloadable };
     }
 
     public string GetId()

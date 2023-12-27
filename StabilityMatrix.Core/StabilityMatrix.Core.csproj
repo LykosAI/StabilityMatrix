@@ -34,7 +34,6 @@
       <PackageReference Include="KGySoft.Drawing.SkiaSharp" Version="8.0.0" />
       <PackageReference Include="LiteDB" Version="5.0.17" />
       <PackageReference Include="LiteDB.Async" Version="0.1.7" />
-      <PackageReference Include="Magick.NET-Q8-x64" Version="13.5.0" />
       <PackageReference Include="MetadataExtractor" Version="2.8.1" />
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />

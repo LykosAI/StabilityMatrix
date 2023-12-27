@@ -4,6 +4,7 @@
              xmlns:local="using:StabilityMatrix.Avalonia"
              xmlns:idcr="using:Dock.Avalonia.Controls.Recycling"
              xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
+             Name="Stability Matrix"
              RequestedThemeVariant="Dark">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -23,6 +24,7 @@
                  <ResourceInclude Source="Controls/Scroll/BetterScrollViewer.axaml"/>
                  <ResourceInclude Source="Styles/ControlThemes/HyperlinkIconButtonStyles.axaml"/>
                  <ResourceInclude Source="Styles/ControlThemes/ListBoxStyles.axaml"/>
+                 <ResourceInclude Source="Styles/ControlThemes/BetterComboBoxStyles.axaml"/>
                  <ResourceInclude Source="Styles/ListBoxStyles.axaml"/>
                  <ResourceInclude Source="Styles/FAComboBoxStyles.axaml"/>
                  <ResourceInclude Source="Controls/Inference/ImageFolderCard.axaml"/>

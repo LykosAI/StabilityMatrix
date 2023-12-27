@@ -897,4 +897,7 @@
   <data name="Label_HolidayMode" xml:space="preserve">
     <value>Holiday Mode</value>
   </data>
+  <data name="Label_CLIPSkip" xml:space="preserve">
+    <value>CLIP Skip</value>
+  </data>
 </root>

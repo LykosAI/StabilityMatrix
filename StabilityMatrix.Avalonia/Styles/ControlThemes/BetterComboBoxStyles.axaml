@@ -1,0 +1,254 @@
+﻿<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:mocks="using:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+
+    <Design.PreviewWith>
+        <Panel Width="450" Height="600">
+            <StackPanel Margin="8" Spacing="4" Width="250">
+                <controls:BetterComboBox
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{x:Static mocks:DesignData.SampleHybridModels}"
+                    SelectedIndex="0" />
+
+                <controls:BetterComboBox
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{x:Static mocks:DesignData.SampleHybridModels}"
+                    SelectedIndex="0"
+                    Theme="{DynamicResource BetterComboBoxHybridModelTheme}" />
+            </StackPanel>
+        </Panel>
+    </Design.PreviewWith>
+
+    <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
+    <ControlTheme
+        x:Key="BetterComboBoxItemHybridModelTheme"
+        BasedOn="{StaticResource {x:Type ComboBoxItem}}"
+        TargetType="ComboBoxItem">
+        <Setter Property="ToolTip.Placement" Value="RightEdgeAlignedTop" />
+        <Setter Property="ToolTip.Tip">
+            <Template>
+                <sg:SpacedGrid
+                    x:DataType="models:HybridModelFile"
+                    ColumnDefinitions="Auto,*"
+                    ColumnSpacing="6"
+                    RowSpacing="0">
+                    <!--  Image  -->
+                    <controls:BetterAdvancedImage
+                        Width="64"
+                        Height="96"
+                        CornerRadius="6"
+                        IsVisible="{Binding Local.PreviewImageFullPathGlobal, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=''}"
+                        RenderOptions.BitmapInterpolationMode="HighQuality"
+                        Source="{Binding Local.PreviewImageFullPathGlobal, FallbackValue=''}"
+                        Stretch="UniformToFill"
+                        StretchDirection="Both" />
+                    <StackPanel
+                        Grid.Column="1"
+                        MaxWidth="300"
+                        VerticalAlignment="Stretch">
+                        <!--  Title  -->
+                        <TextBlock
+                            Margin="0,0,0,4"
+                            HorizontalAlignment="Left"
+                            FontSize="14"
+                            FontWeight="Medium"
+                            Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                            IsVisible="{Binding Local.ConnectedModelInfo, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
+                            Text="{Binding Local.ConnectedModelInfo.ModelName, FallbackValue=''}"
+                            TextWrapping="WrapWithOverflow" />
+                        <!--  Version  -->
+                        <TextBlock
+                            Margin="0,0,0,8"
+                            HorizontalAlignment="Left"
+                            FontSize="13"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            IsVisible="{Binding Local.ConnectedModelInfo, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
+                            Text="{Binding Local.ConnectedModelInfo.VersionName, FallbackValue=''}"
+                            TextWrapping="WrapWithOverflow" />
+                        <!--  Path  -->
+                        <TextBlock
+                            HorizontalAlignment="Left"
+                            FontSize="13"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            Text="{Binding FileName}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </sg:SpacedGrid>
+            </Template>
+        </Setter>
+    </ControlTheme>
+    
+    <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
+    <ControlTheme
+        x:Key="{x:Type controls:BetterComboBox}"
+        BasedOn="{StaticResource {x:Type ComboBox}}"
+        TargetType="controls:BetterComboBox" />
+
+    <ControlTheme
+        x:Key="BetterComboBoxHybridModelTheme"
+        BasedOn="{StaticResource {x:Type controls:BetterComboBox}}"
+        TargetType="controls:BetterComboBox">
+
+        <ControlTheme.Resources>
+            <controls:HybridModelTemplateSelector x:Key="HybridModelTemplateSelector">
+                <DataTemplate x:Key="{x:Static models:HybridModelType.Downloadable}" DataType="models:HybridModelFile">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Foreground="{DynamicResource ThemeGreyColor}" Text="{Binding ShortDisplayName}" />
+                        <Button
+                            Grid.Column="1"
+                            Margin="8,0,0,0"
+                            Padding="0"
+                            Classes="transparent-full">
+                            <fluentIcons:SymbolIcon
+                                VerticalAlignment="Center"
+                                FontSize="18"
+                                Foreground="{DynamicResource ThemeGreyColor}"
+                                IsFilled="True"
+                                Symbol="CloudArrowDown" />
+                        </Button>
+                    </Grid>
+                </DataTemplate>
+
+                <DataTemplate x:Key="{x:Static models:HybridModelType.Local}" DataType="models:HybridModelFile">
+                    <sg:SpacedGrid
+                        HorizontalAlignment="Stretch"
+                        ColumnDefinitions="Auto,*"
+                        ColumnSpacing="8"
+                        TextBlock.TextTrimming="CharacterEllipsis"
+                        TextBlock.TextWrapping="NoWrap">
+                        <controls:BetterAdvancedImage
+                            Grid.RowSpan="2"
+                            Width="42"
+                            Height="42"
+                            RenderOptions.BitmapInterpolationMode="HighQuality"
+                            Source="{Binding Local.PreviewImageFullPathGlobal}"
+                            Stretch="UniformToFill"
+                            StretchDirection="Both">
+                            <controls:BetterAdvancedImage.Clip>
+                                <EllipseGeometry Rect="0,0,42,42" />
+                            </controls:BetterAdvancedImage.Clip>
+                        </controls:BetterAdvancedImage>
+
+                        <!--  Text  -->
+                        <sg:SpacedGrid
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            RowDefinitions="Auto,Auto,Auto"
+                            RowSpacing="1">
+                            <TextBlock Text="{Binding Local.DisplayModelName}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Grid.Row="1"
+                                FontSize="12"
+                                FontWeight="Regular"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                Text="{Binding Local.DisplayModelVersion}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Grid.Row="2"
+                                FontSize="11"
+                                FontWeight="Normal"
+                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                Text="{Binding Local.DisplayModelFileName}" />
+                        </sg:SpacedGrid>
+                    </sg:SpacedGrid>
+                </DataTemplate>
+
+                <DataTemplate x:Key="{x:Static models:HybridModelType.None}" DataType="models:HybridModelFile">
+                    <StackPanel>
+                        <TextBlock Text="{Binding ShortDisplayName}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </DataTemplate>
+            </controls:HybridModelTemplateSelector>
+
+            <controls:HybridModelTemplateSelector x:Key="HybridModelSelectionBoxTemplateSelector">
+                <DataTemplate x:Key="{x:Static models:HybridModelType.Downloadable}" DataType="models:HybridModelFile">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Foreground="{DynamicResource ThemeGreyColor}" Text="{Binding ShortDisplayName}" />
+                        <Button
+                            Grid.Column="1"
+                            Margin="8,0,0,0"
+                            Padding="0"
+                            Classes="transparent-full">
+                            <fluentIcons:SymbolIcon
+                                VerticalAlignment="Center"
+                                FontSize="18"
+                                Foreground="{DynamicResource ThemeGreyColor}"
+                                IsFilled="True"
+                                Symbol="CloudArrowDown" />
+                        </Button>
+                    </Grid>
+                </DataTemplate>
+
+                <DataTemplate x:Key="{x:Static models:HybridModelType.Local}" DataType="models:HybridModelFile">
+                    <sg:SpacedGrid
+                        HorizontalAlignment="Stretch"
+                        ColumnDefinitions="Auto,*"
+                        ColumnSpacing="8"
+                        TextBlock.TextTrimming="CharacterEllipsis"
+                        TextBlock.TextWrapping="NoWrap">
+                        <controls:BetterAdvancedImage
+                            Grid.RowSpan="2"
+                            Width="36"
+                            Height="36"
+                            RenderOptions.BitmapInterpolationMode="HighQuality"
+                            Source="{Binding Local.PreviewImageFullPathGlobal}"
+                            Stretch="UniformToFill"
+                            StretchDirection="Both">
+                            <controls:BetterAdvancedImage.Clip>
+                                <EllipseGeometry Rect="0,0,36,36" />
+                            </controls:BetterAdvancedImage.Clip>
+                        </controls:BetterAdvancedImage>
+
+                        <!--  Text  -->
+                        <sg:SpacedGrid
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            RowDefinitions="Auto,Auto"
+                            RowSpacing="1">
+
+                            <TextBlock Text="{Binding Local.DisplayModelName}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Grid.Row="1"
+                                FontSize="12"
+                                FontWeight="Regular"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                Text="{Binding Local.DisplayModelVersion}"
+                                TextTrimming="CharacterEllipsis" />
+                        </sg:SpacedGrid>
+                    </sg:SpacedGrid>
+                </DataTemplate>
+
+                <DataTemplate x:Key="{x:Static models:HybridModelType.None}" DataType="models:HybridModelFile">
+                    <StackPanel>
+                        <TextBlock Text="{Binding ShortDisplayName}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </DataTemplate>
+            </controls:HybridModelTemplateSelector>
+        </ControlTheme.Resources>
+
+        <Setter Property="TextBlock.TextWrapping" Value="NoWrap" />
+        <Setter Property="SelectionBoxItemTemplate" Value="{StaticResource HybridModelSelectionBoxTemplateSelector}" />
+        <Setter Property="ItemTemplate" Value="{StaticResource HybridModelTemplateSelector}" />
+        <Setter Property="ItemContainerTheme" Value="{StaticResource BetterComboBoxItemHybridModelTheme}" />
+        
+        <Style Selector="^ /template/ Popup#PART_Popup">
+            <Setter Property="Width" Value="400" />
+            <Setter Property="Placement" Value="Bottom" />
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
+            <Setter Property="Effect">
+                <DropShadowEffect
+                    BlurRadius="32"
+                    Opacity="0.6"
+                    Color="#FF000000" />
+            </Setter>
+        </Style>
+
+    </ControlTheme>
+
+</ResourceDictionary>

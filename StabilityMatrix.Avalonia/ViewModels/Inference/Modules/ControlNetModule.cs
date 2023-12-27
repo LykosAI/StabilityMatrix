@@ -49,7 +49,8 @@ public class ControlNetModule : ModuleBase
             new ComfyNodeBuilder.ControlNetLoader
             {
                 Name = e.Nodes.GetUniqueName("ControlNetLoader"),
-                ControlNetName = card.SelectedModel?.FileName ?? throw new ValidationException("No SelectedModel"),
+                ControlNetName =
+                    card.SelectedModel?.RelativePath ?? throw new ValidationException("No SelectedModel"),
             }
         );
 

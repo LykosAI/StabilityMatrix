@@ -5,6 +5,21 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.8.0-dev.1
+### Added
+#### Inference
+- Added image and model details in model selection boxes
+- Added CLIP Skip setting, toggleable from the model settings button
+
+## v2.7.6
+### Added
+- Added SDXL Turbo and Stable Video Diffusion to the Hugging Face tab
+### Changed
+- ControlNet model selector will now show the parent directory of a model when relevant
+### Fixed
+- Fixed Python Packages dialog crash
+- Fixed Base Model downloads from the Hugging Face tab downloading to the wrong folder
+
 ## v2.7.5
 ### Fixed
 - Fixed Python Packages manager crash when pip list returns warnings in json

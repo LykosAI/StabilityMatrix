@@ -334,7 +334,7 @@ public partial class MainWindow : AppWindowBase
         {
             var fileName = Path.GetFileName(e.Url);
             var displayName = string.IsNullOrEmpty(fileName) ? e.Url : fileName;
-            notificationService.ShowPersistent(
+            notificationService.Show(
                 "Failed to load image",
                 $"Could not load '{displayName}'\n({e.Exception.Message})",
                 NotificationType.Warning

@@ -71,7 +71,9 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
     {
         e.Builder.SetupImagePrimarySource(
             ImageSource ?? throw new ValidationException("Input Image is required"),
-            !CurrentBitmapSize.IsEmpty ? CurrentBitmapSize : throw new ValidationException("CurrentBitmapSize is null"),
+            !CurrentBitmapSize.IsEmpty
+                ? CurrentBitmapSize
+                : throw new ValidationException("CurrentBitmapSize is null"),
             e.Builder.Connections.BatchIndex
         );
     }
@@ -98,7 +100,10 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
     private async Task SelectImageFromFilePickerAsync()
     {
         var files = await App.StorageProvider.OpenFilePickerAsync(
-            new FilePickerOpenOptions { FileTypeFilter = [FilePickerFileTypes.ImagePng, FilePickerFileTypes.ImageJpg] }
+            new FilePickerOpenOptions
+            {
+                FileTypeFilter = [FilePickerFileTypes.ImagePng, FilePickerFileTypes.ImageJpg]
+            }
         );
 
         if (files.FirstOrDefault()?.TryGetLocalPath() is { } path)
@@ -112,7 +117,10 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
     /// </summary>
     public void DragOver(object? sender, DragEventArgs e)
     {
-        if (e.Data.GetDataFormats().Contains(DataFormats.Files) || e.Data.GetContext<LocalImageFile>() is not null)
+        if (
+            e.Data.GetDataFormats().Contains(DataFormats.Files)
+            || e.Data.GetContext<LocalImageFile>() is not null
+        )
         {
             e.Handled = true;
             return;
@@ -134,7 +142,10 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
             return;
         }
         // 2. OS Files
-        if (e.Data.GetFiles() is { } files && files.Select(f => f.TryGetLocalPath()).FirstOrDefault() is { } path)
+        if (
+            e.Data.GetFiles() is { } files
+            && files.Select(f => f.TryGetLocalPath()).FirstOrDefault() is { } path
+        )
         {
             e.Handled = true;
 
@@ -154,7 +165,7 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
         catch (Exception e)
         {
             Logger.Warn(e, "Error loading image");
-            notificationService.ShowPersistent("Error loading image", e.Message);
+            notificationService.Show("Error loading image", e.Message);
         }
     }
 

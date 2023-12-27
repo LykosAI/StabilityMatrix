@@ -662,7 +662,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private async Task AddImageToImageFromImage(LocalImageFile imageFile)
     {
         var imgToImgVm = vmFactory.Get<InferenceImageToImageViewModel>();
-        imgToImgVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
+
+        if (!imageFile.FileName.EndsWith("webp"))
+        {
+            imgToImgVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
+        }
 
         if (imageFile.GenerationParameters != null)
         {
@@ -678,11 +682,15 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private async Task AddImageToVideoFromImage(LocalImageFile imageFile)
     {
         var imgToVidVm = vmFactory.Get<InferenceImageToVideoViewModel>();
-        imgToVidVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
 
-        if (imageFile.GenerationParameters != null)
+        if (imageFile.GenerationParameters != null && imageFile.FileName.EndsWith("webp"))
         {
             imgToVidVm.LoadStateFromParameters(imageFile.GenerationParameters);
+        }
+
+        if (!imageFile.FileName.EndsWith("webp"))
+        {
+            imgToVidVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
         }
 
         Tabs.Add(imgToVidVm);

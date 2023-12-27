@@ -21,7 +21,7 @@
                     <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.WebpAnimation}" DataType="models:ImageSource">
                         <gif:GifImage
                             Stretch="Uniform"
-                            SourceUri="{Binding }"/>
+                            SourceUri="{Binding LocalFile.FullPath}"/>
                     </DataTemplate>
                     
                     <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.Image}" DataType="models:ImageSource">

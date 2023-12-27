@@ -41,7 +41,8 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
 
-    public SourceCache<HuggingfaceItem, string> ItemsCache { get; } = new(i => i.RepositoryPath + i.ModelName);
+    public SourceCache<HuggingfaceItem, string> ItemsCache { get; } =
+        new(i => i.RepositoryPath + i.ModelName);
 
     public IObservableCollection<CategoryViewModel> Categories { get; set; } =
         new ObservableCollectionExtended<CategoryViewModel>();
@@ -76,7 +77,13 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
             .Connect()
             .DeferUntilLoaded()
             .Group(i => i.ModelCategory)
-            .Transform(g => new CategoryViewModel(g.Cache.Items) { Title = g.Key.GetDescription() ?? g.Key.ToString() })
+            .Transform(
+                g =>
+                    new CategoryViewModel(g.Cache.Items)
+                    {
+                        Title = g.Key.GetDescription() ?? g.Key.ToString()
+                    }
+            )
             .SortBy(vm => vm.Title)
             .Bind(Categories)
             .WhenAnyPropertyChanged()
@@ -137,12 +144,13 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
         {
             foreach (var file in viewModel.Item.Files)
             {
-                var url = $"https://huggingface.co/{viewModel.Item.RepositoryPath}/resolve/main/{file}?download=true";
+                var url =
+                    $"https://huggingface.co/{viewModel.Item.RepositoryPath}/resolve/main/{file}?download=true";
                 var sharedFolderType = viewModel.Item.ModelCategory.ConvertTo<SharedFolderType>();
                 var downloadPath = new FilePath(
                     Path.Combine(
                         settingsManager.ModelsDirectory,
-                        sharedFolderType.GetDescription() ?? sharedFolderType.ToString(),
+                        sharedFolderType.ToString(),
                         viewModel.Item.Subfolder ?? string.Empty,
                         file
                     )

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.7.7
+### Added
+- Added ComfyUI launch argument configs: Cross Attention Method, Force Floating Point Precision, VAE Precision
 ### Changed
 - Python Packages install dialog now allows entering multiple arguments or option flags
 

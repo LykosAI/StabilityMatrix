@@ -2,6 +2,7 @@
 using System.IO.Compression;
 using NLog;
 using Octokit;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Database;
@@ -147,10 +148,24 @@ public abstract class BaseGitPackage : BasePackage
             await VenvRunner.DisposeAsync().ConfigureAwait(false);
         }
 
+        // Set additional required environment variables
+        var env = new Dictionary<string, string>();
+        if (SettingsManager.Settings.EnvironmentVariables is not null)
+        {
+            env.Update(SettingsManager.Settings.EnvironmentVariables);
+        }
+
+        if (Compat.IsWindows)
+        {
+            var tkPath = Path.Combine(SettingsManager.LibraryDir, "Assets", "Python310", "tcl", "tcl8.6");
+            env["TCL_LIBRARY"] = tkPath;
+            env["TK_LIBRARY"] = tkPath;
+        }
+
         VenvRunner = new PyVenvRunner(venvPath)
         {
             WorkingDirectory = installedPackagePath,
-            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
+            EnvironmentVariables = env
         };
 
         if (!VenvRunner.Exists() || forceRecreate)

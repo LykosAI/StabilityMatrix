@@ -114,7 +114,8 @@ public class ComfyUI(
             {
                 Name = "Use CPU only",
                 Type = LaunchOptionType.Bool,
-                InitialValue = !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
+                InitialValue =
+                    !Compat.IsMacOS && !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
                 Options = ["--cpu"]
             },
             new LaunchOptionDefinition

@@ -58,17 +58,19 @@ public class UriHandler
 
     public void RegisterUriScheme()
     {
+        // Not supported on macos
+
         if (Compat.IsWindows)
         {
             RegisterUriSchemeWin();
         }
         else if (Compat.IsLinux)
         {
-            // Try to register on unix but ignore errors
+            // Try to register on linux but ignore errors
             // Library does not support some distros
             try
             {
-                RegisterUriSchemeUnix();
+                RegisterUriSchemeLinux();
             }
             catch (Exception e)
             {
@@ -98,9 +100,14 @@ public class UriHandler
         }
     }
 
-    private void RegisterUriSchemeUnix()
+    [SupportedOSPlatform("linux")]
+    private void RegisterUriSchemeLinux()
     {
-        var service = URISchemeServiceFactory.GetURISchemeSerivce(Scheme, Description, Compat.AppCurrentPath.FullPath);
+        var service = URISchemeServiceFactory.GetURISchemeSerivce(
+            Scheme,
+            Description,
+            Compat.AppCurrentPath.FullPath
+        );
         service.Set();
     }
 }

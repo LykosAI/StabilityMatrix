@@ -29,7 +29,9 @@ public record PipShowResult
         // Decode each line by splitting on first ":" to key and value
         var lines = output
             .SplitLines(StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .Select(line => line.Split(new[] { ':' }, 2))
+            // Filter warning lines
+            .Where(line => !line.StartsWith("WARNING", StringComparison.OrdinalIgnoreCase))
+            .Select(line => line.Split(':', 2))
             .Where(split => split.Length == 2)
             .Select(split => new KeyValuePair<string, string>(split[0].Trim(), split[1].Trim()))
             .ToDictionary(pair => pair.Key, pair => pair.Value);
@@ -46,11 +48,11 @@ public record PipShowResult
             Location = lines.GetValueOrDefault("Location"),
             Requires = lines
                 .GetValueOrDefault("Requires")
-                ?.Split(new[] { ',' }, StringSplitOptions.TrimEntries)
+                ?.Split(',', StringSplitOptions.TrimEntries)
                 .ToList(),
             RequiredBy = lines
                 .GetValueOrDefault("Required-by")
-                ?.Split(new[] { ',' }, StringSplitOptions.TrimEntries)
+                ?.Split(',', StringSplitOptions.TrimEntries)
                 .ToList()
         };
     }

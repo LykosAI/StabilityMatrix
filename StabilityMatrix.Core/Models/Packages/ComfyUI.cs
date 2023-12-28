@@ -131,6 +131,13 @@ public class ComfyUI(
             },
             new LaunchOptionDefinition
             {
+                Name = "Force Floating Point Precision",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS ? "--force-fp16" : null,
+                Options = ["--force-fp32", "--force-fp16"]
+            },
+            new LaunchOptionDefinition
+            {
                 Name = "Disable Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),

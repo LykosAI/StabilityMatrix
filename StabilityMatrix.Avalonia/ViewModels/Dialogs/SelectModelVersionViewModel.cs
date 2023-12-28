@@ -90,15 +90,13 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
             CanGoToNextImage = allImages.Count > 1;
         }
 
-        Dispatcher
-            .UIThread
-            .Post(() =>
-            {
-                CanGoToPreviousImage = false;
-                SelectedFile = SelectedVersionViewModel?.CivitFileViewModels.FirstOrDefault();
-                ImageUrls = new ObservableCollection<ImageSource>(allImages);
-                SelectedImageIndex = 0;
-            });
+        Dispatcher.UIThread.Post(() =>
+        {
+            CanGoToPreviousImage = false;
+            SelectedFile = SelectedVersionViewModel?.CivitFileViewModels.FirstOrDefault();
+            ImageUrls = new ObservableCollection<ImageSource>(allImages);
+            SelectedImageIndex = 0;
+        });
     }
 
     partial void OnSelectedFileChanged(CivitFileViewModel? value)

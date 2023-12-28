@@ -2,33 +2,36 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:mocks="using:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
     <Design.PreviewWith>
-        <Panel Width="400" Height="600">
-            <Panel Width="350" Height="200" />
+        <Panel Width="250" Height="600">
+            <StackPanel Margin="8" Spacing="4">
+                <ui:FAComboBox
+                    HorizontalAlignment="Stretch"
+                    SelectedIndex="0"
+                    Theme="{DynamicResource FAComboBoxHybridModelTheme}"
+                    ItemsSource="{x:Static mocks:DesignData.SampleHybridModels}"/>
+            </StackPanel>
         </Panel>
     </Design.PreviewWith>
-    
+
     <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
     <ControlTheme
         x:Key="FAComboBoxItemHybridModelTheme"
         BasedOn="{StaticResource {x:Type ui:FAComboBoxItem}}"
         TargetType="ui:FAComboBoxItem">
-        <!--<Setter Property="ContentTemplate">
-            <DataTemplate DataType="models:HybridModelFile">
-                <StackPanel>
-                    <TextBlock Text="{Binding ShortDisplayName}" TextTrimming="CharacterEllipsis" />
-                </StackPanel>
-            </DataTemplate>
-        </Setter>-->
         <Setter Property="ToolTip.Placement" Value="RightEdgeAlignedTop" />
         <Setter Property="ToolTip.Tip">
             <Template>
-                <StackPanel
+                <sg:SpacedGrid
                     x:DataType="models:HybridModelFile"
-                    Orientation="Horizontal"
-                    Spacing="6">
+                    ColumnDefinitions="Auto,*"
+                    ColumnSpacing="6"
+                    RowSpacing="0">
                     <!--  Image  -->
                     <controls:BetterAdvancedImage
                         Width="64"
@@ -39,10 +42,7 @@
                         Source="{Binding Local.PreviewImageFullPathGlobal, FallbackValue=''}"
                         Stretch="UniformToFill"
                         StretchDirection="Both" />
-                    <Grid
-                        MaxWidth="300"
-                        VerticalAlignment="Stretch"
-                        RowDefinitions="Auto,Auto,*">
+                    <StackPanel Grid.Column="1" MaxWidth="300">
                         <!--  Title  -->
                         <TextBlock
                             Margin="0,0,0,4"
@@ -51,32 +51,30 @@
                             FontWeight="Medium"
                             Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                             IsVisible="{Binding Local.ConnectedModelInfo, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
-                            Text="{Binding Local.ConnectedModelInfo.ModelName, FallbackValue=''}"
+                            Text="{Binding Local.DisplayModelName}"
                             TextWrapping="WrapWithOverflow" />
                         <!--  Version  -->
                         <TextBlock
-                            Grid.Row="1"
                             Margin="0,0,0,8"
                             HorizontalAlignment="Left"
                             FontSize="13"
                             Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                             IsVisible="{Binding Local.ConnectedModelInfo, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
-                            Text="{Binding Local.ConnectedModelInfo.VersionName, FallbackValue=''}"
+                            Text="{Binding Local.DisplayModelVersion}"
                             TextWrapping="WrapWithOverflow" />
                         <!--  Path  -->
                         <TextBlock
-                            Grid.Row="2"
                             HorizontalAlignment="Left"
                             FontSize="13"
                             Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                             Text="{Binding FileName}"
                             TextWrapping="Wrap" />
-                    </Grid>
-                </StackPanel>
+                    </StackPanel>
+                </sg:SpacedGrid>
             </Template>
         </Setter>
     </ControlTheme>
-    
+
     <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
     <ControlTheme x:Key="FAComboBoxHybridModelTheme"
                   TargetType="ui:FAComboBox"
@@ -88,7 +86,7 @@
                 </StackPanel>
             </DataTemplate>
         </Setter>
-        <Setter Property="ItemContainerTheme" Value="{StaticResource FAComboBoxItemHybridModelTheme}"/>
+        <Setter Property="ItemContainerTheme" Value="{StaticResource FAComboBoxItemHybridModelTheme}" />
     </ControlTheme>
-    
+
 </ResourceDictionary>

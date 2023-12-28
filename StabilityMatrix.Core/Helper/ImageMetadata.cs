@@ -1,7 +1,12 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using System.Text.Json;
+using ExifLibrary;
 using MetadataExtractor;
+using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.Png;
+using MetadataExtractor.Formats.WebP;
+using Microsoft.VisualBasic;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -13,9 +18,12 @@ public class ImageMetadata
 {
     private IReadOnlyList<Directory>? Directories { get; set; }
 
-    private static readonly byte[] PngHeader = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+    private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
     private static readonly byte[] Idat = "IDAT"u8.ToArray();
     private static readonly byte[] Text = "tEXt"u8.ToArray();
+
+    private static readonly byte[] Riff = "RIFF"u8.ToArray();
+    private static readonly byte[] Webp = "WEBP"u8.ToArray();
 
     public static ImageMetadata ParseFile(FilePath path)
     {
@@ -73,6 +81,14 @@ public class ImageMetadata
         string? ComfyNodes
     ) GetAllFileMetadata(FilePath filePath)
     {
+        if (filePath.Extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
+        {
+            var paramsJson = ReadTextChunkFromWebp(filePath, ExifDirectoryBase.TagImageDescription);
+            var smProj = ReadTextChunkFromWebp(filePath, ExifDirectoryBase.TagSoftware);
+
+            return (null, paramsJson, smProj, null);
+        }
+
         using var stream = filePath.Info.OpenRead();
         using var reader = new BinaryReader(stream);
 
@@ -226,5 +242,131 @@ public class ImageMetadata
         memoryStream.Write([0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]);
         memoryStream.Position = 0;
         return memoryStream;
+    }
+
+    /// <summary>
+    /// Reads an EXIF tag from a webp file and returns the value as string
+    /// </summary>
+    /// <param name="filePath">The webp file to read EXIF data from</param>
+    /// <param name="exifTag">Use <see cref="ExifDirectoryBase"/> constants for the tag you'd like to search for</param>
+    /// <returns></returns>
+    public static string ReadTextChunkFromWebp(FilePath filePath, int exifTag)
+    {
+        var exifDirs = WebPMetadataReader.ReadMetadata(filePath).OfType<ExifIfd0Directory>().FirstOrDefault();
+        return exifDirs is null ? string.Empty : exifDirs.GetString(exifTag) ?? string.Empty;
+    }
+
+    public static IEnumerable<byte> AddMetadataToWebp(
+        byte[] inputImage,
+        Dictionary<ExifTag, string> exifTagData
+    )
+    {
+        using var byteStream = new BinaryReader(new MemoryStream(inputImage));
+        byteStream.BaseStream.Position = 0;
+
+        // Read first 8 bytes and make sure they match the RIFF header
+        if (!byteStream.ReadBytes(4).SequenceEqual(Riff))
+        {
+            return Array.Empty<byte>();
+        }
+
+        // skip 4 bytes then read next 4 for webp header
+        byteStream.BaseStream.Position += 4;
+        if (!byteStream.ReadBytes(4).SequenceEqual(Webp))
+        {
+            return Array.Empty<byte>();
+        }
+
+        while (byteStream.BaseStream.Position < byteStream.BaseStream.Length - 4)
+        {
+            var chunkType = Encoding.UTF8.GetString(byteStream.ReadBytes(4));
+            var chunkSize = BitConverter.ToInt32(byteStream.ReadBytes(4).ToArray());
+
+            if (chunkType != "EXIF")
+            {
+                // skip chunk data
+                byteStream.BaseStream.Position += chunkSize;
+                continue;
+            }
+
+            var exifStart = byteStream.BaseStream.Position - 8;
+            var exifBytes = byteStream.ReadBytes(chunkSize);
+            Debug.WriteLine($"Found exif chunk of size {chunkSize}");
+
+            using var stream = new MemoryStream(exifBytes[6..]);
+            var img = new MyTiffFile(stream, Encoding.UTF8);
+
+            foreach (var (key, value) in exifTagData)
+            {
+                img.Properties.Set(key, value);
+            }
+
+            using var newStream = new MemoryStream();
+            img.Save(newStream);
+            newStream.Seek(0, SeekOrigin.Begin);
+            var newExifBytes = exifBytes[..6].Concat(newStream.ToArray());
+            var newExifSize = newExifBytes.Count();
+            var newChunkSize = BitConverter.GetBytes(newExifSize);
+            var newChunk = "EXIF"u8.ToArray().Concat(newChunkSize).Concat(newExifBytes).ToArray();
+
+            var inputEndIndex = (int)exifStart;
+            var newImage = inputImage[..inputEndIndex].Concat(newChunk).ToArray();
+
+            // webp or tiff or something requires even number of bytes
+            if (newImage.Length % 2 != 0)
+            {
+                newImage = newImage.Concat(new byte[] { 0x00 }).ToArray();
+            }
+
+            // no clue why the minus 8 is needed but it is
+            var newImageSize = BitConverter.GetBytes(newImage.Length - 8);
+            newImage[4] = newImageSize[0];
+            newImage[5] = newImageSize[1];
+            newImage[6] = newImageSize[2];
+            newImage[7] = newImageSize[3];
+            return newImage;
+        }
+
+        return Array.Empty<byte>();
+    }
+
+    private static byte[] GetExifChunks(FilePath imagePath)
+    {
+        using var byteStream = new BinaryReader(File.OpenRead(imagePath));
+        byteStream.BaseStream.Position = 0;
+
+        // Read first 8 bytes and make sure they match the RIFF header
+        if (!byteStream.ReadBytes(4).SequenceEqual(Riff))
+        {
+            return Array.Empty<byte>();
+        }
+
+        // skip 4 bytes then read next 4 for webp header
+        byteStream.BaseStream.Position += 4;
+        if (!byteStream.ReadBytes(4).SequenceEqual(Webp))
+        {
+            return Array.Empty<byte>();
+        }
+
+        while (byteStream.BaseStream.Position < byteStream.BaseStream.Length - 4)
+        {
+            var chunkType = Encoding.UTF8.GetString(byteStream.ReadBytes(4));
+            var chunkSize = BitConverter.ToInt32(byteStream.ReadBytes(4).ToArray());
+
+            if (chunkType != "EXIF")
+            {
+                // skip chunk data
+                byteStream.BaseStream.Position += chunkSize;
+                continue;
+            }
+
+            var exifStart = byteStream.BaseStream.Position;
+            var exifBytes = byteStream.ReadBytes(chunkSize);
+            var exif = Encoding.UTF8.GetString(exifBytes);
+            Debug.WriteLine($"Found exif chunk of size {chunkSize}");
+            return exifBytes;
+        }
+
+        return Array.Empty<byte>();
     }
 }

@@ -93,6 +93,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
             ? Resources.Label_OneImageSelected
             : string.Format(Resources.Label_NumImagesSelected, NumItemsSelected);
 
+    private string[] allowedExtensions = [".png", ".webp"];
+
     public OutputsPageViewModel(
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
@@ -313,6 +315,18 @@ public partial class OutputsPageViewModel : PageViewModelBase
         EventManager.Instance.OnInferenceUpscaleRequested(vm.ImageFile);
     }
 
+    public void SendToImageToImage(OutputImageViewModel vm)
+    {
+        navigationService.NavigateTo<InferenceViewModel>();
+        EventManager.Instance.OnInferenceImageToImageRequested(vm.ImageFile);
+    }
+
+    public void SendToImageToVideo(OutputImageViewModel vm)
+    {
+        navigationService.NavigateTo<InferenceViewModel>();
+        EventManager.Instance.OnInferenceImageToVideoRequested(vm.ImageFile);
+    }
+
     public void ClearSelection()
     {
         foreach (var output in Outputs)
@@ -434,11 +448,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
             var directory = category.Tag.ToString();
 
-            foreach (var path in Directory.EnumerateFiles(directory, "*.png", SearchOption.AllDirectories))
+            foreach (var path in Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories))
             {
                 try
                 {
                     var file = new FilePath(path);
+                    if (!allowedExtensions.Contains(file.Extension))
+                        continue;
+
                     var newPath = settingsManager.ConsolidatedImagesDirectory + file.Name;
                     if (file.FullPath == newPath)
                         continue;
@@ -496,7 +513,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
         }
 
         var files = Directory
-            .EnumerateFiles(directory, "*.png", SearchOption.AllDirectories)
+            .EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
+            .Where(path => allowedExtensions.Contains(new FilePath(path).Extension))
             .Select(file => LocalImageFile.FromPath(file))
             .ToList();
 

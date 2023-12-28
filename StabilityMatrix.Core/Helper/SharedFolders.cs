@@ -35,9 +35,7 @@ public class SharedFolders : ISharedFolders
         else
         {
             // Create parent directory if it doesn't exist, since CreateSymbolicLink doesn't seem to
-            new DirectoryPath(junctionDir)
-                .Parent
-                ?.Create();
+            new DirectoryPath(junctionDir).Parent?.Create();
             Directory.CreateSymbolicLink(junctionDir, targetDir);
         }
     }
@@ -195,7 +193,10 @@ public class SharedFolders : ISharedFolders
 
                 var sharedFolderMethod =
                     package.PreferredSharedFolderMethod ?? basePackage.RecommendedSharedFolderMethod;
-                basePackage.RemoveModelFolderLinks(package.FullPath, sharedFolderMethod).GetAwaiter().GetResult();
+                basePackage
+                    .RemoveModelFolderLinks(package.FullPath, sharedFolderMethod)
+                    .GetAwaiter()
+                    .GetResult();
             }
             catch (Exception e)
             {

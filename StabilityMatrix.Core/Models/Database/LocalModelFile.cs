@@ -30,6 +30,11 @@ public class LocalModelFile
     public string? PreviewImageRelativePath { get; set; }
 
     /// <summary>
+    /// Optional preview image full path. Takes priority over <see cref="PreviewImageRelativePath"/>.
+    /// </summary>
+    public string? PreviewImageFullPath { get; set; }
+
+    /// <summary>
     /// File name of the relative path.
     /// </summary>
     [BsonIgnore]
@@ -45,7 +50,8 @@ public class LocalModelFile
     /// Relative file path from the shared folder type model directory.
     /// </summary>
     [BsonIgnore]
-    public string RelativePathFromSharedFolder => Path.GetRelativePath(SharedFolderType.GetStringValue(), RelativePath);
+    public string RelativePathFromSharedFolder =>
+        Path.GetRelativePath(SharedFolderType.GetStringValue(), RelativePath);
 
     public string GetFullPath(string rootModelDirectory)
     {
@@ -54,14 +60,29 @@ public class LocalModelFile
 
     public string? GetPreviewImageFullPath(string rootModelDirectory)
     {
-        return PreviewImageRelativePath == null ? null : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
+        if (PreviewImageFullPath != null)
+            return PreviewImageFullPath;
+
+        return PreviewImageRelativePath == null
+            ? null
+            : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
 
     [BsonIgnore]
     public string FullPathGlobal => GetFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
 
     [BsonIgnore]
-    public string? PreviewImageFullPathGlobal => GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+    public string? PreviewImageFullPathGlobal =>
+        PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+
+    [BsonIgnore]
+    public string DisplayModelName => ConnectedModelInfo?.ModelName ?? FileNameWithoutExtension;
+
+    [BsonIgnore]
+    public string DisplayModelVersion => ConnectedModelInfo?.VersionName ?? string.Empty;
+
+    [BsonIgnore]
+    public string DisplayModelFileName => FileName;
 
     protected bool Equals(LocalModelFile other)
     {
@@ -94,6 +115,6 @@ public class LocalModelFile
         ".pth",
         ".bin"
     ];
-    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".gif"];
+    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".webp"];
     public static readonly HashSet<string> SupportedMetadataExtensions = [".json"];
 }

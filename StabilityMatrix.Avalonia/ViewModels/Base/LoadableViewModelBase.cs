@@ -28,24 +28,16 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private static readonly Type[] SerializerIgnoredTypes =
-    {
-        typeof(ICommand),
-        typeof(IRelayCommand)
-    };
+    private static readonly Type[] SerializerIgnoredTypes = { typeof(ICommand), typeof(IRelayCommand) };
 
     private static readonly string[] SerializerIgnoredNames = { nameof(HasErrors) };
 
-    private static readonly JsonSerializerOptions SerializerOptions =
-        new() { IgnoreReadOnlyProperties = true };
+    private static readonly JsonSerializerOptions SerializerOptions = new() { IgnoreReadOnlyProperties = true };
 
     private static bool ShouldIgnoreProperty(PropertyInfo property)
     {
         // Skip if read-only and not IJsonLoadableState
-        if (
-            property.SetMethod is null
-            && !typeof(IJsonLoadableState).IsAssignableFrom(property.PropertyType)
-        )
+        if (property.SetMethod is null && !typeof(IJsonLoadableState).IsAssignableFrom(property.PropertyType))
         {
             Logger.ConditionalTrace("Skipping {Property} - read-only", property.Name);
             return true;
@@ -107,11 +99,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
     {
         // Get all of our properties using reflection
         var properties = GetType().GetProperties();
-        Logger.ConditionalTrace(
-            "Serializing {Type} with {Count} properties",
-            GetType(),
-            properties.Length
-        );
+        Logger.ConditionalTrace("Serializing {Type} with {Count} properties", GetType(), properties.Length);
 
         foreach (var property in properties)
         {
@@ -119,9 +107,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 
             // If JsonPropertyName provided, use that as the key
             if (
-                property
-                    .GetCustomAttributes(typeof(JsonPropertyNameAttribute), true)
-                    .FirstOrDefault()
+                property.GetCustomAttributes(typeof(JsonPropertyNameAttribute), true).FirstOrDefault()
                 is JsonPropertyNameAttribute jsonPropertyName
             )
             {
@@ -168,10 +154,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
                 if (property.GetValue(this) is not IJsonLoadableState propertyValue)
                 {
                     // If null, it must have a default constructor
-                    if (
-                        property.PropertyType.GetConstructor(Type.EmptyTypes)
-                        is not { } constructorInfo
-                    )
+                    if (property.PropertyType.GetConstructor(Type.EmptyTypes) is not { } constructorInfo)
                     {
                         throw new InvalidOperationException(
                             $"Property {property.Name} is IJsonLoadableState but current object is null and has no default constructor"
@@ -188,11 +171,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
             }
             else
             {
-                Logger.ConditionalTrace(
-                    "Loading {Property} ({Type})",
-                    property.Name,
-                    property.PropertyType
-                );
+                Logger.ConditionalTrace("Loading {Property} ({Type})", property.Name, property.PropertyType);
 
                 var propertyValue = value.Deserialize(property.PropertyType, SerializerOptions);
                 property.SetValue(this, propertyValue);
@@ -216,11 +195,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
     {
         // Get all of our properties using reflection.
         var properties = GetType().GetProperties();
-        Logger.ConditionalTrace(
-            "Serializing {Type} with {Count} properties",
-            GetType(),
-            properties.Length
-        );
+        Logger.ConditionalTrace("Serializing {Type} with {Count} properties", GetType(), properties.Length);
 
         // Create a JSON object to store the state.
         var state = new JsonObject();
@@ -237,9 +212,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 
             // If JsonPropertyName provided, use that as the key.
             if (
-                property
-                    .GetCustomAttributes(typeof(JsonPropertyNameAttribute), true)
-                    .FirstOrDefault()
+                property.GetCustomAttributes(typeof(JsonPropertyNameAttribute), true).FirstOrDefault()
                 is JsonPropertyNameAttribute jsonPropertyName
             )
             {
@@ -270,11 +243,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
             }
             else
             {
-                Logger.ConditionalTrace(
-                    "Serializing {Property} ({Type})",
-                    property.Name,
-                    property.PropertyType
-                );
+                Logger.ConditionalTrace("Serializing {Property} ({Type})", property.Name, property.PropertyType);
                 var value = property.GetValue(this);
                 if (value is not null)
                 {
@@ -297,8 +266,7 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
     protected static JsonObject SerializeModel<T>(T model)
     {
         var node = JsonSerializer.SerializeToNode(model);
-        return node?.AsObject()
-            ?? throw new NullReferenceException("Failed to serialize state to JSON object.");
+        return node?.AsObject() ?? throw new NullReferenceException("Failed to serialize state to JSON object.");
     }
 
     /// <summary>

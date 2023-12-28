@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
+        <CFBundleName>Stability Matrix</CFBundleName>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
@@ -8,12 +9,19 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
-        <Version>2.7.0-pre.999</Version>
+        <Version>2.8.0-dev.999</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
+    <ItemGroup>
+        <CFBundleURLTypes Include="dummy">
+            <CFBundleURLName>StabilityMatrix.URL</CFBundleURLName>
+            <CFBundleURLSchemes>stabilitymatrix;stabilitymatrix://</CFBundleURLSchemes>
+        </CFBundleURLTypes>
+    </ItemGroup>
+    
     <ItemGroup>
         <InternalsVisibleTo Include="StabilityMatrix.Tests" />
         <InternalsVisibleTo Include="StabilityMatrix.UITests" />
@@ -41,6 +49,7 @@
         <PackageReference Include="Dock.Model.Avalonia" Version="11.0.0.5" />
         <PackageReference Include="Dock.Serializer" Version="11.0.0.5" />
         <PackageReference Include="DynamicData" Version="8.3.27" />
+        <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
         <PackageReference Include="Exceptionless.DateTimeExtensions" Version="3.4.3" />
         <PackageReference Include="FluentAvalonia.BreadcrumbBar" Version="2.0.2" />
         <PackageReference Include="FluentAvaloniaUI" Version="2.0.4" />
@@ -91,6 +100,7 @@
     </ItemGroup>
     
     <ItemGroup>
+        <ProjectReference Include="..\Avalonia.Gif\Avalonia.Gif.csproj" />
         <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
     </ItemGroup>
 
@@ -141,6 +151,18 @@
         <DesignTime>True</DesignTime>
         <AutoGen>True</AutoGen>
         <DependentUpon>Resources.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Views\Inference\InferenceImageToVideoView.axaml.cs">
+        <DependentUpon>InferenceImageToVideoView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\VideoGenerationSettingsCard.axaml.cs">
+        <DependentUpon>VideoGenerationSettingsCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\VideoOutputSettingsCard.axaml.cs">
+        <DependentUpon>VideoOutputSettingsCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
       </Compile>
     </ItemGroup>
 

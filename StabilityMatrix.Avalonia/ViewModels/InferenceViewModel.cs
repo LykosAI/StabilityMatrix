@@ -53,7 +53,8 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private readonly ILiteDbContext liteDbContext;
 
     public override string Title => "Inference";
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.AppGeneric, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.AppGeneric, IsFilled = true };
 
     public RefreshBadgeViewModel ConnectionBadge { get; } =
         new()
@@ -110,6 +111,8 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         // "Send to Inference"
         EventManager.Instance.InferenceTextToImageRequested += OnInferenceTextToImageRequested;
         EventManager.Instance.InferenceUpscaleRequested += OnInferenceUpscaleRequested;
+        EventManager.Instance.InferenceImageToImageRequested += OnInferenceImageToImageRequested;
+        EventManager.Instance.InferenceImageToVideoRequested += OnInferenceImageToVideoRequested;
 
         MenuSaveAsCommand.WithConditionalNotificationErrorHandler(notificationService);
         MenuOpenProjectCommand.WithConditionalNotificationErrorHandler(notificationService);
@@ -126,47 +129,43 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         IDisposable? onStartupComplete = null;
 
-        Dispatcher
-            .UIThread
-            .Post(() =>
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (e.CurrentPackagePair?.BasePackage is ComfyUI package)
             {
-                if (e.CurrentPackagePair?.BasePackage is ComfyUI package)
-                {
-                    IsWaitingForConnection = true;
-                    onStartupComplete = Observable
-                        .FromEventPattern<string>(package, nameof(package.StartupComplete))
-                        .Take(1)
-                        .Subscribe(_ =>
-                        {
-                            Dispatcher
-                                .UIThread
-                                .Post(() =>
-                                {
-                                    if (ConnectCommand.CanExecute(null))
-                                    {
-                                        Logger.Trace("On package launch - starting connection");
-                                        ConnectCommand.Execute(null);
-                                    }
-                                    IsWaitingForConnection = false;
-                                });
-                        });
-                }
-                else
-                {
-                    // Cancel any pending connection
-                    if (ConnectCancelCommand.CanExecute(null))
+                IsWaitingForConnection = true;
+                onStartupComplete = Observable
+                    .FromEventPattern<string>(package, nameof(package.StartupComplete))
+                    .Take(1)
+                    .Subscribe(_ =>
                     {
-                        ConnectCancelCommand.Execute(null);
-                    }
-                    onStartupComplete?.Dispose();
-                    onStartupComplete = null;
-                    IsWaitingForConnection = false;
-
-                    // Disconnect
-                    Logger.Trace("On package close - disconnecting");
-                    DisconnectCommand.Execute(null);
+                        Dispatcher.UIThread.Post(() =>
+                        {
+                            if (ConnectCommand.CanExecute(null))
+                            {
+                                Logger.Trace("On package launch - starting connection");
+                                ConnectCommand.Execute(null);
+                            }
+                            IsWaitingForConnection = false;
+                        });
+                    });
+            }
+            else
+            {
+                // Cancel any pending connection
+                if (ConnectCancelCommand.CanExecute(null))
+                {
+                    ConnectCancelCommand.Execute(null);
                 }
-            });
+                onStartupComplete?.Dispose();
+                onStartupComplete = null;
+                IsWaitingForConnection = false;
+
+                // Disconnect
+                Logger.Trace("On package close - disconnecting");
+                DisconnectCommand.Execute(null);
+            }
+        });
     }
 
     public override void OnLoaded()
@@ -216,9 +215,14 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                     );
 
                     // Set not open
-                    await liteDbContext
-                        .InferenceProjects
-                        .UpdateAsync(project with { IsOpen = false, IsSelected = false, CurrentTabIndex = -1 });
+                    await liteDbContext.InferenceProjects.UpdateAsync(
+                        project with
+                        {
+                            IsOpen = false,
+                            IsSelected = false,
+                            CurrentTabIndex = -1
+                        }
+                    );
                 }
             }
         }
@@ -249,6 +253,16 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         Dispatcher.UIThread.Post(() => AddUpscalerTabFromImage(e).SafeFireAndForget());
     }
 
+    private void OnInferenceImageToImageRequested(object? sender, LocalImageFile e)
+    {
+        Dispatcher.UIThread.Post(() => AddImageToImageFromImage(e).SafeFireAndForget());
+    }
+
+    private void OnInferenceImageToVideoRequested(object? sender, LocalImageFile e)
+    {
+        Dispatcher.UIThread.Post(() => AddImageToVideoFromImage(e).SafeFireAndForget());
+    }
+
     /// <summary>
     /// Update the database with current tabs
     /// </summary>
@@ -272,7 +286,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             entry.IsOpen = tab == SelectedTab;
             entry.CurrentTabIndex = i;
 
-            Logger.Trace("SyncTabStatesWithDatabase updated entry for tab '{Title}': {@Entry}", tab.TabTitle, entry);
+            Logger.Trace(
+                "SyncTabStatesWithDatabase updated entry for tab '{Title}': {@Entry}",
+                tab.TabTitle,
+                entry
+            );
             await liteDbContext.InferenceProjects.UpsertAsync(entry);
         }
     }
@@ -287,7 +305,9 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             return;
         }
 
-        var entry = await liteDbContext.InferenceProjects.FindOneAsync(p => p.FilePath == projectFile.ToString());
+        var entry = await liteDbContext.InferenceProjects.FindOneAsync(
+            p => p.FilePath == projectFile.ToString()
+        );
 
         // Create if not found
         entry ??= new InferenceProjectEntry { Id = Guid.NewGuid(), FilePath = projectFile.ToString() };
@@ -295,7 +315,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         entry.IsOpen = tab == SelectedTab;
         entry.CurrentTabIndex = Tabs.IndexOf(tab);
 
-        Logger.Trace("SyncTabStatesWithDatabase updated entry for tab '{Title}': {@Entry}", tab.TabTitle, entry);
+        Logger.Trace(
+            "SyncTabStatesWithDatabase updated entry for tab '{Title}': {@Entry}",
+            tab.TabTitle,
+            entry
+        );
         await liteDbContext.InferenceProjects.UpsertAsync(entry);
     }
 
@@ -408,7 +432,10 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             return;
         }
 
-        await notificationService.TryAsync(ClientManager.CloseAsync(), "Could not disconnect from ComfyUI backend");
+        await notificationService.TryAsync(
+            ClientManager.CloseAsync(),
+            "Could not disconnect from ComfyUI backend"
+        );
     }
 
     /// <summary>
@@ -464,7 +491,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             await using var stream = await result.OpenWriteAsync();
             stream.SetLength(0); // Overwrite fully
 
-            await JsonSerializer.SerializeAsync(stream, document, new JsonSerializerOptions { WriteIndented = true });
+            await JsonSerializer.SerializeAsync(
+                stream,
+                document,
+                new JsonSerializerOptions { WriteIndented = true }
+            );
         }
         catch (Exception e)
         {
@@ -512,7 +543,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             await using var stream = projectFile.Info.OpenWrite();
             stream.SetLength(0); // Overwrite fully
 
-            await JsonSerializer.SerializeAsync(stream, document, new JsonSerializerOptions { WriteIndented = true });
+            await JsonSerializer.SerializeAsync(
+                stream,
+                document,
+                new JsonSerializerOptions { WriteIndented = true }
+            );
         }
         catch (Exception e)
         {
@@ -620,6 +655,46 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         Tabs.Add(upscaleVm);
         SelectedTab = upscaleVm;
+
+        await SyncTabStatesWithDatabase();
+    }
+
+    private async Task AddImageToImageFromImage(LocalImageFile imageFile)
+    {
+        var imgToImgVm = vmFactory.Get<InferenceImageToImageViewModel>();
+
+        if (!imageFile.FileName.EndsWith("webp"))
+        {
+            imgToImgVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
+        }
+
+        if (imageFile.GenerationParameters != null)
+        {
+            imgToImgVm.LoadStateFromParameters(imageFile.GenerationParameters);
+        }
+
+        Tabs.Add(imgToImgVm);
+        SelectedTab = imgToImgVm;
+
+        await SyncTabStatesWithDatabase();
+    }
+
+    private async Task AddImageToVideoFromImage(LocalImageFile imageFile)
+    {
+        var imgToVidVm = vmFactory.Get<InferenceImageToVideoViewModel>();
+
+        if (imageFile.GenerationParameters != null && imageFile.FileName.EndsWith("webp"))
+        {
+            imgToVidVm.LoadStateFromParameters(imageFile.GenerationParameters);
+        }
+
+        if (!imageFile.FileName.EndsWith("webp"))
+        {
+            imgToVidVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
+        }
+
+        Tabs.Add(imgToVidVm);
+        SelectedTab = imgToVidVm;
 
         await SyncTabStatesWithDatabase();
     }

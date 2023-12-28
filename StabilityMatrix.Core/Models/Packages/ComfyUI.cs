@@ -138,6 +138,12 @@ public class ComfyUI(
             },
             new LaunchOptionDefinition
             {
+                Name = "VAE Precision",
+                Type = LaunchOptionType.Bool,
+                Options = ["--fp16-vae", "--fp32-vae", "--bf16-vae"]
+            },
+            new LaunchOptionDefinition
+            {
                 Name = "Disable Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),

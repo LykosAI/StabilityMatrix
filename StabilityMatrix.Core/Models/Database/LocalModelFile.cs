@@ -6,13 +6,13 @@ namespace StabilityMatrix.Core.Models.Database;
 /// <summary>
 /// Represents a locally indexed model file.
 /// </summary>
-public class LocalModelFile
+public record LocalModelFile
 {
     /// <summary>
     /// Relative path to the file from the root model directory.
     /// </summary>
     [BsonId]
-    public required string RelativePath { get; set; }
+    public required string RelativePath { get; init; }
 
     /// <summary>
     /// Type of the model file.
@@ -53,6 +53,31 @@ public class LocalModelFile
     public string RelativePathFromSharedFolder =>
         Path.GetRelativePath(SharedFolderType.GetStringValue(), RelativePath);
 
+    /// <summary>
+    /// Blake3 hash of the file.
+    /// </summary>
+    public string? HashBlake3 => ConnectedModelInfo?.Hashes.BLAKE3;
+
+    [BsonIgnore]
+    public string FullPathGlobal => GetFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+
+    [BsonIgnore]
+    public string? PreviewImageFullPathGlobal =>
+        PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+
+    [BsonIgnore]
+    public Uri? PreviewImageUriGlobal =>
+        PreviewImageFullPathGlobal == null ? null : new Uri(PreviewImageFullPathGlobal);
+
+    [BsonIgnore]
+    public string DisplayModelName => ConnectedModelInfo?.ModelName ?? FileNameWithoutExtension;
+
+    [BsonIgnore]
+    public string DisplayModelVersion => ConnectedModelInfo?.VersionName ?? string.Empty;
+
+    [BsonIgnore]
+    public string DisplayModelFileName => FileName;
+
     public string GetFullPath(string rootModelDirectory)
     {
         return Path.Combine(rootModelDirectory, RelativePath);
@@ -68,23 +93,7 @@ public class LocalModelFile
             : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
 
-    [BsonIgnore]
-    public string FullPathGlobal => GetFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
-
-    [BsonIgnore]
-    public string? PreviewImageFullPathGlobal =>
-        PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
-
-    [BsonIgnore]
-    public string DisplayModelName => ConnectedModelInfo?.ModelName ?? FileNameWithoutExtension;
-
-    [BsonIgnore]
-    public string DisplayModelVersion => ConnectedModelInfo?.VersionName ?? string.Empty;
-
-    [BsonIgnore]
-    public string DisplayModelFileName => FileName;
-
-    protected bool Equals(LocalModelFile other)
+    /*protected bool Equals(LocalModelFile other)
     {
         return RelativePath == other.RelativePath;
     }
@@ -105,7 +114,7 @@ public class LocalModelFile
     public override int GetHashCode()
     {
         return RelativePath.GetHashCode();
-    }
+    }*/
 
     public static readonly HashSet<string> SupportedCheckpointExtensions =
     [

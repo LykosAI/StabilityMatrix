@@ -40,14 +40,16 @@ public class KohyaSs(
 
     public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.Cuda;
 
-    public override string Disclaimer => "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
+    public override string Disclaimer =>
+        "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.UltraNightmare;
 
     public override bool OfferInOneClickInstaller => false;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
-    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[] { TorchVersion.Cuda };
-    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => new[] { SharedFolderMethod.None };
+    public override IEnumerable<TorchVersion> AvailableTorchVersions => [TorchVersion.Cuda];
+    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
+        new[] { SharedFolderMethod.None };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
@@ -189,7 +191,9 @@ public class KohyaSs(
                 """
             );
 
-            var replacementAcceleratePath = Compat.IsWindows ? @".\venv\scripts\accelerate" : "./venv/bin/accelerate";
+            var replacementAcceleratePath = Compat.IsWindows
+                ? @".\venv\scripts\accelerate"
+                : "./venv/bin/accelerate";
 
             var replacer = scope.InvokeMethod(
                 "StringReplacer",
@@ -238,7 +242,6 @@ public class KohyaSs(
 
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
-        VenvRunner.EnvironmentVariables = GetEnvVars(installedPackagePath);
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
     }
 
@@ -246,23 +249,4 @@ public class KohyaSs(
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
 
     public override string MainBranch => "master";
-
-    private Dictionary<string, string> GetEnvVars(string installDirectory)
-    {
-        // Set additional required environment variables
-        var env = new Dictionary<string, string>();
-        if (SettingsManager.Settings.EnvironmentVariables is not null)
-        {
-            env.Update(SettingsManager.Settings.EnvironmentVariables);
-        }
-
-        if (!Compat.IsWindows)
-            return env;
-
-        var tkPath = Path.Combine(SettingsManager.LibraryDir, "Assets", "Python310", "tcl", "tcl8.6");
-        env["TCL_LIBRARY"] = tkPath;
-        env["TK_LIBRARY"] = tkPath;
-
-        return env;
-    }
 }

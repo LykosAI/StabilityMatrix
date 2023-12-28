@@ -119,6 +119,18 @@ public class ComfyUI(
             },
             new LaunchOptionDefinition
             {
+                Name = "Cross Attention Method",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS ? "--use-pytorch-cross-attention" : null,
+                Options =
+                [
+                    "--use-split-cross-attention",
+                    "--use-quad-cross-attention",
+                    "--use-pytorch-cross-attention"
+                ]
+            },
+            new LaunchOptionDefinition
+            {
                 Name = "Disable Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),

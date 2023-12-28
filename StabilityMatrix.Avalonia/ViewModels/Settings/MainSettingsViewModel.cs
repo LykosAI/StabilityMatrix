@@ -48,6 +48,7 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Python;
@@ -752,6 +753,71 @@ public partial class MainSettingsViewModel : PageViewModelBase
             download.Start();
         }
     }
+    #endregion
+
+    #region Debug Commands
+
+    public CommandItem[] DebugCommands => [new CommandItem(DebugFindLocalModelFromIndexCommand)];
+
+    [RelayCommand]
+    private async Task DebugFindLocalModelFromIndex()
+    {
+        var textFields = new TextBoxField[]
+        {
+            new() { Label = "Blake3 Hash" },
+            new() { Label = "SharedFolderType" }
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("Find Local Model", "", textFields);
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            Func<Task<IEnumerable<LocalModelFile>>> modelGetter;
+
+            if (textFields.ElementAtOrDefault(0)?.Text is { } hash && !string.IsNullOrWhiteSpace(hash))
+            {
+                modelGetter = () => modelIndexService.FindByHashAsync(hash);
+            }
+            else if (textFields.ElementAtOrDefault(1)?.Text is { } type && !string.IsNullOrWhiteSpace(type))
+            {
+                modelGetter = () => modelIndexService.FindAsync(Enum.Parse<SharedFolderType>(type));
+            }
+            else
+            {
+                return;
+            }
+
+            var timer = Stopwatch.StartNew();
+
+            var result = (await modelGetter()).ToImmutableArray();
+
+            timer.Stop();
+
+            if (result.Length != 0)
+            {
+                await DialogHelper
+                    .CreateMarkdownDialog(
+                        string.Join(
+                            "\n\n",
+                            result.Select(
+                                (model, i) =>
+                                    $"[{i + 1}] {model.RelativePath.ToRepr()} "
+                                    + $"({model.DisplayModelName}, {model.DisplayModelVersion})"
+                            )
+                        ),
+                        $"Found Models ({CodeTimer.FormatTime(timer.Elapsed)})"
+                    )
+                    .ShowAsync();
+            }
+            else
+            {
+                await DialogHelper
+                    .CreateMarkdownDialog(":(", $"No models found ({CodeTimer.FormatTime(timer.Elapsed)})")
+                    .ShowAsync();
+            }
+        }
+    }
+
     #endregion
 
     #region Info Section

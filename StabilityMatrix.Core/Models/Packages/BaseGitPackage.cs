@@ -319,7 +319,7 @@ public abstract class BaseGitPackage : BasePackage
         {
             progress?.Report(new ProgressReport(-1f, "Fetching tags...", isIndeterminate: true));
             await PrerequisiteHelper
-                .RunGit(new[] { "fetch", "--tags" }, onConsoleOutput, installedPackage.FullPath)
+                .RunGit(new[] { "fetch", "--tags", "--force" }, onConsoleOutput, installedPackage.FullPath)
                 .ConfigureAwait(false);
 
             progress?.Report(
@@ -353,7 +353,7 @@ public abstract class BaseGitPackage : BasePackage
         // fetch
         progress?.Report(new ProgressReport(-1f, "Fetching data...", isIndeterminate: true));
         await PrerequisiteHelper
-            .RunGit("fetch", onConsoleOutput, installedPackage.FullPath)
+            .RunGit(new[] { "fetch", "--force" }, onConsoleOutput, installedPackage.FullPath)
             .ConfigureAwait(false);
 
         if (versionOptions.IsLatest)

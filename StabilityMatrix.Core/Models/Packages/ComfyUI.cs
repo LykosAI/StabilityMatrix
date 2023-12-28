@@ -114,8 +114,34 @@ public class ComfyUI(
             {
                 Name = "Use CPU only",
                 Type = LaunchOptionType.Bool,
-                InitialValue = !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
+                InitialValue =
+                    !Compat.IsMacOS && !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
                 Options = ["--cpu"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Cross Attention Method",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS ? "--use-pytorch-cross-attention" : null,
+                Options =
+                [
+                    "--use-split-cross-attention",
+                    "--use-quad-cross-attention",
+                    "--use-pytorch-cross-attention"
+                ]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Force Floating Point Precision",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS ? "--force-fp16" : null,
+                Options = ["--force-fp32", "--force-fp16"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "VAE Precision",
+                Type = LaunchOptionType.Bool,
+                Options = ["--fp16-vae", "--fp32-vae", "--bf16-vae"]
             },
             new LaunchOptionDefinition
             {

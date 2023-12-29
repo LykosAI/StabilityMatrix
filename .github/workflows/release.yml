@@ -171,7 +171,114 @@ jobs:
         with:
           name: StabilityMatrix-${{ env.platform-id }}
           path: ./out/${{ env.out-name }}
-    
+  
+  release-macos:
+    name: Release (macos-arm64)
+    env:
+      platform-id: osx-arm64
+      app-name: "Stability Matrix.app"
+      out-name: "Stability Matrix.dmg"
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: olegtarasov/get-tag@v2.1.2
+        if: github.event_name == 'release'
+        id: tag_name
+        with:
+          tagRegex: "v(.*)"
+
+      - name: Set Version from Tag
+        if: github.event_name == 'release'
+        run: |
+          echo "Using tag ${{ env.GIT_TAG_NAME }}"
+          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $env:GITHUB_ENV
+
+      - name: Set Version from manual input
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Using version ${{ github.event.inputs.version }}"
+          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: .NET Msbuild (App)
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: >
+          dotnet msbuild StabilityMatrix.Avalonia
+          -t:BundleApp -p:UseAppHost=true -p:SelfContained=true
+          -p:Configuration=Release -p:RuntimeIdentifier=${{ env.platform-id }}
+          -p:Version=$env:RELEASE_VERSION
+          -p:PublishDir=out
+          -p:PublishReadyToRun=true
+          -p:CFBundleShortVersionString=$env:RELEASE_VERSION
+          -p:CFBundleName="Stability Matrix"
+          -p:CFBundleDisplayName="Stability Matrix"
+          -p:CFBundleVersion=$env:RELEASE_VERSION
+          -p:SentryOrg=${{ secrets.SENTRY_ORG }} -p:SentryProject=${{ secrets.SENTRY_PROJECT }}
+          -p:SentryUploadSymbols=true -p:SentryUploadSources=true
+
+      - name: Post Build (App)
+        run: >
+          mkdir -p signing
+          mv "./out/Stability Matrix.app" ./signing/${{ env.app-name }}
+
+      - name: Codesign app bundle
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.PROD_MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.PROD_MACOS_CERTIFICATE_PWD }}
+          MACOS_CERTIFICATE_NAME: ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
+          MACOS_CI_KEYCHAIN_PWD: ${{ secrets.PROD_MACOS_CI_KEYCHAIN_PWD }}
+        run: ./Build/codesign_macos.sh "./signing/${{ env.app-name }}"
+
+      - name: Notarize app bundle
+        env:
+          MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_APPLE_ID }}
+          MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_TEAM_ID }}
+          MACOS_NOTARIZATION_PWD: ${{ secrets.PROD_MACOS_NOTARIZATION_PWD }}
+        run: ./Build/notarize_macos.sh "./signing/${{ env.app-name }}"
+
+      - name: Upload Artifact (App)
+        uses: actions/upload-artifact@v2
+        with:
+          name: StabilityMatrix-${{ env.platform-id }}-app
+          path: ./signing/${{ env.app-name }}
+          
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      
+      - name: Install dependencies for dmg creation
+        run: >
+          npm install --global create-dmg
+          brew install graphicsmagick imagemagick
+          
+      - name: Create dmg
+        run: >
+          cd signing
+          create-dmg ${{ env.app-name }} --overwrite --identity ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
+          # Rename to remove version number
+          for f in *.dmg; do mv "$f" "${{ env.out-name }}"; done
+
+      - name: Notarize dmg
+        env:
+          MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_APPLE_ID }}
+          MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_TEAM_ID }}
+          MACOS_NOTARIZATION_PWD: ${{ secrets.PROD_MACOS_NOTARIZATION_PWD }}
+        run: ./Build/notarize_macos.sh "./signing/${{ env.out-name }}"
+      
+      - name: Upload Artifact (dmg)
+        uses: actions/upload-artifact@v2
+        with:
+          name: StabilityMatrix-${{ env.platform-id }}-dmg
+          path: ./signing/${{ env.out-name }}
   
   publish-release:
     name: Publish GitHub Release

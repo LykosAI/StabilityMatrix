@@ -155,6 +155,7 @@ public static partial class HardwareHelper
 
     private static readonly Lazy<bool> IsMemoryInfoAvailableLazy = new(() => TryGetMemoryInfo(out _));
     public static bool IsMemoryInfoAvailable => IsMemoryInfoAvailableLazy.Value;
+    public static bool IsLiveMemoryUsageInfoAvailable => Compat.IsWindows && IsMemoryInfoAvailable;
 
     public static bool TryGetMemoryInfo(out MemoryInfo memoryInfo)
     {
@@ -204,6 +205,16 @@ public static partial class HardwareHelper
     private static MemoryInfo GetMemoryInfoImplGeneric()
     {
         HardwareInfo.RefreshMemoryList();
+
+        // On macos only TotalPhysical is reported
+        if (Compat.IsMacOS)
+        {
+            return new MemoryInfo
+            {
+                TotalPhysicalBytes = HardwareInfo.MemoryStatus.TotalPhysical,
+                AvailablePhysicalBytes = HardwareInfo.MemoryStatus.TotalPhysical
+            };
+        }
 
         return new MemoryInfo
         {

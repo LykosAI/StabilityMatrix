@@ -2,6 +2,7 @@
     <PropertyGroup>
         <CFBundleName>Stability Matrix</CFBundleName>
         <CFBundleIconFile>Assets/AppIcon.icns</CFBundleIconFile>
+        <CFBundlePackageType>APPL</CFBundlePackageType>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>

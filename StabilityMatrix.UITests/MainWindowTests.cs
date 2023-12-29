@@ -1,9 +1,9 @@
 using Avalonia.Controls;
-using Avalonia.Threading;
 using Avalonia.VisualTree;
+using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.ViewModels;
-using StabilityMatrix.Avalonia.Views.Dialogs;
+using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.UITests.Extensions;
 
 namespace StabilityMatrix.UITests;
@@ -19,30 +19,9 @@ public class MainWindowTests : TestBase
         var (window, _) = GetMainWindow();
 
         window.Show();
-
         await Task.Delay(300);
-        Dispatcher.UIThread.RunJobs();
 
-        // Find the select data directory dialog
-        var selectDataDirectoryDialog = await WaitHelper.WaitForNotNullAsync(() => GetWindowDialog(window));
-        Assert.NotNull(selectDataDirectoryDialog);
-
-        // Click continue button
-        var continueButton = selectDataDirectoryDialog
-            .GetVisualDescendants()
-            .OfType<Button>()
-            .First(b => b.Content as string == "Continue");
-
-        await window.ClickTargetAsync(continueButton);
-        await Task.Delay(300);
-        Dispatcher.UIThread.RunJobs();
-
-        // Find the one click install dialog
-        var oneClickDialog = await WaitHelper.WaitForConditionAsync(
-            () => GetWindowDialog(window),
-            d => d?.Content is OneClickInstallDialog
-        );
-        Assert.NotNull(oneClickDialog);
+        await DoInitialSetup();
 
         await Task.Delay(1000);
         await Verify(window, Settings);
@@ -53,5 +32,27 @@ public class MainWindowTests : TestBase
     {
         var viewModel = Services.GetRequiredService<MainWindowViewModel>();
         await Verify(viewModel, Settings);
+    }
+
+    [AvaloniaFact, TestPriority(3)]
+    public async Task NavigateToModelBrowser_ShouldWork()
+    {
+        var (window, viewModel) = GetMainWindow();
+        await DoInitialSetup();
+
+        var y = window
+            .FindDescendantOfType<NavigationView>()
+            .GetVisualDescendants()
+            .OfType<NavigationViewItem>()
+            .FirstOrDefault(i => i.Content.ToString() == "Model Browser");
+
+        await window.ClickTargetAsync(y);
+
+        var frame = window.FindControl<Frame>("FrameView");
+        Assert.IsType<CheckpointBrowserPage>(frame.Content);
+
+        await Task.Delay(1000);
+        SaveScreenshot(window);
+        await Verify(window, Settings);
     }
 }

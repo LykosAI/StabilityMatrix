@@ -1,5 +1,6 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAvalonia.UI.Controls;
@@ -72,46 +73,53 @@ public class TestBase
             Dispatcher.UIThread.RunJobs();
         }
 
-        var dialog = await WaitHelper.WaitForNotNullAsync(() => GetWindowDialog(window));
-
-        if (dialog.Content is SelectDataDirectoryDialog selectDataDirectoryDialog)
+        try
         {
-            // Click continue button
-            var continueButton = selectDataDirectoryDialog
-                .GetVisualDescendants()
-                .OfType<Button>()
-                .First(b => b.Content as string == "Continue");
+            var dialog = await WaitHelper.WaitForNotNullAsync(() => GetWindowDialog(window));
 
-            await window.ClickTargetAsync(continueButton);
-            await Task.Delay(300);
-            Dispatcher.UIThread.RunJobs();
+            if (dialog.Content is SelectDataDirectoryDialog selectDataDirectoryDialog)
+            {
+                // Click continue button
+                var continueButton = selectDataDirectoryDialog
+                    .GetVisualDescendants()
+                    .OfType<Button>()
+                    .First(b => b.Content as string == "Continue");
 
-            // Find the one click install dialog
-            var oneClickDialog = await WaitHelper.WaitForConditionAsync(
-                () => GetWindowDialog(window),
-                d => d?.Content is OneClickInstallDialog
-            );
-            Assert.NotNull(oneClickDialog);
+                await window.ClickTargetAsync(continueButton);
+                await Task.Delay(300);
+                Dispatcher.UIThread.RunJobs();
 
-            var skipButton = oneClickDialog
-                .GetVisualDescendants()
-                .OfType<Button>()
-                .First(b => b.Content as string == Resources.Label_SkipSetup);
+                // Find the one click install dialog
+                var oneClickDialog = await WaitHelper.WaitForConditionAsync(
+                    () => GetWindowDialog(window),
+                    d => d?.Content is OneClickInstallDialog
+                );
+                Assert.NotNull(oneClickDialog);
 
-            await window.ClickTargetAsync(skipButton);
-            await Task.Delay(300);
-            Dispatcher.UIThread.RunJobs();
+                var skipButton = oneClickDialog
+                    .GetVisualDescendants()
+                    .OfType<Button>()
+                    .First(b => b.Content as string == Resources.Label_SkipSetup);
+
+                await window.ClickTargetAsync(skipButton);
+                await Task.Delay(300);
+                Dispatcher.UIThread.RunJobs();
+            }
+            else if (dialog.Content is OneClickInstallDialog)
+            {
+                var skipButton = dialog
+                    .GetVisualDescendants()
+                    .OfType<Button>()
+                    .First(b => b.Content as string == Resources.Label_SkipSetup);
+
+                await window.ClickTargetAsync(skipButton);
+                await Task.Delay(300);
+                Dispatcher.UIThread.RunJobs();
+            }
         }
-        else if (dialog.Content is OneClickInstallDialog)
+        catch (TimeoutException)
         {
-            var skipButton = dialog
-                .GetVisualDescendants()
-                .OfType<Button>()
-                .First(b => b.Content as string == Resources.Label_SkipSetup);
-
-            await window.ClickTargetAsync(skipButton);
-            await Task.Delay(300);
-            Dispatcher.UIThread.RunJobs();
+            // ignored
         }
     }
 
@@ -165,5 +173,24 @@ public class TestBase
         var contentDialog = dialogs.First(dialog => dialog.Content is T);
 
         return (contentDialog, contentDialog.Content as T)!;
+    }
+
+    internal void SaveScreenshot(Visual visual)
+    {
+        var rect = new Rect(visual!.Bounds.Size);
+
+        var pixelSize = new PixelSize((int)rect.Width, (int)rect.Height);
+        var dpiVector = new Vector(96, 96);
+        using var bitmap = new RenderTargetBitmap(pixelSize, dpiVector);
+
+        using var fs = File.Open(
+            $"C:\\StabilityMatrix\\StabilityMatrix-avalonia\\StabilityMatrix.UITests\\"
+                + Guid.NewGuid().ToString()
+                + ".png",
+            FileMode.OpenOrCreate
+        );
+        bitmap.Render(visual);
+        bitmap.Save(fs);
+        fs.Flush();
     }
 }

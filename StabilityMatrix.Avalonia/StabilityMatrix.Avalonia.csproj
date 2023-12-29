@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <CFBundleName>Stability Matrix</CFBundleName>
+        <CFBundleIconFile>Assets/AppIcon.icns</CFBundleIconFile>
+        <CFBundlePackageType>APPL</CFBundlePackageType>
         <OutputType>WinExe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
@@ -137,6 +139,12 @@
       <AvaloniaResource Include="Assets\linux-x64\**" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
       <!-- Only for osx-arm64 -->
       <AvaloniaResource Include="Assets\macos-arm64\**" Condition="'$(RuntimeIdentifier)' == 'osx-arm64'" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Assets\AppIcon.icns" Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
     
     <ItemGroup>

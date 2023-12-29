@@ -7,9 +7,9 @@ echo "Notarizing file: $1"
 
 echo "Create keychain profile"
 xcrun notarytool store-credentials "notarytool-profile" \
---apple-id "$PROD_MACOS_NOTARIZATION_APPLE_ID" \
---team-id "$PROD_MACOS_NOTARIZATION_TEAM_ID" \
---password "$PROD_MACOS_NOTARIZATION_PWD"
+--apple-id "$MACOS_NOTARIZATION_APPLE_ID" \
+--team-id "$MACOS_NOTARIZATION_TEAM_ID" \
+--password "$MACOS_NOTARIZATION_PWD"
 
 # We can't notarize an app bundle directly, but we need to compress it as an archive.
 # Therefore, we create a zip file containing our app bundle, so that we can send it to the

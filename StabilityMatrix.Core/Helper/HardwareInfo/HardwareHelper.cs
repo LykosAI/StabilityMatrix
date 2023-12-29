@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Hardware.Info;
 using Microsoft.Win32;
 using NLog;
+using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Core.Helper.HardwareInfo;
 
@@ -106,6 +107,30 @@ public static partial class HardwareHelper
         }
     }
 
+    [SupportedOSPlatform("macos")]
+    private static IEnumerable<GpuInfo> IterGpuInfoMacos()
+    {
+        HardwareInfo.RefreshVideoControllerList();
+
+        foreach (var (i, videoController) in HardwareInfo.VideoControllerList.Enumerate())
+        {
+            var gpuMemoryBytes = 0ul;
+
+            // For arm macs, use the shared system memory
+            if (Compat.IsArm)
+            {
+                gpuMemoryBytes = GetMemoryInfoImplGeneric().TotalPhysicalBytes;
+            }
+
+            yield return new GpuInfo
+            {
+                Index = i,
+                Name = videoController.Name,
+                MemoryBytes = gpuMemoryBytes
+            };
+        }
+    }
+
     /// <summary>
     /// Yields GpuInfo for each GPU in the system.
     /// </summary>
@@ -115,7 +140,8 @@ public static partial class HardwareHelper
         {
             return IterGpuInfoWindows();
         }
-        else if (Compat.IsLinux)
+
+        if (Compat.IsLinux)
         {
             // Since this requires shell commands, fetch cached value if available.
             if (cachedGpuInfos is not null)
@@ -127,7 +153,19 @@ public static partial class HardwareHelper
             cachedGpuInfos = IterGpuInfoLinux().ToList();
             return cachedGpuInfos;
         }
-        // TODO: Implement for macOS
+
+        if (Compat.IsMacOS)
+        {
+            if (cachedGpuInfos is not null)
+            {
+                return cachedGpuInfos;
+            }
+
+            // No cache, fetch and cache.
+            cachedGpuInfos = IterGpuInfoMacos().ToList();
+            return cachedGpuInfos;
+        }
+
         return Enumerable.Empty<GpuInfo>();
     }
 
@@ -204,7 +242,7 @@ public static partial class HardwareHelper
 
     private static MemoryInfo GetMemoryInfoImplGeneric()
     {
-        HardwareInfo.RefreshMemoryList();
+        HardwareInfo.RefreshMemoryStatus();
 
         // On macos only TotalPhysical is reported
         if (Compat.IsMacOS)
@@ -253,10 +291,20 @@ public static partial class HardwareHelper
         {
             HardwareInfo.RefreshCPUList();
 
-            return new CpuInfo
+            if (HardwareInfo.CpuList.FirstOrDefault() is not { } cpu)
             {
-                ProcessorCaption = HardwareInfo.CpuList.FirstOrDefault()?.Caption.Trim() ?? ""
-            };
+                return default;
+            }
+
+            var processorCaption = cpu.Caption.Trim();
+
+            // Try name if caption is empty (like on macos)
+            if (string.IsNullOrWhiteSpace(processorCaption))
+            {
+                processorCaption = cpu.Name.Trim();
+            }
+
+            return new CpuInfo { ProcessorCaption = processorCaption };
         });
     }
 

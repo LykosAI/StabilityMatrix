@@ -266,13 +266,6 @@ jobs:
           create-dmg ${{ env.app-name }} --overwrite --identity ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
           # Rename to remove version number
           for f in *.dmg; do mv "$f" "${{ env.out-name }}"; done
-
-      - name: Notarize dmg
-        env:
-          MACOS_NOTARIZATION_APPLE_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_APPLE_ID }}
-          MACOS_NOTARIZATION_TEAM_ID: ${{ secrets.PROD_MACOS_NOTARIZATION_TEAM_ID }}
-          MACOS_NOTARIZATION_PWD: ${{ secrets.PROD_MACOS_NOTARIZATION_PWD }}
-        run: ./Build/notarize_macos.sh "./signing/${{ env.out-name }}"
       
       - name: Upload Artifact (dmg)
         uses: actions/upload-artifact@v2
@@ -282,7 +275,7 @@ jobs:
   
   publish-release:
     name: Publish GitHub Release
-    needs: [ release-linux, release-windows ]
+    needs: [ release-linux, release-windows, release-macos ]
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.github-release == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -301,11 +294,12 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v3
         
-      # Zip each build
+      # Zip each build (except macos which is already dmg)
       - name: Zip Artifacts
         run: |
           cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
           cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
+          mv "StabilityMatrix-macos-arm64-dmg/Stability Matrix.dmg" "../StabilityMatrix-macos-arm64.dmg"
 
       - name: Create Github Release
         id: create_release
@@ -316,6 +310,7 @@ jobs:
           files: |
             StabilityMatrix-win-x64.zip
             StabilityMatrix-linux-x64.zip
+            StabilityMatrix-macos-arm64.dmg
           fail_on_unmatched_files: true
           tag_name: v${{ github.event.inputs.version }}
           body: ${{ steps.release_notes.outputs.release_notes }}
@@ -324,7 +319,7 @@ jobs:
           
   publish-auto-update-github:
     name: Publish Auto-Update Release (GitHub)
-    needs: [ release-linux, release-windows ]
+    needs: [ release-linux, release-windows, release-macos ]
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.auto-update-release == 'true' && github.event.inputs.auto-update-release-mode == 'github url' }}
     runs-on: ubuntu-latest
     steps:
@@ -353,7 +348,7 @@ jobs:
 
   publish-auto-update-b2:
     name: Publish Auto-Update Release (B2)
-    needs: [ release-linux, release-windows ]
+    needs: [ release-linux, release-windows, release-macos ]
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.auto-update-release == 'true' && github.event.inputs.auto-update-release-mode == 'upload to b2' }}
     runs-on: ubuntu-latest
     steps:
@@ -368,11 +363,12 @@ jobs:
       - name: Download Artifacts
         uses: actions/download-artifact@v3
       
-      # Zip each build
+      # Zip each build (except macos which is already dmg)
       - name: Zip Artifacts
         run: |
           cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
           cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
+          mv "StabilityMatrix-macos-arm64-dmg/Stability Matrix.dmg" "../StabilityMatrix-macos-arm64.dmg"
 
       - uses: actions/setup-python@v4
         with:
@@ -390,6 +386,10 @@ jobs:
           fi
           if [ ! -f StabilityMatrix-linux-x64.zip ]; then
             echo "StabilityMatrix-linux-x64.zip not found"
+            exit 1
+          fi
+          if [ ! -f StabilityMatrix-macos-arm64.dmg ]; then
+            echo "StabilityMatrix-macos-arm64.dmg not found"
             exit 1
           fi
           if [ ! -f CHANGELOG.md ]; then
@@ -410,4 +410,5 @@ jobs:
           --changelog CHANGELOG.md
           --win-x64 StabilityMatrix-win-x64.zip
           --linux-x64 StabilityMatrix-linux-x64.zip
+          --macos-arm64 StabilityMatrix-macos-arm64.dmg
           -y

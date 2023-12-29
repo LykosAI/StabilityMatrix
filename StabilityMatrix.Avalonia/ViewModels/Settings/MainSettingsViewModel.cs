@@ -252,6 +252,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
         {
             MemoryInfo = newMemoryInfo;
         }
+
+        // Stop timer if live memory info is not available
+        if (!HardwareHelper.IsLiveMemoryUsageInfoAvailable)
+        {
+            (sender as DispatcherTimer)?.Stop();
+        }
     }
 
     partial void OnSelectedThemeChanged(string? value)

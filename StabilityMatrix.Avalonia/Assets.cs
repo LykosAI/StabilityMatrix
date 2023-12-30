@@ -11,16 +11,19 @@ namespace StabilityMatrix.Avalonia;
 
 internal static class Assets
 {
-    public static AvaloniaResource AppIcon { get; } = new("avares://StabilityMatrix.Avalonia/Assets/Icon.ico");
+    public static AvaloniaResource AppIcon { get; } =
+        new("avares://StabilityMatrix.Avalonia/Assets/Icon.ico");
 
-    public static AvaloniaResource AppIconPng { get; } = new("avares://StabilityMatrix.Avalonia/Assets/Icon.png");
+    public static AvaloniaResource AppIconPng { get; } =
+        new("avares://StabilityMatrix.Avalonia/Assets/Icon.png");
 
     /// <summary>
     /// Fixed image for models with no images.
     /// </summary>
     public static Uri NoImage { get; } = new("avares://StabilityMatrix.Avalonia/Assets/noimage.png");
 
-    public static AvaloniaResource LicensesJson => new("avares://StabilityMatrix.Avalonia/Assets/licenses.json");
+    public static AvaloniaResource LicensesJson =>
+        new("avares://StabilityMatrix.Avalonia/Assets/licenses.json");
 
     public static AvaloniaResource ImagePromptLanguageJson =>
         new("avares://StabilityMatrix.Avalonia/Assets/ImagePrompt.tmLanguage.json");
@@ -28,7 +31,8 @@ internal static class Assets
     public static AvaloniaResource ThemeMatrixDarkJson =>
         new("avares://StabilityMatrix.Avalonia/Assets/ThemeMatrixDark.json");
 
-    public static AvaloniaResource HfPackagesJson => new("avares://StabilityMatrix.Avalonia/Assets/hf-packages.json");
+    public static AvaloniaResource HfPackagesJson =>
+        new("avares://StabilityMatrix.Avalonia/Assets/hf-packages.json");
 
     private const UnixFileMode Unix755 =
         UnixFileMode.UserRead
@@ -44,7 +48,10 @@ internal static class Assets
     [SupportedOSPlatform("macos")]
     public static AvaloniaResource SevenZipExecutable =>
         Compat.Switch(
-            (PlatformKind.Windows, new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/win-x64/7za.exe")),
+            (
+                PlatformKind.Windows,
+                new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/win-x64/7za.exe")
+            ),
             (
                 PlatformKind.Linux | PlatformKind.X64,
                 new AvaloniaResource("avares://StabilityMatrix.Avalonia/Assets/linux-x64/7zzs", Unix755)
@@ -112,10 +119,9 @@ internal static class Assets
                 PlatformKind.MacOS | PlatformKind.Arm,
                 new RemoteResource
                 {
-                    Url = new Uri(
-                        "https://github.com/indygreg/python-build-standalone/releases/download/20230507/cpython-3.10.11+20230507-aarch64-apple-darwin-install_only.tar.gz"
-                    ),
-                    HashSha256 = "8348bc3c2311f94ec63751fb71bd0108174be1c4def002773cf519ee1506f96f"
+                    // Requires our distribution with signed dylib for gatekeeper
+                    Url = new Uri("https://cdn.lykos.ai/cpython-3.10.11-macos-arm64.tar.gz"),
+                    HashSha256 = "fb52f882a4afa6e7f53f9baa7b9d5c2235dff47eff10cfc3572118a7f63d9c93"
                 }
             )
         );
@@ -148,7 +154,9 @@ internal static class Assets
     /// <summary>
     /// Yield AvaloniaResources given a relative directory path within the 'Assets' folder.
     /// </summary>
-    public static IEnumerable<(AvaloniaResource resource, string relativePath)> FindAssets(string relativeAssetPath)
+    public static IEnumerable<(AvaloniaResource resource, string relativePath)> FindAssets(
+        string relativeAssetPath
+    )
     {
         var baseUri = new Uri("avares://StabilityMatrix.Avalonia/Assets/");
         var targetUri = new Uri(baseUri, relativeAssetPath);

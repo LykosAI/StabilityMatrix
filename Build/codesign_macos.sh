@@ -20,8 +20,10 @@ if [ -n "$CI" ]; then
 fi
 
 # Sign all files
+PARENT_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" || return ; pwd -P )
+ENTITLEMENTS="$PARENT_PATH/AppEntitlements.entitlements"
 
-ENTITLEMENTS="AppEntitlements.entitlements"
+echo "Using entitlements file: $ENTITLEMENTS"
 
 find "$1/Contents/MacOS/"|while read fname; do
     if [[ -f $fname ]]; then

@@ -43,6 +43,10 @@ on:
           - stable
           - preview
           - development
+      test-release-artifacts:
+        type: boolean
+        description: [Debug] Test release artifacts?
+        default: false
 
 jobs:
   release-linux:
@@ -324,6 +328,65 @@ jobs:
           draft: ${{ github.event.inputs.github-release-draft == 'true' }}
           prerelease: ${{ github.event.inputs.github-release-prerelease == 'true' }} 
           
+  test-artifacts:
+    name: Test Release Artifacts
+    needs: [ release-linux, release-windows, release-macos ]
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test-release-artifacts == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Extract Release Notes
+        id: release_notes
+        run: |
+          RELEASE_NOTES="$(awk -v version="${{ github.event.inputs.version }}" '/## v/{if(p) exit; if($0 ~ version) p=1}; p' CHANGELOG.md)"
+          RELEASE_NOTES="${RELEASE_NOTES//'%'/'%25'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\n'/'%0A'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\r'/'%0D'}"
+          echo "::set-output name=release_notes::$RELEASE_NOTES"
+          echo "Release Notes:"
+          echo "$RELEASE_NOTES"
+
+      # Downloads all previous artifacts to the current working directory
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+
+      # Zip each build (except macos which is already dmg)
+      - name: Zip Artifacts
+        run: |
+          cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
+          cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
+          mv "StabilityMatrix-osx-arm64-dmg/Stability Matrix.dmg" "../StabilityMatrix-macos-arm64.dmg"
+
+      # Check that the zips and CHANGELOG.md are in the current working directory
+      - name: Check files
+        run: |
+          if [ ! -f StabilityMatrix-win-x64.zip ]; then
+            echo "StabilityMatrix-win-x64.zip not found"
+            exit 1
+          else
+            echo "StabilityMatrix-win-x64.zip found"
+            sha256sum StabilityMatrix-win-x64.zip
+          fi
+          if [ ! -f StabilityMatrix-linux-x64.zip ]; then
+            echo "StabilityMatrix-linux-x64.zip not found"
+            exit 1
+          else
+            echo "StabilityMatrix-linux-x64.zip found"
+            sha256sum StabilityMatrix-linux-x64.zip
+          fi
+          if [ ! -f StabilityMatrix-macos-arm64.dmg ]; then
+            echo "StabilityMatrix-macos-arm64.dmg not found"
+            exit 1
+          else
+            echo "StabilityMatrix-macos-arm64.dmg found"
+            sha256sum StabilityMatrix-macos-arm64.dmg
+          fi
+          if [ ! -f CHANGELOG.md ]; then
+            echo "CHANGELOG.md not found"
+            exit 1
+          fi
+  
   publish-auto-update-github:
     name: Publish Auto-Update Release (GitHub)
     needs: [ release-linux, release-windows, release-macos ]

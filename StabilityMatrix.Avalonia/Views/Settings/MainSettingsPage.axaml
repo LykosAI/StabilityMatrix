@@ -380,10 +380,12 @@
                             <TextBlock
                                 Grid.Row="1"
                                 Grid.Column="0"
+                                IsVisible="{x:Static hardwareInfo:HardwareHelper.IsLiveMemoryUsageInfoAvailable}"
                                 Text="Available Memory" />
                             <SelectableTextBlock
                                 Grid.Row="1"
                                 Grid.Column="1"
+                                IsVisible="{x:Static hardwareInfo:HardwareHelper.IsLiveMemoryUsageInfoAvailable}"
                                 Foreground="{DynamicResource TextControlPlaceholderForeground}"
                                 Text="{Binding AvailablePhysicalBytes, Converter={x:Static converters:StringFormatConverters.MemoryBytes}}"
                                 TextWrapping="WrapWithOverflow" />

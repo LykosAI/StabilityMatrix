@@ -250,8 +250,7 @@ public static partial class HardwareHelper
             return new MemoryInfo
             {
                 TotalPhysicalBytes = HardwareInfo.MemoryStatus.TotalPhysical,
-                TotalInstalledBytes = HardwareInfo.MemoryStatus.TotalPhysical,
-                AvailablePhysicalBytes = HardwareInfo.MemoryStatus.TotalPhysical
+                TotalInstalledBytes = HardwareInfo.MemoryStatus.TotalPhysical
             };
         }
 

@@ -251,7 +251,8 @@ jobs:
         run: ./Build/notarize_macos.sh "./signing/${{ env.app-name }}"
 
       - name: Zip Artifact (App)
-        run: cd signing && zip -r -y "../StabilityMatrix-${{ env.platform-id }}-app.zip" "${{ env.app-name }}"
+        working-directory: signing
+        run: zip -r -y "../StabilityMatrix-${{ env.platform-id }}-app.zip" "${{ env.app-name }}"
 
       - name: Upload Artifact (App)
         uses: actions/upload-artifact@v2
@@ -269,14 +270,17 @@ jobs:
           brew install graphicsmagick imagemagick
           
       - name: Create dmg
+        working-directory: signing
         run: >
-          cd signing
           create-dmg "${{ env.app-name }}" --overwrite --identity "${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}"
-          # Rename to remove version number
-          for f in *.dmg; do mv "$f" "${{ env.out-name }}"; done
+          
+      - name: Rename dmg
+        working-directory: signing
+        run: mv "$(find . -type f -name "*.dmg")" "${{ env.out-name }}"
           
       - name: Zip Artifact (dmg)
-        run: cd signing && zip -r -y "../StabilityMatrix-${{ env.platform-id }}-dmg.zip" "${{ env.out-name }}"
+        working-directory: signing
+        run: zip -r -y "../StabilityMatrix-${{ env.platform-id }}-dmg.zip" "${{ env.out-name }}"
         
       - name: Upload Artifact (dmg)
         uses: actions/upload-artifact@v2

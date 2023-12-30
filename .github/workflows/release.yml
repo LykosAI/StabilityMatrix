@@ -178,7 +178,7 @@ jobs:
       platform-id: osx-arm64
       app-name: "Stability Matrix.app"
       out-name: "Stability Matrix.dmg"
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v3
 
@@ -212,16 +212,17 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: >
+          echo $RELEASE_VERSION
           dotnet msbuild StabilityMatrix.Avalonia
           -t:BundleApp -p:UseAppHost=true -p:SelfContained=true
           -p:Configuration=Release -p:RuntimeIdentifier=${{ env.platform-id }}
-          -p:Version=$RELEASE_VERSION
+          -p:Version="$RELEASE_VERSION"
           -p:PublishDir=out
           -p:PublishReadyToRun=true
-          -p:CFBundleShortVersionString=$RELEASE_VERSION
+          -p:CFBundleShortVersionString="$RELEASE_VERSION"
           -p:CFBundleName="Stability Matrix"
           -p:CFBundleDisplayName="Stability Matrix"
-          -p:CFBundleVersion=$RELEASE_VERSION
+          -p:CFBundleVersion="$RELEASE_VERSION"
           -p:SentryOrg=${{ secrets.SENTRY_ORG }} -p:SentryProject=${{ secrets.SENTRY_PROJECT }}
           -p:SentryUploadSymbols=true -p:SentryUploadSources=true
 

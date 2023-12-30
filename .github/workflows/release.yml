@@ -229,9 +229,7 @@ jobs:
           -p:SentryUploadSymbols=true -p:SentryUploadSources=true
 
       - name: Post Build (App)
-        run: >
-          mkdir -p signing
-          mv "./StabilityMatrix.Avalonia/out/Stability Matrix.app" ./signing/${{ env.app-name }}
+        run: mkdir -p signing && mv "./StabilityMatrix.Avalonia/out/Stability Matrix.app" "./signing/${{ env.app-name }}"
 
       - name: Codesign app bundle
         env:

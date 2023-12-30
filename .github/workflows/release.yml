@@ -181,7 +181,7 @@ jobs:
     env:
       platform-id: osx-arm64
       app-name: "Stability Matrix.app"
-      out-name: "Stability Matrix.dmg"
+      out-name: "StabilityMatrix-macos-arm64.dmg"
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v3
@@ -314,7 +314,7 @@ jobs:
         run: |
           cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
           cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
-          mv "StabilityMatrix-osx-arm64-dmg/Stability Matrix.dmg" "../StabilityMatrix-macos-arm64.dmg"
+          unzip "StabilityMatrix-osx-arm64-dmg/StabilityMatrix-osx-arm64-dmg.zip"
 
       - name: Create Github Release
         id: create_release

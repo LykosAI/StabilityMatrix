@@ -45,7 +45,7 @@ on:
           - development
       test-release-artifacts:
         type: boolean
-        description: [Debug] Test release artifacts?
+        description: "[Debug] Test release artifacts?"
         default: false
 
 jobs:

@@ -192,13 +192,13 @@ jobs:
         if: github.event_name == 'release'
         run: |
           echo "Using tag ${{ env.GIT_TAG_NAME }}"
-          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $env:GITHUB_ENV
+          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $GITHUB_ENV
 
       - name: Set Version from manual input
         if: github.event_name == 'workflow_dispatch'
         run: |
           echo "Using version ${{ github.event.inputs.version }}"
-          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
+          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v3
@@ -209,7 +209,7 @@ jobs:
         run: dotnet restore -p:PublishReadyToRun=true
         
       - name: Check Version
-        run: echo "$RELEASE_VERSION"
+        run: echo $RELEASE_VERSION
 
       - name: .NET Msbuild (App)
         env:
@@ -218,14 +218,13 @@ jobs:
           dotnet msbuild ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj
           -t:BundleApp -p:UseAppHost=true -p:SelfContained=true
           -p:Configuration=Release -p:RuntimeIdentifier=${{ env.platform-id }}
-          -p:Version="$RELEASE_VERSION"
-          -p:NuGetVersion="$RELEASE_VERSION"
+          -p:Version=$RELEASE_VERSION
           -p:PublishDir=out
           -p:PublishReadyToRun=true
-          -p:CFBundleShortVersionString="$RELEASE_VERSION"
+          -p:CFBundleShortVersionString=$RELEASE_VERSION
           -p:CFBundleName="Stability Matrix"
           -p:CFBundleDisplayName="Stability Matrix"
-          -p:CFBundleVersion="$RELEASE_VERSION"
+          -p:CFBundleVersion=$RELEASE_VERSION
           -p:SentryOrg=${{ secrets.SENTRY_ORG }} -p:SentryProject=${{ secrets.SENTRY_PROJECT }}
           -p:SentryUploadSymbols=true -p:SentryUploadSources=true
 

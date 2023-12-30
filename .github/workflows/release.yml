@@ -300,7 +300,7 @@ jobs:
         run: |
           cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
           cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
-          mv "StabilityMatrix-macos-arm64-dmg/Stability Matrix.dmg" "../StabilityMatrix-macos-arm64.dmg"
+          mv "StabilityMatrix-osx-arm64-dmg/Stability Matrix.dmg" "../StabilityMatrix-macos-arm64.dmg"
 
       - name: Create Github Release
         id: create_release
@@ -369,7 +369,7 @@ jobs:
         run: |
           cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
           cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
-          mv "StabilityMatrix-macos-arm64-dmg/Stability Matrix.dmg" "../StabilityMatrix-macos-arm64.dmg"
+          mv "StabilityMatrix-osx-arm64-dmg/Stability Matrix.dmg" "../StabilityMatrix-macos-arm64.dmg"
 
       - uses: actions/setup-python@v4
         with:

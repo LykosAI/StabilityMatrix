@@ -206,7 +206,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Install dependencies
-        run: dotnet restore
+        run: dotnet restore -p:PublishReadyToRun=true
 
       - name: .NET Msbuild (App)
         env:
@@ -228,7 +228,7 @@ jobs:
       - name: Post Build (App)
         run: >
           mkdir -p signing
-          mv "./out/Stability Matrix.app" ./signing/${{ env.app-name }}
+          mv "./StabilityMatrix.Avalonia/out/Stability Matrix.app" ./signing/${{ env.app-name }}
 
       - name: Codesign app bundle
         env:
@@ -335,7 +335,7 @@ jobs:
           python-version: '3.11'
           
       - name: Install Python Dependencies
-        run: pip install stability-matrix-tools>=0.2.18 --upgrade
+        run: pip install stability-matrix-tools>=0.3.0 --upgrade
         
       - name: Publish Auto-Update Release
         env:
@@ -375,7 +375,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Python Dependencies
-        run: pip install stability-matrix-tools>=0.2.18 --upgrade
+        run: pip install stability-matrix-tools>=0.3.0 --upgrade
       
       # Check that the zips and CHANGELOG.md are in the current working directory
       - name: Check files

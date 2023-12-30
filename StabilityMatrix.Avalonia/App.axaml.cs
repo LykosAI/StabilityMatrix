@@ -585,9 +585,16 @@ public sealed class App : Application
     {
         if (Current is null)
             throw new NullReferenceException("Current Application was null when Shutdown called");
+
         if (Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
         {
             lifetime.Shutdown(exitCode);
+
+            if (Compat.IsMacOS)
+            {
+                Dispatcher.UIThread.InvokeShutdown();
+                Environment.Exit(exitCode);
+            }
         }
     }
 

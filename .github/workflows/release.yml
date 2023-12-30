@@ -264,7 +264,7 @@ jobs:
       - name: Create dmg
         run: >
           cd signing
-          create-dmg ${{ env.app-name }} --overwrite --identity ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
+          create-dmg "${{ env.app-name }}" --overwrite --identity "${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}"
           # Rename to remove version number
           for f in *.dmg; do mv "$f" "${{ env.out-name }}"; done
       

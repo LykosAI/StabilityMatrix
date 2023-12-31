@@ -121,7 +121,7 @@ internal static class Assets
                 {
                     // Requires our distribution with signed dylib for gatekeeper
                     Url = new Uri("https://cdn.lykos.ai/cpython-3.10.11-macos-arm64.zip"),
-                    HashSha256 = "dca71c3e5091fc51e8ed8b7f36095eedae2b14f2e8517588eef1508fc5214363"
+                    HashSha256 = "83c00486e0af9c460604a425e519d58e4b9604fbe7a4448efda0f648f86fb6e3"
                 }
             )
         );

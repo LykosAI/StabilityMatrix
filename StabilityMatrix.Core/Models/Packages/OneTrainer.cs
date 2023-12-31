@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -33,6 +34,8 @@ public class OneTrainer(
     public override string OutputFolderName => string.Empty;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
     public override IEnumerable<TorchVersion> AvailableTorchVersions => [TorchVersion.Cuda];
+    public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
+
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.None };
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Nightmare;

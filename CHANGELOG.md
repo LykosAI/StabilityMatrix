@@ -7,12 +7,15 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.8.0-dev.3
 ### Added
+- Added release builds for macOS (Apple Silicon)
 - Added new package: [OneTrainer](https://github.com/Nerogar/OneTrainer)
 - Added ComfyUI launch argument configs: Cross Attention Method, Force Floating Point Precision, VAE Precision
 - Added Delete button to the CivitAI Model Browser details dialog
 - Added "Copy Link to Clipboard" for connected models in the Checkpoints page
 ### Changed
 - Python Packages install dialog now allows entering multiple arguments or option flags
+### Fixed
+- Fixed environment variables grid not being editable related to [Avalonia #13843](https://github.com/AvaloniaUI/Avalonia/issues/13843)
 
 ## v2.8.0-dev.2
 ### Added

@@ -166,6 +166,14 @@ public partial class MainWindow : AppWindowBase
         base.OnClosing(e);
     }
 
+    /// <inheritdoc />
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+
+        App.Shutdown();
+    }
+
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);

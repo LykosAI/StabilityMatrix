@@ -43,6 +43,10 @@ on:
           - stable
           - preview
           - development
+      test-release-artifacts:
+        type: boolean
+        description: "[Debug] Test release artifacts?"
+        default: false
 
 jobs:
   release-linux:
@@ -177,7 +181,7 @@ jobs:
     env:
       platform-id: osx-arm64
       app-name: "Stability Matrix.app"
-      out-name: "Stability Matrix.dmg"
+      out-name: "StabilityMatrix-macos-arm64.dmg"
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v3
@@ -192,13 +196,13 @@ jobs:
         if: github.event_name == 'release'
         run: |
           echo "Using tag ${{ env.GIT_TAG_NAME }}"
-          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $env:GITHUB_ENV
+          echo "RELEASE_VERSION=${{ env.GIT_TAG_NAME }}" >> $GITHUB_ENV
 
       - name: Set Version from manual input
         if: github.event_name == 'workflow_dispatch'
         run: |
           echo "Using version ${{ github.event.inputs.version }}"
-          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
+          echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v3
@@ -206,13 +210,16 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Install dependencies
-        run: dotnet restore
+        run: dotnet restore -p:PublishReadyToRun=true
+        
+      - name: Check Version
+        run: echo $RELEASE_VERSION
 
       - name: .NET Msbuild (App)
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: >
-          dotnet msbuild StabilityMatrix.Avalonia
+          dotnet msbuild ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj
           -t:BundleApp -p:UseAppHost=true -p:SelfContained=true
           -p:Configuration=Release -p:RuntimeIdentifier=${{ env.platform-id }}
           -p:Version=$RELEASE_VERSION
@@ -226,9 +233,7 @@ jobs:
           -p:SentryUploadSymbols=true -p:SentryUploadSources=true
 
       - name: Post Build (App)
-        run: >
-          mkdir -p signing
-          mv "./out/Stability Matrix.app" ./signing/${{ env.app-name }}
+        run: mkdir -p signing && mv "./StabilityMatrix.Avalonia/out/Stability Matrix.app" "./signing/${{ env.app-name }}"
 
       - name: Codesign app bundle
         env:
@@ -245,11 +250,15 @@ jobs:
           MACOS_NOTARIZATION_PWD: ${{ secrets.PROD_MACOS_NOTARIZATION_PWD }}
         run: ./Build/notarize_macos.sh "./signing/${{ env.app-name }}"
 
+      - name: Zip Artifact (App)
+        working-directory: signing
+        run: zip -r -y "../StabilityMatrix-${{ env.platform-id }}-app.zip" "${{ env.app-name }}"
+
       - name: Upload Artifact (App)
         uses: actions/upload-artifact@v2
         with:
           name: StabilityMatrix-${{ env.platform-id }}-app
-          path: ./signing/${{ env.app-name }}
+          path: StabilityMatrix-${{ env.platform-id }}-app.zip
           
       - uses: actions/setup-node@v4
         with:
@@ -261,17 +270,23 @@ jobs:
           brew install graphicsmagick imagemagick
           
       - name: Create dmg
+        working-directory: signing
         run: >
-          cd signing
-          create-dmg ${{ env.app-name }} --overwrite --identity ${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}
-          # Rename to remove version number
-          for f in *.dmg; do mv "$f" "${{ env.out-name }}"; done
-      
+          create-dmg "${{ env.app-name }}" --overwrite --identity "${{ secrets.PROD_MACOS_CERTIFICATE_NAME }}"
+          
+      - name: Rename dmg
+        working-directory: signing
+        run: mv "$(find . -type f -name "*.dmg")" "${{ env.out-name }}"
+          
+      - name: Zip Artifact (dmg)
+        working-directory: signing
+        run: zip -r -y "../StabilityMatrix-${{ env.platform-id }}-dmg.zip" "${{ env.out-name }}"
+        
       - name: Upload Artifact (dmg)
         uses: actions/upload-artifact@v2
         with:
           name: StabilityMatrix-${{ env.platform-id }}-dmg
-          path: ./signing/${{ env.out-name }}
+          path: StabilityMatrix-${{ env.platform-id }}-dmg.zip
   
   publish-release:
     name: Publish GitHub Release
@@ -299,7 +314,7 @@ jobs:
         run: |
           cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
           cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
-          mv "StabilityMatrix-macos-arm64-dmg/Stability Matrix.dmg" "../StabilityMatrix-macos-arm64.dmg"
+          unzip "StabilityMatrix-osx-arm64-dmg/StabilityMatrix-osx-arm64-dmg.zip"
 
       - name: Create Github Release
         id: create_release
@@ -317,6 +332,65 @@ jobs:
           draft: ${{ github.event.inputs.github-release-draft == 'true' }}
           prerelease: ${{ github.event.inputs.github-release-prerelease == 'true' }} 
           
+  test-artifacts:
+    name: Test Release Artifacts
+    needs: [ release-linux, release-windows, release-macos ]
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.test-release-artifacts == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Extract Release Notes
+        id: release_notes
+        run: |
+          RELEASE_NOTES="$(awk -v version="${{ github.event.inputs.version }}" '/## v/{if(p) exit; if($0 ~ version) p=1}; p' CHANGELOG.md)"
+          RELEASE_NOTES="${RELEASE_NOTES//'%'/'%25'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\n'/'%0A'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\r'/'%0D'}"
+          echo "::set-output name=release_notes::$RELEASE_NOTES"
+          echo "Release Notes:"
+          echo "$RELEASE_NOTES"
+
+      # Downloads all previous artifacts to the current working directory
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+
+      # Zip each build (except macos which is already dmg)
+      - name: Zip Artifacts
+        run: |
+          cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
+          cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
+          unzip "StabilityMatrix-osx-arm64-dmg/StabilityMatrix-osx-arm64-dmg.zip"
+
+      # Check that the zips and CHANGELOG.md are in the current working directory
+      - name: Check files
+        run: |
+          if [ ! -f StabilityMatrix-win-x64.zip ]; then
+            echo "StabilityMatrix-win-x64.zip not found"
+            exit 1
+          else
+            echo "StabilityMatrix-win-x64.zip found"
+            sha256sum StabilityMatrix-win-x64.zip
+          fi
+          if [ ! -f StabilityMatrix-linux-x64.zip ]; then
+            echo "StabilityMatrix-linux-x64.zip not found"
+            exit 1
+          else
+            echo "StabilityMatrix-linux-x64.zip found"
+            sha256sum StabilityMatrix-linux-x64.zip
+          fi
+          if [ ! -f StabilityMatrix-macos-arm64.dmg ]; then
+            echo "StabilityMatrix-macos-arm64.dmg not found"
+            exit 1
+          else
+            echo "StabilityMatrix-macos-arm64.dmg found"
+            sha256sum StabilityMatrix-macos-arm64.dmg
+          fi
+          if [ ! -f CHANGELOG.md ]; then
+            echo "CHANGELOG.md not found"
+            exit 1
+          fi
+  
   publish-auto-update-github:
     name: Publish Auto-Update Release (GitHub)
     needs: [ release-linux, release-windows, release-macos ]
@@ -335,7 +409,7 @@ jobs:
           python-version: '3.11'
           
       - name: Install Python Dependencies
-        run: pip install stability-matrix-tools>=0.2.18 --upgrade
+        run: pip install stability-matrix-tools>=0.3.0 --upgrade
         
       - name: Publish Auto-Update Release
         env:
@@ -368,14 +442,14 @@ jobs:
         run: |
           cd StabilityMatrix-win-x64 && zip -r ../StabilityMatrix-win-x64.zip ./. && cd $OLDPWD
           cd StabilityMatrix-linux-x64 && zip -r ../StabilityMatrix-linux-x64.zip ./. && cd $OLDPWD
-          mv "StabilityMatrix-macos-arm64-dmg/Stability Matrix.dmg" "../StabilityMatrix-macos-arm64.dmg"
+          unzip "StabilityMatrix-osx-arm64-dmg/StabilityMatrix-osx-arm64-dmg.zip"
 
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
       - name: Install Python Dependencies
-        run: pip install stability-matrix-tools>=0.2.18 --upgrade
+        run: pip install stability-matrix-tools>=0.3.0 --upgrade
       
       # Check that the zips and CHANGELOG.md are in the current working directory
       - name: Check files

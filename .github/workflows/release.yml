@@ -47,20 +47,10 @@ on:
         type: boolean
         description: "[Debug] Test release artifacts?"
         default: false
-      skip-win-x64:
-        type: boolean
-        description: Skip win-x64
-      skip-linux-x64:
-        type: boolean
-        description: Skip linux-x64
-      skip-macos-arm64:
-        type: boolean
-        description: Skip macos-arm64
 
 jobs:
   release-linux:
     name: Release (linux-x64)
-    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.skip-linux-x64 == 'false' }}
     env:
       platform-id: linux-x64
       out-name: StabilityMatrix.AppImage
@@ -132,7 +122,6 @@ jobs:
           
   release-windows:
     name: Release (win-x64)
-    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.skip-win-x64 == 'false' }}
     env:
       platform-id: win-x64
       out-name: StabilityMatrix.exe
@@ -189,7 +178,6 @@ jobs:
   
   release-macos:
     name: Release (macos-arm64)
-    if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.skip-macos-arm64 == 'false' }}
     env:
       platform-id: osx-arm64
       app-name: "Stability Matrix.app"

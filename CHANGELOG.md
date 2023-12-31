@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Copy Link to Clipboard" for connected models in the Checkpoints page
 ### Changed
 - Python Packages install dialog now allows entering multiple arguments or option flags
+### Fixed
+- Fixed environment variables grid not being editable related to [Avalonia #13843](https://github.com/AvaloniaUI/Avalonia/issues/13843)
 
 ## v2.8.0-dev.2
 ### Added

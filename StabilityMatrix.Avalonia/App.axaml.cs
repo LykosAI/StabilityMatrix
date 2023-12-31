@@ -220,9 +220,6 @@ public sealed class App : Application
             mainWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
         }
 
-        mainWindow.Closing += OnMainWindowClosing;
-        mainWindow.Closed += (_, _) => Shutdown();
-
         mainWindow.SetDefaultFonts();
 
         VisualRoot = mainWindow;
@@ -231,6 +228,7 @@ public sealed class App : Application
 
         DesktopLifetime.MainWindow = mainWindow;
         DesktopLifetime.Exit += OnExit;
+        DesktopLifetime.ShutdownRequested += OnShutdownRequested;
     }
 
     private static void ConfigureServiceProvider()
@@ -588,27 +586,25 @@ public sealed class App : Application
 
         if (Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
         {
-            lifetime.Shutdown(exitCode);
-
-            if (Compat.IsMacOS)
+            try
             {
-                Dispatcher.UIThread.InvokeShutdown();
-                Environment.Exit(exitCode);
+                var result = lifetime.TryShutdown(exitCode);
+                Debug.WriteLine($"Shutdown: {result}");
             }
+            catch (InvalidOperationException)
+            {
+                // Ignore in case already shutting down
+            }
+        }
+        else
+        {
+            Environment.Exit(exitCode);
         }
     }
 
-    /// <summary>
-    /// Handle shutdown requests (happens before <see cref="OnExit"/>)
-    /// </summary>
-    private static void OnMainWindowClosing(object? sender, WindowClosingEventArgs e)
+    private static void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
     {
-        if (e.Cancel)
-            return;
-
-        // Show confirmation if package running
-        var launchPageViewModel = Services.GetRequiredService<LaunchPageViewModel>();
-        launchPageViewModel.OnMainWindowClosing(e);
+        Debug.WriteLine("Start OnShutdownRequested");
 
         if (e.Cancel)
             return;
@@ -626,7 +622,8 @@ public sealed class App : Application
 
         Debug.WriteLine("OnShutdownRequested Canceled: Disposing IAsyncDisposables");
 
-        Task.Run(async () =>
+        Dispatcher
+            .UIThread.InvokeAsync(async () =>
             {
                 foreach (var disposable in asyncDisposables)
                 {
@@ -644,7 +641,14 @@ public sealed class App : Application
             .ContinueWith(_ =>
             {
                 // Shutdown again
-                Dispatcher.UIThread.Invoke(() => Shutdown());
+                Debug.WriteLine("Finished disposing IAsyncDisposables, shutting down");
+
+                if (Dispatcher.UIThread.SupportsRunLoops)
+                {
+                    Dispatcher.UIThread.Invoke(() => Shutdown());
+                }
+
+                Environment.Exit(0);
             })
             .SafeFireAndForget();
     }

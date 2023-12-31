@@ -120,8 +120,8 @@ internal static class Assets
                 new RemoteResource
                 {
                     // Requires our distribution with signed dylib for gatekeeper
-                    Url = new Uri("https://cdn.lykos.ai/cpython-3.10.11-macos-arm64.tar.gz"),
-                    HashSha256 = "fb52f882a4afa6e7f53f9baa7b9d5c2235dff47eff10cfc3572118a7f63d9c93"
+                    Url = new Uri("https://cdn.lykos.ai/cpython-3.10.11-macos-arm64.zip"),
+                    HashSha256 = "dca71c3e5091fc51e8ed8b7f36095eedae2b14f2e8517588eef1508fc5214363"
                 }
             )
         );

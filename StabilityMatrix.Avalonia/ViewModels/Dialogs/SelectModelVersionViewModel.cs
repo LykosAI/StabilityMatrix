@@ -121,10 +121,16 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
         if (settingsManager.IsLibraryDirSet)
         {
             var fileSizeBytes = value?.CivitFile.SizeKb * 1024;
-            var freeSizeBytes = SystemInfo.GetDiskFreeSpaceBytes(settingsManager.ModelsDirectory);
+            var freeSizeBytes =
+                SystemInfo.GetDiskFreeSpaceBytes(settingsManager.ModelsDirectory) ?? long.MaxValue;
             canImport = fileSizeBytes < freeSizeBytes;
             ImportTooltip = canImport
-                ? $"Free space after download: {Size.FormatBytes(Convert.ToUInt64(freeSizeBytes - fileSizeBytes))}"
+                ? "Free space after download: "
+                    + (
+                        freeSizeBytes < long.MaxValue
+                            ? Size.FormatBytes(Convert.ToUInt64(freeSizeBytes - fileSizeBytes))
+                            : "Unknown"
+                    )
                 : $"Not enough space on disk. Need {Size.FormatBytes(Convert.ToUInt64(fileSizeBytes))} but only have {Size.FormatBytes(Convert.ToUInt64(freeSizeBytes))}";
         }
         else

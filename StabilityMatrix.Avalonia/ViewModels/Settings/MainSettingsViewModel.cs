@@ -77,6 +77,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public SharedState SharedState { get; }
 
+    public bool IsMacOS => Compat.IsMacOS;
+
     public override string Title => "Settings";
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
@@ -763,7 +765,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     #region Debug Commands
 
-    public CommandItem[] DebugCommands => [new CommandItem(DebugFindLocalModelFromIndexCommand)];
+    public CommandItem[] DebugCommands =>
+        [new CommandItem(DebugFindLocalModelFromIndexCommand), new CommandItem(DebugExtractDmgCommand)];
 
     [RelayCommand]
     private async Task DebugFindLocalModelFromIndex()
@@ -822,6 +825,34 @@ public partial class MainSettingsViewModel : PageViewModelBase
                     .ShowAsync();
             }
         }
+    }
+
+    [RelayCommand(CanExecute = nameof(IsMacOS))]
+    private async Task DebugExtractDmg()
+    {
+        if (!Compat.IsMacOS)
+            return;
+
+        // Select File
+        var files = await App.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions { Title = "Select .dmg file" }
+        );
+        if (files.FirstOrDefault()?.TryGetLocalPath() is not { } dmgFile)
+            return;
+
+        // Select output directory
+        var folders = await App.StorageProvider.OpenFolderPickerAsync(
+            new FolderPickerOpenOptions { Title = "Select output directory" }
+        );
+        if (folders.FirstOrDefault()?.TryGetLocalPath() is not { } outputDir)
+            return;
+
+        // Extract
+        notificationService.Show("Extracting...", dmgFile);
+
+        await ArchiveHelper.ExtractDmg(dmgFile, outputDir);
+
+        notificationService.Show("Extraction Complete", dmgFile);
     }
 
     #endregion

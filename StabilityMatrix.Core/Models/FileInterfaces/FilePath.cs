@@ -71,6 +71,11 @@ public partial class FilePath : FileSystemPath, IPathObject
     public FilePath(params string[] paths)
         : base(paths) { }
 
+    public FilePath RelativeTo(DirectoryPath path)
+    {
+        return new FilePath(Path.GetRelativePath(path.FullPath, FullPath));
+    }
+
     public long GetSize()
     {
         Info.Refresh();

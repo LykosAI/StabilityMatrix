@@ -57,6 +57,11 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
     public DirectoryPath(params string[] paths)
         : base(paths) { }
 
+    public DirectoryPath RelativeTo(DirectoryPath path)
+    {
+        return new DirectoryPath(Path.GetRelativePath(path.FullPath, FullPath));
+    }
+
     /// <inheritdoc />
     public long GetSize()
     {
@@ -81,9 +86,7 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
             .Sum(file => file.Length);
         var subDirs = Info.GetDirectories()
             .Where(dir => !dir.Attributes.HasFlag(FileAttributes.ReparsePoint))
-            .Sum(
-                dir => dir.EnumerateFiles("*", SearchOption.AllDirectories).Sum(file => file.Length)
-            );
+            .Sum(dir => dir.EnumerateFiles("*", SearchOption.AllDirectories).Sum(file => file.Length));
         return files + subDirs;
     }
 

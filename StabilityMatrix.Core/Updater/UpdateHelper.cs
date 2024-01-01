@@ -10,6 +10,7 @@ using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Updater;
@@ -88,10 +89,7 @@ public class UpdateHelper : IUpdateHelper
                 )
             )
             {
-                logger.LogInformation(
-                    "Handling authenticated update download: {Url}",
-                    updateInfo.Url
-                );
+                logger.LogInformation("Handling authenticated update download: {Url}", updateInfo.Url);
 
                 var path = updateInfo.Url.PathAndQuery.StripStart(authedPathPrefix);
                 path = HttpUtility.UrlDecode(path);
@@ -102,12 +100,7 @@ public class UpdateHelper : IUpdateHelper
 
             // Download update
             await downloadService
-                .DownloadToFileAsync(
-                    url,
-                    downloadFile,
-                    progress: progress,
-                    httpClientName: "UpdateClient"
-                )
+                .DownloadToFileAsync(url, downloadFile, progress: progress, httpClientName: "UpdateClient")
                 .ConfigureAwait(false);
 
             // Unzip if needed
@@ -119,10 +112,11 @@ public class UpdateHelper : IUpdateHelper
                 }
                 extractDir.Create();
 
-                progress.Report(
-                    new ProgressReport(-1, isIndeterminate: true, type: ProgressType.Extract)
-                );
+                progress.Report(new ProgressReport(-1, isIndeterminate: true, type: ProgressType.Extract));
+
                 await ArchiveHelper.Extract(downloadFile, extractDir).ConfigureAwait(false);
+
+                progress.Report(new ProgressReport(1, isIndeterminate: true, type: ProgressType.Extract));
 
                 // Find binary and move it up to the root
                 var binaryFile = extractDir
@@ -130,6 +124,24 @@ public class UpdateHelper : IUpdateHelper
                     .First(f => f.Extension.ToLowerInvariant() is ".exe" or ".appimage");
 
                 await binaryFile.MoveToAsync(ExecutablePath).ConfigureAwait(false);
+            }
+            else if (downloadFile.Extension == ".dmg")
+            {
+                if (!Compat.IsMacOS)
+                    throw new NotSupportedException(".dmg is only supported on macOS");
+
+                if (extractDir.Exists)
+                {
+                    await extractDir.DeleteAsync(true).ConfigureAwait(false);
+                }
+                extractDir.Create();
+
+                // Extract dmg contents
+                await ArchiveHelper.ExtractDmg(downloadFile, extractDir).ConfigureAwait(false);
+
+                // Find app and move it up to the root
+                var appFile = extractDir.EnumerateFiles("*.app").First();
+                await appFile.MoveToAsync(ExecutablePath).ConfigureAwait(false);
             }
             // Otherwise just rename
             else
@@ -184,9 +196,7 @@ public class UpdateHelper : IUpdateHelper
                 var channel in Enum.GetValues(typeof(UpdateChannel))
                     .Cast<UpdateChannel>()
                     .Where(
-                        c =>
-                            c > UpdateChannel.Unknown
-                            && c <= settingsManager.Settings.PreferredUpdateChannel
+                        c => c > UpdateChannel.Unknown && c <= settingsManager.Settings.PreferredUpdateChannel
                     )
             )
             {
@@ -295,11 +305,7 @@ public class UpdateHelper : IUpdateHelper
 
     private void NotifyUpdateAvailable(UpdateInfo update)
     {
-        logger.LogInformation(
-            "Update available {AppVer} -> {UpdateVer}",
-            Compat.AppVersion,
-            update.Version
-        );
+        logger.LogInformation("Update available {AppVer} -> {UpdateVer}", Compat.AppVersion, update.Version);
         EventManager.Instance.OnUpdateAvailable(update);
     }
 }

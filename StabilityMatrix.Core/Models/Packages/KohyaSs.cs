@@ -32,7 +32,7 @@ public class KohyaSs(
 
     public override Uri PreviewImageUri =>
         new(
-            "https://camo.githubusercontent.com/2170d2204816f428eec57ff87218f06344e0b4d91966343a6c5f0a76df91ec75/68747470733a2f2f696d672e796f75747562652e636f6d2f76692f6b35696d713031757655592f302e6a7067"
+            "https://camo.githubusercontent.com/5154eea62c113d5c04393e51a0d0f76ef25a723aad29d256dcc85ead1961cd41/68747470733a2f2f696d672e796f75747562652e636f6d2f76692f6b35696d713031757655592f302e6a7067"
         );
     public override string OutputFolderName => string.Empty;
 
@@ -44,7 +44,7 @@ public class KohyaSs(
         "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.UltraNightmare;
-
+    public override PackageType PackageType => PackageType.SdTraining;
     public override bool OfferInOneClickInstaller => false;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
     public override IEnumerable<TorchVersion> AvailableTorchVersions => [TorchVersion.Cuda];

@@ -20,6 +20,7 @@ using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -34,9 +35,9 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-[ManagedService]
-[Transient]
-public partial class InstallerViewModel : ContentDialogViewModelBase
+[View(typeof(InstallerDialog))]
+[Transient, ManagedService]
+public partial class InstallerViewModel : PageViewModelBase
 {
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
@@ -45,6 +46,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     private readonly INotificationService notificationService;
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly ILogger<InstallerViewModel> logger;
+
+    public override string Title => "Add Package";
 
     [ObservableProperty]
     private BasePackage selectedPackage;
@@ -90,11 +93,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
 
     // Version types (release or commit)
     [ObservableProperty]
-    [NotifyPropertyChangedFor(
-        nameof(ReleaseLabelText),
-        nameof(IsReleaseMode),
-        nameof(SelectedVersion)
-    )]
+    [NotifyPropertyChangedFor(nameof(ReleaseLabelText), nameof(IsReleaseMode), nameof(SelectedVersion))]
     private PackageVersionType selectedVersionType = PackageVersionType.Commit;
 
     [ObservableProperty]
@@ -106,22 +105,16 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
     [NotifyPropertyChangedFor(nameof(CanInstall))]
     private bool isLoading;
 
-    public string ReleaseLabelText =>
-        IsReleaseMode ? Resources.Label_Version : Resources.Label_Branch;
+    public string ReleaseLabelText => IsReleaseMode ? Resources.Label_Version : Resources.Label_Branch;
     public bool IsReleaseMode
     {
         get => SelectedVersionType == PackageVersionType.GithubRelease;
-        set =>
-            SelectedVersionType = value
-                ? PackageVersionType.GithubRelease
-                : PackageVersionType.Commit;
+        set => SelectedVersionType = value ? PackageVersionType.GithubRelease : PackageVersionType.Commit;
     }
-    public bool IsReleaseModeAvailable =>
-        AvailableVersionTypes.HasFlag(PackageVersionType.GithubRelease);
+    public bool IsReleaseModeAvailable => AvailableVersionTypes.HasFlag(PackageVersionType.GithubRelease);
     public bool ShowTorchVersionOptions => SelectedTorchVersion != TorchVersion.None;
 
-    public bool CanInstall =>
-        !string.IsNullOrWhiteSpace(InstallName) && !ShowDuplicateWarning && !IsLoading;
+    public bool CanInstall => !string.IsNullOrWhiteSpace(InstallName) && !ShowDuplicateWarning && !IsLoading;
 
     public IEnumerable<IPackageStep> Steps { get; set; }
 
@@ -148,6 +141,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         AvailablePackages = new ObservableCollection<BasePackage>(
             filtered.Any() ? filtered : packageFactory.GetAllAvailablePackages()
         );
+        SelectedPackage = AvailablePackages.FirstOrDefault();
         ShowIncompatiblePackages = !filtered.Any();
     }
 
@@ -207,7 +201,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         );
         if (result.IsSuccessful)
         {
-            OnPrimaryButtonClick();
+            // OnPrimaryButtonClick();
         }
         else
         {
@@ -254,10 +248,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         if (IsReleaseMode)
         {
             downloadOptions.VersionTag =
-                SelectedVersion?.TagName
-                ?? throw new NullReferenceException("Selected version is null");
-            downloadOptions.IsLatest =
-                AvailableVersions?.First().TagName == downloadOptions.VersionTag;
+                SelectedVersion?.TagName ?? throw new NullReferenceException("Selected version is null");
+            downloadOptions.IsLatest = AvailableVersions?.First().TagName == downloadOptions.VersionTag;
             downloadOptions.IsPrerelease = SelectedVersion.IsPrerelease;
 
             installedVersion.InstalledReleaseVersion = downloadOptions.VersionTag;
@@ -268,21 +260,15 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
             downloadOptions.CommitHash =
                 SelectedCommit?.Sha ?? throw new NullReferenceException("Selected commit is null");
             downloadOptions.BranchName =
-                SelectedVersion?.TagName
-                ?? throw new NullReferenceException("Selected version is null");
+                SelectedVersion?.TagName ?? throw new NullReferenceException("Selected version is null");
             downloadOptions.IsLatest = AvailableCommits?.First().Sha == SelectedCommit.Sha;
 
             installedVersion.InstalledBranch =
-                SelectedVersion?.TagName
-                ?? throw new NullReferenceException("Selected version is null");
+                SelectedVersion?.TagName ?? throw new NullReferenceException("Selected version is null");
             installedVersion.InstalledCommitSha = downloadOptions.CommitHash;
         }
 
-        var downloadStep = new DownloadPackageVersionStep(
-            SelectedPackage,
-            installLocation,
-            downloadOptions
-        );
+        var downloadStep = new DownloadPackageVersionStep(SelectedPackage, installLocation, downloadOptions);
         var installStep = new InstallPackageStep(
             SelectedPackage,
             SelectedTorchVersion,
@@ -326,7 +312,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
 
     public void Cancel()
     {
-        OnCloseButtonClick();
+        // OnCloseButtonClick();
     }
 
     partial void OnShowIncompatiblePackagesChanged(bool value)
@@ -351,9 +337,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         else
         {
             // First try to find the package-defined main branch
-            var version = AvailableVersions.FirstOrDefault(
-                x => x.TagName == SelectedPackage.MainBranch
-            );
+            var version = AvailableVersions.FirstOrDefault(x => x.TagName == SelectedPackage.MainBranch);
             // If not found, try main
             version ??= AvailableVersions.FirstOrDefault(x => x.TagName == "main");
 
@@ -406,8 +390,8 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
         if (SelectedPackage is null || Design.IsDesignMode)
             return;
 
-        Dispatcher.UIThread
-            .InvokeAsync(async () =>
+        Dispatcher
+            .UIThread.InvokeAsync(async () =>
             {
                 logger.LogDebug($"Release mode: {IsReleaseMode}");
                 var versionOptions = await SelectedPackage.GetAllVersionOptions();
@@ -425,9 +409,7 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
 
                 if (!IsReleaseMode)
                 {
-                    var commits = (
-                        await SelectedPackage.GetAllCommits(SelectedVersion.TagName)
-                    )?.ToList();
+                    var commits = (await SelectedPackage.GetAllCommits(SelectedVersion.TagName))?.ToList();
                     if (commits is null || commits.Count == 0)
                         return;
 
@@ -506,4 +488,6 @@ public partial class InstallerViewModel : ContentDialogViewModelBase
                 .SafeFireAndForget();
         }
     }
+
+    public override IconSource IconSource { get; }
 }

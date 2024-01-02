@@ -6,6 +6,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -166,6 +167,9 @@ public class ComfyUI(
         ];
 
     public override string MainBranch => "master";
+
+    public override IEnumerable<ExtensionBase> AvailableExtensions => [new ComfyManager(PrerequisiteHelper)];
+    public override string ExtensionsFolderName => "custom_nodes";
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[]

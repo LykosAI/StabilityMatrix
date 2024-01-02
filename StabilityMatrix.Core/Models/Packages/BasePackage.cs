@@ -3,6 +3,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -46,6 +47,12 @@ public abstract class BasePackage
     public virtual bool IsCompatible => GetRecommendedTorchVersion() != TorchVersion.Cpu;
 
     public abstract PackageDifficulty InstallerSortOrder { get; }
+
+    public virtual PackageType PackageType => PackageType.SdInference;
+
+    public virtual IEnumerable<ExtensionBase> AvailableExtensions => Enumerable.Empty<ExtensionBase>();
+
+    public virtual string ExtensionsFolderName => string.Empty;
 
     public abstract Task DownloadPackage(
         string installLocation,

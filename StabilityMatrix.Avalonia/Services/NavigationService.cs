@@ -7,7 +7,9 @@ using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -33,10 +35,7 @@ public class NavigationService<T> : INavigationService<T>
     }
 
     /// <inheritdoc />
-    public void NavigateTo<TViewModel>(
-        NavigationTransitionInfo? transitionInfo = null,
-        object? param = null
-    )
+    public void NavigateTo<TViewModel>(NavigationTransitionInfo? transitionInfo = null, object? param = null)
         where TViewModel : ViewModelBase
     {
         if (_frame is null)
@@ -70,10 +69,7 @@ public class NavigationService<T> : INavigationService<T>
             }
         );
 
-        TypedNavigation?.Invoke(
-            this,
-            new TypedNavigationEventArgs { ViewModelType = typeof(TViewModel) }
-        );
+        TypedNavigation?.Invoke(this, new TypedNavigationEventArgs { ViewModelType = typeof(TViewModel) });
     }
 
     /// <inheritdoc />
@@ -120,10 +116,7 @@ public class NavigationService<T> : INavigationService<T>
             }
         );
 
-        TypedNavigation?.Invoke(
-            this,
-            new TypedNavigationEventArgs { ViewModelType = viewModelType }
-        );
+        TypedNavigation?.Invoke(this, new TypedNavigationEventArgs { ViewModelType = viewModelType });
     }
 
     /// <inheritdoc />
@@ -161,11 +154,34 @@ public class NavigationService<T> : INavigationService<T>
 
         TypedNavigation?.Invoke(
             this,
+            new TypedNavigationEventArgs { ViewModelType = viewModel.GetType(), ViewModel = viewModel }
+        );
+    }
+
+    public bool GoBack()
+    {
+        if (_frame?.Content is IHandleNavigation navigationHandler)
+        {
+            var wentBack = navigationHandler.GoBack();
+            if (wentBack)
+            {
+                return true;
+            }
+        }
+
+        if (_frame is not { CanGoBack: true })
+            return false;
+
+        TypedNavigation?.Invoke(
+            this,
             new TypedNavigationEventArgs
             {
-                ViewModelType = viewModel.GetType(),
-                ViewModel = viewModel
+                ViewModelType = _frame.BackStack.Last().SourcePageType,
+                ViewModel = _frame.BackStack.Last().Context
             }
         );
+
+        _frame.GoBack();
+        return true;
     }
 }

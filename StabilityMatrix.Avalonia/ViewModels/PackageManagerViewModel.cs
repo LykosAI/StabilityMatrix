@@ -136,46 +136,9 @@ public partial class PackageManagerViewModel : PageViewModelBase
         base.OnUnloaded();
     }
 
-    public async Task ShowInstallDialog(BasePackage? selectedPackage = null)
+    public void ShowInstallDialog(BasePackage? selectedPackage = null)
     {
         NavigateToSubPage(typeof(NewInstallerDialogViewModel));
-        return;
-
-        var viewModel = dialogFactory.Get<InstallerViewModel>();
-        viewModel.SelectedPackage = selectedPackage ?? viewModel.AvailablePackages[0];
-
-        var dialog = new BetterContentDialog
-        {
-            MaxDialogWidth = 900,
-            MinDialogWidth = 900,
-            FullSizeDesired = true,
-            DefaultButton = ContentDialogButton.Close,
-            IsPrimaryButtonEnabled = false,
-            IsSecondaryButtonEnabled = false,
-            IsFooterVisible = false,
-            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            Content = new InstallerDialog { DataContext = viewModel }
-        };
-
-        var result = await dialog.ShowAsync();
-        if (result == ContentDialogResult.Primary)
-        {
-            var runner = new PackageModificationRunner { ShowDialogOnStart = true };
-            var steps = viewModel.Steps;
-
-            EventManager.Instance.OnPackageInstallProgressAdded(runner);
-            await runner.ExecuteSteps(steps.ToList());
-
-            if (!runner.Failed)
-            {
-                EventManager.Instance.OnInstalledPackagesChanged();
-                notificationService.Show(
-                    "Package Install Complete",
-                    $"{viewModel.InstallName} installed successfully",
-                    NotificationType.Success
-                );
-            }
-        }
     }
 
     private async Task CheckPackagesForUpdates()

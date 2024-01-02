@@ -33,9 +33,9 @@ public partial class PackageManagerPage : UserControlBase
         if (args.Parameter is PackageManagerNavigationOptions { OpenInstallerDialog: true } options)
         {
             var vm = (PackageManagerViewModel)DataContext!;
-            Dispatcher.UIThread.InvokeAsync(async () =>
+            Dispatcher.UIThread.Invoke(() =>
             {
-                await vm.ShowInstallDialog(options.InstallerSelectedPackage);
+                vm.ShowInstallDialog(options.InstallerSelectedPackage);
             });
         }
     }

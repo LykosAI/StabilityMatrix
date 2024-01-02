@@ -228,8 +228,6 @@ public partial class PackageInstallDetailViewModel(
                 $"{InstallName} installed successfully",
                 NotificationType.Success
             );
-            packageNavigationService.GoBack();
-            packageNavigationService.GoBack();
         }
     }
 

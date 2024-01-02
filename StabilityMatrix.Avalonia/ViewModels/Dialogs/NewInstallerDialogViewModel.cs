@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Reactive.Linq;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using DynamicData;
+using DynamicData.Alias;
+using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
@@ -31,10 +36,15 @@ public partial class NewInstallerDialogViewModel : PageViewModelBase
     private readonly IPrerequisiteHelper prerequisiteHelper;
 
     [ObservableProperty]
-    private IEnumerable<BasePackage> inferencePackages;
+    private bool showIncompatiblePackages = false;
 
-    [ObservableProperty]
-    private IEnumerable<BasePackage> trainingPackages;
+    private SourceCache<BasePackage, string> packageSource = new(p => p.GithubUrl);
+
+    public IObservableCollection<BasePackage> InferencePackages { get; } =
+        new ObservableCollectionExtended<BasePackage>();
+
+    public IObservableCollection<BasePackage> TrainingPackages { get; } =
+        new ObservableCollectionExtended<BasePackage>();
 
     public NewInstallerDialogViewModel(
         IPackageFactory packageFactory,
@@ -52,12 +62,41 @@ public partial class NewInstallerDialogViewModel : PageViewModelBase
         this.logger = logger;
         this.pyRunner = pyRunner;
         this.prerequisiteHelper = prerequisiteHelper;
-        inferencePackages = packageFactory
-            .GetPackagesByType(PackageType.SdInference)
-            .OrderBy(p => p.InstallerSortOrder);
-        trainingPackages = packageFactory
-            .GetPackagesByType(PackageType.SdTraining)
-            .OrderBy(p => p.InstallerSortOrder);
+
+        var searchPredicate = this.WhenPropertyChanged(vm => vm.ShowIncompatiblePackages)
+            .Select(_ => new Func<BasePackage, bool>(p => p.IsCompatible || ShowIncompatiblePackages))
+            .AsObservable();
+
+        packageSource
+            .Connect()
+            .DeferUntilLoaded()
+            .Filter(searchPredicate)
+            .Where(p => p is { PackageType: PackageType.SdInference })
+            .Sort(
+                SortExpressionComparer<BasePackage>
+                    .Ascending(p => p.InstallerSortOrder)
+                    .ThenByAscending(p => p.DisplayName)
+            )
+            .Bind(InferencePackages)
+            .Subscribe();
+
+        packageSource
+            .Connect()
+            .DeferUntilLoaded()
+            .Filter(searchPredicate)
+            .Where(p => p is { PackageType: PackageType.SdTraining })
+            .Sort(
+                SortExpressionComparer<BasePackage>
+                    .Ascending(p => p.InstallerSortOrder)
+                    .ThenByAscending(p => p.DisplayName)
+            )
+            .Bind(TrainingPackages)
+            .Subscribe();
+
+        packageSource.EditDiff(
+            packageFactory.GetAllAvailablePackages(),
+            (a, b) => a.GithubUrl == b.GithubUrl
+        );
     }
 
     public override string Title => "Add Package";

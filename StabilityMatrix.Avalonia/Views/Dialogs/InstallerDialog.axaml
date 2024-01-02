@@ -12,7 +12,6 @@
                           xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
                           x:DataType="dialogs:InstallerViewModel"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
-                          d:DataContext="{x:Static mocks:DesignData.InstallerViewModel}"
                           x:Class="StabilityMatrix.Avalonia.Views.Dialogs.InstallerDialog">
 
     <Grid MaxHeight="900"

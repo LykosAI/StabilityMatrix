@@ -35,8 +35,6 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-[View(typeof(InstallerDialog))]
-[Transient, ManagedService]
 public partial class InstallerViewModel : PageViewModelBase
 {
     private readonly ISettingsManager settingsManager;

@@ -178,20 +178,13 @@ public static class DesignData
         };
         LaunchOptionsViewModel.UpdateFilterCards();
 
-        InstallerViewModel = Services.GetRequiredService<InstallerViewModel>();
-        InstallerViewModel.AvailablePackages = new ObservableCollectionExtended<BasePackage>(
-            packageFactory.GetAllAvailablePackages()
-        );
-        InstallerViewModel.SelectedPackage = InstallerViewModel.AvailablePackages[0];
-        InstallerViewModel.ReleaseNotes = "## Release Notes\nThis is a test release note.";
-
         NewInstallerDialogViewModel = Services.GetRequiredService<NewInstallerDialogViewModel>();
-        NewInstallerDialogViewModel.InferencePackages = new ObservableCollection<BasePackage>(
-            packageFactory.GetPackagesByType(PackageType.SdInference).OrderBy(p => p.InstallerSortOrder)
-        );
-        NewInstallerDialogViewModel.TrainingPackages = new ObservableCollection<BasePackage>(
-            packageFactory.GetPackagesByType(PackageType.SdTraining).OrderBy(p => p.InstallerSortOrder)
-        );
+        // NewInstallerDialogViewModel.InferencePackages = new ObservableCollectionExtended<BasePackage>(
+        //     packageFactory.GetPackagesByType(PackageType.SdInference).OrderBy(p => p.InstallerSortOrder)
+        // );
+        // NewInstallerDialogViewModel.TrainingPackages = new ObservableCollection<BasePackage>(
+        //     packageFactory.GetPackagesByType(PackageType.SdTraining).OrderBy(p => p.InstallerSortOrder)
+        // );
 
         PackageInstallDetailViewModel = new PackageInstallDetailViewModel(
             packageFactory.GetAllAvailablePackages().FirstOrDefault() as BaseGitPackage,
@@ -423,9 +416,6 @@ public static class DesignData
 
         isInitialized = true;
     }
-
-    [NotNull]
-    public static InstallerViewModel? InstallerViewModel { get; private set; }
 
     [NotNull]
     public static NewInstallerDialogViewModel? NewInstallerDialogViewModel { get; private set; }

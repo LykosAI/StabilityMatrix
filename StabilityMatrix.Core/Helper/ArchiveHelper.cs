@@ -1,10 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using NLog;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using Timer = System.Timers.Timer;
@@ -127,7 +129,12 @@ public static partial class ArchiveHelper
                 var percent = int.Parse(match.Groups[1].Value);
                 var currentFile = match.Groups[2].Value;
                 progress.Report(
-                    new ProgressReport(percent / (float)100, "Extracting", currentFile, type: ProgressType.Extract)
+                    new ProgressReport(
+                        percent / (float)100,
+                        "Extracting",
+                        currentFile,
+                        type: ProgressType.Extract
+                    )
                 );
             }
         });
@@ -252,29 +259,28 @@ public static partial class ArchiveHelper
             };
         }
 
-        await Task.Factory
-            .StartNew(
-                () =>
+        await Task.Factory.StartNew(
+            () =>
+            {
+                var extractOptions = new ExtractionOptions { Overwrite = true, ExtractFullPath = true, };
+                using var stream = File.OpenRead(archivePath);
+                using var archive = ReaderFactory.Open(stream);
+
+                // Start the progress reporting timer
+                progressMonitor?.Start();
+
+                while (archive.MoveToNextEntry())
                 {
-                    var extractOptions = new ExtractionOptions { Overwrite = true, ExtractFullPath = true, };
-                    using var stream = File.OpenRead(archivePath);
-                    using var archive = ReaderFactory.Open(stream);
-
-                    // Start the progress reporting timer
-                    progressMonitor?.Start();
-
-                    while (archive.MoveToNextEntry())
+                    var entry = archive.Entry;
+                    if (!entry.IsDirectory)
                     {
-                        var entry = archive.Entry;
-                        if (!entry.IsDirectory)
-                        {
-                            count += (ulong)entry.CompressedSize;
-                        }
-                        archive.WriteEntryToDirectory(outputDirectory, extractOptions);
+                        count += (ulong)entry.CompressedSize;
                     }
-                },
-                TaskCreationOptions.LongRunning
-            )
+                    archive.WriteEntryToDirectory(outputDirectory, extractOptions);
+                }
+            },
+            TaskCreationOptions.LongRunning
+        )
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(progress: 1, message: "Done extracting"));
@@ -365,6 +371,38 @@ public static partial class ArchiveHelper
                 await using var fileStream = File.Create(outputPath);
                 await entryStream.CopyToAsync(fileStream).ConfigureAwait(false);
             }
+        }
+    }
+
+    [SupportedOSPlatform("macos")]
+    public static async Task ExtractDmg(string archivePath, DirectoryPath extractDir)
+    {
+        using var mountPoint = new TempDirectoryPath();
+
+        // Mount the dmg
+        await ProcessRunner
+            .GetProcessResultAsync("hdiutil", ["attach", archivePath, "-mountpoint", mountPoint])
+            .EnsureSuccessExitCode();
+
+        try
+        {
+            // Copy apps
+            foreach (var sourceDir in mountPoint.EnumerateDirectories("*.app"))
+            {
+                var destDir = extractDir.JoinDir(sourceDir.RelativeTo(mountPoint));
+
+                await ProcessRunner
+                    .GetProcessResultAsync("cp", ["-R", sourceDir, destDir])
+                    .EnsureSuccessExitCode()
+                    .ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            // Unmount the dmg
+            await ProcessRunner
+                .GetProcessResultAsync("hdiutil", ["detach", mountPoint])
+                .ConfigureAwait(false);
         }
     }
 }

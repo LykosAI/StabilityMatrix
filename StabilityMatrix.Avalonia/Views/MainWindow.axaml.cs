@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
 using AsyncImageLoader;
@@ -415,5 +414,11 @@ public partial class MainWindow : AppWindowBase
     private void PatreonPatreonItem_OnTapped(object? sender, TappedEventArgs e)
     {
         ProcessRunner.OpenUrl(Assets.PatreonUrl);
+    }
+
+    private void TopLevel_OnBackRequested(object? sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        navigationService.GoBack();
     }
 }

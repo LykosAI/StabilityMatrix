@@ -28,7 +28,8 @@ public class StableDiffusionUx(
     public override string DisplayName { get; set; } = "Stable Diffusion Web UI-UX";
     public override string Author => "anapnoe";
     public override string LicenseType => "AGPL-3.0";
-    public override string LicenseUrl => "https://github.com/anapnoe/stable-diffusion-webui-ux/blob/master/LICENSE.txt";
+    public override string LicenseUrl =>
+        "https://github.com/anapnoe/stable-diffusion-webui-ux/blob/master/LICENSE.txt";
     public override string Blurb =>
         "A pixel perfect design, mobile friendly, customizable interface that adds accessibility, "
         + "ease of use and extended functionallity to the stable diffusion web ui.";
@@ -38,7 +39,7 @@ public class StableDiffusionUx(
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()

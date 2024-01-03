@@ -17,12 +17,6 @@
                           x:Class="StabilityMatrix.Avalonia.Views.PackageManagerPage">
 
     <Grid Margin="16" RowDefinitions="Auto,*,Auto">
-        <!-- Title -->
-        <TextBlock Grid.Row="0" Text="{Binding Title}"
-                   Margin="0,0,0,16"
-                   FontSize="24" />
-
-        <!-- Cards -->
         <ScrollViewer Grid.Row="1">
             <ItemsRepeater
                 ItemsSource="{Binding PackageCards}">

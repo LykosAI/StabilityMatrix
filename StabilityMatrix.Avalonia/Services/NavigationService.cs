@@ -22,6 +22,10 @@ namespace StabilityMatrix.Avalonia.Services;
     ImplType = typeof(NavigationService<SettingsViewModel>),
     InterfaceType = typeof(INavigationService<SettingsViewModel>)
 )]
+[Singleton(
+    ImplType = typeof(NavigationService<NewPackageManagerViewModel>),
+    InterfaceType = typeof(INavigationService<NewPackageManagerViewModel>)
+)]
 public class NavigationService<T> : INavigationService<T>
 {
     private Frame? _frame;

@@ -271,7 +271,7 @@ public sealed class App : Application
                     {
                         provider.GetRequiredService<LaunchPageViewModel>(),
                         provider.GetRequiredService<InferenceViewModel>(),
-                        provider.GetRequiredService<PackageManagerViewModel>(),
+                        provider.GetRequiredService<NewPackageManagerViewModel>(),
                         provider.GetRequiredService<CheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
                         provider.GetRequiredService<OutputsPageViewModel>()

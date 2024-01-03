@@ -173,6 +173,14 @@
         <DependentUpon>VideoOutputSettingsCard.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Views\NewPackageManagerPage.axaml.cs">
+        <DependentUpon>NewPackageManagerPage.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\PackageInstallDetailView.axaml.cs">
+        <DependentUpon>PackageInstallDetailView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
     <!-- set HUSKY to 0 to disable, or opt-in during CI by setting HUSKY to 1 -->

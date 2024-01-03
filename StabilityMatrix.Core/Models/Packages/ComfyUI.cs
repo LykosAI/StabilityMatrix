@@ -6,6 +6,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;

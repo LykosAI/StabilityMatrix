@@ -35,7 +35,7 @@ public class OneTrainer(
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
     public override IEnumerable<TorchVersion> AvailableTorchVersions => [TorchVersion.Cuda];
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
-
+    public override PackageType PackageType => PackageType.SdTraining;
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.None };
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Nightmare;

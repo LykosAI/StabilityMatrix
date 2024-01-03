@@ -38,6 +38,9 @@ public partial class NewInstallerDialogViewModel : PageViewModelBase
     [ObservableProperty]
     private bool showIncompatiblePackages = false;
 
+    [ObservableProperty]
+    private string searchFilter = string.Empty;
+
     private SourceCache<BasePackage, string> packageSource = new(p => p.GithubUrl);
 
     public IObservableCollection<BasePackage> InferencePackages { get; } =
@@ -63,13 +66,23 @@ public partial class NewInstallerDialogViewModel : PageViewModelBase
         this.pyRunner = pyRunner;
         this.prerequisiteHelper = prerequisiteHelper;
 
-        var searchPredicate = this.WhenPropertyChanged(vm => vm.ShowIncompatiblePackages)
+        var incompatiblePredicate = this.WhenPropertyChanged(vm => vm.ShowIncompatiblePackages)
             .Select(_ => new Func<BasePackage, bool>(p => p.IsCompatible || ShowIncompatiblePackages))
+            .AsObservable();
+
+        var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchFilter)
+            .Select(
+                _ =>
+                    new Func<BasePackage, bool>(
+                        p => p.DisplayName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                    )
+            )
             .AsObservable();
 
         packageSource
             .Connect()
             .DeferUntilLoaded()
+            .Filter(incompatiblePredicate)
             .Filter(searchPredicate)
             .Where(p => p is { PackageType: PackageType.SdInference })
             .Sort(
@@ -83,6 +96,7 @@ public partial class NewInstallerDialogViewModel : PageViewModelBase
         packageSource
             .Connect()
             .DeferUntilLoaded()
+            .Filter(incompatiblePredicate)
             .Filter(searchPredicate)
             .Where(p => p is { PackageType: PackageType.SdTraining })
             .Sort(
@@ -123,5 +137,10 @@ public partial class NewInstallerDialogViewModel : PageViewModelBase
             () => packageNavigationService.NavigateTo(vm, BetterSlideNavigationTransition.PageSlideFromRight),
             DispatcherPriority.Send
         );
+    }
+
+    public void ClearSearchQuery()
+    {
+        SearchFilter = string.Empty;
     }
 }

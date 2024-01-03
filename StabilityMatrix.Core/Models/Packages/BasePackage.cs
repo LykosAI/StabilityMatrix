@@ -50,10 +50,6 @@ public abstract class BasePackage
 
     public virtual PackageType PackageType => PackageType.SdInference;
 
-    public virtual IEnumerable<ExtensionBase> AvailableExtensions => Enumerable.Empty<ExtensionBase>();
-
-    public virtual string ExtensionsFolderName => string.Empty;
-
     public abstract Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,

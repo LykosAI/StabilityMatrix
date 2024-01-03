@@ -203,12 +203,37 @@
             <TabItem Header="Inference" Margin="8,0,0,0">
                 <ScrollViewer Padding="8">
                     <StackPanel Orientation="Vertical">
-                        <ToggleSwitch OnContent="Show All Packages" OffContent="Show All Packages"
-                                      IsChecked="{Binding ShowIncompatiblePackages}"
-                                      VerticalAlignment="Top"
-                                      HorizontalAlignment="Left"
-                                      Margin="4, 4, 16, 0"
-                                      ToolTip.Tip="Enabling &quot;Show All Packages&quot; will include packages that may not be compatible with your system and may run very slowly as a result." />
+                        <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,8">
+                            <TextBox Margin="4, 0,0,0"
+                                     Watermark="{x:Static lang:Resources.Action_Search}"
+                                     Height="36"
+                                     FontSize="16"
+                                     HorizontalAlignment="Stretch"
+                                     VerticalAlignment="Center"
+                                     KeyDown="InputElement_OnKeyDown"
+                                     Text="{Binding SearchFilter, Mode=TwoWay}">
+                                <TextBox.InnerRightContent>
+                                    <Grid>
+                                        <Button Classes="transparent-full"
+                                                IsVisible="{Binding SearchFilter.Length}"
+                                                Command="{Binding ClearSearchQuery}">
+                                            <controls1:SymbolIcon Symbol="Cancel" />
+                                        </Button>
+                                        <controls1:SymbolIcon
+                                            IsVisible="{Binding !SearchFilter.Length}"
+                                            Margin="0,0,10,0"
+                                            FontSize="16"
+                                            Symbol="Find" />
+                                    </Grid>
+                                </TextBox.InnerRightContent>
+                            </TextBox>
+                            <ToggleSwitch Grid.Column="1" OnContent="Show All Packages" OffContent="Show All Packages"
+                                          IsChecked="{Binding ShowIncompatiblePackages}"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Left"
+                                          Margin="16, 0, 8, 0"
+                                          ToolTip.Tip="Enabling &quot;Show All Packages&quot; will include packages that may not be compatible with your system and may run very slowly as a result." />
+                        </Grid>
                         <ItemsRepeater ItemsSource="{Binding InferencePackages}">
                             <ItemsRepeater.Layout>
                                 <StackLayout Orientation="Vertical" />
@@ -223,12 +248,37 @@
             <TabItem Header="Training">
                 <ScrollViewer Padding="8">
                     <StackPanel Orientation="Vertical">
-                        <ToggleSwitch OnContent="Show All Packages" OffContent="Show All Packages"
-                                      IsChecked="{Binding ShowIncompatiblePackages}"
-                                      VerticalAlignment="Top"
-                                      HorizontalAlignment="Left"
-                                      Margin="4, 4, 16, 0"
-                                      ToolTip.Tip="Enabling &quot;Show All Packages&quot; will include packages that may not be compatible with your system and may run very slowly as a result." />
+                        <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,8">
+                            <TextBox Margin="4, 0,0,0"
+                                     Watermark="{x:Static lang:Resources.Action_Search}"
+                                     Height="36"
+                                     FontSize="16"
+                                     HorizontalAlignment="Stretch"
+                                     VerticalAlignment="Center"
+                                     KeyDown="InputElement_OnKeyDown"
+                                     Text="{Binding SearchFilter, Mode=TwoWay}">
+                                <TextBox.InnerRightContent>
+                                    <Grid>
+                                        <Button Classes="transparent-full"
+                                                IsVisible="{Binding SearchFilter.Length}"
+                                                Command="{Binding ClearSearchQuery}">
+                                            <controls1:SymbolIcon Symbol="Cancel" />
+                                        </Button>
+                                        <controls1:SymbolIcon
+                                            IsVisible="{Binding !SearchFilter.Length}"
+                                            Margin="0,0,10,0"
+                                            FontSize="16"
+                                            Symbol="Find" />
+                                    </Grid>
+                                </TextBox.InnerRightContent>
+                            </TextBox>
+                            <ToggleSwitch Grid.Column="1" OnContent="Show All Packages" OffContent="Show All Packages"
+                                          IsChecked="{Binding ShowIncompatiblePackages}"
+                                          VerticalAlignment="Center"
+                                          HorizontalAlignment="Left"
+                                          Margin="16, 0, 8, 0"
+                                          ToolTip.Tip="Enabling &quot;Show All Packages&quot; will include packages that may not be compatible with your system and may run very slowly as a result." />
+                        </Grid>
                         <ItemsRepeater ItemsSource="{Binding TrainingPackages}">
                             <ItemsRepeater.Layout>
                                 <StackLayout Orientation="Vertical" />

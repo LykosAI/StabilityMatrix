@@ -168,9 +168,6 @@ public class ComfyUI(
 
     public override string MainBranch => "master";
 
-    public override IEnumerable<ExtensionBase> AvailableExtensions => [new ComfyManager(PrerequisiteHelper)];
-    public override string ExtensionsFolderName => "custom_nodes";
-
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[]
         {

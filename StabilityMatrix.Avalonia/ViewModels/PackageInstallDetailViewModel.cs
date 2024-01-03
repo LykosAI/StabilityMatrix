@@ -107,6 +107,8 @@ public partial class PackageInstallDetailViewModel(
             UpdateVersions();
             await UpdateCommits(SelectedPackage.MainBranch);
         }
+
+        SelectedTorchVersion = SelectedPackage.GetRecommendedTorchVersion();
     }
 
     [RelayCommand]

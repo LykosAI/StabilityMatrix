@@ -30,43 +30,40 @@
                     CommandParameter="{Binding }">
                 <controls:Card>
 
-                    <Grid RowDefinitions="Auto, Auto, Auto, Auto"
-                          ColumnDefinitions="Auto, *, Auto">
+                    <Grid ColumnDefinitions="Auto, *, Auto">
                         <controls:BetterAdvancedImage
-                            Grid.Row="0"
-                            Grid.RowSpan="4"
                             Grid.Column="0"
                             MaxHeight="128"
                             MaxWidth="128"
                             Stretch="UniformToFill"
                             CornerRadius="4"
                             Source="{Binding PreviewImageUri}" />
-                        <TextBlock Grid.Row="0"
-                                   Grid.Column="1"
-                                   Text="{Binding DisplayName}"
+                        <StackPanel Grid.Column="1" Orientation="Vertical">
+                        <TextBlock Text="{Binding DisplayName}"
                                    FontWeight="Light"
                                    Margin="16,0,0,0"
                                    FontSize="20" />
-                        <TextBlock Grid.Row="1"
-                                   Grid.Column="1"
-                                   Text="{Binding ByAuthor}"
-                                   FontWeight="Light"
-                                   Margin="16,-4,0,0"
-                                   FontSize="13" />
-
-                        <TextBlock Grid.Row="0"
-                                   Grid.RowSpan="4"
-                                   Grid.Column="1"
-                                   TextWrapping="Wrap"
-                                   Text="{Binding Blurb}"
+                        
+                        <TextBlock Text="{Binding ByAuthor}"
                                    FontWeight="Light"
                                    Margin="16,0,0,0"
-                                   VerticalAlignment="Center"
-                                   FontSize="16" />
+                                   FontSize="13" />
 
-                        <ItemsRepeater Grid.Column="1"
-                                       Grid.Row="3"
-                                       Margin="16, 8, 0, 8"
+                        <TextBlock TextWrapping="Wrap"
+                                   Text="{Binding Blurb}"
+                                   FontWeight="Light"
+                                   Margin="16,8,0,8"
+                                   FontSize="16" />
+                        
+                        <TextBlock TextWrapping="Wrap"
+                                   Text="{Binding Disclaimer}"
+                                   IsVisible="{Binding Disclaimer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                   Foreground="OrangeRed"
+                                   FontWeight="Light"
+                                   Margin="16,-4,0,4"
+                                   FontSize="14" />
+
+                        <ItemsRepeater Margin="16, 8, 0, 0"
                                        ItemsSource="{Binding AvailableTorchVersions}">
                             <ItemsRepeater.Layout>
                                 <StackLayout Orientation="Horizontal" />
@@ -187,10 +184,10 @@
                                 </DataTemplate>
                             </ItemsRepeater.ItemTemplate>
                         </ItemsRepeater>
+                        
+                        </StackPanel>
 
-                        <controls1:SymbolIcon Grid.Row="0"
-                                              Grid.RowSpan="4"
-                                              Grid.Column="2"
+                        <controls1:SymbolIcon Grid.Column="2"
                                               HorizontalAlignment="Right"
                                               VerticalAlignment="Center"
                                               FontSize="24"

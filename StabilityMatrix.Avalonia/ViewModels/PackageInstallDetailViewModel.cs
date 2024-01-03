@@ -50,7 +50,6 @@ public partial class PackageInstallDetailViewModel(
     public string ReleaseLabelText => IsReleaseMode ? Resources.Label_Version : Resources.Label_Branch;
 
     public bool ShowTorchVersionOptions => SelectedTorchVersion != TorchVersion.None;
-    public bool ShowExtensions => SelectedPackage.AvailableExtensions.Any();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FullInstallPath))]
@@ -82,9 +81,6 @@ public partial class PackageInstallDetailViewModel(
     [ObservableProperty]
     private GitCommit? selectedCommit;
 
-    [ObservableProperty]
-    private ObservableCollection<ExtensionViewModel> availableExtensions = [];
-
     private PackageVersionOptions? allOptions;
 
     public override async Task OnLoadedAsync()
@@ -93,9 +89,6 @@ public partial class PackageInstallDetailViewModel(
             return;
 
         OnInstallNameChanged(InstallName);
-        AvailableExtensions = new ObservableCollection<ExtensionViewModel>(
-            SelectedPackage.AvailableExtensions.Select(p => new ExtensionViewModel { Extension = p })
-        );
 
         allOptions = await SelectedPackage.GetAllVersionOptions();
         if (ShowReleaseMode)
@@ -171,16 +164,6 @@ public partial class PackageInstallDetailViewModel(
             downloadOptions,
             installLocation
         );
-        var installExtensionSteps = AvailableExtensions
-            .Where(e => e.IsSelected)
-            .Select(
-                e =>
-                    new InstallExtensionStep(
-                        e.Extension,
-                        Path.Combine(installLocation, SelectedPackage.ExtensionsFolderName)
-                    )
-            )
-            .ToList();
 
         var setupModelFoldersStep = new SetupModelFoldersStep(
             SelectedPackage,
@@ -209,15 +192,9 @@ public partial class PackageInstallDetailViewModel(
             prereqStep,
             downloadStep,
             installStep,
+            setupModelFoldersStep,
+            addInstalledPackageStep
         };
-
-        if (installExtensionSteps.Count > 0)
-        {
-            steps.AddRange(installExtensionSteps);
-        }
-
-        steps.Add(setupModelFoldersStep);
-        steps.Add(addInstalledPackageStep);
 
         var runner = new PackageModificationRunner { ShowDialogOnStart = true };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);

@@ -97,24 +97,6 @@
                 </TextBlock>
             </StackPanel>
             
-            <Expander Header="Extensions"
-                      FontSize="16"
-                      HorizontalAlignment="Stretch"
-                      IsVisible="{Binding ShowExtensions}"
-                      Margin="8">
-                <ItemsRepeater ItemsSource="{Binding AvailableExtensions}">
-                    <ItemsRepeater.Layout>
-                        <UniformGridLayout MinColumnSpacing="4" MinRowSpacing="4"/>
-                    </ItemsRepeater.Layout>
-                    <ItemsRepeater.ItemTemplate>
-                        <DataTemplate x:DataType="{x:Type viewModels:ExtensionViewModel}">
-                            <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" 
-                                      Content="{Binding Extension.DisplayName}"/>
-                        </DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
-            </Expander>
-            
             <Expander Header="{x:Static lang:Resources.Label_AdvancedOptions}"
                       FontSize="16"
                       HorizontalAlignment="Stretch"

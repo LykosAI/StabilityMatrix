@@ -109,6 +109,7 @@ public partial class PackageInstallDetailViewModel(
         }
 
         SelectedTorchVersion = SelectedPackage.GetRecommendedTorchVersion();
+        SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
     }
 
     [RelayCommand]

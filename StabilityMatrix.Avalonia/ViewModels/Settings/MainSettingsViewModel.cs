@@ -24,7 +24,9 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
+using ExifLibrary;
 using FluentAvalonia.UI.Controls;
+using MetadataExtractor.Formats.Exif;
 using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Animations;
@@ -46,6 +48,7 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Python;
@@ -74,8 +77,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public SharedState SharedState { get; }
 
+    public bool IsMacOS => Compat.IsMacOS;
+
     public override string Title => "Settings";
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
 
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public string AppVersion =>
@@ -132,7 +138,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private MemoryInfo memoryInfo;
 
-    private readonly DispatcherTimer hardwareInfoUpdateTimer = new() { Interval = TimeSpan.FromSeconds(2.627) };
+    private readonly DispatcherTimer hardwareInfoUpdateTimer =
+        new() { Interval = TimeSpan.FromSeconds(2.627) };
 
     public Task<CpuInfo> CpuInfoAsync => HardwareHelper.GetCpuInfoAsync();
 
@@ -198,8 +205,16 @@ public partial class MainSettingsViewModel : PageViewModelBase
             true
         );
 
-        settingsManager.RelayPropertyFor(this, vm => vm.SelectedAnimationScale, settings => settings.AnimationScale);
-        settingsManager.RelayPropertyFor(this, vm => vm.HolidayModeSetting, settings => settings.HolidayModeSetting);
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedAnimationScale,
+            settings => settings.AnimationScale
+        );
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.HolidayModeSetting,
+            settings => settings.HolidayModeSetting
+        );
 
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 
@@ -239,6 +254,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
         {
             MemoryInfo = newMemoryInfo;
         }
+
+        // Stop timer if live memory info is not available
+        if (!HardwareHelper.IsLiveMemoryUsageInfoAvailable)
+        {
+            (sender as DispatcherTimer)?.Stop();
+        }
     }
 
     partial void OnSelectedThemeChanged(string? value)
@@ -277,16 +298,14 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 CloseButtonText = Resources.Action_RelaunchLater
             };
 
-            Dispatcher
-                .UIThread
-                .InvokeAsync(async () =>
+            Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                if (await dialog.ShowAsync() == ContentDialogResult.Primary)
                 {
-                    if (await dialog.ShowAsync() == ContentDialogResult.Primary)
-                    {
-                        Process.Start(Compat.AppCurrentPath);
-                        App.Shutdown();
-                    }
-                });
+                    Process.Start(Compat.AppCurrentPath);
+                    App.Shutdown();
+                }
+            });
         }
         else
         {
@@ -313,16 +332,14 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [RelayCommand]
     private void NavigateToSubPage(Type viewModelType)
     {
-        Dispatcher
-            .UIThread
-            .Post(
-                () =>
-                    settingsNavigationService.NavigateTo(
-                        viewModelType,
-                        BetterSlideNavigationTransition.PageSlideFromRight
-                    ),
-                DispatcherPriority.Send
-            );
+        Dispatcher.UIThread.Post(
+            () =>
+                settingsNavigationService.NavigateTo(
+                    viewModelType,
+                    BetterSlideNavigationTransition.PageSlideFromRight
+                ),
+            DispatcherPriority.Send
+        );
     }
 
     #region Package Environment
@@ -350,8 +367,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         {
             // Save settings
             var newEnvVars = viewModel
-                .EnvVars
-                .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
+                .EnvVars.Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
                 .GroupBy(kvp => kvp.Key, StringComparer.Ordinal)
                 .ToDictionary(g => g.Key, g => g.First().Value, StringComparer.Ordinal);
             settingsManager.Transaction(s => s.EnvironmentVariables = newEnvVars);
@@ -405,7 +421,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         await using var _ = new MinimumDelay(200, 300);
 
-        var shortcutDir = new DirectoryPath(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs");
+        var shortcutDir = new DirectoryPath(
+            Environment.GetFolderPath(Environment.SpecialFolder.StartMenu),
+            "Programs"
+        );
         var shortcutLink = shortcutDir.JoinFile("Stability Matrix.lnk");
 
         var appPath = Compat.AppCurrentPath;
@@ -742,6 +761,100 @@ public partial class MainSettingsViewModel : PageViewModelBase
             download.Start();
         }
     }
+    #endregion
+
+    #region Debug Commands
+
+    public CommandItem[] DebugCommands =>
+        [new CommandItem(DebugFindLocalModelFromIndexCommand), new CommandItem(DebugExtractDmgCommand)];
+
+    [RelayCommand]
+    private async Task DebugFindLocalModelFromIndex()
+    {
+        var textFields = new TextBoxField[]
+        {
+            new() { Label = "Blake3 Hash" },
+            new() { Label = "SharedFolderType" }
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("Find Local Model", "", textFields);
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            Func<Task<IEnumerable<LocalModelFile>>> modelGetter;
+
+            if (textFields.ElementAtOrDefault(0)?.Text is { } hash && !string.IsNullOrWhiteSpace(hash))
+            {
+                modelGetter = () => modelIndexService.FindByHashAsync(hash);
+            }
+            else if (textFields.ElementAtOrDefault(1)?.Text is { } type && !string.IsNullOrWhiteSpace(type))
+            {
+                modelGetter = () => modelIndexService.FindAsync(Enum.Parse<SharedFolderType>(type));
+            }
+            else
+            {
+                return;
+            }
+
+            var timer = Stopwatch.StartNew();
+
+            var result = (await modelGetter()).ToImmutableArray();
+
+            timer.Stop();
+
+            if (result.Length != 0)
+            {
+                await DialogHelper
+                    .CreateMarkdownDialog(
+                        string.Join(
+                            "\n\n",
+                            result.Select(
+                                (model, i) =>
+                                    $"[{i + 1}] {model.RelativePath.ToRepr()} "
+                                    + $"({model.DisplayModelName}, {model.DisplayModelVersion})"
+                            )
+                        ),
+                        $"Found Models ({CodeTimer.FormatTime(timer.Elapsed)})"
+                    )
+                    .ShowAsync();
+            }
+            else
+            {
+                await DialogHelper
+                    .CreateMarkdownDialog(":(", $"No models found ({CodeTimer.FormatTime(timer.Elapsed)})")
+                    .ShowAsync();
+            }
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(IsMacOS))]
+    private async Task DebugExtractDmg()
+    {
+        if (!Compat.IsMacOS)
+            return;
+
+        // Select File
+        var files = await App.StorageProvider.OpenFilePickerAsync(
+            new FilePickerOpenOptions { Title = "Select .dmg file" }
+        );
+        if (files.FirstOrDefault()?.TryGetLocalPath() is not { } dmgFile)
+            return;
+
+        // Select output directory
+        var folders = await App.StorageProvider.OpenFolderPickerAsync(
+            new FolderPickerOpenOptions { Title = "Select output directory" }
+        );
+        if (folders.FirstOrDefault()?.TryGetLocalPath() is not { } outputDir)
+            return;
+
+        // Extract
+        notificationService.Show("Extracting...", dmgFile);
+
+        await ArchiveHelper.ExtractDmg(dmgFile, outputDir);
+
+        notificationService.Show("Extraction Complete", dmgFile);
+    }
+
     #endregion
 
     #region Info Section

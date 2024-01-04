@@ -6,6 +6,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -114,8 +115,34 @@ public class ComfyUI(
             {
                 Name = "Use CPU only",
                 Type = LaunchOptionType.Bool,
-                InitialValue = !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
+                InitialValue =
+                    !Compat.IsMacOS && !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
                 Options = ["--cpu"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Cross Attention Method",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS ? "--use-pytorch-cross-attention" : null,
+                Options =
+                [
+                    "--use-split-cross-attention",
+                    "--use-quad-cross-attention",
+                    "--use-pytorch-cross-attention"
+                ]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Force Floating Point Precision",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS ? "--force-fp16" : null,
+                Options = ["--force-fp32", "--force-fp16"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "VAE Precision",
+                Type = LaunchOptionType.Bool,
+                Options = ["--fp16-vae", "--fp32-vae", "--bf16-vae"]
             },
             new LaunchOptionDefinition
             {
@@ -142,7 +169,14 @@ public class ComfyUI(
     public override string MainBranch => "master";
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm, TorchVersion.Mps };
+        new[]
+        {
+            TorchVersion.Cpu,
+            TorchVersion.Cuda,
+            TorchVersion.DirectMl,
+            TorchVersion.Rocm,
+            TorchVersion.Mps
+        };
 
     public override async Task InstallPackage(
         string installLocation,
@@ -161,7 +195,9 @@ public class ComfyUI(
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
-        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true));
+        progress?.Report(
+            new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
+        );
 
         var pipArgs = new PipInstallArgs();
 
@@ -181,7 +217,12 @@ public class ComfyUI(
                             TorchVersion.Cpu => "cpu",
                             TorchVersion.Cuda => "cu121",
                             TorchVersion.Rocm => "rocm5.6",
-                            _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                            _
+                                => throw new ArgumentOutOfRangeException(
+                                    nameof(torchVersion),
+                                    torchVersion,
+                                    null
+                                )
                         }
                     )
         };
@@ -239,16 +280,23 @@ public class ComfyUI(
         }
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
+    public override Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    ) =>
         sharedFolderMethod switch
         {
-            SharedFolderMethod.Symlink => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
+            SharedFolderMethod.Symlink
+                => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
             SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
             SharedFolderMethod.None => Task.CompletedTask,
             _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
         };
 
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
+    public override Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
     {
         return sharedFolderMethod switch
         {
@@ -286,7 +334,9 @@ public class ComfyUI(
             throw new Exception("Invalid extra_model_paths.yaml");
         }
         // check if we have a child called "stability_matrix"
-        var stabilityMatrixNode = mappingNode.Children.FirstOrDefault(c => c.Key.ToString() == "stability_matrix");
+        var stabilityMatrixNode = mappingNode.Children.FirstOrDefault(
+            c => c.Key.ToString() == "stability_matrix"
+        );
 
         if (stabilityMatrixNode.Key != null)
         {
@@ -337,7 +387,11 @@ public class ComfyUI(
                     { "hypernetworks", Path.Combine(modelsDir, "Hypernetwork") },
                     {
                         "controlnet",
-                        string.Join('\n', Path.Combine(modelsDir, "ControlNet"), Path.Combine(modelsDir, "T2IAdapter"))
+                        string.Join(
+                            '\n',
+                            Path.Combine(modelsDir, "ControlNet"),
+                            Path.Combine(modelsDir, "T2IAdapter")
+                        )
                     },
                     { "clip", Path.Combine(modelsDir, "CLIP") },
                     { "clip_vision", Path.Combine(modelsDir, "InvokeClipVision") },
@@ -401,7 +455,9 @@ public class ComfyUI(
 
         mappingNode.Children.Remove("stability_matrix");
 
-        var serializer = new SerializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
+        var serializer = new SerializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .Build();
         var yamlData = serializer.Serialize(mappingNode);
 
         await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);

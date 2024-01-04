@@ -92,7 +92,7 @@ public static class ProcessRunner
         else if (Compat.IsMacOS)
         {
             using var process = new Process();
-            process.StartInfo.FileName = "explorer";
+            process.StartInfo.FileName = "open";
             process.StartInfo.Arguments = $"-R {Quote(filePath)}";
             process.Start();
             await process.WaitForExitAsync().ConfigureAwait(false);
@@ -331,19 +331,10 @@ public static class ProcessRunner
     {
         // Quote arguments containing spaces
         var args = string.Join(" ", arguments.Where(s => !string.IsNullOrEmpty(s)).Select(Quote));
-        return StartAnsiProcess(
-            fileName,
-            args,
-            workingDirectory,
-            outputDataReceived,
-            environmentVariables
-        );
+        return StartAnsiProcess(fileName, args, workingDirectory, outputDataReceived, environmentVariables);
     }
 
-    public static async Task<ProcessResult> RunBashCommand(
-        string command,
-        string workingDirectory = ""
-    )
+    public static async Task<ProcessResult> RunBashCommand(string command, string workingDirectory = "")
     {
         // Escape any single quotes in the command
         var escapedCommand = command.Replace("\"", "\\\"");
@@ -381,10 +372,7 @@ public static class ProcessRunner
         };
     }
 
-    public static Task<ProcessResult> RunBashCommand(
-        IEnumerable<string> commands,
-        string workingDirectory = ""
-    )
+    public static Task<ProcessResult> RunBashCommand(IEnumerable<string> commands, string workingDirectory = "")
     {
         // Quote arguments containing spaces
         var args = string.Join(" ", commands.Select(Quote));
@@ -433,9 +421,7 @@ public static class ProcessRunner
         catch (SystemException) { }
 
         throw new ProcessException(
-            "Process "
-                + (processName == null ? "" : processName + " ")
-                + $"failed with exit-code {process.ExitCode}."
+            "Process " + (processName == null ? "" : processName + " ") + $"failed with exit-code {process.ExitCode}."
         );
     }
 }

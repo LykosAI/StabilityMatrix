@@ -5,6 +5,44 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.8.0-dev.4
+### Added
+- Auto-update support for macOS
+- New package installation flow
+- Added `--use-directml` launch argument for SDWebUI DirectML fork
+### Changed
+- Changed default Period to "AllTime" in the Model Browser
+### Fixed
+- Fixed SDTurboScheduler's missing denoise parameter
+
+## v2.8.0-dev.3
+### Added
+- Added release builds for macOS (Apple Silicon)
+- Added new package: [OneTrainer](https://github.com/Nerogar/OneTrainer)
+- Added ComfyUI launch argument configs: Cross Attention Method, Force Floating Point Precision, VAE Precision
+- Added Delete button to the CivitAI Model Browser details dialog
+- Added "Copy Link to Clipboard" for connected models in the Checkpoints page
+### Changed
+- Python Packages install dialog now allows entering multiple arguments or option flags
+### Fixed
+- Fixed environment variables grid not being editable related to [Avalonia #13843](https://github.com/AvaloniaUI/Avalonia/issues/13843)
+
+## v2.8.0-dev.2
+### Added
+#### Inference
+- Added Image to Video project type
+#### Output Browser
+- Added support for webp files
+- Added "Send to Image to Image" and "Send to Image to Video" options to the context menu
+### Changed
+- Changed how settings file is written to disk to reduce potential data loss risk
+
+## v2.8.0-dev.1
+### Added
+#### Inference
+- Added image and model details in model selection boxes
+- Added CLIP Skip setting, toggleable from the model settings button
+
 ## v2.7.7
 ### Added
 - Added `--use-directml` launch argument for SDWebUI DirectML fork

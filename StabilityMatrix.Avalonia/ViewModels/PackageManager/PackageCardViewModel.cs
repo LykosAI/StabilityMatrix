@@ -97,7 +97,10 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (string.IsNullOrWhiteSpace(value?.PackageName))
             return;
 
-        if (value.PackageName == UnknownPackage.Key || packageFactory.FindPackageByName(value.PackageName) is null)
+        if (
+            value.PackageName == UnknownPackage.Key
+            || packageFactory.FindPackageByName(value.PackageName) is null
+        )
         {
             IsUnknownPackage = true;
             CardImageSource = "";
@@ -124,7 +127,11 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (Design.IsDesignMode || !settingsManager.IsLibraryDirSet || Package is not { } currentPackage)
             return;
 
-        if (packageFactory.FindPackageByName(currentPackage.PackageName) is { } basePackage and not UnknownPackage)
+        if (
+            packageFactory.FindPackageByName(currentPackage.PackageName)
+            is { } basePackage
+                and not UnknownPackage
+        )
         {
             // Migrate old packages with null preferred shared folder method
             currentPackage.PreferredSharedFolderMethod ??= basePackage.RecommendedSharedFolderMethod;
@@ -185,11 +192,18 @@ public partial class PackageCardViewModel : ProgressViewModel
             var packagePath = new DirectoryPath(settingsManager.LibraryDir, Package.LibraryPath);
             var deleteTask = packagePath.DeleteVerboseAsync(logger);
 
-            var taskResult = await notificationService.TryAsync(deleteTask, Resources.Text_SomeFilesCouldNotBeDeleted);
+            var taskResult = await notificationService.TryAsync(
+                deleteTask,
+                Resources.Text_SomeFilesCouldNotBeDeleted
+            );
             if (taskResult.IsSuccessful)
             {
                 notificationService.Show(
-                    new Notification(Resources.Label_PackageUninstalled, Package.DisplayName, NotificationType.Success)
+                    new Notification(
+                        Resources.Label_PackageUninstalled,
+                        Package.DisplayName,
+                        NotificationType.Success
+                    )
                 );
 
                 if (!IsUnknownPackage)
@@ -254,7 +268,12 @@ public partial class PackageCardViewModel : ProgressViewModel
                 versionOptions.CommitHash = latest.Sha;
             }
 
-            var updatePackageStep = new UpdatePackageStep(settingsManager, Package, versionOptions, basePackage);
+            var updatePackageStep = new UpdatePackageStep(
+                settingsManager,
+                Package,
+                versionOptions,
+                basePackage
+            );
             var steps = new List<IPackageStep> { updatePackageStep };
 
             EventManager.Instance.OnPackageInstallProgressAdded(runner);
@@ -381,7 +400,8 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (basePackage == null)
             return false;
 
-        var canCheckUpdate = Package.LastUpdateCheck == null || Package.LastUpdateCheck < DateTime.Now.AddMinutes(-15);
+        var canCheckUpdate =
+            Package.LastUpdateCheck == null || Package.LastUpdateCheck < DateTime.Now.AddMinutes(-15);
 
         if (!canCheckUpdate)
         {

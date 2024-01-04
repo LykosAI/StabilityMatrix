@@ -43,7 +43,12 @@ public class DownloadService : IDownloadService
 
         await AddConditionalHeaders(client, new Uri(downloadUrl)).ConfigureAwait(false);
 
-        await using var file = new FileStream(downloadPath, FileMode.Create, FileAccess.Write, FileShare.None);
+        await using var file = new FileStream(
+            downloadPath,
+            FileMode.Create,
+            FileAccess.Write,
+            FileShare.None
+        );
 
         long contentLength = 0;
 
@@ -81,7 +86,9 @@ public class DownloadService : IDownloadService
             }
         }
 
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        await using var stream = await response
+            .Content.ReadAsStreamAsync(cancellationToken)
+            .ConfigureAwait(false);
         var totalBytesRead = 0L;
         var buffer = new byte[BufferSize];
         while (true)
@@ -143,7 +150,12 @@ public class DownloadService : IDownloadService
             File.Create(downloadPath).Close();
         }
 
-        await using var file = new FileStream(downloadPath, FileMode.Append, FileAccess.Write, FileShare.None);
+        await using var file = new FileStream(
+            downloadPath,
+            FileMode.Append,
+            FileAccess.Write,
+            FileShare.None
+        );
 
         // Remaining content length
         long remainingContentLength = 0;
@@ -156,7 +168,9 @@ public class DownloadService : IDownloadService
         noRedirectRequest.Headers.Range = new RangeHeaderValue(existingFileSize, null);
 
         HttpResponseMessage? response = null;
-        foreach (var delay in Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromMilliseconds(50), retryCount: 4))
+        foreach (
+            var delay in Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromMilliseconds(50), retryCount: 4)
+        )
         {
             var noRedirectResponse = await noRedirectClient
                 .SendAsync(noRedirectRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
@@ -197,7 +211,9 @@ public class DownloadService : IDownloadService
 
         var isIndeterminate = remainingContentLength == 0;
 
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        await using var stream = await response
+            .Content.ReadAsStreamAsync(cancellationToken)
+            .ConfigureAwait(false);
         var totalBytesRead = 0L;
         var buffer = new byte[BufferSize];
         while (true)
@@ -252,7 +268,9 @@ public class DownloadService : IDownloadService
 
         var contentLength = 0L;
 
-        foreach (var delay in Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromMilliseconds(50), retryCount: 3))
+        foreach (
+            var delay in Backoff.DecorrelatedJitterBackoffV2(TimeSpan.FromMilliseconds(50), retryCount: 3)
+        )
         {
             var response = await client
                 .GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
@@ -303,7 +321,10 @@ public class DownloadService : IDownloadService
                     ObjectHash.GetStringSignature(civitApi.ApiToken),
                     url
                 );
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", civitApi.ApiToken);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                    "Bearer",
+                    civitApi.ApiToken
+                );
             }
         }
     }

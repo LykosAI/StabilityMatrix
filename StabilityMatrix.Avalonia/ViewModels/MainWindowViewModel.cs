@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -10,6 +11,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using KGySoft.CoreLibraries;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
@@ -112,10 +114,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
         Logger.Info($"App started ({startupTime})");
 
-        if (
-            Program.Args.DebugOneClickInstall
-            || settingsManager.Settings.InstalledPackages.Count == 0
-        )
+        if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Count == 0)
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
             var dialog = new BetterContentDialog
@@ -148,8 +147,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 .Where(p => p.GetType().GetCustomAttributes(typeof(PreloadAttribute), true).Any())
         )
         {
-            Dispatcher.UIThread
-                .InvokeAsync(
+            Dispatcher
+                .UIThread.InvokeAsync(
                     async () =>
                     {
                         var stopwatch = Stopwatch.StartNew();

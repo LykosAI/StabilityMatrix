@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
@@ -25,9 +26,21 @@ public class MockModelIndexService : IModelIndexService
     }
 
     /// <inheritdoc />
-    public Task<IReadOnlyList<LocalModelFile>> GetModelsOfType(SharedFolderType type)
+    public Task<IEnumerable<LocalModelFile>> FindAsync(SharedFolderType type)
     {
-        return Task.FromResult<IReadOnlyList<LocalModelFile>>(new List<LocalModelFile>());
+        return Task.FromResult(Enumerable.Empty<LocalModelFile>());
+    }
+
+    /// <inheritdoc />
+    public Task<IEnumerable<LocalModelFile>> FindByHashAsync(string hashBlake3)
+    {
+        return Task.FromResult(Enumerable.Empty<LocalModelFile>());
+    }
+
+    /// <inheritdoc />
+    public Task<bool> RemoveModelAsync(LocalModelFile model)
+    {
+        return Task.FromResult(false);
     }
 
     /// <inheritdoc />

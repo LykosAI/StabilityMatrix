@@ -1,6 +1,9 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
 using AsyncAwaitBestPractices;
+using AutoCtor;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
@@ -13,31 +16,20 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 namespace StabilityMatrix.Core.Services;
 
 [Singleton(typeof(IModelIndexService))]
-public class ModelIndexService : IModelIndexService
+[AutoConstruct]
+public partial class ModelIndexService : IModelIndexService
 {
     private readonly ILogger<ModelIndexService> logger;
-    private readonly ILiteDbContext liteDbContext;
     private readonly ISettingsManager settingsManager;
+    private readonly ILiteDbContext liteDbContext;
 
     public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; private set; } = new();
 
-    public ModelIndexService(
-        ILogger<ModelIndexService> logger,
-        ILiteDbContext liteDbContext,
-        ISettingsManager settingsManager
-    )
+    [AutoPostConstruct]
+    private void Initialize()
     {
-        this.logger = logger;
-        this.liteDbContext = liteDbContext;
-        this.settingsManager = settingsManager;
-    }
-
-    /// <summary>
-    /// Deletes all entries in the local model file index.
-    /// </summary>
-    private async Task ClearIndex()
-    {
-        await liteDbContext.LocalModelFiles.DeleteAllAsync().ConfigureAwait(false);
+        // Start background index when library dir is set
+        settingsManager.RegisterOnLibraryDirSet(_ => BackgroundRefreshIndex());
     }
 
     public IEnumerable<LocalModelFile> GetFromModelIndex(SharedFolderType types)
@@ -46,12 +38,22 @@ public class ModelIndexService : IModelIndexService
     }
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<LocalModelFile>> GetModelsOfType(SharedFolderType type)
+    public async Task<IEnumerable<LocalModelFile>> FindAsync(SharedFolderType type)
     {
+        await liteDbContext.LocalModelFiles.EnsureIndexAsync(m => m.SharedFolderType).ConfigureAwait(false);
+
         return await liteDbContext
-            .LocalModelFiles.Query()
-            .Where(m => m.SharedFolderType == type)
-            .ToArrayAsync()
+            .LocalModelFiles.FindAsync(m => m.SharedFolderType == type)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<LocalModelFile>> FindByHashAsync(string hashBlake3)
+    {
+        await liteDbContext.LocalModelFiles.EnsureIndexAsync(m => m.HashBlake3).ConfigureAwait(false);
+
+        return await liteDbContext
+            .LocalModelFiles.FindAsync(m => m.HashBlake3 == hashBlake3)
             .ConfigureAwait(false);
     }
 
@@ -86,6 +88,7 @@ public class ModelIndexService : IModelIndexService
         var added = 0;
 
         var newIndex = new Dictionary<SharedFolderType, List<LocalModelFile>>();
+
         foreach (
             var file in modelsDir
                 .Info.EnumerateFiles("*.*", SearchOption.AllDirectories)
@@ -161,6 +164,7 @@ public class ModelIndexService : IModelIndexService
             // Add to index
             var list = newIndex.GetOrAdd(sharedFolderType);
             list.Add(localModel);
+
             added++;
         }
 
@@ -194,5 +198,25 @@ public class ModelIndexService : IModelIndexService
             {
                 logger.LogError(ex, "Error in background model indexing");
             });
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> RemoveModelAsync(LocalModelFile model)
+    {
+        // Remove from database
+        if (await liteDbContext.LocalModelFiles.DeleteAsync(model.RelativePath).ConfigureAwait(false))
+        {
+            // Remove from index
+            if (ModelIndex.TryGetValue(model.SharedFolderType, out var list))
+            {
+                list.Remove(model);
+            }
+
+            EventManager.Instance.OnModelIndexChanged();
+
+            return true;
+        }
+
+        return false;
     }
 }

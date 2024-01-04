@@ -61,15 +61,19 @@
                     <!-- Right click menu for a checkpoint file -->
                     <controls:Card.ContextFlyout>
                         <ui:FAMenuFlyout>
-                            <ui:MenuFlyoutItem Command="{Binding RenameCommand}"
-                                               Text="{x:Static lang:Resources.Action_Rename}" IconSource="Rename" />
-                            <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
-                                               Text="{x:Static lang:Resources.Action_OpenOnCivitAi}" IconSource="Link"
-                                               IsVisible="{Binding IsConnectedModel}" />
                             <ui:MenuFlyoutItem Command="{Binding CopyTriggerWordsCommand}"
                                                IsVisible="{Binding CanShowTriggerWords}"
                                                Text="{x:Static lang:Resources.Action_CopyTriggerWords}"
                                                IconSource="Copy" />
+                            <ui:MenuFlyoutSeparator IsVisible="{Binding CanShowTriggerWords}"/>
+                            <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
+                                               Text="{x:Static lang:Resources.Action_OpenOnCivitAi}" IconSource="Link"
+                                               IsVisible="{Binding IsConnectedModel}" />
+                            <ui:MenuFlyoutItem
+                                Command="{Binding CopyModelUrlCommand}"
+                                Text="Copy Link to Clipboard" 
+                                IconSource="Clipboard"
+                                IsVisible="{Binding IsConnectedModel}"/>
                             <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_FindConnectedMetadata}"
                                                IconSource="Find"
                                                Command="{Binding FindConnectedMetadataCommand}"
@@ -86,6 +90,9 @@
                                     <system:Boolean>True</system:Boolean>
                                 </ui:MenuFlyoutItem.CommandParameter>
                             </ui:MenuFlyoutItem>
+                            <ui:MenuFlyoutSeparator/>
+                            <ui:MenuFlyoutItem Command="{Binding RenameCommand}"
+                                               Text="{x:Static lang:Resources.Action_Rename}" IconSource="Rename" />
                             <ui:MenuFlyoutItem Command="{Binding DeleteCommand}"
                                                Text="{x:Static lang:Resources.Action_Delete}" 
                                                IconSource="Delete" />

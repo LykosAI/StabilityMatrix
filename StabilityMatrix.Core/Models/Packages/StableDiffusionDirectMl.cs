@@ -31,7 +31,6 @@ public class StableDiffusionDirectMl(
     public override string LaunchCommand => "launch.py";
     public override Uri PreviewImageUri =>
         new("https://github.com/lshqqytiger/stable-diffusion-webui-directml/raw/master/screenshot.png");
-
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.DirectMl;
@@ -61,29 +60,7 @@ public class StableDiffusionDirectMl(
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.DirectMl };
 
-    public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.DirectMl;
-
     public override bool ShouldIgnoreReleases => true;
-
-    public override List<LaunchOptionDefinition> LaunchOptions
-    {
-        get
-        {
-            var baseLaunchOptions = base.LaunchOptions;
-            baseLaunchOptions.Insert(
-                0,
-                new LaunchOptionDefinition
-                {
-                    Name = "Use DirectML",
-                    Type = LaunchOptionType.Bool,
-                    InitialValue = HardwareHelper.PreferDirectML(),
-                    Options = ["--use-directml"]
-                }
-            );
-
-            return baseLaunchOptions;
-        }
-    }
 
     public override async Task InstallPackage(
         string installLocation,

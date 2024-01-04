@@ -20,8 +20,8 @@
       <PackageReference Include="Blake3" Version="1.0.0" />
       <PackageReference Include="Crc32.NET" Version="1.2.0" />
       <PackageReference Include="CSharpDiscriminatedUnion" Version="2.0.1" />
-      <PackageReference Include="DeviceId" Version="6.5.0" />
-      <PackageReference Include="DeviceId.Linux" Version="6.3.1" />
+      <PackageReference Include="DeviceId" Version="6.6.0" />
+      <PackageReference Include="DeviceId.Linux" Version="6.4.0" />
       <PackageReference Include="DeviceId.Mac" Version="6.2.1" />
       <PackageReference Include="DeviceId.Windows" Version="6.5.0" />
       <PackageReference Include="DeviceId.Windows.Wmi" Version="6.5.1" />

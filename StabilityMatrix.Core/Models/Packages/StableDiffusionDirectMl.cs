@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
-using NLog;
+﻿using NLog;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -37,7 +34,8 @@ public class StableDiffusionDirectMl(
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.DirectMl;
+    public override TorchVersion GetRecommendedTorchVersion() =>
+        HardwareHelper.PreferDirectML() ? TorchVersion.DirectMl : base.GetRecommendedTorchVersion();
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
 

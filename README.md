@@ -6,7 +6,7 @@
 [release]: https://github.com/LykosAI/StabilityMatrix/releases/latest
 [download-win-x64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-win-x64.zip
 [download-linux-x64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-linux-x64.zip
-[download-macos]: https://github.com/LykosAI/StabilityMatrix/issues/45 
+[download-macos-arm64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-macos-arm64.dmg
 
 [auto1111]: https://github.com/AUTOMATIC1111/stable-diffusion-webui
 [comfy]: https://github.com/comfyanonymous/ComfyUI
@@ -44,9 +44,7 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
 
 [![Windows](https://img.shields.io/badge/Windows-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)][download-win-x64]
 [![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)][download-linux-x64]
-[![macOS](https://img.shields.io/badge/mac%20os%20%28apple%20silicon%29-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)][download-macos]
-
-> macOS builds are currently pending: [#45][download-macos]
+[![macOS](https://img.shields.io/badge/mac%20os%20%28apple%20silicon%29-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)][download-macos-arm64]
 
 ### Inference - A reimagined built-in Stable Diffusion experience
 - Powerful auto-completion and syntax highlighting using a formal language grammar

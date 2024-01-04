@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
@@ -44,7 +43,8 @@ public partial class CheckpointsPage : UserControlBase
 
         if (DataContext is CheckpointsPageViewModel vm)
         {
-            subscription = vm.WhenPropertyChanged(m => m.ShowConnectedModelImages).Subscribe(_ => InvalidateRepeater());
+            subscription = vm.WhenPropertyChanged(m => m.ShowConnectedModelImages)
+                .Subscribe(_ => InvalidateRepeater());
         }
     }
 
@@ -152,7 +152,8 @@ public partial class CheckpointsPage : UserControlBase
 
                 var parentFolder = file.ParentFolder;
                 var dragFilePath = new FilePath(dragFile.FilePath);
-                parentFolder.IsCurrentDragTarget = dragFilePath.Directory?.FullPath != parentFolder.DirectoryPath;
+                parentFolder.IsCurrentDragTarget =
+                    dragFilePath.Directory?.FullPath != parentFolder.DirectoryPath;
                 break;
             }
         }

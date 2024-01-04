@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
@@ -34,8 +36,11 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Services;
+using TeachingTip = FluentAvalonia.UI.Controls.TeachingTip;
 #if DEBUG
 using StabilityMatrix.Avalonia.Diagnostics.Views;
 #endif
@@ -48,6 +53,7 @@ public partial class MainWindow : AppWindowBase
 {
     private readonly INotificationService notificationService;
     private readonly INavigationService<MainWindowViewModel> navigationService;
+    private readonly ISettingsManager settingsManager;
 
     private FlyoutBase? progressFlyout;
 
@@ -61,11 +67,13 @@ public partial class MainWindow : AppWindowBase
 
     public MainWindow(
         INotificationService notificationService,
-        INavigationService<MainWindowViewModel> navigationService
+        INavigationService<MainWindowViewModel> navigationService,
+        ISettingsManager settingsManager
     )
     {
         this.notificationService = notificationService;
         this.navigationService = navigationService;
+        this.settingsManager = settingsManager;
 
         InitializeComponent();
 
@@ -82,6 +90,47 @@ public partial class MainWindow : AppWindowBase
         EventManager.Instance.ToggleProgressFlyout += (_, _) => progressFlyout?.Hide();
         EventManager.Instance.CultureChanged += (_, _) => SetDefaultFonts();
         EventManager.Instance.UpdateAvailable += OnUpdateAvailable;
+
+        Observable
+            .FromEventPattern<SizeChangedEventArgs>(this, nameof(SizeChanged))
+            .Where(x => x.EventArgs.PreviousSize != x.EventArgs.NewSize)
+            .Throttle(TimeSpan.FromMilliseconds(100))
+            .Select(x => x.EventArgs.NewSize)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe(newSize =>
+            {
+                var validWindowPosition = Screens.All.Any(screen => screen.Bounds.Contains(Position));
+
+                settingsManager.Transaction(
+                    s =>
+                    {
+                        s.WindowSettings = new WindowSettings(
+                            newSize.Width,
+                            newSize.Height,
+                            validWindowPosition ? Position.X : 0,
+                            validWindowPosition ? Position.Y : 0
+                        );
+                    },
+                    ignoreMissingLibraryDir: true
+                );
+            });
+
+        Observable
+            .FromEventPattern<PixelPointEventArgs>(this, nameof(PositionChanged))
+            .Where(x => Screens.All.Any(screen => screen.Bounds.Contains(x.EventArgs.Point)))
+            .Throttle(TimeSpan.FromMilliseconds(100))
+            .Select(x => x.EventArgs.Point)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe(position =>
+            {
+                settingsManager.Transaction(
+                    s =>
+                    {
+                        s.WindowSettings = new WindowSettings(Width, Height, position.X, position.Y);
+                    },
+                    ignoreMissingLibraryDir: true
+                );
+            });
     }
 
     /// <inheritdoc />
@@ -114,6 +163,14 @@ public partial class MainWindow : AppWindowBase
         launchPageViewModel.OnMainWindowClosing(e);
 
         base.OnClosing(e);
+    }
+
+    /// <inheritdoc />
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+
+        App.Shutdown();
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
@@ -357,5 +414,11 @@ public partial class MainWindow : AppWindowBase
     private void PatreonPatreonItem_OnTapped(object? sender, TappedEventArgs e)
     {
         ProcessRunner.OpenUrl(Assets.PatreonUrl);
+    }
+
+    private void TopLevel_OnBackRequested(object? sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        navigationService.GoBack();
     }
 }

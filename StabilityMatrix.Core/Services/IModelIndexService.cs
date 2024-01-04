@@ -13,17 +13,27 @@ public interface IModelIndexService
     Task RefreshIndex();
 
     /// <summary>
+    /// Starts a background task to refresh the local model file index.
+    /// </summary>
+    void BackgroundRefreshIndex();
+
+    /// <summary>
     /// Get all models of the specified type from the existing (in-memory) index.
     /// </summary>
     IEnumerable<LocalModelFile> GetFromModelIndex(SharedFolderType types);
 
     /// <summary>
-    /// Get all models of the specified type from the existing index.
+    /// Find all models of the specified SharedFolderType.
     /// </summary>
-    Task<IReadOnlyList<LocalModelFile>> GetModelsOfType(SharedFolderType type);
+    Task<IEnumerable<LocalModelFile>> FindAsync(SharedFolderType type);
 
     /// <summary>
-    /// Starts a background task to refresh the local model file index.
+    /// Find all models with the specified Blake3 hash.
     /// </summary>
-    void BackgroundRefreshIndex();
+    Task<IEnumerable<LocalModelFile>> FindByHashAsync(string hashBlake3);
+
+    /// <summary>
+    /// Remove a model from the index.
+    /// </summary>
+    Task<bool> RemoveModelAsync(LocalModelFile model);
 }

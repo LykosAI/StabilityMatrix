@@ -21,6 +21,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -120,30 +121,24 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
         var latestVersionInstalled =
             latestVersion.Files != null
-            && latestVersion
-                .Files
-                .Any(
-                    file =>
-                        file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-                        && installedModels.Contains(file.Hashes.BLAKE3)
-                );
+            && latestVersion.Files.Any(
+                file =>
+                    file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                    && installedModels.Contains(file.Hashes.BLAKE3)
+            );
 
         // check if any of the ModelVersion.Files.Hashes.BLAKE3 hashes are in the installedModels list
         var anyVersionInstalled =
             latestVersionInstalled
-            || CivitModel
-                .ModelVersions
-                .Any(
-                    version =>
-                        version.Files != null
-                        && version
-                            .Files
-                            .Any(
-                                file =>
-                                    file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-                                    && installedModels.Contains(file.Hashes.BLAKE3)
-                            )
-                );
+            || CivitModel.ModelVersions.Any(
+                version =>
+                    version.Files != null
+                    && version.Files.Any(
+                        file =>
+                            file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                            && installedModels.Contains(file.Hashes.BLAKE3)
+                    )
+            );
 
         UpdateCardText = latestVersionInstalled
             ? "Installed"
@@ -154,7 +149,6 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         ShowUpdateCard = anyVersionInstalled;
     }
 
-    // Choose and load image based on nsfw setting
     private void UpdateImage()
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
@@ -162,21 +156,17 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         var images = version?.Images;
 
         // Try to find a valid image
-        var image = images?.FirstOrDefault(image => nsfwEnabled || image.Nsfw == "None");
+        var image = images
+            ?.Where(img => LocalModelFile.SupportedImageExtensions.Any(img.Url.Contains))
+            .FirstOrDefault(image => nsfwEnabled || image.Nsfw == "None");
         if (image != null)
         {
-            // var imageStream = await downloadService.GetImageStreamFromUrl(image.Url);
-            // Dispatcher.UIThread.Post(() => { CardImage = new Bitmap(imageStream); });
             CardImage = new Uri(image.Url);
             return;
         }
 
         // If no valid image found, use no image
         CardImage = Assets.NoImage;
-
-        // var assetStream = AssetLoader.Open(new Uri("avares://StabilityMatrix.Avalonia/Assets/noimage.png"));
-        // Otherwise Default image
-        // Dispatcher.UIThread.Post(() => { CardImage = new Bitmap(assetStream); });
     }
 
     [RelayCommand]
@@ -270,8 +260,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     {
         var prunedDescription =
             model
-                .Description
-                ?.Replace("<br/>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Description?.Replace("<br/>", $"{Environment.NewLine}{Environment.NewLine}")
                 .Replace("<br />", $"{Environment.NewLine}{Environment.NewLine}")
                 .Replace("</p>", $"{Environment.NewLine}{Environment.NewLine}")
                 .Replace("</h1>", $"{Environment.NewLine}{Environment.NewLine}")
@@ -318,9 +307,9 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
         if (imageExtension is "jpg" or "jpeg" or "png")
         {
-            var imageDownloadPath = modelFilePath
-                .Directory!
-                .JoinFile($"{modelFilePath.NameWithoutExtension}.preview.{imageExtension}");
+            var imageDownloadPath = modelFilePath.Directory!.JoinFile(
+                $"{modelFilePath.NameWithoutExtension}.preview.{imageExtension}"
+            );
 
             var imageTask = downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
             await notificationService.TryAsync(imageTask, "Could not download preview image");
@@ -358,7 +347,8 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         }
 
         // Get latest version file
-        var modelFile = selectedFile ?? modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
+        var modelFile =
+            selectedFile ?? modelVersion.Files?.FirstOrDefault(x => x.Type == CivitFileType.Model);
         if (modelFile is null)
         {
             notificationService.Show(
@@ -374,7 +364,9 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
         var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
 
-        var downloadDirectory = rootModelsDirectory.JoinDir(model.Type.ConvertTo<SharedFolderType>().GetStringValue());
+        var downloadDirectory = rootModelsDirectory.JoinDir(
+            model.Type.ConvertTo<SharedFolderType>().GetStringValue()
+        );
         // Folders might be missing if user didn't install any packages yet
         downloadDirectory.Create();
 

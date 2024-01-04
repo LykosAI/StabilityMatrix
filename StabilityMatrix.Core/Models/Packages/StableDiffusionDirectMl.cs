@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
-using NLog;
+﻿using NLog;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -41,8 +38,30 @@ public class StableDiffusionDirectMl(
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
 
+    public override List<LaunchOptionDefinition> LaunchOptions
+    {
+        get
+        {
+            var baseLaunchOptions = base.LaunchOptions;
+            baseLaunchOptions.Insert(
+                0,
+                new LaunchOptionDefinition
+                {
+                    Name = "Use DirectML",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = HardwareHelper.PreferDirectML(),
+                    Options = ["--use-directml"]
+                }
+            );
+
+            return baseLaunchOptions;
+        }
+    }
+
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.DirectMl };
+
+    public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.DirectMl;
 
     public override bool ShouldIgnoreReleases => true;
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
@@ -11,7 +10,6 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -90,15 +88,13 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
             CanGoToNextImage = allImages.Count > 1;
         }
 
-        Dispatcher
-            .UIThread
-            .Post(() =>
-            {
-                CanGoToPreviousImage = false;
-                SelectedFile = SelectedVersionViewModel?.CivitFileViewModels.FirstOrDefault();
-                ImageUrls = new ObservableCollection<ImageSource>(allImages);
-                SelectedImageIndex = 0;
-            });
+        Dispatcher.UIThread.Post(() =>
+        {
+            CanGoToPreviousImage = false;
+            SelectedFile = SelectedVersionViewModel?.CivitFileViewModels.FirstOrDefault();
+            ImageUrls = new ObservableCollection<ImageSource>(allImages);
+            SelectedImageIndex = 0;
+        });
     }
 
     partial void OnSelectedFileChanged(CivitFileViewModel? value)
@@ -107,10 +103,16 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
         if (settingsManager.IsLibraryDirSet)
         {
             var fileSizeBytes = value?.CivitFile.SizeKb * 1024;
-            var freeSizeBytes = SystemInfo.GetDiskFreeSpaceBytes(settingsManager.ModelsDirectory);
+            var freeSizeBytes =
+                SystemInfo.GetDiskFreeSpaceBytes(settingsManager.ModelsDirectory) ?? long.MaxValue;
             canImport = fileSizeBytes < freeSizeBytes;
             ImportTooltip = canImport
-                ? $"Free space after download: {Size.FormatBytes(Convert.ToUInt64(freeSizeBytes - fileSizeBytes))}"
+                ? "Free space after download: "
+                    + (
+                        freeSizeBytes < long.MaxValue
+                            ? Size.FormatBytes(Convert.ToUInt64(freeSizeBytes - fileSizeBytes))
+                            : "Unknown"
+                    )
                 : $"Not enough space on disk. Need {Size.FormatBytes(Convert.ToUInt64(fileSizeBytes))} but only have {Size.FormatBytes(Convert.ToUInt64(freeSizeBytes))}";
         }
         else

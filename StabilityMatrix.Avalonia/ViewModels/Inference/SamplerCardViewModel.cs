@@ -87,7 +87,10 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     private int TotalSteps => Steps + RefinerSteps;
 
-    public SamplerCardViewModel(IInferenceClientManager clientManager, ServiceManager<ViewModelBase> vmFactory)
+    public SamplerCardViewModel(
+        IInferenceClientManager clientManager,
+        ServiceManager<ViewModelBase> vmFactory
+    )
     {
         ClientManager = clientManager;
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
@@ -101,7 +104,10 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     public void ApplyStep(ModuleApplyStepEventArgs e)
     {
         // Resample the current primary if size does not match the selected size
-        if (e.Builder.Connections.PrimarySize.Width != Width || e.Builder.Connections.PrimarySize.Height != Height)
+        if (
+            e.Builder.Connections.PrimarySize.Width != Width
+            || e.Builder.Connections.PrimarySize.Height != Height
+        )
         {
             e.Builder.Connections.Primary = e.Builder.Group_Upscale(
                 e.Nodes.GetUniqueName("Sampler_ScalePrimary"),
@@ -147,7 +153,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         var primaryLatent = e.Builder.GetPrimaryAsLatent();
 
         // Set primary sampler and scheduler
-        e.Builder.Connections.PrimarySampler = SelectedSampler ?? throw new ValidationException("Sampler not selected");
+        e.Builder.Connections.PrimarySampler =
+            SelectedSampler ?? throw new ValidationException("Sampler not selected");
         e.Builder.Connections.PrimaryScheduler =
             SelectedScheduler ?? throw new ValidationException("Scheduler not selected");
 
@@ -173,7 +180,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 {
                     Name = "SDTurboScheduler",
                     Model = e.Builder.Connections.BaseModel ?? throw new ArgumentException("No BaseModel"),
-                    Steps = Steps
+                    Steps = Steps,
+                    Denoise = DenoiseStrength
                 }
             );
 
@@ -249,7 +257,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 new ComfyNodeBuilder.KSamplerAdvanced
                 {
                     Name = "Refiner_Sampler",
-                    Model = e.Builder.Connections.RefinerModel ?? throw new ArgumentException("No RefinerModel"),
+                    Model =
+                        e.Builder.Connections.RefinerModel ?? throw new ArgumentException("No RefinerModel"),
                     AddNoise = false,
                     NoiseSeed = e.Builder.Connections.Seed,
                     Steps = TotalSteps,
@@ -295,7 +304,10 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
         if (
             !string.IsNullOrEmpty(parameters.Sampler)
-            && GenerationParametersConverter.TryGetSamplerScheduler(parameters.Sampler, out var samplerScheduler)
+            && GenerationParametersConverter.TryGetSamplerScheduler(
+                parameters.Sampler,
+                out var samplerScheduler
+            )
         )
         {
             SelectedSampler = ClientManager.Samplers.FirstOrDefault(s => s == samplerScheduler.Sampler);

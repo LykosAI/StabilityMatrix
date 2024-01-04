@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.8.0-dev.4
 ### Added
 - Auto-update support for macOS
+- New package installation flow
+- Added `--use-directml` launch argument for SDWebUI DirectML fork
+### Changed
+- Changed default Period to "AllTime" in the Model Browser
+### Fixed
+- Fixed SDTurboScheduler's missing denoise parameter
 
 ## v2.8.0-dev.3
 ### Added

@@ -138,7 +138,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
     public void ShowInstallDialog(BasePackage? selectedPackage = null)
     {
-        NavigateToSubPage(typeof(NewInstallerDialogViewModel));
+        NavigateToSubPage(typeof(PackageInstallBrowserViewModel));
     }
 
     private async Task CheckPackagesForUpdates()

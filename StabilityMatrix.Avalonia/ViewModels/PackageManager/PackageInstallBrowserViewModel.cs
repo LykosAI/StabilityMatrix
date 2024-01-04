@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Reactive.Linq;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.Views.Dialogs;
+using StabilityMatrix.Avalonia.Views.PackageManager;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -22,11 +19,11 @@ using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
-namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
+namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
-[View(typeof(NewInstallerDialog))]
+[View(typeof(PackageInstallBrowserView))]
 [Transient, ManagedService]
-public partial class NewInstallerDialogViewModel : PageViewModelBase
+public partial class PackageInstallBrowserViewModel : PageViewModelBase
 {
     private readonly INavigationService<NewPackageManagerViewModel> packageNavigationService;
     private readonly ISettingsManager settingsManager;
@@ -36,7 +33,7 @@ public partial class NewInstallerDialogViewModel : PageViewModelBase
     private readonly IPrerequisiteHelper prerequisiteHelper;
 
     [ObservableProperty]
-    private bool showIncompatiblePackages = false;
+    private bool showIncompatiblePackages;
 
     [ObservableProperty]
     private string searchFilter = string.Empty;
@@ -49,7 +46,7 @@ public partial class NewInstallerDialogViewModel : PageViewModelBase
     public IObservableCollection<BasePackage> TrainingPackages { get; } =
         new ObservableCollectionExtended<BasePackage>();
 
-    public NewInstallerDialogViewModel(
+    public PackageInstallBrowserViewModel(
         IPackageFactory packageFactory,
         INavigationService<NewPackageManagerViewModel> packageNavigationService,
         ISettingsManager settingsManager,
@@ -116,7 +113,7 @@ public partial class NewInstallerDialogViewModel : PageViewModelBase
     public override string Title => "Add Package";
     public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Add };
 
-    public void OnPackageSelected(BaseGitPackage package)
+    public void OnPackageSelected(BasePackage? package)
     {
         if (package is null)
         {

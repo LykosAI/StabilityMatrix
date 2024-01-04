@@ -6,6 +6,7 @@ using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using Symbol = FluentIcons.Common.Symbol;
@@ -33,7 +34,7 @@ public partial class NewPackageManagerViewModel : PageViewModelBase
         SubPages = new PageViewModelBase[]
         {
             vmFactory.Get<PackageManagerViewModel>(),
-            vmFactory.Get<NewInstallerDialogViewModel>(),
+            vmFactory.Get<PackageInstallBrowserViewModel>(),
         };
 
         CurrentPagePath.AddRange(SubPages);

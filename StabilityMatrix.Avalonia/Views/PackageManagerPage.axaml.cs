@@ -4,6 +4,7 @@ using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Navigation;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Packages;
@@ -38,12 +39,5 @@ public partial class PackageManagerPage : UserControlBase
                 vm.ShowInstallDialog(options.InstallerSelectedPackage);
             });
         }
-    }
-
-    public record PackageManagerNavigationOptions
-    {
-        public bool OpenInstallerDialog { get; init; }
-
-        public BasePackage? InstallerSelectedPackage { get; init; }
     }
 }

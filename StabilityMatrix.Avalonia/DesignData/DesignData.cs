@@ -8,13 +8,10 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using AvaloniaEdit.Utils;
-using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
-using NSubstitute.ReturnsExtensions;
 using Semver;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
@@ -26,9 +23,9 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
-using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
+using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Api;
@@ -178,7 +175,7 @@ public static class DesignData
         };
         LaunchOptionsViewModel.UpdateFilterCards();
 
-        NewInstallerDialogViewModel = Services.GetRequiredService<NewInstallerDialogViewModel>();
+        NewInstallerDialogViewModel = Services.GetRequiredService<PackageInstallBrowserViewModel>();
         // NewInstallerDialogViewModel.InferencePackages = new ObservableCollectionExtended<BasePackage>(
         //     packageFactory.GetPackagesByType(PackageType.SdInference).OrderBy(p => p.InstallerSortOrder)
         // );
@@ -418,7 +415,7 @@ public static class DesignData
     }
 
     [NotNull]
-    public static NewInstallerDialogViewModel? NewInstallerDialogViewModel { get; private set; }
+    public static PackageInstallBrowserViewModel? NewInstallerDialogViewModel { get; private set; }
 
     [NotNull]
     public static PackageInstallDetailViewModel? PackageInstallDetailViewModel { get; private set; }

@@ -13,6 +13,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 
@@ -38,6 +39,8 @@ public partial class NewPackageManagerPage : UserControlBase, IHandleNavigation
 
         InitializeComponent();
 
+        AddHandler(Frame.NavigatedToEvent, OnNavigatedTo, RoutingStrategies.Direct);
+
         packageNavigationService.SetFrame(FrameView);
         packageNavigationService.TypedNavigation += NavigationService_OnTypedNavigation;
         FrameView.Navigated += FrameView_Navigated;
@@ -61,6 +64,31 @@ public partial class NewPackageManagerPage : UserControlBase, IHandleNavigation
             );
 
             hasLoaded = true;
+        }
+    }
+
+    /// <summary>
+    /// Handle navigation events to this page
+    /// </summary>
+    private void OnNavigatedTo(object? sender, NavigationEventArgs args)
+    {
+        if (args.Parameter is PackageManagerNavigationOptions { OpenInstallerDialog: true } options)
+        {
+            var vm = (NewPackageManagerViewModel)DataContext!;
+
+            Dispatcher.UIThread.Post(
+                () =>
+                {
+                    // Navigate to the installer page
+                    packageNavigationService.NavigateTo<PackageInstallBrowserViewModel>();
+
+                    // Select the package
+                    vm.SubPages.OfType<PackageInstallBrowserViewModel>()
+                        .First()
+                        .OnPackageSelected(options.InstallerSelectedPackage);
+                },
+                DispatcherPriority.Send
+            );
         }
     }
 

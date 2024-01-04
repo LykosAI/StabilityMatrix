@@ -15,7 +15,6 @@ using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -25,13 +24,14 @@ using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using PackageInstallDetailView = StabilityMatrix.Avalonia.Views.PackageManager.PackageInstallDetailView;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [View(typeof(PackageInstallDetailView))]
 public partial class PackageInstallDetailViewModel(
-    BaseGitPackage package,
+    BasePackage package,
     ISettingsManager settingsManager,
     INotificationService notificationService,
     ILogger<PackageInstallDetailViewModel> logger,
@@ -40,7 +40,7 @@ public partial class PackageInstallDetailViewModel(
     INavigationService<NewPackageManagerViewModel> packageNavigationService
 ) : PageViewModelBase
 {
-    public BaseGitPackage SelectedPackage { get; } = package;
+    public BasePackage SelectedPackage { get; } = package;
     public override string Title { get; } = package.DisplayName;
     public override IconSource IconSource => new SymbolIconSource();
 

@@ -10,10 +10,11 @@
                           xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
                           xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
                           xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+                          xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                          x:DataType="dialogs:NewInstallerDialogViewModel"
+                          x:DataType="packageManager:PackageInstallBrowserViewModel"
                           d:DataContext="{x:Static mocks:DesignData.NewInstallerDialogViewModel}"
-                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.NewInstallerDialog">
+                          x:Class="StabilityMatrix.Avalonia.Views.PackageManager.PackageInstallBrowserView">
 
     <controls:UserControlBase.Resources>
         <input:StandardUICommand x:Key="PackageSelected"

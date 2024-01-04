@@ -33,7 +33,8 @@ public class StableDiffusionDirectMl(
         new("https://github.com/lshqqytiger/stable-diffusion-webui-directml/raw/master/screenshot.png");
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.DirectMl;
+    public override TorchVersion GetRecommendedTorchVersion() =>
+        HardwareHelper.PreferDirectML() ? TorchVersion.DirectMl : base.GetRecommendedTorchVersion();
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
 

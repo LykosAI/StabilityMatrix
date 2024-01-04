@@ -72,7 +72,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
     private bool showMainLoadingSpinner;
 
     [ObservableProperty]
-    private CivitPeriod selectedPeriod = CivitPeriod.Month;
+    private CivitPeriod selectedPeriod = CivitPeriod.AllTime;
 
     [ObservableProperty]
     private CivitSortMode sortMode = CivitSortMode.HighestRated;
@@ -118,8 +118,10 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
 
     private List<CheckpointBrowserCardViewModel> allModelCards = new();
 
-    public IEnumerable<CivitPeriod> AllCivitPeriods => Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
-    public IEnumerable<CivitSortMode> AllSortModes => Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
+    public IEnumerable<CivitPeriod> AllCivitPeriods =>
+        Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
+    public IEnumerable<CivitSortMode> AllSortModes =>
+        Enum.GetValues(typeof(CivitSortMode)).Cast<CivitSortMode>();
 
     public IEnumerable<CivitModelType> AllModelTypes =>
         Enum.GetValues(typeof(CivitModelType))
@@ -128,7 +130,17 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             .OrderBy(t => t.ToString());
 
     public List<string> BaseModelOptions =>
-        ["All", "SD 1.5", "SD 1.5 LCM", "SD 2.1", "SDXL 0.9", "SDXL 1.0", "SDXL 1.0 LCM", "SDXL Turbo", "Other"];
+        [
+            "All",
+            "SD 1.5",
+            "SD 1.5 LCM",
+            "SD 2.1",
+            "SDXL 0.9",
+            "SDXL 1.0",
+            "SDXL 1.0 LCM",
+            "SDXL Turbo",
+            "Other"
+        ];
 
     public CivitAiBrowserViewModel(
         ICivitApi civitApi,
@@ -189,7 +201,11 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
 
         ShowNsfw = settingsManager.Settings.ModelBrowserNsfwEnabled;
 
-        settingsManager.RelayPropertyFor(this, model => model.ShowNsfw, settings => settings.ModelBrowserNsfwEnabled);
+        settingsManager.RelayPropertyFor(
+            this,
+            model => model.ShowNsfw,
+            settings => settings.ModelBrowserNsfwEnabled
+        );
     }
 
     /// <summary>
@@ -238,7 +254,10 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             }
 
             // Filter out unknown model types and archived/taken-down models
-            models = models.Where(m => m.Type.ConvertTo<SharedFolderType>() > 0).Where(m => m.Mode == null).ToList();
+            models = models
+                .Where(m => m.Type.ConvertTo<SharedFolderType>() > 0)
+                .Where(m => m.Mode == null)
+                .ToList();
 
             // Database update calls will invoke `OnModelsUpdated`
             // Add to database
@@ -451,8 +470,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
         try
         {
             cachedQuery = await liteDbContext
-                .CivitModelQueryCache
-                .IncludeAll()
+                .CivitModelQueryCache.IncludeAll()
                 .FindByIdAsync(ObjectHash.GetMd5Guid(modelRequest));
         }
         catch (Exception e)
@@ -556,7 +574,12 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
         TrySearchAgain().SafeFireAndForget();
         settingsManager.Transaction(
             s =>
-                s.ModelSearchOptions = new ModelSearchOptions(value, SortMode, SelectedModelType, SelectedBaseModelType)
+                s.ModelSearchOptions = new ModelSearchOptions(
+                    value,
+                    SortMode,
+                    SelectedModelType,
+                    SelectedBaseModelType
+                )
         );
     }
 
@@ -578,7 +601,13 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
     {
         TrySearchAgain().SafeFireAndForget();
         settingsManager.Transaction(
-            s => s.ModelSearchOptions = new ModelSearchOptions(SelectedPeriod, SortMode, value, SelectedBaseModelType)
+            s =>
+                s.ModelSearchOptions = new ModelSearchOptions(
+                    SelectedPeriod,
+                    SortMode,
+                    value,
+                    SelectedBaseModelType
+                )
         );
     }
 
@@ -586,7 +615,13 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
     {
         TrySearchAgain().SafeFireAndForget();
         settingsManager.Transaction(
-            s => s.ModelSearchOptions = new ModelSearchOptions(SelectedPeriod, SortMode, SelectedModelType, value)
+            s =>
+                s.ModelSearchOptions = new ModelSearchOptions(
+                    SelectedPeriod,
+                    SortMode,
+                    SelectedModelType,
+                    value
+                )
         );
     }
 

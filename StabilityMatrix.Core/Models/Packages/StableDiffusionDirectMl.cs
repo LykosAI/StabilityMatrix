@@ -5,6 +5,7 @@ using NLog;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -36,12 +37,34 @@ public class StableDiffusionDirectMl(
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
+    public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.DirectMl;
+
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
         new[] { TorchVersion.Cpu, TorchVersion.DirectMl };
 
     public override bool ShouldIgnoreReleases => true;
+
+    public override List<LaunchOptionDefinition> LaunchOptions
+    {
+        get
+        {
+            var baseLaunchOptions = base.LaunchOptions;
+            baseLaunchOptions.Insert(
+                0,
+                new LaunchOptionDefinition
+                {
+                    Name = "Use DirectML",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = HardwareHelper.PreferDirectML(),
+                    Options = ["--use-directml"]
+                }
+            );
+
+            return baseLaunchOptions;
+        }
+    }
 
     public override async Task InstallPackage(
         string installLocation,

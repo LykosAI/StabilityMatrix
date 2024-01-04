@@ -114,6 +114,14 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 SamplerCardViewModel.IsRefinerStepsEnabled =
                     e.Sender is { IsRefinerSelectionEnabled: true, SelectedRefiner: not null };
             });
+
+        SamplerCardViewModel
+            .WhenPropertyChanged(x => x.SelectedScheduler)
+            .Subscribe(e =>
+            {
+                e.Sender.IsDenoiseStrengthEnabled =
+                    e.Sender.SelectedScheduler?.DisplayName.Equals("SD Turbo") ?? false;
+            });
     }
 
     /// <inheritdoc />
@@ -162,18 +170,21 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
     protected override IEnumerable<ImageSource> GetInputImages()
     {
         var samplerImages = SamplerCardViewModel
-            .ModulesCardViewModel
-            .Cards
-            .OfType<IInputImageProvider>()
+            .ModulesCardViewModel.Cards.OfType<IInputImageProvider>()
             .SelectMany(m => m.GetInputImages());
 
-        var moduleImages = ModulesCardViewModel.Cards.OfType<IInputImageProvider>().SelectMany(m => m.GetInputImages());
+        var moduleImages = ModulesCardViewModel
+            .Cards.OfType<IInputImageProvider>()
+            .SelectMany(m => m.GetInputImages());
 
         return samplerImages.Concat(moduleImages);
     }
 
     /// <inheritdoc />
-    protected override async Task GenerateImageImpl(GenerateOverrides overrides, CancellationToken cancellationToken)
+    protected override async Task GenerateImageImpl(
+        GenerateOverrides overrides,
+        CancellationToken cancellationToken
+    )
     {
         // Validate the prompts
         if (!await PromptCardViewModel.ValidatePrompts())
@@ -267,12 +278,16 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
                 if (state.TryGetPropertyValue("HiresSampler", out var hiresSamplerState))
                 {
-                    module.GetCard<SamplerCardViewModel>().LoadStateFromJsonObject(hiresSamplerState!.AsObject());
+                    module
+                        .GetCard<SamplerCardViewModel>()
+                        .LoadStateFromJsonObject(hiresSamplerState!.AsObject());
                 }
 
                 if (state.TryGetPropertyValue("HiresUpscaler", out var hiresUpscalerState))
                 {
-                    module.GetCard<UpscalerCardViewModel>().LoadStateFromJsonObject(hiresUpscalerState!.AsObject());
+                    module
+                        .GetCard<UpscalerCardViewModel>()
+                        .LoadStateFromJsonObject(hiresUpscalerState!.AsObject());
                 }
             });
 
@@ -282,17 +297,17 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
                 if (state.TryGetPropertyValue("Upscaler", out var upscalerState))
                 {
-                    module.GetCard<UpscalerCardViewModel>().LoadStateFromJsonObject(upscalerState!.AsObject());
+                    module
+                        .GetCard<UpscalerCardViewModel>()
+                        .LoadStateFromJsonObject(upscalerState!.AsObject());
                 }
             });
 
             // Add FreeU to sampler
-            SamplerCardViewModel
-                .ModulesCardViewModel
-                .AddModule<FreeUModule>(module =>
-                {
-                    module.IsEnabled = state.GetPropertyValueOrDefault<bool>("IsFreeUEnabled");
-                });
+            SamplerCardViewModel.ModulesCardViewModel.AddModule<FreeUModule>(module =>
+            {
+                module.IsEnabled = state.GetPropertyValueOrDefault<bool>("IsFreeUEnabled");
+            });
         }
 
         base.LoadStateFromJsonObject(state);

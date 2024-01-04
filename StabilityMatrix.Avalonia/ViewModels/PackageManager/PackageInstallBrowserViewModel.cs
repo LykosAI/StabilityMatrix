@@ -113,7 +113,7 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
     public override string Title => "Add Package";
     public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Add };
 
-    public void OnPackageSelected(BaseGitPackage? package)
+    public void OnPackageSelected(BasePackage? package)
     {
         if (package is null)
         {

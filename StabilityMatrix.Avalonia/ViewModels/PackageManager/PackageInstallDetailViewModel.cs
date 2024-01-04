@@ -31,7 +31,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [View(typeof(PackageInstallDetailView))]
 public partial class PackageInstallDetailViewModel(
-    BaseGitPackage package,
+    BasePackage package,
     ISettingsManager settingsManager,
     INotificationService notificationService,
     ILogger<PackageInstallDetailViewModel> logger,
@@ -40,7 +40,7 @@ public partial class PackageInstallDetailViewModel(
     INavigationService<NewPackageManagerViewModel> packageNavigationService
 ) : PageViewModelBase
 {
-    public BaseGitPackage SelectedPackage { get; } = package;
+    public BasePackage SelectedPackage { get; } = package;
     public override string Title { get; } = package.DisplayName;
     public override IconSource IconSource => new SymbolIconSource();
 

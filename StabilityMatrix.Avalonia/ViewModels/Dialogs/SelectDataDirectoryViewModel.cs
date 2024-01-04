@@ -24,13 +24,19 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    public static string DefaultInstallLocation => Compat.AppDataHome;
+
+    public static string DefaultInstallLocation =>
+        Compat.IsLinux
+            ? Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                "StabilityMatrix"
+            )
+            : Compat.AppDataHome;
 
     private readonly ISettingsManager settingsManager;
 
     private const string ValidExistingDirectoryText = "Valid existing data directory found";
-    private const string InvalidDirectoryText =
-        "Directory must be empty or have a valid settings.json file";
+    private const string InvalidDirectoryText = "Directory must be empty or have a valid settings.json file";
     private const string NotEnoughFreeSpaceText = "Not enough free space on the selected drive";
     private const string FatWarningText = "FAT32 / exFAT drives are not supported at this time";
 
@@ -38,7 +44,7 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
     private string dataDirectory = DefaultInstallLocation;
 
     [ObservableProperty]
-    private bool isPortableMode;
+    private bool isPortableMode = Compat.IsLinux;
 
     [ObservableProperty]
     private string directoryStatusText = string.Empty;

@@ -590,6 +590,11 @@ public sealed class App : Application
             {
                 var result = lifetime.TryShutdown(exitCode);
                 Debug.WriteLine($"Shutdown: {result}");
+
+                if (result)
+                {
+                    Environment.Exit(exitCode);
+                }
             }
             catch (InvalidOperationException)
             {

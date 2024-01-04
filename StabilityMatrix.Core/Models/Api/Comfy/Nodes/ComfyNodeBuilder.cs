@@ -110,6 +110,9 @@ public class ComfyNodeBuilder
 
         [Range(1, 10)]
         public required int Steps { get; init; }
+
+        [Range(0, 1.0)]
+        public required double Denoise { get; init; }
     }
 
     public record EmptyLatentImage : ComfyTypedNodeBase<LatentNodeConnection>
@@ -155,7 +158,11 @@ public class ComfyNodeBuilder
         return new NamedComfyNode<ImageNodeConnection>(name)
         {
             ClassType = "ImageUpscaleWithModel",
-            Inputs = new Dictionary<string, object?> { ["upscale_model"] = upscaleModel.Data, ["image"] = image.Data }
+            Inputs = new Dictionary<string, object?>
+            {
+                ["upscale_model"] = upscaleModel.Data,
+                ["image"] = image.Data
+            }
         };
     }
 
@@ -286,7 +293,8 @@ public class ComfyNodeBuilder
         public required string ControlNetName { get; init; }
     }
 
-    public record ControlNetApplyAdvanced : ComfyTypedNodeBase<ConditioningNodeConnection, ConditioningNodeConnection>
+    public record ControlNetApplyAdvanced
+        : ComfyTypedNodeBase<ConditioningNodeConnection, ConditioningNodeConnection>
     {
         public required ConditioningNodeConnection Positive { get; init; }
         public required ConditioningNodeConnection Negative { get; init; }
@@ -409,7 +417,9 @@ public class ComfyNodeBuilder
                         .Output,
                 image =>
                     Nodes
-                        .AddNamedNode(ImageScale($"{name}_ImageUpscale", image, upscaleInfo.Name, height, width, false))
+                        .AddNamedNode(
+                            ImageScale($"{name}_ImageUpscale", image, upscaleInfo.Name, height, width, false)
+                        )
                         .Output
             );
         }
@@ -420,7 +430,11 @@ public class ComfyNodeBuilder
             var samplerImage = GetPrimaryAsImage(primary, vae);
 
             // Do group upscale
-            var modelUpscaler = Group_UpscaleWithModel($"{name}_ModelUpscale", upscaleInfo.Name, samplerImage);
+            var modelUpscaler = Group_UpscaleWithModel(
+                $"{name}_ModelUpscale",
+                upscaleInfo.Name,
+                samplerImage
+            );
 
             // Since the model upscale is fixed to model (2x/4x), scale it again to the requested size
             var resizedScaled = Nodes.AddNamedNode(
@@ -476,7 +490,11 @@ public class ComfyNodeBuilder
             );
 
             // Do group upscale
-            var modelUpscaler = Group_UpscaleWithModel($"{name}_ModelUpscale", upscaleInfo.Name, samplerImage.Output);
+            var modelUpscaler = Group_UpscaleWithModel(
+                $"{name}_ModelUpscale",
+                upscaleInfo.Name,
+                samplerImage.Output
+            );
 
             // Since the model upscale is fixed to model (2x/4x), scale it again to the requested size
             var resizedScaled = Nodes.AddNamedNode(
@@ -550,7 +568,11 @@ public class ComfyNodeBuilder
             );
 
             // Do group upscale
-            var modelUpscaler = Group_UpscaleWithModel($"{name}_ModelUpscale", upscaleInfo.Name, samplerImage.Output);
+            var modelUpscaler = Group_UpscaleWithModel(
+                $"{name}_ModelUpscale",
+                upscaleInfo.Name,
+                samplerImage.Output
+            );
 
             // Since the model upscale is fixed to model (2x/4x), scale it again to the requested size
             var resizedScaled = Nodes.AddNamedNode(
@@ -750,7 +772,10 @@ public class ComfyNodeBuilder
             return Connections.Primary.AsT1;
         }
 
-        return GetPrimaryAsImage(Connections.Primary ?? throw new NullReferenceException("No primary connection"), vae);
+        return GetPrimaryAsImage(
+            Connections.Primary ?? throw new NullReferenceException("No primary connection"),
+            vae
+        );
     }
 
     /// <summary>
@@ -771,7 +796,7 @@ public class ComfyNodeBuilder
 
         public ClipNodeConnection? BaseClip { get; set; }
         public ClipVisionNodeConnection? BaseClipVision { get; set; }
-      
+
         public Dictionary<string, ModelConnections> Models { get; } =
             new() { ["Base"] = new ModelConnections("Base"), ["Refiner"] = new ModelConnections("Refiner") };
 
@@ -796,7 +821,9 @@ public class ComfyNodeBuilder
 
         public ModelNodeConnection GetRefinerOrBaseModel()
         {
-            return Refiner.Model ?? Base.Model ?? throw new NullReferenceException("No Refiner or Base Model");
+            return Refiner.Model
+                ?? Base.Model
+                ?? throw new NullReferenceException("No Refiner or Base Model");
         }
 
         public ConditioningConnections GetRefinerOrBaseConditioning()

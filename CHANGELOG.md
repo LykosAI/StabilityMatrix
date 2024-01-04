@@ -43,6 +43,17 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added image and model details in model selection boxes
 - Added CLIP Skip setting, toggleable from the model settings button
 
+## v2.7.7
+### Added
+- Added `--use-directml` launch argument for SDWebUI DirectML fork
+### Changed
+- Model Browser downloads will no longer be disabled if the free drive space is unavailable
+- Default Linux installation folder changed to prevent issues with hidden folders
+- Changed default Period to "AllTime" in the Model Browser
+### Fixed
+- Fixed error where Environment Variables were not editable
+- Fixed SDTurboScheduler's missing denoise parameter
+
 ## v2.7.6
 ### Added
 - Added SDXL Turbo and Stable Video Diffusion to the Hugging Face tab

@@ -125,6 +125,98 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
     /// </summary>
     public Task DeleteAsync(bool recursive) => Task.Run(() => Delete(recursive));
 
+    private void ThrowIfNotExists()
+    {
+        if (!Exists)
+        {
+            throw new DirectoryNotFoundException($"Directory not found: {FullPath}");
+        }
+    }
+
+    public void CopyTo(DirectoryPath destinationDir, bool recursive = true)
+    {
+        ThrowIfNotExists();
+
+        // Cache directories before we start copying
+        var dirs = EnumerateDirectories().ToList();
+
+        destinationDir.Create();
+
+        // Get the files in the source directory and copy to the destination directory
+        foreach (var file in EnumerateFiles())
+        {
+            var targetFilePath = destinationDir.JoinFile(file.Name);
+            file.CopyTo(targetFilePath);
+        }
+
+        // If recursive and copying subdirectories, recursively call this method
+        if (recursive)
+        {
+            foreach (var subDir in dirs)
+            {
+                var targetDirectory = destinationDir.JoinDir(subDir.Name);
+                subDir.CopyTo(targetDirectory);
+            }
+        }
+    }
+
+    public async Task CopyToAsync(DirectoryPath destinationDir, bool recursive = true)
+    {
+        ThrowIfNotExists();
+
+        // Cache directories before we start copying
+        var dirs = EnumerateDirectories().ToList();
+
+        destinationDir.Create();
+
+        // Get the files in the source directory and copy to the destination directory
+        foreach (var file in EnumerateFiles())
+        {
+            var targetFilePath = destinationDir.JoinFile(file.Name);
+            await file.CopyToAsync(targetFilePath).ConfigureAwait(false);
+        }
+
+        // If recursive and copying subdirectories, recursively call this method
+        if (recursive)
+        {
+            foreach (var subDir in dirs)
+            {
+                var targetDirectory = destinationDir.JoinDir(subDir.Name);
+                await subDir.CopyToAsync(targetDirectory).ConfigureAwait(false);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Move the directory to a destination path.
+    /// </summary>
+    public DirectoryPath MoveTo(DirectoryPath destinationDir)
+    {
+        Info.MoveTo(destinationDir.FullPath);
+        // Return the new path
+        return destinationDir;
+    }
+
+    /// <summary>
+    /// Move the file to a target path.
+    /// </summary>
+    public async Task<DirectoryPath> MoveToAsync(DirectoryPath destinationDir)
+    {
+        await Task.Run(() => Info.MoveTo(destinationDir.FullPath)).ConfigureAwait(false);
+        // Return the new path
+        return destinationDir;
+    }
+
+    /// <summary>
+    /// Move the directory to a destination path as a subfolder with the current name.
+    /// </summary>
+    public async Task<DirectoryPath> MoveToDirectoryAsync(DirectoryPath destinationParentDir)
+    {
+        await Task.Run(() => Info.MoveTo(destinationParentDir.JoinDir(Name))).ConfigureAwait(false);
+        // Return the new path
+        return destinationParentDir.JoinDir(this);
+    }
+
     /// <summary>
     /// Join with other paths to form a new directory path.
     /// </summary>

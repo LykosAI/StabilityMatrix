@@ -249,6 +249,19 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
         Info.EnumerateDirectories(searchPattern, searchOption)
             .Select(directory => new DirectoryPath(directory));
 
+    /// <summary>
+    /// Return a new <see cref="DirectoryPath"/> with the given file name.
+    /// </summary>
+    public DirectoryPath WithName(string directoryName)
+    {
+        if (Path.GetDirectoryName(FullPath) is { } directory && !string.IsNullOrWhiteSpace(directory))
+        {
+            return new DirectoryPath(directory, directoryName);
+        }
+
+        return new DirectoryPath(directoryName);
+    }
+
     public override string ToString() => FullPath;
 
     /// <inheritdoc />

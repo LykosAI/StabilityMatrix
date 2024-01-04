@@ -30,6 +30,27 @@ public static class ProcessRunner
     }
 
     /// <summary>
+    /// Start an executable or .app on macOS.
+    /// </summary>
+    public static Process StartApp(string path, ProcessArgs args)
+    {
+        if (Compat.IsMacOS)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "open",
+                Arguments = args.Prepend([path, "--args"]),
+                UseShellExecute = true
+            };
+
+            return Process.Start(startInfo)
+                ?? throw new NullReferenceException("Process.Start returned null");
+        }
+
+        return Process.Start(args.Prepend(path));
+    }
+
+    /// <summary>
     /// Opens the given folder in the system file explorer.
     /// </summary>
     public static async Task OpenFolderBrowser(string directoryPath)
@@ -372,7 +393,10 @@ public static class ProcessRunner
         };
     }
 
-    public static Task<ProcessResult> RunBashCommand(IEnumerable<string> commands, string workingDirectory = "")
+    public static Task<ProcessResult> RunBashCommand(
+        IEnumerable<string> commands,
+        string workingDirectory = ""
+    )
     {
         // Quote arguments containing spaces
         var args = string.Join(" ", commands.Select(Quote));
@@ -421,7 +445,9 @@ public static class ProcessRunner
         catch (SystemException) { }
 
         throw new ProcessException(
-            "Process " + (processName == null ? "" : processName + " ") + $"failed with exit-code {process.ExitCode}."
+            "Process "
+                + (processName == null ? "" : processName + " ")
+                + $"failed with exit-code {process.ExitCode}."
         );
     }
 }

@@ -11,11 +11,12 @@
                           xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
                           xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
                           xmlns:extensions="clr-namespace:StabilityMatrix.Core.Models.Packages.Extensions;assembly=StabilityMatrix.Core"
+                          xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                          x:DataType="viewModels:PackageInstallDetailViewModel"
+                          x:DataType="packageManager:PackageInstallDetailViewModel"
                           x:CompileBindings="True"
                           d:DataContext="{x:Static designData:DesignData.PackageInstallDetailViewModel}"
-                          x:Class="StabilityMatrix.Avalonia.Views.PackageInstallDetailView">
+                          x:Class="StabilityMatrix.Avalonia.Views.PackageManager.PackageInstallDetailView">
 
     <Grid ColumnDefinitions="Auto, *"
           RowDefinitions="Auto, *">

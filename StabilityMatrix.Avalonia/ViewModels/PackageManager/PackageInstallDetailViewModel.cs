@@ -15,7 +15,6 @@ using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -25,9 +24,10 @@ using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using PackageInstallDetailView = StabilityMatrix.Avalonia.Views.PackageManager.PackageInstallDetailView;
 using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
 
-namespace StabilityMatrix.Avalonia.ViewModels;
+namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [View(typeof(PackageInstallDetailView))]
 public partial class PackageInstallDetailViewModel(

@@ -177,8 +177,12 @@
         <DependentUpon>NewPackageManagerPage.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
-      <Compile Update="Views\PackageInstallDetailView.axaml.cs">
+      <Compile Update="Views\PackageManager\PackageInstallDetailView.axaml.cs">
         <DependentUpon>PackageInstallDetailView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\PackageManager\PackageInstallBrowserView.axaml.cs">
+        <DependentUpon>NewInstallerDialog.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>

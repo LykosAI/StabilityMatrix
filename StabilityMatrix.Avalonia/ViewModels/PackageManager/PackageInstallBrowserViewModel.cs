@@ -33,7 +33,7 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
     private readonly IPrerequisiteHelper prerequisiteHelper;
 
     [ObservableProperty]
-    private bool showIncompatiblePackages = false;
+    private bool showIncompatiblePackages;
 
     [ObservableProperty]
     private string searchFilter = string.Empty;
@@ -113,7 +113,7 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
     public override string Title => "Add Package";
     public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Add };
 
-    public void OnPackageSelected(BaseGitPackage package)
+    public void OnPackageSelected(BaseGitPackage? package)
     {
         if (package is null)
         {

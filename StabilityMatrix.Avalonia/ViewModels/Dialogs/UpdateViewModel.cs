@@ -157,7 +157,8 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         if (Compat.IsUnix)
         {
             File.SetUnixFileMode(
-                UpdateHelper.ExecutablePath.FullPath, // 0755
+                UpdateHelper.ExecutablePath.FullPath,
+                // 0755
                 UnixFileMode.UserRead
                     | UnixFileMode.UserWrite
                     | UnixFileMode.UserExecute

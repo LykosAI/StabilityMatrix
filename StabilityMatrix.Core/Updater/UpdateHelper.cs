@@ -32,7 +32,10 @@ public class UpdateHelper : IUpdateHelper
     public const string UpdateFolderName = ".StabilityMatrixUpdate";
     public static DirectoryPath UpdateFolder => Compat.AppCurrentDir.JoinDir(UpdateFolderName);
 
-    public static FilePath ExecutablePath => UpdateFolder.JoinFile(Compat.GetExecutableName());
+    public static IPathObject ExecutablePath =>
+        Compat.IsMacOS
+            ? UpdateFolder.JoinDir(Compat.GetAppName())
+            : UpdateFolder.JoinFile(Compat.GetAppName());
 
     /// <inheritdoc />
     public event EventHandler<UpdateStatusChangedEventArgs>? UpdateStatusChanged;
@@ -123,7 +126,7 @@ public class UpdateHelper : IUpdateHelper
                     .EnumerateFiles("*.*", SearchOption.AllDirectories)
                     .First(f => f.Extension.ToLowerInvariant() is ".exe" or ".appimage");
 
-                await binaryFile.MoveToAsync(ExecutablePath).ConfigureAwait(false);
+                await binaryFile.MoveToAsync((FilePath)ExecutablePath).ConfigureAwait(false);
             }
             else if (downloadFile.Extension == ".dmg")
             {
@@ -139,9 +142,10 @@ public class UpdateHelper : IUpdateHelper
                 // Extract dmg contents
                 await ArchiveHelper.ExtractDmg(downloadFile, extractDir).ConfigureAwait(false);
 
-                // Find app and move it up to the root
-                var appFile = extractDir.EnumerateFiles("*.app").First();
-                await appFile.MoveToAsync(ExecutablePath).ConfigureAwait(false);
+                // Find app dir and move it up to the root
+                var appBundle = extractDir.EnumerateDirectories("*.app").First();
+
+                await appBundle.MoveToAsync((DirectoryPath)ExecutablePath).ConfigureAwait(false);
             }
             // Otherwise just rename
             else
@@ -210,10 +214,10 @@ public class UpdateHelper : IUpdateHelper
                         new UpdateStatusChangedEventArgs
                         {
                             LatestUpdate = update,
-                            UpdateChannels = updateManifest.Updates.ToDictionary(
-                                kv => kv.Key,
-                                kv => kv.Value.GetInfoForCurrentPlatform()
-                            )!
+                            UpdateChannels = updateManifest
+                                .Updates.Select(kv => (kv.Key, kv.Value.GetInfoForCurrentPlatform()))
+                                .Where(kv => kv.Item2 is not null)
+                                .ToDictionary(kv => kv.Item1, kv => kv.Item2)!
                         }
                     );
                     return;
@@ -222,15 +226,14 @@ public class UpdateHelper : IUpdateHelper
 
             logger.LogInformation("No update available");
 
-            OnUpdateStatusChanged(
-                new UpdateStatusChangedEventArgs
-                {
-                    UpdateChannels = updateManifest.Updates.ToDictionary(
-                        kv => kv.Key,
-                        kv => kv.Value.GetInfoForCurrentPlatform()
-                    )!
-                }
-            );
+            var args = new UpdateStatusChangedEventArgs
+            {
+                UpdateChannels = updateManifest
+                    .Updates.Select(kv => (kv.Key, kv.Value.GetInfoForCurrentPlatform()))
+                    .Where(kv => kv.Item2 is not null)
+                    .ToDictionary(kv => kv.Item1, kv => kv.Item2)!
+            };
+            OnUpdateStatusChanged(args);
         }
         catch (Exception e)
         {

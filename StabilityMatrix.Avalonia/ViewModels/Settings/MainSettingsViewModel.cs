@@ -51,6 +51,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -302,7 +303,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
             {
                 if (await dialog.ShowAsync() == ContentDialogResult.Primary)
                 {
-                    Process.Start(Compat.AppCurrentPath);
+                    // Start the new app while passing our own PID to wait for exit
+                    Process.Start(Compat.AppCurrentPath, $"--wait-for-exit-pid {Environment.ProcessId}");
+
+                    // Shutdown the current app
                     App.Shutdown();
                 }
             });

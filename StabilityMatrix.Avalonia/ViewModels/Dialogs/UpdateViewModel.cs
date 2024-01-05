@@ -18,6 +18,7 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 
@@ -156,7 +157,8 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         if (Compat.IsUnix)
         {
             File.SetUnixFileMode(
-                UpdateHelper.ExecutablePath, // 0755
+                UpdateHelper.ExecutablePath.FullPath,
+                // 0755
                 UnixFileMode.UserRead
                     | UnixFileMode.UserWrite
                     | UnixFileMode.UserExecute
@@ -170,7 +172,13 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         UpdateText = "Getting a few things ready...";
         await using (new MinimumDelay(500, 1000))
         {
-            Process.Start(UpdateHelper.ExecutablePath, $"--wait-for-exit-pid {Environment.ProcessId}");
+            await Task.Run(() =>
+            {
+                ProcessRunner.StartApp(
+                    UpdateHelper.ExecutablePath.FullPath,
+                    new[] { "--wait-for-exit-pid", $"{Environment.ProcessId}" }
+                );
+            });
         }
 
         UpdateText = "Update complete. Restarting Stability Matrix in 3 seconds...";
@@ -259,7 +267,10 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         var currentVersionBlock = results.FindIndex(x => x.Version == currentVersion.WithoutMetadata());
 
         // For mismatching build metadata, add one
-        if (currentVersionBlock != -1 && results[currentVersionBlock].Version?.Metadata != currentVersion.Metadata)
+        if (
+            currentVersionBlock != -1
+            && results[currentVersionBlock].Version?.Metadata != currentVersion.Metadata
+        )
         {
             currentVersionBlock++;
         }
@@ -267,7 +278,9 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         // Support for previous pre-release without changelogs
         if (currentVersionBlock == -1)
         {
-            currentVersionBlock = results.FindIndex(x => x.Version == currentVersion.WithoutPrereleaseOrMetadata());
+            currentVersionBlock = results.FindIndex(
+                x => x.Version == currentVersion.WithoutPrereleaseOrMetadata()
+            );
 
             // Add 1 if found to include the current release
             if (currentVersionBlock != -1)

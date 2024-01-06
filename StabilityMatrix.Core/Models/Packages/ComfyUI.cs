@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Attributes;
@@ -461,5 +463,39 @@ public class ComfyUI(
         var yamlData = serializer.Serialize(mappingNode);
 
         await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);
+    }
+
+    public override IPackageExtensionManager ExtensionManager => new ComfyExtensionManager(this);
+
+    private class ComfyExtensionManager(ComfyUI package)
+        : GitPackageExtensionManager(package.PrerequisiteHelper)
+    {
+        public override string RelativeInstallDirectory => "custom_nodes";
+
+        protected override IEnumerable<ExtensionManifest> GetManifests(InstalledPackage installedPackage) =>
+            [
+                new ExtensionManifest(
+                    new Uri("https://github.com/ltdrdata/ComfyUI-Manager/blob/main/custom-node-list.json")
+                )
+            ];
+
+        public override async Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(
+            ExtensionManifest manifest,
+            CancellationToken cancellationToken = default
+        )
+        {
+            // Get json
+            var content = await package
+                .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
+                .ConfigureAwait(false);
+
+            // Parse json
+            var jsonManifest = JsonSerializer.Deserialize<ComfyExtensionManifest>(
+                content,
+                ComfyExtensionManifestSerializerContext.Default.Options
+            );
+
+            return jsonManifest?.GetPackageExtensions() ?? Enumerable.Empty<PackageExtension>();
+        }
     }
 }

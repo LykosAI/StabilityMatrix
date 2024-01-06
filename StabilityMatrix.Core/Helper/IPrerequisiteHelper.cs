@@ -21,17 +21,22 @@ public interface IPrerequisiteHelper
     /// <summary>
     /// Run embedded git with the given arguments.
     /// </summary>
-    Task RunGit(
-        ProcessArgs args,
-        Action<ProcessOutput>? onProcessOutput,
-        string? workingDirectory = null
-    );
+    Task RunGit(ProcessArgs args, Action<ProcessOutput>? onProcessOutput, string? workingDirectory = null);
 
     /// <summary>
     /// Run embedded git with the given arguments.
     /// </summary>
     Task RunGit(ProcessArgs args, string? workingDirectory = null);
 
-    Task<string> GetGitOutput(string? workingDirectory = null, params string[] args);
+    Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null);
+
+    async Task<bool> CheckIsGitRepository(string directory)
+    {
+        var result = await GetGitOutput(["rev-parse", "--is-inside-work-tree"], directory)
+            .ConfigureAwait(false);
+
+        return result.ExitCode == 0 && result.StandardOutput?.Trim().ToLowerInvariant() == "true";
+    }
+
     Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null);
 }

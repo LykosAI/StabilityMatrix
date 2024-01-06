@@ -305,6 +305,18 @@ public class DownloadService : IDownloadService
         }
     }
 
+    public async Task<Stream> GetContentAsync(string url, CancellationToken cancellationToken = default)
+    {
+        using var client = httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromSeconds(10);
+        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("StabilityMatrix", "2.0"));
+
+        await AddConditionalHeaders(client, new Uri(url)).ConfigureAwait(false);
+
+        var response = await client.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        return await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+    }
+
     /// <summary>
     /// Adds conditional headers to the HttpClient for the given URL
     /// </summary>

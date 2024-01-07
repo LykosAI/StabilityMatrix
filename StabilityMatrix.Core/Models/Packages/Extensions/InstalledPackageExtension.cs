@@ -15,7 +15,12 @@ public record InstalledPackageExtension
     public PackageExtensionVersion? Version { get; init; }
 
     /// <summary>
-    ///
+    /// Remote git repository url, if the extension is a git repository.
+    /// </summary>
+    public string? GitRepositoryUrl { get; init; }
+
+    /// <summary>
+    /// The PackageExtension definition, if available.
     /// </summary>
     public PackageExtension? Definition { get; init; }
 }

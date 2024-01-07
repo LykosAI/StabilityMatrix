@@ -10,6 +10,9 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
 {
     public abstract string RelativeInstallDirectory { get; }
 
+    public virtual IEnumerable<ExtensionManifest> DefaultManifests { get; } =
+        Enumerable.Empty<ExtensionManifest>();
+
     protected virtual IEnumerable<string> IndexRelativeDirectories => [RelativeInstallDirectory];
 
     public abstract Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(
@@ -26,7 +29,10 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
         return GetManifestExtensionsAsync(manifest, cancellationToken);
     }
 
-    protected abstract IEnumerable<ExtensionManifest> GetManifests(InstalledPackage installedPackage);
+    protected virtual IEnumerable<ExtensionManifest> GetManifests(InstalledPackage installedPackage)
+    {
+        return DefaultManifests;
+    }
 
     /// <inheritdoc />
     IEnumerable<ExtensionManifest> IPackageExtensionManager.GetManifests(InstalledPackage installedPackage)
@@ -70,6 +76,11 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
                     .GetGitRepositoryVersion(subDirectory)
                     .ConfigureAwait(false);
 
+                // Get git remote
+                var remoteUrlResult = await prerequisiteHelper
+                    .GetGitRepositoryRemoteOriginUrl(subDirectory)
+                    .ConfigureAwait(false);
+
                 extensions.Add(
                     new InstalledPackageExtension
                     {
@@ -79,7 +90,10 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
                             Tag = version.Tag,
                             Branch = version.Branch,
                             CommitSha = version.CommitSha
-                        }
+                        },
+                        GitRepositoryUrl = remoteUrlResult.IsSuccessExitCode
+                            ? remoteUrlResult.StandardOutput?.Trim()
+                            : null
                     }
                 );
             }

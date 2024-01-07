@@ -122,5 +122,10 @@ public interface IPrerequisiteHelper
         }
     }
 
+    Task<ProcessResult> GetGitRepositoryRemoteOriginUrl(string repositoryPath)
+    {
+        return GetGitOutput(["config", "--get", "remote.origin.url"], repositoryPath);
+    }
+
     Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null);
 }

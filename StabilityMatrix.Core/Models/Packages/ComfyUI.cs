@@ -472,10 +472,10 @@ public class ComfyUI(
     {
         public override string RelativeInstallDirectory => "custom_nodes";
 
-        protected override IEnumerable<ExtensionManifest> GetManifests(InstalledPackage installedPackage) =>
+        public override IEnumerable<ExtensionManifest> DefaultManifests =>
             [
                 new ExtensionManifest(
-                    new Uri("https://github.com/ltdrdata/ComfyUI-Manager/blob/main/custom-node-list.json")
+                    new Uri("https://cdn.jsdelivr.net/gh/ltdrdata/ComfyUI-Manager/custom-node-list.json")
                 )
             ];
 

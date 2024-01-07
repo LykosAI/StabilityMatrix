@@ -4,11 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -373,6 +375,32 @@ public partial class PackageCardViewModel : ProgressViewModel
         });
 
         await vm.GetDialog().ShowAsync();
+    }
+
+    [RelayCommand]
+    public async Task OpenExtensionsDialog()
+    {
+        if (
+            Package is not { FullPath: not null }
+            || packageFactory.GetPackagePair(Package) is not { } packagePair
+        )
+            return;
+
+        var vm = vmFactory.Get<PackageExtensionBrowserViewModel>(vm =>
+        {
+            vm.PackagePair = packagePair;
+        });
+
+        var dialog = new BetterContentDialog
+        {
+            Content = vm,
+            CloseOnClickOutside = true,
+            FullSizeDesired = true,
+            IsFooterVisible = false,
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+
+        await dialog.ShowAsync();
     }
 
     [RelayCommand]

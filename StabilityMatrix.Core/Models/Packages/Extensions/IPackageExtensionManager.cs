@@ -8,12 +8,36 @@ namespace StabilityMatrix.Core.Models.Packages.Extensions;
 /// </summary>
 public interface IPackageExtensionManager
 {
-    IEnumerable<ExtensionManifest> GetManifests(InstalledPackage installedPackage);
+    IEnumerable<ExtensionManifest> DefaultManifests { get; }
+
+    IEnumerable<ExtensionManifest> GetManifests(InstalledPackage installedPackage)
+    {
+        return DefaultManifests;
+    }
 
     Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(
         ExtensionManifest manifest,
         CancellationToken cancellationToken = default
     );
+
+    async Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(
+        IEnumerable<ExtensionManifest> manifests,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var extensions = Enumerable.Empty<PackageExtension>();
+
+        foreach (var manifest in manifests)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            extensions = extensions.Concat(
+                await GetManifestExtensionsAsync(manifest, cancellationToken).ConfigureAwait(false)
+            );
+        }
+
+        return extensions;
+    }
 
     Task<IEnumerable<InstalledPackageExtension>> GetInstalledExtensionsAsync(
         InstalledPackage installedPackage,

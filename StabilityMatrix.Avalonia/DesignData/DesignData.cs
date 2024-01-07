@@ -39,6 +39,7 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Python;
@@ -481,6 +482,21 @@ public static class DesignData
             return vm;
         }
     }
+
+    public static PackageExtensionBrowserViewModel PackageExtensionBrowserViewModel =>
+        DialogFactory.Get<PackageExtensionBrowserViewModel>(vm =>
+        {
+            vm.AddExtensions(
+                new PackageExtension
+                {
+                    Author = "123",
+                    Title = "Cool Extension",
+                    Description = "This is an interesting extension",
+                    Reference = new Uri("https://github.com/LykosAI/StabilityMatrix"),
+                    Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")]
+                }
+            );
+        });
 
     public static CheckpointsPageViewModel CheckpointsPageViewModel =>
         Services.GetRequiredService<CheckpointsPageViewModel>();

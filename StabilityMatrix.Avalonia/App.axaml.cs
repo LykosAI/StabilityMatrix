@@ -17,11 +17,13 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Input.Platform;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using FluentAvalonia.Interop;
 using FluentAvalonia.UI.Controls;
 using MessagePipe;
 using Microsoft.Extensions.Configuration;
@@ -97,6 +99,8 @@ public sealed class App : Application
     public IClassicDesktopStyleApplicationLifetime? DesktopLifetime =>
         ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
 
+    public static new App? Current => (App?)Application.Current;
+
     /// <summary>
     /// Called before <see cref="Services"/> is built.
     /// Can be used by UI tests to override services.
@@ -106,6 +110,8 @@ public sealed class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+
+        SetFontFamily(GetPlatformDefaultFontFamily());
 
         // Set design theme
         if (Design.IsDesignMode)
@@ -183,6 +189,58 @@ public sealed class App : Application
     }
 
     /// <summary>
+    /// Set the default font family for the application.
+    /// </summary>
+    private void SetFontFamily(FontFamily fontFamily)
+    {
+        Resources["ContentControlThemeFontFamily"] = fontFamily;
+    }
+
+    /// <summary>
+    /// Get the default font family for the current platform and language.
+    /// </summary>
+    public FontFamily GetPlatformDefaultFontFamily()
+    {
+        try
+        {
+            var fonts = new List<string>();
+
+            if (Cultures.Current?.Name == "ja-JP")
+            {
+                return Resources["NotoSansJP"] as FontFamily
+                    ?? throw new ApplicationException("Font NotoSansJP not found");
+            }
+
+            if (Compat.IsWindows)
+            {
+                fonts.Add(OSVersionHelper.IsWindows11() ? "Segoe UI Variable Text" : "Segoe UI");
+            }
+            else if (Compat.IsMacOS)
+            {
+                // Use Segoe fonts if installed, but we can't distribute them
+                fonts.Add("Segoe UI Variable");
+                fonts.Add("Segoe UI");
+
+                fonts.Add("San Francisco");
+                fonts.Add("Helvetica Neue");
+                fonts.Add("Helvetica");
+            }
+            else
+            {
+                return FontFamily.Default;
+            }
+
+            return new FontFamily(string.Join(",", fonts));
+        }
+        catch (Exception e)
+        {
+            LogManager.GetCurrentClassLogger().Error(e);
+
+            return FontFamily.Default;
+        }
+    }
+
+    /// <summary>
     /// Setup tasks to be run shortly before any window is shown
     /// </summary>
     private void Setup()
@@ -219,8 +277,6 @@ public sealed class App : Application
         {
             mainWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
         }
-
-        mainWindow.SetDefaultFonts();
 
         VisualRoot = mainWindow;
         StorageProvider = mainWindow.StorageProvider;

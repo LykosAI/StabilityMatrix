@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Reactive.Linq;
@@ -121,13 +122,23 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase
             .Cast<IPackageStep>()
             .ToArray();
 
-        var runner = new PackageModificationRunner { ShowDialogOnStart = true, HideCloseButton = true };
+        var runner = new PackageModificationRunner { ShowDialogOnStart = true };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps(steps);
+
+        ClearSelection();
+    }
+
+    /// <inheritdoc />
+    public override async Task OnLoadedAsync()
+    {
+        await base.OnLoadedAsync();
+
+        await Refresh();
     }
 
     [RelayCommand]
-    private async Task Refresh()
+    public async Task Refresh()
     {
         if (PackagePair is null)
             return;
@@ -167,6 +178,14 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    public void ClearSelection()
+    {
+        foreach (var item in SelectedAvailableItems.ToImmutableArray())
+        {
+            item.IsSelected = false;
         }
     }
 

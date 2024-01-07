@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,7 @@ using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -85,6 +87,14 @@ public partial class CheckpointFolder : ViewModelBase
     [ObservableProperty]
     private string searchFilter = string.Empty;
 
+    [ObservableProperty]
+    private ObservableCollection<string> baseModelOptions =
+        new(
+            Enum.GetValues<CivitBaseModelType>()
+                .Where(x => x != CivitBaseModelType.All)
+                .Select(x => x.GetStringValue())
+        );
+
     public bool IsDragBlurEnabled => IsCurrentDragTarget || IsImportInProgress;
 
     public string TitleWithFilesCount =>
@@ -141,6 +151,7 @@ public partial class CheckpointFolder : ViewModelBase
                     f.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
                     || f.Title.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
             )
+            .Filter(BaseModelFilter)
             .Bind(DisplayedCheckpointFiles)
             .Subscribe();
 
@@ -159,6 +170,13 @@ public partial class CheckpointFolder : ViewModelBase
 
         CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
         // DisplayedCheckpointFiles = CheckpointFiles;
+    }
+
+    private bool BaseModelFilter(CheckpointFile file)
+    {
+        return file.IsConnectedModel
+            ? BaseModelOptions.Contains(file.ConnectedModel!.BaseModel)
+            : BaseModelOptions.Contains("Other");
     }
 
     /// <summary>
@@ -182,6 +200,16 @@ public partial class CheckpointFolder : ViewModelBase
         foreach (var subFolder in SubFolders)
         {
             subFolder.SearchFilter = value;
+        }
+
+        checkpointFilesCache.Refresh();
+    }
+
+    partial void OnBaseModelOptionsChanged(ObservableCollection<string> value)
+    {
+        foreach (var subFolder in SubFolders)
+        {
+            subFolder.BaseModelOptions = new ObservableCollection<string>(value);
         }
 
         checkpointFilesCache.Refresh();
@@ -393,7 +421,9 @@ public partial class CheckpointFolder : ViewModelBase
                 Progress.Value = report.Percentage;
                 // For multiple files, add count
                 Progress.Text =
-                    copyPaths.Count > 1 ? $"Importing {report.Title} ({report.Message})" : $"Importing {report.Title}";
+                    copyPaths.Count > 1
+                        ? $"Importing {report.Title} ({report.Message})"
+                        : $"Importing {report.Title}";
             });
 
             await FileTransfers.CopyFiles(copyPaths, progress);
@@ -603,15 +633,13 @@ public partial class CheckpointFolder : ViewModelBase
         SubFoldersCache.EditDiff(updatedFolders, (a, b) => a.Title == b.Title);
 
         // Index files
-        Dispatcher
-            .UIThread
-            .Post(
-                () =>
-                {
-                    var files = GetCheckpointFiles();
-                    checkpointFilesCache.EditDiff(files, CheckpointFile.FilePathComparer);
-                },
-                DispatcherPriority.Background
-            );
+        Dispatcher.UIThread.Post(
+            () =>
+            {
+                var files = GetCheckpointFiles();
+                checkpointFilesCache.EditDiff(files, CheckpointFile.FilePathComparer);
+            },
+            DispatcherPriority.Background
+        );
     }
 }

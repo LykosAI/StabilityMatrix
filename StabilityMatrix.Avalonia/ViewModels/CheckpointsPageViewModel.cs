@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -17,7 +19,9 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -41,7 +45,19 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
     public override string Title => "Checkpoints";
 
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };
+
+    [ObservableProperty]
+    private ObservableCollection<string> baseModelOptions =
+        new(
+            Enum.GetValues<CivitBaseModelType>()
+                .Where(x => x != CivitBaseModelType.All)
+                .Select(x => x.GetStringValue())
+        );
+
+    [ObservableProperty]
+    private ObservableCollection<string> selectedBaseModels = [];
 
     // Toggle button for auto hashing new drag-and-dropped files for connected upgrade
     [ObservableProperty]
@@ -97,12 +113,24 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         this.metadataImportService = metadataImportService;
         this.modelFinder = modelFinder;
 
+        SelectedBaseModels = new ObservableCollection<string>(BaseModelOptions);
+        SelectedBaseModels.CollectionChanged += (sender, args) =>
+        {
+            foreach (var folder in CheckpointFolders)
+            {
+                folder.BaseModelOptions = new ObservableCollection<string>(SelectedBaseModels);
+            }
+
+            CheckpointFoldersCache.Refresh();
+        };
+
         CheckpointFoldersCache
             .Connect()
             .DeferUntilLoaded()
             .SortBy(x => x.Title)
             .Bind(CheckpointFolders)
             .Filter(ContainsSearchFilter)
+            .Filter(ContainsBaseModel)
             .Bind(DisplayedCheckpointFolders)
             .Subscribe();
     }
@@ -165,8 +193,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
     private bool ContainsSearchFilter(CheckpointFolder folder)
     {
-        if (folder == null)
-            throw new ArgumentNullException(nameof(folder));
+        ArgumentNullException.ThrowIfNull(folder);
 
         if (string.IsNullOrWhiteSpace(SearchFilter))
         {
@@ -174,10 +201,26 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         }
 
         // Check files in the current folder
-        return folder.CheckpointFiles.Any(x => x.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase))
+        return folder.CheckpointFiles.Any(
+                x =>
+                    x.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                    || x.ConnectedModel?.ModelName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                        == true
+                    || x.ConnectedModel?.Tags.Any(
+                        t => t.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                    ) == true
+            )
             ||
             // If no matching files were found in the current folder, check in all subfolders
             folder.SubFolders.Any(ContainsSearchFilter);
+    }
+
+    private bool ContainsBaseModel(CheckpointFolder folder)
+    {
+        ArgumentNullException.ThrowIfNull(folder);
+
+        return folder.CheckpointFiles.Any(x => SelectedBaseModels.Contains(x.ConnectedModel?.BaseModel))
+            || folder.SubFolders.Any(ContainsBaseModel);
     }
 
     private void IndexFolders()
@@ -241,9 +284,16 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             Progress = report;
         });
 
-        await metadataImportService.ScanDirectoryForMissingInfo(settingsManager.ModelsDirectory, progressHandler);
+        await metadataImportService.ScanDirectoryForMissingInfo(
+            settingsManager.ModelsDirectory,
+            progressHandler
+        );
 
-        notificationService.Show("Scan Complete", "Finished scanning for missing metadata.", NotificationType.Success);
+        notificationService.Show(
+            "Scan Complete",
+            "Finished scanning for missing metadata.",
+            NotificationType.Success
+        );
 
         DelayedClearProgress(TimeSpan.FromSeconds(1.5));
     }

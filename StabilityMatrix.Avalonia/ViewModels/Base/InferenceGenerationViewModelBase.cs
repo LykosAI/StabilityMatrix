@@ -181,6 +181,11 @@ public abstract partial class InferenceGenerationViewModelBase
             file = outputDir.JoinFile($"{fileName}_{uuid}.{fileExtension}");
         }
 
+        if (file.Info.DirectoryName != null)
+        {
+            Directory.CreateDirectory(file.Info.DirectoryName);
+        }
+
         await using var fileStream = file.Info.OpenWrite();
         await imageStream.CopyToAsync(fileStream);
 

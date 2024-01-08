@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -12,12 +14,15 @@ using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -41,7 +46,19 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
     public override string Title => "Checkpoints";
 
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };
+
+    [ObservableProperty]
+    private ObservableCollection<string> baseModelOptions =
+        new(
+            Enum.GetValues<CivitBaseModelType>()
+                .Where(x => x != CivitBaseModelType.All)
+                .Select(x => x.GetStringValue())
+        );
+
+    [ObservableProperty]
+    private ObservableCollection<string> selectedBaseModels = [];
 
     // Toggle button for auto hashing new drag-and-dropped files for connected upgrade
     [ObservableProperty]
@@ -81,6 +98,13 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     public IObservableCollection<CheckpointFolder> DisplayedCheckpointFolders { get; } =
         new ObservableCollectionExtended<CheckpointFolder>();
 
+    public string ClearButtonText =>
+        SelectedBaseModels.Count == BaseModelOptions.Count
+            ? Resources.Action_ClearSelection
+            : Resources.Action_SelectAll;
+
+    private bool isClearing = false;
+
     public CheckpointsPageViewModel(
         ISharedFolders sharedFolders,
         ISettingsManager settingsManager,
@@ -97,12 +121,31 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         this.metadataImportService = metadataImportService;
         this.modelFinder = modelFinder;
 
+        SelectedBaseModels = new ObservableCollection<string>(BaseModelOptions);
+        SelectedBaseModels.CollectionChanged += (_, _) =>
+        {
+            foreach (var folder in CheckpointFolders)
+            {
+                folder.BaseModelOptionsCache.EditDiff(SelectedBaseModels);
+            }
+
+            CheckpointFoldersCache.Refresh();
+            OnPropertyChanged(nameof(ClearButtonText));
+            if (!isClearing)
+            {
+                settingsManager.Transaction(
+                    settings => settings.SelectedBaseModels = SelectedBaseModels.ToList()
+                );
+            }
+        };
+
         CheckpointFoldersCache
             .Connect()
             .DeferUntilLoaded()
-            .SortBy(x => x.Title)
             .Bind(CheckpointFolders)
             .Filter(ContainsSearchFilter)
+            .Filter(ContainsBaseModel)
+            .SortBy(x => x.Title)
             .Bind(DisplayedCheckpointFolders)
             .Subscribe();
     }
@@ -112,7 +155,6 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         base.OnLoaded();
 
         var sw = Stopwatch.StartNew();
-        // DisplayedCheckpointFolders = CheckpointFolders;
 
         // Set UI states
         IsImportAsConnected = settingsManager.Settings.IsImportAsConnected;
@@ -136,12 +178,31 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         IsLoading = false;
         IsIndexing = false;
 
+        isClearing = true;
+        SelectedBaseModels.Clear();
+        isClearing = false;
+
+        SelectedBaseModels.AddRange(settingsManager.Settings.SelectedBaseModels);
+
         Logger.Info($"OnLoadedAsync in {sw.ElapsedMilliseconds}ms");
     }
 
     public void ClearSearchQuery()
     {
         SearchFilter = string.Empty;
+    }
+
+    public void ClearOrSelectAllBaseModels()
+    {
+        if (SelectedBaseModels.Count == BaseModelOptions.Count)
+        {
+            SelectedBaseModels.Clear();
+        }
+        else
+        {
+            SelectedBaseModels.Clear();
+            SelectedBaseModels.AddRange(BaseModelOptions);
+        }
     }
 
     // ReSharper disable once UnusedParameterInPartialMethod
@@ -165,8 +226,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
     private bool ContainsSearchFilter(CheckpointFolder folder)
     {
-        if (folder == null)
-            throw new ArgumentNullException(nameof(folder));
+        ArgumentNullException.ThrowIfNull(folder);
 
         if (string.IsNullOrWhiteSpace(SearchFilter))
         {
@@ -174,10 +234,41 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         }
 
         // Check files in the current folder
-        return folder.CheckpointFiles.Any(x => x.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase))
+        return folder.CheckpointFiles.Any(
+                x =>
+                    x.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                    || x.Title.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                    || x.ConnectedModel?.ModelName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                        == true
+                    || x.ConnectedModel?.Tags.Any(
+                        t => t.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                    ) == true
+                    || x.ConnectedModel?.TrainedWordsString.Contains(
+                        SearchFilter,
+                        StringComparison.OrdinalIgnoreCase
+                    ) == true
+            )
             ||
             // If no matching files were found in the current folder, check in all subfolders
             folder.SubFolders.Any(ContainsSearchFilter);
+    }
+
+    private bool ContainsBaseModel(CheckpointFolder folder)
+    {
+        ArgumentNullException.ThrowIfNull(folder);
+
+        if (SelectedBaseModels.Count == 0 || SelectedBaseModels.Count == BaseModelOptions.Count)
+            return true;
+
+        if (!folder.DisplayedCheckpointFiles.Any())
+            return true;
+
+        return folder.CheckpointFiles.Any(
+                x =>
+                    x.IsConnectedModel
+                        ? SelectedBaseModels.Contains(x.ConnectedModel?.BaseModel)
+                        : SelectedBaseModels.Contains("Other")
+            ) || folder.SubFolders.Any(ContainsBaseModel);
     }
 
     private void IndexFolders()
@@ -241,9 +332,16 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             Progress = report;
         });
 
-        await metadataImportService.ScanDirectoryForMissingInfo(settingsManager.ModelsDirectory, progressHandler);
+        await metadataImportService.ScanDirectoryForMissingInfo(
+            settingsManager.ModelsDirectory,
+            progressHandler
+        );
 
-        notificationService.Show("Scan Complete", "Finished scanning for missing metadata.", NotificationType.Success);
+        notificationService.Show(
+            "Scan Complete",
+            "Finished scanning for missing metadata.",
+            NotificationType.Success
+        );
 
         DelayedClearProgress(TimeSpan.FromSeconds(1.5));
     }

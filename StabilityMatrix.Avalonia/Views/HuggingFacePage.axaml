@@ -102,6 +102,7 @@
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate DataType="{x:Type huggingFacePage:HuggingfaceItemViewModel}">
                                         <Button
+                                            IsEnabled="{Binding !Exists}"
                                             HorizontalAlignment="Stretch"
                                             HorizontalContentAlignment="Stretch"
                                             Command="{Binding ToggleSelectedCommand}"

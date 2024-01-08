@@ -24,6 +24,7 @@ using FluentAvalonia.UI.Media;
 using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Windowing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using NLog;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
@@ -40,6 +41,7 @@ using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
+using ILogger = NLog.ILogger;
 using TeachingTip = FluentAvalonia.UI.Controls.TeachingTip;
 #if DEBUG
 using StabilityMatrix.Avalonia.Diagnostics.Views;
@@ -54,6 +56,7 @@ public partial class MainWindow : AppWindowBase
     private readonly INotificationService notificationService;
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly ISettingsManager settingsManager;
+    private readonly ILogger<MainWindow> logger;
 
     private FlyoutBase? progressFlyout;
 
@@ -68,12 +71,14 @@ public partial class MainWindow : AppWindowBase
     public MainWindow(
         INotificationService notificationService,
         INavigationService<MainWindowViewModel> navigationService,
-        ISettingsManager settingsManager
+        ISettingsManager settingsManager,
+        ILogger<MainWindow> logger
     )
     {
         this.notificationService = notificationService;
         this.navigationService = navigationService;
         this.settingsManager = settingsManager;
+        this.logger = logger;
 
         InitializeComponent();
 
@@ -337,16 +342,9 @@ public partial class MainWindow : AppWindowBase
 
     private void OnImageLoadFailed(object? sender, ImageLoadFailedEventArgs e)
     {
-        Dispatcher.UIThread.Post(() =>
-        {
-            var fileName = Path.GetFileName(e.Url);
-            var displayName = string.IsNullOrEmpty(fileName) ? e.Url : fileName;
-            notificationService.Show(
-                "Failed to load image",
-                $"Could not load '{displayName}'\n({e.Exception.Message})",
-                NotificationType.Warning
-            );
-        });
+        var fileName = Path.GetFileName(e.Url);
+        var displayName = string.IsNullOrEmpty(fileName) ? e.Url : fileName;
+        logger.LogWarning($"Could not load '{displayName}'\n({e.Exception.Message})");
     }
 
     private void TryEnableMicaEffect()

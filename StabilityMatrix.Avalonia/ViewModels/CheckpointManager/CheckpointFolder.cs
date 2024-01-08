@@ -45,6 +45,8 @@ public partial class CheckpointFolder : ViewModelBase
 
     private readonly SourceCache<CheckpointFile, string> checkpointFilesCache = new(x => x.FilePath);
 
+    public readonly SourceCache<string, string> BaseModelOptionsCache = new(x => x);
+
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
     private bool useCategoryVisibility;
 
@@ -87,14 +89,6 @@ public partial class CheckpointFolder : ViewModelBase
     [ObservableProperty]
     private string searchFilter = string.Empty;
 
-    [ObservableProperty]
-    private ObservableCollection<string> baseModelOptions =
-        new(
-            Enum.GetValues<CivitBaseModelType>()
-                .Where(x => x != CivitBaseModelType.All)
-                .Select(x => x.GetStringValue())
-        );
-
     public bool IsDragBlurEnabled => IsCurrentDragTarget || IsImportInProgress;
 
     public string TitleWithFilesCount =>
@@ -114,6 +108,9 @@ public partial class CheckpointFolder : ViewModelBase
 
     public IObservableCollection<CheckpointFile> DisplayedCheckpointFiles { get; set; } =
         new ObservableCollectionExtended<CheckpointFile>();
+
+    public IObservableCollection<string> BaseModelOptions { get; } =
+        new ObservableCollectionExtended<string>();
 
     public CheckpointFolder(
         ISettingsManager settingsManager,
@@ -141,17 +138,17 @@ public partial class CheckpointFolder : ViewModelBase
                         .Subscribe(_ => checkpointFilesCache.Remove(file))
             )
             .Bind(CheckpointFiles)
-            .Sort(
-                SortExpressionComparer<CheckpointFile>
-                    .Descending(f => f.IsConnectedModel)
-                    .ThenByAscending(f => f.IsConnectedModel ? f.ConnectedModel!.ModelName : f.FileName)
-            )
             .Filter(
                 f =>
                     f.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
                     || f.Title.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
             )
             .Filter(BaseModelFilter)
+            .Sort(
+                SortExpressionComparer<CheckpointFile>
+                    .Descending(f => f.IsConnectedModel)
+                    .ThenByAscending(f => f.IsConnectedModel ? f.ConnectedModel!.ModelName : f.FileName)
+            )
             .Bind(DisplayedCheckpointFiles)
             .Subscribe();
 
@@ -167,6 +164,27 @@ public partial class CheckpointFolder : ViewModelBase
             .SortBy(x => x.Title)
             .Bind(SubFolders)
             .Subscribe();
+
+        BaseModelOptionsCache
+            .Connect()
+            .DeferUntilLoaded()
+            .Bind(BaseModelOptions)
+            .Subscribe(_ =>
+            {
+                foreach (var subFolder in SubFolders)
+                {
+                    subFolder.BaseModelOptionsCache.EditDiff(BaseModelOptions);
+                }
+
+                checkpointFilesCache.Refresh();
+                SubFoldersCache.Refresh();
+            });
+
+        BaseModelOptionsCache.AddOrUpdate(
+            Enum.GetValues<CivitBaseModelType>()
+                .Where(x => x != CivitBaseModelType.All)
+                .Select(x => x.GetStringValue())
+        );
 
         CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
         // DisplayedCheckpointFiles = CheckpointFiles;
@@ -200,16 +218,6 @@ public partial class CheckpointFolder : ViewModelBase
         foreach (var subFolder in SubFolders)
         {
             subFolder.SearchFilter = value;
-        }
-
-        checkpointFilesCache.Refresh();
-    }
-
-    partial void OnBaseModelOptionsChanged(ObservableCollection<string> value)
-    {
-        foreach (var subFolder in SubFolders)
-        {
-            subFolder.BaseModelOptions = new ObservableCollection<string>(value);
         }
 
         checkpointFilesCache.Refresh();

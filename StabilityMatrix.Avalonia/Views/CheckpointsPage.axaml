@@ -504,20 +504,27 @@
                 HorizontalAlignment="Right">
                 <DropDownButton.Flyout>
                     <Flyout>
-                        <ListBox ItemsSource="{Binding BaseModelOptions}"
-                                 SelectionMode="Multiple, Toggle"
-                                 SelectedItems="{Binding SelectedBaseModels}">
-                            <ListBox.Template>
-                                <ControlTemplate>
-                                    <ItemsPresenter />
-                                </ControlTemplate>
-                            </ListBox.Template>
-                            <ListBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type checkpointManager:BaseModelOptionViewModel}">
-                                    <TextBlock Text="{Binding ModelType}"/>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                        <StackPanel Orientation="Vertical">
+                            <Button Content="{Binding ClearButtonText}"
+                                    HorizontalAlignment="Stretch"
+                                    Classes="transparent"
+                                    Command="{Binding ClearOrSelectAllBaseModels}"
+                                    Margin="0,0,0,8"/>
+                            <ListBox ItemsSource="{Binding BaseModelOptions}"
+                                     SelectionMode="Multiple, Toggle"
+                                     SelectedItems="{Binding SelectedBaseModels}">
+                                <ListBox.Template>
+                                    <ControlTemplate>
+                                        <ItemsPresenter />
+                                    </ControlTemplate>
+                                </ListBox.Template>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type checkpointManager:BaseModelOptionViewModel}">
+                                        <TextBlock Text="{Binding ModelType}"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
                     </Flyout>
                 </DropDownButton.Flyout>
             </DropDownButton>

@@ -138,11 +138,7 @@ public partial class CheckpointFolder : ViewModelBase
                         .Subscribe(_ => checkpointFilesCache.Remove(file))
             )
             .Bind(CheckpointFiles)
-            .Filter(
-                f =>
-                    f.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
-                    || f.Title.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
-            )
+            .Filter(ContainsSearchFilter)
             .Filter(BaseModelFilter)
             .Sort(
                 SortExpressionComparer<CheckpointFile>
@@ -195,6 +191,29 @@ public partial class CheckpointFolder : ViewModelBase
         return file.IsConnectedModel
             ? BaseModelOptions.Contains(file.ConnectedModel!.BaseModel)
             : BaseModelOptions.Contains("Other");
+    }
+
+    private bool ContainsSearchFilter(CheckpointFile file)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+
+        if (string.IsNullOrWhiteSpace(SearchFilter))
+        {
+            return true;
+        }
+
+        // Check files in the current folder
+        return file.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+            || file.Title.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+            || file.ConnectedModel?.ModelName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                == true
+            || file.ConnectedModel?.Tags.Any(
+                t => t.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+            ) == true
+            || file.ConnectedModel?.TrainedWordsString.Contains(
+                SearchFilter,
+                StringComparison.OrdinalIgnoreCase
+            ) == true;
     }
 
     /// <summary>

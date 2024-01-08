@@ -237,6 +237,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         return folder.CheckpointFiles.Any(
                 x =>
                     x.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                    || x.Title.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
                     || x.ConnectedModel?.ModelName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
                         == true
                     || x.ConnectedModel?.Tags.Any(

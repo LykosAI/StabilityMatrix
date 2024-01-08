@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.8.0-pre.1
 ### Added
 - Added base model filter to Checkpoints page
+- Search box on Checkpoints page now searches tags and trigger words
+- Added "Compatible Images" category when selecting images for Inference projects
 ### Fixed
 - Inference file name patterns with directory separator characters will now have the subdirectories created automatically
 - Fixed missing up/downgrade buttons on the Python Packages dialog when the version was not semver compatible

@@ -103,6 +103,8 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             ? Resources.Action_ClearSelection
             : Resources.Action_SelectAll;
 
+    private bool isClearing = false;
+
     public CheckpointsPageViewModel(
         ISharedFolders sharedFolders,
         ISettingsManager settingsManager,
@@ -129,9 +131,12 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
             CheckpointFoldersCache.Refresh();
             OnPropertyChanged(nameof(ClearButtonText));
-            settingsManager.Transaction(
-                settings => settings.SelectedBaseModels = SelectedBaseModels.ToList()
-            );
+            if (!isClearing)
+            {
+                settingsManager.Transaction(
+                    settings => settings.SelectedBaseModels = SelectedBaseModels.ToList()
+                );
+            }
         };
 
         CheckpointFoldersCache
@@ -173,7 +178,10 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         IsLoading = false;
         IsIndexing = false;
 
+        isClearing = true;
         SelectedBaseModels.Clear();
+        isClearing = false;
+
         SelectedBaseModels.AddRange(settingsManager.Settings.SelectedBaseModels);
 
         Logger.Info($"OnLoadedAsync in {sw.ElapsedMilliseconds}ms");
@@ -233,6 +241,10 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
                         == true
                     || x.ConnectedModel?.Tags.Any(
                         t => t.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                    ) == true
+                    || x.ConnectedModel?.TrainedWordsString.Contains(
+                        SearchFilter,
+                        StringComparison.OrdinalIgnoreCase
                     ) == true
             )
             ||

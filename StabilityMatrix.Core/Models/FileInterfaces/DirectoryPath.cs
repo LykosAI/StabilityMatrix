@@ -125,6 +125,10 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
     /// </summary>
     public Task DeleteAsync(bool recursive) => Task.Run(() => Delete(recursive));
 
+    void IPathObject.Delete() => Info.Delete(true);
+
+    Task IPathObject.DeleteAsync() => DeleteAsync(true);
+
     private void ThrowIfNotExists()
     {
         if (!Exists)

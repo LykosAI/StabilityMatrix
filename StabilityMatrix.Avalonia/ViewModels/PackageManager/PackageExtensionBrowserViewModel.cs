@@ -5,6 +5,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -152,9 +153,42 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
 
         var runner = new PackageModificationRunner { ShowDialogOnStart = true };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
+
         await runner.ExecuteSteps(steps);
 
         ClearSelection();
+
+        await Refresh();
+    }
+
+    [RelayCommand]
+    public async Task UninstallSelectedExtensions()
+    {
+        var extensions = SelectedInstalledItems.Select(x => x.Item).ToArray();
+
+        if (extensions.Length == 0)
+            return;
+
+        var steps = extensions
+            .Select(
+                ext =>
+                    new UninstallExtensionStep(
+                        PackagePair!.BasePackage.ExtensionManager!,
+                        PackagePair.InstalledPackage,
+                        ext
+                    )
+            )
+            .Cast<IPackageStep>()
+            .ToArray();
+
+        var runner = new PackageModificationRunner { ShowDialogOnStart = true };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+
+        await runner.ExecuteSteps(steps);
+
+        ClearSelection();
+
+        await Refresh();
     }
 
     /// <inheritdoc />

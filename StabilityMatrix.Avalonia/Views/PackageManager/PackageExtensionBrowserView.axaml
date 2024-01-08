@@ -152,12 +152,12 @@
                             <TextBox.InnerRightContent>
                                 <Grid>
                                     <Button Classes="transparent-full"
-                                            IsVisible="{Binding !!Query.Length}"
+                                            IsVisible="{Binding Query, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                             Command="{Binding ClearQuery}">
                                         <ui:SymbolIcon Symbol="Cancel" />
                                     </Button>
                                     <ui:SymbolIcon
-                                        IsVisible="{Binding !Query.Length}"
+                                        IsVisible="{Binding Query, Converter={x:Static StringConverters.IsNullOrEmpty}}"
                                         Margin="0,0,10,0"
                                         FontSize="16"
                                         Symbol="Find" />
@@ -187,7 +187,9 @@
                         </Button>
                     </sg:SpacedGrid>
                     
-                    <ScrollViewer Grid.Row="1">
+                    <ScrollViewer 
+                        IsVisible="{Binding !IsLoading}"
+                        Grid.Row="1">
                         <ItemsRepeater 
                             DataContext="{Binding AvailableItemsSearchCollection}"
                             ItemTemplate="{StaticResource PackageExtensionTemplate}"
@@ -249,12 +251,12 @@
                             <TextBox.InnerRightContent>
                                 <Grid>
                                     <Button Classes="transparent-full"
-                                            IsVisible="{Binding !!Query.Length}"
+                                            IsVisible="{Binding Query, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                             Command="{Binding ClearQuery}">
                                         <ui:SymbolIcon Symbol="Cancel" />
                                     </Button>
                                     <ui:SymbolIcon
-                                        IsVisible="{Binding !Query.Length}"
+                                        IsVisible="{Binding Query, Converter={x:Static StringConverters.IsNullOrEmpty}}"
                                         Margin="0,0,10,0"
                                         FontSize="16"
                                         Symbol="Find" />
@@ -284,8 +286,10 @@
                         </Button>
                     </sg:SpacedGrid>
                     
-                    <ScrollViewer Grid.Row="1">
-                        <ItemsRepeater 
+                    <ScrollViewer 
+                        IsVisible="{Binding !IsLoading}"
+                        Grid.Row="1">
+                        <ItemsRepeater
                             DataContext="{Binding InstalledItemsSearchCollection}"
                             ItemTemplate="{StaticResource InstalledPackageExtensionTemplate}"
                             ItemsSource="{Binding FilteredItems}">
@@ -324,6 +328,7 @@
                                     Classes="accent"
                                     Content="{x:Static lang:Resources.Action_Update}"/>
                                 <Button
+                                    Command="{Binding UninstallSelectedExtensionsCommand}"
                                     Content="{x:Static lang:Resources.Action_Uninstall}"/>
                             </StackPanel>
 

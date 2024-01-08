@@ -37,6 +37,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Packages.Extensions;
@@ -487,14 +488,24 @@ public static class DesignData
         DialogFactory.Get<PackageExtensionBrowserViewModel>(vm =>
         {
             vm.AddExtensions(
-                new PackageExtension
-                {
-                    Author = "123",
-                    Title = "Cool Extension",
-                    Description = "This is an interesting extension",
-                    Reference = new Uri("https://github.com/LykosAI/StabilityMatrix"),
-                    Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")]
-                }
+                [
+                    new PackageExtension
+                    {
+                        Author = "123",
+                        Title = "Cool Extension",
+                        Description = "This is an interesting extension",
+                        Reference = new Uri("https://github.com/LykosAI/StabilityMatrix"),
+                        Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")]
+                    }
+                ],
+                [
+                    new InstalledPackageExtension
+                    {
+                        GitRepositoryUrl = "https://github.com/LykosAI/StabilityMatrix",
+                        Paths = [new DirectoryPath("example-dir")]
+                    },
+                    new InstalledPackageExtension { Paths = [new DirectoryPath("example-dir-2")] }
+                ]
             );
         });
 

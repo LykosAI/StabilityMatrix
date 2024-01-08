@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -9,6 +11,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using StabilityMatrix.Avalonia.Collections;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.PackageManager;
 using StabilityMatrix.Core.Attributes;
@@ -23,15 +27,12 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 [View(typeof(PackageExtensionBrowserView))]
 [Transient]
 [ManagedService]
-public partial class PackageExtensionBrowserViewModel : ViewModelBase
+public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposable
 {
+    private readonly INotificationService notificationService;
+    private readonly IDisposable cleanUp;
+
     public PackagePair? PackagePair { get; set; }
-
-    [ObservableProperty]
-    private string searchFilter = string.Empty;
-
-    [ObservableProperty]
-    private int selectedItemsCount;
 
     [ObservableProperty]
     private bool isLoading;
@@ -39,14 +40,14 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase
     private SourceCache<PackageExtension, string> availableExtensionsSource =
         new(ext => ext.Author + ext.Title + ext.Reference);
 
-    public IObservableCollection<SelectableItem<PackageExtension>> AvailableItems { get; } =
-        new ObservableCollectionExtended<SelectableItem<PackageExtension>>();
-
-    public IObservableCollection<SelectableItem<PackageExtension>> AvailableItemsFiltered { get; } =
-        new ObservableCollectionExtended<SelectableItem<PackageExtension>>();
-
     public IObservableCollection<SelectableItem<PackageExtension>> SelectedAvailableItems { get; } =
         new ObservableCollectionExtended<SelectableItem<PackageExtension>>();
+
+    public SearchCollection<
+        SelectableItem<PackageExtension>,
+        string,
+        string
+    > AvailableItemsSearchCollection { get; }
 
     private SourceCache<InstalledPackageExtension, string> installedExtensionsSource =
         new(
@@ -54,21 +55,21 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase
                 ext.Paths.FirstOrDefault()?.ToString() ?? ext.GitRepositoryUrl ?? ext.GetHashCode().ToString()
         );
 
+    public IObservableCollection<SelectableItem<InstalledPackageExtension>> SelectedInstalledItems { get; } =
+        new ObservableCollectionExtended<SelectableItem<InstalledPackageExtension>>();
+
+    public SearchCollection<
+        SelectableItem<InstalledPackageExtension>,
+        string,
+        string
+    > InstalledItemsSearchCollection { get; }
+
     public IObservableCollection<InstalledPackageExtension> InstalledExtensions { get; } =
         new ObservableCollectionExtended<InstalledPackageExtension>();
 
-    public PackageExtensionBrowserViewModel()
+    public PackageExtensionBrowserViewModel(INotificationService notificationService)
     {
-        var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchFilter)
-            .Select(
-                change =>
-                    string.IsNullOrWhiteSpace(change.Value)
-                        ? _ => true
-                        : new Func<SelectableItem<PackageExtension>, bool>(
-                            ext => ext.Item.Title.Contains(change.Value, StringComparison.OrdinalIgnoreCase)
-                        )
-            )
-            .AsObservable();
+        this.notificationService = notificationService;
 
         var availableItemsChangeSet = availableExtensionsSource
             .Connect()
@@ -76,30 +77,57 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase
             .Publish();
 
         availableItemsChangeSet
-            .SortBy(x => x.Item.Title)
-            .Bind(AvailableItems)
-            .Filter(searchPredicate)
-            .Bind(AvailableItemsFiltered)
-            .Subscribe();
-
-        availableItemsChangeSet
             .AutoRefresh(item => item.IsSelected)
             .Filter(item => item.IsSelected)
-            .ForEachChange(OnSelectedItemsUpdate)
             .Bind(SelectedAvailableItems)
             .Subscribe();
 
-        availableItemsChangeSet.Connect();
+        var installedItemsChangeSet = installedExtensionsSource
+            .Connect()
+            .Transform(ext => new SelectableItem<InstalledPackageExtension>(ext))
+            .Publish();
 
-        SelectedAvailableItems
-            .WhenPropertyChanged(x => x.Count)
-            .Select(x => x.Value)
-            .Subscribe(x => SelectedItemsCount = x);
+        installedItemsChangeSet
+            .AutoRefresh(item => item.IsSelected)
+            .Filter(item => item.IsSelected)
+            .Bind(SelectedInstalledItems)
+            .Subscribe();
+
+        cleanUp = new CompositeDisposable(
+            AvailableItemsSearchCollection = new SearchCollection<
+                SelectableItem<PackageExtension>,
+                string,
+                string
+            >(
+                availableItemsChangeSet,
+                query =>
+                    string.IsNullOrWhiteSpace(query)
+                        ? _ => true
+                        : x => x.Item.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+            ),
+            availableItemsChangeSet.Connect(),
+            InstalledItemsSearchCollection = new SearchCollection<
+                SelectableItem<InstalledPackageExtension>,
+                string,
+                string
+            >(
+                installedItemsChangeSet,
+                query =>
+                    string.IsNullOrWhiteSpace(query)
+                        ? _ => true
+                        : x => x.Item.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+            ),
+            installedItemsChangeSet.Connect()
+        );
     }
 
-    public void AddExtensions(params PackageExtension[] packageExtensions)
+    public void AddExtensions(
+        IEnumerable<PackageExtension> packageExtensions,
+        IEnumerable<InstalledPackageExtension> installedExtensions
+    )
     {
         availableExtensionsSource.AddOrUpdate(packageExtensions);
+        installedExtensionsSource.AddOrUpdate(installedExtensions);
     }
 
     [RelayCommand]
@@ -156,23 +184,34 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase
         {
             if (Design.IsDesignMode)
             {
+                var (availableExtensions, installedExtensions) = SynchronizeExtensions(
+                    availableExtensionsSource.Items,
+                    installedExtensionsSource.Items
+                );
+
+                availableExtensionsSource.EditDiff(availableExtensions);
+                installedExtensionsSource.EditDiff(installedExtensions);
+
                 await Task.Delay(250);
             }
             else
             {
-                // Refresh installed
+                var availableExtensions = await extensionManager.GetManifestExtensionsAsync(
+                    extensionManager.GetManifests(PackagePair.InstalledPackage)
+                );
+
                 var installedExtensions = await extensionManager.GetInstalledExtensionsAsync(
                     PackagePair.InstalledPackage
                 );
 
-                installedExtensionsSource.EditDiff(installedExtensions);
-
-                // Refresh available
-                var extensions = await extensionManager.GetManifestExtensionsAsync(
-                    extensionManager.GetManifests(PackagePair.InstalledPackage)
+                // Synchronize
+                (availableExtensions, installedExtensions) = SynchronizeExtensions(
+                    availableExtensions,
+                    installedExtensions
                 );
 
-                availableExtensionsSource.EditDiff(extensions);
+                availableExtensionsSource.EditDiff(availableExtensions);
+                installedExtensionsSource.EditDiff(installedExtensions);
             }
         }
         finally
@@ -187,10 +226,58 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase
         {
             item.IsSelected = false;
         }
+
+        foreach (var item in SelectedInstalledItems.ToImmutableArray())
+        {
+            item.IsSelected = false;
+        }
     }
 
-    private void OnSelectedItemsUpdate(Change<SelectableItem<PackageExtension>, string> change)
+    [Pure]
+    private static (
+        IEnumerable<PackageExtension>,
+        IEnumerable<InstalledPackageExtension>
+    ) SynchronizeExtensions(
+        IEnumerable<PackageExtension> extensions,
+        IEnumerable<InstalledPackageExtension> installedExtensions
+    )
     {
-        Debug.WriteLine($"{change}");
+        using var _ = CodeTimer.StartDebug();
+
+        var extensionsArr = extensions.ToImmutableArray();
+
+        // For extensions, map their file paths for lookup
+        var repoToExtension = extensionsArr
+            .SelectMany(ext => ext.Files.Select(path => (path, ext)))
+            .ToLookup(kv => kv.path.ToString().StripEnd(".git"))
+            .ToDictionary(group => group.Key, x => x.First().ext);
+
+        // For installed extensions, add remote repo if available
+        var installedExtensionsWithDefinition = installedExtensions.Select(
+            installedExt =>
+                installedExt.GitRepositoryUrl is null
+                || !repoToExtension.TryGetValue(
+                    installedExt.GitRepositoryUrl.StripEnd(".git"),
+                    out var mappedExt
+                )
+                    ? installedExt
+                    : installedExt with
+                    {
+                        Definition = mappedExt
+                    }
+        );
+
+        return (extensionsArr, installedExtensionsWithDefinition);
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        availableExtensionsSource.Dispose();
+        installedExtensionsSource.Dispose();
+
+        cleanUp.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 }

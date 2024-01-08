@@ -14,6 +14,7 @@
                           xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
                           xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
                           xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+                          xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
                           d:DataContext="{x:Static mocks:DesignData.PackageExtensionBrowserViewModel}"
                           x:DataType="packageManager:PackageExtensionBrowserViewModel"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -21,6 +22,7 @@
     <controls:UserControlBase.Resources>
         <!--<input:StandardUICommand x:Key="InstallExtensionCommand"
                                  Command="{Binding InstallExtensionCommand}" />-->
+        <converters:FileUriConverter x:Key="FileUriConverter"/>
         
         <DataTemplate x:Key="PackageExtensionTemplate">
             <DataTemplate.DataType>
@@ -68,17 +70,70 @@
                         Margin="0,0,16,0"
                         Grid.Column="2"/>
                     
-                    <!--<fluentIcons:SymbolIcon Grid.Column="2"
-                                            HorizontalAlignment="Right"
-                                            VerticalAlignment="Center"
-                                            FontSize="24"
-                                            Symbol="ChevronRight" />-->
+                </sg:SpacedGrid>
+            </controls:Card>
+        </DataTemplate>
+        
+        <DataTemplate x:Key="InstalledPackageExtensionTemplate">
+            <DataTemplate.DataType>
+                <x:Type TypeName="models:SelectableItem" x:TypeArguments="extensions:InstalledPackageExtension"/>
+            </DataTemplate.DataType>
+            <controls:Card 
+                Padding="12,12"
+                Margin="4"
+                Classes="transparent-full"
+                CornerRadius="8">
+
+                <sg:SpacedGrid ColumnDefinitions="*,Auto">
+                    <StackPanel 
+                        DataContext="{Binding Item}"
+                        Orientation="Vertical" Spacing="4">
+                        <TextBlock
+                            Text="{Binding Title}"
+                            FontWeight="Light"
+                            FontSize="16"/>
+                        <TextBlock Text="{Binding Version, FallbackValue=''}"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   FontSize="13" />
+                        <TextBlock TextWrapping="Wrap"
+                                   Text="{Binding Definition.Description, FallbackValue=''}"
+                                   Foreground="{DynamicResource TextFillColorSecondary}"
+                                   FontWeight="Light"
+                                   FontSize="13" />
+                        <StackPanel Orientation="Horizontal" Spacing="2">
+                            <controls:HyperlinkIconButton
+                                IsEnabled="{Binding Definition, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                Margin="0"
+                                Padding="0,2"
+                                NavigateUri="{Binding Definition.Reference, FallbackValue=''}"
+                                Content="GitHub"/>
+                            
+                            <Ellipse
+                                Width="3"
+                                Height="3"
+                                Opacity="0.8"
+                                VerticalAlignment="Center"
+                                Fill="{DynamicResource TextFillColorTertiaryBrush}" />
+                            
+                            <controls:HyperlinkIconButton
+                                IsEnabled="{Binding Definition, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                Margin="0"
+                                Padding="0,2"
+                                NavigateUri="{Binding PrimaryPath.FullPath, Converter={StaticResource FileUriConverter}}"
+                                Content="{Binding DisplayPath}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <CheckBox 
+                        Grid.Column="1"
+                        HorizontalAlignment="Right"
+                        IsChecked="{Binding IsSelected}"
+                        Margin="0,0,16,0"/>
                 </sg:SpacedGrid>
             </controls:Card>
         </DataTemplate>
     </controls:UserControlBase.Resources>
 
-    <TabControl TabStripPlacement="Top">
+    <TabControl TabStripPlacement="Top" SelectionChanged="TabControl_OnSelectionChanged">
         <TabControl.Items>
             <TabItem FontSize="18" Header="Available Extensions" Margin="8,0,0,0">
                 <sg:SpacedGrid 
@@ -89,19 +144,20 @@
                         ColumnDefinitions="*,Auto,Auto" 
                         ColumnSpacing="8">
                         <TextBox Margin="4, 0,0,0"
+                                 DataContext="{Binding AvailableItemsSearchCollection}"
                                  Watermark="{x:Static lang:Resources.Action_Search}"
                                  HorizontalAlignment="Stretch"
                                  VerticalAlignment="Center"
-                                 Text="{Binding SearchFilter, Mode=TwoWay}">
+                                 Text="{Binding Query, Mode=TwoWay}">
                             <TextBox.InnerRightContent>
                                 <Grid>
                                     <Button Classes="transparent-full"
-                                            IsVisible="{Binding SearchFilter.Length}"
-                                            Command="{Binding $parent[TextBox].Clear}">
+                                            IsVisible="{Binding Query.Length}"
+                                            Command="{Binding ClearQuery}">
                                         <ui:SymbolIcon Symbol="Cancel" />
                                     </Button>
                                     <ui:SymbolIcon
-                                        IsVisible="{Binding !SearchFilter.Length}"
+                                        IsVisible="{Binding !Query.Length}"
                                         Margin="0,0,10,0"
                                         FontSize="16"
                                         Symbol="Find" />
@@ -133,19 +189,31 @@
                     
                     <ScrollViewer Grid.Row="1">
                         <ItemsRepeater 
+                            DataContext="{Binding AvailableItemsSearchCollection}"
                             ItemTemplate="{StaticResource PackageExtensionTemplate}"
-                            ItemsSource="{Binding AvailableItemsFiltered}">
+                            ItemsSource="{Binding FilteredItems}">
                             <ItemsRepeater.Layout>
                                 <StackLayout Orientation="Vertical" />
                             </ItemsRepeater.Layout>
                         </ItemsRepeater>
                     </ScrollViewer>
                     
+                    <Panel
+                        IsVisible="{Binding IsLoading}"
+                        Grid.Row="1">
+                        <ProgressBar
+                            Margin="32,16"
+                            IsIndeterminate="True"
+                            IsEnabled="{Binding IsLoading}"
+                            IsVisible="{Binding IsLoading}"/>
+                    </Panel>
+                    
                     <ui:InfoBar
                         Grid.Row="2"
                         IsOpen="{Binding !!SelectedAvailableItems.Count}" 
                         HorizontalContentAlignment="Right"
                         HorizontalAlignment="Right"
+                        CloseButtonCommand="{Binding ClearSelection}"
                         IsIconVisible="False">
                         <ui:InfoBar.Title>
                             <MultiBinding StringFormat="{}{0} Selected">
@@ -163,53 +231,108 @@
                 </sg:SpacedGrid>
             </TabItem>
             
-            <TabItem FontSize="18" Header="Installed Extensions" Margin="0,0,0,0"/>
+            <TabItem FontSize="18" Header="Installed Extensions" Margin="0,0,0,0">
+                
+                <sg:SpacedGrid 
+                    RowDefinitions="Auto,*,Auto"
+                    RowSpacing="12"
+                    Margin="8">
+                    <sg:SpacedGrid 
+                        ColumnDefinitions="*,Auto,Auto" 
+                        ColumnSpacing="8">
+                        <TextBox Margin="4, 0,0,0"
+                                 DataContext="{Binding InstalledItemsSearchCollection}"
+                                 Watermark="{x:Static lang:Resources.Action_Search}"
+                                 HorizontalAlignment="Stretch"
+                                 VerticalAlignment="Center"
+                                 Text="{Binding Query, Mode=TwoWay}">
+                            <TextBox.InnerRightContent>
+                                <Grid>
+                                    <Button Classes="transparent-full"
+                                            IsVisible="{Binding Query.Length}"
+                                            Command="{Binding ClearQuery}">
+                                        <ui:SymbolIcon Symbol="Cancel" />
+                                    </Button>
+                                    <ui:SymbolIcon
+                                        IsVisible="{Binding !Query.Length}"
+                                        Margin="0,0,10,0"
+                                        FontSize="16"
+                                        Symbol="Find" />
+                                </Grid>
+                            </TextBox.InnerRightContent>
+                        </TextBox>
+                        
+                        <!-- Refresh Button -->
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Padding="16,6"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Stretch"
+                            Command="{Binding RefreshCommand}">
+                            <ui:SymbolIcon FontSize="16" Symbol="Refresh" />
+                        </Button>
+                        
+                        <!-- Settings / Edit Manifests Button -->
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Padding="16,6"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Stretch">
+                            <ui:SymbolIcon FontSize="16" Symbol="Settings" />
+                        </Button>
+                    </sg:SpacedGrid>
                     
-            <!--<TabItem Header="Training">
-                <ScrollViewer Padding="8">
-                    <StackPanel Orientation="Vertical">
-                        <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,8">
-                            <TextBox Margin="4, 0,0,0"
-                                     Watermark="{x:Static lang:Resources.Action_Search}"
-                                     Height="36"
-                                     FontSize="16"
-                                     HorizontalAlignment="Stretch"
-                                     VerticalAlignment="Center"
-                                     KeyDown="InputElement_OnKeyDown"
-                                     Text="{Binding SearchFilter, Mode=TwoWay}">
-                                <TextBox.InnerRightContent>
-                                    <Grid>
-                                        <Button Classes="transparent-full"
-                                                IsVisible="{Binding SearchFilter.Length}"
-                                                Command="{Binding ClearSearchQuery}">
-                                            <controls1:SymbolIcon Symbol="Cancel" />
-                                        </Button>
-                                        <controls1:SymbolIcon
-                                            IsVisible="{Binding !SearchFilter.Length}"
-                                            Margin="0,0,10,0"
-                                            FontSize="16"
-                                            Symbol="Find" />
-                                    </Grid>
-                                </TextBox.InnerRightContent>
-                            </TextBox>
-                            <ToggleSwitch Grid.Column="1" OnContent="Show All Packages" OffContent="Show All Packages"
-                                          IsChecked="{Binding ShowIncompatiblePackages}"
-                                          VerticalAlignment="Center"
-                                          HorizontalAlignment="Left"
-                                          Margin="16, 0, 8, 0"
-                                          ToolTip.Tip="Enabling &quot;Show All Packages&quot; will include packages that may not be compatible with your system and may run very slowly as a result." />
-                        </Grid>
-                        <ItemsRepeater ItemsSource="{Binding InstalledExtensions}">
+                    <ScrollViewer Grid.Row="1">
+                        <ItemsRepeater 
+                            DataContext="{Binding InstalledItemsSearchCollection}"
+                            ItemTemplate="{StaticResource InstalledPackageExtensionTemplate}"
+                            ItemsSource="{Binding FilteredItems}">
                             <ItemsRepeater.Layout>
                                 <StackLayout Orientation="Vertical" />
                             </ItemsRepeater.Layout>
-                            <ItemsRepeater.ItemTemplate>
-                                <StaticResource ResourceKey="PackageExtensionTemplate" />
-                            </ItemsRepeater.ItemTemplate>
                         </ItemsRepeater>
-                    </StackPanel>
-                </ScrollViewer>
-            </TabItem>-->
+                    </ScrollViewer>
+                    
+                    <Panel
+                        IsVisible="{Binding IsLoading}"
+                        Grid.Row="1"
+                           >
+                        <ProgressBar
+                            Margin="32,16"
+                            IsIndeterminate="True"
+                            IsEnabled="{Binding IsLoading}"
+                            IsVisible="{Binding IsLoading}"/>
+                    </Panel>
+                    
+                    <ui:InfoBar
+                        Grid.Row="2"
+                        IsOpen="{Binding !!SelectedInstalledItems.Count}" 
+                        HorizontalContentAlignment="Right"
+                        HorizontalAlignment="Right"
+                        CloseButtonCommand="{Binding ClearSelection}"
+                        IsIconVisible="False">
+                        <ui:InfoBar.Title>
+                            <MultiBinding StringFormat="{}{0} Selected">
+                                <Binding Path="SelectedInstalledItems.Count"/>
+                            </MultiBinding>
+                        </ui:InfoBar.Title>
+                        <ui:InfoBar.ActionButton>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button
+                                    Classes="accent"
+                                    Content="{x:Static lang:Resources.Action_Update}"/>
+                                <Button
+                                    Content="{x:Static lang:Resources.Action_Uninstall}"/>
+                            </StackPanel>
+
+                        </ui:InfoBar.ActionButton>
+                    </ui:InfoBar>
+
+                </sg:SpacedGrid>
+                
+            </TabItem>
         </TabControl.Items>
     </TabControl>
 </controls:UserControlBase>

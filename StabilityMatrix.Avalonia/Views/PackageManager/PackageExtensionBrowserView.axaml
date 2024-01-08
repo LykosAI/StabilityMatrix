@@ -152,7 +152,7 @@
                             <TextBox.InnerRightContent>
                                 <Grid>
                                     <Button Classes="transparent-full"
-                                            IsVisible="{Binding Query.Length}"
+                                            IsVisible="{Binding !!Query.Length}"
                                             Command="{Binding ClearQuery}">
                                         <ui:SymbolIcon Symbol="Cancel" />
                                     </Button>
@@ -249,7 +249,7 @@
                             <TextBox.InnerRightContent>
                                 <Grid>
                                     <Button Classes="transparent-full"
-                                            IsVisible="{Binding Query.Length}"
+                                            IsVisible="{Binding !!Query.Length}"
                                             Command="{Binding ClearQuery}">
                                         <ui:SymbolIcon Symbol="Cancel" />
                                     </Button>

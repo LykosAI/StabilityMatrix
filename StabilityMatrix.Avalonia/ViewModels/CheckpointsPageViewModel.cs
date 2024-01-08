@@ -263,8 +263,12 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         if (!folder.DisplayedCheckpointFiles.Any())
             return true;
 
-        return folder.CheckpointFiles.Any(x => SelectedBaseModels.Contains(x.ConnectedModel?.BaseModel))
-            || folder.SubFolders.Any(ContainsBaseModel);
+        return folder.CheckpointFiles.Any(
+                x =>
+                    x.IsConnectedModel
+                        ? SelectedBaseModels.Contains(x.ConnectedModel?.BaseModel)
+                        : SelectedBaseModels.Contains("Other")
+            ) || folder.SubFolders.Any(ContainsBaseModel);
     }
 
     private void IndexFolders()

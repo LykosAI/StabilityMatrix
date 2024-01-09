@@ -143,27 +143,13 @@
                     <sg:SpacedGrid 
                         ColumnDefinitions="*,Auto,Auto" 
                         ColumnSpacing="8">
-                        <TextBox Margin="4, 0,0,0"
-                                 DataContext="{Binding AvailableItemsSearchCollection}"
+                        <TextBox 
+                            Classes="search"
+                            Margin="4, 0,0,0"
                                  Watermark="{x:Static lang:Resources.Action_Search}"
                                  HorizontalAlignment="Stretch"
                                  VerticalAlignment="Center"
-                                 Text="{Binding Query, Mode=TwoWay}">
-                            <TextBox.InnerRightContent>
-                                <Grid>
-                                    <Button Classes="transparent-full"
-                                            IsVisible="{Binding Query, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                            Command="{Binding ClearQuery}">
-                                        <ui:SymbolIcon Symbol="Cancel" />
-                                    </Button>
-                                    <ui:SymbolIcon
-                                        IsVisible="{Binding Query, Converter={x:Static StringConverters.IsNullOrEmpty}}"
-                                        Margin="0,0,10,0"
-                                        FontSize="16"
-                                        Symbol="Find" />
-                                </Grid>
-                            </TextBox.InnerRightContent>
-                        </TextBox>
+                                 Text="{Binding AvailableItemsSearchCollection.Query, Mode=TwoWay}"/>
                         
                         <!-- Refresh Button -->
                         <Button
@@ -242,27 +228,14 @@
                     <sg:SpacedGrid 
                         ColumnDefinitions="*,Auto,Auto" 
                         ColumnSpacing="8">
-                        <TextBox Margin="4, 0,0,0"
+                        <TextBox 
+                            Classes="search"
+                            Margin="4, 0,0,0"
                                  DataContext="{Binding InstalledItemsSearchCollection}"
                                  Watermark="{x:Static lang:Resources.Action_Search}"
                                  HorizontalAlignment="Stretch"
                                  VerticalAlignment="Center"
-                                 Text="{Binding Query, Mode=TwoWay}">
-                            <TextBox.InnerRightContent>
-                                <Grid>
-                                    <Button Classes="transparent-full"
-                                            IsVisible="{Binding Query, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                            Command="{Binding ClearQuery}">
-                                        <ui:SymbolIcon Symbol="Cancel" />
-                                    </Button>
-                                    <ui:SymbolIcon
-                                        IsVisible="{Binding Query, Converter={x:Static StringConverters.IsNullOrEmpty}}"
-                                        Margin="0,0,10,0"
-                                        FontSize="16"
-                                        Symbol="Find" />
-                                </Grid>
-                            </TextBox.InnerRightContent>
-                        </TextBox>
+                                 Text="{Binding Query, Mode=TwoWay}"/>
                         
                         <!-- Refresh Button -->
                         <Button

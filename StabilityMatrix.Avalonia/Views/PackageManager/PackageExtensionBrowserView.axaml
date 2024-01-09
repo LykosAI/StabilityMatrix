@@ -299,6 +299,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <Button
                                     Classes="accent"
+                                    Command="{Binding UpdateSelectedExtensionsCommand}"
                                     Content="{x:Static lang:Resources.Action_Update}"/>
                                 <Button
                                     Command="{Binding UninstallSelectedExtensionsCommand}"

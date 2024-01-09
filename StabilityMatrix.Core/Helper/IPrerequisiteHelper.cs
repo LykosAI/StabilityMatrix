@@ -98,27 +98,53 @@ public interface IPrerequisiteHelper
         }
     }
 
-    async Task UpdateGitRepository(string repositoryDir, string repositoryUrl, GitVersion? version = null)
+    async Task UpdateGitRepository(string repositoryDir, string repositoryUrl, GitVersion version)
     {
-        if (version?.Tag is not null)
+        // Specify Tag
+        if (version.Tag is not null)
         {
             await RunGit(["init"], repositoryDir).ConfigureAwait(false);
             await RunGit(["remote", "add", "origin", repositoryUrl], repositoryDir).ConfigureAwait(false);
             await RunGit(["fetch", "--tags"], repositoryDir).ConfigureAwait(false);
 
             await RunGit(["checkout", version.Tag, "--force"], repositoryDir).ConfigureAwait(false);
+            // Update submodules
+            await RunGit(["submodule", "update", "--init", "--recursive"], repositoryDir)
+                .ConfigureAwait(false);
         }
-        else if (version?.Branch is not null && version.CommitSha is not null)
+        // Specify Branch + CommitSha
+        else if (version.Branch is not null && version.CommitSha is not null)
         {
             await RunGit(["init"], repositoryDir).ConfigureAwait(false);
             await RunGit(["remote", "add", "origin", repositoryUrl], repositoryDir).ConfigureAwait(false);
             await RunGit(["fetch", "--tags"], repositoryDir).ConfigureAwait(false);
 
             await RunGit(["checkout", version.CommitSha, "--force"], repositoryDir).ConfigureAwait(false);
+            // Update submodules
+            await RunGit(["submodule", "update", "--init", "--recursive"], repositoryDir)
+                .ConfigureAwait(false);
         }
+        // Specify Branch (Use latest commit)
+        else if (version.Branch is not null)
+        {
+            // Fetch
+            await RunGit(["fetch", "--tags", "--force"], repositoryDir).ConfigureAwait(false);
+            // Checkout
+            await RunGit(["checkout", version.Branch, "--force"], repositoryDir).ConfigureAwait(false);
+            // Pull latest
+            await RunGit(["pull", "--autostash", "origin", version.Branch], repositoryDir)
+                .ConfigureAwait(false);
+            // Update submodules
+            await RunGit(["submodule", "update", "--init", "--recursive"], repositoryDir)
+                .ConfigureAwait(false);
+        }
+        // Not specified
         else
         {
-            throw new ArgumentException("Version must have a tag or branch and commit sha.", nameof(version));
+            throw new ArgumentException(
+                "Version must have a tag, branch + commit sha, or branch only.",
+                nameof(version)
+            );
         }
     }
 

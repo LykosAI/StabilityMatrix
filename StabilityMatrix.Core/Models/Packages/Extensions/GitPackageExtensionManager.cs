@@ -1,13 +1,17 @@
 using KGySoft.CoreLibraries;
+using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Models.Packages.Extensions;
 
 public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisiteHelper)
     : IPackageExtensionManager
 {
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
     public abstract string RelativeInstallDirectory { get; }
 
     public virtual IEnumerable<ExtensionManifest> DefaultManifests { get; } =
@@ -137,6 +141,51 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
                 .ConfigureAwait(false);
 
             progress?.Report(new ProgressReport(1f, $"Cloned {repositoryUri}"));
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task UpdateExtensionAsync(
+        InstalledPackageExtension installedExtension,
+        InstalledPackage installedPackage,
+        PackageExtensionVersion? version = null,
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        ArgumentNullException.ThrowIfNull(installedPackage.FullPath);
+
+        foreach (var repoPath in installedExtension.Paths.OfType<DirectoryPath>())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Check git
+            if (!await prerequisiteHelper.CheckIsGitRepository(repoPath.FullPath).ConfigureAwait(false))
+                continue;
+
+            // Get remote url
+            var remoteUrlResult = await prerequisiteHelper
+                .GetGitRepositoryRemoteOriginUrl(repoPath.FullPath)
+                .EnsureSuccessExitCode()
+                .ConfigureAwait(false);
+
+            progress?.Report(
+                new ProgressReport(0f, $"Updating git repository {repoPath.Name}", isIndeterminate: true)
+            );
+
+            // If version not provided, use current branch
+            if (version is null)
+            {
+                ArgumentNullException.ThrowIfNull(installedExtension.Version?.Branch);
+
+                version = new PackageExtensionVersion { Branch = installedExtension.Version?.Branch };
+            }
+
+            await prerequisiteHelper
+                .UpdateGitRepository(repoPath, remoteUrlResult.StandardOutput!.Trim(), version)
+                .ConfigureAwait(false);
+
+            progress?.Report(new ProgressReport(1f, $"Updated git repository {repoPath.Name}"));
         }
     }
 

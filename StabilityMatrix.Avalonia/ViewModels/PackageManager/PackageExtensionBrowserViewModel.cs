@@ -7,7 +7,9 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
@@ -75,6 +77,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         var availableItemsChangeSet = availableExtensionsSource
             .Connect()
             .Transform(ext => new SelectableItem<PackageExtension>(ext))
+            .ObserveOn(SynchronizationContext.Current!)
             .Publish();
 
         availableItemsChangeSet
@@ -86,6 +89,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         var installedItemsChangeSet = installedExtensionsSource
             .Connect()
             .Transform(ext => new SelectableItem<InstalledPackageExtension>(ext))
+            .ObserveOn(SynchronizationContext.Current!)
             .Publish();
 
         installedItemsChangeSet
@@ -158,7 +162,37 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
 
         ClearSelection();
 
-        await Refresh();
+        RefreshBackground();
+    }
+
+    [RelayCommand]
+    public async Task UpdateSelectedExtensions()
+    {
+        var extensions = SelectedInstalledItems.Select(x => x.Item).ToArray();
+
+        if (extensions.Length == 0)
+            return;
+
+        var steps = extensions
+            .Select(
+                ext =>
+                    new UpdateExtensionStep(
+                        PackagePair!.BasePackage.ExtensionManager!,
+                        PackagePair.InstalledPackage,
+                        ext
+                    )
+            )
+            .Cast<IPackageStep>()
+            .ToArray();
+
+        var runner = new PackageModificationRunner { ShowDialogOnStart = true };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+
+        await runner.ExecuteSteps(steps);
+
+        ClearSelection();
+
+        RefreshBackground();
     }
 
     [RelayCommand]
@@ -188,7 +222,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
 
         ClearSelection();
 
-        await Refresh();
+        RefreshBackground();
     }
 
     /// <inheritdoc />
@@ -204,13 +238,6 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     {
         if (PackagePair is null)
             return;
-
-        if (PackagePair.BasePackage.ExtensionManager is not { } extensionManager)
-        {
-            throw new NotSupportedException(
-                $"The package {PackagePair.BasePackage} does not support extensions."
-            );
-        }
 
         IsLoading = true;
 
@@ -230,28 +257,61 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             }
             else
             {
-                var availableExtensions = await extensionManager.GetManifestExtensionsAsync(
-                    extensionManager.GetManifests(PackagePair.InstalledPackage)
-                );
-
-                var installedExtensions = await extensionManager.GetInstalledExtensionsAsync(
-                    PackagePair.InstalledPackage
-                );
-
-                // Synchronize
-                (availableExtensions, installedExtensions) = SynchronizeExtensions(
-                    availableExtensions,
-                    installedExtensions
-                );
-
-                availableExtensionsSource.EditDiff(availableExtensions);
-                installedExtensionsSource.EditDiff(installedExtensions);
+                await RefreshCore();
             }
         }
         finally
         {
             IsLoading = false;
         }
+    }
+
+    public void RefreshBackground()
+    {
+        RefreshCore()
+            .SafeFireAndForget(ex =>
+            {
+                notificationService.ShowPersistent("Failed to refresh extensions", ex.ToString());
+            });
+    }
+
+    private async Task RefreshCore()
+    {
+        using var _ = CodeTimer.StartDebug();
+
+        if (PackagePair?.BasePackage.ExtensionManager is not { } extensionManager)
+        {
+            throw new NotSupportedException(
+                $"The package {PackagePair?.BasePackage} does not support extensions."
+            );
+        }
+
+        var availableExtensions = await extensionManager.GetManifestExtensionsAsync(
+            extensionManager.GetManifests(PackagePair.InstalledPackage)
+        );
+
+        var installedExtensions = await extensionManager.GetInstalledExtensionsAsync(
+            PackagePair.InstalledPackage
+        );
+
+        // Synchronize
+        (availableExtensions, installedExtensions) = SynchronizeExtensions(
+            availableExtensions,
+            installedExtensions
+        );
+
+        await Task.Run(() =>
+        {
+            availableExtensionsSource.Edit(updater =>
+            {
+                updater.Load(availableExtensions);
+            });
+
+            installedExtensionsSource.Edit(updater =>
+            {
+                updater.Load(installedExtensions);
+            });
+        });
     }
 
     public void ClearSelection()

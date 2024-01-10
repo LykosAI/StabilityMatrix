@@ -103,15 +103,16 @@ public class ModelFinder
 
     public async Task<IEnumerable<CivitModel>> FindRemoteModelsById(IEnumerable<int> ids)
     {
-        try
-        {
-            // split ids into batches of 20
-            var batches = ids.Select((id, index) => (id, index))
-                .GroupBy(tuple => tuple.index / 20)
-                .Select(group => group.Select(tuple => tuple.id));
+        var results = new List<CivitModel>();
 
-            var results = new List<CivitModel>();
-            foreach (var batch in batches)
+        // split ids into batches of 20
+        var batches = ids.Select((id, index) => (id, index))
+            .GroupBy(tuple => tuple.index / 20)
+            .Select(group => group.Select(tuple => tuple.id));
+
+        foreach (var batch in batches)
+        {
+            try
             {
                 var response = await civitApi
                     .GetModels(new CivitModelsRequest { CommaSeparatedModelIds = string.Join(",", batch) })
@@ -122,14 +123,12 @@ public class ModelFinder
 
                 results.AddRange(response.Items);
             }
-
-            return results;
-        }
-        catch (Exception e)
-        {
-            Logger.Error("Error while finding remote models by id: {Error}", e.Message);
+            catch (Exception e)
+            {
+                Logger.Error("Error while finding remote models by id: {Error}", e.Message);
+            }
         }
 
-        return Enumerable.Empty<CivitModel>();
+        return results;
     }
 }

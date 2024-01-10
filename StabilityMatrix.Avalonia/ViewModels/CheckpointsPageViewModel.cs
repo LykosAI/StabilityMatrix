@@ -149,9 +149,9 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             .Subscribe();
     }
 
-    public override async Task OnLoadedAsync()
+    public override void OnLoaded()
     {
-        await base.OnLoadedAsync();
+        base.OnLoaded();
         var sw = Stopwatch.StartNew();
 
         // Set UI states
@@ -171,7 +171,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
         IsLoading = CheckpointFolders.Count == 0;
         IsIndexing = CheckpointFolders.Count > 0;
-        await IndexFoldersAsync();
+        IndexFolders();
         IsLoading = false;
         IsIndexing = false;
 
@@ -268,7 +268,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             ) || folder.SubFolders.Any(ContainsBaseModel);
     }
 
-    private async Task IndexFoldersAsync()
+    private void IndexFolders()
     {
         var modelsDirectory = settingsManager.ModelsDirectory;
 
@@ -287,7 +287,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             // Get from cache or create new
             if (CheckpointFoldersCache.Lookup(folder) is { HasValue: true } result)
             {
-                await result.Value.IndexAsync();
+                result.Value.Index();
                 updatedFolders.Add(result.Value);
             }
             else
@@ -304,7 +304,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
                     DirectoryPath = folder,
                     IsExpanded = true // Top level folders expanded by default
                 };
-                await checkpointFolder.IndexAsync();
+                checkpointFolder.Index();
                 updatedFolders.Add(checkpointFolder);
             }
         }

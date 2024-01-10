@@ -615,13 +615,13 @@ public partial class CheckpointFolder : ViewModelBase
     /// </summary>
     public void BackgroundIndex()
     {
-        Dispatcher.UIThread.InvokeAsync(IndexAsync, DispatcherPriority.Background);
+        Dispatcher.UIThread.Post(Index, DispatcherPriority.Background);
     }
 
     /// <summary>
     /// Indexes the folder for checkpoint files and refreshes the CheckPointFiles collection.
     /// </summary>
-    public async Task IndexAsync()
+    public void Index()
     {
         var updatedFolders = new List<CheckpointFolder>();
         // Get subfolders

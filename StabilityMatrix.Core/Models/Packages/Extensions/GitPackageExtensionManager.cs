@@ -35,7 +35,22 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
 
     protected virtual IEnumerable<ExtensionManifest> GetManifests(InstalledPackage installedPackage)
     {
-        return DefaultManifests;
+        if (installedPackage.ExtraExtensionManifestUrls is not { } customUrls)
+        {
+            return DefaultManifests;
+        }
+
+        var manifests = DefaultManifests.ToList();
+
+        foreach (var url in customUrls)
+        {
+            if (!string.IsNullOrEmpty(url) && Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            {
+                manifests.Add(new ExtensionManifest(uri));
+            }
+        }
+
+        return manifests;
     }
 
     /// <inheritdoc />

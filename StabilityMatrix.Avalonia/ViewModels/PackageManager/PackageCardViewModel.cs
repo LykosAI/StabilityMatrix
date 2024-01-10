@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
@@ -394,6 +395,10 @@ public partial class PackageCardViewModel : ProgressViewModel
         var dialog = new BetterContentDialog
         {
             Content = vm,
+            MinDialogWidth = 850,
+            MaxDialogHeight = 1100,
+            MaxDialogWidth = 850,
+            ContentMargin = new Thickness(16, 32),
             CloseOnClickOutside = true,
             FullSizeDesired = true,
             IsFooterVisible = false,

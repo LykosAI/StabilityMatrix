@@ -166,6 +166,7 @@
                         <Button
                             Grid.Row="0"
                             Grid.Column="2"
+                            Command="{Binding OpenExtensionsSettingsDialogCommand}"
                             Padding="16,6"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Stretch">
@@ -226,7 +227,7 @@
                     RowSpacing="12"
                     Margin="8">
                     <sg:SpacedGrid 
-                        ColumnDefinitions="*,Auto,Auto" 
+                        ColumnDefinitions="*,Auto" 
                         ColumnSpacing="8">
                         <TextBox 
                             Classes="search"
@@ -236,7 +237,7 @@
                                  HorizontalAlignment="Stretch"
                                  VerticalAlignment="Center"
                                  Text="{Binding Query, Mode=TwoWay}"/>
-                        
+
                         <!-- Refresh Button -->
                         <Button
                             Grid.Row="0"
@@ -249,14 +250,14 @@
                         </Button>
                         
                         <!-- Settings / Edit Manifests Button -->
-                        <Button
+                        <!--<Button
                             Grid.Row="0"
                             Grid.Column="2"
                             Padding="16,6"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Stretch">
                             <ui:SymbolIcon FontSize="16" Symbol="Settings" />
-                        </Button>
+                        </Button>-->
                     </sg:SpacedGrid>
                     
                     <ScrollViewer 

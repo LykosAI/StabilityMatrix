@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reactive.Disposables;
@@ -14,9 +15,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using FluentAvalonia.UI.Controls;
+using KGySoft.CoreLibraries;
 using StabilityMatrix.Avalonia.Collections;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.PackageManager;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
@@ -24,6 +29,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages.Extensions;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
@@ -33,7 +39,9 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposable
 {
     private readonly INotificationService notificationService;
-    private readonly IDisposable cleanUp;
+    private readonly ISettingsManager settingsManager;
+    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly CompositeDisposable cleanUp;
 
     public PackagePair? PackagePair { get; set; }
 
@@ -70,9 +78,15 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     public IObservableCollection<InstalledPackageExtension> InstalledExtensions { get; } =
         new ObservableCollectionExtended<InstalledPackageExtension>();
 
-    public PackageExtensionBrowserViewModel(INotificationService notificationService)
+    public PackageExtensionBrowserViewModel(
+        INotificationService notificationService,
+        ISettingsManager settingsManager,
+        ServiceManager<ViewModelBase> vmFactory
+    )
     {
         this.notificationService = notificationService;
+        this.settingsManager = settingsManager;
+        this.vmFactory = vmFactory;
 
         var availableItemsChangeSet = availableExtensionsSource
             .Connect()
@@ -225,6 +239,39 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         RefreshBackground();
     }
 
+    [RelayCommand]
+    public async Task OpenExtensionsSettingsDialog()
+    {
+        if (PackagePair is null)
+            return;
+
+        var grid = new ExtensionSettingsPropertyGrid
+        {
+            ManifestUrls = new BindingList<string>(
+                PackagePair?.InstalledPackage.ExtraExtensionManifestUrls ?? []
+            )
+        };
+
+        var dialog = vmFactory
+            .Get<PropertyGridViewModel>(vm =>
+            {
+                vm.Title = $"{Resources.Label_Settings}";
+                vm.SelectedObject = grid;
+                vm.IncludeCategories = ["Base"];
+            })
+            .GetSaveDialog();
+
+        dialog.MinDialogWidth = 750;
+        dialog.MaxDialogWidth = 750;
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            await using var _ = settingsManager.BeginTransaction();
+
+            PackagePair!.InstalledPackage.ExtraExtensionManifestUrls = grid.ManifestUrls.ToList();
+        }
+    }
+
     /// <inheritdoc />
     public override async Task OnLoadedAsync()
     {
@@ -373,5 +420,12 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         cleanUp.Dispose();
 
         GC.SuppressFinalize(this);
+    }
+
+    private class ExtensionSettingsPropertyGrid : AbstractNotifyPropertyChanged
+    {
+        [Category("Base")]
+        [DisplayName("Extension Manifest Sources")]
+        public BindingList<string> ManifestUrls { get; init; } = [];
     }
 }

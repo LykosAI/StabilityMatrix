@@ -191,9 +191,9 @@ public class InvokeAI : BaseGitPackage
                 await venvRunner
                     .PipInstall(
                         new PipInstallArgs(args.Any() ? args.ToArray() : Array.Empty<Argument>())
-                            .WithTorch("==2.1.0")
-                            .WithTorchVision("==0.16.0")
-                            .WithXFormers("==0.0.22post7")
+                            .WithTorch("==2.1.2")
+                            .WithTorchVision("==0.16.2")
+                            .WithXFormers("==0.0.23post1")
                             .WithTorchExtraIndex("cu121"),
                         onConsoleOutput
                     )

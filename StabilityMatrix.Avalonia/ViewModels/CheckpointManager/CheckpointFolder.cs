@@ -659,7 +659,7 @@ public partial class CheckpointFolder : ViewModelBase
         SubFoldersCache.EditDiff(updatedFolders, (a, b) => a.Title == b.Title);
 
         // Index files
-        var files = GetCheckpointFiles().ToList();
+        var files = GetCheckpointFiles();
 
         Dispatcher.UIThread.Post(
             () => checkpointFilesCache.EditDiff(files, CheckpointFile.FilePathComparer),

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -616,13 +615,13 @@ public partial class CheckpointFolder : ViewModelBase
     /// </summary>
     public void BackgroundIndex()
     {
-        Dispatcher.UIThread.Post(Index, DispatcherPriority.Background);
+        Dispatcher.UIThread.InvokeAsync(IndexAsync, DispatcherPriority.Background);
     }
 
     /// <summary>
     /// Indexes the folder for checkpoint files and refreshes the CheckPointFiles collection.
     /// </summary>
-    public void Index()
+    public async Task IndexAsync()
     {
         var updatedFolders = new List<CheckpointFolder>();
         // Get subfolders
@@ -660,12 +659,10 @@ public partial class CheckpointFolder : ViewModelBase
         SubFoldersCache.EditDiff(updatedFolders, (a, b) => a.Title == b.Title);
 
         // Index files
+        var files = GetCheckpointFiles().ToList();
+
         Dispatcher.UIThread.Post(
-            () =>
-            {
-                var files = GetCheckpointFiles();
-                checkpointFilesCache.EditDiff(files, CheckpointFile.FilePathComparer);
-            },
+            () => checkpointFilesCache.EditDiff(files, CheckpointFile.FilePathComparer),
             DispatcherPriority.Background
         );
     }

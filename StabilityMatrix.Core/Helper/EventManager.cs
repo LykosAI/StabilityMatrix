@@ -39,6 +39,7 @@ public class EventManager
     public event EventHandler<LocalImageFile>? InferenceUpscaleRequested;
     public event EventHandler<LocalImageFile>? InferenceImageToImageRequested;
     public event EventHandler<LocalImageFile>? InferenceImageToVideoRequested;
+    public event EventHandler<int>? NavigateAndFindCivitModelRequested;
 
     public void OnGlobalProgressChanged(int progress) => GlobalProgressChanged?.Invoke(this, progress);
 
@@ -86,4 +87,7 @@ public class EventManager
 
     public void OnInferenceImageToVideoRequested(LocalImageFile imageFile) =>
         InferenceImageToVideoRequested?.Invoke(this, imageFile);
+
+    public void OnNavigateAndFindCivitModelRequested(int modelId) =>
+        NavigateAndFindCivitModelRequested?.Invoke(this, modelId);
 }

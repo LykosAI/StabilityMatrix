@@ -1,6 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Collections.Immutable;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
 using AsyncAwaitBestPractices;
 using AutoCtor;
@@ -10,6 +8,7 @@ using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
@@ -22,6 +21,7 @@ public partial class ModelIndexService : IModelIndexService
     private readonly ILogger<ModelIndexService> logger;
     private readonly ISettingsManager settingsManager;
     private readonly ILiteDbContext liteDbContext;
+    private readonly ModelFinder modelFinder;
 
     public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; private set; } = new();
 
@@ -218,5 +218,44 @@ public partial class ModelIndexService : IModelIndexService
         }
 
         return false;
+    }
+
+    // idk do somethin with this
+    public async Task CheckModelsForUpdateAsync()
+    {
+        var installedHashes = settingsManager.Settings.InstalledModelHashes;
+        var dbModels = (
+            await liteDbContext.LocalModelFiles.FindAllAsync().ConfigureAwait(false)
+            ?? Enumerable.Empty<LocalModelFile>()
+        ).ToList();
+        var ids = dbModels
+            .Where(x => x.ConnectedModelInfo != null)
+            .Where(
+                x => x.LastUpdateCheck == default || x.LastUpdateCheck < DateTimeOffset.UtcNow.AddHours(-8)
+            )
+            .Select(x => x.ConnectedModelInfo!.ModelId);
+        var remoteModels = (await modelFinder.FindRemoteModelsById(ids).ConfigureAwait(false)).ToList();
+
+        foreach (var dbModel in dbModels)
+        {
+            if (dbModel.ConnectedModelInfo == null)
+                continue;
+
+            var remoteModel = remoteModels.FirstOrDefault(m => m.Id == dbModel.ConnectedModelInfo!.ModelId);
+
+            var latestVersion = remoteModel?.ModelVersions?.FirstOrDefault();
+            var latestHashes = latestVersion
+                ?.Files
+                ?.Where(f => f.Type == CivitFileType.Model)
+                .Select(f => f.Hashes.BLAKE3);
+
+            if (latestHashes == null)
+                continue;
+
+            dbModel.HasUpdate = !latestHashes.Any(hash => installedHashes?.Contains(hash) ?? false);
+            dbModel.LastUpdateCheck = DateTimeOffset.UtcNow;
+
+            await liteDbContext.LocalModelFiles.UpsertAsync(dbModel).ConfigureAwait(false);
+        }
     }
 }

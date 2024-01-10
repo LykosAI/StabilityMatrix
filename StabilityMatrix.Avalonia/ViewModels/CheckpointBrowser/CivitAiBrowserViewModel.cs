@@ -18,6 +18,7 @@ using CommunityToolkit.Mvvm.Input;
 using LiteDB;
 using LiteDB.Async;
 using NLog;
+using OneOf.Types;
 using Refit;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -160,6 +161,17 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             .Where(page => page <= TotalPages && page > 0)
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe(_ => TrySearchAgain(false).SafeFireAndForget(), err => Logger.Error(err));
+
+        EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
+    }
+
+    private void OnNavigateAndFindCivitModelRequested(object? sender, int e)
+    {
+        if (e <= 0)
+            return;
+
+        SearchQuery = $"$#{e}";
+        SearchModelsCommand.ExecuteAsync(null).SafeFireAndForget();
     }
 
     public override void OnLoaded()
@@ -399,19 +411,6 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             Page = CurrentPageNumber
         };
 
-        if (SearchQuery.StartsWith("#"))
-        {
-            modelRequest.Tag = SearchQuery[1..];
-        }
-        else if (SearchQuery.StartsWith("@"))
-        {
-            modelRequest.Username = SearchQuery[1..];
-        }
-        else
-        {
-            modelRequest.Query = SearchQuery;
-        }
-
         if (SelectedModelType != CivitModelType.All)
         {
             modelRequest.Types = [SelectedModelType];
@@ -420,6 +419,26 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
         if (SelectedBaseModelType != "All")
         {
             modelRequest.BaseModel = SelectedBaseModelType;
+        }
+
+        if (SearchQuery.StartsWith("#"))
+        {
+            modelRequest.Tag = SearchQuery[1..];
+        }
+        else if (SearchQuery.StartsWith("@"))
+        {
+            modelRequest.Username = SearchQuery[1..];
+        }
+        else if (SearchQuery.StartsWith("$#"))
+        {
+            modelRequest.Period = CivitPeriod.AllTime;
+            modelRequest.BaseModel = null;
+            modelRequest.Types = null;
+            modelRequest.CommaSeparatedModelIds = SearchQuery[2..];
+        }
+        else
+        {
+            modelRequest.Query = SearchQuery;
         }
 
         if (SortMode == CivitSortMode.Installed)

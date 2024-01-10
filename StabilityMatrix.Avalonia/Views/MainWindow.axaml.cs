@@ -34,6 +34,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -95,6 +96,7 @@ public partial class MainWindow : AppWindowBase
         EventManager.Instance.ToggleProgressFlyout += (_, _) => progressFlyout?.Hide();
         EventManager.Instance.CultureChanged += (_, _) => SetDefaultFonts();
         EventManager.Instance.UpdateAvailable += OnUpdateAvailable;
+        EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
 
         Observable
             .FromEventPattern<SizeChangedEventArgs>(this, nameof(SizeChanged))
@@ -136,6 +138,11 @@ public partial class MainWindow : AppWindowBase
                     ignoreMissingLibraryDir: true
                 );
             });
+    }
+
+    private void OnNavigateAndFindCivitModelRequested(object? sender, int e)
+    {
+        navigationService.NavigateTo<CheckpointBrowserViewModel>();
     }
 
     /// <inheritdoc />

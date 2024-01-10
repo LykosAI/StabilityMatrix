@@ -927,4 +927,7 @@
   <data name="Label_VideoQuality" xml:space="preserve">
     <value>Quality</value>
   </data>
+  <data name="Label_FindInModelBrowser" xml:space="preserve">
+    <value>Find in Model Browser</value>
+  </data>
 </root>

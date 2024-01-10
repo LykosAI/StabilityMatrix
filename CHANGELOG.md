@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added base model filter to Checkpoints page
 - Search box on Checkpoints page now searches tags and trigger words
 - Added "Compatible Images" category when selecting images for Inference projects
+- Added "Find in Model Browser" option to the right-click menu on the Checkpoints page
 ### Changed
 - Removed "Failed to load image" notification when loading some images on the Checkpoints page
 - Installed models will no longer be selectable on the Hugging Face tab of the model browser

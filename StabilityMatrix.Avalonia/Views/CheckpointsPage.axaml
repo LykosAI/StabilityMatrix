@@ -72,7 +72,7 @@
                                                IconSource="Copy" />
                             <ui:MenuFlyoutItem Command="{Binding FindOnModelBrowserCommand}"
                                                IsVisible="{Binding IsConnectedModel}"
-                                               Text="Find in Model Browser"
+                                               Text="{x:Static lang:Resources.Label_FindInModelBrowser}"
                                                IconSource="Find" />
                             <ui:MenuFlyoutSeparator IsVisible="{Binding CanShowTriggerWords}" />
                             <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
@@ -203,7 +203,7 @@
                                     VerticalAlignment="Center"
                                     FontSize="11"
                                     FontWeight="Medium"
-                                    Text="Update Available" />
+                                    Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
                             </controls:Card>
                             <Button
                                 Background="Transparent"

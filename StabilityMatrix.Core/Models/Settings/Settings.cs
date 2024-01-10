@@ -2,6 +2,8 @@
 using System.Text.Json.Serialization;
 using Semver;
 using StabilityMatrix.Core.Converters.Json;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
@@ -107,6 +109,12 @@ public class Settings
 
     public HashSet<TeachingTip> SeenTeachingTips { get; set; } = new();
 
+    public List<string> SelectedBaseModels { get; set; } =
+        Enum.GetValues<CivitBaseModelType>()
+            .Where(x => x != CivitBaseModelType.All)
+            .Select(x => x.GetStringValue())
+            .ToList();
+
     public Size InferenceImageSize { get; set; } = new(150, 190);
     public Size OutputsImageSize { get; set; } = new(300, 300);
     public HolidayMode HolidayModeSetting { get; set; } = HolidayMode.Automatic;
@@ -170,7 +178,10 @@ public class Settings
     }
 }
 
-[JsonSourceGenerationOptions(WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 [JsonSerializable(typeof(Settings))]
 [JsonSerializable(typeof(bool))]
 [JsonSerializable(typeof(int))]

@@ -129,18 +129,8 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             .Where(t => t == CivitModelType.All || t.ConvertTo<SharedFolderType>() > 0)
             .OrderBy(t => t.ToString());
 
-    public List<string> BaseModelOptions =>
-        [
-            "All",
-            "SD 1.5",
-            "SD 1.5 LCM",
-            "SD 2.1",
-            "SDXL 0.9",
-            "SDXL 1.0",
-            "SDXL 1.0 LCM",
-            "SDXL Turbo",
-            "Other"
-        ];
+    public IEnumerable<string> BaseModelOptions =>
+        Enum.GetValues<CivitBaseModelType>().Select(t => t.GetStringValue());
 
     public CivitAiBrowserViewModel(
         ICivitApi civitApi,
@@ -424,7 +414,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
 
         if (SelectedModelType != CivitModelType.All)
         {
-            modelRequest.Types = new[] { SelectedModelType };
+            modelRequest.Types = [SelectedModelType];
         }
 
         if (SelectedBaseModelType != "All")

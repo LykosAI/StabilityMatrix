@@ -10,6 +10,9 @@
                           xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
                           xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
                           xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+                          xmlns:api="clr-namespace:StabilityMatrix.Core.Models.Api;assembly=StabilityMatrix.Core"
+                          xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+                          xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
                           d:DataContext="{x:Static mocks:DesignData.CheckpointsPageViewModel}"
                           x:CompileBindings="True"
                           x:DataType="vm:CheckpointsPageViewModel"
@@ -24,6 +27,8 @@
             Color="#FF000000"
             Opacity="0.2"
             x:Key="TextDropShadowEffect" />
+        
+        <converters:EnumStringConverter x:Key="EnumStringConverter" />
 
         <!--  Template for a single badge  -->
         <DataTemplate DataType="{x:Type system:String}" x:Key="BadgeTemplate">
@@ -490,6 +495,42 @@
                     </ui:FAMenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
+            
+            <DropDownButton
+                x:Name="BaseModelDropdown"
+                Content="{x:Static lang:Resources.Label_BaseModel}"
+                Margin="8,0"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Right">
+                <DropDownButton.Flyout>
+                    <Flyout>
+                        <StackPanel Orientation="Vertical">
+                            <Button Content="{Binding ClearButtonText}"
+                                    HorizontalAlignment="Stretch"
+                                    Classes="transparent"
+                                    Command="{Binding ClearOrSelectAllBaseModels}"
+                                    Margin="0,0,0,8"/>
+                            <ListBox ItemsSource="{Binding BaseModelOptions}"
+                                     SelectionMode="Multiple, Toggle"
+                                     SelectedItems="{Binding SelectedBaseModels}">
+                                <ListBox.Template>
+                                    <ControlTemplate>
+                                        <ItemsPresenter />
+                                    </ControlTemplate>
+                                </ListBox.Template>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type checkpointManager:BaseModelOptionViewModel}">
+                                        <TextBlock Text="{Binding ModelType}"/>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Flyout>
+                </DropDownButton.Flyout>
+            </DropDownButton>
+            
+            
+            
         </StackPanel>
         <ui:CommandBar
             Grid.Row="0"

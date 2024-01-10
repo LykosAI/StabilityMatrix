@@ -237,7 +237,7 @@ public class MetadataImportService(
                 new ProgressReport(
                     current: report.Current ?? 0,
                     total: report.Total ?? 0,
-                    $"Getting metadata for {filePath} ... {report.Percentage}%"
+                    $"Getting metadata for {fileNameWithoutExtension} ... {report.Percentage}%"
                 )
             );
         });

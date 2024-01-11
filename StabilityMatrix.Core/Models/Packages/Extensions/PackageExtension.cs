@@ -13,4 +13,6 @@ public record PackageExtension
     public string? Description { get; init; }
 
     public string? InstallType { get; init; }
+
+    public bool IsInstalled { get; init; }
 }

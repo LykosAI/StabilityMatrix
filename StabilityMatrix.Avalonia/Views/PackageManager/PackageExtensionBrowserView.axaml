@@ -74,7 +74,15 @@
                                 Content="GitHub" />
                         </StackPanel>
 
+                        <TextBlock 
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding Item.IsInstalled}"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            Text="{Binding Source={x:Static lang:Resources.Label_Installed}, StringFormat='{}({0})'}"
+                            Margin="0,0,16,0"/>
                         <CheckBox
+                            IsVisible="{Binding !Item.IsInstalled}"
                             IsChecked="{Binding IsSelected}"
                             Margin="0,0,16,0"
                             Grid.Column="2" />

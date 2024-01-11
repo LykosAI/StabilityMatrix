@@ -153,7 +153,10 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     [RelayCommand]
     public async Task InstallSelectedExtensions()
     {
-        var extensions = SelectedAvailableItems.Select(x => x.Item).ToArray();
+        var extensions = SelectedAvailableItems
+            .Select(item => item.Item)
+            .Where(extension => !extension.IsInstalled)
+            .ToArray();
 
         if (extensions.Length == 0)
             return;
@@ -334,19 +337,18 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             );
         }
 
-        var availableExtensions = await extensionManager.GetManifestExtensionsAsync(
-            extensionManager.GetManifests(PackagePair.InstalledPackage)
-        );
+        var availableExtensions = (
+            await extensionManager.GetManifestExtensionsAsync(
+                extensionManager.GetManifests(PackagePair.InstalledPackage)
+            )
+        ).ToArray();
 
-        var installedExtensions = await extensionManager.GetInstalledExtensionsAsync(
-            PackagePair.InstalledPackage
-        );
+        var installedExtensions = (
+            await extensionManager.GetInstalledExtensionsAsync(PackagePair.InstalledPackage)
+        ).ToArray();
 
         // Synchronize
-        (availableExtensions, installedExtensions) = SynchronizeExtensions(
-            availableExtensions,
-            installedExtensions
-        );
+        SynchronizeExtensions(availableExtensions, installedExtensions);
 
         await Task.Run(() =>
         {
@@ -377,39 +379,59 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
 
     [Pure]
     private static (
-        IEnumerable<PackageExtension>,
-        IEnumerable<InstalledPackageExtension>
+        IEnumerable<PackageExtension> extensions,
+        IEnumerable<InstalledPackageExtension> installedExtensions
     ) SynchronizeExtensions(
         IEnumerable<PackageExtension> extensions,
         IEnumerable<InstalledPackageExtension> installedExtensions
     )
     {
-        using var _ = CodeTimer.StartDebug();
+        var availableArr = extensions.ToArray();
+        var installedArr = installedExtensions.ToArray();
 
-        var extensionsArr = extensions.ToImmutableArray();
+        SynchronizeExtensions(availableArr, installedArr);
 
+        return (availableArr, installedArr);
+    }
+
+    private static void SynchronizeExtensions(
+        IList<PackageExtension> extensions,
+        IList<InstalledPackageExtension> installedExtensions
+    )
+    {
         // For extensions, map their file paths for lookup
-        var repoToExtension = extensionsArr
+        var repoToExtension = extensions
             .SelectMany(ext => ext.Files.Select(path => (path, ext)))
             .ToLookup(kv => kv.path.ToString().StripEnd(".git"))
             .ToDictionary(group => group.Key, x => x.First().ext);
 
         // For installed extensions, add remote repo if available
-        var installedExtensionsWithDefinition = installedExtensions.Select(
-            installedExt =>
-                installedExt.GitRepositoryUrl is null
-                || !repoToExtension.TryGetValue(
+        var extensionsInstalled = new HashSet<PackageExtension>();
+
+        foreach (var (i, installedExt) in installedExtensions.Enumerate())
+        {
+            if (
+                installedExt.GitRepositoryUrl is not null
+                && repoToExtension.TryGetValue(
                     installedExt.GitRepositoryUrl.StripEnd(".git"),
                     out var mappedExt
                 )
-                    ? installedExt
-                    : installedExt with
-                    {
-                        Definition = mappedExt
-                    }
-        );
+            )
+            {
+                extensionsInstalled.Add(mappedExt);
 
-        return (extensionsArr, installedExtensionsWithDefinition);
+                installedExtensions[i] = installedExt with { Definition = mappedExt };
+            }
+        }
+
+        // For available extensions, add installed status if available
+        foreach (var (i, ext) in extensions.Enumerate())
+        {
+            if (extensionsInstalled.Contains(ext))
+            {
+                extensions[i] = ext with { IsInstalled = true };
+            }
+        }
     }
 
     /// <inheritdoc />

@@ -930,4 +930,7 @@
   <data name="Label_FindInModelBrowser" xml:space="preserve">
     <value>Find in Model Browser</value>
   </data>
+  <data name="Label_Installed" xml:space="preserve">
+    <value>Installed</value>
+  </data>
 </root>

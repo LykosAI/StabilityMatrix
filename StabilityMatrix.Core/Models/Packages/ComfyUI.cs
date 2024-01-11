@@ -4,6 +4,8 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Exceptions;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -496,6 +498,102 @@ public class ComfyUI(
             );
 
             return jsonManifest?.GetPackageExtensions() ?? Enumerable.Empty<PackageExtension>();
+        }
+
+        /// <inheritdoc />
+        public override async Task InstallExtensionAsync(
+            PackageExtension extension,
+            InstalledPackage installedPackage,
+            PackageExtensionVersion? version = null,
+            IProgress<ProgressReport>? progress = null,
+            CancellationToken cancellationToken = default
+        )
+        {
+            await base.InstallExtensionAsync(
+                extension,
+                installedPackage,
+                version,
+                progress,
+                cancellationToken
+            )
+                .ConfigureAwait(false);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var cloneRoot = new DirectoryPath(installedPackage.FullPath!, RelativeInstallDirectory);
+
+            var installedDirs = extension
+                .Files.Select(uri => uri.Segments.LastOrDefault())
+                .Where(path => !string.IsNullOrEmpty(path))
+                .Select(path => cloneRoot.JoinDir(path!))
+                .Where(dir => dir.Exists);
+
+            foreach (var installedDir in installedDirs)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Install requirements.txt if found
+                if (installedDir.JoinFile("requirements.txt") is { Exists: true } requirementsFile)
+                {
+                    progress?.Report(
+                        new ProgressReport(
+                            0f,
+                            $"Installing requirements.txt for {installedDir.Name}",
+                            isIndeterminate: true
+                        )
+                    );
+
+                    await using var venvRunner = await package
+                        .SetupVenvPure(installedPackage.FullPath!)
+                        .ConfigureAwait(false);
+
+                    var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(
+                        await requirementsFile.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)
+                    );
+
+                    await venvRunner
+                        .PipInstall(pipArgs, progress.AsProcessOutputHandler())
+                        .ConfigureAwait(false);
+
+                    progress?.Report(
+                        new ProgressReport(1f, $"Installed requirements.txt for {installedDir.Name}")
+                    );
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Run install.py if found
+                if (installedDir.JoinFile("install.py") is { Exists: true } installScript)
+                {
+                    progress?.Report(
+                        new ProgressReport(
+                            0f,
+                            $"Running install.py for {installedDir.Name}",
+                            isIndeterminate: true
+                        )
+                    );
+
+                    await using var venvRunner = await package
+                        .SetupVenvPure(installedPackage.FullPath!)
+                        .ConfigureAwait(false);
+
+                    venvRunner.WorkingDirectory = installScript.Directory;
+
+                    venvRunner.RunDetached(["install.py"], progress.AsProcessOutputHandler());
+
+                    await venvRunner.Process.WaitUntilOutputEOF(cancellationToken).ConfigureAwait(false);
+                    await venvRunner.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+
+                    if (venvRunner.Process.HasExited && venvRunner.Process.ExitCode != 0)
+                    {
+                        throw new ProcessException(
+                            $"install.py for {installedDir.Name} exited with code {venvRunner.Process.ExitCode}"
+                        );
+                    }
+
+                    progress?.Report(new ProgressReport(1f, $"Ran launch.py for {installedDir.Name}"));
+                }
+            }
         }
     }
 }

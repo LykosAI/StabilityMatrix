@@ -61,7 +61,7 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
     }
 
     /// <inheritdoc />
-    public async Task<IEnumerable<InstalledPackageExtension>> GetInstalledExtensionsAsync(
+    public virtual async Task<IEnumerable<InstalledPackageExtension>> GetInstalledExtensionsAsync(
         InstalledPackage installedPackage,
         CancellationToken cancellationToken = default
     )
@@ -123,7 +123,7 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
     }
 
     /// <inheritdoc />
-    public async Task InstallExtensionAsync(
+    public virtual async Task InstallExtensionAsync(
         PackageExtension extension,
         InstalledPackage installedPackage,
         PackageExtensionVersion? version = null,
@@ -131,8 +131,7 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
         CancellationToken cancellationToken = default
     )
     {
-        if (installedPackage.FullPath is not { } packagePath)
-            throw new ArgumentException("Package must have a valid path.", nameof(installedPackage));
+        ArgumentNullException.ThrowIfNull(installedPackage.FullPath);
 
         // Ensure type
         if (extension.InstallType?.ToLowerInvariant() != "git-clone")
@@ -144,7 +143,7 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
         }
 
         // Git clone all files
-        var cloneRoot = new DirectoryPath(packagePath, RelativeInstallDirectory);
+        var cloneRoot = new DirectoryPath(installedPackage.FullPath, RelativeInstallDirectory);
 
         foreach (var repositoryUri in extension.Files)
         {
@@ -161,7 +160,7 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
     }
 
     /// <inheritdoc />
-    public async Task UpdateExtensionAsync(
+    public virtual async Task UpdateExtensionAsync(
         InstalledPackageExtension installedExtension,
         InstalledPackage installedPackage,
         PackageExtensionVersion? version = null,
@@ -206,7 +205,7 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
     }
 
     /// <inheritdoc />
-    public async Task UninstallExtensionAsync(
+    public virtual async Task UninstallExtensionAsync(
         InstalledPackageExtension installedExtension,
         InstalledPackage installedPackage,
         IProgress<ProgressReport>? progress = null,

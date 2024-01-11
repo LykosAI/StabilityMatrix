@@ -175,6 +175,47 @@ public abstract class BaseGitPackage : BasePackage
         return VenvRunner;
     }
 
+    /// <summary>
+    /// Like <see cref="SetupVenv"/>, but does not set the <see cref="VenvRunner"/> property.
+    /// Returns a new <see cref="PyVenvRunner"/> instance.
+    /// </summary>
+    public async Task<PyVenvRunner> SetupVenvPure(
+        string installedPackagePath,
+        string venvName = "venv",
+        bool forceRecreate = false,
+        Action<ProcessOutput>? onConsoleOutput = null
+    )
+    {
+        var venvPath = Path.Combine(installedPackagePath, venvName);
+
+        // Set additional required environment variables
+        var env = new Dictionary<string, string>();
+        if (SettingsManager.Settings.EnvironmentVariables is not null)
+        {
+            env.Update(SettingsManager.Settings.EnvironmentVariables);
+        }
+
+        if (Compat.IsWindows)
+        {
+            var tkPath = Path.Combine(SettingsManager.LibraryDir, "Assets", "Python310", "tcl", "tcl8.6");
+            env["TCL_LIBRARY"] = tkPath;
+            env["TK_LIBRARY"] = tkPath;
+        }
+
+        var venvRunner = new PyVenvRunner(venvPath)
+        {
+            WorkingDirectory = installedPackagePath,
+            EnvironmentVariables = env
+        };
+
+        if (!venvRunner.Exists() || forceRecreate)
+        {
+            await venvRunner.Setup(forceRecreate, onConsoleOutput).ConfigureAwait(false);
+        }
+
+        return venvRunner;
+    }
+
     public override async Task<IEnumerable<Release>> GetReleaseTags()
     {
         var allReleases = await GithubApi.GetAllReleases(Author, Name).ConfigureAwait(false);

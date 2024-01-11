@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.8.0-pre.1
 ### Added
+- Added Package Extensions (Plugins) management - accessible from the Packages' 3-dot menu. Currently supports ComfyUI.
 - Added base model filter to Checkpoints page
 - Search box on Checkpoints page now searches tags and trigger words
 - Added "Compatible Images" category when selecting images for Inference projects

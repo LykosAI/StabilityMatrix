@@ -66,6 +66,18 @@
                                                 </MenuItem.Icon>
                                             </MenuItem>
                                             <MenuItem
+                                                Header="{x:Static lang:Resources.Action_OpenGithub}"
+                                                IsVisible="{Binding !IsUnknownPackage}"
+                                                Command="{Binding OpenOnGitHubCommand}">
+                                                <MenuItem.Icon>
+                                                    <icons:Icon
+                                                        Value="fa-brands fa-github" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            
+                                            <Separator/>
+                                            
+                                            <MenuItem
                                                 Header="{x:Static lang:Resources.Label_PythonPackages}"
                                                 IsVisible="{Binding !IsUnknownPackage}"
                                                 Command="{Binding OpenPythonPackagesDialogCommand}">
@@ -76,21 +88,11 @@
                                             </MenuItem>
                                             <MenuItem
                                                 Header="Extensions"
-                                                IsVisible="{Binding !IsUnknownPackage}"
+                                                IsVisible="{Binding CanUseExtensions}"
                                                 Command="{Binding OpenExtensionsDialogCommand}">
                                                 <MenuItem.Icon>
                                                     <icons:Icon
                                                         Value="fa-solid fa-puzzle-piece" />
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                            
-                                            <MenuItem
-                                                Header="{x:Static lang:Resources.Action_OpenGithub}"
-                                                IsVisible="{Binding !IsUnknownPackage}"
-                                                Command="{Binding OpenOnGitHubCommand}">
-                                                <MenuItem.Icon>
-                                                    <icons:Icon
-                                                        Value="fa-brands fa-github" />
                                                 </MenuItem.Icon>
                                             </MenuItem>
                                             

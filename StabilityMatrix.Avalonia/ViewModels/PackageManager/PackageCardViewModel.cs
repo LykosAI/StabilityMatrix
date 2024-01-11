@@ -78,6 +78,9 @@ public partial class PackageCardViewModel : ProgressViewModel
     [ObservableProperty]
     private bool canUseSharedOutput;
 
+    [ObservableProperty]
+    private bool canUseExtensions;
+
     public PackageCardViewModel(
         ILogger<PackageCardViewModel> logger,
         IPackageFactory packageFactory,
@@ -122,6 +125,7 @@ public partial class PackageCardViewModel : ProgressViewModel
                 basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Symlink) ?? false;
             UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
             CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
+            CanUseExtensions = basePackage?.SupportsExtensions ?? false;
         }
     }
 

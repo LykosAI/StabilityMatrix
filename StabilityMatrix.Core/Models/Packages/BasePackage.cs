@@ -162,12 +162,12 @@ public abstract class BasePackage
     /// <summary>
     /// If defined, this package supports extensions using this manager.
     /// </summary>
-    public virtual IPackageExtensionManager? ExtensionManager { get; }
+    public virtual IPackageExtensionManager? ExtensionManager => null;
 
     /// <summary>
     /// True if this package supports extensions.
     /// </summary>
-    [MemberNotNullWhen(true)]
+    [MemberNotNullWhen(true, nameof(ExtensionManager))]
     public virtual bool SupportsExtensions => ExtensionManager is not null;
 
     public abstract Task<PackageVersionOptions> GetAllVersionOptions();

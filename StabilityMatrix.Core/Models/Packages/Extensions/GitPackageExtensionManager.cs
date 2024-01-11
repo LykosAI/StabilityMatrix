@@ -1,5 +1,6 @@
 using KGySoft.CoreLibraries;
 using NLog;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -216,7 +217,16 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            await path.DeleteAsync().ConfigureAwait(false);
+            if (path is DirectoryPath directoryPath)
+            {
+                await directoryPath
+                    .DeleteVerboseAsync(cancellationToken: cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                await path.DeleteAsync().ConfigureAwait(false);
+            }
         }
     }
 }

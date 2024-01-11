@@ -140,10 +140,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             ? UpgradePackageVersion(
                 item.Package.Name,
                 item.SelectedVersion,
-                PythonPackagesItemViewModel.GetKnownIndexUrl(
-                    item.Package.Name,
-                    item.SelectedVersion
-                ),
+                PythonPackagesItemViewModel.GetKnownIndexUrl(item.Package.Name, item.SelectedVersion),
                 isDowngrade: item.CanDowngrade
             )
             : Task.CompletedTask;
@@ -167,9 +164,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             Resources.Label_ConfirmQuestion
         );
 
-        dialog.PrimaryButtonText = isDowngrade
-            ? Resources.Action_Downgrade
-            : Resources.Action_Upgrade;
+        dialog.PrimaryButtonText = isDowngrade ? Resources.Action_Downgrade : Resources.Action_Upgrade;
         dialog.IsPrimaryButtonEnabled = true;
         dialog.DefaultButton = ContentDialogButton.Primary;
         dialog.CloseButtonText = Resources.Action_Cancel;
@@ -225,7 +220,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         var dialog = DialogHelper.CreateTextEntryDialog("Install Package", "", fields);
         var result = await dialog.ShowAsync();
 
-        if (result != ContentDialogResult.Primary || fields[0].Text is not { } packageName)
+        if (result != ContentDialogResult.Primary || fields[0].Text is not { } packageArgs)
         {
             return;
         }
@@ -236,14 +231,14 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             {
                 VenvDirectory = VenvPath,
                 WorkingDirectory = VenvPath.Parent,
-                Args = new[] { "install", packageName }
+                Args = new ProcessArgs(packageArgs).Prepend("install")
             }
         };
 
         var runner = new PackageModificationRunner
         {
             ShowDialogOnStart = true,
-            ModificationCompleteMessage = $"Installed Python Package '{packageName}'"
+            ModificationCompleteMessage = $"Installed Python Package '{packageArgs}'"
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps(steps);

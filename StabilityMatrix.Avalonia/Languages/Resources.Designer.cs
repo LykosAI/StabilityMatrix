@@ -1185,6 +1185,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Find in Model Browser.
+        /// </summary>
+        public static string Label_FindInModelBrowser {
+            get {
+                return ResourceManager.GetString("Label_FindInModelBrowser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to First Page.
         /// </summary>
         public static string Label_FirstPage {

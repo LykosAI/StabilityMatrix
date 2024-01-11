@@ -35,6 +35,16 @@ public record LocalModelFile
     public string? PreviewImageFullPath { get; set; }
 
     /// <summary>
+    /// Whether or not an update is available for this model
+    /// </summary>
+    public bool HasUpdate { get; set; }
+
+    /// <summary>
+    /// Last time this model was checked for an update
+    /// </summary>
+    public DateTimeOffset LastUpdateCheck { get; set; }
+
+    /// <summary>
     /// File name of the relative path.
     /// </summary>
     [BsonIgnore]

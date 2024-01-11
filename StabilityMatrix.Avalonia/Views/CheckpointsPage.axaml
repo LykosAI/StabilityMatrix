@@ -27,7 +27,7 @@
             Color="#FF000000"
             Opacity="0.2"
             x:Key="TextDropShadowEffect" />
-        
+
         <converters:EnumStringConverter x:Key="EnumStringConverter" />
 
         <!--  Template for a single badge  -->
@@ -70,15 +70,19 @@
                                                IsVisible="{Binding CanShowTriggerWords}"
                                                Text="{x:Static lang:Resources.Action_CopyTriggerWords}"
                                                IconSource="Copy" />
-                            <ui:MenuFlyoutSeparator IsVisible="{Binding CanShowTriggerWords}"/>
+                            <ui:MenuFlyoutItem Command="{Binding FindOnModelBrowserCommand}"
+                                               IsVisible="{Binding IsConnectedModel}"
+                                               Text="{x:Static lang:Resources.Label_FindInModelBrowser}"
+                                               IconSource="Find" />
+                            <ui:MenuFlyoutSeparator IsVisible="{Binding CanShowTriggerWords}" />
                             <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
                                                Text="{x:Static lang:Resources.Action_OpenOnCivitAi}" IconSource="Link"
                                                IsVisible="{Binding IsConnectedModel}" />
                             <ui:MenuFlyoutItem
                                 Command="{Binding CopyModelUrlCommand}"
-                                Text="Copy Link to Clipboard" 
+                                Text="Copy Link to Clipboard"
                                 IconSource="Clipboard"
-                                IsVisible="{Binding IsConnectedModel}"/>
+                                IsVisible="{Binding IsConnectedModel}" />
                             <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_FindConnectedMetadata}"
                                                IconSource="Find"
                                                Command="{Binding FindConnectedMetadataCommand}"
@@ -95,188 +99,213 @@
                                     <system:Boolean>True</system:Boolean>
                                 </ui:MenuFlyoutItem.CommandParameter>
                             </ui:MenuFlyoutItem>
-                            <ui:MenuFlyoutSeparator/>
+                            <ui:MenuFlyoutSeparator />
                             <ui:MenuFlyoutItem Command="{Binding RenameCommand}"
                                                Text="{x:Static lang:Resources.Action_Rename}" IconSource="Rename" />
                             <ui:MenuFlyoutItem Command="{Binding DeleteCommand}"
-                                               Text="{x:Static lang:Resources.Action_Delete}" 
+                                               Text="{x:Static lang:Resources.Action_Delete}"
                                                IconSource="Delete" />
                         </ui:FAMenuFlyout>
                     </controls:Card.ContextFlyout>
-                    <Grid RowDefinitions="Auto, Auto">
-                        <!--  Main contents, hidden when IsLoading is true  -->
-                        <StackPanel Grid.Row="0" Grid.RowSpan="2"
-                                    MinHeight="70" Margin="14, 16, 14, 16">
-                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto,*,Auto,Auto"
-                                  IsVisible="{Binding !IsLoading}">
-                                <StackPanel
-                                    Grid.ColumnSpan="2"
-                                    HorizontalAlignment="Left"
-                                    IsEnabled="True"
-                                    Margin="0,0,0,4"
-                                    Orientation="Vertical">
-                                    <!--  Tooltip for title and version  -->
-                                    <ToolTip.Tip>
-                                        <StackPanel>
-                                            <!--  Title  -->
-                                            <TextBlock
-                                                FontSize="14"
-                                                FontWeight="Medium"
-                                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                HorizontalAlignment="Left"
-                                                Margin="0,0,0,4"
-                                                Text="{Binding Title}"
-                                                TextWrapping="WrapWithOverflow" />
-                                            <!--  Version  -->
-                                            <TextBlock
-                                                FontSize="13"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                HorizontalAlignment="Left"
-                                                Margin="0,0,0,4"
-                                                Text="{Binding ConnectedModel.VersionName, FallbackValue=''}"
-                                                TextWrapping="WrapWithOverflow"
-                                                IsVisible="{Binding IsConnectedModel}" />
-                                            <!--  Image  -->
-                                            <controls:BetterAdvancedImage
-                                                Margin="0,0,0,4"
-                                                CornerRadius="4"
-                                                Source="{Binding PreviewImagePath}"
-                                                Stretch="Uniform"
-                                                IsVisible="{Binding IsConnectedModel}" />
-                                            <TextBlock
-                                                FontSize="13"
-                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                                HorizontalAlignment="Left"
-                                                Margin="0,0,0,4"
-                                                TextWrapping="WrapWithOverflow"
-                                                IsVisible="{Binding CanShowTriggerWords}">
-                                                <Run Text="{x:Static lang:Resources.Label_TriggerWords}" />
-                                                <Run
-                                                    Text="{Binding ConnectedModel.TrainedWordsString, FallbackValue=''}" />
-                                            </TextBlock>
-                                        </StackPanel>
-                                    </ToolTip.Tip>
+                    <!--  Main contents  -->
+                    <Grid ColumnDefinitions="*, Auto"
+                          RowDefinitions="Auto,*,Auto,Auto"
+                          MinHeight="70" Margin="14, 16, 14, 16">
+                        <StackPanel
+                            Grid.ColumnSpan="2"
+                            HorizontalAlignment="Left"
+                            Margin="0,0,0,4"
+                            Orientation="Vertical">
+                            <!--  Tooltip for title and version  -->
+                            <ToolTip.Tip>
+                                <StackPanel>
+                                    <!--  Title  -->
                                     <TextBlock
+                                        FontSize="14"
+                                        FontWeight="Medium"
                                         Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                         HorizontalAlignment="Left"
-                                        IsEnabled="True"
-                                        MaxWidth="250"
+                                        Margin="0,0,0,4"
                                         Text="{Binding Title}"
-                                        TextTrimming="CharacterEllipsis"
-                                        TextWrapping="NoWrap" />
+                                        TextWrapping="WrapWithOverflow" />
+                                    <!--  Version  -->
                                     <TextBlock
                                         FontSize="13"
                                         Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                         HorizontalAlignment="Left"
-                                        IsEnabled="True"
+                                        Margin="0,0,0,4"
                                         Text="{Binding ConnectedModel.VersionName, FallbackValue=''}"
                                         TextWrapping="WrapWithOverflow"
                                         IsVisible="{Binding IsConnectedModel}" />
+                                    <!--  Image  -->
+                                    <controls:BetterAdvancedImage
+                                        Margin="0,0,0,4"
+                                        CornerRadius="4"
+                                        Source="{Binding PreviewImagePath}"
+                                        Stretch="Uniform"
+                                        IsVisible="{Binding IsConnectedModel}" />
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                        HorizontalAlignment="Left"
+                                        Margin="0,0,0,4"
+                                        TextWrapping="WrapWithOverflow"
+                                        IsVisible="{Binding CanShowTriggerWords}">
+                                        <Run Text="{x:Static lang:Resources.Label_TriggerWords}" />
+                                        <Run
+                                            Text="{Binding ConnectedModel.TrainedWordsString, FallbackValue=''}" />
+                                    </TextBlock>
                                 </StackPanel>
-
-                                <controls:BetterAdvancedImage Grid.Row="1"
-                                                              Grid.Column="0"
-                                                              Grid.ColumnSpan="2"
-                                                              Margin="0, 4,0,4"
-                                                              CornerRadius="8"
-                                                              Source="{Binding PreviewImagePath}"
-                                                              Stretch="UniformToFill"
-                                                              Height="300"
-                                                              Width="300"
-                                                              IsVisible="{Binding $parent[ItemsControl].((vm:CheckpointsPageViewModel)DataContext).ShowConnectedModelImages}" />
-
-                                <Grid Grid.Column="1" Grid.Row="0">
-                                    <Button
-                                        Background="Transparent"
-                                        BorderBrush="Transparent"
-                                        FontSize="20"
-                                        HorizontalAlignment="Right"
-                                        IsEnabled="True"
-                                        MaxHeight="48"
-                                        MaxWidth="64"
-                                        Padding="0"
-                                        ToolTip.Tip="{x:Static lang:Resources.Label_ConnectedModel}"
-                                        VerticalAlignment="Top"
-                                        IsVisible="{Binding IsConnectedModel, Mode=OneWay}">
-                                        <ui:SymbolIcon
-                                            Foreground="LightGreen"
-                                            Symbol="CloudSyncComplete"
-                                            ToolTip.Tip="{x:Static lang:Resources.Label_ConnectedModel}" />
-                                    </Button>
-                                    <Button
-                                        Background="Transparent"
-                                        BorderBrush="Transparent"
-                                        FontSize="20"
-                                        HorizontalAlignment="Right"
-                                        IsEnabled="True"
-                                        MaxHeight="48"
-                                        MaxWidth="64"
-                                        Padding="0"
-                                        ToolTip.Tip="{x:Static lang:Resources.Label_LocalModel}"
-                                        VerticalAlignment="Top"
-                                        IsVisible="{Binding !IsConnectedModel, Mode=OneWay}">
-                                        <ui:SymbolIcon
-                                            Foreground="DimGray"
-                                            Symbol="CloudOffline"
-                                            ToolTip.Tip="{x:Static lang:Resources.Label_LocalModel}" />
-                                    </Button>
-                                </Grid>
-                                <TextBlock
-                                    FontSize="11"
-                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                    Grid.Column="0"
-                                    Grid.Row="2"
-                                    IsEnabled="True"
-                                    Margin="0,4"
-                                    Text="{Binding FileName}"
-                                    TextTrimming="CharacterEllipsis"
-                                    ToolTip.Tip="{Binding FileName}"
-                                    VerticalAlignment="Bottom" />
-                                <ItemsRepeater
-                                    Grid.Column="1"
-                                    Grid.Row="2"
-                                    HorizontalAlignment="Right"
-                                    ItemTemplate="{StaticResource BadgeTemplate}"
-                                    ItemsSource="{Binding Badges}"
-                                    VerticalAlignment="Bottom">
-
-                                    <ItemsRepeater.Layout>
-                                        <UniformGridLayout />
-                                    </ItemsRepeater.Layout>
-                                </ItemsRepeater>
-                                <TextBlock Grid.Row="3" Grid.Column="0"
-                                           Grid.ColumnSpan="2"
-                                           FontSize="11"
-                                           Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                           HorizontalAlignment="Left"
-                                           VerticalAlignment="Bottom"
-                                           Margin="0,4,0,0"
-                                           TextTrimming="CharacterEllipsis"
-                                           TextWrapping="NoWrap"
-                                           ToolTip.Tip="{Binding ConnectedModel.TrainedWordsString, FallbackValue=''}"
-                                           IsVisible="{Binding CanShowTriggerWords}">
-                                    <Run Text="{x:Static lang:Resources.Label_TriggerWords}" />
-                                    <Run Text="{Binding ConnectedModel.TrainedWordsString, FallbackValue=''}" />
-                                </TextBlock>
-                            </Grid>
+                            </ToolTip.Tip>
+                            <TextBlock
+                                Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                HorizontalAlignment="Left"
+                                IsEnabled="True"
+                                MaxWidth="250"
+                                Text="{Binding Title}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
+                            <TextBlock
+                                FontSize="13"
+                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                HorizontalAlignment="Left"
+                                IsEnabled="True"
+                                Text="{Binding ConnectedModel.VersionName, FallbackValue=''}"
+                                TextWrapping="WrapWithOverflow"
+                                IsVisible="{Binding IsConnectedModel}" />
                         </StackPanel>
-                        
-                        <Border Grid.Row="0" 
-                                Grid.RowSpan="2" 
-                                Background="#AA000000" 
+
+                        <controls:BetterAdvancedImage Grid.Row="1"
+                                                      Grid.Column="0"
+                                                      Grid.ColumnSpan="2"
+                                                      Margin="0, 4,0,4"
+                                                      CornerRadius="8"
+                                                      Source="{Binding PreviewImagePath}"
+                                                      Stretch="UniformToFill"
+                                                      Height="300"
+                                                      Width="300"
+                                                      IsVisible="{Binding $parent[ItemsControl].((vm:CheckpointsPageViewModel)DataContext).ShowConnectedModelImages}" />
+                        <StackPanel Orientation="Horizontal"
+                                    Grid.Column="1" 
+                                    Grid.Row="0"
+                                    HorizontalAlignment="Right">
+                            <controls:Card
+                                Height="24"
+                                Margin="0,0,8,0"
+                                Padding="4"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Classes="success"
+                                IsVisible="{Binding UpdateAvailable}">
+
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="11"
+                                    FontWeight="Medium"
+                                    Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
+                            </controls:Card>
+                            <Button
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                FontSize="20"
+                                HorizontalAlignment="Right"
+                                IsEnabled="True"
+                                MaxHeight="48"
+                                MaxWidth="64"
+                                Padding="0"
+                                ToolTip.Tip="{x:Static lang:Resources.Label_ConnectedModel}"
+                                VerticalAlignment="Top"
+                                IsVisible="{Binding IsConnectedModel, Mode=OneWay}">
+                                <ui:SymbolIcon
+                                    Foreground="LightGreen"
+                                    Symbol="CloudSyncComplete"
+                                    ToolTip.Tip="{x:Static lang:Resources.Label_ConnectedModel}" />
+                            </Button>
+                            <Button
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                FontSize="20"
+                                HorizontalAlignment="Right"
+                                IsEnabled="True"
+                                MaxHeight="48"
+                                MaxWidth="64"
+                                Padding="0"
+                                ToolTip.Tip="{x:Static lang:Resources.Label_LocalModel}"
+                                VerticalAlignment="Top"
+                                IsVisible="{Binding !IsConnectedModel, Mode=OneWay}">
+                                <ui:SymbolIcon
+                                    Foreground="DimGray"
+                                    Symbol="CloudOffline"
+                                    ToolTip.Tip="{x:Static lang:Resources.Label_LocalModel}" />
+                            </Button>
+                        </StackPanel>
+
+                        <TextBlock
+                            FontSize="11"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            Grid.Column="0"
+                            Grid.Row="2"
+                            IsEnabled="True"
+                            Margin="0,4"
+                            Text="{Binding FileName}"
+                            TextTrimming="CharacterEllipsis"
+                            ToolTip.Tip="{Binding FileName}"
+                            VerticalAlignment="Bottom" />
+                        <ItemsRepeater
+                            Grid.Column="1"
+                            Grid.Row="2"
+                            HorizontalAlignment="Right"
+                            ItemTemplate="{StaticResource BadgeTemplate}"
+                            ItemsSource="{Binding Badges}"
+                            VerticalAlignment="Bottom">
+
+                            <ItemsRepeater.Layout>
+                                <UniformGridLayout />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+
+                        <TextBlock Grid.Row="3" Grid.Column="0"
+                                   Grid.ColumnSpan="2"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                   HorizontalAlignment="Left"
+                                   VerticalAlignment="Bottom"
+                                   Margin="0,4,0,0"
+                                   TextTrimming="CharacterEllipsis"
+                                   TextWrapping="NoWrap"
+                                   ToolTip.Tip="{Binding ConnectedModel.TrainedWordsString, FallbackValue=''}"
+                                   IsVisible="{Binding CanShowTriggerWords}">
+                            <Run Text="{x:Static lang:Resources.Label_TriggerWords}" />
+                            <Run Text="{Binding ConnectedModel.TrainedWordsString, FallbackValue=''}" />
+                        </TextBlock>
+
+                        <Border Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Grid.Row="0"
+                                Grid.RowSpan="4"
+                                Margin="-14, -16"
+                                Background="#BB000000"
                                 IsVisible="{Binding IsLoading}"
-                                CornerRadius="12"/>
-                        
-                        <TextBlock Grid.Row="1" 
+                                CornerRadius="12" />
+
+                        <TextBlock Grid.Column="0"
+                                   Grid.ColumnSpan="2"
+                                   Grid.Row="0"
+                                   Grid.RowSpan="4"
                                    x:CompileBindings="False"
-                                   Text="{Binding Progress.Title}" 
+                                   Margin="0,64,0,0"
+                                   Text="{Binding Progress.Title, FallbackValue=Test}"
                                    TextAlignment="Center"
                                    IsVisible="{Binding IsLoading}"
-                                   VerticalAlignment="Center"/>
-                        
+                                   VerticalAlignment="Center" />
+
                         <!--  Progress ring  -->
                         <controls:ProgressRing
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
                             Grid.Row="0"
+                            Grid.RowSpan="4"
                             Height="32"
                             Width="32"
                             Foreground="{DynamicResource ThemeRedColor}"
@@ -495,7 +524,7 @@
                     </ui:FAMenuFlyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
-            
+
             <DropDownButton
                 x:Name="BaseModelDropdown"
                 Content="{x:Static lang:Resources.Label_BaseModel}"
@@ -509,7 +538,7 @@
                                     HorizontalAlignment="Stretch"
                                     Classes="transparent"
                                     Command="{Binding ClearOrSelectAllBaseModels}"
-                                    Margin="0,0,0,8"/>
+                                    Margin="0,0,0,8" />
                             <ListBox ItemsSource="{Binding BaseModelOptions}"
                                      SelectionMode="Multiple, Toggle"
                                      SelectedItems="{Binding SelectedBaseModels}">
@@ -520,7 +549,7 @@
                                 </ListBox.Template>
                                 <ListBox.ItemTemplate>
                                     <DataTemplate DataType="{x:Type checkpointManager:BaseModelOptionViewModel}">
-                                        <TextBlock Text="{Binding ModelType}"/>
+                                        <TextBlock Text="{Binding ModelType}" />
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
@@ -528,9 +557,8 @@
                     </Flyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
-            
-            
-            
+
+
         </StackPanel>
         <ui:CommandBar
             Grid.Row="0"
@@ -556,19 +584,19 @@
                             <Grid ColumnDefinitions="Auto, Auto">
                                 <ui:SymbolIcon Grid.Column="0"
                                                Symbol="CloudDownload"
-                                               FontSize="18"/>
+                                               FontSize="18" />
                                 <TextBlock Grid.Column="1"
                                            Text="{x:Static lang:Resources.Label_FindConnectedMetadata}"
                                            Margin="8,0,0,0"
-                                           VerticalAlignment="Center"/>
+                                           VerticalAlignment="Center" />
                             </Grid>
                         </SplitButton.Content>
-                        
+
                         <SplitButton.Flyout>
-                            <ui:FAMenuFlyout 
+                            <ui:FAMenuFlyout
                                 Placement="Bottom">
                                 <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}"
-                                                   Command="{Binding UpdateExistingMetadataCommand}"/>
+                                                   Command="{Binding UpdateExistingMetadataCommand}" />
                             </ui:FAMenuFlyout>
                         </SplitButton.Flyout>
                     </SplitButton>
@@ -604,7 +632,7 @@
                         Title="{x:Static lang:Resources.TeachingTip_MoreCheckpointCategories}"
                         PreferredPlacement="Bottom"
                         IsOpen="{Binding IsCategoryTipOpen}" />
-        
+
         <!-- Metadata scan progress -->
         <StackPanel Grid.Row="1"
                     Grid.Column="0"
@@ -613,9 +641,9 @@
                     Orientation="Vertical">
             <TextBlock Text="{Binding Progress.Title}"
                        TextAlignment="Center"
-                       Margin="0,0,0,4"/>
+                       Margin="0,0,0,4" />
             <ProgressBar Value="{Binding Progress.Percentage}"
-                         Margin="16,4,16,16"/>
+                         Margin="16,4,16,16" />
         </StackPanel>
 
         <StackPanel

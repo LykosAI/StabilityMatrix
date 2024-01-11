@@ -63,6 +63,9 @@ public partial class CheckpointFile : ViewModelBase
     [ObservableProperty]
     private ProgressReport? progress;
 
+    [ObservableProperty]
+    private bool updateAvailable;
+
     public string FileName => Path.GetFileName(FilePath);
 
     public bool CanShowTriggerWords =>
@@ -210,6 +213,15 @@ public partial class CheckpointFile : ViewModelBase
                 Logger.Warn(e, $"Failed to rename checkpoint file {FilePath}");
             }
         }
+    }
+
+    [RelayCommand]
+    private void FindOnModelBrowser()
+    {
+        if (ConnectedModel?.ModelId == null)
+            return;
+
+        EventManager.Instance.OnNavigateAndFindCivitModelRequested(ConnectedModel.ModelId);
     }
 
     [RelayCommand]

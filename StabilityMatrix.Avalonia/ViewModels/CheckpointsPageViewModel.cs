@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -153,7 +152,6 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     public override void OnLoaded()
     {
         base.OnLoaded();
-
         var sw = Stopwatch.StartNew();
 
         // Set UI states
@@ -173,7 +171,6 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
 
         IsLoading = CheckpointFolders.Count == 0;
         IsIndexing = CheckpointFolders.Count > 0;
-        // GetStuff();
         IndexFolders();
         IsLoading = false;
         IsIndexing = false;

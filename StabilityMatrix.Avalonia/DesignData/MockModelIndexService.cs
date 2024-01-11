@@ -43,6 +43,11 @@ public class MockModelIndexService : IModelIndexService
         return Task.FromResult(false);
     }
 
+    public Task CheckModelsForUpdates()
+    {
+        return Task.CompletedTask;
+    }
+
     /// <inheritdoc />
     public void BackgroundRefreshIndex() { }
 }

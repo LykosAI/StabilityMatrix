@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
@@ -660,12 +659,10 @@ public partial class CheckpointFolder : ViewModelBase
         SubFoldersCache.EditDiff(updatedFolders, (a, b) => a.Title == b.Title);
 
         // Index files
+        var files = GetCheckpointFiles();
+
         Dispatcher.UIThread.Post(
-            () =>
-            {
-                var files = GetCheckpointFiles();
-                checkpointFilesCache.EditDiff(files, CheckpointFile.FilePathComparer);
-            },
+            () => checkpointFilesCache.EditDiff(files, CheckpointFile.FilePathComparer),
             DispatcherPriority.Background
         );
     }

@@ -1,7 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Windows.Input;
+using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using JetBrains.Annotations;
 
-namespace StabilityMatrix.Core.Models;
+namespace StabilityMatrix.Avalonia.Models;
 
 [PublicAPI]
 public class SelectableItem<T>(T item) : AbstractNotifyPropertyChanged, IEquatable<SelectableItem<T>>
@@ -16,6 +20,8 @@ public class SelectableItem<T>(T item) : AbstractNotifyPropertyChanged, IEquatab
         set => SetAndRaise(ref _isSelected, value);
     }
 
+    public ICommand ToggleSelectedCommand => new RelayCommand(() => IsSelected = !IsSelected); 
+    
     /// <inheritdoc />
     public bool Equals(SelectableItem<T>? other)
     {

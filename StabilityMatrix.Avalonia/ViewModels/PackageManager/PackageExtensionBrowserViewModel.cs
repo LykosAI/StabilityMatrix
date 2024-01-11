@@ -19,6 +19,7 @@ using FluentAvalonia.UI.Controls;
 using KGySoft.CoreLibraries;
 using StabilityMatrix.Avalonia.Collections;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;

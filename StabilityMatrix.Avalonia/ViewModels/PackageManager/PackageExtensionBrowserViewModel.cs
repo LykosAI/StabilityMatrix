@@ -10,14 +10,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
-using KGySoft.CoreLibraries;
 using StabilityMatrix.Avalonia.Collections;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -153,6 +152,9 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     [RelayCommand]
     public async Task InstallSelectedExtensions()
     {
+        if (!await BeforeInstallCheck())
+            return;
+
         var extensions = SelectedAvailableItems
             .Select(item => item.Item)
             .Where(extension => !extension.IsInstalled)
@@ -375,6 +377,43 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         {
             item.IsSelected = false;
         }
+    }
+
+    private async Task<bool> BeforeInstallCheck()
+    {
+        if (
+            !settingsManager.Settings.SeenTeachingTips.Contains(
+                Core.Models.Settings.TeachingTip.PackageExtensionsInstallNotice
+            )
+        )
+        {
+            var dialog = new BetterContentDialog
+            {
+                Title = "Installing Extensions",
+                Content = """
+                          Extensions, the extension index, and their dependencies are community provided and not verified by the Stability Matrix team. 
+                          
+                          The install process may invoke external programs and scripts.
+                          
+                          Please review the extension's source code and applicable licenses before installing.
+                          """,
+                PrimaryButtonText = Resources.Action_Continue,
+                CloseButtonText = Resources.Action_Cancel,
+                DefaultButton = ContentDialogButton.Primary,
+                MaxDialogWidth = 400
+            };
+
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            {
+                return false;
+            }
+
+            settingsManager.Transaction(
+                s => s.SeenTeachingTips.Add(Core.Models.Settings.TeachingTip.PackageExtensionsInstallNotice)
+            );
+        }
+
+        return true;
     }
 
     [Pure]

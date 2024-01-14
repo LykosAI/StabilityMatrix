@@ -249,6 +249,20 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
 
     [UnsupportedOSPlatform("Linux")]
     [UnsupportedOSPlatform("macOS")]
+    public Task RunNpm(ProcessArgs args, string? workingDirectory = null)
+    {
+        throw new PlatformNotSupportedException();
+    }
+
+    [UnsupportedOSPlatform("Linux")]
+    [UnsupportedOSPlatform("macOS")]
+    public Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        throw new PlatformNotSupportedException();
+    }
+
+    [UnsupportedOSPlatform("Linux")]
+    [UnsupportedOSPlatform("macOS")]
     public Task InstallVcRedistIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         throw new PlatformNotSupportedException();

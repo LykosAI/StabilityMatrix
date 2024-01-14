@@ -71,3 +71,8 @@ public partial class ProcessArgs : OneOfBase<string, string[]>, IEnumerable<stri
     [GeneratedRegex("""[\"].+?[\"]|[^ ]+""", RegexOptions.IgnoreCase)]
     private static partial Regex ArgumentsRegex();
 }
+
+public static class ProcessArgsCollectionBuilder
+{
+    public static ProcessArgs Create(ReadOnlySpan<string> values) => new(values.ToArray());
+}

@@ -37,7 +37,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     public string GitBinPath => PortableGitInstallDir + "bin";
 
     private DirectoryPath NodeDir => AssetsDir.JoinDir("nodejs");
-    private string NpmPath => Path.Combine(NodeDir, "bin", "npm");
+    private string NpmPath => Path.Combine(NodeDir, "lib", "node_modules", "npm", "bin", "npm");
     private bool IsNodeInstalled => File.Exists(NpmPath);
 
     // Cached store of whether or not git is installed
@@ -239,7 +239,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     [SupportedOSPlatform("macOS")]
     public async Task RunNpm(ProcessArgs args, string? workingDirectory = null)
     {
-        var command = args.Prepend(NpmPath);
+        var command = args.Prepend([NpmPath]);
 
         var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "");
         if (result.ExitCode != 0)

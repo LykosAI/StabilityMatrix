@@ -34,20 +34,21 @@ public static class ProcessRunner
     /// </summary>
     public static Process StartApp(string path, ProcessArgs args)
     {
+        var startInfo = new ProcessStartInfo();
+
         if (Compat.IsMacOS)
         {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "open",
-                Arguments = args.Prepend([path, "--args"]),
-                UseShellExecute = true
-            };
-
-            return Process.Start(startInfo)
-                ?? throw new NullReferenceException("Process.Start returned null");
+            startInfo.FileName = "open";
+            startInfo.Arguments = args.Prepend(path).ToString();
+            startInfo.UseShellExecute = true;
+        }
+        else
+        {
+            startInfo.FileName = path;
+            startInfo.Arguments = args;
         }
 
-        return Process.Start(args.Prepend(path));
+        return Process.Start(startInfo) ?? throw new NullReferenceException("Process.Start returned null");
     }
 
     /// <summary>

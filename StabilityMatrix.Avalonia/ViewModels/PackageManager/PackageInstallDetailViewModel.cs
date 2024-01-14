@@ -91,6 +91,9 @@ public partial class PackageInstallDetailViewModel(
 
         OnInstallNameChanged(InstallName);
 
+        SelectedTorchVersion = SelectedPackage.GetRecommendedTorchVersion();
+        SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
+
         allOptions = await SelectedPackage.GetAllVersionOptions();
         if (ShowReleaseMode)
         {
@@ -101,9 +104,6 @@ public partial class PackageInstallDetailViewModel(
             UpdateVersions();
             await UpdateCommits(SelectedPackage.MainBranch);
         }
-
-        SelectedTorchVersion = SelectedPackage.GetRecommendedTorchVersion();
-        SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
     }
 
     [RelayCommand]

@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Inference file name patterns with directory separator characters will now have the subdirectories created automatically
 - Fixed missing up/downgrade buttons on the Python Packages dialog when the version was not semver compatible
+- Automatic1111 package installs will now install the missing `jsonmerge` package
 
 ## v2.8.0-dev.4
 ### Added

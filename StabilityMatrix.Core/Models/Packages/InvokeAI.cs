@@ -193,7 +193,7 @@ public class InvokeAI : BaseGitPackage
 
         var process = ProcessRunner.StartProcess(
             pnpmPath,
-            "i",
+            "i --ignore-scripts=true",
             invokeFrontendPath,
             s => onConsoleOutput?.Invoke(new ProcessOutput { Text = s }),
             venvRunner.EnvironmentVariables
@@ -425,6 +425,8 @@ public class InvokeAI : BaseGitPackage
         }
 
         env["PATH"] += $"{Compat.PathDelimiter}{Path.Combine(installPath, "node_modules", ".bin")}";
+        env["PATH"] +=
+            $"{Compat.PathDelimiter}{Path.Combine(installPath, "invokeai", "frontend", "web", "node_modules", ".bin")}";
 
         if (Compat.IsMacOS || Compat.IsLinux)
         {

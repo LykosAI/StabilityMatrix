@@ -37,7 +37,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     public string GitBinPath => PortableGitInstallDir + "bin";
 
     private DirectoryPath NodeDir => AssetsDir.JoinDir("nodejs");
-    private string NpmPath => Path.Combine(NodeDir, "lib", "node_modules", "npm", "bin", "npm");
+    private string NpmPath => Path.Combine(NodeDir, "bin", "npm");
     private bool IsNodeInstalled => File.Exists(NpmPath);
 
     // Cached store of whether or not git is installed
@@ -284,9 +284,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
             ? "https://nodejs.org/dist/v20.11.0/node-v20.11.0-darwin-arm64.tar.gz"
             : "https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz";
 
-        var nodeDownloadPath = Compat.IsMacOS
-            ? Path.Combine(AssetsDir, "nodejs.tar.gz")
-            : Path.Combine(AssetsDir, "nodejs.tar.xz");
+        var nodeDownloadPath = AssetsDir.JoinFile(Path.GetFileName(downloadUrl));
 
         await downloadService.DownloadToFileAsync(downloadUrl, nodeDownloadPath, progress: progress);
 
@@ -301,7 +299,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         );
 
         // unzip
-        await ArchiveHelper.ExtractManaged(nodeDownloadPath, AssetsDir);
+        await ArchiveHelper.Extract7ZAuto(nodeDownloadPath, AssetsDir);
 
         var nodeDir = Compat.IsMacOS
             ? AssetsDir.JoinDir("node-v20.11.0-darwin-arm64")

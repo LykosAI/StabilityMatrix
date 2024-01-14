@@ -183,14 +183,20 @@ public class InvokeAI : BaseGitPackage
         await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
         await PrerequisiteHelper.RunNpm(["i", "pnpm"], installLocation).ConfigureAwait(false);
 
-        var pnpmPath = Path.Combine(installLocation, "node_modules", ".bin", "pnpm.cmd");
+        var pnpmPath = Path.Combine(
+            installLocation,
+            "node_modules",
+            ".bin",
+            Compat.IsWindows ? "pnpm.cmd" : "pnpm"
+        );
         var invokeFrontendPath = Path.Combine(installLocation, "invokeai", "frontend", "web");
 
         var process = ProcessRunner.StartProcess(
             pnpmPath,
             "i",
             invokeFrontendPath,
-            s => onConsoleOutput?.Invoke(new ProcessOutput { Text = s })
+            s => onConsoleOutput?.Invoke(new ProcessOutput { Text = s }),
+            venvRunner.EnvironmentVariables
         );
 
         await process.WaitForExitAsync().ConfigureAwait(false);
@@ -199,7 +205,8 @@ public class InvokeAI : BaseGitPackage
             pnpmPath,
             "build",
             invokeFrontendPath,
-            s => onConsoleOutput?.Invoke(new ProcessOutput { Text = s })
+            s => onConsoleOutput?.Invoke(new ProcessOutput { Text = s }),
+            venvRunner.EnvironmentVariables
         );
 
         await process.WaitForExitAsync().ConfigureAwait(false);
@@ -406,6 +413,20 @@ public class InvokeAI : BaseGitPackage
         var root = installPath.JoinDir(RelativeRootPath);
         root.Create();
         env["INVOKEAI_ROOT"] = root;
+
+        if (env.ContainsKey("PATH"))
+        {
+            env["PATH"] += $";{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs")}";
+        }
+        else
+        {
+            env["PATH"] = Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs");
+        }
+
+        if (Compat.IsMacOS || Compat.IsLinux)
+        {
+            env["PATH"] += $";{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs", "bin")}";
+        }
 
         return env;
     }

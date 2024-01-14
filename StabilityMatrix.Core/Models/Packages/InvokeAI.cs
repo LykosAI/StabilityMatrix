@@ -424,10 +424,18 @@ public class InvokeAI : BaseGitPackage
             env["PATH"] = Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs");
         }
 
+        env["PATH"] += $"{Compat.PathDelimiter}{Path.Combine(installPath, "node_modules", ".bin")}";
+
         if (Compat.IsMacOS || Compat.IsLinux)
         {
             env["PATH"] +=
                 $"{Compat.PathDelimiter}{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs", "bin")}";
+        }
+
+        if (Compat.IsWindows)
+        {
+            env["PATH"] +=
+                $"{Compat.PathDelimiter}{Environment.GetFolderPath(Environment.SpecialFolder.System)}";
         }
 
         return env;

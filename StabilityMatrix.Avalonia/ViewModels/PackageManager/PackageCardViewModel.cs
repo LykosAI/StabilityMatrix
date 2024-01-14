@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -75,6 +78,9 @@ public partial class PackageCardViewModel : ProgressViewModel
     [ObservableProperty]
     private bool canUseSharedOutput;
 
+    [ObservableProperty]
+    private bool canUseExtensions;
+
     public PackageCardViewModel(
         ILogger<PackageCardViewModel> logger,
         IPackageFactory packageFactory,
@@ -119,6 +125,7 @@ public partial class PackageCardViewModel : ProgressViewModel
                 basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Symlink) ?? false;
             UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
             CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
+            CanUseExtensions = basePackage?.SupportsExtensions ?? false;
         }
     }
 
@@ -373,6 +380,36 @@ public partial class PackageCardViewModel : ProgressViewModel
         });
 
         await vm.GetDialog().ShowAsync();
+    }
+
+    [RelayCommand]
+    public async Task OpenExtensionsDialog()
+    {
+        if (
+            Package is not { FullPath: not null }
+            || packageFactory.GetPackagePair(Package) is not { } packagePair
+        )
+            return;
+
+        var vm = vmFactory.Get<PackageExtensionBrowserViewModel>(vm =>
+        {
+            vm.PackagePair = packagePair;
+        });
+
+        var dialog = new BetterContentDialog
+        {
+            Content = vm,
+            MinDialogWidth = 850,
+            MaxDialogHeight = 1100,
+            MaxDialogWidth = 850,
+            ContentMargin = new Thickness(16, 32),
+            CloseOnClickOutside = true,
+            FullSizeDesired = true,
+            IsFooterVisible = false,
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+
+        await dialog.ShowAsync();
     }
 
     [RelayCommand]

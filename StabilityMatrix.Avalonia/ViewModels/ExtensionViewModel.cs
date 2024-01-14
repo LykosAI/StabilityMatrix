@@ -9,5 +9,5 @@ public partial class ExtensionViewModel() : ViewModelBase
     [ObservableProperty]
     private bool isSelected;
 
-    public ExtensionBase Extension { get; init; }
+    public PackageExtension PackageExtension { get; init; }
 }

@@ -1,0 +1,37 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fluentIcons="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+        xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters">
+    <Design.PreviewWith>
+        <Panel MinWidth="300">
+            <StackPanel Margin="16" Spacing="6">
+                <TextBox Classes="search" />
+                <TextBox Classes="search" Text="Some Text" />
+            </StackPanel>
+        </Panel>
+    </Design.PreviewWith>
+    
+    <Styles.Resources>
+        <converters:FuncCommandConverter x:Key="FuncCommandConverter"/>
+    </Styles.Resources>
+
+    <!-- Success -->
+    <Style Selector="TextBox.search">
+        <Setter Property="InnerRightContent">
+            <Template>
+                <Grid>
+                    <Button Classes="transparent-full"
+                            IsVisible="{Binding $parent[TextBox].Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                            Command="{Binding $parent[TextBox], Converter={StaticResource FuncCommandConverter}, ConverterParameter=Clear}">
+                        <fluentIcons:SymbolIcon Symbol="Cancel" />
+                    </Button>
+                    <fluentIcons:SymbolIcon
+                        IsVisible="{Binding $parent[TextBox].Text, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+                        Margin="0,0,10,0"
+                        FontSize="16"
+                        Symbol="Find" />
+                </Grid>
+            </Template>
+        </Setter>
+    </Style>
+</Styles>

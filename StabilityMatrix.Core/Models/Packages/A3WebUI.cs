@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using NLog;
@@ -7,6 +8,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -175,6 +177,8 @@ public class A3WebUI(
 
     public override string OutputFolderName => "outputs";
 
+    public override IPackageExtensionManager ExtensionManager => new A3WebUiExtensionManager(this);
+
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
@@ -267,5 +271,39 @@ public class A3WebUI(
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+    }
+
+    private class A3WebUiExtensionManager(A3WebUI package)
+        : GitPackageExtensionManager(package.PrerequisiteHelper)
+    {
+        public override string RelativeInstallDirectory => "extensions";
+
+        public override IEnumerable<ExtensionManifest> DefaultManifests =>
+            [
+                new ExtensionManifest(
+                    new Uri(
+                        "https://raw.githubusercontent.com/AUTOMATIC1111/stable-diffusion-webui-extensions/master/index.json"
+                    )
+                )
+            ];
+
+        public override async Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(
+            ExtensionManifest manifest,
+            CancellationToken cancellationToken = default
+        )
+        {
+            // Get json
+            var content = await package
+                .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
+                .ConfigureAwait(false);
+
+            // Parse json
+            var jsonManifest = JsonSerializer.Deserialize<A1111ExtensionManifest>(
+                content,
+                A1111ExtensionManifestSerializerContext.Default.Options
+            );
+
+            return jsonManifest?.GetPackageExtensions() ?? Enumerable.Empty<PackageExtension>();
+        }
     }
 }

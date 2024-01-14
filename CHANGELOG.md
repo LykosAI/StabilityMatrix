@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.8.0-pre.1
 ### Added
+- Added Package Extensions (Plugins) management - accessible from the Packages' 3-dot menu. Currently supports ComfyUI and A1111.
 - Added base model filter to Checkpoints page
 - Search box on Checkpoints page now searches tags and trigger words
 - Added "Compatible Images" category when selecting images for Inference projects
@@ -56,6 +57,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### Inference
 - Added image and model details in model selection boxes
 - Added CLIP Skip setting, toggleable from the model settings button
+
+## v2.7.8
+### Changed
+- Python Packages install dialog now allows entering multiple arguments or option flags
+### Fixed
+- Fixed InvokeAI Package dependency versions ([#395](https://github.com/LykosAI/StabilityMatrix/pull/395))
 
 ## v2.7.7
 ### Added

@@ -112,13 +112,19 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         );
     }
 
-    public async Task RunNpm(ProcessArgs args, string? workingDirectory = null)
+    public async Task RunNpm(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null
+    )
     {
         var result = await ProcessRunner
             .GetProcessResultAsync(NodeExistsPath, args, workingDirectory)
             .ConfigureAwait(false);
 
         result.EnsureSuccessExitCode();
+        onProcessOutput?.Invoke(ProcessOutput.FromStdOutLine(result.StandardOutput));
+        onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
     }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)

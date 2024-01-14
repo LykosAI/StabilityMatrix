@@ -183,12 +183,25 @@ public class InvokeAI : BaseGitPackage
         await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
         await PrerequisiteHelper.RunNpm(["i", "pnpm"], installLocation).ConfigureAwait(false);
 
+        if (Compat.IsMacOS || Compat.IsLinux)
+        {
+            await PrerequisiteHelper.RunNpm(["i", "vite"], installLocation).ConfigureAwait(false);
+        }
+
         var pnpmPath = Path.Combine(
             installLocation,
             "node_modules",
             ".bin",
             Compat.IsWindows ? "pnpm.cmd" : "pnpm"
         );
+
+        var vitePath = Path.Combine(
+            installLocation,
+            "node_modules",
+            ".bin",
+            Compat.IsWindows ? "vite.cmd" : "vite"
+        );
+
         var invokeFrontendPath = Path.Combine(installLocation, "invokeai", "frontend", "web");
 
         var process = ProcessRunner.StartProcess(
@@ -202,7 +215,7 @@ public class InvokeAI : BaseGitPackage
         await process.WaitForExitAsync().ConfigureAwait(false);
 
         process = ProcessRunner.StartProcess(
-            pnpmPath,
+            Compat.IsWindows ? pnpmPath : vitePath,
             "build",
             invokeFrontendPath,
             s => onConsoleOutput?.Invoke(new ProcessOutput { Text = s }),
@@ -423,10 +436,7 @@ public class InvokeAI : BaseGitPackage
         {
             env["PATH"] = Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs");
         }
-
         env["PATH"] += $"{Compat.PathDelimiter}{Path.Combine(installPath, "node_modules", ".bin")}";
-        env["PATH"] +=
-            $"{Compat.PathDelimiter}{Path.Combine(installPath, "invokeai", "frontend", "web", "node_modules", ".bin")}";
 
         if (Compat.IsMacOS || Compat.IsLinux)
         {

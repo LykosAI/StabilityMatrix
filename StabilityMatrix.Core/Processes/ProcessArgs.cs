@@ -70,7 +70,7 @@ public partial class ProcessArgs : OneOfBase<string, string[]>, IEnumerable<stri
     private static partial Regex ArgumentsRegex();
 }
 
-internal static class ProcessArgsCollectionBuilder
+public static class ProcessArgsCollectionBuilder
 {
-    internal static ProcessArgs Create(ReadOnlySpan<string> values) => new(values.ToArray());
+    public static ProcessArgs Create(ReadOnlySpan<string> values) => new(values.ToArray());
 }

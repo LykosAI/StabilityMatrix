@@ -1,4 +1,5 @@
-﻿using Octokit;
+﻿using System.Diagnostics.CodeAnalysis;
+using Octokit;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Database;
@@ -157,6 +158,17 @@ public abstract class BasePackage
     /// </summary>
     public abstract Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
     public abstract Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
+
+    /// <summary>
+    /// If defined, this package supports extensions using this manager.
+    /// </summary>
+    public virtual IPackageExtensionManager? ExtensionManager => null;
+
+    /// <summary>
+    /// True if this package supports extensions.
+    /// </summary>
+    [MemberNotNullWhen(true, nameof(ExtensionManager))]
+    public virtual bool SupportsExtensions => ExtensionManager is not null;
 
     public abstract Task<PackageVersionOptions> GetAllVersionOptions();
     public abstract Task<IEnumerable<GitCommit>?> GetAllCommits(

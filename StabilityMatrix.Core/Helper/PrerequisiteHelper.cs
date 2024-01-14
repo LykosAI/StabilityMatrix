@@ -90,14 +90,16 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         result.EnsureSuccessExitCode();
     }
 
+    /// <inheritdoc />
+    public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)
     {
         var output = await ProcessRunner
-            .GetProcessOutputAsync(
-                GitExePath,
-                string.Join(" ", args),
-                workingDirectory: workingDirectory
-            )
+            .GetProcessOutputAsync(GitExePath, string.Join(" ", args), workingDirectory: workingDirectory)
             .ConfigureAwait(false);
         return output;
     }
@@ -195,11 +197,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         // Skip if all files exist
-        if (
-            File.Exists(SevenZipPath)
-            && File.Exists(PythonDllPath)
-            && File.Exists(PythonLibraryZipPath)
-        )
+        if (File.Exists(SevenZipPath) && File.Exists(PythonDllPath) && File.Exists(PythonLibraryZipPath))
         {
             return;
         }
@@ -273,10 +271,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
             if (!File.Exists(SevenZipPath))
             {
                 await ExtractEmbeddedResource("StabilityMatrix.Assets.7za.exe", AssetsDir);
-                await ExtractEmbeddedResource(
-                    "StabilityMatrix.Assets.7za - LICENSE.txt",
-                    AssetsDir
-                );
+                await ExtractEmbeddedResource("StabilityMatrix.Assets.7za - LICENSE.txt", AssetsDir);
             }
 
             // Delete existing python dir
@@ -356,10 +351,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     public async Task InstallVcRedistIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         var registry = Registry.LocalMachine;
-        var key = registry.OpenSubKey(
-            @"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64",
-            false
-        );
+        var key = registry.OpenSubKey(@"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64", false);
         if (key != null)
         {
             var buildId = Convert.ToUInt32(key.GetValue("Bld"));
@@ -393,10 +385,7 @@ public class PrerequisiteHelper : IPrerequisiteHelper
                 message: "Installing prerequisites..."
             )
         );
-        var process = ProcessRunner.StartAnsiProcess(
-            VcRedistDownloadPath,
-            "/install /quiet /norestart"
-        );
+        var process = ProcessRunner.StartAnsiProcess(VcRedistDownloadPath, "/install /quiet /norestart");
         await process.WaitForExitAsync();
         progress?.Report(
             new ProgressReport(

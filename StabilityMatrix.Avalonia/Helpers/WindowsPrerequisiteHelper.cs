@@ -96,19 +96,17 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         result.EnsureSuccessExitCode();
     }
 
-    public async Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)
+    public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
     {
-        var process = await ProcessRunner.GetProcessOutputAsync(
+        return ProcessRunner.GetProcessResultAsync(
             GitExePath,
-            string.Join(" ", args),
+            args,
             workingDirectory: workingDirectory,
             environmentVariables: new Dictionary<string, string>
             {
                 { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) }
             }
         );
-
-        return process;
     }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -122,15 +120,9 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         // Array of (asset_uri, extract_to)
-        var assets = new[]
-        {
-            (Assets.SevenZipExecutable, AssetsDir),
-            (Assets.SevenZipLicense, AssetsDir),
-        };
+        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir), };
 
-        progress?.Report(
-            new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true));
 
         Directory.CreateDirectory(AssetsDir);
         foreach (var (asset, extractDir) in assets)
@@ -138,9 +130,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
             await asset.ExtractToDir(extractDir);
         }
 
-        progress?.Report(
-            new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false)
-        );
+        progress?.Report(new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false));
     }
 
     public async Task InstallPythonIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -262,11 +252,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         if (!Directory.Exists(TkinterExistsPath))
         {
             Logger.Info("Downloading Tkinter");
-            await downloadService.DownloadToFileAsync(
-                TkinterDownloadUrl,
-                TkinterZipPath,
-                progress: progress
-            );
+            await downloadService.DownloadToFileAsync(TkinterDownloadUrl, TkinterZipPath, progress: progress);
             progress?.Report(
                 new ProgressReport(
                     progress: 1f,
@@ -281,11 +267,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         }
 
         progress?.Report(
-            new ProgressReport(
-                progress: 1f,
-                message: "Tkinter install complete",
-                type: ProgressType.Generic
-            )
+            new ProgressReport(progress: 1f, message: "Tkinter install complete", type: ProgressType.Generic)
         );
     }
 
@@ -319,10 +301,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     public async Task InstallVcRedistIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         var registry = Registry.LocalMachine;
-        var key = registry.OpenSubKey(
-            @"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64",
-            false
-        );
+        var key = registry.OpenSubKey(@"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64", false);
         if (key != null)
         {
             var buildId = Convert.ToUInt32(key.GetValue("Bld"));
@@ -356,10 +335,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
                 message: "Installing prerequisites..."
             )
         );
-        var process = ProcessRunner.StartAnsiProcess(
-            VcRedistDownloadPath,
-            "/install /quiet /norestart"
-        );
+        var process = ProcessRunner.StartAnsiProcess(VcRedistDownloadPath, "/install /quiet /norestart");
         await process.WaitForExitAsync();
         progress?.Report(
             new ProgressReport(

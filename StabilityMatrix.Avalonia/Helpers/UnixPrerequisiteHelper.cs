@@ -66,15 +66,9 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         // Array of (asset_uri, extract_to)
-        var assets = new[]
-        {
-            (Assets.SevenZipExecutable, AssetsDir),
-            (Assets.SevenZipLicense, AssetsDir),
-        };
+        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir), };
 
-        progress?.Report(
-            new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true));
 
         Directory.CreateDirectory(AssetsDir);
         foreach (var (asset, extractDir) in assets)
@@ -82,9 +76,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
             await asset.ExtractToDir(extractDir);
         }
 
-        progress?.Report(
-            new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false)
-        );
+        progress?.Report(new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false));
     }
 
     public async Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -146,8 +138,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         if (result.ExitCode != 0)
         {
             Logger.Error(
-                "Git command [{Command}] failed with exit code "
-                    + "{ExitCode}:\n{StdOut}\n{StdErr}",
+                "Git command [{Command}] failed with exit code " + "{ExitCode}:\n{StdOut}\n{StdErr}",
                 command,
                 result.ExitCode,
                 result.StandardOutput,
@@ -235,9 +226,9 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         progress?.Report(new ProgressReport(1, "Installing Python", isIndeterminate: false));
     }
 
-    public Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)
+    public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
     {
-        throw new NotImplementedException();
+        return ProcessRunner.RunBashCommand(args.Prepend("git").ToArray(), workingDirectory ?? "");
     }
 
     [UnsupportedOSPlatform("Linux")]

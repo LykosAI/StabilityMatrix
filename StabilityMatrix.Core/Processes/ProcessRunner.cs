@@ -30,6 +30,27 @@ public static class ProcessRunner
     }
 
     /// <summary>
+    /// Start an executable or .app on macOS.
+    /// </summary>
+    public static Process StartApp(string path, ProcessArgs args)
+    {
+        if (Compat.IsMacOS)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "open",
+                Arguments = args.Prepend([path, "--args"]),
+                UseShellExecute = true
+            };
+
+            return Process.Start(startInfo)
+                ?? throw new NullReferenceException("Process.Start returned null");
+        }
+
+        return Process.Start(args.Prepend(path));
+    }
+
+    /// <summary>
     /// Opens the given folder in the system file explorer.
     /// </summary>
     public static async Task OpenFolderBrowser(string directoryPath)
@@ -92,7 +113,7 @@ public static class ProcessRunner
         else if (Compat.IsMacOS)
         {
             using var process = new Process();
-            process.StartInfo.FileName = "explorer";
+            process.StartInfo.FileName = "open";
             process.StartInfo.Arguments = $"-R {Quote(filePath)}";
             process.Start();
             await process.WaitForExitAsync().ConfigureAwait(false);
@@ -331,19 +352,10 @@ public static class ProcessRunner
     {
         // Quote arguments containing spaces
         var args = string.Join(" ", arguments.Where(s => !string.IsNullOrEmpty(s)).Select(Quote));
-        return StartAnsiProcess(
-            fileName,
-            args,
-            workingDirectory,
-            outputDataReceived,
-            environmentVariables
-        );
+        return StartAnsiProcess(fileName, args, workingDirectory, outputDataReceived, environmentVariables);
     }
 
-    public static async Task<ProcessResult> RunBashCommand(
-        string command,
-        string workingDirectory = ""
-    )
+    public static async Task<ProcessResult> RunBashCommand(string command, string workingDirectory = "")
     {
         // Escape any single quotes in the command
         var escapedCommand = command.Replace("\"", "\\\"");

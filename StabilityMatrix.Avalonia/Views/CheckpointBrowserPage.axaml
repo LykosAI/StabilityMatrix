@@ -14,5 +14,6 @@
                           x:DataType="viewModels:CheckpointBrowserViewModel"
                           mc:Ignorable="d"
                           x:Class="StabilityMatrix.Avalonia.Views.CheckpointBrowserPage">
-        <TabControl ItemsSource="{Binding Pages}"/>
+        <TabControl ItemsSource="{Binding Pages}"
+                    SelectedItem="{Binding SelectedPage}"/>
 </controls:UserControlBase>

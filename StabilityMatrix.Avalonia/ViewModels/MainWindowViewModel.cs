@@ -112,10 +112,7 @@ public partial class MainWindowViewModel : ViewModelBase
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
         Logger.Info($"App started ({startupTime})");
 
-        if (
-            Program.Args.DebugOneClickInstall
-            || settingsManager.Settings.InstalledPackages.Count == 0
-        )
+        if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Count == 0)
         {
             var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
             var dialog = new BetterContentDialog
@@ -148,8 +145,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 .Where(p => p.GetType().GetCustomAttributes(typeof(PreloadAttribute), true).Any())
         )
         {
-            Dispatcher.UIThread
-                .InvokeAsync(
+            Dispatcher
+                .UIThread.InvokeAsync(
                     async () =>
                     {
                         var stopwatch = Stopwatch.StartNew();

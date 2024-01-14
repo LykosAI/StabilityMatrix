@@ -708,6 +708,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Augmentation Level.
+        /// </summary>
+        public static string Label_AugmentationLevel {
+            get {
+                return ResourceManager.GetString("Label_AugmentationLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Auto Completion.
         /// </summary>
         public static string Label_AutoCompletion {
@@ -830,6 +839,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_CivitAiLoginRequired {
             get {
                 return ResourceManager.GetString("Label_CivitAiLoginRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CLIP Skip.
+        /// </summary>
+        public static string Label_CLIPSkip {
+            get {
+                return ResourceManager.GetString("Label_CLIPSkip", resourceCulture);
             }
         }
         
@@ -1167,6 +1185,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Find in Model Browser.
+        /// </summary>
+        public static string Label_FindInModelBrowser {
+            get {
+                return ResourceManager.GetString("Label_FindInModelBrowser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to First Page.
         /// </summary>
         public static string Label_FirstPage {
@@ -1181,6 +1208,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Folder {
             get {
                 return ResourceManager.GetString("Label_Folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Frames Per Second.
+        /// </summary>
+        public static string Label_Fps {
+            get {
+                return ResourceManager.GetString("Label_Fps", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Frames.
+        /// </summary>
+        public static string Label_Frames {
+            get {
+                return ResourceManager.GetString("Label_Frames", resourceCulture);
             }
         }
         
@@ -1226,6 +1271,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ImageToImage {
             get {
                 return ResourceManager.GetString("Label_ImageToImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Image to Video.
+        /// </summary>
+        public static string Label_ImageToVideo {
+            get {
+                return ResourceManager.GetString("Label_ImageToVideo", resourceCulture);
             }
         }
         
@@ -1428,6 +1482,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Lossless.
+        /// </summary>
+        public static string Label_Lossless {
+            get {
+                return ResourceManager.GetString("Label_Lossless", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min CFG.
+        /// </summary>
+        public static string Label_MinCfg {
+            get {
+                return ResourceManager.GetString("Label_MinCfg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing Image File.
         /// </summary>
         public static string Label_MissingImageFile {
@@ -1478,6 +1550,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ModelType {
             get {
                 return ResourceManager.GetString("Label_ModelType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Motion Bucket ID.
+        /// </summary>
+        public static string Label_MotionBucketId {
+            get {
+                return ResourceManager.GetString("Label_MotionBucketId", resourceCulture);
             }
         }
         
@@ -2153,6 +2234,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_VersionType {
             get {
                 return ResourceManager.GetString("Label_VersionType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Method.
+        /// </summary>
+        public static string Label_VideoOutputMethod {
+            get {
+                return ResourceManager.GetString("Label_VideoOutputMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quality.
+        /// </summary>
+        public static string Label_VideoQuality {
+            get {
+                return ResourceManager.GetString("Label_VideoQuality", resourceCulture);
             }
         }
         

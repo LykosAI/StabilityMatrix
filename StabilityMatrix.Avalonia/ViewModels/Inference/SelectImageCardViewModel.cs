@@ -96,13 +96,21 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
         }
     }
 
+    private static FilePickerFileType SupportedImages { get; } =
+        new("Supported Images")
+        {
+            Patterns = new[] { "*.png", "*.jpg", "*.jpeg" },
+            AppleUniformTypeIdentifiers = new[] { "public.jpeg", "public.png" },
+            MimeTypes = new[] { "image/jpeg", "image/png" }
+        };
+
     [RelayCommand]
     private async Task SelectImageFromFilePickerAsync()
     {
         var files = await App.StorageProvider.OpenFilePickerAsync(
             new FilePickerOpenOptions
             {
-                FileTypeFilter = [FilePickerFileTypes.ImagePng, FilePickerFileTypes.ImageJpg]
+                FileTypeFilter = [FilePickerFileTypes.ImagePng, FilePickerFileTypes.ImageJpg, SupportedImages]
             }
         );
 

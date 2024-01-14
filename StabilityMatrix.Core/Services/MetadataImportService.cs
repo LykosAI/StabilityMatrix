@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -236,7 +237,7 @@ public class MetadataImportService(
                 new ProgressReport(
                     current: report.Current ?? 0,
                     total: report.Total ?? 0,
-                    $"Getting metadata for {filePath} ... {report.Percentage}%"
+                    $"Getting metadata for {fileNameWithoutExtension} ... {report.Percentage}%"
                 )
             );
         });

@@ -1,14 +1,11 @@
-﻿using System.Linq;
-using System.Text.Json.Nodes;
+﻿using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Newtonsoft.Json;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Extensions;
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;

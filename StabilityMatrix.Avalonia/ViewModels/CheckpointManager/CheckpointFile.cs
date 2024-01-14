@@ -63,6 +63,9 @@ public partial class CheckpointFile : ViewModelBase
     [ObservableProperty]
     private ProgressReport? progress;
 
+    [ObservableProperty]
+    private bool updateAvailable;
+
     public string FileName => Path.GetFileName(FilePath);
 
     public bool CanShowTriggerWords =>
@@ -70,7 +73,14 @@ public partial class CheckpointFile : ViewModelBase
 
     public ObservableCollection<string> Badges { get; set; } = new();
 
-    public static readonly string[] SupportedCheckpointExtensions = { ".safetensors", ".pt", ".ckpt", ".pth", ".bin" };
+    public static readonly string[] SupportedCheckpointExtensions =
+    {
+        ".safetensors",
+        ".pt",
+        ".ckpt",
+        ".pth",
+        ".bin"
+    };
     private static readonly string[] SupportedImageExtensions = { ".png", ".jpg", ".jpeg", ".gif" };
     private static readonly string[] SupportedMetadataExtensions = { ".json" };
 
@@ -95,7 +105,9 @@ public partial class CheckpointFile : ViewModelBase
     {
         if (string.IsNullOrEmpty(FilePath))
         {
-            throw new InvalidOperationException("Cannot get connected model info file path when FilePath is empty");
+            throw new InvalidOperationException(
+                "Cannot get connected model info file path when FilePath is empty"
+            );
         }
         var modelNameNoExt = Path.GetFileNameWithoutExtension((string?)FilePath);
         var modelDir = Path.GetDirectoryName((string?)FilePath) ?? "";
@@ -204,6 +216,15 @@ public partial class CheckpointFile : ViewModelBase
     }
 
     [RelayCommand]
+    private void FindOnModelBrowser()
+    {
+        if (ConnectedModel?.ModelId == null)
+            return;
+
+        EventManager.Instance.OnNavigateAndFindCivitModelRequested(ConnectedModel.ModelId);
+    }
+
+    [RelayCommand]
     private void OpenOnCivitAi()
     {
         if (ConnectedModel?.ModelId == null)
@@ -225,9 +246,20 @@ public partial class CheckpointFile : ViewModelBase
     }
 
     [RelayCommand]
+    private Task CopyModelUrl()
+    {
+        return ConnectedModel == null
+            ? Task.CompletedTask
+            : App.Clipboard.SetTextAsync($"https://civitai.com/models/{ConnectedModel.ModelId}");
+    }
+
+    [RelayCommand]
     private async Task FindConnectedMetadata(bool forceReimport = false)
     {
-        if (App.Services.GetService(typeof(IMetadataImportService)) is not IMetadataImportService importService)
+        if (
+            App.Services.GetService(typeof(IMetadataImportService))
+            is not IMetadataImportService importService
+        )
             return;
 
         IsLoading = true;
@@ -298,7 +330,9 @@ public partial class CheckpointFile : ViewModelBase
             }
 
             checkpointFile.PreviewImagePath = SupportedImageExtensions
-                .Select(ext => Path.Combine(directory, $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}"))
+                .Select(
+                    ext => Path.Combine(directory, $"{Path.GetFileNameWithoutExtension(file)}.preview{ext}")
+                )
                 .Where(File.Exists)
                 .FirstOrDefault();
 
@@ -324,7 +358,11 @@ public partial class CheckpointFile : ViewModelBase
             )
                 continue;
 
-            var checkpointFile = new CheckpointFile { Title = Path.GetFileNameWithoutExtension(file), FilePath = file };
+            var checkpointFile = new CheckpointFile
+            {
+                Title = Path.GetFileNameWithoutExtension(file),
+                FilePath = file
+            };
 
             var jsonPath = Path.Combine(
                 Path.GetDirectoryName(file) ?? "",
@@ -432,5 +470,6 @@ public partial class CheckpointFile : ViewModelBase
         }
     }
 
-    public static IEqualityComparer<CheckpointFile> FilePathComparer { get; } = new FilePathEqualityComparer();
+    public static IEqualityComparer<CheckpointFile> FilePathComparer { get; } =
+        new FilePathEqualityComparer();
 }

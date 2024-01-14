@@ -33,7 +33,7 @@ public class InferenceProjectDocument : ICloneable
                 InferenceImageToImageViewModel => InferenceProjectType.ImageToImage,
                 InferenceTextToImageViewModel => InferenceProjectType.TextToImage,
                 InferenceImageUpscaleViewModel => InferenceProjectType.Upscale,
-                _ => throw new InvalidOperationException($"Unknown loadable model type: {loadableModel.GetType()}")
+                InferenceImageToVideoViewModel => InferenceProjectType.ImageToVideo,
             },
             State = loadableModel.SaveStateToJsonObject()
         };

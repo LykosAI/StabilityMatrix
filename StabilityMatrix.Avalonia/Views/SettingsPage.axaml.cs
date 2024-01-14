@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
-using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
@@ -15,11 +14,12 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.Views;
 
 [Singleton]
-public partial class SettingsPage : UserControlBase
+public partial class SettingsPage : UserControlBase, IHandleNavigation
 {
     private readonly INavigationService<SettingsViewModel> settingsNavigationService;
 
@@ -66,9 +66,7 @@ public partial class SettingsPage : UserControlBase
 
     private void NavigationService_OnTypedNavigation(object? sender, TypedNavigationEventArgs e)
     {
-        ViewModel.CurrentPage = ViewModel.SubPages.FirstOrDefault(
-            x => x.GetType() == e.ViewModelType
-        );
+        ViewModel.CurrentPage = ViewModel.SubPages.FirstOrDefault(x => x.GetType() == e.ViewModelType);
     }
 
     private async void FrameView_Navigated(object? sender, NavigationEventArgs args)
@@ -81,10 +79,7 @@ public partial class SettingsPage : UserControlBase
         ViewModel.CurrentPage = vm;
     }
 
-    private async void BreadcrumbBar_ItemClicked(
-        BreadcrumbBar sender,
-        BreadcrumbBarItemClickedEventArgs args
-    )
+    private async void BreadcrumbBar_ItemClicked(BreadcrumbBar sender, BreadcrumbBarItemClickedEventArgs args)
     {
         // Skip if already on same page
         if (args.Item is not PageViewModelBase viewModel || viewModel == ViewModel.CurrentPage)
@@ -92,9 +87,11 @@ public partial class SettingsPage : UserControlBase
             return;
         }
 
-        settingsNavigationService.NavigateTo(
-            viewModel,
-            BetterSlideNavigationTransition.PageSlideFromLeft
-        );
+        settingsNavigationService.NavigateTo(viewModel, BetterSlideNavigationTransition.PageSlideFromLeft);
+    }
+
+    public bool GoBack()
+    {
+        return settingsNavigationService.GoBack();
     }
 }

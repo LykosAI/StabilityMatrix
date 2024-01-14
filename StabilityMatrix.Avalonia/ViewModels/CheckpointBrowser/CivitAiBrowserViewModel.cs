@@ -18,6 +18,7 @@ using CommunityToolkit.Mvvm.Input;
 using LiteDB;
 using LiteDB.Async;
 using NLog;
+using OneOf.Types;
 using Refit;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -129,18 +130,8 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             .Where(t => t == CivitModelType.All || t.ConvertTo<SharedFolderType>() > 0)
             .OrderBy(t => t.ToString());
 
-    public List<string> BaseModelOptions =>
-        [
-            "All",
-            "SD 1.5",
-            "SD 1.5 LCM",
-            "SD 2.1",
-            "SDXL 0.9",
-            "SDXL 1.0",
-            "SDXL 1.0 LCM",
-            "SDXL Turbo",
-            "Other"
-        ];
+    public IEnumerable<string> BaseModelOptions =>
+        Enum.GetValues<CivitBaseModelType>().Select(t => t.GetStringValue());
 
     public CivitAiBrowserViewModel(
         ICivitApi civitApi,
@@ -170,6 +161,17 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             .Where(page => page <= TotalPages && page > 0)
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe(_ => TrySearchAgain(false).SafeFireAndForget(), err => Logger.Error(err));
+
+        EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
+    }
+
+    private void OnNavigateAndFindCivitModelRequested(object? sender, int e)
+    {
+        if (e <= 0)
+            return;
+
+        SearchQuery = $"$#{e}";
+        SearchModelsCommand.ExecuteAsync(null).SafeFireAndForget();
     }
 
     public override void OnLoaded()
@@ -409,6 +411,16 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             Page = CurrentPageNumber
         };
 
+        if (SelectedModelType != CivitModelType.All)
+        {
+            modelRequest.Types = [SelectedModelType];
+        }
+
+        if (SelectedBaseModelType != "All")
+        {
+            modelRequest.BaseModel = SelectedBaseModelType;
+        }
+
         if (SearchQuery.StartsWith("#"))
         {
             modelRequest.Tag = SearchQuery[1..];
@@ -417,19 +429,16 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
         {
             modelRequest.Username = SearchQuery[1..];
         }
+        else if (SearchQuery.StartsWith("$#"))
+        {
+            modelRequest.Period = CivitPeriod.AllTime;
+            modelRequest.BaseModel = null;
+            modelRequest.Types = null;
+            modelRequest.CommaSeparatedModelIds = SearchQuery[2..];
+        }
         else
         {
             modelRequest.Query = SearchQuery;
-        }
-
-        if (SelectedModelType != CivitModelType.All)
-        {
-            modelRequest.Types = new[] { SelectedModelType };
-        }
-
-        if (SelectedBaseModelType != "All")
-        {
-            modelRequest.BaseModel = SelectedBaseModelType;
         }
 
         if (SortMode == CivitSortMode.Installed)

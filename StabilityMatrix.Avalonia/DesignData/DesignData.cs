@@ -4,15 +4,14 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using AvaloniaEdit.Utils;
-using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
-using NSubstitute.ReturnsExtensions;
 using Semver;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Models;
@@ -24,8 +23,9 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
-using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
+using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Api;
@@ -175,12 +175,23 @@ public static class DesignData
         };
         LaunchOptionsViewModel.UpdateFilterCards();
 
-        InstallerViewModel = Services.GetRequiredService<InstallerViewModel>();
-        InstallerViewModel.AvailablePackages = new ObservableCollectionExtended<BasePackage>(
-            packageFactory.GetAllAvailablePackages()
+        NewInstallerDialogViewModel = Services.GetRequiredService<PackageInstallBrowserViewModel>();
+        // NewInstallerDialogViewModel.InferencePackages = new ObservableCollectionExtended<BasePackage>(
+        //     packageFactory.GetPackagesByType(PackageType.SdInference).OrderBy(p => p.InstallerSortOrder)
+        // );
+        // NewInstallerDialogViewModel.TrainingPackages = new ObservableCollection<BasePackage>(
+        //     packageFactory.GetPackagesByType(PackageType.SdTraining).OrderBy(p => p.InstallerSortOrder)
+        // );
+
+        PackageInstallDetailViewModel = new PackageInstallDetailViewModel(
+            packageFactory.GetAllAvailablePackages().FirstOrDefault() as BaseGitPackage,
+            settingsManager,
+            notificationService,
+            null,
+            null,
+            null,
+            null
         );
-        InstallerViewModel.SelectedPackage = InstallerViewModel.AvailablePackages[0];
-        InstallerViewModel.ReleaseNotes = "## Release Notes\nThis is a test release note.";
 
         ObservableCacheEx.AddOrUpdate(
             CheckpointsPageViewModel.CheckpointFoldersCache,
@@ -198,6 +209,7 @@ public static class DesignData
                             PreviewImagePath =
                                 "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
                                 + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                            UpdateAvailable = true,
                             ConnectedModel = new ConnectedModelInfo
                             {
                                 VersionName = "Lightning Auroral",
@@ -373,25 +385,27 @@ public static class DesignData
             new() { FilePath = "~/Models/Lora/model.safetensors", Title = "Some model" }
         };
 
-        ProgressManagerViewModel
-            .ProgressItems
-            .AddRange(
-                new ProgressItemViewModelBase[]
-                {
-                    new ProgressItemViewModel(
-                        new ProgressItem(Guid.NewGuid(), "Test File.exe", new ProgressReport(0.5f, "Downloading..."))
-                    ),
-                    new MockDownloadProgressItemViewModel(
-                        "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
-                    ),
-                    new PackageInstallProgressItemViewModel(
-                        new PackageModificationRunner
-                        {
-                            CurrentProgress = new ProgressReport(0.5f, "Installing package...")
-                        }
+        ProgressManagerViewModel.ProgressItems.AddRange(
+            new ProgressItemViewModelBase[]
+            {
+                new ProgressItemViewModel(
+                    new ProgressItem(
+                        Guid.NewGuid(),
+                        "Test File.exe",
+                        new ProgressReport(0.5f, "Downloading...")
                     )
-                }
-            );
+                ),
+                new MockDownloadProgressItemViewModel(
+                    "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
+                ),
+                new PackageInstallProgressItemViewModel(
+                    new PackageModificationRunner
+                    {
+                        CurrentProgress = new ProgressReport(0.5f, "Installing package...")
+                    }
+                )
+            }
+        );
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
         UpdateViewModel.CurrentVersionText = "v2.0.0";
@@ -402,7 +416,10 @@ public static class DesignData
     }
 
     [NotNull]
-    public static InstallerViewModel? InstallerViewModel { get; private set; }
+    public static PackageInstallBrowserViewModel? NewInstallerDialogViewModel { get; private set; }
+
+    [NotNull]
+    public static PackageInstallDetailViewModel? PackageInstallDetailViewModel { get; private set; }
 
     [NotNull]
     public static LaunchOptionsViewModel? LaunchOptionsViewModel { get; private set; }
@@ -413,12 +430,14 @@ public static class DesignData
     public static ServiceManager<ViewModelBase> DialogFactory =>
         Services.GetRequiredService<ServiceManager<ViewModelBase>>();
 
-    public static MainWindowViewModel MainWindowViewModel => Services.GetRequiredService<MainWindowViewModel>();
+    public static MainWindowViewModel MainWindowViewModel =>
+        Services.GetRequiredService<MainWindowViewModel>();
 
     public static FirstLaunchSetupViewModel FirstLaunchSetupViewModel =>
         Services.GetRequiredService<FirstLaunchSetupViewModel>();
 
-    public static LaunchPageViewModel LaunchPageViewModel => Services.GetRequiredService<LaunchPageViewModel>();
+    public static LaunchPageViewModel LaunchPageViewModel =>
+        Services.GetRequiredService<LaunchPageViewModel>();
 
     public static HuggingFacePageViewModel HuggingFacePageViewModel =>
         Services.GetRequiredService<HuggingFacePageViewModel>();
@@ -452,7 +471,10 @@ public static class DesignData
 
             vm.SetPackages(settings.Settings.InstalledPackages);
             vm.SetUnknownPackages(
-                new InstalledPackage[] { UnknownInstalledPackage.FromDirectoryName("sd-unknown-with-long-name"), }
+                new InstalledPackage[]
+                {
+                    UnknownInstalledPackage.FromDirectoryName("sd-unknown-with-long-name"),
+                }
             );
 
             vm.PackageCards[0].IsUpdateAvailable = true;
@@ -469,10 +491,14 @@ public static class DesignData
 
     public static SettingsViewModel SettingsViewModel => Services.GetRequiredService<SettingsViewModel>();
 
+    public static NewPackageManagerViewModel NewPackageManagerViewModel =>
+        Services.GetRequiredService<NewPackageManagerViewModel>();
+
     public static InferenceSettingsViewModel InferenceSettingsViewModel =>
         Services.GetRequiredService<InferenceSettingsViewModel>();
 
-    public static MainSettingsViewModel MainSettingsViewModel => Services.GetRequiredService<MainSettingsViewModel>();
+    public static MainSettingsViewModel MainSettingsViewModel =>
+        Services.GetRequiredService<MainSettingsViewModel>();
 
     public static AccountSettingsViewModel AccountSettingsViewModel =>
         Services.GetRequiredService<AccountSettingsViewModel>();
@@ -556,7 +582,10 @@ The gallery images are often inpainted, but you will get something very similar 
                     }
                 }
             };
-            var sampleViewModel = new ModelVersionViewModel(new HashSet<string> { "ABCD" }, sampleCivitVersions[0]);
+            var sampleViewModel = new ModelVersionViewModel(
+                new HashSet<string> { "ABCD" },
+                sampleCivitVersions[0]
+            );
 
             // Sample data for dialogs
             vm.Versions = new List<ModelVersionViewModel> { sampleViewModel };
@@ -630,13 +659,22 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.OutputProgress.Text = "Sampler 10/30";
         });
 
+    public static InferenceImageToVideoViewModel InferenceImageToVideoViewModel =>
+        DialogFactory.Get<InferenceImageToVideoViewModel>(vm =>
+        {
+            vm.OutputProgress.Value = 10;
+            vm.OutputProgress.Maximum = 30;
+            vm.OutputProgress.Text = "Sampler 10/30";
+        });
+
     public static InferenceImageToImageViewModel InferenceImageToImageViewModel =>
         DialogFactory.Get<InferenceImageToImageViewModel>();
 
     public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
         DialogFactory.Get<InferenceImageUpscaleViewModel>();
 
-    public static PackageImportViewModel PackageImportViewModel => DialogFactory.Get<PackageImportViewModel>();
+    public static PackageImportViewModel PackageImportViewModel =>
+        DialogFactory.Get<PackageImportViewModel>();
 
     public static RefreshBadgeViewModel RefreshBadgeViewModel => new() { State = ProgressState.Success };
 
@@ -652,6 +690,8 @@ The gallery images are often inpainted, but you will get something very similar 
         });
 
     public static SeedCardViewModel SeedCardViewModel => new();
+    public static SvdImgToVidConditioningViewModel SvdImgToVidConditioningViewModel => new();
+    public static VideoOutputSettingsCardViewModel VideoOutputSettingsCardViewModel => new();
 
     public static SamplerCardViewModel SamplerCardViewModel =>
         DialogFactory.Get<SamplerCardViewModel>(vm =>
@@ -681,6 +721,9 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static ModelCardViewModel ModelCardViewModel => DialogFactory.Get<ModelCardViewModel>();
 
+    public static ImgToVidModelCardViewModel ImgToVidModelCardViewModel =>
+        DialogFactory.Get<ImgToVidModelCardViewModel>();
+
     public static ImageGalleryCardViewModel ImageGalleryCardViewModel =>
         DialogFactory.Get<ImageGalleryCardViewModel>(vm =>
         {
@@ -706,7 +749,8 @@ The gallery images are often inpainted, but you will get something very similar 
             );
         });
 
-    public static ImageFolderCardViewModel ImageFolderCardViewModel => DialogFactory.Get<ImageFolderCardViewModel>();
+    public static ImageFolderCardViewModel ImageFolderCardViewModel =>
+        DialogFactory.Get<ImageFolderCardViewModel>();
 
     public static FreeUCardViewModel FreeUCardViewModel => DialogFactory.Get<FreeUCardViewModel>();
 
@@ -759,7 +803,8 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static UpscalerCardViewModel UpscalerCardViewModel => DialogFactory.Get<UpscalerCardViewModel>();
 
-    public static BatchSizeCardViewModel BatchSizeCardViewModel => DialogFactory.Get<BatchSizeCardViewModel>();
+    public static BatchSizeCardViewModel BatchSizeCardViewModel =>
+        DialogFactory.Get<BatchSizeCardViewModel>();
 
     public static BatchSizeCardViewModel BatchSizeCardViewModelWithIndexOption =>
         DialogFactory.Get<BatchSizeCardViewModel>(vm =>
@@ -790,6 +835,42 @@ The gallery images are often inpainted, but you will get something very similar 
         }
     }
 
+    public static IEnumerable<HybridModelFile> SampleHybridModels { get; } =
+        [
+            HybridModelFile.FromLocal(
+                new LocalModelFile
+                {
+                    SharedFolderType = SharedFolderType.StableDiffusion,
+                    RelativePath = "art_shaper_v8.safetensors",
+                    PreviewImageFullPath =
+                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512",
+                    ConnectedModelInfo = new ConnectedModelInfo
+                    {
+                        ModelName = "Art Shaper (very long name example)",
+                        VersionName = "Style v8 (very long name)"
+                    }
+                }
+            ),
+            HybridModelFile.FromLocal(
+                new LocalModelFile
+                {
+                    SharedFolderType = SharedFolderType.StableDiffusion,
+                    RelativePath = "background_arts.safetensors",
+                    PreviewImageFullPath =
+                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/71c81ddf-d8c3-46b4-843d-9f8f20a9254a/width=512",
+                    ConnectedModelInfo = new ConnectedModelInfo
+                    {
+                        ModelName = "Background Arts",
+                        VersionName = "Anime Style v10"
+                    }
+                }
+            ),
+            HybridModelFile.FromRemote("v1-5-pruned-emaonly.safetensors"),
+            HybridModelFile.FromRemote("sample-model.pt"),
+        ];
+
+    public static HybridModelFile SampleHybridModel => SampleHybridModels.First();
+
     public static ImageViewerViewModel ImageViewerViewModel =>
         DialogFactory.Get<ImageViewerViewModel>(vm =>
         {
@@ -816,7 +897,8 @@ The gallery images are often inpainted, but you will get something very similar 
     public static InferenceConnectionHelpViewModel InferenceConnectionHelpViewModel =>
         DialogFactory.Get<InferenceConnectionHelpViewModel>();
 
-    public static SelectImageCardViewModel SelectImageCardViewModel => DialogFactory.Get<SelectImageCardViewModel>();
+    public static SelectImageCardViewModel SelectImageCardViewModel =>
+        DialogFactory.Get<SelectImageCardViewModel>();
 
     public static SelectImageCardViewModel SelectImageCardViewModel_WithImage =>
         DialogFactory.Get<SelectImageCardViewModel>(vm =>
@@ -829,12 +911,17 @@ The gallery images are often inpainted, but you will get something very similar 
         });
 
     public static ImageSource SampleImageSource =>
-        new(new Uri("https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"))
+        new(
+            new Uri(
+                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
+            )
+        )
         {
             Label = "Test Image"
         };
 
-    public static ControlNetCardViewModel ControlNetCardViewModel => DialogFactory.Get<ControlNetCardViewModel>();
+    public static ControlNetCardViewModel ControlNetCardViewModel =>
+        DialogFactory.Get<ControlNetCardViewModel>();
 
     public static Indexer Types { get; } = new();
 
@@ -844,7 +931,8 @@ The gallery images are often inpainted, but you will get something very similar 
         {
             get
             {
-                var type = Type.GetType(typeName) ?? throw new ArgumentException($"Type {typeName} not found");
+                var type =
+                    Type.GetType(typeName) ?? throw new ArgumentException($"Type {typeName} not found");
                 try
                 {
                     return Services.GetService(type);

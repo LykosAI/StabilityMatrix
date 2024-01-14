@@ -80,7 +80,8 @@ public sealed class App : Application
 
     public static TopLevel TopLevel => TopLevel.GetTopLevel(VisualRoot)!;
 
-    internal static bool IsHeadlessMode => TopLevel.TryGetPlatformHandle()?.HandleDescriptor is null or "STUB";
+    internal static bool IsHeadlessMode =>
+        TopLevel.TryGetPlatformHandle()?.HandleDescriptor is null or "STUB";
 
     [NotNull]
     public static IStorageProvider? StorageProvider { get; internal set; }
@@ -117,8 +118,7 @@ public sealed class App : Application
     {
         // Remove DataAnnotations validation plugin since we're using INotifyDataErrorInfo from MvvmToolkit
         var dataValidationPluginsToRemove = BindingPlugins
-            .DataValidators
-            .OfType<DataAnnotationsValidationPlugin>()
+            .DataValidators.OfType<DataAnnotationsValidationPlugin>()
             .ToArray();
 
         foreach (var plugin in dataValidationPluginsToRemove)
@@ -161,22 +161,19 @@ public sealed class App : Application
 
                 DesktopLifetime.MainWindow = setupWindow;
 
-                setupWindow
-                    .ShowAsyncCts
-                    .Token
-                    .Register(() =>
+                setupWindow.ShowAsyncCts.Token.Register(() =>
+                {
+                    if (setupWindow.Result == ContentDialogResult.Primary)
                     {
-                        if (setupWindow.Result == ContentDialogResult.Primary)
-                        {
-                            settingsManager.SetEulaAccepted();
-                            ShowMainWindow();
-                            DesktopLifetime.MainWindow.Show();
-                        }
-                        else
-                        {
-                            Shutdown();
-                        }
-                    });
+                        settingsManager.SetEulaAccepted();
+                        ShowMainWindow();
+                        DesktopLifetime.MainWindow.Show();
+                    }
+                    else
+                    {
+                        Shutdown();
+                    }
+                });
             }
             else
             {
@@ -223,9 +220,6 @@ public sealed class App : Application
             mainWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
         }
 
-        mainWindow.Closing += OnMainWindowClosing;
-        mainWindow.Closed += (_, _) => Shutdown();
-
         mainWindow.SetDefaultFonts();
 
         VisualRoot = mainWindow;
@@ -234,6 +228,7 @@ public sealed class App : Application
 
         DesktopLifetime.MainWindow = mainWindow;
         DesktopLifetime.Exit += OnExit;
+        DesktopLifetime.ShutdownRequested += OnShutdownRequested;
     }
 
     private static void ConfigureServiceProvider()
@@ -276,7 +271,7 @@ public sealed class App : Application
                     {
                         provider.GetRequiredService<LaunchPageViewModel>(),
                         provider.GetRequiredService<InferenceViewModel>(),
-                        provider.GetRequiredService<PackageManagerViewModel>(),
+                        provider.GetRequiredService<NewPackageManagerViewModel>(),
                         provider.GetRequiredService<CheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
                         provider.GetRequiredService<OutputsPageViewModel>()
@@ -297,7 +292,9 @@ public sealed class App : Application
             var serviceManager = new ServiceManager<ViewModelBase>();
 
             var serviceManagedTypes = exportedTypes
-                .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(ManagedServiceAttribute), true) })
+                .Select(
+                    t => new { t, attributes = t.GetCustomAttributes(typeof(ManagedServiceAttribute), true) }
+                )
                 .Where(t1 => t1.attributes is { Length: > 0 })
                 .Select(t1 => t1.t)
                 .ToList();
@@ -322,8 +319,7 @@ public sealed class App : Application
         services.AddMessagePipeNamedPipeInterprocess("StabilityMatrix");
 
         var exportedTypes = AppDomain
-            .CurrentDomain
-            .GetAssemblies()
+            .CurrentDomain.GetAssemblies()
             .Where(a => a.FullName?.StartsWith("StabilityMatrix") == true)
             .SelectMany(a => a.GetExportedTypes())
             .ToArray();
@@ -332,7 +328,8 @@ public sealed class App : Application
             .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(TransientAttribute), false) })
             .Where(
                 t1 =>
-                    t1.attributes is { Length: > 0 } && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
+                    t1.attributes is { Length: > 0 }
+                    && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
             )
             .Select(t1 => new { Type = t1.t, Attribute = (TransientAttribute)t1.attributes[0] });
 
@@ -352,9 +349,12 @@ public sealed class App : Application
             .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(SingletonAttribute), false) })
             .Where(
                 t1 =>
-                    t1.attributes is { Length: > 0 } && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
+                    t1.attributes is { Length: > 0 }
+                    && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
             )
-            .Select(t1 => new { Type = t1.t, Attributes = t1.attributes.Cast<SingletonAttribute>().ToArray() });
+            .Select(
+                t1 => new { Type = t1.t, Attributes = t1.attributes.Cast<SingletonAttribute>().ToArray() }
+            );
 
         foreach (var typePair in singletonTypes)
         {
@@ -386,7 +386,9 @@ public sealed class App : Application
 
         // Rich presence
         services.AddSingleton<IDiscordRichPresenceService, DiscordRichPresenceService>();
-        services.AddSingleton<IDisposable>(provider => provider.GetRequiredService<IDiscordRichPresenceService>());
+        services.AddSingleton<IDisposable>(
+            provider => provider.GetRequiredService<IDiscordRichPresenceService>()
+        );
 
         Config = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -557,7 +559,11 @@ public sealed class App : Application
 #if DEBUG
             builder.AddNLog(
                 ConfigureLogging(),
-                new NLogProviderOptions { IgnoreEmptyEventId = false, CaptureEventId = EventIdCaptureType.Legacy }
+                new NLogProviderOptions
+                {
+                    IgnoreEmptyEventId = false,
+                    CaptureEventId = EventIdCaptureType.Legacy
+                }
             );
 #else
             builder.AddNLog(ConfigureLogging());
@@ -577,91 +583,79 @@ public sealed class App : Application
     {
         if (Current is null)
             throw new NullReferenceException("Current Application was null when Shutdown called");
+
         if (Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
         {
-            lifetime.Shutdown(exitCode);
+            try
+            {
+                var result = lifetime.TryShutdown(exitCode);
+                Debug.WriteLine($"Shutdown: {result}");
+
+                if (result)
+                {
+                    Environment.Exit(exitCode);
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // Ignore in case already shutting down
+            }
+        }
+        else
+        {
+            Environment.Exit(exitCode);
         }
     }
 
-    /// <summary>
-    /// Handle shutdown requests (happens before <see cref="OnExit"/>)
-    /// </summary>
-    private static void OnMainWindowClosing(object? sender, WindowClosingEventArgs e)
+    private static void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
     {
-        if (e.Cancel)
-            return;
-
-        var mainWindow = (MainWindow)sender!;
-
-        // Show confirmation if package running
-        var launchPageViewModel = Services.GetRequiredService<LaunchPageViewModel>();
-        launchPageViewModel.OnMainWindowClosing(e);
+        Debug.WriteLine("Start OnShutdownRequested");
 
         if (e.Cancel)
             return;
 
         // Check if we need to dispose IAsyncDisposables
         if (
-            !isAsyncDisposeComplete
-            && Services.GetServices<IAsyncDisposable>().ToList() is { Count: > 0 } asyncDisposables
+            isAsyncDisposeComplete
+            || Services.GetServices<IAsyncDisposable>().ToList() is not { Count: > 0 } asyncDisposables
         )
-        {
-            // Cancel shutdown for now
-            e.Cancel = true;
-            isAsyncDisposeComplete = true;
-
-            Debug.WriteLine("OnShutdownRequested Canceled: Disposing IAsyncDisposables");
-
-            Task.Run(async () =>
-                {
-                    foreach (var disposable in asyncDisposables)
-                    {
-                        Debug.WriteLine($"Disposing IAsyncDisposable ({disposable.GetType().Name})");
-                        try
-                        {
-                            await disposable.DisposeAsync().ConfigureAwait(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.Fail(ex.ToString());
-                        }
-                    }
-                })
-                .ContinueWith(_ =>
-                {
-                    // Shutdown again
-                    Dispatcher.UIThread.Invoke(() => Shutdown());
-                })
-                .SafeFireAndForget();
-
             return;
-        }
 
-        OnMainWindowClosingTerminal(mainWindow);
-    }
+        // Cancel shutdown for now
+        e.Cancel = true;
+        isAsyncDisposeComplete = true;
 
-    /// <summary>
-    /// Called at the end of <see cref="OnMainWindowClosing"/> before the main window is closed.
-    /// </summary>
-    private static void OnMainWindowClosingTerminal(Window sender)
-    {
-        var settingsManager = Services.GetRequiredService<ISettingsManager>();
+        Debug.WriteLine("OnShutdownRequested Canceled: Disposing IAsyncDisposables");
 
-        // Save window position
-        var validWindowPosition = sender.Screens.All.Any(screen => screen.Bounds.Contains(sender.Position));
-
-        settingsManager.Transaction(
-            s =>
+        Dispatcher
+            .UIThread.InvokeAsync(async () =>
             {
-                s.WindowSettings = new WindowSettings(
-                    sender.Width,
-                    sender.Height,
-                    validWindowPosition ? sender.Position.X : 0,
-                    validWindowPosition ? sender.Position.Y : 0
-                );
-            },
-            ignoreMissingLibraryDir: true
-        );
+                foreach (var disposable in asyncDisposables)
+                {
+                    Debug.WriteLine($"Disposing IAsyncDisposable ({disposable.GetType().Name})");
+                    try
+                    {
+                        await disposable.DisposeAsync().ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.Fail(ex.ToString());
+                    }
+                }
+            })
+            .ContinueWith(_ =>
+            {
+                // Shutdown again
+                Debug.WriteLine("Finished disposing IAsyncDisposables, shutting down");
+
+                if (Dispatcher.UIThread.SupportsRunLoops)
+                {
+                    Dispatcher.UIThread.Invoke(() => Shutdown());
+                }
+
+                Environment.Exit(0);
+            })
+            .SafeFireAndForget();
     }
 
     private static void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs args)
@@ -714,10 +708,12 @@ public sealed class App : Application
                 .WriteTo(
                     new FileTarget
                     {
-                        Layout = "${longdate}|${level:uppercase=true}|${logger}|${message:withexception=true}",
+                        Layout =
+                            "${longdate}|${level:uppercase=true}|${logger}|${message:withexception=true}",
                         ArchiveOldFileOnStartup = true,
                         FileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.log",
-                        ArchiveFileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.{#}.log",
+                        ArchiveFileName =
+                            "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.{#}.log",
                         ArchiveNumbering = ArchiveNumberingMode.Rolling,
                         MaxArchiveFiles = 2
                     }
@@ -730,7 +726,9 @@ public sealed class App : Application
             builder.ForLogger("Microsoft.Extensions.Http.*").WriteToNil(NLog.LogLevel.Warn);
 
             // Disable console trace logging by default
-            builder.ForLogger("StabilityMatrix.Avalonia.ViewModels.ConsoleViewModel").WriteToNil(NLog.LogLevel.Debug);
+            builder
+                .ForLogger("StabilityMatrix.Avalonia.ViewModels.ConsoleViewModel")
+                .WriteToNil(NLog.LogLevel.Debug);
 
             // Disable LoadableViewModelBase trace logging by default
             builder
@@ -751,20 +749,18 @@ public sealed class App : Application
         // Sentry
         if (SentrySdk.IsEnabled)
         {
-            LogManager
-                .Configuration
-                .AddSentry(o =>
-                {
-                    o.InitializeSdk = false;
-                    o.Layout = "${message}";
-                    o.ShutdownTimeoutSeconds = 5;
-                    o.IncludeEventDataOnBreadcrumbs = true;
-                    o.BreadcrumbLayout = "${logger}: ${message}";
-                    // Debug and higher are stored as breadcrumbs (default is Info)
-                    o.MinimumBreadcrumbLevel = NLog.LogLevel.Debug;
-                    // Error and higher is sent as event (default is Error)
-                    o.MinimumEventLevel = NLog.LogLevel.Error;
-                });
+            LogManager.Configuration.AddSentry(o =>
+            {
+                o.InitializeSdk = false;
+                o.Layout = "${message}";
+                o.ShutdownTimeoutSeconds = 5;
+                o.IncludeEventDataOnBreadcrumbs = true;
+                o.BreadcrumbLayout = "${logger}: ${message}";
+                // Debug and higher are stored as breadcrumbs (default is Info)
+                o.MinimumBreadcrumbLevel = NLog.LogLevel.Debug;
+                // Error and higher is sent as event (default is Error)
+                o.MinimumEventLevel = NLog.LogLevel.Error;
+            });
         }
 
         LogManager.ReconfigExistingLoggers();
@@ -803,34 +799,36 @@ public sealed class App : Application
             results.Add(ms);
         }
 
-        Dispatcher
-            .UIThread
-            .InvokeAsync(async () =>
-            {
-                var dest = await StorageProvider.SaveFilePickerAsync(
-                    new FilePickerSaveOptions() { SuggestedFileName = "screenshot.png", ShowOverwritePrompt = true }
-                );
-
-                if (dest?.TryGetLocalPath() is { } localPath)
+        Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            var dest = await StorageProvider.SaveFilePickerAsync(
+                new FilePickerSaveOptions()
                 {
-                    var localFile = new FilePath(localPath);
-                    foreach (var (i, stream) in results.Enumerate())
-                    {
-                        var name = localFile.NameWithoutExtension;
-                        if (results.Count > 1)
-                        {
-                            name += $"_{i + 1}";
-                        }
-
-                        localFile = localFile.Directory!.JoinFile(name + ".png");
-                        localFile.Create();
-
-                        await using var fileStream = localFile.Info.OpenWrite();
-                        stream.Seek(0, SeekOrigin.Begin);
-                        await stream.CopyToAsync(fileStream);
-                    }
+                    SuggestedFileName = "screenshot.png",
+                    ShowOverwritePrompt = true
                 }
-            });
+            );
+
+            if (dest?.TryGetLocalPath() is { } localPath)
+            {
+                var localFile = new FilePath(localPath);
+                foreach (var (i, stream) in results.Enumerate())
+                {
+                    var name = localFile.NameWithoutExtension;
+                    if (results.Count > 1)
+                    {
+                        name += $"_{i + 1}";
+                    }
+
+                    localFile = localFile.Directory!.JoinFile(name + ".png");
+                    localFile.Create();
+
+                    await using var fileStream = localFile.Info.OpenWrite();
+                    stream.Seek(0, SeekOrigin.Begin);
+                    await stream.CopyToAsync(fileStream);
+                }
+            }
+        });
     }
 
     [Conditional("DEBUG")]

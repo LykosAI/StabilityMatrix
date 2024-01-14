@@ -20,6 +20,15 @@ public partial record GenerationParameters
     public int Width { get; set; }
     public string? ModelHash { get; set; }
     public string? ModelName { get; set; }
+    public int FrameCount { get; set; }
+    public int MotionBucketId { get; set; }
+    public int VideoQuality { get; set; }
+    public bool Lossless { get; set; }
+    public int Fps { get; set; }
+    public double OutputFps { get; set; }
+    public double MinCfg { get; set; }
+    public double AugmentationLevel { get; set; }
+    public string? VideoOutputMethod { get; set; }
 
     public static bool TryParse(
         string? text,

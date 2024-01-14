@@ -20,14 +20,17 @@ public partial class AdvancedImageBoxView : UserControl
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-        
-        var copyMenuItem = this.FindControl<MenuFlyoutItem>("CopyMenuItem")!;
-        copyMenuItem.Command = new AsyncRelayCommand<Bitmap?>(FlyoutCopy);
+
+        if (this.FindControl<MenuFlyoutItem>("CopyMenuItem") is { } copyMenuItem)
+        {
+            copyMenuItem.Command = new AsyncRelayCommand<Bitmap?>(FlyoutCopy);
+        }
     }
-    
+
     private static async Task FlyoutCopy(Bitmap? image)
     {
-        if (image is null || !Compat.IsWindows) return;
+        if (image is null || !Compat.IsWindows)
+            return;
 
         await Task.Run(() =>
         {

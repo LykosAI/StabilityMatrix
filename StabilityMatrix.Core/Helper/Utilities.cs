@@ -13,8 +13,12 @@ public static class Utilities
             : $"{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
     }
 
-    public static void CopyDirectory(string sourceDir, string destinationDir, bool recursive,
-        bool includeReparsePoints = false)
+    public static void CopyDirectory(
+        string sourceDir,
+        string destinationDir,
+        bool recursive,
+        bool includeReparsePoints = false
+    )
     {
         // Get information about the source directory
         var dir = new DirectoryInfo(sourceDir);
@@ -35,11 +39,13 @@ public static class Utilities
         foreach (var file in dir.GetFiles())
         {
             var targetFilePath = Path.Combine(destinationDir, file.Name);
-            if (file.FullName == targetFilePath) continue;
+            if (file.FullName == targetFilePath)
+                continue;
             file.CopyTo(targetFilePath, true);
         }
 
-        if (!recursive) return;
+        if (!recursive)
+            return;
 
         // If recursive and copying subdirectories, recursively call this method
         foreach (var subDir in dirs)
@@ -47,5 +53,14 @@ public static class Utilities
             var newDestinationDir = Path.Combine(destinationDir, subDir.Name);
             CopyDirectory(subDir.FullName, newDestinationDir, true);
         }
+    }
+
+    public static MemoryStream? GetMemoryStreamFromFile(string filePath)
+    {
+        var fileBytes = File.ReadAllBytes(filePath);
+        var stream = new MemoryStream(fileBytes);
+        stream.Position = 0;
+
+        return stream;
     }
 }

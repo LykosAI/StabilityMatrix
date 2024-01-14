@@ -20,6 +20,8 @@
     xmlns:update="clr-namespace:StabilityMatrix.Core.Models.Update;assembly=StabilityMatrix.Core"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
+    xmlns:input="clr-namespace:System.Windows.Input;assembly=System.ObjectModel"
+    xmlns:ct="clr-namespace:CommunityToolkit.Mvvm.Input;assembly=CommunityToolkit.Mvvm"
     d:DataContext="{x:Static mocks:DesignData.MainSettingsViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
@@ -378,10 +380,12 @@
                             <TextBlock
                                 Grid.Row="1"
                                 Grid.Column="0"
+                                IsVisible="{x:Static hardwareInfo:HardwareHelper.IsLiveMemoryUsageInfoAvailable}"
                                 Text="Available Memory" />
                             <SelectableTextBlock
                                 Grid.Row="1"
                                 Grid.Column="1"
+                                IsVisible="{x:Static hardwareInfo:HardwareHelper.IsLiveMemoryUsageInfoAvailable}"
                                 Foreground="{DynamicResource TextControlPlaceholderForeground}"
                                 Text="{Binding AvailablePhysicalBytes, Converter={x:Static converters:StringFormatConverters.MemoryBytes}}"
                                 TextWrapping="WrapWithOverflow" />
@@ -566,6 +570,22 @@
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
 
+                    <ItemsRepeater
+                        Margin="4,0,4,4"
+                        ItemsSource="{Binding DebugCommands}">
+                        <ItemsRepeater.Layout>
+                            <UniformGridLayout />
+                        </ItemsRepeater.Layout>
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate DataType="models:CommandItem">
+                                <Button
+                                    Margin="4,8"
+                                    Command="{Binding Command}"
+                                    Content="{Binding DisplayName}" />
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                    
                 </ui:SettingsExpander>
             </Grid>
 

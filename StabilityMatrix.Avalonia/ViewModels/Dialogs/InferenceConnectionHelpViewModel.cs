@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
@@ -65,8 +66,9 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
         this.packageFactory = packageFactory;
 
         // Get comfy type installed packages
-        var comfyPackages = this.settingsManager.Settings.InstalledPackages
-            .Where(p => p.PackageName == "ComfyUI")
+        var comfyPackages = this.settingsManager.Settings.InstalledPackages.Where(
+            p => p.PackageName == "ComfyUI"
+        )
             .ToImmutableArray();
 
         InstalledPackages = comfyPackages;
@@ -103,13 +105,14 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
     {
         Dispatcher.UIThread.Post(() =>
         {
-            navigationService.NavigateTo<PackageManagerViewModel>(
-                param: new PackageManagerPage.PackageManagerNavigationOptions
+            navigationService.NavigateTo<NewPackageManagerViewModel>(
+                param: new PackageManagerNavigationOptions
                 {
                     OpenInstallerDialog = true,
                     InstallerSelectedPackage = packageFactory
                         .GetAllAvailablePackages()
-                        .First(p => p is ComfyUI)
+                        .OfType<ComfyUI>()
+                        .First()
                 }
             );
         });
@@ -138,9 +141,7 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
         var dialog = new BetterContentDialog
         {
             Content = new InferenceConnectionHelpDialog { DataContext = this },
-            PrimaryButtonCommand = IsInstallMode
-                ? NavigateToInstallCommand
-                : LaunchSelectedPackageCommand,
+            PrimaryButtonCommand = IsInstallMode ? NavigateToInstallCommand : LaunchSelectedPackageCommand,
             PrimaryButtonText = IsInstallMode ? Resources.Action_Install : Resources.Action_Launch,
             CloseButtonText = Resources.Action_Close,
             DefaultButton = ContentDialogButton.Primary

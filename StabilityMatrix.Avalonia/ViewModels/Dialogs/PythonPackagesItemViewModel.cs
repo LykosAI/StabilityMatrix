@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -49,8 +50,9 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
             || !SemVersion.TryParse(value, out var selectedSemver)
         )
         {
-            CanUpgrade = false;
-            CanDowngrade = false;
+            var compare = string.CompareOrdinal(value, Package.Version);
+            CanUpgrade = compare > 0;
+            CanDowngrade = compare < 0;
             return;
         }
 

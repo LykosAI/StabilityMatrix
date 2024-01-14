@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Semver;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Helper;
@@ -62,9 +63,20 @@ public static class Compat
     public static DirectoryPath AppCurrentDir { get; }
 
     /// <summary>
-    /// Current path to the app.
+    /// Current path to the app binary.
     /// </summary>
     public static FilePath AppCurrentPath => AppCurrentDir.JoinFile(GetExecutableName());
+
+    /// <summary>
+    /// Path to the .app bundle on macOS.
+    /// </summary>
+    [SupportedOSPlatform("macos")]
+    public static DirectoryPath? AppBundleCurrentPath { get; }
+
+    /// <summary>
+    /// Either the <see cref="AppCurrentPath"/> File or <see cref="AppBundleCurrentPath"/> directory on macOS.
+    /// </summary>
+    public static FileSystemPath AppOrBundleCurrentPath => IsMacOS ? AppBundleCurrentPath! : AppCurrentPath;
 
     // File extensions
     /// <summary>
@@ -103,7 +115,14 @@ public static class Compat
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             Platform = PlatformKind.MacOS | PlatformKind.Unix;
-            AppCurrentDir = AppContext.BaseDirectory; // TODO: check this
+
+            // This is ./<AppName>.app/Contents/MacOS
+            var macDir = new DirectoryPath(AppContext.BaseDirectory);
+            // We need to go up two directories to get the .app directory
+            AppBundleCurrentPath = macDir.Parent?.Parent;
+            // Then CurrentDir is the next parent
+            AppCurrentDir = AppBundleCurrentPath!.Parent!;
+
             ExeExtension = "";
             DllExtension = ".dylib";
         }
@@ -112,11 +131,9 @@ public static class Compat
             Platform = PlatformKind.Linux | PlatformKind.Unix;
 
             // For AppImage builds, the path is in `$APPIMAGE`
-            var appPath =
-                Environment.GetEnvironmentVariable("APPIMAGE") ?? AppContext.BaseDirectory;
+            var appPath = Environment.GetEnvironmentVariable("APPIMAGE") ?? AppContext.BaseDirectory;
             AppCurrentDir =
-                Path.GetDirectoryName(appPath)
-                ?? throw new Exception("Could not find application directory");
+                Path.GetDirectoryName(appPath) ?? throw new Exception("Could not find application directory");
             ExeExtension = "";
             DllExtension = ".so";
         }
@@ -186,12 +203,24 @@ public static class Compat
         return Path.GetFileName(fullPath);
     }
 
+    /// <summary>
+    /// Get the current application executable or bundle name.
+    /// </summary>
+    public static string GetAppName()
+    {
+        // For other platforms, this is the same as the executable name
+        if (!IsMacOS)
+        {
+            return GetExecutableName();
+        }
+
+        // On macOS, get name of current bundle
+        return Path.GetFileName(AppBundleCurrentPath.Unwrap());
+    }
+
     public static string GetEnvPathWithExtensions(params string[] paths)
     {
-        var currentPath = Environment.GetEnvironmentVariable(
-            "PATH",
-            EnvironmentVariableTarget.Process
-        );
+        var currentPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Process);
         var newPath = string.Join(PathDelimiter, paths);
 
         if (string.IsNullOrEmpty(currentPath))

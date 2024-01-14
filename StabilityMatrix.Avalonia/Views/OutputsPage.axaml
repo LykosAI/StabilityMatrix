@@ -219,19 +219,11 @@
                                             IconSource="FullScreenMaximize"
                                             Text="{x:Static lang:Resources.Label_TextToImage}" />
                                         <ui:MenuFlyoutItem
+                                            Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).SendToImageToImage}"
                                             CommandParameter="{Binding}"
                                             HotKey="{x:Null}"
                                             IconSource="ImageCopy"
-                                            IsEnabled="False"
-                                            IsVisible="False"
                                             Text="{x:Static lang:Resources.Label_ImageToImage}" />
-                                        <ui:MenuFlyoutItem
-                                            CommandParameter="{Binding}"
-                                            HotKey="{x:Null}"
-                                            IconSource="ImageEdit"
-                                            IsEnabled="False"
-                                            IsVisible="False"
-                                            Text="{x:Static lang:Resources.Label_Inpainting}" />
                                         <ui:MenuFlyoutItem
                                             Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).SendToUpscale}"
                                             CommandParameter="{Binding}"
@@ -241,6 +233,12 @@
                                                 <fluentAvalonia:SymbolIconSource FontSize="10" Symbol="ResizeImage" />
                                             </ui:MenuFlyoutItem.IconSource>
                                         </ui:MenuFlyoutItem>
+                                        <ui:MenuFlyoutItem
+                                            Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).SendToImageToVideo}"
+                                            CommandParameter="{Binding}"
+                                            HotKey="{x:Null}"
+                                            IconSource="Video"
+                                            Text="{x:Static lang:Resources.Label_ImageToVideo}" />
                                     </ui:MenuFlyoutSubItem>
                                 </ui:FAMenuFlyout>
                             </selectableImageCard:SelectableImageButton.ContextFlyout>

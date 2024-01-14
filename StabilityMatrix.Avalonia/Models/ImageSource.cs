@@ -12,7 +12,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Avalonia.Models;
 
-public record ImageSource : IDisposable
+public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
 {
     private Hash? contentHashBlake3;
 
@@ -53,6 +53,23 @@ public record ImageSource : IDisposable
     public ImageSource(Bitmap bitmap)
     {
         Bitmap = bitmap;
+    }
+
+    /// <inheritdoc />
+    public ImageSourceTemplateType TemplateKey
+    {
+        get
+        {
+            var ext = LocalFile?.Extension ?? Path.GetExtension(RemoteUrl?.ToString());
+
+            if (ext is not null && ext.Equals(".webp", StringComparison.OrdinalIgnoreCase))
+            {
+                // TODO: Check if webp is animated
+                return ImageSourceTemplateType.WebpAnimation;
+            }
+
+            return ImageSourceTemplateType.Image;
+        }
     }
 
     [JsonIgnore]

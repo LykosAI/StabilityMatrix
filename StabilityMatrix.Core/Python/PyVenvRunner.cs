@@ -515,7 +515,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             "Launching venv process [{PythonPath}] "
                 + "in working directory [{WorkingDirectory}] with args {Arguments}",
             PythonPath,
-            WorkingDirectory,
+            WorkingDirectory?.ToString(),
             arguments
         );
 

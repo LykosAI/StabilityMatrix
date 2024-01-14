@@ -187,13 +187,11 @@ public class A3WebUI(
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
         var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
-
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-
         var pipArgs = new PipInstallArgs()
             .WithTorch("==2.0.1")
             .WithTorchVision("==0.15.2")
@@ -221,6 +219,9 @@ public class A3WebUI(
         {
             pipArgs = pipArgs.AddArg("httpx==0.24.1");
         }
+
+        // Add jsonmerge to fix https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/12482
+        pipArgs = pipArgs.AddArg("jsonmerge");
 
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 

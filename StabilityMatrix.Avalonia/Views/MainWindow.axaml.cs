@@ -98,6 +98,8 @@ public partial class MainWindow : AppWindowBase
         EventManager.Instance.UpdateAvailable += OnUpdateAvailable;
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
 
+        SetDefaultFonts();
+
         Observable
             .FromEventPattern<SizeChangedEventArgs>(this, nameof(SizeChanged))
             .Where(x => x.EventArgs.PreviousSize != x.EventArgs.NewSize)
@@ -255,54 +257,11 @@ public partial class MainWindow : AppWindowBase
         });
     }
 
-    public void SetDefaultFonts()
+    private void SetDefaultFonts()
     {
-        var fonts = new List<string>();
-
-        try
+        if (App.Current is not null)
         {
-            if (Cultures.Current?.Name == "ja-JP")
-            {
-                var customFont = (Application.Current!.Resources["NotoSansJP"] as FontFamily)!;
-                Resources["ContentControlThemeFontFamily"] = customFont;
-                FontFamily = customFont;
-                return;
-            }
-
-            if (Compat.IsWindows)
-            {
-                if (OSVersionHelper.IsWindows11())
-                {
-                    fonts.Add("Segoe UI Variable Text");
-                }
-                else
-                {
-                    fonts.Add("Segoe UI");
-                }
-            }
-            else if (Compat.IsMacOS)
-            {
-                fonts.Add("San Francisco");
-                fonts.Add("Helvetica Neue");
-                fonts.Add("Helvetica");
-            }
-            else
-            {
-                Resources["ContentControlThemeFontFamily"] = FontFamily.Default;
-                FontFamily = FontFamily.Default;
-                return;
-            }
-
-            var fontString = new FontFamily(string.Join(",", fonts));
-            Resources["ContentControlThemeFontFamily"] = fontString;
-            FontFamily = fontString;
-        }
-        catch (Exception e)
-        {
-            LogManager.GetCurrentClassLogger().Error(e);
-
-            Resources["ContentControlThemeFontFamily"] = FontFamily.Default;
-            FontFamily = FontFamily.Default;
+            FontFamily = App.Current.GetPlatformDefaultFontFamily();
         }
     }
 

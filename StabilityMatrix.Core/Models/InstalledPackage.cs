@@ -57,6 +57,8 @@ public class InstalledPackage : IJsonOnDeserialized
 
     public bool UseSharedOutputFolder { get; set; }
 
+    public List<string>? ExtraExtensionManifestUrls { get; set; }
+
     /// <summary>
     /// Get the launch args host option value.
     /// </summary>
@@ -239,7 +241,11 @@ public class InstalledPackage : IJsonOnDeserialized
         if (string.IsNullOrWhiteSpace(InstalledBranch) && !string.IsNullOrWhiteSpace(PackageVersion))
         {
             // release mode
-            Version = new InstalledPackageVersion { InstalledReleaseVersion = PackageVersion, IsPrerelease = false };
+            Version = new InstalledPackageVersion
+            {
+                InstalledReleaseVersion = PackageVersion,
+                IsPrerelease = false
+            };
         }
         else if (!string.IsNullOrWhiteSpace(PackageVersion))
         {

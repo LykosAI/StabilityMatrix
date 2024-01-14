@@ -50,7 +50,6 @@ public class TestBase
         var viewModel = Services.GetRequiredService<MainWindowViewModel>();
         window.DataContext = viewModel;
 
-        window.SetDefaultFonts();
         window.Width = 1400;
         window.Height = 900;
 

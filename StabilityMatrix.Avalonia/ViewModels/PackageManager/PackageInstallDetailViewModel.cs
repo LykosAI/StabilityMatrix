@@ -16,6 +16,7 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;

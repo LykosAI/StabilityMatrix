@@ -1,24 +1,24 @@
-﻿using StabilityMatrix.Core.Models.Packages.Extensions;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
-public class InstallExtensionStep(
+public class UpdateExtensionStep(
     IPackageExtensionManager extensionManager,
     InstalledPackage installedPackage,
-    PackageExtension packageExtension,
+    InstalledPackageExtension installedExtension,
     PackageExtensionVersion? extensionVersion = null
 ) : IPackageStep
 {
     public Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        return extensionManager.InstallExtensionAsync(
-            packageExtension,
+        return extensionManager.UpdateExtensionAsync(
+            installedExtension,
             installedPackage,
             extensionVersion,
             progress
         );
     }
 
-    public string ProgressTitle => $"Installing Extension {packageExtension.Title}";
+    public string ProgressTitle => $"Updating Extension {installedExtension.Title}";
 }

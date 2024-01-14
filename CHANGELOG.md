@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.8.0-pre.2
+### Fixed
+- Fixed Auto-update failing to start new version on Windows and Linux when path contains spaces
+
 ## v2.8.0-pre.1
 ### Added
 - Added Package Extensions (Plugins) management - accessible from the Packages' 3-dot menu. Currently supports ComfyUI and A1111.

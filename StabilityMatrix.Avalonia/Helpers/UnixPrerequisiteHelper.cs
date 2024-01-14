@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using DynamicData;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Languages;
@@ -32,9 +33,12 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
 
     private DirectoryPath PythonDir => AssetsDir.JoinDir("Python310");
     public bool IsPythonInstalled => PythonDir.JoinFile(PyRunner.RelativePythonDllPath).Exists;
-
     private DirectoryPath PortableGitInstallDir => HomeDir + "PortableGit";
     public string GitBinPath => PortableGitInstallDir + "bin";
+
+    private DirectoryPath NodeDir => AssetsDir.JoinDir("nodejs");
+    private string NpmPath => Path.Combine(NodeDir, "bin", "npm");
+    private bool IsNodeInstalled => File.Exists(NpmPath);
 
     // Cached store of whether or not git is installed
     private bool? isGitInstalled;
@@ -240,23 +244,80 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         throw new NotImplementedException();
     }
 
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
+    public async Task RunNpm(ProcessArgs args, string? workingDirectory = null)
+    {
+        var command = args.Prepend(NpmPath);
+
+        var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "");
+        if (result.ExitCode != 0)
+        {
+            Logger.Error(
+                "npm command [{Command}] failed with exit code " + "{ExitCode}:\n{StdOut}\n{StdErr}",
+                command,
+                result.ExitCode,
+                result.StandardOutput,
+                result.StandardError
+            );
+
+            throw new ProcessException(
+                $"npm command [{command}] failed with exit code"
+                    + $" {result.ExitCode}:\n{result.StandardOutput}\n{result.StandardError}"
+            );
+        }
+    }
+
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
+    public async Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (IsNodeInstalled)
+        {
+            Logger.Info("node already installed");
+            return;
+        }
+
+        Logger.Info("Downloading node");
+
+        var downloadUrl = Compat.IsMacOS
+            ? "https://nodejs.org/dist/v20.11.0/node-v20.11.0-darwin-arm64.tar.gz"
+            : "https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz";
+
+        var nodeDownloadPath = Compat.IsMacOS
+            ? Path.Combine(AssetsDir, "nodejs.tar.gz")
+            : Path.Combine(AssetsDir, "nodejs.tar.xz");
+
+        await downloadService.DownloadToFileAsync(downloadUrl, nodeDownloadPath, progress: progress);
+
+        Logger.Info("Installing node");
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing prerequisites..."
+            )
+        );
+
+        // unzip
+        await ArchiveHelper.Extract(nodeDownloadPath, AssetsDir, progress);
+
+        var nodeDir = Compat.IsMacOS
+            ? AssetsDir.JoinDir("node-v20.11.0-darwin-arm64")
+            : AssetsDir.JoinDir("node-v20.11.0-linux-x64");
+        Directory.Move(nodeDir, NodeDir);
+
+        progress?.Report(
+            new ProgressReport(progress: 1f, message: "Node install complete", type: ProgressType.Generic)
+        );
+
+        File.Delete(nodeDownloadPath);
+    }
+
     [UnsupportedOSPlatform("Linux")]
     [UnsupportedOSPlatform("macOS")]
     public Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
-    {
-        throw new PlatformNotSupportedException();
-    }
-
-    [UnsupportedOSPlatform("Linux")]
-    [UnsupportedOSPlatform("macOS")]
-    public Task RunNpm(ProcessArgs args, string? workingDirectory = null)
-    {
-        throw new PlatformNotSupportedException();
-    }
-
-    [UnsupportedOSPlatform("Linux")]
-    [UnsupportedOSPlatform("macOS")]
-    public Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         throw new PlatformNotSupportedException();
     }

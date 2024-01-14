@@ -26,7 +26,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
     private const string TkinterDownloadUrl =
         "https://cdn.lykos.ai/tkinter-cpython-embedded-3.10.11-win-x64.zip";
-    private const string NodeDownloadUrl = "https://cdn.lykos.ai/nodejs.zip";
+    private const string NodeDownloadUrl = "https://nodejs.org/dist/v20.11.0/node-v20.11.0-win-x64.zip";
 
     private string HomeDir => settingsManager.LibraryDir;
 

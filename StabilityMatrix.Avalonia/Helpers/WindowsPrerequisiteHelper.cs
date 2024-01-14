@@ -410,6 +410,10 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         // unzip
         await ArchiveHelper.Extract(NodeDownloadPath, AssetsDir, progress);
 
+        // move to assets dir
+        var existingNodeDir = Path.Combine(AssetsDir, "node-v20.11.0-win-x64");
+        Directory.Move(existingNodeDir, Path.Combine(AssetsDir, "nodejs"));
+
         progress?.Report(
             new ProgressReport(progress: 1f, message: "Node install complete", type: ProgressType.Generic)
         );

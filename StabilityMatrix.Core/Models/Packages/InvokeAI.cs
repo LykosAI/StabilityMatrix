@@ -61,10 +61,19 @@ public class InvokeAI : BaseGitPackage
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = new[] { Path.Combine(RelativeRootPath, "autoimport", "main") },
+            [SharedFolderType.StableDiffusion] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "main")
+            },
             [SharedFolderType.Lora] = new[] { Path.Combine(RelativeRootPath, "autoimport", "lora") },
-            [SharedFolderType.TextualInversion] = new[] { Path.Combine(RelativeRootPath, "autoimport", "embedding") },
-            [SharedFolderType.ControlNet] = new[] { Path.Combine(RelativeRootPath, "autoimport", "controlnet") },
+            [SharedFolderType.TextualInversion] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "embedding")
+            },
+            [SharedFolderType.ControlNet] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "controlnet")
+            },
             [SharedFolderType.InvokeIpAdapters15] = new[]
             {
                 Path.Combine(RelativeRootPath, "models", "sd-1", "ip_adapter")
@@ -77,7 +86,10 @@ public class InvokeAI : BaseGitPackage
             {
                 Path.Combine(RelativeRootPath, "models", "any", "clip_vision")
             },
-            [SharedFolderType.T2IAdapter] = new[] { Path.Combine(RelativeRootPath, "autoimport", "t2i_adapter") }
+            [SharedFolderType.T2IAdapter] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "t2i_adapter")
+            }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -168,13 +180,39 @@ public class InvokeAI : BaseGitPackage
         venvRunner.EnvironmentVariables = GetEnvVars(installLocation);
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
 
+        await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
+        await PrerequisiteHelper.RunNpm(["i", "pnpm"], installLocation).ConfigureAwait(false);
+
+        var pnpmPath = Path.Combine(installLocation, "node_modules", ".bin", "pnpm.cmd");
+        var invokeFrontendPath = Path.Combine(installLocation, "invokeai", "frontend", "web");
+
+        var process = ProcessRunner.StartProcess(
+            pnpmPath,
+            "i",
+            invokeFrontendPath,
+            s => onConsoleOutput?.Invoke(new ProcessOutput { Text = s })
+        );
+
+        await process.WaitForExitAsync().ConfigureAwait(false);
+
+        process = ProcessRunner.StartProcess(
+            pnpmPath,
+            "build",
+            invokeFrontendPath,
+            s => onConsoleOutput?.Invoke(new ProcessOutput { Text = s })
+        );
+
+        await process.WaitForExitAsync().ConfigureAwait(false);
+
         var pipCommandArgs = "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
 
         switch (torchVersion)
         {
             // If has Nvidia Gpu, install CUDA version
             case TorchVersion.Cuda:
-                progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true));
+                progress?.Report(
+                    new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true)
+                );
 
                 var args = new List<Argument>();
                 if (exists)
@@ -200,18 +238,23 @@ public class InvokeAI : BaseGitPackage
                     .ConfigureAwait(false);
 
                 Logger.Info("Starting InvokeAI install (CUDA)...");
-                pipCommandArgs = "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu121";
+                pipCommandArgs =
+                    "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu121";
                 break;
             // For AMD, Install ROCm version
             case TorchVersion.Rocm:
                 await venvRunner
                     .PipInstall(
-                        new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision().WithExtraIndex("rocm5.4.2"),
+                        new PipInstallArgs()
+                            .WithTorch("==2.0.1")
+                            .WithTorchVision()
+                            .WithExtraIndex("rocm5.4.2"),
                         onConsoleOutput
                     )
                     .ConfigureAwait(false);
                 Logger.Info("Starting InvokeAI install (ROCm)...");
-                pipCommandArgs = "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
+                pipCommandArgs =
+                    "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
                 break;
             case TorchVersion.Mps:
                 // For Apple silicon, use MPS
@@ -320,7 +363,9 @@ public class InvokeAI : BaseGitPackage
             {
                 onConsoleOutput?.Invoke(s);
 
-                if (spam3 && s.Text.Contains("[3] Accept the best guess;", StringComparison.OrdinalIgnoreCase))
+                if (
+                    spam3 && s.Text.Contains("[3] Accept the best guess;", StringComparison.OrdinalIgnoreCase)
+                )
                 {
                     VenvRunner.Process?.StandardInput.WriteLine("3");
                     return;

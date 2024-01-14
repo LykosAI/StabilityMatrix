@@ -154,4 +154,6 @@ public interface IPrerequisiteHelper
     }
 
     Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null);
+    Task RunNpm(ProcessArgs args, string? workingDirectory = null);
+    Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null);
 }

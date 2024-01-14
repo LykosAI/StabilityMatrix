@@ -107,7 +107,11 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         throw new NotImplementedException();
     }
 
-    public Task RunNpm(ProcessArgs args, string? workingDirectory = null)
+    public Task RunNpm(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null
+    )
     {
         throw new NotImplementedException();
     }

@@ -246,7 +246,11 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
 
     [SupportedOSPlatform("Linux")]
     [SupportedOSPlatform("macOS")]
-    public async Task RunNpm(ProcessArgs args, string? workingDirectory = null)
+    public async Task RunNpm(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null
+    )
     {
         var command = args.Prepend([NpmPath]);
 
@@ -266,6 +270,9 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
                     + $" {result.ExitCode}:\n{result.StandardOutput}\n{result.StandardError}"
             );
         }
+
+        onProcessOutput?.Invoke(ProcessOutput.FromStdOutLine(result.StandardOutput));
+        onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
     }
 
     [SupportedOSPlatform("Linux")]

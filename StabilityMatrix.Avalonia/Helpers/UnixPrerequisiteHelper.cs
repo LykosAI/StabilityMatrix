@@ -301,7 +301,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         );
 
         // unzip
-        await ArchiveHelper.Extract(nodeDownloadPath, AssetsDir, progress);
+        await ArchiveHelper.ExtractManaged(nodeDownloadPath, AssetsDir);
 
         var nodeDir = Compat.IsMacOS
             ? AssetsDir.JoinDir("node-v20.11.0-darwin-arm64")

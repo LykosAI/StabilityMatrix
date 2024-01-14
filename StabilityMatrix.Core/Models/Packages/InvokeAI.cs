@@ -416,7 +416,8 @@ public class InvokeAI : BaseGitPackage
 
         if (env.ContainsKey("PATH"))
         {
-            env["PATH"] += $";{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs")}";
+            env["PATH"] +=
+                $"{Compat.PathDelimiter}{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs")}";
         }
         else
         {
@@ -425,7 +426,8 @@ public class InvokeAI : BaseGitPackage
 
         if (Compat.IsMacOS || Compat.IsLinux)
         {
-            env["PATH"] += $";{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs", "bin")}";
+            env["PATH"] +=
+                $"{Compat.PathDelimiter}{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs", "bin")}";
         }
 
         return env;

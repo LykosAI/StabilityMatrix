@@ -104,6 +104,10 @@ Stability Matrix is now available in the following languages, thanks to our comm
   - aolko
 - 🇹🇷 Türkçe
   - Progesor
+- 🇩🇪 Deutsch
+  - Mario da Graca
+- 🇵🇹 Português
+  - nextosai
 
 If you would like to contribute a translation, please create an issue or contact us on Discord. Include an email where we'll send an invite to our [POEditor](https://poeditor.com/) project.
 

@@ -34,4 +34,10 @@ public interface IPrerequisiteHelper
 
     Task<string> GetGitOutput(string? workingDirectory = null, params string[] args);
     Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null);
+    Task RunNpm(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null
+    );
+    Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null);
 }

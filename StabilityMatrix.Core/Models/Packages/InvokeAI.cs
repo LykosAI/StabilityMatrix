@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Attributes;
@@ -18,6 +19,7 @@ public class InvokeAI : BaseGitPackage
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private const string RelativeRootPath = "invokeai-root";
+    private string RelativeFrontendBuildPath = Path.Combine("invokeai", "frontend", "web", "dist");
 
     public override string Name => "InvokeAI";
     public override string DisplayName { get; set; } = "InvokeAI";
@@ -61,10 +63,19 @@ public class InvokeAI : BaseGitPackage
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = new[] { Path.Combine(RelativeRootPath, "autoimport", "main") },
+            [SharedFolderType.StableDiffusion] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "main")
+            },
             [SharedFolderType.Lora] = new[] { Path.Combine(RelativeRootPath, "autoimport", "lora") },
-            [SharedFolderType.TextualInversion] = new[] { Path.Combine(RelativeRootPath, "autoimport", "embedding") },
-            [SharedFolderType.ControlNet] = new[] { Path.Combine(RelativeRootPath, "autoimport", "controlnet") },
+            [SharedFolderType.TextualInversion] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "embedding")
+            },
+            [SharedFolderType.ControlNet] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "controlnet")
+            },
             [SharedFolderType.InvokeIpAdapters15] = new[]
             {
                 Path.Combine(RelativeRootPath, "models", "sd-1", "ip_adapter")
@@ -77,7 +88,10 @@ public class InvokeAI : BaseGitPackage
             {
                 Path.Combine(RelativeRootPath, "models", "any", "clip_vision")
             },
-            [SharedFolderType.T2IAdapter] = new[] { Path.Combine(RelativeRootPath, "autoimport", "t2i_adapter") }
+            [SharedFolderType.T2IAdapter] = new[]
+            {
+                Path.Combine(RelativeRootPath, "autoimport", "t2i_adapter")
+            }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -168,13 +182,23 @@ public class InvokeAI : BaseGitPackage
         venvRunner.EnvironmentVariables = GetEnvVars(installLocation);
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
 
+        await SetupAndBuildInvokeFrontend(
+                installLocation,
+                progress,
+                onConsoleOutput,
+                venvRunner.EnvironmentVariables
+            )
+            .ConfigureAwait(false);
+
         var pipCommandArgs = "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
 
         switch (torchVersion)
         {
             // If has Nvidia Gpu, install CUDA version
             case TorchVersion.Cuda:
-                progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true));
+                progress?.Report(
+                    new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true)
+                );
 
                 var args = new List<Argument>();
                 if (exists)
@@ -200,18 +224,23 @@ public class InvokeAI : BaseGitPackage
                     .ConfigureAwait(false);
 
                 Logger.Info("Starting InvokeAI install (CUDA)...");
-                pipCommandArgs = "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu121";
+                pipCommandArgs =
+                    "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu121";
                 break;
             // For AMD, Install ROCm version
             case TorchVersion.Rocm:
                 await venvRunner
                     .PipInstall(
-                        new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision().WithExtraIndex("rocm5.4.2"),
+                        new PipInstallArgs()
+                            .WithTorch("==2.0.1")
+                            .WithTorchVision()
+                            .WithExtraIndex("rocm5.4.2"),
                         onConsoleOutput
                     )
                     .ConfigureAwait(false);
                 Logger.Info("Starting InvokeAI install (ROCm)...");
-                pipCommandArgs = "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
+                pipCommandArgs =
+                    "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
                 break;
             case TorchVersion.Mps:
                 // For Apple silicon, use MPS
@@ -246,6 +275,58 @@ public class InvokeAI : BaseGitPackage
         progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
     }
 
+    private async Task SetupAndBuildInvokeFrontend(
+        string installLocation,
+        IProgress<ProgressReport>? progress,
+        Action<ProcessOutput>? onConsoleOutput,
+        IReadOnlyDictionary<string, string>? envVars = null
+    )
+    {
+        await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
+        await PrerequisiteHelper.RunNpm(["i", "pnpm"], installLocation).ConfigureAwait(false);
+
+        if (Compat.IsMacOS || Compat.IsLinux)
+        {
+            await PrerequisiteHelper.RunNpm(["i", "vite"], installLocation).ConfigureAwait(false);
+        }
+
+        var pnpmPath = Path.Combine(
+            installLocation,
+            "node_modules",
+            ".bin",
+            Compat.IsWindows ? "pnpm.cmd" : "pnpm"
+        );
+
+        var vitePath = Path.Combine(
+            installLocation,
+            "node_modules",
+            ".bin",
+            Compat.IsWindows ? "vite.cmd" : "vite"
+        );
+
+        var invokeFrontendPath = Path.Combine(installLocation, "invokeai", "frontend", "web");
+
+        var process = ProcessRunner.StartAnsiProcess(
+            pnpmPath,
+            "i --ignore-scripts=true",
+            invokeFrontendPath,
+            onConsoleOutput,
+            envVars
+        );
+
+        await process.WaitForExitAsync().ConfigureAwait(false);
+
+        process = ProcessRunner.StartAnsiProcess(
+            Compat.IsWindows ? pnpmPath : vitePath,
+            "build",
+            invokeFrontendPath,
+            onConsoleOutput,
+            envVars
+        );
+
+        await process.WaitForExitAsync().ConfigureAwait(false);
+    }
+
     public override Task RunPackage(
         string installedPackagePath,
         string command,
@@ -276,6 +357,19 @@ public class InvokeAI : BaseGitPackage
         };
 
         VenvRunner.EnvironmentVariables = GetEnvVars(installedPackagePath);
+
+        // fix frontend build missing for people who updated to v3.6 before the fix
+        var frontendExistsPath = Path.Combine(installedPackagePath, RelativeFrontendBuildPath);
+        if (!Directory.Exists(frontendExistsPath))
+        {
+            await SetupAndBuildInvokeFrontend(
+                    installedPackagePath,
+                    null,
+                    onConsoleOutput,
+                    VenvRunner.EnvironmentVariables
+                )
+                .ConfigureAwait(false);
+        }
 
         // Launch command is for a console entry point, and not a direct script
         var entryPoint = await VenvRunner.GetEntryPoint(command).ConfigureAwait(false);
@@ -320,7 +414,9 @@ public class InvokeAI : BaseGitPackage
             {
                 onConsoleOutput?.Invoke(s);
 
-                if (spam3 && s.Text.Contains("[3] Accept the best guess;", StringComparison.OrdinalIgnoreCase))
+                if (
+                    spam3 && s.Text.Contains("[3] Accept the best guess;", StringComparison.OrdinalIgnoreCase)
+                )
                 {
                     VenvRunner.Process?.StandardInput.WriteLine("3");
                     return;
@@ -361,6 +457,29 @@ public class InvokeAI : BaseGitPackage
         var root = installPath.JoinDir(RelativeRootPath);
         root.Create();
         env["INVOKEAI_ROOT"] = root;
+
+        if (env.ContainsKey("PATH"))
+        {
+            env["PATH"] +=
+                $"{Compat.PathDelimiter}{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs")}";
+        }
+        else
+        {
+            env["PATH"] = Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs");
+        }
+        env["PATH"] += $"{Compat.PathDelimiter}{Path.Combine(installPath, "node_modules", ".bin")}";
+
+        if (Compat.IsMacOS || Compat.IsLinux)
+        {
+            env["PATH"] +=
+                $"{Compat.PathDelimiter}{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs", "bin")}";
+        }
+
+        if (Compat.IsWindows)
+        {
+            env["PATH"] +=
+                $"{Compat.PathDelimiter}{Environment.GetFolderPath(Environment.SpecialFolder.System)}";
+        }
 
         return env;
     }

@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Attributes;
@@ -18,6 +19,7 @@ public class InvokeAI : BaseGitPackage
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private const string RelativeRootPath = "invokeai-root";
+    private string RelativeFrontendBuildPath = Path.Combine("invokeai", "frontend", "web", "dist");
 
     public override string Name => "InvokeAI";
     public override string DisplayName { get; set; } = "InvokeAI";
@@ -180,49 +182,13 @@ public class InvokeAI : BaseGitPackage
         venvRunner.EnvironmentVariables = GetEnvVars(installLocation);
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
 
-        await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
-        await PrerequisiteHelper.RunNpm(["i", "pnpm"], installLocation).ConfigureAwait(false);
-
-        if (Compat.IsMacOS || Compat.IsLinux)
-        {
-            await PrerequisiteHelper.RunNpm(["i", "vite"], installLocation).ConfigureAwait(false);
-        }
-
-        var pnpmPath = Path.Combine(
-            installLocation,
-            "node_modules",
-            ".bin",
-            Compat.IsWindows ? "pnpm.cmd" : "pnpm"
-        );
-
-        var vitePath = Path.Combine(
-            installLocation,
-            "node_modules",
-            ".bin",
-            Compat.IsWindows ? "vite.cmd" : "vite"
-        );
-
-        var invokeFrontendPath = Path.Combine(installLocation, "invokeai", "frontend", "web");
-
-        var process = ProcessRunner.StartProcess(
-            pnpmPath,
-            "i --ignore-scripts=true",
-            invokeFrontendPath,
-            s => onConsoleOutput?.Invoke(new ProcessOutput { Text = s }),
-            venvRunner.EnvironmentVariables
-        );
-
-        await process.WaitForExitAsync().ConfigureAwait(false);
-
-        process = ProcessRunner.StartProcess(
-            Compat.IsWindows ? pnpmPath : vitePath,
-            "build",
-            invokeFrontendPath,
-            s => onConsoleOutput?.Invoke(new ProcessOutput { Text = s }),
-            venvRunner.EnvironmentVariables
-        );
-
-        await process.WaitForExitAsync().ConfigureAwait(false);
+        await SetupAndBuildInvokeFrontend(
+                installLocation,
+                progress,
+                onConsoleOutput,
+                venvRunner.EnvironmentVariables
+            )
+            .ConfigureAwait(false);
 
         var pipCommandArgs = "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
 
@@ -309,6 +275,58 @@ public class InvokeAI : BaseGitPackage
         progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
     }
 
+    private async Task SetupAndBuildInvokeFrontend(
+        string installLocation,
+        IProgress<ProgressReport>? progress,
+        Action<ProcessOutput>? onConsoleOutput,
+        IReadOnlyDictionary<string, string>? envVars = null
+    )
+    {
+        await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
+        await PrerequisiteHelper.RunNpm(["i", "pnpm"], installLocation).ConfigureAwait(false);
+
+        if (Compat.IsMacOS || Compat.IsLinux)
+        {
+            await PrerequisiteHelper.RunNpm(["i", "vite"], installLocation).ConfigureAwait(false);
+        }
+
+        var pnpmPath = Path.Combine(
+            installLocation,
+            "node_modules",
+            ".bin",
+            Compat.IsWindows ? "pnpm.cmd" : "pnpm"
+        );
+
+        var vitePath = Path.Combine(
+            installLocation,
+            "node_modules",
+            ".bin",
+            Compat.IsWindows ? "vite.cmd" : "vite"
+        );
+
+        var invokeFrontendPath = Path.Combine(installLocation, "invokeai", "frontend", "web");
+
+        var process = ProcessRunner.StartAnsiProcess(
+            pnpmPath,
+            "i --ignore-scripts=true",
+            invokeFrontendPath,
+            onConsoleOutput,
+            envVars
+        );
+
+        await process.WaitForExitAsync().ConfigureAwait(false);
+
+        process = ProcessRunner.StartAnsiProcess(
+            Compat.IsWindows ? pnpmPath : vitePath,
+            "build",
+            invokeFrontendPath,
+            onConsoleOutput,
+            envVars
+        );
+
+        await process.WaitForExitAsync().ConfigureAwait(false);
+    }
+
     public override Task RunPackage(
         string installedPackagePath,
         string command,
@@ -339,6 +357,19 @@ public class InvokeAI : BaseGitPackage
         };
 
         VenvRunner.EnvironmentVariables = GetEnvVars(installedPackagePath);
+
+        // fix frontend build missing for people who updated to v3.6 before the fix
+        var frontendExistsPath = Path.Combine(installedPackagePath, RelativeFrontendBuildPath);
+        if (!Directory.Exists(frontendExistsPath))
+        {
+            await SetupAndBuildInvokeFrontend(
+                    installedPackagePath,
+                    null,
+                    onConsoleOutput,
+                    VenvRunner.EnvironmentVariables
+                )
+                .ConfigureAwait(false);
+        }
 
         // Launch command is for a console entry point, and not a direct script
         var entryPoint = await VenvRunner.GetEntryPoint(command).ConfigureAwait(false);

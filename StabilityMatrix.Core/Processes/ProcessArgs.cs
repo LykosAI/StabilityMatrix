@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using OneOf;
 
@@ -9,6 +10,7 @@ namespace StabilityMatrix.Core.Processes;
 /// Implicitly converts between string and string[],
 /// with no parsing if the input and output types are the same.
 /// </summary>
+[CollectionBuilder(typeof(ProcessArgsCollectionBuilder), "Create")]
 public partial class ProcessArgs : OneOfBase<string, string[]>, IEnumerable<string>
 {
     /// <inheritdoc />

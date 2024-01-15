@@ -82,6 +82,9 @@ public partial class PackageInstallDetailViewModel(
     [ObservableProperty]
     private GitCommit? selectedCommit;
 
+    [ObservableProperty]
+    private bool canInstall;
+
     private PackageVersionOptions? allOptions;
 
     public override async Task OnLoadedAsync()
@@ -104,6 +107,8 @@ public partial class PackageInstallDetailViewModel(
             UpdateVersions();
             await UpdateCommits(SelectedPackage.MainBranch);
         }
+
+        CanInstall = !ShowDuplicateWarning;
     }
 
     [RelayCommand]
@@ -214,6 +219,8 @@ public partial class PackageInstallDetailViewModel(
 
     private void UpdateVersions()
     {
+        CanInstall = false;
+
         AvailableVersions =
             IsReleaseMode && ShowReleaseMode ? allOptions.AvailableVersions : allOptions.AvailableBranches;
 
@@ -221,16 +228,22 @@ public partial class PackageInstallDetailViewModel(
             ? AvailableVersions?.FirstOrDefault(x => x.TagName == SelectedPackage.MainBranch)
                 ?? AvailableVersions?.FirstOrDefault()
             : AvailableVersions?.FirstOrDefault();
+
+        CanInstall = !ShowDuplicateWarning;
     }
 
     private async Task UpdateCommits(string branchName)
     {
+        CanInstall = false;
+
         var commits = await SelectedPackage.GetAllCommits(branchName);
         if (commits != null)
         {
             AvailableCommits = new ObservableCollection<GitCommit>(commits);
             SelectedCommit = AvailableCommits.FirstOrDefault();
         }
+
+        CanInstall = !ShowDuplicateWarning;
     }
 
     partial void OnInstallNameChanged(string? value)
@@ -238,6 +251,7 @@ public partial class PackageInstallDetailViewModel(
         ShowDuplicateWarning = settingsManager.Settings.InstalledPackages.Any(
             p => p.LibraryPath == $"Packages{Path.DirectorySeparatorChar}{value}"
         );
+        CanInstall = !ShowDuplicateWarning;
     }
 
     partial void OnIsReleaseModeChanged(bool value)

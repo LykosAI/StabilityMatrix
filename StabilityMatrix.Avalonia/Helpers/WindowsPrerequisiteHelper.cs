@@ -26,6 +26,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
     private const string TkinterDownloadUrl =
         "https://cdn.lykos.ai/tkinter-cpython-embedded-3.10.11-win-x64.zip";
+    private const string NodeDownloadUrl = "https://nodejs.org/dist/v20.11.0/node-v20.11.0-win-x64.zip";
 
     private string HomeDir => settingsManager.LibraryDir;
 
@@ -49,8 +50,10 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     private string TkinterZipPath => Path.Combine(AssetsDir, "tkinter.zip");
     private string TkinterExtractPath => PythonDir;
     private string TkinterExistsPath => Path.Combine(PythonDir, "tkinter");
-    public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
+    private string NodeExistsPath => Path.Combine(AssetsDir, "nodejs", "npm.cmd");
+    private string NodeDownloadPath => Path.Combine(AssetsDir, "nodejs.zip");
 
+    public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
 
     public WindowsPrerequisiteHelper(
@@ -109,12 +112,28 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         );
     }
 
+    public async Task RunNpm(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null
+    )
+    {
+        var result = await ProcessRunner
+            .GetProcessResultAsync(NodeExistsPath, args, workingDirectory)
+            .ConfigureAwait(false);
+
+        result.EnsureSuccessExitCode();
+        onProcessOutput?.Invoke(ProcessOutput.FromStdOutLine(result.StandardOutput));
+        onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
+    }
+
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         await InstallVcRedistIfNecessary(progress);
         await UnpackResourcesIfNecessary(progress);
         await InstallPythonIfNecessary(progress);
         await InstallGitIfNecessary(progress);
+        await InstallNodeIfNecessary(progress);
     }
 
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -346,6 +365,42 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         );
 
         File.Delete(VcRedistDownloadPath);
+    }
+
+    [SupportedOSPlatform("windows")]
+    public async Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (File.Exists(NodeExistsPath))
+        {
+            Logger.Info("node already installed");
+            return;
+        }
+
+        Logger.Info("Downloading node");
+        await downloadService.DownloadToFileAsync(NodeDownloadUrl, NodeDownloadPath, progress: progress);
+
+        Logger.Info("Installing node");
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing prerequisites..."
+            )
+        );
+
+        // unzip
+        await ArchiveHelper.Extract(NodeDownloadPath, AssetsDir, progress);
+
+        // move to assets dir
+        var existingNodeDir = Path.Combine(AssetsDir, "node-v20.11.0-win-x64");
+        Directory.Move(existingNodeDir, Path.Combine(AssetsDir, "nodejs"));
+
+        progress?.Report(
+            new ProgressReport(progress: 1f, message: "Node install complete", type: ProgressType.Generic)
+        );
+
+        File.Delete(NodeDownloadPath);
     }
 
     private async Task UnzipGit(IProgress<ProgressReport>? progress = null)

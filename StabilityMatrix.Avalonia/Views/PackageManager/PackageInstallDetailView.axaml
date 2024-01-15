@@ -169,6 +169,7 @@
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
                     FontSize="16"
+                    IsEnabled="{Binding CanInstall}"
                     Command="{Binding InstallCommand}"
                     Content="{x:Static lang:Resources.Action_Install}" />
 

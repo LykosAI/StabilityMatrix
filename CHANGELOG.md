@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed Auto-update failing to start new version on Windows and Linux when path contains spaces
 - Fixed InvokeAI v3.6.0 `"detail": "Not Found"` error when opening the UI
+- Install button will now be properly disabled when the duplicate warning is shown
 
 ## v2.8.0-pre.1
 ### Added

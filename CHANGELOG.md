@@ -64,6 +64,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added image and model details in model selection boxes
 - Added CLIP Skip setting, toggleable from the model settings button
 
+## v2.7.9
+### Fixed
+- Fixed InvokeAI v3.6.0 `"detail": "Not Found"` error when opening the UI
+
 ## v2.7.8
 ### Changed
 - Python Packages install dialog now allows entering multiple arguments or option flags

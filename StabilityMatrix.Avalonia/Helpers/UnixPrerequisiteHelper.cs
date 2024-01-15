@@ -237,37 +237,6 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
 
     [SupportedOSPlatform("Linux")]
     [SupportedOSPlatform("macOS")]
-    public async Task RunNpm(
-        ProcessArgs args,
-        string? workingDirectory = null,
-        Action<ProcessOutput>? onProcessOutput = null
-    )
-    {
-        var command = args.Prepend([NpmPath]);
-
-        var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "");
-        if (result.ExitCode != 0)
-        {
-            Logger.Error(
-                "npm command [{Command}] failed with exit code " + "{ExitCode}:\n{StdOut}\n{StdErr}",
-                command,
-                result.ExitCode,
-                result.StandardOutput,
-                result.StandardError
-            );
-
-            throw new ProcessException(
-                $"npm command [{command}] failed with exit code"
-                    + $" {result.ExitCode}:\n{result.StandardOutput}\n{result.StandardError}"
-            );
-        }
-
-        onProcessOutput?.Invoke(ProcessOutput.FromStdOutLine(result.StandardOutput));
-        onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
-    }
-
-    [SupportedOSPlatform("Linux")]
-    [SupportedOSPlatform("macOS")]
     public async Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         if (IsNodeInstalled)

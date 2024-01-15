@@ -237,51 +237,6 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
 
     [SupportedOSPlatform("Linux")]
     [SupportedOSPlatform("macOS")]
-    public async Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null)
-    {
-        if (IsNodeInstalled)
-        {
-            Logger.Info("node already installed");
-            return;
-        }
-
-        Logger.Info("Downloading node");
-
-        var downloadUrl = Compat.IsMacOS
-            ? "https://nodejs.org/dist/v20.11.0/node-v20.11.0-darwin-arm64.tar.gz"
-            : "https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz";
-
-        var nodeDownloadPath = AssetsDir.JoinFile(Path.GetFileName(downloadUrl));
-
-        await downloadService.DownloadToFileAsync(downloadUrl, nodeDownloadPath, progress: progress);
-
-        Logger.Info("Installing node");
-        progress?.Report(
-            new ProgressReport(
-                progress: 0.5f,
-                isIndeterminate: true,
-                type: ProgressType.Generic,
-                message: "Installing prerequisites..."
-            )
-        );
-
-        // unzip
-        await ArchiveHelper.Extract7ZAuto(nodeDownloadPath, AssetsDir);
-
-        var nodeDir = Compat.IsMacOS
-            ? AssetsDir.JoinDir("node-v20.11.0-darwin-arm64")
-            : AssetsDir.JoinDir("node-v20.11.0-linux-x64");
-        Directory.Move(nodeDir, NodeDir);
-
-        progress?.Report(
-            new ProgressReport(progress: 1f, message: "Node install complete", type: ProgressType.Generic)
-        );
-
-        File.Delete(nodeDownloadPath);
-    }
-
-    [SupportedOSPlatform("Linux")]
-    [SupportedOSPlatform("macOS")]
     public async Task RunNpm(
         ProcessArgs args,
         string? workingDirectory = null,

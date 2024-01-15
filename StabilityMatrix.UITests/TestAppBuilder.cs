@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.Extensions;
 using Semver;
@@ -69,6 +70,7 @@ public static class TestAppBuilder
 
         // UpdateViewModel
         var updateViewModel = Substitute.ForPartsOf<UpdateViewModel>(
+            Substitute.For<ILogger<UpdateViewModel>>(),
             settingsManager,
             null,
             updateHelper

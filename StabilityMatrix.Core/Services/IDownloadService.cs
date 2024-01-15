@@ -28,4 +28,6 @@ public interface IDownloadService
     );
 
     Task<Stream?> GetImageStreamFromUrl(string url);
+
+    Task<Stream> GetContentAsync(string url, CancellationToken cancellationToken = default);
 }

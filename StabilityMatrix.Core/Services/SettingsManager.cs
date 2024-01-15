@@ -675,7 +675,20 @@ public class SettingsManager : ISettingsManager
                 SettingsSerializerContext.Default.Settings
             );
 
-            File.WriteAllBytes(SettingsPath, jsonBytes);
+            if (jsonBytes.Length == 0)
+            {
+                Logger.Error("JsonSerializer returned empty bytes for some reason");
+                return;
+            }
+
+            using var fs = File.Open(SettingsPath, FileMode.Open);
+            if (fs.CanWrite)
+            {
+                fs.Write(jsonBytes, 0, jsonBytes.Length);
+                fs.Flush();
+                fs.SetLength(jsonBytes.Length);
+            }
+            fs.Close();
         }
         finally
         {

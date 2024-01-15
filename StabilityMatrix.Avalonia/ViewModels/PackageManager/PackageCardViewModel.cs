@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -75,6 +78,9 @@ public partial class PackageCardViewModel : ProgressViewModel
     [ObservableProperty]
     private bool canUseSharedOutput;
 
+    [ObservableProperty]
+    private bool canUseExtensions;
+
     public PackageCardViewModel(
         ILogger<PackageCardViewModel> logger,
         IPackageFactory packageFactory,
@@ -97,7 +103,10 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (string.IsNullOrWhiteSpace(value?.PackageName))
             return;
 
-        if (value.PackageName == UnknownPackage.Key || packageFactory.FindPackageByName(value.PackageName) is null)
+        if (
+            value.PackageName == UnknownPackage.Key
+            || packageFactory.FindPackageByName(value.PackageName) is null
+        )
         {
             IsUnknownPackage = true;
             CardImageSource = "";
@@ -116,6 +125,7 @@ public partial class PackageCardViewModel : ProgressViewModel
                 basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Symlink) ?? false;
             UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
             CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
+            CanUseExtensions = basePackage?.SupportsExtensions ?? false;
         }
     }
 
@@ -124,7 +134,11 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (Design.IsDesignMode || !settingsManager.IsLibraryDirSet || Package is not { } currentPackage)
             return;
 
-        if (packageFactory.FindPackageByName(currentPackage.PackageName) is { } basePackage and not UnknownPackage)
+        if (
+            packageFactory.FindPackageByName(currentPackage.PackageName)
+            is { } basePackage
+                and not UnknownPackage
+        )
         {
             // Migrate old packages with null preferred shared folder method
             currentPackage.PreferredSharedFolderMethod ??= basePackage.RecommendedSharedFolderMethod;
@@ -185,11 +199,18 @@ public partial class PackageCardViewModel : ProgressViewModel
             var packagePath = new DirectoryPath(settingsManager.LibraryDir, Package.LibraryPath);
             var deleteTask = packagePath.DeleteVerboseAsync(logger);
 
-            var taskResult = await notificationService.TryAsync(deleteTask, Resources.Text_SomeFilesCouldNotBeDeleted);
+            var taskResult = await notificationService.TryAsync(
+                deleteTask,
+                Resources.Text_SomeFilesCouldNotBeDeleted
+            );
             if (taskResult.IsSuccessful)
             {
                 notificationService.Show(
-                    new Notification(Resources.Label_PackageUninstalled, Package.DisplayName, NotificationType.Success)
+                    new Notification(
+                        Resources.Label_PackageUninstalled,
+                        Package.DisplayName,
+                        NotificationType.Success
+                    )
                 );
 
                 if (!IsUnknownPackage)
@@ -254,7 +275,12 @@ public partial class PackageCardViewModel : ProgressViewModel
                 versionOptions.CommitHash = latest.Sha;
             }
 
-            var updatePackageStep = new UpdatePackageStep(settingsManager, Package, versionOptions, basePackage);
+            var updatePackageStep = new UpdatePackageStep(
+                settingsManager,
+                Package,
+                versionOptions,
+                basePackage
+            );
             var steps = new List<IPackageStep> { updatePackageStep };
 
             EventManager.Instance.OnPackageInstallProgressAdded(runner);
@@ -357,6 +383,36 @@ public partial class PackageCardViewModel : ProgressViewModel
     }
 
     [RelayCommand]
+    public async Task OpenExtensionsDialog()
+    {
+        if (
+            Package is not { FullPath: not null }
+            || packageFactory.GetPackagePair(Package) is not { } packagePair
+        )
+            return;
+
+        var vm = vmFactory.Get<PackageExtensionBrowserViewModel>(vm =>
+        {
+            vm.PackagePair = packagePair;
+        });
+
+        var dialog = new BetterContentDialog
+        {
+            Content = vm,
+            MinDialogWidth = 850,
+            MaxDialogHeight = 1100,
+            MaxDialogWidth = 850,
+            ContentMargin = new Thickness(16, 32),
+            CloseOnClickOutside = true,
+            FullSizeDesired = true,
+            IsFooterVisible = false,
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled
+        };
+
+        await dialog.ShowAsync();
+    }
+
+    [RelayCommand]
     private void OpenOnGitHub()
     {
         if (Package is null)
@@ -381,7 +437,8 @@ public partial class PackageCardViewModel : ProgressViewModel
         if (basePackage == null)
             return false;
 
-        var canCheckUpdate = Package.LastUpdateCheck == null || Package.LastUpdateCheck < DateTime.Now.AddMinutes(-15);
+        var canCheckUpdate =
+            Package.LastUpdateCheck == null || Package.LastUpdateCheck < DateTime.Now.AddMinutes(-15);
 
         if (!canCheckUpdate)
         {

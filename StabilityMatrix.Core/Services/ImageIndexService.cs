@@ -26,10 +26,7 @@ public class ImageIndexService : IImageIndexService
         this.logger = logger;
         this.settingsManager = settingsManager;
 
-        InferenceImages = new IndexCollection<LocalImageFile, string>(
-            this,
-            file => file.AbsolutePath
-        )
+        InferenceImages = new IndexCollection<LocalImageFile, string>(this, file => file.AbsolutePath)
         {
             RelativePath = "Inference"
         };
@@ -56,7 +53,7 @@ public class ImageIndexService : IImageIndexService
 
         // Start
         var stopwatch = Stopwatch.StartNew();
-        logger.LogInformation("Refreshing images index at {SearchDir}...", searchDir);
+        logger.LogInformation("Refreshing images index at {SearchDir}...", searchDir.ToString());
 
         var toAdd = new ConcurrentBag<LocalImageFile>();
 
@@ -64,9 +61,7 @@ public class ImageIndexService : IImageIndexService
             {
                 var files = searchDir
                     .EnumerateFiles("*.*", SearchOption.AllDirectories)
-                    .Where(
-                        file => LocalImageFile.SupportedImageExtensions.Contains(file.Extension)
-                    );
+                    .Where(file => LocalImageFile.SupportedImageExtensions.Contains(file.Extension));
 
                 Parallel.ForEach(
                     files,

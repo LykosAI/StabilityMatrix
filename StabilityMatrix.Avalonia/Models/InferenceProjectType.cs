@@ -9,7 +9,8 @@ public enum InferenceProjectType
     TextToImage,
     ImageToImage,
     Inpainting,
-    Upscale
+    Upscale,
+    ImageToVideo
 }
 
 public static class InferenceProjectTypeExtensions
@@ -22,6 +23,7 @@ public static class InferenceProjectTypeExtensions
             InferenceProjectType.ImageToImage => typeof(InferenceImageToImageViewModel),
             InferenceProjectType.Inpainting => null,
             InferenceProjectType.Upscale => typeof(InferenceImageUpscaleViewModel),
+            InferenceProjectType.ImageToVideo => typeof(InferenceImageToVideoViewModel),
             InferenceProjectType.Unknown => null,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };

@@ -25,6 +25,7 @@ using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Updater;
 
 namespace StabilityMatrix.Avalonia;
@@ -55,8 +56,7 @@ public static class Program
         SetDebugBuild();
 
         var parseResult = Parser
-            .Default
-            .ParseArguments<AppArgs>(args)
+            .Default.ParseArguments<AppArgs>(args)
             .WithNotParsed(errors =>
             {
                 foreach (var error in errors)
@@ -147,7 +147,10 @@ public static class Program
         if (Args.UseOpenGlRendering)
         {
             app = app.With(
-                new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Wgl, Win32RenderingMode.Software] }
+                new Win32PlatformOptions
+                {
+                    RenderingMode = [Win32RenderingMode.Wgl, Win32RenderingMode.Software]
+                }
             );
         }
 
@@ -156,7 +159,10 @@ public static class Program
             app = app.With(new Win32PlatformOptions { RenderingMode = new[] { Win32RenderingMode.Software } })
                 .With(new X11PlatformOptions { RenderingMode = new[] { X11RenderingMode.Software } })
                 .With(
-                    new AvaloniaNativePlatformOptions { RenderingMode = new[] { AvaloniaNativeRenderingMode.Software } }
+                    new AvaloniaNativePlatformOptions
+                    {
+                        RenderingMode = new[] { AvaloniaNativeRenderingMode.Software }
+                    }
                 );
         }
 
@@ -173,8 +179,6 @@ public static class Program
             return;
 
         // Copy our current file to the parent directory, overwriting the old app file
-        var currentExe = Compat.AppCurrentDir.JoinFile(Compat.GetExecutableName());
-        var targetExe = parentDir.JoinFile(Compat.GetExecutableName());
 
         var isCopied = false;
 
@@ -188,7 +192,27 @@ public static class Program
         {
             try
             {
-                currentExe.CopyTo(targetExe, true);
+                if (Compat.IsMacOS)
+                {
+                    var currentApp = Compat.AppBundleCurrentPath!;
+                    var targetApp = parentDir.JoinDir(Compat.GetAppName());
+
+                    // Since macOS has issues with signature caching, delete the target app first
+                    if (targetApp.Exists)
+                    {
+                        targetApp.Delete(true);
+                    }
+
+                    currentApp.CopyTo(targetApp);
+                }
+                else
+                {
+                    var currentExe = Compat.AppCurrentPath;
+                    var targetExe = parentDir.JoinFile(Compat.GetExecutableName());
+
+                    currentExe.CopyTo(targetExe, true);
+                }
+
                 isCopied = true;
                 break;
             }
@@ -204,11 +228,13 @@ public static class Program
             Environment.Exit(1);
         }
 
+        var targetAppOrBundle = Path.Combine(parentDir, Compat.GetAppName());
+
         // Ensure permissions are set for unix
         if (Compat.IsUnix)
         {
             File.SetUnixFileMode(
-                targetExe, // 0755
+                targetAppOrBundle, // 0755
                 UnixFileMode.UserRead
                     | UnixFileMode.UserWrite
                     | UnixFileMode.UserExecute
@@ -220,7 +246,10 @@ public static class Program
         }
 
         // Start the new app while passing our own PID to wait for exit
-        Process.Start(targetExe, $"--wait-for-exit-pid {Environment.ProcessId}");
+        ProcessRunner.StartApp(
+            targetAppOrBundle,
+            new[] { "--wait-for-exit-pid", $"{Environment.ProcessId}" }
+        );
 
         // Shutdown the current app
         Environment.Exit(0);
@@ -274,7 +303,8 @@ public static class Program
     {
         SentrySdk.Init(o =>
         {
-            o.Dsn = "https://eac7a5ea065d44cf9a8565e0f1817da2@o4505314753380352.ingest.sentry.io/4505314756067328";
+            o.Dsn =
+                "https://eac7a5ea065d44cf9a8565e0f1817da2@o4505314753380352.ingest.sentry.io/4505314756067328";
             o.StackTraceMode = StackTraceMode.Enhanced;
             o.TracesSampleRate = 1.0;
             o.IsGlobalModeEnabled = true;
@@ -301,7 +331,10 @@ public static class Program
         });
     }
 
-    private static void TaskScheduler_UnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    private static void TaskScheduler_UnobservedTaskException(
+        object? sender,
+        UnobservedTaskExceptionEventArgs e
+    )
     {
         if (e.Exception is Exception ex)
         {

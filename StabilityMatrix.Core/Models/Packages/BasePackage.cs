@@ -1,8 +1,10 @@
-﻿using Octokit;
+﻿using System.Diagnostics.CodeAnalysis;
+using Octokit;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -47,6 +49,8 @@ public abstract class BasePackage
 
     public abstract PackageDifficulty InstallerSortOrder { get; }
 
+    public virtual PackageType PackageType => PackageType.SdInference;
+
     public abstract Task DownloadPackage(
         string installLocation,
         DownloadPackageVersionOptions versionOptions,
@@ -85,11 +89,20 @@ public abstract class BasePackage
 
     public abstract SharedFolderMethod RecommendedSharedFolderMethod { get; }
 
-    public abstract Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod);
+    public abstract Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    );
 
-    public abstract Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod);
+    public abstract Task UpdateModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    );
 
-    public abstract Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod);
+    public abstract Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    );
 
     public abstract Task SetupOutputFolderLinks(DirectoryPath installDirectory);
     public abstract Task RemoveOutputFolderLinks(DirectoryPath installDirectory);
@@ -117,6 +130,11 @@ public abstract class BasePackage
             return TorchVersion.DirectMl;
         }
 
+        if (Compat.IsMacOS && Compat.IsArm && AvailableTorchVersions.Contains(TorchVersion.Mps))
+        {
+            return TorchVersion.Mps;
+        }
+
         return TorchVersion.Cpu;
     }
 
@@ -141,8 +159,23 @@ public abstract class BasePackage
     public abstract Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
     public abstract Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
 
+    /// <summary>
+    /// If defined, this package supports extensions using this manager.
+    /// </summary>
+    public virtual IPackageExtensionManager? ExtensionManager => null;
+
+    /// <summary>
+    /// True if this package supports extensions.
+    /// </summary>
+    [MemberNotNullWhen(true, nameof(ExtensionManager))]
+    public virtual bool SupportsExtensions => ExtensionManager is not null;
+
     public abstract Task<PackageVersionOptions> GetAllVersionOptions();
-    public abstract Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10);
+    public abstract Task<IEnumerable<GitCommit>?> GetAllCommits(
+        string branch,
+        int page = 1,
+        int perPage = 10
+    );
     public abstract Task<DownloadPackageVersionOptions> GetLatestVersion(bool includePrerelease = false);
     public abstract string MainBranch { get; }
     public event EventHandler<int>? Exited;
@@ -153,7 +186,9 @@ public abstract class BasePackage
     public void OnStartupComplete(string url) => StartupComplete?.Invoke(this, url);
 
     public virtual PackageVersionType AvailableVersionTypes =>
-        ShouldIgnoreReleases ? PackageVersionType.Commit : PackageVersionType.GithubRelease | PackageVersionType.Commit;
+        ShouldIgnoreReleases
+            ? PackageVersionType.Commit
+            : PackageVersionType.GithubRelease | PackageVersionType.Commit;
 
     protected async Task InstallCudaTorch(
         PyVenvRunner venvRunner,
@@ -194,6 +229,9 @@ public abstract class BasePackage
     {
         progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true));
 
-        return venvRunner.PipInstall(new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision(), onConsoleOutput);
+        return venvRunner.PipInstall(
+            new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision(),
+            onConsoleOutput
+        );
     }
 }

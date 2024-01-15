@@ -2,6 +2,7 @@
 using System.IO.Compression;
 using NLog;
 using Octokit;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Database;
@@ -147,10 +148,24 @@ public abstract class BaseGitPackage : BasePackage
             await VenvRunner.DisposeAsync().ConfigureAwait(false);
         }
 
+        // Set additional required environment variables
+        var env = new Dictionary<string, string>();
+        if (SettingsManager.Settings.EnvironmentVariables is not null)
+        {
+            env.Update(SettingsManager.Settings.EnvironmentVariables);
+        }
+
+        if (Compat.IsWindows)
+        {
+            var tkPath = Path.Combine(SettingsManager.LibraryDir, "Assets", "Python310", "tcl", "tcl8.6");
+            env["TCL_LIBRARY"] = tkPath;
+            env["TK_LIBRARY"] = tkPath;
+        }
+
         VenvRunner = new PyVenvRunner(venvPath)
         {
             WorkingDirectory = installedPackagePath,
-            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
+            EnvironmentVariables = env
         };
 
         if (!VenvRunner.Exists() || forceRecreate)
@@ -158,6 +173,47 @@ public abstract class BaseGitPackage : BasePackage
             await VenvRunner.Setup(forceRecreate, onConsoleOutput).ConfigureAwait(false);
         }
         return VenvRunner;
+    }
+
+    /// <summary>
+    /// Like <see cref="SetupVenv"/>, but does not set the <see cref="VenvRunner"/> property.
+    /// Returns a new <see cref="PyVenvRunner"/> instance.
+    /// </summary>
+    public async Task<PyVenvRunner> SetupVenvPure(
+        string installedPackagePath,
+        string venvName = "venv",
+        bool forceRecreate = false,
+        Action<ProcessOutput>? onConsoleOutput = null
+    )
+    {
+        var venvPath = Path.Combine(installedPackagePath, venvName);
+
+        // Set additional required environment variables
+        var env = new Dictionary<string, string>();
+        if (SettingsManager.Settings.EnvironmentVariables is not null)
+        {
+            env.Update(SettingsManager.Settings.EnvironmentVariables);
+        }
+
+        if (Compat.IsWindows)
+        {
+            var tkPath = Path.Combine(SettingsManager.LibraryDir, "Assets", "Python310", "tcl", "tcl8.6");
+            env["TCL_LIBRARY"] = tkPath;
+            env["TK_LIBRARY"] = tkPath;
+        }
+
+        var venvRunner = new PyVenvRunner(venvPath)
+        {
+            WorkingDirectory = installedPackagePath,
+            EnvironmentVariables = env
+        };
+
+        if (!venvRunner.Exists() || forceRecreate)
+        {
+            await venvRunner.Setup(forceRecreate, onConsoleOutput).ConfigureAwait(false);
+        }
+
+        return venvRunner;
     }
 
     public override async Task<IEnumerable<Release>> GetReleaseTags()

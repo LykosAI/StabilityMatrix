@@ -8,9 +8,11 @@
     IsOpen: false,
     CanNavigateNext: false,
     CanNavigatePrevious: false,
+    RemoveFromParentListCommand: ViewModelBase.RemoveFromParentList(),
     HasErrors: false
   },
   UpdateViewModel: {
+    Title: ,
     IsUpdateAvailable: true,
     UpdateInfo: {
       Version: {
@@ -24,15 +26,18 @@
       ReleaseDate: DateTimeOffset_1,
       Channel: Stable,
       Type: Normal,
-      DownloadUrl: https://example.org,
-      ChangelogUrl: https://example.org,
+      Url: https://example.org,
+      Changelog: https://example.org,
       HashBlake3: 46e11a5216c55d4c9d3c54385f62f3e1022537ae191615237f05e06d6f8690d0,
       Signature: IX5/CCXWJQG0oGkYWVnuF34gTqF/dJSrDrUd6fuNMYnncL39G3HSvkXrjvJvR18MA2rQNB5z13h3/qBSf9c7DA==
     },
+    IsProgressIndeterminate: false,
     ShowProgressBar: false,
     NewVersionText: v2.999.0,
     InstallUpdateCommand: UpdateViewModel.InstallUpdate(),
+    RemoveFromParentListCommand: ViewModelBase.RemoveFromParentList(),
     HasErrors: false
   },
+  RemoveFromParentListCommand: ViewModelBase.RemoveFromParentList(),
   HasErrors: false
 }

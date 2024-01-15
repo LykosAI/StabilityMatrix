@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -42,19 +43,31 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
     private async Task<bool> SetGpuInfo()
     {
         GpuInfo[] gpuInfo;
+
         await using (new MinimumDelay(800, 1200))
         {
             // Query GPU info
             gpuInfo = await Task.Run(() => HardwareHelper.IterGpuInfo().ToArray());
         }
+
         // First Nvidia GPU
-        var activeGpu = gpuInfo.FirstOrDefault(gpu => gpu.Name?.ToLowerInvariant().Contains("nvidia") ?? false);
+        var activeGpu = gpuInfo.FirstOrDefault(
+            gpu => gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
+        );
         var isNvidia = activeGpu is not null;
+
         // Otherwise first GPU
         activeGpu ??= gpuInfo.FirstOrDefault();
+
         GpuInfoText = activeGpu is null
             ? "No GPU detected"
             : $"{activeGpu.Name} ({Size.FormatBytes(activeGpu.MemoryBytes)})";
+
+        // Always succeed for macos arm
+        if (Compat.IsMacOS && Compat.IsArm)
+        {
+            return true;
+        }
 
         return isNvidia;
     }

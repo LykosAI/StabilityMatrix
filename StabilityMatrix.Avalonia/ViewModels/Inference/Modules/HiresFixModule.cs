@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
-using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -73,7 +70,7 @@ public partial class HiresFixModule : ModuleBase
         {
             builder.Connections.Primary = builder.Group_Upscale(
                 builder.Nodes.GetUniqueName("HiresFix"),
-                builder.Connections.Primary ?? throw new ArgumentException("No Primary"),
+                builder.Connections.Primary.Unwrap(),
                 builder.Connections.GetDefaultVAE(),
                 selectedUpscaler,
                 hiresSize.Width,
@@ -99,8 +96,8 @@ public partial class HiresFixModule : ModuleBase
                         samplerCard.SelectedScheduler?.Name
                         ?? e.Builder.Connections.PrimaryScheduler?.Name
                         ?? throw new ArgumentException("No PrimaryScheduler"),
-                    Positive = builder.Connections.GetRefinerOrBaseConditioning(),
-                    Negative = builder.Connections.GetRefinerOrBaseNegativeConditioning(),
+                    Positive = builder.Connections.GetRefinerOrBaseConditioning().Positive,
+                    Negative = builder.Connections.GetRefinerOrBaseConditioning().Negative,
                     LatentImage = builder.GetPrimaryAsLatent(),
                     Denoise = samplerCard.DenoiseStrength
                 }

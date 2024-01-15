@@ -4,6 +4,7 @@
              xmlns:local="using:StabilityMatrix.Avalonia"
              xmlns:idcr="using:Dock.Avalonia.Controls.Recycling"
              xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
+             Name="Stability Matrix"
              RequestedThemeVariant="Dark">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -23,6 +24,7 @@
                  <ResourceInclude Source="Controls/Scroll/BetterScrollViewer.axaml"/>
                  <ResourceInclude Source="Styles/ControlThemes/HyperlinkIconButtonStyles.axaml"/>
                  <ResourceInclude Source="Styles/ControlThemes/ListBoxStyles.axaml"/>
+                 <ResourceInclude Source="Styles/ControlThemes/BetterComboBoxStyles.axaml"/>
                  <ResourceInclude Source="Styles/ListBoxStyles.axaml"/>
                  <ResourceInclude Source="Styles/FAComboBoxStyles.axaml"/>
                  <ResourceInclude Source="Controls/Inference/ImageFolderCard.axaml"/>
@@ -51,6 +53,7 @@
         <StyleInclude Source="Styles/ToggleButtonStyles.axaml"/>
         <StyleInclude Source="Styles/DockStyles.axaml"/>
         <StyleInclude Source="Styles/BorderStyles.axaml"/>
+        <StyleInclude Source="Styles/TextBoxStyles.axaml"/>
         <StyleInclude Source="Controls/AdvancedImageBox.axaml"/>
         <StyleInclude Source="Controls/FrameCarousel.axaml"/>
         <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml"/>
@@ -58,6 +61,8 @@
         <StyleInclude Source="Controls/SelectableImageCard/SelectableImageButton.axaml"/>
         <StyleInclude Source="Controls/SettingsAccountLinkExpander.axaml"/>
         <StyleInclude Source="Controls/StarsRating.axaml"/>
+        <StyleInclude Source="Controls/VideoGenerationSettingsCard.axaml"/>
+        <StyleInclude Source="Controls/VideoOutputSettingsCard.axaml"/>
         <StyleInclude Source="Controls/Inference/StackCard.axaml"/>
         <StyleInclude Source="Controls/Inference/StackEditableCard.axaml"/>
         <StyleInclude Source="Controls/Inference/StackExpander.axaml"/>

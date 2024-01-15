@@ -1,11 +1,16 @@
 ﻿using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Exceptions;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -114,8 +119,34 @@ public class ComfyUI(
             {
                 Name = "Use CPU only",
                 Type = LaunchOptionType.Bool,
-                InitialValue = !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
+                InitialValue =
+                    !Compat.IsMacOS && !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
                 Options = ["--cpu"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Cross Attention Method",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS ? "--use-pytorch-cross-attention" : null,
+                Options =
+                [
+                    "--use-split-cross-attention",
+                    "--use-quad-cross-attention",
+                    "--use-pytorch-cross-attention"
+                ]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Force Floating Point Precision",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS ? "--force-fp16" : null,
+                Options = ["--force-fp32", "--force-fp16"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "VAE Precision",
+                Type = LaunchOptionType.Bool,
+                Options = ["--fp16-vae", "--fp32-vae", "--bf16-vae"]
             },
             new LaunchOptionDefinition
             {
@@ -142,7 +173,14 @@ public class ComfyUI(
     public override string MainBranch => "master";
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm, TorchVersion.Mps };
+        new[]
+        {
+            TorchVersion.Cpu,
+            TorchVersion.Cuda,
+            TorchVersion.DirectMl,
+            TorchVersion.Rocm,
+            TorchVersion.Mps
+        };
 
     public override async Task InstallPackage(
         string installLocation,
@@ -161,7 +199,9 @@ public class ComfyUI(
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
-        progress?.Report(new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true));
+        progress?.Report(
+            new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
+        );
 
         var pipArgs = new PipInstallArgs();
 
@@ -181,7 +221,12 @@ public class ComfyUI(
                             TorchVersion.Cpu => "cpu",
                             TorchVersion.Cuda => "cu121",
                             TorchVersion.Rocm => "rocm5.6",
-                            _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                            _
+                                => throw new ArgumentOutOfRangeException(
+                                    nameof(torchVersion),
+                                    torchVersion,
+                                    null
+                                )
                         }
                     )
         };
@@ -239,16 +284,23 @@ public class ComfyUI(
         }
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
+    public override Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    ) =>
         sharedFolderMethod switch
         {
-            SharedFolderMethod.Symlink => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
+            SharedFolderMethod.Symlink
+                => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
             SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
             SharedFolderMethod.None => Task.CompletedTask,
             _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
         };
 
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
+    public override Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
     {
         return sharedFolderMethod switch
         {
@@ -286,7 +338,9 @@ public class ComfyUI(
             throw new Exception("Invalid extra_model_paths.yaml");
         }
         // check if we have a child called "stability_matrix"
-        var stabilityMatrixNode = mappingNode.Children.FirstOrDefault(c => c.Key.ToString() == "stability_matrix");
+        var stabilityMatrixNode = mappingNode.Children.FirstOrDefault(
+            c => c.Key.ToString() == "stability_matrix"
+        );
 
         if (stabilityMatrixNode.Key != null)
         {
@@ -337,7 +391,11 @@ public class ComfyUI(
                     { "hypernetworks", Path.Combine(modelsDir, "Hypernetwork") },
                     {
                         "controlnet",
-                        string.Join('\n', Path.Combine(modelsDir, "ControlNet"), Path.Combine(modelsDir, "T2IAdapter"))
+                        string.Join(
+                            '\n',
+                            Path.Combine(modelsDir, "ControlNet"),
+                            Path.Combine(modelsDir, "T2IAdapter")
+                        )
                     },
                     { "clip", Path.Combine(modelsDir, "CLIP") },
                     { "clip_vision", Path.Combine(modelsDir, "InvokeClipVision") },
@@ -401,9 +459,141 @@ public class ComfyUI(
 
         mappingNode.Children.Remove("stability_matrix");
 
-        var serializer = new SerializerBuilder().WithNamingConvention(UnderscoredNamingConvention.Instance).Build();
+        var serializer = new SerializerBuilder()
+            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .Build();
         var yamlData = serializer.Serialize(mappingNode);
 
         await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);
+    }
+
+    public override IPackageExtensionManager ExtensionManager => new ComfyExtensionManager(this);
+
+    private class ComfyExtensionManager(ComfyUI package)
+        : GitPackageExtensionManager(package.PrerequisiteHelper)
+    {
+        public override string RelativeInstallDirectory => "custom_nodes";
+
+        public override IEnumerable<ExtensionManifest> DefaultManifests =>
+            [
+                new ExtensionManifest(
+                    new Uri("https://cdn.jsdelivr.net/gh/ltdrdata/ComfyUI-Manager/custom-node-list.json")
+                )
+            ];
+
+        public override async Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(
+            ExtensionManifest manifest,
+            CancellationToken cancellationToken = default
+        )
+        {
+            // Get json
+            var content = await package
+                .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
+                .ConfigureAwait(false);
+
+            // Parse json
+            var jsonManifest = JsonSerializer.Deserialize<ComfyExtensionManifest>(
+                content,
+                ComfyExtensionManifestSerializerContext.Default.Options
+            );
+
+            return jsonManifest?.GetPackageExtensions() ?? Enumerable.Empty<PackageExtension>();
+        }
+
+        /// <inheritdoc />
+        public override async Task InstallExtensionAsync(
+            PackageExtension extension,
+            InstalledPackage installedPackage,
+            PackageExtensionVersion? version = null,
+            IProgress<ProgressReport>? progress = null,
+            CancellationToken cancellationToken = default
+        )
+        {
+            await base.InstallExtensionAsync(
+                extension,
+                installedPackage,
+                version,
+                progress,
+                cancellationToken
+            )
+                .ConfigureAwait(false);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var cloneRoot = new DirectoryPath(installedPackage.FullPath!, RelativeInstallDirectory);
+
+            var installedDirs = extension
+                .Files.Select(uri => uri.Segments.LastOrDefault())
+                .Where(path => !string.IsNullOrEmpty(path))
+                .Select(path => cloneRoot.JoinDir(path!))
+                .Where(dir => dir.Exists);
+
+            foreach (var installedDir in installedDirs)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Install requirements.txt if found
+                if (installedDir.JoinFile("requirements.txt") is { Exists: true } requirementsFile)
+                {
+                    progress?.Report(
+                        new ProgressReport(
+                            0f,
+                            $"Installing requirements.txt for {installedDir.Name}",
+                            isIndeterminate: true
+                        )
+                    );
+
+                    await using var venvRunner = await package
+                        .SetupVenvPure(installedPackage.FullPath!)
+                        .ConfigureAwait(false);
+
+                    var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(
+                        await requirementsFile.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)
+                    );
+
+                    await venvRunner
+                        .PipInstall(pipArgs, progress.AsProcessOutputHandler())
+                        .ConfigureAwait(false);
+
+                    progress?.Report(
+                        new ProgressReport(1f, $"Installed requirements.txt for {installedDir.Name}")
+                    );
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Run install.py if found
+                if (installedDir.JoinFile("install.py") is { Exists: true } installScript)
+                {
+                    progress?.Report(
+                        new ProgressReport(
+                            0f,
+                            $"Running install.py for {installedDir.Name}",
+                            isIndeterminate: true
+                        )
+                    );
+
+                    await using var venvRunner = await package
+                        .SetupVenvPure(installedPackage.FullPath!)
+                        .ConfigureAwait(false);
+
+                    venvRunner.WorkingDirectory = installScript.Directory;
+
+                    venvRunner.RunDetached(["install.py"], progress.AsProcessOutputHandler());
+
+                    await venvRunner.Process.WaitUntilOutputEOF(cancellationToken).ConfigureAwait(false);
+                    await venvRunner.Process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+
+                    if (venvRunner.Process.HasExited && venvRunner.Process.ExitCode != 0)
+                    {
+                        throw new ProcessException(
+                            $"install.py for {installedDir.Name} exited with code {venvRunner.Process.ExitCode}"
+                        );
+                    }
+
+                    progress?.Report(new ProgressReport(1f, $"Ran launch.py for {installedDir.Name}"));
+                }
+            }
+        }
     }
 }

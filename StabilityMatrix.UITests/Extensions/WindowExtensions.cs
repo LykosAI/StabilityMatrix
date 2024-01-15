@@ -19,16 +19,12 @@ public static class WindowExtensions
         }
         if (targetVisualRoot.Equals(topLevel))
         {
-            throw new ArgumentException(
-                "Target is not part of the same visual tree as the top level"
-            );
+            throw new ArgumentException("Target is not part of the same visual tree as the top level");
         }
 
         var point =
-            target.TranslatePoint(
-                new Point(target.Bounds.Width / 2, target.Bounds.Height / 2),
-                topLevel
-            ) ?? throw new NullReferenceException("Point is null");
+            target.TranslatePoint(new Point(target.Bounds.Width / 2, target.Bounds.Height / 2), topLevel)
+            ?? throw new NullReferenceException("Point is null");
 
         topLevel.MouseMove(point);
         topLevel.MouseDown(point, MouseButton.Left);
@@ -48,16 +44,12 @@ public static class WindowExtensions
         }
         if (!targetVisualRoot.Equals(topLevel))
         {
-            throw new ArgumentException(
-                "Target is not part of the same visual tree as the top level"
-            );
+            throw new ArgumentException("Target is not part of the same visual tree as the top level");
         }
 
         var point =
-            target.TranslatePoint(
-                new Point(target.Bounds.Width / 2, target.Bounds.Height / 2),
-                topLevel
-            ) ?? throw new NullReferenceException("Point is null");
+            target.TranslatePoint(new Point(target.Bounds.Width / 2, target.Bounds.Height / 2), topLevel)
+            ?? throw new NullReferenceException("Point is null");
 
         topLevel.MouseMove(point);
         topLevel.MouseDown(point, MouseButton.Left);
@@ -68,6 +60,6 @@ public static class WindowExtensions
         // Return mouse to outside of window
         topLevel.MouseMove(new Point(-50, -50));
 
-        Dispatcher.UIThread.Invoke(() => Dispatcher.UIThread.RunJobs());
+        await Task.Delay(300);
     }
 }

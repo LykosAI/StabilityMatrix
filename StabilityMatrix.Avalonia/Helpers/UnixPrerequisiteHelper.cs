@@ -70,15 +70,9 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         // Array of (asset_uri, extract_to)
-        var assets = new[]
-        {
-            (Assets.SevenZipExecutable, AssetsDir),
-            (Assets.SevenZipLicense, AssetsDir),
-        };
+        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir), };
 
-        progress?.Report(
-            new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true));
 
         Directory.CreateDirectory(AssetsDir);
         foreach (var (asset, extractDir) in assets)
@@ -86,9 +80,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
             await asset.ExtractToDir(extractDir);
         }
 
-        progress?.Report(
-            new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false)
-        );
+        progress?.Report(new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false));
     }
 
     public async Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -150,8 +142,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         if (result.ExitCode != 0)
         {
             Logger.Error(
-                "Git command [{Command}] failed with exit code "
-                    + "{ExitCode}:\n{StdOut}\n{StdErr}",
+                "Git command [{Command}] failed with exit code " + "{ExitCode}:\n{StdOut}\n{StdErr}",
                 command,
                 result.ExitCode,
                 result.StandardOutput,
@@ -239,9 +230,85 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         progress?.Report(new ProgressReport(1, "Installing Python", isIndeterminate: false));
     }
 
-    public Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)
+    public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
     {
-        throw new NotImplementedException();
+        return ProcessRunner.RunBashCommand(args.Prepend("git").ToArray(), workingDirectory ?? "");
+    }
+
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
+    public async Task RunNpm(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null
+    )
+    {
+        var command = args.Prepend([NpmPath]);
+
+        var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "");
+        if (result.ExitCode != 0)
+        {
+            Logger.Error(
+                "npm command [{Command}] failed with exit code " + "{ExitCode}:\n{StdOut}\n{StdErr}",
+                command,
+                result.ExitCode,
+                result.StandardOutput,
+                result.StandardError
+            );
+
+            throw new ProcessException(
+                $"npm command [{command}] failed with exit code"
+                    + $" {result.ExitCode}:\n{result.StandardOutput}\n{result.StandardError}"
+            );
+        }
+
+        onProcessOutput?.Invoke(ProcessOutput.FromStdOutLine(result.StandardOutput));
+        onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
+    }
+
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
+    public async Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (IsNodeInstalled)
+        {
+            Logger.Info("node already installed");
+            return;
+        }
+
+        Logger.Info("Downloading node");
+
+        var downloadUrl = Compat.IsMacOS
+            ? "https://nodejs.org/dist/v20.11.0/node-v20.11.0-darwin-arm64.tar.gz"
+            : "https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz";
+
+        var nodeDownloadPath = AssetsDir.JoinFile(Path.GetFileName(downloadUrl));
+
+        await downloadService.DownloadToFileAsync(downloadUrl, nodeDownloadPath, progress: progress);
+
+        Logger.Info("Installing node");
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing prerequisites..."
+            )
+        );
+
+        // unzip
+        await ArchiveHelper.Extract7ZAuto(nodeDownloadPath, AssetsDir);
+
+        var nodeDir = Compat.IsMacOS
+            ? AssetsDir.JoinDir("node-v20.11.0-darwin-arm64")
+            : AssetsDir.JoinDir("node-v20.11.0-linux-x64");
+        Directory.Move(nodeDir, NodeDir);
+
+        progress?.Report(
+            new ProgressReport(progress: 1f, message: "Node install complete", type: ProgressType.Generic)
+        );
+
+        File.Delete(nodeDownloadPath);
     }
 
     [SupportedOSPlatform("Linux")]

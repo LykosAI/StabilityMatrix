@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.8.0-pre.2
+### Added
+- Added German language option, thanks to Mario da Graca for the translation
+- Added Portuguese language options, thanks to nextosai for the translation
+### Changed
+- Updated translations for the following languages:
+  - Spanish
+  - French
+  - Japanese
+  - Turkish
 ### Fixed
 - Fixed Auto-update failing to start new version on Windows and Linux when path contains spaces
 - Fixed InvokeAI v3.6.0 `"detail": "Not Found"` error when opening the UI

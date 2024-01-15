@@ -680,7 +680,106 @@
   <data name="Action_RestoreDefaultLayout" xml:space="preserve">
     <value>Restablecer Diseño Predeterminado</value>
   </data>
-  <data name="Label_CivitAi" xml:space="preserve">
-    <value>CivitAI</value>
+  <data name="Label_UseSharedOutputFolder" xml:space="preserve">
+    <value>Compartir Resultado</value>
+  </data>
+  <data name="Label_BatchIndex" xml:space="preserve">
+    <value>Índice de lotes</value>
+  </data>
+  <data name="Action_Copy" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="Action_OpenInViewer" xml:space="preserve">
+    <value>Abrir en el Visor de imágenes</value>
+  </data>
+  <data name="Label_NumImagesSelected" xml:space="preserve">
+    <value>{0} imágenes seleccionadas</value>
+  </data>
+  <data name="Label_OutputFolder" xml:space="preserve">
+    <value>Carpeta de Resultados</value>
+  </data>
+  <data name="Label_OutputType" xml:space="preserve">
+    <value>Tipo de Resultados</value>
+  </data>
+  <data name="Action_ClearSelection" xml:space="preserve">
+    <value>Borrar Selección</value>
+  </data>
+  <data name="Action_SelectAll" xml:space="preserve">
+    <value>Seleccionar Todo</value>
+  </data>
+  <data name="Action_SendToInference" xml:space="preserve">
+    <value>Enviar a Inference</value>
+  </data>
+  <data name="Label_TextToImage" xml:space="preserve">
+    <value>Texto a Imagen</value>
+  </data>
+  <data name="Label_ImageToImage" xml:space="preserve">
+    <value>Imagen a Imagen</value>
+  </data>
+  <data name="Label_Inpainting" xml:space="preserve">
+    <value>Pintar Región</value>
+  </data>
+  <data name="Label_Upscale" xml:space="preserve">
+    <value>Escalar</value>
+  </data>
+  <data name="Label_OutputsPageTitle" xml:space="preserve">
+    <value>Navegador de Resultados</value>
+  </data>
+  <data name="Label_OneImageSelected" xml:space="preserve">
+    <value>1 imagen seleccionada</value>
+  </data>
+  <data name="Label_PythonPackages" xml:space="preserve">
+    <value>Paquetes Python</value>
+  </data>
+  <data name="Action_Consolidate" xml:space="preserve">
+    <value>Agrupar</value>
+  </data>
+  <data name="Label_AreYouSure" xml:space="preserve">
+    <value>¿Estás seguro?</value>
+  </data>
+  <data name="Label_ConsolidateExplanation" xml:space="preserve">
+    <value>Esto moverá todas las imágenes generadas desde los paquetes seleccionados, al directorio &apos;Grupo&apos; de la carpeta de resultados compartidos. Esta acción no se puede deshacer.</value>
+  </data>
+  <data name="Action_Refresh" xml:space="preserve">
+    <value>Refrescar</value>
+  </data>
+  <data name="Action_Upgrade" xml:space="preserve">
+    <value>Mejorar</value>
+  </data>
+  <data name="Action_Downgrade" xml:space="preserve">
+    <value>Degradar</value>
+  </data>
+  <data name="Action_OpenGithub" xml:space="preserve">
+    <value>Abrir en GitHub</value>
+  </data>
+  <data name="Label_Connected" xml:space="preserve">
+    <value>Conectado</value>
+  </data>
+  <data name="Action_Disconnect" xml:space="preserve">
+    <value>Desconectar</value>
+  </data>
+  <data name="Label_Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Label_Username" xml:space="preserve">
+    <value>Usuario</value>
+  </data>
+  <data name="Label_Password" xml:space="preserve">
+    <value>Contraseña</value>
+  </data>
+  <data name="Action_Login" xml:space="preserve">
+    <value>Entrar</value>
+  </data>
+  <data name="Action_Signup" xml:space="preserve">
+    <value>Registrarme</value>
+  </data>
+  <data name="Label_ConfirmPassword" xml:space="preserve">
+    <value>Confirmar Contraseña</value>
+  </data>
+  <data name="Label_ApiKey" xml:space="preserve">
+    <value>Clave API</value>
+  </data>
+  <data name="Label_Accounts" xml:space="preserve">
+    <value>Cuentas</value>
   </data>
 </root>

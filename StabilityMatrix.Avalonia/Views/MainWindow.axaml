@@ -72,7 +72,7 @@
             ItemInvoked="NavigationView_OnItemInvoked"
             PaneDisplayMode="Left"
             IsPaneOpen="False"
-            OpenPaneLength="200"
+            OpenPaneLength="{Binding PaneWidth}"
             IsSettingsVisible="False"
             IsBackEnabled="False"
             MenuItemsSource="{Binding Pages, Mode=OneWay}"

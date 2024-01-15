@@ -118,564 +118,816 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="Action_Launch" xml:space="preserve">
-    <value>Lancer</value>
+    <value>Executar</value>
   </data>
   <data name="Action_Quit" xml:space="preserve">
-    <value>Quitter</value>
+    <value>Encerrar</value>
   </data>
   <data name="Action_Save" xml:space="preserve">
-    <value>Enregistrer</value>
+    <value>Salvar</value>
   </data>
   <data name="Action_Cancel" xml:space="preserve">
-    <value>Annuler</value>
+    <value>Cancelar</value>
   </data>
   <data name="Label_Language" xml:space="preserve">
-    <value>Langue</value>
+    <value>Idioma</value>
   </data>
   <data name="Text_RelaunchRequiredToApplyLanguage" xml:space="preserve">
-    <value>Un redémarrage est nécessaire pour que la nouvelle option linguistique prenne effet.</value>
+    <value>Reiniciar</value>
   </data>
   <data name="Action_Relaunch" xml:space="preserve">
-    <value>Relancer</value>
+    <value>Reiniciar</value>
   </data>
   <data name="Action_RelaunchLater" xml:space="preserve">
-    <value>Relancer plus tard</value>
+    <value>Reiniciar mais tarde</value>
   </data>
   <data name="Label_RelaunchRequired" xml:space="preserve">
-    <value>Relance nécessaire</value>
+    <value>Necessário Reiniciar</value>
   </data>
   <data name="Label_UnknownPackage" xml:space="preserve">
-    <value>Paquet inconnu</value>
+    <value>Pacote Desconhecido</value>
   </data>
   <data name="Action_Import" xml:space="preserve">
-    <value>Importer</value>
+    <value>Importar</value>
   </data>
   <data name="Label_PackageType" xml:space="preserve">
-    <value>Type de package</value>
+    <value>Tipo do Pacote</value>
   </data>
   <data name="Label_Version" xml:space="preserve">
-    <value>Version</value>
+    <value>Versão</value>
   </data>
   <data name="Label_VersionType" xml:space="preserve">
-    <value>Version Type</value>
+    <value>Tipo da Versão</value>
   </data>
   <data name="Label_Releases" xml:space="preserve">
-    <value>Version</value>
+    <value>Versões</value>
   </data>
   <data name="Label_Branches" xml:space="preserve">
-    <value>Branches</value>
+    <value>Ramificações</value>
   </data>
   <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
-    <value>Glisser-déposer les checkpoints ici pour les importer</value>
+    <value>Arraste e Solte os Checkpoints aqui para Importar</value>
   </data>
   <data name="Label_Emphasis" xml:space="preserve">
-    <value>Accentuation</value>
+    <value>Enfatizar</value>
   </data>
   <data name="Label_Deemphasis" xml:space="preserve">
-    <value>Désaccentuation</value>
+    <value>Desenfatizar</value>
   </data>
   <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
-    <value>Emebeddings / Inversion textuelle</value>
+    <value>Emebeddings / Inversão Textual</value>
   </data>
   <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
-    <value>Réseaux (Lora / LyCORIS)</value>
+    <value>Networks (Lora / LyCORIS)</value>
   </data>
   <data name="Label_Comments" xml:space="preserve">
-    <value>Commentaires</value>
+    <value>Comentários</value>
   </data>
   <data name="Label_ShowPixelGridAtHighZoomLevels" xml:space="preserve">
-    <value>Afficher la grille de pixels à des niveaux de zoom élevés</value>
+    <value>Exibir Pixels Grid com níveis de Zoom</value>
   </data>
   <data name="Label_Steps" xml:space="preserve">
-    <value>Étapes</value>
+    <value>Passos</value>
   </data>
   <data name="Label_StepsBase" xml:space="preserve">
-    <value>Étapes - Base</value>
+    <value>Passos - Base</value>
   </data>
   <data name="Label_StepsRefiner" xml:space="preserve">
-    <value>Étapes - Affineur</value>
+    <value>Passos - Refinamento</value>
   </data>
   <data name="Label_CFGScale" xml:space="preserve">
-    <value>Échelle CFG</value>
+    <value>Escale de CFG</value>
   </data>
   <data name="Label_DenoisingStrength" xml:space="preserve">
-    <value>Force de denoising</value>
+    <value>Nível de Denoising</value>
   </data>
   <data name="Label_Width" xml:space="preserve">
-    <value>Largeur</value>
+    <value>Largura</value>
   </data>
   <data name="Label_Height" xml:space="preserve">
-    <value>Hauteur</value>
+    <value>Altura</value>
   </data>
   <data name="Label_Refiner" xml:space="preserve">
-    <value>Raffineur</value>
+    <value>Refinamento</value>
   </data>
   <data name="Label_VAE" xml:space="preserve">
     <value>VAE</value>
   </data>
   <data name="Label_Model" xml:space="preserve">
-    <value>Modèle</value>
+    <value>Modelo</value>
   </data>
   <data name="Action_Connect" xml:space="preserve">
-    <value>Connecter</value>
+    <value>Conectar</value>
   </data>
   <data name="Label_ConnectingEllipsis" xml:space="preserve">
-    <value>Connexion...</value>
+    <value>Conectando...</value>
   </data>
   <data name="Action_Close" xml:space="preserve">
-    <value>Fermer</value>
+    <value>Fechar</value>
   </data>
   <data name="Label_WaitingToConnectEllipsis" xml:space="preserve">
-    <value>En attente de connexion...</value>
+    <value>Aguardando pela conecção</value>
   </data>
   <data name="Label_UpdateAvailable" xml:space="preserve">
-    <value>Mise à jour disponible</value>
+    <value>Novo Update disponível</value>
   </data>
   <data name="Label_BecomeAPatron" xml:space="preserve">
-    <value>Devenir un Patreon</value>
+    <value>Torne-se um colaborador no Patreon</value>
   </data>
   <data name="Label_JoinDiscord" xml:space="preserve">
-    <value>Rejoindre le serveur Discord</value>
+    <value>Junte-se ao nosso canal no Discord</value>
   </data>
   <data name="Label_Downloads" xml:space="preserve">
-    <value>Téléchargements</value>
+    <value>Downloads</value>
   </data>
   <data name="Action_Install" xml:space="preserve">
-    <value>Installer</value>
+    <value>Instalação</value>
   </data>
   <data name="Label_SkipSetup" xml:space="preserve">
-    <value>Sauter la première installation</value>
+    <value>Pular as configurações iniciais</value>
   </data>
   <data name="Label_UnexpectedErrorOccurred" xml:space="preserve">
-    <value>Une erreur inattendue s&apos;est produite</value>
+    <value>Um erro inesperado ocorreu</value>
   </data>
   <data name="Action_ExitApplication" xml:space="preserve">
-    <value>Demande de sortie</value>
+    <value>Sair da Aplicação</value>
   </data>
   <data name="Label_DisplayName" xml:space="preserve">
-    <value>Nom d&apos;affichage</value>
+    <value>Nome de Exibição</value>
   </data>
   <data name="Label_InstallationWithThisNameExists" xml:space="preserve">
-    <value>Une installation portant ce nom existe déjà.</value>
+    <value>Uma instalação com este nome já existe</value>
   </data>
   <data name="Label_PleaseChooseDifferentName" xml:space="preserve">
-    <value>Veuillez choisir un autre nom ou un autre lieu d&apos;installation.</value>
+    <value>Por favor escolha um novo nome ou escolha um novo local para a instalação</value>
   </data>
   <data name="Label_AdvancedOptions" xml:space="preserve">
-    <value>Options avancées</value>
+    <value>Opções Avançadas</value>
   </data>
   <data name="Label_Commit" xml:space="preserve">
-    <value>Commit</value>
+    <value>Salvar alterações</value>
   </data>
   <data name="Label_SharedModelFolderStrategy" xml:space="preserve">
-    <value>Stratégie du dossier de modéles partagé</value>
+    <value>Estratégia de Modelo de Pasta compartilhado</value>
   </data>
   <data name="Label_PyTorchVersion" xml:space="preserve">
-    <value>Version PyTorch</value>
+    <value>Versão to PyTorch</value>
   </data>
   <data name="Label_CloseDialogWhenFinished" xml:space="preserve">
-    <value>Fermer la boîte de dialogue lorsque l&apos;opération est terminée</value>
+    <value>Fechar diálogo quando finalizar</value>
   </data>
   <data name="Label_DataDirectory" xml:space="preserve">
-    <value>Répertoire de données</value>
+    <value>DIretório de Dados</value>
   </data>
   <data name="Label_DataDirectoryExplanation" xml:space="preserve">
-    <value>C&apos;est là que seront installés les points de contrôle du modèle, les LORA, les interfaces web, les paramètres, etc.</value>
+    <value>Este local é onde os dados do aplicativo (modelos de Checkpoints, Interfaces Web, etc.) serão instaldos</value>
   </data>
   <data name="Label_FatWarning" xml:space="preserve">
-    <value>Vous pouvez rencontrer des erreurs lors de l&apos;utilisation d&apos;un disque FAT32 ou exFAT. Sélectionnez un autre disque pour une meilleure expérience.</value>
+    <value>Você poderá encontrar erros quando usar discos rígidos com formatação FAT32 ou exFAT. Escolha outro tipo de HD  para uma experiência melhor.</value>
   </data>
   <data name="Label_PortableMode" xml:space="preserve">
-    <value>Mode portable</value>
+    <value>Modo Portátil</value>
   </data>
   <data name="Label_PortableModeExplanation" xml:space="preserve">
-    <value>En mode portable, toutes les données et tous les paramètres sont stockés dans le même répertoire que l&apos;application. Vous pourrez déplacer l&apos;application et son dossier &quot;Data&quot; vers un autre endroit ou un autre ordinateur.</value>
+    <value>Com o Modo Portátil, todos os dados e configurações serão salvos no mesmo diretório da aplicação. Você poderá mover a aplicação com suas pastas de dados para um local diferente em seu computador.</value>
   </data>
   <data name="Action_Continue" xml:space="preserve">
-    <value>Continuer</value>
+    <value>Continuar</value>
   </data>
   <data name="Label_PreviousImage" xml:space="preserve">
-    <value>Image précédente</value>
+    <value>Imagem Anterior</value>
   </data>
   <data name="Label_NextImage" xml:space="preserve">
-    <value>Image suivante</value>
+    <value>Próxima Imagem</value>
   </data>
   <data name="Label_ModelDescription" xml:space="preserve">
-    <value>Description du modèle</value>
+    <value>Descrição do Modelo</value>
   </data>
   <data name="Label_NewVersionAvailable" xml:space="preserve">
-    <value>Une nouvelle version de Stability Matrix est disponible !</value>
+    <value>Uma nova versão do Stability Matrix está disponível</value>
   </data>
   <data name="Label_ImportLatest" xml:space="preserve">
-    <value>Importer les dernières -</value>
+    <value>Importar última versão</value>
   </data>
   <data name="Label_AllVersions" xml:space="preserve">
-    <value>Toutes les versions</value>
+    <value>Todas as Versões</value>
   </data>
   <data name="Label_ModelSearchWatermark" xml:space="preserve">
-    <value>Rechercher des modèles, des #tags ou des @utilisateurs</value>
+    <value>Pesquisar Modelos, #tags, ou @users</value>
   </data>
   <data name="Action_Search" xml:space="preserve">
-    <value>Recherche</value>
+    <value>Pesquisar</value>
   </data>
   <data name="Label_Sort" xml:space="preserve">
-    <value>Trier</value>
+    <value>Filtrar</value>
   </data>
   <data name="Label_TimePeriod" xml:space="preserve">
-    <value>Période</value>
+    <value>Período</value>
   </data>
   <data name="Label_ModelType" xml:space="preserve">
-    <value>Type de modèle</value>
+    <value>Tipo do Modelo</value>
   </data>
   <data name="Label_BaseModel" xml:space="preserve">
-    <value>Modèle de base</value>
+    <value>Modelo Base</value>
   </data>
   <data name="Label_ShowNsfwContent" xml:space="preserve">
-    <value>Afficher le contenu NSFW</value>
+    <value>Mostar Conteúdo NSFW (adulto)</value>
   </data>
   <data name="Label_DataProvidedByCivitAi" xml:space="preserve">
-    <value>Données fournies par CivitAI</value>
+    <value>Dados fornecidos pela CivitAI</value>
   </data>
   <data name="Label_Page" xml:space="preserve">
-    <value>Page</value>
+    <value>Página</value>
   </data>
   <data name="Label_FirstPage" xml:space="preserve">
-    <value>Première page</value>
+    <value>Primeira Página</value>
   </data>
   <data name="Label_PreviousPage" xml:space="preserve">
-    <value>Page précédente</value>
+    <value>Página Anterior</value>
   </data>
   <data name="Label_NextPage" xml:space="preserve">
-    <value>Page suivante</value>
+    <value>Próxima Página</value>
   </data>
   <data name="Label_LastPage" xml:space="preserve">
-    <value>Dernière page</value>
+    <value>Última Página</value>
   </data>
   <data name="Action_Rename" xml:space="preserve">
-    <value>Renommer</value>
+    <value>Renomear</value>
   </data>
   <data name="Action_Delete" xml:space="preserve">
-    <value>Supprimer</value>
+    <value>Apagar</value>
   </data>
   <data name="Action_OpenOnCivitAi" xml:space="preserve">
-    <value>Ouvrir sur CivitAI</value>
+    <value>Abrir em CivitAI</value>
   </data>
   <data name="Label_ConnectedModel" xml:space="preserve">
-    <value>Modèle connecté</value>
+    <value>Modelo Conectado</value>
   </data>
   <data name="Label_LocalModel" xml:space="preserve">
-    <value>Modèle local</value>
+    <value>Modelo Local</value>
   </data>
   <data name="Action_ShowInExplorer" xml:space="preserve">
-    <value>Afficher dans l&apos;explorateur</value>
+    <value>Exibir no Explorer</value>
   </data>
   <data name="Action_New" xml:space="preserve">
-    <value>Nouveau</value>
+    <value>Novo</value>
   </data>
   <data name="Label_Folder" xml:space="preserve">
-    <value>Dossier</value>
+    <value>Pasta</value>
   </data>
   <data name="Label_DropFileToImport" xml:space="preserve">
-    <value>Déposer le fichier ici pour l&apos;importer</value>
+    <value>Coloque o arquivo aqui para Importar</value>
   </data>
   <data name="Label_ImportAsConnected" xml:space="preserve">
-    <value>Importer en tant que connecté</value>
+    <value>Importar com Metadados</value>
   </data>
   <data name="Label_ImportAsConnectedExplanation" xml:space="preserve">
-    <value>Recherche de métadonnées connectées sur les nouvelles importations locales</value>
+    <value>Procurar por Metadados conectados em novos locais de importação</value>
   </data>
   <data name="Label_Indexing" xml:space="preserve">
-    <value>Indexation...</value>
+    <value>Indexando...</value>
   </data>
   <data name="Label_ModelsFolder" xml:space="preserve">
-    <value>Dossier des modèles</value>
+    <value>Pasta de Modelos</value>
   </data>
   <data name="Label_Categories" xml:space="preserve">
-    <value>Catégories</value>
+    <value>Catagorias</value>
   </data>
   <data name="Label_LetsGetStarted" xml:space="preserve">
-    <value>Commençons</value>
+    <value>Vamos começar!</value>
   </data>
   <data name="Label_ReadAndAgree" xml:space="preserve">
-    <value>J&apos;ai lu et j&apos;accepte l&apos;</value>
+    <value>Ei lí e concordei com o</value>
   </data>
   <data name="Label_LicenseAgreement" xml:space="preserve">
-    <value>Accord de licence.</value>
+    <value>Acordo de Licenciamento</value>
   </data>
   <data name="Label_FindConnectedMetadata" xml:space="preserve">
-    <value>Trouver des métadonnées connectées</value>
+    <value>Procurar Metadados Conectados</value>
   </data>
   <data name="Label_ShowModelImages" xml:space="preserve">
-    <value>Afficher les images du modèle</value>
+    <value>Exibir imagens dos Modelos</value>
   </data>
   <data name="Label_Appearance" xml:space="preserve">
-    <value>Apparence</value>
+    <value>Aparencia</value>
   </data>
   <data name="Label_Theme" xml:space="preserve">
-    <value>Thème</value>
+    <value>Tema</value>
   </data>
   <data name="Label_CheckpointManager" xml:space="preserve">
-    <value>Gestionnaire de checkpoints</value>
+    <value>Gerenciador de Checkpoint</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown" xml:space="preserve">
-    <value>Suppression des liens symboliques des répertoires de checkpoints partagés lors de l&apos;arrêt de l&apos;application</value>
+    <value>Remove os links simbólico compartilhados do diretorio de Checkpoints  ao encerrar</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
-    <value>Sélectionnez cette option si vous rencontrez des problèmes pour déplacer Stability Matrix sur un autre lecteur.</value>
+    <value>Selecione esta opção caso você esteja encontrando problemas ao mover o Stability Matrix para outro HD</value>
   </data>
   <data name="Label_ResetCheckpointsCache" xml:space="preserve">
-    <value>Réinitialiser le cache des checkpoints</value>
+    <value>Resetar o cache de Checkpoints</value>
   </data>
   <data name="Label_ResetCheckpointsCache_Details" xml:space="preserve">
-    <value>Reconstruit le cache des checkpoints installés. À utiliser si les checkpoints sont mal étiquetés dans le navigateur de modèles.</value>
+    <value>Recriar o cache de Checkpoints instalados. Use caso os Checkpoints estiverem com a descrição incorreta no Selecionador de Modelos</value>
   </data>
   <data name="Label_PackageEnvironment" xml:space="preserve">
-    <value>Environnement du paquet</value>
+    <value>Ambiente do Pacote de Instalação</value>
   </data>
   <data name="Action_Edit" xml:space="preserve">
-    <value>Editer</value>
+    <value>Editar</value>
   </data>
   <data name="Label_EnvironmentVariables" xml:space="preserve">
-    <value>Variables d&apos;environnement</value>
+    <value>Variáveis de Ambiente</value>
   </data>
   <data name="Label_EmbeddedPython" xml:space="preserve">
-    <value>Python embarqué</value>
+    <value>Python Embutido</value>
   </data>
   <data name="Action_CheckVersion" xml:space="preserve">
-    <value>Vérifier la version</value>
+    <value>Verificar Versão</value>
   </data>
   <data name="Label_Integrations" xml:space="preserve">
-    <value>Intégrations</value>
+    <value>Integrações</value>
   </data>
   <data name="Label_DiscordRichPresence" xml:space="preserve">
-    <value>Présence riche en discorde</value>
+    <value>Presença no Discord</value>
   </data>
   <data name="Label_System" xml:space="preserve">
-    <value>Système</value>
+    <value>Sistema</value>
   </data>
   <data name="Label_AddToStartMenu" xml:space="preserve">
-    <value>Ajouter la matrice de stabilité au menu de démarrage</value>
+    <value>Adicionar o Stability Matrix ao Menu Iniciar</value>
   </data>
   <data name="Label_AddToStartMenu_Details" xml:space="preserve">
-    <value>Utilise l&apos;emplacement actuel de l&apos;application, vous pouvez relancer cette opération si vous déplacez l&apos;application.</value>
+    <value>Utilizar o local atual do aplicativo. Você poderá executar esta opção novamente caso você mover o aplicativo</value>
   </data>
   <data name="Label_OnlyAvailableOnWindows" xml:space="preserve">
-    <value>Uniquement disponible sous Windows</value>
+    <value>Apenas disponível no Windows</value>
   </data>
   <data name="Action_AddForCurrentUser" xml:space="preserve">
-    <value>Ajouter pour l&apos;utilisateur actuel</value>
+    <value>Adicionar para o Usuário Atual</value>
   </data>
   <data name="Action_AddForAllUsers" xml:space="preserve">
-    <value>Ajouter pour tous les utilisateurs</value>
+    <value>Adicionar para todos os Usuários</value>
   </data>
   <data name="Label_SelectNewDataDirectory" xml:space="preserve">
-    <value>Sélectionner un nouveau répertoire de données</value>
+    <value>Selecionar novo Diretório de Dados</value>
   </data>
   <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
-    <value>Ne pas déplacer les données existantes</value>
+    <value>Não mover os dados atuais</value>
   </data>
   <data name="Action_SelectDirectory" xml:space="preserve">
-    <value>Sélectionner un répertoire</value>
+    <value>Selecionar o Diretório</value>
   </data>
   <data name="Label_About" xml:space="preserve">
-    <value>A propos de</value>
+    <value>Sobre</value>
   </data>
   <data name="Label_StabilityMatrix" xml:space="preserve">
     <value>Stability Matrix</value>
   </data>
   <data name="Label_LicenseAndOpenSourceNotices" xml:space="preserve">
-    <value>Licence et avis sur les logiciels libres</value>
+    <value>Avisos de licença e código aberto</value>
   </data>
   <data name="TeachingTip_ClickLaunchToGetStarted" xml:space="preserve">
-    <value>Cliquez sur Lancer pour commencer !</value>
+    <value>Clique em Iniciar para começar!</value>
   </data>
   <data name="Action_Stop" xml:space="preserve">
-    <value>Arrêter</value>
+    <value>Parar</value>
   </data>
   <data name="Action_SendInput" xml:space="preserve">
-    <value>Envoyer input</value>
+    <value>Enviar comando</value>
   </data>
   <data name="Label_Input" xml:space="preserve">
     <value>Input</value>
   </data>
   <data name="Action_Send" xml:space="preserve">
-    <value>Envoyer</value>
+    <value>Enviar</value>
   </data>
   <data name="Label_InputRequired" xml:space="preserve">
-    <value>Données requises</value>
+    <value>Input necessário</value>
   </data>
   <data name="Label_ConfirmQuestion" xml:space="preserve">
-    <value>Confirmer ?</value>
+    <value>Confirma?</value>
   </data>
   <data name="Action_Yes" xml:space="preserve">
-    <value>Oui</value>
+    <value>Sim</value>
   </data>
   <data name="Label_No" xml:space="preserve">
-    <value>Non</value>
+    <value>Não</value>
   </data>
   <data name="Action_OpenWebUI" xml:space="preserve">
-    <value>Open Web UI</value>
+    <value>Abrir a Interface Web</value>
   </data>
   <data name="Text_WelcomeToStabilityMatrix" xml:space="preserve">
-    <value>Bienvenue à Stability Matrix !</value>
+    <value>Bem-vindo ao Stability Matrix!</value>
   </data>
   <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
-    <value>Choisissez votre interface préférée et cliquez sur Installer pour commencer.</value>
+    <value>Escolha sua interface preferida e clique em Instalar para começar</value>
   </data>
   <data name="Label_Installing" xml:space="preserve">
-    <value>Installation</value>
+    <value>Instalando</value>
   </data>
   <data name="Text_ProceedingToLaunchPage" xml:space="preserve">
-    <value>Aller à la page de lancement</value>
+    <value>Prosseguindo para a Página de Inicial</value>
   </data>
   <data name="Progress_DownloadingPackage" xml:space="preserve">
-    <value>Téléchargement du paquet...</value>
+    <value>Baixando pacote...</value>
   </data>
   <data name="Progress_DownloadComplete" xml:space="preserve">
-    <value>Téléchargement complet</value>
+    <value>Download completo</value>
   </data>
   <data name="Progress_InstallationComplete" xml:space="preserve">
-    <value>L&apos;installation est terminée</value>
+    <value>Instalação completa</value>
   </data>
   <data name="Progress_InstallingPrerequisites" xml:space="preserve">
-    <value>Installation des prérequis...</value>
+    <value>Instalando pré-requisitos...</value>
   </data>
   <data name="Progress_InstallingPackageRequirements" xml:space="preserve">
-    <value>Installation des exigences du paquet...</value>
+    <value>Instalando requisitos de pacote...</value>
   </data>
   <data name="Action_OpenInExplorer" xml:space="preserve">
-    <value>Ouvrir dans l&apos;explorateur</value>
+    <value>Abrir no Explorer</value>
   </data>
   <data name="Action_OpenInFinder" xml:space="preserve">
-    <value>Ouvrir dans le Finder</value>
+    <value>Abrir no Finder</value>
   </data>
   <data name="Action_Uninstall" xml:space="preserve">
-    <value>Désinstaller</value>
+    <value>Desinstalar</value>
   </data>
   <data name="Action_CheckForUpdates" xml:space="preserve">
-    <value>Vérifier les mises à jour</value>
+    <value>Verificar se existem atualizações</value>
   </data>
   <data name="Action_Update" xml:space="preserve">
-    <value>Mise à jour</value>
+    <value>Atualizar</value>
   </data>
   <data name="Action_AddPackage" xml:space="preserve">
-    <value>Ajouter un paquet</value>
+    <value>Adicionar um pacote</value>
   </data>
   <data name="TeachingTip_AddPackageToGetStarted" xml:space="preserve">
-    <value>Ajoutez un paquet pour commencer !</value>
+    <value>Adicione um pacote para iniciar!</value>
   </data>
   <data name="Label_EnvVarsTable_Name" xml:space="preserve">
-    <value>Nom</value>
+    <value>Nome</value>
   </data>
   <data name="Label_EnvVarsTable_Value" xml:space="preserve">
-    <value>Valeur</value>
+    <value>Valor</value>
   </data>
   <data name="Action_Remove" xml:space="preserve">
-    <value>Retirer</value>
+    <value>Remover</value>
   </data>
   <data name="Label_Details" xml:space="preserve">
-    <value>Détails</value>
+    <value>Detalhes</value>
   </data>
   <data name="Label_Callstack" xml:space="preserve">
-    <value>Callstack</value>
+    <value>Pilha de chamadas</value>
   </data>
   <data name="Label_InnerException" xml:space="preserve">
-    <value>Exception interne</value>
+    <value>Exceção interna</value>
   </data>
   <data name="Label_SearchEllipsis" xml:space="preserve">
-    <value>Recherche...</value>
+    <value>Procurar...</value>
   </data>
   <data name="Action_OK" xml:space="preserve">
     <value>OK</value>
   </data>
   <data name="Action_Retry" xml:space="preserve">
-    <value>Réessayer</value>
+    <value>Tentar novamente</value>
   </data>
   <data name="Label_PythonVersionInfo" xml:space="preserve">
-    <value>Informations sur la version de Python</value>
+    <value>Informações da versão do Python</value>
   </data>
   <data name="Action_Restart" xml:space="preserve">
-    <value>Redémarrage</value>
+    <value>Reiniciar</value>
   </data>
   <data name="Label_ConfirmDelete" xml:space="preserve">
-    <value>Confirmer Supprimer</value>
+    <value>Confirmar exclusão</value>
   </data>
   <data name="Text_PackageUninstall_Details" xml:space="preserve">
-    <value>Cette opération va supprimer le dossier du paquet et tout son contenu, y compris les images générées et les fichiers que vous avez éventuellement ajoutés.</value>
+    <value>Isso excluirá a pasta do pacote e todo o seu conteúdo, incluindo quaisquer imagens e arquivos gerados que você possa ter adicionado.</value>
   </data>
   <data name="Progress_UninstallingPackage" xml:space="preserve">
-    <value>Désinstallation du paquet...</value>
+    <value>Desinstalando pacote...</value>
   </data>
   <data name="Label_PackageUninstalled" xml:space="preserve">
-    <value>Paquet désinstallé</value>
+    <value>Pacote desinstalado</value>
   </data>
   <data name="Text_SomeFilesCouldNotBeDeleted" xml:space="preserve">
-    <value>Certains fichiers n&apos;ont pas pu être supprimés. Veuillez fermer tous les fichiers ouverts dans le répertoire du paquet et réessayer.</value>
+    <value>Alguns arquivos não puderam ser excluídos. Feche todos os arquivos abertos no diretório do pacote e tente novamente.</value>
   </data>
   <data name="Label_InvalidPackageType" xml:space="preserve">
-    <value>Type de paquet non valide</value>
+    <value>Tipo de pacote inválido</value>
   </data>
   <data name="TextTemplate_UpdatingPackage" xml:space="preserve">
-    <value>Mise à jour de {0}</value>
+    <value>Atualizando {0}</value>
   </data>
   <data name="Progress_UpdateComplete" xml:space="preserve">
-    <value>Mise à jour complète</value>
+    <value>Atualização completa</value>
   </data>
   <data name="TextTemplate_PackageUpdatedToLatest" xml:space="preserve">
-    <value>{0} a été mis à jour vers la dernière version</value>
+    <value>{0} foi atualizado para a versão mais recente</value>
   </data>
   <data name="TextTemplate_ErrorUpdatingPackage" xml:space="preserve">
-    <value>Erreur de mise à jour de {0}</value>
+    <value>Erro ao atualizar {0}</value>
   </data>
   <data name="Progress_UpdateFailed" xml:space="preserve">
-    <value>Échec de la mise à jour</value>
+    <value>A Atualização falhou</value>
   </data>
   <data name="Action_OpenInBrowser" xml:space="preserve">
-    <value>Ouvrir dans le navigateur</value>
+    <value>Abrir no navegador</value>
   </data>
   <data name="Label_ErrorInstallingPackage" xml:space="preserve">
-    <value>Erreur lors de l&apos;installation du paquet</value>
+    <value>Erro ao instalar o pacote</value>
   </data>
   <data name="Label_Branch" xml:space="preserve">
-    <value>Branche</value>
+    <value>Branch</value>
   </data>
   <data name="Label_AutoScrollToEnd" xml:space="preserve">
-    <value>Défilement automatique jusqu&apos;à la fin de la sortie de la console</value>
+    <value>Rolar automaticamente até o final da saída do console</value>
   </data>
   <data name="Label_License" xml:space="preserve">
-    <value>Licence</value>
+    <value>Licença</value>
   </data>
   <data name="Label_SharedModelStrategyShort" xml:space="preserve">
-    <value>Partage de modèle</value>
+    <value>Compartilhamento de modelo</value>
   </data>
   <data name="Label_PleaseSelectDataDirectory" xml:space="preserve">
-    <value>Veuillez sélectionner un répertoire de données</value>
+    <value>Selecione um diretório de dados</value>
   </data>
   <data name="Label_DataFolderName" xml:space="preserve">
-    <value>Nom du dossier de données</value>
+    <value>Nome da pasta de dados</value>
   </data>
   <data name="Label_CurrentDirectory" xml:space="preserve">
-    <value>Répertoire actuel :</value>
+    <value>Diretório atual:</value>
   </data>
   <data name="Text_AppWillRelaunchAfterUpdate" xml:space="preserve">
-    <value>L&apos;application sera relancée après la mise à jour</value>
+    <value>O aplicativo será reiniciado após a atualização</value>
   </data>
   <data name="Action_RemindMeLater" xml:space="preserve">
-    <value>Rappelez-moi plus tard</value>
+    <value>Lembre-me mais tarde</value>
   </data>
   <data name="Action_InstallNow" xml:space="preserve">
-    <value>Installer maintenant</value>
+    <value>instale agora</value>
   </data>
   <data name="Label_ReleaseNotes" xml:space="preserve">
-    <value>Notes de mise à jour</value>
+    <value>Notas de versão</value>
   </data>
   <data name="Action_OpenProjectEllipsis" xml:space="preserve">
-    <value>Projet ouvert...</value>
+    <value>Abrir Projeto...</value>
   </data>
   <data name="Action_SaveAsEllipsis" xml:space="preserve">
-    <value>Enregistrer sous...</value>
+    <value>Salvar como...</value>
   </data>
   <data name="Action_RestoreDefaultLayout" xml:space="preserve">
-    <value>Rétablir la présentation par défaut</value>
+    <value>Restaurar layout padrão</value>
+  </data>
+  <data name="Label_UseSharedOutputFolder" xml:space="preserve">
+    <value>Usar Pasta de saída Compartilhada </value>
+  </data>
+  <data name="Label_BatchIndex" xml:space="preserve">
+    <value>Índice de lote</value>
+  </data>
+  <data name="Action_Copy" xml:space="preserve">
+    <value>Copiar</value>
+  </data>
+  <data name="Action_OpenInViewer" xml:space="preserve">
+    <value>Abrir no Visualizador de Imagens</value>
+  </data>
+  <data name="Label_NumImagesSelected" xml:space="preserve">
+    <value>{0} imagens selecionadas</value>
+  </data>
+  <data name="Label_OutputFolder" xml:space="preserve">
+    <value>Pasta de saída</value>
+  </data>
+  <data name="Label_OutputType" xml:space="preserve">
+    <value>Tipo de saída</value>
+  </data>
+  <data name="Action_ClearSelection" xml:space="preserve">
+    <value>Limpar Seleção</value>
+  </data>
+  <data name="Action_SelectAll" xml:space="preserve">
+    <value>Selecionar tudo</value>
+  </data>
+  <data name="Action_SendToInference" xml:space="preserve">
+    <value>Enviar para inferência</value>
+  </data>
+  <data name="Label_TextToImage" xml:space="preserve">
+    <value>Texto para imagem</value>
+  </data>
+  <data name="Label_ImageToImage" xml:space="preserve">
+    <value>Imagem para imagem</value>
+  </data>
+  <data name="Label_Inpainting" xml:space="preserve">
+    <value>Inpainting (Pintar sobre a imagem)</value>
+  </data>
+  <data name="Label_Upscale" xml:space="preserve">
+    <value>Aumentar o tamanho da Imagem</value>
+  </data>
+  <data name="Label_OutputsPageTitle" xml:space="preserve">
+    <value>Navegador de Exibição</value>
+  </data>
+  <data name="Label_OneImageSelected" xml:space="preserve">
+    <value>1 imagem selecionada</value>
+  </data>
+  <data name="Label_PythonPackages" xml:space="preserve">
+    <value>Pacotes Python</value>
+  </data>
+  <data name="Action_Consolidate" xml:space="preserve">
+    <value>Consolidar</value>
+  </data>
+  <data name="Label_AreYouSure" xml:space="preserve">
+    <value>Tem certeza?</value>
+  </data>
+  <data name="Label_ConsolidateExplanation" xml:space="preserve">
+    <value>Isso moverá todas as imagens geradas dos pacotes selecionados para o diretório Consolidado da pasta de saídas compartilhadas. Essa ação não pode ser desfeita.</value>
+  </data>
+  <data name="Action_Refresh" xml:space="preserve">
+    <value>Atualizar</value>
+  </data>
+  <data name="Action_Upgrade" xml:space="preserve">
+    <value>Upgrade</value>
+  </data>
+  <data name="Action_Downgrade" xml:space="preserve">
+    <value>Downgrade</value>
+  </data>
+  <data name="Action_OpenGithub" xml:space="preserve">
+    <value>Abrir no GitHub</value>
+  </data>
+  <data name="Label_Connected" xml:space="preserve">
+    <value>Conectado</value>
+  </data>
+  <data name="Action_Disconnect" xml:space="preserve">
+    <value>Desconectar</value>
+  </data>
+  <data name="Label_Email" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Label_Username" xml:space="preserve">
+    <value>Nome de usuário</value>
+  </data>
+  <data name="Label_Password" xml:space="preserve">
+    <value>Senha</value>
+  </data>
+  <data name="Action_Login" xml:space="preserve">
+    <value>Conectar</value>
+  </data>
+  <data name="Action_Signup" xml:space="preserve">
+    <value>Cadastrar Conta</value>
+  </data>
+  <data name="Label_ConfirmPassword" xml:space="preserve">
+    <value>Confirme sua senha</value>
+  </data>
+  <data name="Label_ApiKey" xml:space="preserve">
+    <value>Chave API</value>
+  </data>
+  <data name="Label_Accounts" xml:space="preserve">
+    <value>Contas</value>
+  </data>
+  <data name="Label_Preprocessor" xml:space="preserve">
+    <value>Pré-processador</value>
+  </data>
+  <data name="Label_Strength" xml:space="preserve">
+    <value>Força a aplicar</value>
+  </data>
+  <data name="Label_ControlWeight" xml:space="preserve">
+    <value>Controle de Potência a aplicar</value>
+  </data>
+  <data name="Label_ControlSteps" xml:space="preserve">
+    <value>Número de Etapas de controle</value>
+  </data>
+  <data name="Label_CivitAiLoginRequired" xml:space="preserve">
+    <value>Você deve estar logado para baixar este ponto de verificação. Insira uma chave de API CivitAI nas configurações.</value>
+  </data>
+  <data name="Label_DownloadFailed" xml:space="preserve">
+    <value>O Download falhou</value>
+  </data>
+  <data name="Label_AutoUpdates" xml:space="preserve">
+    <value>Atualizações automáticas</value>
+  </data>
+  <data name="Label_UpdatesPreviewChannelDescription" xml:space="preserve">
+    <value>Para os usuários Beta. Os Builds (compilações) de pré-visualização serão mais confiáveis do que as do canal Dev e estarão disponíveis mais próximas de versões estáveis. Seu feedback nos ajudará muito a descobrir problemas e aprimorar os elementos do design.</value>
+  </data>
+  <data name="Label_UpdatesDevChannelDescription" xml:space="preserve">
+    <value>Para usuários técnicos. Seja o primeiro a acessar nossos Builds (compilações) de desenvolvimento a partir das versões com novos recursos assim que estes estiverem disponíveis. Podem haver alguns Bugs e pequenos problemas à medida que experimentamos novos recursos.</value>
+  </data>
+  <data name="Label_Updates" xml:space="preserve">
+    <value>Atualizações</value>
+  </data>
+  <data name="Label_YouAreUpToDate" xml:space="preserve">
+    <value>Você está atualizado</value>
+  </data>
+  <data name="TextTemplate_LastChecked" xml:space="preserve">
+    <value>Última verificação: {0}</value>
+  </data>
+  <data name="Action_CopyTriggerWords" xml:space="preserve">
+    <value>Copiar palavras que executam ações</value>
+  </data>
+  <data name="Label_TriggerWords" xml:space="preserve">
+    <value>Palavras que executam ações:</value>
+  </data>
+  <data name="TeachingTip_MoreCheckpointCategories" xml:space="preserve">
+    <value>Pastas adicionais como IPAdapters e TextualInversions (embeddings) podem ser habilitadas aqui</value>
+  </data>
+  <data name="Action_OpenOnHuggingFace" xml:space="preserve">
+    <value>Abrir no Hugging Face</value>
+  </data>
+  <data name="Action_UpdateExistingMetadata" xml:space="preserve">
+    <value>Atualizar metadados existentes</value>
+  </data>
+  <data name="Label_General" xml:space="preserve">
+    <value>Em geral</value>
+    <comment>A general settings category</comment>
+  </data>
+  <data name="Label_Inference" xml:space="preserve">
+    <value>Inferência</value>
+    <comment>The Inference feature page</comment>
+  </data>
+  <data name="Label_Prompt" xml:space="preserve">
+    <value>Incitar</value>
+    <comment>A settings category for Inference generation prompts</comment>
+  </data>
+  <data name="Label_OutputImageFiles" xml:space="preserve">
+    <value>Arquivos de imagem de saída</value>
+  </data>
+  <data name="Label_ImageViewer" xml:space="preserve">
+    <value>Visualizador de imagens</value>
+  </data>
+  <data name="Label_AutoCompletion" xml:space="preserve">
+    <value>Preenchimento automático</value>
+  </data>
+  <data name="Label_CompletionReplaceUnderscoresWithSpaces" xml:space="preserve">
+    <value>Substitua sublinhados por espaços ao inserir conclusões</value>
+  </data>
+  <data name="Label_PromptTags" xml:space="preserve">
+    <value>Etiquetas de prompt</value>
+    <comment>Tags for image generation prompts</comment>
+  </data>
+  <data name="Label_PromptTagsImport" xml:space="preserve">
+    <value>Tags de prompt de importação</value>
+  </data>
+  <data name="Label_PromptTagsDescription" xml:space="preserve">
+    <value>Arquivo de tags a ser usado para sugerir conclusões (suporta o formato .csv a1111-sd-webui-tagcomplete)</value>
+  </data>
+  <data name="Label_SystemInformation" xml:space="preserve">
+    <value>Informação do sistema</value>
+  </data>
+  <data name="Label_CivitAi" xml:space="preserve">
+    <value>CivitAI</value>
+  </data>
+  <data name="Label_HuggingFace" xml:space="preserve">
+    <value>Abraçando o rosto</value>
+  </data>
+  <data name="Label_Addons" xml:space="preserve">
+    <value>Complementos</value>
+    <comment>Inference Sampler Addons</comment>
+  </data>
+  <data name="Label_SaveIntermediateImage" xml:space="preserve">
+    <value>Salvar imagem intermediária</value>
+    <comment>Inference module step to save an intermediate image</comment>
+  </data>
+  <data name="Label_Settings" xml:space="preserve">
+    <value>Configurações</value>
+  </data>
+  <data name="Action_SelectFile" xml:space="preserve">
+    <value>Selecione o arquivo</value>
+  </data>
+  <data name="Action_ReplaceContents" xml:space="preserve">
+    <value>Substituir conteúdo</value>
+  </data>
+  <data name="Label_WipFeature" xml:space="preserve">
+    <value>Não disponível ainda</value>
+  </data>
+  <data name="Label_WipFeatureDescription" xml:space="preserve">
+    <value>Este recurso estará disponível em uma atualização futura</value>
+  </data>
+  <data name="Label_MissingImageFile" xml:space="preserve">
+    <value>Arquivo de imagem não encontrado</value>
+  </data>
+  <data name="Label_HolidayMode" xml:space="preserve">
+    <value>Modo Férias</value>
+  </data>
+  <data name="Label_CLIPSkip" xml:space="preserve">
+    <value>Pular CLIPE</value>
+  </data>
+  <data name="Label_ImageToVideo" xml:space="preserve">
+    <value>Imagem para vídeo</value>
+  </data>
+  <data name="Label_Fps" xml:space="preserve">
+    <value>Quadros por segundo</value>
+  </data>
+  <data name="Label_MinCfg" xml:space="preserve">
+    <value>CFG mínimo</value>
+  </data>
+  <data name="Label_Lossless" xml:space="preserve">
+    <value>Sem perdas</value>
+  </data>
+  <data name="Label_Frames" xml:space="preserve">
+    <value>Frames</value>
+  </data>
+  <data name="Label_MotionBucketId" xml:space="preserve">
+    <value>ID do Motion Bucket</value>
+  </data>
+  <data name="Label_AugmentationLevel" xml:space="preserve">
+    <value>Nível de aumento</value>
+  </data>
+  <data name="Label_VideoOutputMethod" xml:space="preserve">
+    <value>Método</value>
   </data>
 </root>

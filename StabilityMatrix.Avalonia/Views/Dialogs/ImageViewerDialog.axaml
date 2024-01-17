@@ -55,7 +55,9 @@
                 Command="{Binding CopyImageCommand}"/>
         </Grid.Resources>
 
+        <!-- Tag is not used but sets TemplateKey which is used to select the DataTemplate later -->
         <ContentPresenter Grid.Row="0"
+                          Tag="{Binding TemplateKeyAsync^}"
                           DataContext="{Binding ImageSource}" 
                           Content="{Binding }">
             <ContentPresenter.ContentTemplate>
@@ -85,6 +87,13 @@
                                 </ui:FAMenuFlyout>
                             </controls:AdvancedImageBox.ContextFlyout>
                         </controls:AdvancedImageBox>
+                    </DataTemplate>
+                    
+                    <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.Default}" DataType="models:ImageSource">
+                        <TextBlock 
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Text="Unsupported Format"/>
                     </DataTemplate>
                 </controls:DataTemplateSelector>
             </ContentPresenter.ContentTemplate>

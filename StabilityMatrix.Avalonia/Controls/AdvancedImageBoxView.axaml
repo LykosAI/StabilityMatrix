@@ -15,7 +15,10 @@
     x:DataType="models:ImageSource"
     mc:Ignorable="d">
     <Grid>
-        <ContentPresenter Content="{Binding}">
+        <!-- Tag is not used but sets TemplateKey which is used to select the DataTemplate later -->
+        <ContentPresenter 
+            Tag="{Binding TemplateKeyAsync^}"
+            Content="{Binding}">
             <ContentPresenter.ContentTemplate>
                 <controls:DataTemplateSelector x:TypeArguments="models:ImageSourceTemplateType">
                     <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.WebpAnimation}" DataType="models:ImageSource">
@@ -41,6 +44,13 @@
                                 </ui:FAMenuFlyout>
                             </controls:AdvancedImageBox.ContextFlyout>
                         </controls:AdvancedImageBox>
+                    </DataTemplate>
+                    
+                    <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.Default}" DataType="models:ImageSource">
+                        <TextBlock 
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Text="Unsupported Format"/>
                     </DataTemplate>
                 </controls:DataTemplateSelector>
             </ContentPresenter.ContentTemplate>

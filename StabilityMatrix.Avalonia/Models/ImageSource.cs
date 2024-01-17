@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AsyncImageLoader;
 using Avalonia.Media.Imaging;
 using Blake3;
+using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Webp;
@@ -90,9 +91,11 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
 
             if (RemoteUrl is not null)
             {
+                var httpClientFactory = App.Services.GetRequiredService<IHttpClientFactory>();
+                using var client = httpClientFactory.CreateClient();
+
                 try
                 {
-                    using var client = new HttpClient();
                     await using var stream = await client.GetStreamAsync(RemoteUrl);
                     using var reader = new WebpReader(stream);
 

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.8.0-pre.3
 ### Fixed
 - Webp static images can now be shown alongside existing webp animation support
+- Fixed image gallery arrow key navigation requiring clicking before responding
 
 ## v2.8.0-pre.2
 ### Added

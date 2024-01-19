@@ -35,7 +35,7 @@ using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -58,8 +58,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     private static partial Regex InputYesNoRegex();
 
     public override string Title => "Launch";
-    public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Rocket, IsFilled = true };
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Rocket, IsFilled = true };
 
     public ConsoleViewModel Console { get; } = new();
 
@@ -154,8 +153,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         };
     }
 
-    private void OnTeachingTooltipNeeded(object? sender, EventArgs e) =>
-        IsLaunchTeachingTipsOpen = true;
+    private void OnTeachingTooltipNeeded(object? sender, EventArgs e) => IsLaunchTeachingTipsOpen = true;
 
     private void OnInstalledPackagesChanged(object? sender, EventArgs e) => OnLoaded();
 
@@ -353,9 +351,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         // Open a config page
         var userLaunchArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
         var viewModel = dialogFactory.Get<LaunchOptionsViewModel>();
-        viewModel.Cards = LaunchOptionCard
-            .FromDefinitions(definitions, userLaunchArgs)
-            .ToImmutableArray();
+        viewModel.Cards = LaunchOptionCard.FromDefinitions(definitions, userLaunchArgs).ToImmutableArray();
 
         logger.LogDebug("Launching config dialog with cards: {CardsCount}", viewModel.Cards.Count);
 
@@ -454,14 +450,10 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     private void OnProcessExited(object? sender, int exitCode)
     {
         EventManager.Instance.OnRunningPackageStatusChanged(null);
-        Dispatcher.UIThread
-            .InvokeAsync(async () =>
+        Dispatcher
+            .UIThread.InvokeAsync(async () =>
             {
-                logger.LogTrace(
-                    "Process exited ({Code}) at {Time:g}",
-                    exitCode,
-                    DateTimeOffset.Now
-                );
+                logger.LogTrace("Process exited ({Code}) at {Time:g}", exitCode, DateTimeOffset.Now);
 
                 // Need to wait for streams to finish before detaching handlers
                 if (sender is BaseGitPackage { VenvRunner: not null } package)
@@ -477,10 +469,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
                         }
                         catch (OperationCanceledException e)
                         {
-                            logger.LogWarning(
-                                "Waiting for process EOF timed out: {Message}",
-                                e.Message
-                            );
+                            logger.LogWarning("Waiting for process EOF timed out: {Message}", e.Message);
                         }
                     }
                 }
@@ -499,9 +488,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
                 // Need to reset cursor in case its in some weird position
                 // from progress bars
                 await Console.ResetWriteCursor();
-                Console.PostLine(
-                    $"{Environment.NewLine}Process finished with exit code {exitCode}"
-                );
+                Console.PostLine($"{Environment.NewLine}Process finished with exit code {exitCode}");
             })
             .SafeFireAndForget();
     }
@@ -538,8 +525,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
                 e.Cancel = true;
 
                 var dialog = CreateExitConfirmDialog();
-                Dispatcher.UIThread
-                    .InvokeAsync(async () =>
+                Dispatcher
+                    .UIThread.InvokeAsync(async () =>
                     {
                         if (
                             (TaskDialogStandardResult)await dialog.ShowAsync(true)

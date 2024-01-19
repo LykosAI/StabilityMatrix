@@ -1,5 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -32,7 +34,9 @@ public class Fooocus(
     public override string LaunchCommand => "launch.py";
 
     public override Uri PreviewImageUri =>
-        new("https://user-images.githubusercontent.com/19834515/261830306-f79c5981-cf80-4ee3-b06b-3fef3f8bfbc7.png");
+        new(
+            "https://user-images.githubusercontent.com/19834515/261830306-f79c5981-cf80-4ee3-b06b-3fef3f8bfbc7.png"
+        );
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()
@@ -81,7 +85,13 @@ public class Fooocus(
                     MemoryLevel.Medium => "--always-normal-vram",
                     _ => null
                 },
-                Options = { "--always-high-vram", "--always-normal-vram", "--always-low-vram", "--always-no-vram" }
+                Options =
+                {
+                    "--always-high-vram",
+                    "--always-normal-vram",
+                    "--always-low-vram",
+                    "--always-no-vram"
+                }
             },
             new LaunchOptionDefinition
             {
@@ -107,10 +117,10 @@ public class Fooocus(
             LaunchOptionDefinition.Extras
         };
 
-    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
+    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
+        new[] { SharedFolderMethod.Symlink, SharedFolderMethod.Configuration, SharedFolderMethod.None };
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
@@ -221,5 +231,107 @@ public class Fooocus(
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
         VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+    }
+
+    public override Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
+    {
+        return sharedFolderMethod switch
+        {
+            SharedFolderMethod.Symlink
+                => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
+            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
+            SharedFolderMethod.None => WriteDefaultConfig(installDirectory),
+            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
+        };
+    }
+
+    public override Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
+    {
+        return sharedFolderMethod switch
+        {
+            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
+            SharedFolderMethod.Configuration => WriteDefaultConfig(installDirectory),
+            SharedFolderMethod.None => Task.CompletedTask,
+            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
+        };
+    }
+
+    private JsonSerializerOptions jsonSerializerOptions =
+        new() { WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault };
+
+    private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)
+    {
+        var fooocusConfigPath = installDirectory.JoinFile("config.txt");
+        var fooocusConfig = new FooocusConfig();
+        if (fooocusConfigPath.Exists)
+        {
+            var configText = await fooocusConfigPath.ReadAllTextAsync().ConfigureAwait(false);
+            fooocusConfig = JsonSerializer.Deserialize<FooocusConfig>(configText) ?? new FooocusConfig();
+        }
+        else
+        {
+            fooocusConfigPath.Create();
+        }
+
+        fooocusConfig.PathCheckpoints = Path.Combine(settingsManager.ModelsDirectory, "StableDiffusion");
+        fooocusConfig.PathLoras = Path.Combine(settingsManager.ModelsDirectory, "Lora");
+        fooocusConfig.PathEmbeddings = Path.Combine(settingsManager.ModelsDirectory, "TextualInversion");
+        fooocusConfig.PathVaeApprox = Path.Combine(settingsManager.ModelsDirectory, "ApproxVAE");
+        fooocusConfig.PathUpscaleModels = Path.Combine(settingsManager.ModelsDirectory, "ESRGAN");
+        fooocusConfig.PathInpaint = Path.Combine(installDirectory, "models", "inpaint");
+        fooocusConfig.PathControlnet = Path.Combine(settingsManager.ModelsDirectory, "ControlNet");
+        fooocusConfig.PathClipVision = Path.Combine(settingsManager.ModelsDirectory, "CLIP");
+        fooocusConfig.PathFooocusExpansion = Path.Combine(
+            installDirectory,
+            "models",
+            "prompt_expansion",
+            "fooocus_expansion"
+        );
+        fooocusConfig.PathOutputs = Path.Combine(installDirectory, OutputFolderName);
+
+        await fooocusConfigPath
+            .WriteAllTextAsync(JsonSerializer.Serialize(fooocusConfig, jsonSerializerOptions))
+            .ConfigureAwait(false);
+    }
+
+    private async Task WriteDefaultConfig(DirectoryPath installDirectory)
+    {
+        var fooocusConfigPath = installDirectory.JoinFile("config.txt");
+        var fooocusConfig = new FooocusConfig();
+        if (fooocusConfigPath.Exists)
+        {
+            var configText = await fooocusConfigPath.ReadAllTextAsync().ConfigureAwait(false);
+            fooocusConfig = JsonSerializer.Deserialize<FooocusConfig>(configText) ?? new FooocusConfig();
+        }
+        else
+        {
+            fooocusConfigPath.Create();
+        }
+
+        fooocusConfig.PathCheckpoints = Path.Combine(installDirectory, "models", "checkpoints");
+        fooocusConfig.PathLoras = Path.Combine(installDirectory, "models", "loras");
+        fooocusConfig.PathEmbeddings = Path.Combine(installDirectory, "models", "embeddings");
+        fooocusConfig.PathVaeApprox = Path.Combine(installDirectory, "models", "vae_approx");
+        fooocusConfig.PathUpscaleModels = Path.Combine(installDirectory, "models", "upscale_models");
+        fooocusConfig.PathInpaint = Path.Combine(installDirectory, "models", "inpaint");
+        fooocusConfig.PathControlnet = Path.Combine(installDirectory, "models", "controlnet");
+        fooocusConfig.PathClipVision = Path.Combine(installDirectory, "models", "clip_vision");
+        fooocusConfig.PathFooocusExpansion = Path.Combine(
+            installDirectory,
+            "models",
+            "prompt_expansion",
+            "fooocus_expansion"
+        );
+        fooocusConfig.PathOutputs = Path.Combine(installDirectory, OutputFolderName);
+
+        await fooocusConfigPath
+            .WriteAllTextAsync(JsonSerializer.Serialize(fooocusConfig, jsonSerializerOptions))
+            .ConfigureAwait(false);
     }
 }

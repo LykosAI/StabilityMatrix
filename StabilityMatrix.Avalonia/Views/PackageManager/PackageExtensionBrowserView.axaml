@@ -11,7 +11,7 @@
                           xmlns:extensions="clr-namespace:StabilityMatrix.Core.Models.Packages.Extensions;assembly=StabilityMatrix.Core"
                           xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
                           xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                          xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+                          xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
                           xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
                           xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
                           xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
@@ -201,6 +201,11 @@
                             <ui:SymbolIcon FontSize="16" Symbol="Settings" />
                         </Button>
                     </sg:SpacedGrid>
+                    
+                    <TextBlock Grid.Row="1"
+                               HorizontalAlignment="Center"
+                               IsVisible="{Binding ShowNoExtensionsFoundMessage}"
+                               Text="{x:Static lang:Resources.Label_NoExtensionsFound}"/>
 
                     <ScrollViewer
                         IsVisible="{Binding !IsLoading}"

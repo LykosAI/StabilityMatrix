@@ -142,7 +142,7 @@
     <value>Relancer plus tard</value>
   </data>
   <data name="Label_RelaunchRequired" xml:space="preserve">
-    <value>Relance nécessaire</value>
+    <value>Relancement nécessaire</value>
   </data>
   <data name="Label_UnknownPackage" xml:space="preserve">
     <value>Paquet inconnu</value>
@@ -250,7 +250,7 @@
     <value>Une erreur inattendue s&apos;est produite</value>
   </data>
   <data name="Action_ExitApplication" xml:space="preserve">
-    <value>Demande de sortie</value>
+    <value>Quitter l&apos;application</value>
   </data>
   <data name="Label_DisplayName" xml:space="preserve">
     <value>Nom d&apos;affichage</value>
@@ -677,5 +677,187 @@
   </data>
   <data name="Action_RestoreDefaultLayout" xml:space="preserve">
     <value>Rétablir la présentation par défaut</value>
+  </data>
+  <data name="Label_UseSharedOutputFolder" xml:space="preserve">
+    <value>Partager des générations</value>
+  </data>
+  <data name="Action_Copy" xml:space="preserve">
+    <value>Copier</value>
+  </data>
+  <data name="Action_OpenInViewer" xml:space="preserve">
+    <value>Ouvrir dans la visionneuse d&apos;images</value>
+  </data>
+  <data name="Label_NumImagesSelected" xml:space="preserve">
+    <value>{0} images sélectionnées</value>
+  </data>
+  <data name="Label_OutputFolder" xml:space="preserve">
+    <value>Dossier</value>
+    <comment>Hey hey :) is this used somewhere else ? if it&apos;s only inside the &quot;output browser&quot;, I suggest to remove &quot;output&quot; from translation, but you&apos;re the boss, lmk :)</comment>
+  </data>
+  <data name="Label_OutputType" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Action_ClearSelection" xml:space="preserve">
+    <value>Annuler la sélection</value>
+  </data>
+  <data name="Action_SelectAll" xml:space="preserve">
+    <value>Sélectionner tout</value>
+  </data>
+  <data name="Action_SendToInference" xml:space="preserve">
+    <value>Envoyer à l&apos;inférence</value>
+  </data>
+  <data name="Label_TextToImage" xml:space="preserve">
+    <value>Texte vers image</value>
+  </data>
+  <data name="Label_ImageToImage" xml:space="preserve">
+    <value>Image vers image</value>
+  </data>
+  <data name="Label_Upscale" xml:space="preserve">
+    <value>Amélioration de qualité</value>
+  </data>
+  <data name="Label_OutputsPageTitle" xml:space="preserve">
+    <value>Explorateur des générations</value>
+  </data>
+  <data name="Label_OneImageSelected" xml:space="preserve">
+    <value>1 image sélectionnée</value>
+  </data>
+  <data name="Label_PythonPackages" xml:space="preserve">
+    <value>Paquets Python</value>
+  </data>
+  <data name="Action_Consolidate" xml:space="preserve">
+    <value>Consolider</value>
+  </data>
+  <data name="Label_AreYouSure" xml:space="preserve">
+    <value>Êtes-vous sure ?</value>
+  </data>
+  <data name="Label_ConsolidateExplanation" xml:space="preserve">
+    <value>Cela déplacera toutes les images générées des packages sélectionnés vers le répertoire consolidé du dossier de sorties partagées. Cette action ne peut pas être annulée.</value>
+  </data>
+  <data name="Action_Refresh" xml:space="preserve">
+    <value>Rafraichir</value>
+  </data>
+  <data name="Action_Upgrade" xml:space="preserve">
+    <value>Passer à la version supérieure</value>
+    <comment>What is this related to ?</comment>
+  </data>
+  <data name="Action_Downgrade" xml:space="preserve">
+    <value>Passer à la version inférieure</value>
+    <comment>What is this related to ?</comment>
+  </data>
+  <data name="Action_OpenGithub" xml:space="preserve">
+    <value>Ouvrir sur GitHub</value>
+  </data>
+  <data name="Label_Connected" xml:space="preserve">
+    <value>Connecté</value>
+  </data>
+  <data name="Action_Disconnect" xml:space="preserve">
+    <value>Se déconnecter</value>
+  </data>
+  <data name="Label_Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Label_Username" xml:space="preserve">
+    <value>Nom d&apos;utilisateur</value>
+  </data>
+  <data name="Label_Password" xml:space="preserve">
+    <value>Mot de passe</value>
+  </data>
+  <data name="Action_Login" xml:space="preserve">
+    <value>Ouvrir une session</value>
+  </data>
+  <data name="Action_Signup" xml:space="preserve">
+    <value>S&apos;enregistrer</value>
+  </data>
+  <data name="Label_ConfirmPassword" xml:space="preserve">
+    <value>Confirmer le mot de passe</value>
+  </data>
+  <data name="Label_ApiKey" xml:space="preserve">
+    <value>Clé d&apos;API</value>
+  </data>
+  <data name="Label_Accounts" xml:space="preserve">
+    <value>Comptes</value>
+  </data>
+  <data name="Label_Preprocessor" xml:space="preserve">
+    <value>Préprocesseur</value>
+  </data>
+  <data name="Label_Strength" xml:space="preserve">
+    <value>Force</value>
+  </data>
+  <data name="Label_CivitAiLoginRequired" xml:space="preserve">
+    <value>Vous devez être loggué pour télécharger ce checkpoint. Veuillez entrer une clé d&apos;API CivitAI dans les paramètres.</value>
+  </data>
+  <data name="Label_DownloadFailed" xml:space="preserve">
+    <value>Echec du téléchargement</value>
+  </data>
+  <data name="Label_AutoUpdates" xml:space="preserve">
+    <value>Mises à jour automatiques</value>
+  </data>
+  <data name="Label_Updates" xml:space="preserve">
+    <value>Mises à jour</value>
+  </data>
+  <data name="Label_YouAreUpToDate" xml:space="preserve">
+    <value>Vous êtes à jour</value>
+  </data>
+  <data name="TextTemplate_LastChecked" xml:space="preserve">
+    <value>Dernière vérification: {0}</value>
+  </data>
+  <data name="Action_OpenOnHuggingFace" xml:space="preserve">
+    <value>Ouvrir sur Hugging Face</value>
+  </data>
+  <data name="Action_UpdateExistingMetadata" xml:space="preserve">
+    <value>Mettre à jour les métadonnées existantes</value>
+  </data>
+  <data name="Label_General" xml:space="preserve">
+    <value>Générale</value>
+    <comment>A general settings category</comment>
+  </data>
+  <data name="Label_SystemInformation" xml:space="preserve">
+    <value>Informations système</value>
+  </data>
+  <data name="Label_CivitAi" xml:space="preserve">
+    <value>CivitAI</value>
+  </data>
+  <data name="Label_HuggingFace" xml:space="preserve">
+    <value>Hugging Face</value>
+  </data>
+  <data name="Label_Addons" xml:space="preserve">
+    <value>Modules complémentaires</value>
+    <comment>Inference Sampler Addons</comment>
+  </data>
+  <data name="Label_Settings" xml:space="preserve">
+    <value>Paramètres</value>
+  </data>
+  <data name="Action_SelectFile" xml:space="preserve">
+    <value>Sélectionner un fichier</value>
+  </data>
+  <data name="Action_ReplaceContents" xml:space="preserve">
+    <value>Remplacer des contenus</value>
+  </data>
+  <data name="Label_WipFeature" xml:space="preserve">
+    <value>Pas encore disponible</value>
+  </data>
+  <data name="Label_WipFeatureDescription" xml:space="preserve">
+    <value>Fonctionnalité disponible dans une mise à jour future</value>
+  </data>
+  <data name="Label_MissingImageFile" xml:space="preserve">
+    <value>Fichier image manquant</value>
+  </data>
+  <data name="Label_ImageToVideo" xml:space="preserve">
+    <value>Image vers vidéo</value>
+  </data>
+  <data name="Label_Fps" xml:space="preserve">
+    <value>Images par seconde</value>
+  </data>
+  <data name="Label_MinCfg" xml:space="preserve">
+    <value>CFG Min</value>
+  </data>
+  <data name="Label_Lossless" xml:space="preserve">
+    <value>Sans perte</value>
+  </data>
+  <data name="Label_VideoOutputMethod" xml:space="preserve">
+    <value>Méthode</value>
+  </data>
+  <data name="Label_VideoQuality" xml:space="preserve">
+    <value>Qualité</value>
   </data>
 </root>

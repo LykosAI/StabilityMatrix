@@ -8,7 +8,6 @@ using StabilityMatrix.UITests.Extensions;
 
 namespace StabilityMatrix.UITests;
 
-[UsesVerify]
 [Collection("TempDir")]
 [TestCaseOrderer("StabilityMatrix.UITests.PriorityOrderer", "StabilityMatrix.UITests")]
 public class MainWindowTests : TestBase

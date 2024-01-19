@@ -3,17 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Documents;
 using Avalonia.Controls.Primitives;
-using Avalonia.Data;
 using Avalonia.Layout;
-using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using FluentIcons.Avalonia.Fluent;
 using FluentIcons.Common;
-using FluentIcons.FluentAvalonia;
-using SpacedGridControl.Avalonia;
-using StabilityMatrix.Avalonia.Styles;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
@@ -36,10 +31,10 @@ public class StarsRating : TemplatedControl
         set => SetValue(IsEditableProperty, value);
     }
 
-    public static readonly StyledProperty<int> MaximumProperty = AvaloniaProperty.Register<
-        StarsRating,
-        int
-    >(nameof(Maximum), 5);
+    public static readonly StyledProperty<int> MaximumProperty = AvaloniaProperty.Register<StarsRating, int>(
+        nameof(Maximum),
+        5
+    );
 
     public int Maximum
     {

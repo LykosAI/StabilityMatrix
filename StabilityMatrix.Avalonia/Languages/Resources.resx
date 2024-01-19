@@ -933,4 +933,7 @@
   <data name="Label_Installed" xml:space="preserve">
     <value>Installed</value>
   </data>
+  <data name="Label_NoExtensionsFound" xml:space="preserve">
+    <value>No extensions found.</value>
+  </data>
 </root>

@@ -23,7 +23,7 @@ using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 
@@ -61,10 +61,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         EventManager.Instance.ToggleProgressFlyout += (_, _) => IsOpen = !IsOpen;
     }
 
-    private void InstanceOnPackageInstallProgressAdded(
-        object? sender,
-        IPackageModificationRunner runner
-    )
+    private void InstanceOnPackageInstallProgressAdded(object? sender, IPackageModificationRunner runner)
     {
         AddPackageInstall(runner).SafeFireAndForget();
     }
@@ -181,9 +178,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         );
         ProgressItems.Add(vm);
 
-        return packageModificationRunner.ShowDialogOnStart
-            ? vm.ShowProgressDialog()
-            : Task.CompletedTask;
+        return packageModificationRunner.ShowDialogOnStart ? vm.ShowProgressDialog() : Task.CompletedTask;
     }
 
     private void ShowFailedNotification(string title, string message)

@@ -24,7 +24,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 
@@ -40,7 +40,8 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     public override string Title => "Inference";
 
     /// <inheritdoc />
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
 
     [ObservableProperty]
     private bool isPromptCompletionEnabled = true;
@@ -64,8 +65,9 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     public IEnumerable<FileNameFormatVar> OutputImageFileNameFormatVars =>
         FileNameFormatProvider
             .GetSample()
-            .Substitutions
-            .Select(kv => new FileNameFormatVar { Variable = $"{{{kv.Key}}}", Example = kv.Value.Invoke() });
+            .Substitutions.Select(
+                kv => new FileNameFormatVar { Variable = $"{{{kv.Key}}}", Example = kv.Value.Invoke() }
+            );
 
     [ObservableProperty]
     private bool isImageViewerPixelGridEnabled = true;
@@ -114,7 +116,10 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
                 var provider = FileNameFormatProvider.GetSample();
                 var template = formatProperty.Value ?? string.Empty;
 
-                if (!string.IsNullOrEmpty(template) && provider.Validate(template) == ValidationResult.Success)
+                if (
+                    !string.IsNullOrEmpty(template)
+                    && provider.Validate(template) == ValidationResult.Success
+                )
                 {
                     var format = FileNameFormat.Parse(template, provider);
                     OutputImageFileNameFormatSample = format.GetFileName() + ".png";
@@ -147,7 +152,10 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     /// <summary>
     /// Validator for <see cref="OutputImageFileNameFormat"/>
     /// </summary>
-    public static ValidationResult ValidateOutputImageFileNameFormat(string? format, ValidationContext context)
+    public static ValidationResult ValidateOutputImageFileNameFormat(
+        string? format,
+        ValidationContext context
+    )
     {
         return FileNameFormatProvider.GetSample().Validate(format ?? string.Empty);
     }

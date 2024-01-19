@@ -4,7 +4,7 @@ using StabilityMatrix.Core.Models.Packages.Extensions;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
-public partial class ExtensionViewModel() : ViewModelBase
+public partial class ExtensionViewModel : ViewModelBase
 {
     [ObservableProperty]
     private bool isSelected;

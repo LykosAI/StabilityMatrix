@@ -9,7 +9,7 @@ using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -18,7 +18,8 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class SettingsViewModel : PageViewModelBase
 {
     public override string Title => "Settings";
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
 
     public IReadOnlyList<PageViewModelBase> SubPages { get; }
 

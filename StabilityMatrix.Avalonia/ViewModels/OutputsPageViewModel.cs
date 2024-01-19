@@ -39,7 +39,7 @@ using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Size = StabilityMatrix.Core.Models.Settings.Size;
 using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 

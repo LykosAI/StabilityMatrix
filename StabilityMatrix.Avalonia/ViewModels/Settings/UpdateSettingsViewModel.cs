@@ -21,7 +21,7 @@ using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 
@@ -111,9 +111,7 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
             var isBetaChannelsEnabled = args.User?.IsActiveSupporter == true;
 
             foreach (
-                var card in AvailableUpdateChannelCards.Where(
-                    c => c.UpdateChannel > UpdateChannel.Stable
-                )
+                var card in AvailableUpdateChannelCards.Where(c => c.UpdateChannel > UpdateChannel.Stable)
             )
             {
                 card.IsSelectable = isBetaChannelsEnabled;
@@ -169,8 +167,8 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
 
     public void ShowLoginRequiredDialog()
     {
-        Dispatcher.UIThread
-            .InvokeAsync(async () =>
+        Dispatcher
+            .UIThread.InvokeAsync(async () =>
             {
                 var dialog = DialogHelper.CreateTaskDialog(
                     "Become a Supporter",
@@ -214,7 +212,8 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
         // Use maximum version from platforms equal or lower than current
         foreach (var card in AvailableUpdateChannelCards)
         {
-            card.LatestVersion = value?.UpdateChannels
+            card.LatestVersion = value
+                ?.UpdateChannels
                 .Where(kv => kv.Key <= card.UpdateChannel)
                 .Select(kv => kv.Value)
                 .MaxBy(info => info.Version, SemVersion.PrecedenceComparer)

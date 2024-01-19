@@ -17,19 +17,19 @@
 
     <ItemGroup>
       <PackageReference Include="AsyncAwaitBestPractices" Version="7.0.0" />
-      <PackageReference Include="AutoCtor" Version="2.0.0" />
+      <PackageReference Include="AutoCtor" Version="2.1.0" />
       <PackageReference Include="Blake3" Version="1.0.0" />
       <PackageReference Include="Crc32.NET" Version="1.2.0" />
       <PackageReference Include="CSharpDiscriminatedUnion" Version="2.0.1" />
-      <PackageReference Include="DeviceId" Version="6.5.0" />
-      <PackageReference Include="DeviceId.Linux" Version="6.3.1" />
-      <PackageReference Include="DeviceId.Mac" Version="6.2.1" />
-      <PackageReference Include="DeviceId.Windows" Version="6.5.0" />
-      <PackageReference Include="DeviceId.Windows.Wmi" Version="6.5.1" />
+      <PackageReference Include="DeviceId" Version="6.6.0" />
+      <PackageReference Include="DeviceId.Linux" Version="6.4.0" />
+      <PackageReference Include="DeviceId.Mac" Version="6.3.0" />
+      <PackageReference Include="DeviceId.Windows" Version="6.6.0" />
+      <PackageReference Include="DeviceId.Windows.Wmi" Version="6.6.0" />
       <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
-      <PackageReference Include="DynamicData" Version="8.1.1" />
+      <PackageReference Include="DynamicData" Version="8.3.27" />
       <PackageReference Include="ExifLibNet" Version="2.1.4" />
-      <PackageReference Include="Hardware.Info" Version="100.0.0.1" />
+      <PackageReference Include="Hardware.Info" Version="100.0.1.1" />
       <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
       <PackageReference Include="KGySoft.Drawing.Core" Version="8.0.0" />
       <PackageReference Include="KGySoft.Drawing.SkiaSharp" Version="8.0.0" />
@@ -38,23 +38,23 @@
       <PackageReference Include="MetadataExtractor" Version="2.8.1" />
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
-      <PackageReference Include="NLog" Version="5.2.5" />
-      <PackageReference Include="NLog.Extensions.Logging" Version="5.3.5" />
+      <PackageReference Include="NLog" Version="5.2.8" />
+      <PackageReference Include="NLog.Extensions.Logging" Version="5.3.8" />
       <PackageReference Include="NSec.Cryptography" Version="22.4.0" />
-      <PackageReference Include="Octokit" Version="9.0.0" />
+      <PackageReference Include="Octokit" Version="9.1.0" />
       <PackageReference Include="OneOf" Version="3.0.263" />
       <PackageReference Include="OneOf.SourceGenerator" Version="3.0.263" />
-      <PackageReference Include="Polly" Version="8.2.0" />
+      <PackageReference Include="Polly" Version="8.2.1" />
       <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
       <PackageReference Include="pythonnet" Version="3.0.3" />
       <PackageReference Include="Refit" Version="7.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="7.0.0" />
-      <PackageReference Include="RockLib.Reflection.Optimized" Version="2.0.0" />
+      <PackageReference Include="RockLib.Reflection.Optimized" Version="3.0.0" />
       <PackageReference Include="Salaros.ConfigParser" Version="0.3.8" />
       <PackageReference Include="Semver" Version="3.0.0-beta.1" />
-      <PackageReference Include="Sentry.NLog" Version="3.41.0" />
-      <PackageReference Include="SharpCompress" Version="0.34.2" />
-      <PackageReference Include="SkiaSharp" Version="2.88.6" />
+      <PackageReference Include="Sentry.NLog" Version="3.41.3" />
+      <PackageReference Include="SharpCompress" Version="0.36.0" />
+      <PackageReference Include="SkiaSharp" Version="2.88.7" />
       <PackageReference Include="Websocket.Client" Version="5.0.0" />
       <PackageReference Include="YamlDotNet" Version="13.7.1" />
       <PackageReference Include="Yoh.Text.Json.NamingPolicies" Version="1.0.0" />

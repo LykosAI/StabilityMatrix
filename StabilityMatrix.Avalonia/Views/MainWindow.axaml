@@ -9,7 +9,7 @@
                         xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                         xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
                         xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                        xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+                        xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
                         d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
                         x:DataType="vm:MainWindowViewModel"

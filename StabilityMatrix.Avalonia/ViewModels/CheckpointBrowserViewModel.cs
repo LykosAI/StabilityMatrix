@@ -12,7 +12,7 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 

@@ -26,7 +26,7 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
 
 namespace StabilityMatrix.Avalonia.ViewModels;

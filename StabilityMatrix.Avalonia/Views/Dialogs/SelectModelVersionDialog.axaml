@@ -7,7 +7,7 @@
              xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="850"
              x:DataType="dialogs:SelectModelVersionViewModel"
-             xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+             xmlns:fluentAvalonia="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
              xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
              xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"

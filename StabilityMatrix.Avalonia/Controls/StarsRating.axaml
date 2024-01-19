@@ -1,8 +1,6 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-        xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
-        xmlns:icons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia">
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls">
     <Design.PreviewWith>
         <StackPanel Width="400" Height="400" Spacing="4">
             <StackPanel.Styles>

@@ -2,11 +2,11 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
     xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     x:DataType="vmInference:StackExpanderViewModel">
 
     <Design.PreviewWith>
@@ -66,7 +66,7 @@
                                 Classes="transparent-full"
                                 Command="{Binding SettingsCommand}"
                                 IsVisible="{Binding IsSettingsEnabled}">
-                                <fluentIcons:SymbolIcon FontSize="17" Symbol="Settings" />
+                                <fluent:SymbolIcon FontSize="17" Symbol="Settings" />
                             </Button>
                             <!--  Delete button for StackEditableCard  -->
                             <Button
@@ -76,7 +76,7 @@
                                 Classes="transparent-red"
                                 Command="{Binding RemoveFromParentListCommand}"
                                 IsVisible="{Binding IsEditEnabled}">
-                                <fluentIcons:SymbolIcon FontSize="16" Symbol="Delete" />
+                                <fluent:SymbolIcon FontSize="16" Symbol="Delete" />
                             </Button>
                         </Grid>
                     </Expander.Header>

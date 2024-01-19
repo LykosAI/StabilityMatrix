@@ -292,18 +292,26 @@ public class A3WebUI(
             CancellationToken cancellationToken = default
         )
         {
-            // Get json
-            var content = await package
-                .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
-                .ConfigureAwait(false);
+            try
+            {
+                // Get json
+                var content = await package
+                    .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
+                    .ConfigureAwait(false);
 
-            // Parse json
-            var jsonManifest = JsonSerializer.Deserialize<A1111ExtensionManifest>(
-                content,
-                A1111ExtensionManifestSerializerContext.Default.Options
-            );
+                // Parse json
+                var jsonManifest = JsonSerializer.Deserialize<A1111ExtensionManifest>(
+                    content,
+                    A1111ExtensionManifestSerializerContext.Default.Options
+                );
 
-            return jsonManifest?.GetPackageExtensions() ?? Enumerable.Empty<PackageExtension>();
+                return jsonManifest?.GetPackageExtensions() ?? Enumerable.Empty<PackageExtension>();
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to get extensions from manifest");
+                return Enumerable.Empty<PackageExtension>();
+            }
         }
     }
 }

@@ -26,7 +26,7 @@ using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using PackageInstallDetailView = StabilityMatrix.Avalonia.Views.PackageManager.PackageInstallDetailView;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 

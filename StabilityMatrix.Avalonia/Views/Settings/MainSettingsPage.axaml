@@ -6,7 +6,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:hardwareInfo="clr-namespace:StabilityMatrix.Core.Helper.HardwareInfo;assembly=StabilityMatrix.Core"
     xmlns:helper="clr-namespace:StabilityMatrix.Core.Helper;assembly=StabilityMatrix.Core"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"

@@ -486,18 +486,26 @@ public class ComfyUI(
             CancellationToken cancellationToken = default
         )
         {
-            // Get json
-            var content = await package
-                .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
-                .ConfigureAwait(false);
+            try
+            {
+                // Get json
+                var content = await package
+                    .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
+                    .ConfigureAwait(false);
 
-            // Parse json
-            var jsonManifest = JsonSerializer.Deserialize<ComfyExtensionManifest>(
-                content,
-                ComfyExtensionManifestSerializerContext.Default.Options
-            );
+                // Parse json
+                var jsonManifest = JsonSerializer.Deserialize<ComfyExtensionManifest>(
+                    content,
+                    ComfyExtensionManifestSerializerContext.Default.Options
+                );
 
-            return jsonManifest?.GetPackageExtensions() ?? Enumerable.Empty<PackageExtension>();
+                return jsonManifest?.GetPackageExtensions() ?? Enumerable.Empty<PackageExtension>();
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to get package extensions");
+                return Enumerable.Empty<PackageExtension>();
+            }
         }
 
         /// <inheritdoc />

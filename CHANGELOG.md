@@ -6,9 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.8.0-pre.3
+### Added
+- Added "Config" Shared Model Folder option for Fooocus
+### Changed
+- (Internal) Updated to Avalonia 11.0.7
+- Updated French translation (thanks Greg!)
 ### Fixed
 - Webp static images can now be shown alongside existing webp animation support
 - Fixed image gallery arrow key navigation requiring clicking before responding
+- Fixed crash when loading extensions list with no internet connection
 
 ## v2.8.0-pre.2
 ### Added

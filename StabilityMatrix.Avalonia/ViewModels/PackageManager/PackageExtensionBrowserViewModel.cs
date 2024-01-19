@@ -46,6 +46,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     public PackagePair? PackagePair { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowNoExtensionsFoundMessage))]
     private bool isLoading;
 
     private SourceCache<PackageExtension, string> availableExtensionsSource =
@@ -77,6 +78,9 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
 
     public IObservableCollection<InstalledPackageExtension> InstalledExtensions { get; } =
         new ObservableCollectionExtended<InstalledPackageExtension>();
+
+    [ObservableProperty]
+    private bool showNoExtensionsFoundMessage;
 
     public PackageExtensionBrowserViewModel(
         INotificationService notificationService,
@@ -316,6 +320,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         finally
         {
             IsLoading = false;
+            ShowNoExtensionsFoundMessage = AvailableItemsSearchCollection.FilteredItems.Count == 0;
         }
     }
 

@@ -11,11 +11,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Copy Details" button to Unexpected Error dialog
 ### Changed
 - (Internal) Updated to Avalonia 11.0.7
+- Changed the Close button on the package install dialog to "Hide" 
+  - Functionality remains the same, just a name change
 - Updated French translation (thanks Greg!)
 ### Fixed
 - Webp static images can now be shown alongside existing webp animation support
 - Fixed image gallery arrow key navigation requiring clicking before responding
 - Fixed crash when loading extensions list with no internet connection
+- Fixed crash when invalid launch arguments are passed
 
 ## v2.8.0-pre.2
 ### Added

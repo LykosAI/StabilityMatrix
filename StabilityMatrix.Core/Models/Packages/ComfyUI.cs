@@ -543,29 +543,34 @@ public class ComfyUI(
                 // Install requirements.txt if found
                 if (installedDir.JoinFile("requirements.txt") is { Exists: true } requirementsFile)
                 {
-                    progress?.Report(
-                        new ProgressReport(
-                            0f,
-                            $"Installing requirements.txt for {installedDir.Name}",
-                            isIndeterminate: true
-                        )
-                    );
-
-                    await using var venvRunner = await package
-                        .SetupVenvPure(installedPackage.FullPath!)
+                    var requirementsContent = await requirementsFile
+                        .ReadAllTextAsync(cancellationToken)
                         .ConfigureAwait(false);
 
-                    var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(
-                        await requirementsFile.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)
-                    );
+                    if (!string.IsNullOrWhiteSpace(requirementsContent))
+                    {
+                        progress?.Report(
+                            new ProgressReport(
+                                0f,
+                                $"Installing requirements.txt for {installedDir.Name}",
+                                isIndeterminate: true
+                            )
+                        );
 
-                    await venvRunner
-                        .PipInstall(pipArgs, progress.AsProcessOutputHandler())
-                        .ConfigureAwait(false);
+                        await using var venvRunner = await package
+                            .SetupVenvPure(installedPackage.FullPath!)
+                            .ConfigureAwait(false);
 
-                    progress?.Report(
-                        new ProgressReport(1f, $"Installed requirements.txt for {installedDir.Name}")
-                    );
+                        var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(requirementsContent);
+
+                        await venvRunner
+                            .PipInstall(pipArgs, progress.AsProcessOutputHandler())
+                            .ConfigureAwait(false);
+
+                        progress?.Report(
+                            new ProgressReport(1f, $"Installed requirements.txt for {installedDir.Name}")
+                        );
+                    }
                 }
 
                 cancellationToken.ThrowIfCancellationRequested();

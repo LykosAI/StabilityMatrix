@@ -444,6 +444,9 @@ public static class DesignData
     public static HuggingFacePageViewModel HuggingFacePageViewModel =>
         Services.GetRequiredService<HuggingFacePageViewModel>();
 
+    public static NewOneClickInstallViewModel NewOneClickInstallViewModel =>
+        Services.GetRequiredService<NewOneClickInstallViewModel>();
+
     public static OutputsPageViewModel OutputsPageViewModel
     {
         get

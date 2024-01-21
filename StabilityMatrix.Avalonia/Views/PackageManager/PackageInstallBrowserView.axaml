@@ -20,7 +20,7 @@
         <input:StandardUICommand x:Key="PackageSelected"
                                  Command="{Binding OnPackageSelected}" />
 
-        <DataTemplate x:DataType="packages:BaseGitPackage" x:Key="PackageTemplate">
+        <DataTemplate x:DataType="packages:BasePackage" x:Key="PackageTemplate">
             <Button Padding="0"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Stretch"

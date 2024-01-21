@@ -936,4 +936,7 @@
   <data name="Label_NoExtensionsFound" xml:space="preserve">
     <value>No extensions found.</value>
   </data>
+  <data name="Action_Hide" xml:space="preserve">
+    <value>Hide</value>
+  </data>
 </root>

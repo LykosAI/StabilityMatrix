@@ -65,7 +65,7 @@ public static class Program
                 }
             });
 
-        Args = parseResult.Value;
+        Args = parseResult.Value ?? new AppArgs();
 
         if (Args.HomeDirectoryOverride is { } homeDir)
         {

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.8.0-pre.3
 ### Added
 - Added "Config" Shared Model Folder option for Fooocus
+- Added "Copy Details" button to Unexpected Error dialog
 ### Changed
 - (Internal) Updated to Avalonia 11.0.7
 - Changed the Close button on the package install dialog to "Hide" 

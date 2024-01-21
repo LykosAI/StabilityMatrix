@@ -347,11 +347,13 @@ public static class Program
         if (e.ExceptionObject is not Exception ex)
             return;
 
+        SentryId? sentryId = null;
+
         // Exception automatically logged by Sentry if enabled
         if (SentrySdk.IsEnabled)
         {
             ex.SetSentryMechanism("AppDomain.UnhandledException", handled: false);
-            SentrySdk.CaptureException(ex);
+            sentryId = SentrySdk.CaptureException(ex);
             SentrySdk.FlushAsync().SafeFireAndForget();
         }
         else
@@ -361,7 +363,10 @@ public static class Program
 
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
         {
-            var dialog = new ExceptionDialog { DataContext = new ExceptionViewModel { Exception = ex } };
+            var dialog = new ExceptionDialog
+            {
+                DataContext = new ExceptionViewModel { Exception = ex, SentryId = sentryId }
+            };
 
             var mainWindow = lifetime.MainWindow;
             // We can only show dialog if main window exists, and is visible

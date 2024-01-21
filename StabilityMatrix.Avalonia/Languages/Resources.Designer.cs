@@ -168,6 +168,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy Details.
+        /// </summary>
+        public static string Action_CopyDetails {
+            get {
+                return ResourceManager.GetString("Action_CopyDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Copy Trigger Words.
         /// </summary>
         public static string Action_CopyTriggerWords {

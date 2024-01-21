@@ -293,7 +293,12 @@ public class Fooocus(
             "prompt_expansion",
             "fooocus_expansion"
         );
-        fooocusConfig.PathOutputs = Path.Combine(installDirectory, OutputFolderName);
+
+        var outputsPath = Path.Combine(installDirectory, OutputFolderName);
+
+        // doesn't always exist on first install
+        Directory.CreateDirectory(outputsPath);
+        fooocusConfig.PathOutputs = outputsPath;
 
         await fooocusConfigPath
             .WriteAllTextAsync(JsonSerializer.Serialize(fooocusConfig, jsonSerializerOptions))

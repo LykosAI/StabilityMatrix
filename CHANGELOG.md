@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed image gallery arrow key navigation requiring clicking before responding
 - Fixed crash when loading extensions list with no internet connection
 - Fixed crash when invalid launch arguments are passed
+- Fixed "must give at least one requirement to install" error when installing extensions with empty requirements.txt
 
 ## v2.8.0-pre.2
 ### Added

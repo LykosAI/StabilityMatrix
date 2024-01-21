@@ -547,9 +547,7 @@ public class ComfyUI(
                         .ReadAllTextAsync(cancellationToken)
                         .ConfigureAwait(false);
 
-                    requirementsContent = requirementsContent.Trim();
-
-                    if (!string.IsNullOrEmpty(requirementsContent))
+                    if (!string.IsNullOrWhiteSpace(requirementsContent))
                     {
                         progress?.Report(
                             new ProgressReport(

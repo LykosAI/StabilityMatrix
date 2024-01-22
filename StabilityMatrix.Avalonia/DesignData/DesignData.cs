@@ -404,7 +404,8 @@ public static class DesignData
                     new PackageModificationRunner
                     {
                         CurrentProgress = new ProgressReport(0.5f, "Installing package...")
-                    }
+                    },
+                    new List<IPackageStep>()
                 )
             }
         );
@@ -493,6 +494,14 @@ public static class DesignData
         {
             vm.AddExtensions(
                 [
+                    new PackageExtension
+                    {
+                        Author = "123",
+                        Title = "Cool Extension",
+                        Description = "This is an interesting extension",
+                        Reference = new Uri("https://github.com/LykosAI/StabilityMatrix"),
+                        Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")]
+                    },
                     new PackageExtension
                     {
                         Author = "123",

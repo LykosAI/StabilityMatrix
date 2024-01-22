@@ -16,8 +16,8 @@
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.NewOneClickInstallDialog">
     
     <controls:UserControlBase.Resources>
-        <!-- <input:StandardUICommand x:Key="PackageSelected" -->
-        <!--                          Command="{Binding OnPackageSelected}" /> -->
+        <input:StandardUICommand x:Key="InstallPackageCommand"
+                                 Command="{Binding InstallPackageCommand}" />
 
         <DataTemplate x:DataType="packages:BasePackage" x:Key="PackageTemplate">
             <Button Padding="0"
@@ -26,7 +26,7 @@
                     Margin="4"
                     Classes="transparent-full"
                     CornerRadius="8"
-                    Command="{StaticResource PackageSelected}"
+                    Command="{StaticResource InstallPackageCommand}"
                     CommandParameter="{Binding }">
                 <controls:Card Padding="8, 0">
 

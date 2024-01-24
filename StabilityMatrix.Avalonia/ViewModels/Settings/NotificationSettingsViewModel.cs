@@ -26,7 +26,7 @@ public partial class NotificationSettingsViewModel(ISettingsManager settingsMana
     {
         base.OnLoaded();
 
-        Items = GetItems().OrderBy(item => item.Key).ToImmutableArray();
+        Items = GetItems().OrderBy(item => item.Key?.Value).ToImmutableArray();
     }
 
     private IEnumerable<NotificationSettingsItem> GetItems()

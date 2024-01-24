@@ -76,10 +76,10 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         // Add to dictionary
         downloads.TryAdd(download.Id, (download, jsonFileStream));
 
-        OnDownloadAdded(download);
-
         // Connect to state changed event to update json file
         AttachHandlers(download);
+
+        OnDownloadAdded(download);
     }
 
     /// <summary>

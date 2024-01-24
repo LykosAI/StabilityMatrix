@@ -42,9 +42,9 @@ public class ParsableStringValueJsonConverter<
         JsonSerializerOptions options
     )
     {
-        if (reader.TokenType != JsonTokenType.String)
+        if (reader.TokenType != JsonTokenType.PropertyName)
         {
-            throw new JsonException();
+            throw new JsonException("Unexpected token type");
         }
 
         var value = reader.GetString();
@@ -87,11 +87,11 @@ public class ParsableStringValueJsonConverter<
 
         if (value is IFormattable formattable)
         {
-            writer.WriteStringValue(formattable.ToString(null, CultureInfo.InvariantCulture));
+            writer.WritePropertyName(formattable.ToString(null, CultureInfo.InvariantCulture));
         }
         else
         {
-            writer.WriteStringValue(value.ToString());
+            writer.WritePropertyName(value.ToString());
         }
     }
 }

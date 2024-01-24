@@ -109,6 +109,8 @@ public class Settings
 
     public HashSet<TeachingTip> SeenTeachingTips { get; set; } = new();
 
+    public Dictionary<NotificationKey, NotificationOption> NotificationOptions { get; set; } = new();
+
     public List<string> SelectedBaseModels { get; set; } =
         Enum.GetValues<CivitBaseModelType>()
             .Where(x => x != CivitBaseModelType.All)

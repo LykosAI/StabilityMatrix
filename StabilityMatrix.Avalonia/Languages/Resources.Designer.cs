@@ -1644,6 +1644,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string Label_NotificationOption_None {
+            get {
+                return ResourceManager.GetString("Label_NotificationOption_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notifications.
+        /// </summary>
+        public static string Label_Notifications {
+            get {
+                return ResourceManager.GetString("Label_Notifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} images selected.
         /// </summary>
         public static string Label_NumImagesSelected {

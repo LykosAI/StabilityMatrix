@@ -2,19 +2,14 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using JetBrains.Annotations;
+using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Core.Converters.Json;
 
-/// <summary>
-/// Json converter for types that serialize to string by `ToString()` and
-/// can be created by `Activator.CreateInstance(Type, string)`
-/// Types implementing <see cref="IFormattable"/> will be formatted with <see cref="CultureInfo.InvariantCulture"/>
-/// </summary>
-[PublicAPI]
-public class StringJsonConverter<
+public class ParsableStringValueJsonConverter<
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T
 > : JsonConverter<T>
+    where T : StringValue, IParsable<T>
 {
     /// <inheritdoc />
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -30,6 +25,13 @@ public class StringJsonConverter<
             return default;
         }
 
+        // Use TryParse result if available
+        if (T.TryParse(value, CultureInfo.InvariantCulture, out var result))
+        {
+            return result;
+        }
+
+        // Otherwise use Activator
         return (T?)Activator.CreateInstance(typeToConvert, value);
     }
 
@@ -51,19 +53,20 @@ public class StringJsonConverter<
             throw new JsonException("Property name cannot be null");
         }
 
+        // Use TryParse result if available
+        if (T.TryParse(value, CultureInfo.InvariantCulture, out var result))
+        {
+            return result;
+        }
+
+        // Otherwise use Activator
         return (T?)Activator.CreateInstance(typeToConvert, value)
             ?? throw new JsonException("Property name cannot be null");
     }
 
     /// <inheritdoc />
-    public override void Write(Utf8JsonWriter writer, T? value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
-        if (value is null)
-        {
-            writer.WriteNullValue();
-            return;
-        }
-
         if (value is IFormattable formattable)
         {
             writer.WriteStringValue(formattable.ToString(null, CultureInfo.InvariantCulture));

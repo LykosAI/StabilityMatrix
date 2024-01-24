@@ -9,9 +9,11 @@ namespace StabilityMatrix.Core.Models.Settings;
 /// </summary>
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 [JsonConverter(typeof(StringJsonConverter<NotificationKey>))]
-public record NotificationKey(string Value) : StringValue(Value)
+public record NotificationKey(string Value) : StringValue(Value), IParsable<NotificationKey>
 {
     public NotificationOption DefaultOption { get; init; }
+
+    public NotificationLevel Level { get; init; }
 
     public string? DisplayName { get; init; }
 
@@ -19,6 +21,7 @@ public record NotificationKey(string Value) : StringValue(Value)
         new("Inference_PromptCompleted")
         {
             DefaultOption = NotificationOption.NativePush,
+            Level = NotificationLevel.Success,
             DisplayName = "Inference Prompt Completed"
         };
 
@@ -26,6 +29,7 @@ public record NotificationKey(string Value) : StringValue(Value)
         new("Download_Completed")
         {
             DefaultOption = NotificationOption.NativePush,
+            Level = NotificationLevel.Success,
             DisplayName = "Download Completed"
         };
 
@@ -33,6 +37,7 @@ public record NotificationKey(string Value) : StringValue(Value)
         new("Download_Failed")
         {
             DefaultOption = NotificationOption.NativePush,
+            Level = NotificationLevel.Error,
             DisplayName = "Download Failed"
         };
 
@@ -40,6 +45,7 @@ public record NotificationKey(string Value) : StringValue(Value)
         new("Download_Canceled")
         {
             DefaultOption = NotificationOption.NativePush,
+            Level = NotificationLevel.Warning,
             DisplayName = "Download Canceled"
         };
 
@@ -47,4 +53,20 @@ public record NotificationKey(string Value) : StringValue(Value)
 
     /// <inheritdoc />
     public override string ToString() => base.ToString();
+
+    /// <inheritdoc />
+    public static NotificationKey Parse(string s, IFormatProvider? provider)
+    {
+        return All[s];
+    }
+
+    /// <inheritdoc />
+    public static bool TryParse(
+        string? s,
+        IFormatProvider? provider,
+        [MaybeNullWhen(false)] out NotificationKey result
+    )
+    {
+        return All.TryGetValue(s ?? "", out result);
+    }
 }

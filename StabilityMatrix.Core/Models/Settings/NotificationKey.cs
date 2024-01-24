@@ -29,6 +29,20 @@ public record NotificationKey(string Value) : StringValue(Value)
             DisplayName = "Download Completed"
         };
 
+    public static NotificationKey Download_Failed =>
+        new("Download_Failed")
+        {
+            DefaultOption = NotificationOption.NativePush,
+            DisplayName = "Download Failed"
+        };
+
+    public static NotificationKey Download_Canceled =>
+        new("Download_Canceled")
+        {
+            DefaultOption = NotificationOption.NativePush,
+            DisplayName = "Download Canceled"
+        };
+
     public static Dictionary<string, NotificationKey> All { get; } = GetValues<NotificationKey>();
 
     /// <inheritdoc />

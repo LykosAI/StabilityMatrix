@@ -20,22 +20,15 @@ using INotificationManager = DesktopNotifications.INotificationManager;
 namespace StabilityMatrix.Avalonia.Services;
 
 [Singleton(typeof(INotificationService))]
-public class NotificationService : INotificationService, IDisposable
+public class NotificationService(ILogger<NotificationService> logger, ISettingsManager settingsManager)
+    : INotificationService,
+        IDisposable
 {
-    private readonly ILogger<NotificationService> logger;
-    private readonly ISettingsManager settingsManager;
-
     private WindowNotificationManager? notificationManager;
 
     private readonly AsyncLock nativeNotificationManagerLock = new();
     private volatile INotificationManager? nativeNotificationManager;
     private volatile bool isNativeNotificationManagerInitialized;
-
-    public NotificationService(ILogger<NotificationService> logger, ISettingsManager settingsManager)
-    {
-        this.logger = logger;
-        this.settingsManager = settingsManager;
-    }
 
     public void Initialize(
         Visual? visual,

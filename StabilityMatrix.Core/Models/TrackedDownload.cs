@@ -92,6 +92,23 @@ public class TrackedDownload
         progressUpdateEventManager?.RaiseEvent(this, e, nameof(ProgressUpdate));
     }
 
+    private WeakEventManager<ProgressState>? progressStateChangingEventManager;
+
+    public event EventHandler<ProgressState> ProgressStateChanging
+    {
+        add
+        {
+            progressStateChangingEventManager ??= new WeakEventManager<ProgressState>();
+            progressStateChangingEventManager.AddEventHandler(value);
+        }
+        remove => progressStateChangingEventManager?.RemoveEventHandler(value);
+    }
+
+    protected void OnProgressStateChanging(ProgressState e)
+    {
+        progressStateChangingEventManager?.RaiseEvent(this, e, nameof(ProgressStateChanging));
+    }
+
     private WeakEventManager<ProgressState>? progressStateChangedEventManager;
 
     public event EventHandler<ProgressState> ProgressStateChanged
@@ -134,9 +151,7 @@ public class TrackedDownload
         // If hash validation is enabled, validate the hash
         if (ValidateHash)
         {
-            OnProgressUpdate(
-                new ProgressReport(0, isIndeterminate: true, type: ProgressType.Hashing)
-            );
+            OnProgressUpdate(new ProgressReport(0, isIndeterminate: true, type: ProgressType.Hashing));
             var hash = await FileHash
                 .GetSha256Async(DownloadDirectory.JoinFile(TempFileName), progress)
                 .ConfigureAwait(false);
@@ -167,6 +182,7 @@ public class TrackedDownload
         downloadTask = StartDownloadTask(0, AggregateCancellationTokenSource.Token)
             .ContinueWith(OnDownloadTaskCompleted);
 
+        OnProgressStateChanging(ProgressState.Working);
         ProgressState = ProgressState.Working;
         OnProgressStateChanged(ProgressState);
     }
@@ -200,6 +216,7 @@ public class TrackedDownload
         downloadTask = StartDownloadTask(tempSize, AggregateCancellationTokenSource.Token)
             .ContinueWith(OnDownloadTaskCompleted);
 
+        OnProgressStateChanging(ProgressState.Working);
         ProgressState = ProgressState.Working;
         OnProgressStateChanged(ProgressState);
     }
@@ -244,6 +261,7 @@ public class TrackedDownload
         {
             DoCleanup();
 
+            OnProgressStateChanging(ProgressState.Cancelled);
             ProgressState = ProgressState.Cancelled;
             OnProgressStateChanged(ProgressState);
         }
@@ -287,11 +305,13 @@ public class TrackedDownload
             // If the task was cancelled, set the state to cancelled
             if (downloadCancellationTokenSource?.IsCancellationRequested == true)
             {
+                OnProgressStateChanging(ProgressState.Cancelled);
                 ProgressState = ProgressState.Cancelled;
             }
             // If the task was not cancelled, set the state to paused
             else if (downloadPauseTokenSource?.IsCancellationRequested == true)
             {
+                OnProgressStateChanging(ProgressState.Inactive);
                 ProgressState = ProgressState.Inactive;
             }
             else
@@ -307,10 +327,7 @@ public class TrackedDownload
             // Set the exception
             Exception = task.Exception;
 
-            if (
-                (Exception is IOException || Exception?.InnerException is IOException)
-                && attempts < 3
-            )
+            if ((Exception is IOException || Exception?.InnerException is IOException) && attempts < 3)
             {
                 attempts++;
                 Logger.Warn(
@@ -319,16 +336,20 @@ public class TrackedDownload
                     Exception,
                     attempts
                 );
+
+                OnProgressStateChanging(ProgressState.Inactive);
                 ProgressState = ProgressState.Inactive;
                 Resume();
                 return;
             }
 
+            OnProgressStateChanging(ProgressState.Failed);
             ProgressState = ProgressState.Failed;
         }
         // Otherwise success
         else
         {
+            OnProgressStateChanging(ProgressState.Success);
             ProgressState = ProgressState.Success;
         }
 

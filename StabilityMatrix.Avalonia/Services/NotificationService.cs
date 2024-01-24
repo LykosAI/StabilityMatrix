@@ -3,10 +3,12 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Threading;
 using DesktopNotifications.FreeDesktop;
 using DesktopNotifications.Windows;
 using Microsoft.Extensions.Logging;
 using Nito.AsyncEx;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
@@ -56,10 +58,29 @@ public class NotificationService : INotificationService, IDisposable
     }
 
     /// <inheritdoc />
-    public async Task ShowAsync(
+    public Task ShowPersistentAsync(NotificationKey key, DesktopNotifications.Notification notification)
+    {
+        return ShowAsyncCore(key, notification, null, true);
+    }
+
+    /// <inheritdoc />
+    public Task ShowAsync(
         NotificationKey key,
         DesktopNotifications.Notification notification,
         TimeSpan? expiration = null
+    )
+    {
+        // Use default expiration if not specified
+        expiration ??= TimeSpan.FromSeconds(5);
+
+        return ShowAsyncCore(key, notification, expiration, false);
+    }
+
+    private async Task ShowAsyncCore(
+        NotificationKey key,
+        DesktopNotifications.Notification notification,
+        TimeSpan? expiration,
+        bool isPersistent
     )
     {
         // If settings has option preference, use that, otherwise default
@@ -77,14 +98,30 @@ public class NotificationService : INotificationService, IDisposable
                 // If native option is not supported, fallback to toast
                 if (await GetNativeNotificationManagerAsync() is not { } nativeManager)
                 {
-                    Show(
-                        new Notification(
-                            notification.Title,
-                            notification.Body,
-                            NotificationType.Information,
-                            expiration
-                        )
-                    );
+                    // Show app toast
+                    if (isPersistent)
+                    {
+                        Dispatcher.UIThread.Invoke(
+                            () =>
+                                ShowPersistent(
+                                    notification.Title ?? "",
+                                    notification.Body ?? "",
+                                    key.Level.ToNotificationType()
+                                )
+                        );
+                    }
+                    else
+                    {
+                        Dispatcher.UIThread.Invoke(
+                            () =>
+                                Show(
+                                    notification.Title ?? "",
+                                    notification.Body ?? "",
+                                    key.Level.ToNotificationType(),
+                                    expiration
+                                )
+                        );
+                    }
                     return;
                 }
 
@@ -93,18 +130,35 @@ public class NotificationService : INotificationService, IDisposable
                     notification,
                     expiration is null ? null : DateTimeOffset.Now.Add(expiration.Value)
                 );
+
                 break;
             }
             case NotificationOption.AppToast:
                 // Show app toast
-                Show(
-                    new Notification(
-                        notification.Title,
-                        notification.Body,
-                        NotificationType.Information,
-                        expiration
-                    )
-                );
+                if (isPersistent)
+                {
+                    Dispatcher.UIThread.Invoke(
+                        () =>
+                            ShowPersistent(
+                                notification.Title ?? "",
+                                notification.Body ?? "",
+                                key.Level.ToNotificationType()
+                            )
+                    );
+                }
+                else
+                {
+                    Dispatcher.UIThread.Invoke(
+                        () =>
+                            Show(
+                                notification.Title ?? "",
+                                notification.Body ?? "",
+                                key.Level.ToNotificationType(),
+                                expiration
+                            )
+                    );
+                }
+
                 break;
             default:
                 logger.LogError("Unknown notification option {Option}", option);

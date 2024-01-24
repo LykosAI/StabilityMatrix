@@ -49,6 +49,11 @@ public interface INotificationService
     );
 
     /// <summary>
+    /// Show a keyed customizable persistent notification with the given parameters.
+    /// </summary>
+    Task ShowPersistentAsync(NotificationKey key, DesktopNotifications.Notification notification);
+
+    /// <summary>
     /// Show a keyed customizable notification with the given parameters.
     /// </summary>
     Task ShowAsync(

@@ -8,7 +8,7 @@ namespace StabilityMatrix.Core.Models.Settings;
 /// Notification Names
 /// </summary>
 [SuppressMessage("ReSharper", "InconsistentNaming")]
-[JsonConverter(typeof(StringJsonConverter<NotificationKey>))]
+[JsonConverter(typeof(ParsableStringValueJsonConverter<NotificationKey>))]
 public record NotificationKey(string Value) : StringValue(Value), IParsable<NotificationKey>
 {
     public NotificationOption DefaultOption { get; init; }

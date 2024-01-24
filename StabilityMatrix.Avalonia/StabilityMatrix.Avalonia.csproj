@@ -1,10 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' != 'win-x64'">
+        <TargetFramework>net8.0</TargetFramework>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+        <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+    </PropertyGroup>
+    
     <PropertyGroup>
         <CFBundleName>Stability Matrix</CFBundleName>
         <CFBundleIconFile>Assets/AppIcon.icns</CFBundleIconFile>
         <CFBundlePackageType>APPL</CFBundlePackageType>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
         <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
@@ -16,7 +22,7 @@
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
-
+   
     <ItemGroup>
         <CFBundleURLTypes Include="dummy">
             <CFBundleURLName>StabilityMatrix.URL</CFBundleURLName>
@@ -47,6 +53,7 @@
         <PackageReference Include="bodong.PropertyModels" Version="11.0.6.2" />
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+        <PackageReference Include="DesktopNotifications" Version="1.3.1" />
         <PackageReference Include="DesktopNotifications.Avalonia" Version="1.3.1" />
         <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
         <PackageReference Include="Dock.Avalonia" Version="11.0.0.5" />

@@ -71,59 +71,33 @@ public class TrackedDownload
     private int attempts;
 
     #region Events
-    private WeakEventManager<ProgressReport>? progressUpdateEventManager;
+    public event EventHandler<ProgressReport>? ProgressUpdate;
 
-    public event EventHandler<ProgressReport> ProgressUpdate
-    {
-        add
-        {
-            progressUpdateEventManager ??= new WeakEventManager<ProgressReport>();
-            progressUpdateEventManager.AddEventHandler(value);
-        }
-        remove => progressUpdateEventManager?.RemoveEventHandler(value);
-    }
-
-    protected void OnProgressUpdate(ProgressReport e)
+    private void OnProgressUpdate(ProgressReport e)
     {
         // Update downloaded and total bytes
         DownloadedBytes = Convert.ToInt64(e.Current);
         TotalBytes = Convert.ToInt64(e.Total);
 
-        progressUpdateEventManager?.RaiseEvent(this, e, nameof(ProgressUpdate));
+        ProgressUpdate?.Invoke(this, e);
     }
 
-    private WeakEventManager<ProgressState>? progressStateChangingEventManager;
+    public event EventHandler<ProgressState>? ProgressStateChanging;
 
-    public event EventHandler<ProgressState> ProgressStateChanging
+    private void OnProgressStateChanging(ProgressState e)
     {
-        add
-        {
-            progressStateChangingEventManager ??= new WeakEventManager<ProgressState>();
-            progressStateChangingEventManager.AddEventHandler(value);
-        }
-        remove => progressStateChangingEventManager?.RemoveEventHandler(value);
+        Logger.Debug("Download {Download}: State changing to {State}", FileName, e);
+
+        ProgressStateChanging?.Invoke(this, e);
     }
 
-    protected void OnProgressStateChanging(ProgressState e)
-    {
-        progressStateChangingEventManager?.RaiseEvent(this, e, nameof(ProgressStateChanging));
-    }
+    public event EventHandler<ProgressState>? ProgressStateChanged;
 
-    private WeakEventManager<ProgressState>? progressStateChangedEventManager;
-
-    public event EventHandler<ProgressState> ProgressStateChanged
+    private void OnProgressStateChanged(ProgressState e)
     {
-        add
-        {
-            progressStateChangedEventManager ??= new WeakEventManager<ProgressState>();
-            progressStateChangedEventManager.AddEventHandler(value);
-        }
-        remove => progressStateChangedEventManager?.RemoveEventHandler(value);
-    }
+        Logger.Debug("Download {Download}: State changed to {State}", FileName, e);
 
-    protected void OnProgressStateChanged(ProgressState e)
-    {
-        progressStateChangedEventManager?.RaiseEvent(this, e, nameof(ProgressStateChanged));
+        ProgressStateChanged?.Invoke(this, e);
     }
     #endregion
 

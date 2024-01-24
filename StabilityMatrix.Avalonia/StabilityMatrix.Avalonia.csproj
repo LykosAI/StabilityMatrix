@@ -47,6 +47,7 @@
         <PackageReference Include="bodong.PropertyModels" Version="11.0.6.2" />
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+        <PackageReference Include="DesktopNotifications.Avalonia" Version="1.3.1" />
         <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
         <PackageReference Include="Dock.Avalonia" Version="11.0.0.5" />
         <PackageReference Include="Dock.Model.Avalonia" Version="11.0.0.5" />

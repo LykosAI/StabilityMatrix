@@ -5,6 +5,7 @@ using Avalonia.Controls.Notifications;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Settings;
 
 namespace StabilityMatrix.Avalonia.Services;
 
@@ -45,6 +46,15 @@ public interface INotificationService
         string title = "Error",
         string? message = null,
         NotificationType appearance = NotificationType.Error
+    );
+
+    /// <summary>
+    /// Show a keyed customizable notification with the given parameters.
+    /// </summary>
+    Task ShowAsync(
+        NotificationKey key,
+        DesktopNotifications.Notification notification,
+        TimeSpan? expiration = null
     );
 
     /// <summary>

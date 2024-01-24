@@ -237,7 +237,7 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
         GC.SuppressFinalize(this);
     }
 
-    private async Task<INotificationManager?> GetNativeNotificationManagerAsync()
+    public async Task<INotificationManager?> GetNativeNotificationManagerAsync()
     {
         if (isNativeNotificationManagerInitialized)
             return nativeNotificationManager;
@@ -251,7 +251,7 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
         {
             if (Compat.IsWindows)
             {
-                var context = WindowsApplicationContext.FromCurrentProcess();
+                var context = WindowsApplicationContext.FromCurrentProcess("Stability Matrix");
                 nativeNotificationManager = new WindowsNotificationManager(context);
             }
             else if (Compat.IsLinux)

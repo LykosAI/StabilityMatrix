@@ -770,7 +770,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
     #region Debug Commands
 
     public CommandItem[] DebugCommands =>
-        [new CommandItem(DebugFindLocalModelFromIndexCommand), new CommandItem(DebugExtractDmgCommand)];
+        [
+            new CommandItem(DebugFindLocalModelFromIndexCommand),
+            new CommandItem(DebugExtractDmgCommand),
+            new CommandItem(DebugShowNativeNotificationCommand)
+        ];
 
     [RelayCommand]
     private async Task DebugFindLocalModelFromIndex()
@@ -857,6 +861,31 @@ public partial class MainSettingsViewModel : PageViewModelBase
         await ArchiveHelper.ExtractDmg(dmgFile, outputDir);
 
         notificationService.Show("Extraction Complete", dmgFile);
+    }
+
+    [RelayCommand]
+    private async Task DebugShowNativeNotification()
+    {
+        var nativeManager = await notificationService.GetNativeNotificationManagerAsync();
+
+        if (nativeManager is null)
+        {
+            notificationService.Show(
+                "Not supported",
+                "Native notifications are not supported on this platform.",
+                NotificationType.Warning
+            );
+            return;
+        }
+
+        await nativeManager.ShowNotification(
+            new DesktopNotifications.Notification
+            {
+                Title = "Test Notification",
+                Body = "Here is some message",
+                Buttons = { ("Action", "__Debug_Action"), ("Close", "__Debug_Close"), }
+            }
+        );
     }
 
     #endregion

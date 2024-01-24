@@ -92,4 +92,9 @@ public interface INotificationService
         NotificationType appearance = NotificationType.Error,
         LogLevel logLevel = LogLevel.Warning
     );
+
+    /// <summary>
+    /// Get the native notification manager.
+    /// </summary>
+    Task<DesktopNotifications.INotificationManager?> GetNativeNotificationManagerAsync();
 }

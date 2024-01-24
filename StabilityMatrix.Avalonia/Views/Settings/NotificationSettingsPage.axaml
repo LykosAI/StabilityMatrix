@@ -28,6 +28,7 @@
 
                     <controls:BetterComboBox
                         Grid.Column="1"
+                        MinWidth="100"
                         ItemsSource="{x:Static vmSettings:NotificationSettingsItem.AvailableOptions}"
                         SelectedItem="{Binding Option}">
                         <controls:BetterComboBox.ItemTemplate>

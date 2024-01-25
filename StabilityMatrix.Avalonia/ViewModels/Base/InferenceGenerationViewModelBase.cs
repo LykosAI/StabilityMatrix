@@ -37,7 +37,9 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
+using Notification = DesktopNotifications.Notification;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
@@ -300,6 +302,7 @@ public abstract partial class InferenceGenerationViewModelBase
                         {
                             await Task.Delay(delayTime, cancellationToken);
                         }
+
                         // ReSharper disable once AccessToDisposedClosure
                         AttachRunningNodeChangedHandler(promptTask);
                     },
@@ -347,7 +350,19 @@ public abstract partial class InferenceGenerationViewModelBase
                 ImageGalleryCardViewModel.ImageSources.Clear();
             }
 
-            await ProcessOutputImages(images, args);
+            var outputImages = await ProcessOutputImages(images, args);
+
+            var notificationImage = outputImages.FirstOrDefault()?.LocalFile;
+
+            await notificationService.ShowAsync(
+                NotificationKey.Inference_PromptCompleted,
+                new Notification
+                {
+                    Title = "Prompt Completed",
+                    Body = $"Prompt [{promptTask.Id[..7].ToLower()}] completed successfully",
+                    BodyImagePath = notificationImage?.FullPath
+                }
+            );
         }
         finally
         {
@@ -368,7 +383,7 @@ public abstract partial class InferenceGenerationViewModelBase
     /// <summary>
     /// Handles image output metadata for generation runs
     /// </summary>
-    private async Task ProcessOutputImages(
+    private async Task<List<ImageSource>> ProcessOutputImages(
         IReadOnlyCollection<ComfyImage> images,
         ImageGenerationEventArgs args
     )
@@ -511,6 +526,8 @@ public abstract partial class InferenceGenerationViewModelBase
             await img.GetBitmapAsync();
             ImageGalleryCardViewModel.ImageSources.Add(img);
         }
+
+        return outputImages;
     }
 
     /// <summary>

@@ -1,0 +1,132 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                          xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+                          xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core"
+                          xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+                          xmlns:api="clr-namespace:StabilityMatrix.Core.Models.Api;assembly=StabilityMatrix.Core"
+                          mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="725"
+                          x:DataType="dialogs:RecommendedModelsViewModel"
+                          d:DataContext="{x:Static mocks:DesignData.RecommendedModelsViewModel}"
+                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.RecommendedModelsDialog">
+    <controls:UserControlBase.Resources>
+        <DataTemplate x:DataType="dialogs:RecommendedModelItemViewModel" x:Key="PackageTemplate">
+            <Button Padding="-4"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    Margin="4"
+                    Classes="transparent-full"
+                    CornerRadius="8">
+                <controls:Card Margin="0" Padding="0">
+
+                    <Grid RowDefinitions="Auto, *, Auto">
+                        <CheckBox CornerRadius="100" 
+                                  ZIndex="1"
+                                  VerticalAlignment="Top"
+                                  HorizontalAlignment="Right"
+                                  Margin="0,4,-8,0">
+                            <CheckBox.RenderTransform>
+                                <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                            </CheckBox.RenderTransform>
+                        </CheckBox>
+                        <controls:BetterAdvancedImage
+                            Grid.Row="0"
+                            Grid.RowSpan="3"
+                            CornerRadius="8"
+                            Width="200"
+                            Height="250"
+                            Source="{Binding ThumbnailUrl}"
+                            Stretch="UniformToFill"
+                            StretchDirection="Both"/>
+                        <Border
+                            Grid.Row="2"
+                            Padding="8"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Background="#DD000000"
+                            CornerRadius="0,0,8,8"
+                            ZIndex="1" >
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock Text="{Binding ModelVersion.Name}"
+                                           VerticalAlignment="Center"
+                                           FontSize="14" />
+                                <TextBlock Text="{Binding Author}"
+                                           VerticalAlignment="Center"
+                                           FontSize="12" />
+                                <StackPanel Orientation="Horizontal">
+                                    <controls:StarsRating
+                                        Margin="0,8,0,8"
+                                        Background="#66000000"
+                                        FontSize="16"
+                                        Foreground="{DynamicResource ThemeEldenRingOrangeColor}"
+                                        Value="{Binding CivitModel.Stats.Rating}" />
+                                    <TextBlock
+                                        Margin="4,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{Binding CivitModel.Stats.RatingCount}"
+                                        TextAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </controls:Card>
+            </Button>
+        </DataTemplate>
+    </controls:UserControlBase.Resources>
+    <StackPanel>
+        <TextBlock Text="Recommended Models"
+                   TextAlignment="Center"
+                   Margin="8"
+                   FontSize="26"/>
+
+        <TextBlock Text="While your package is installing, here are some models we recommend to help get you started"
+                   TextAlignment="Center"
+                   Margin="8,0,8,8"
+                   TextWrapping="WrapWithOverflow"/>
+        
+        
+        <TextBlock Text="Stable Diffusion 1.5"
+                   Margin="8,16,8,4"
+                   FontSize="16"
+                   FontWeight="Bold"
+                   TextWrapping="WrapWithOverflow"/>
+        <TextBlock Text="Compatible with most packages, easier to run on less powerful hardware"
+                   FontSize="12"
+                   Margin="8,0,8,8"/>
+        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                      Margin="8">
+            <ItemsRepeater ItemsSource="{Binding Sd15Models}"
+                           ItemTemplate="{StaticResource PackageTemplate}">
+                <ItemsRepeater.Layout> 
+                    <StackLayout Orientation="Horizontal"
+                                 Spacing="8"/>
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </ScrollViewer>
+        
+        <TextBlock Text="Stable Diffusion XL"
+                   Margin="8,16,8,4"
+                   FontSize="16"
+                   FontWeight="Bold"
+                   TextWrapping="WrapWithOverflow"/>
+        <TextBlock Text="Compatible with all packages, requires more powerful hardware"
+                   FontSize="12"
+                   Margin="8,0,8,8"/>
+        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                      Margin="8,8">
+            <ItemsRepeater ItemsSource="{Binding SdxlModels}"
+                           ItemTemplate="{StaticResource PackageTemplate}">
+                <ItemsRepeater.Layout> 
+                    <StackLayout Orientation="Horizontal"
+                                 Spacing="8"/>
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </ScrollViewer>
+    </StackPanel>
+</controls:UserControlBase >

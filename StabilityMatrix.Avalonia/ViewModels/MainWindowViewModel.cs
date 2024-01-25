@@ -128,7 +128,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Count == 0)
         {
-            var viewModel = dialogFactory.Get<NewOneClickInstallViewModel>();
+            var viewModel = dialogFactory.Get<RecommendedModelsViewModel>();
             var dialog = new BetterContentDialog
             {
                 IsPrimaryButtonEnabled = false,
@@ -136,7 +136,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 IsFooterVisible = false,
                 FullSizeDesired = true,
                 MinDialogHeight = 775,
-                Content = new NewOneClickInstallDialog { DataContext = viewModel },
+                Content = new RecommendedModelsDialog { DataContext = viewModel },
             };
 
             EventManager.Instance.OneClickInstallFinished += (_, skipped) =>

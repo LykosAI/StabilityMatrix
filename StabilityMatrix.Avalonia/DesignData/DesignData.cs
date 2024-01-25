@@ -448,6 +448,49 @@ public static class DesignData
     public static NewOneClickInstallViewModel NewOneClickInstallViewModel =>
         Services.GetRequiredService<NewOneClickInstallViewModel>();
 
+    public static RecommendedModelsViewModel RecommendedModelsViewModel =>
+        DialogFactory.Get<RecommendedModelsViewModel>(vm =>
+        {
+            vm.Sd15Models = new ObservableCollectionExtended<RecommendedModelItemViewModel>()
+            {
+                new()
+                {
+                    ModelVersion = new CivitModelVersion
+                    {
+                        Name = "BB95 Furry Mix",
+                        Description = "A furry mix of BB95",
+                        Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 },
+                        Images =
+                        [
+                            new CivitImage
+                            {
+                                Url =
+                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
+                            }
+                        ],
+                    },
+                    Author = "bb95"
+                },
+                new()
+                {
+                    ModelVersion = new CivitModelVersion
+                    {
+                        Name = "BB95 Furry Mix",
+                        Description = "A furry mix of BB95",
+                        Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 },
+                        Images =
+                        [
+                            new CivitImage
+                            {
+                                Url =
+                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
+                            }
+                        ],
+                    },
+                    Author = "bb95"
+                }
+            };
+        });
     public static OutputsPageViewModel OutputsPageViewModel
     {
         get

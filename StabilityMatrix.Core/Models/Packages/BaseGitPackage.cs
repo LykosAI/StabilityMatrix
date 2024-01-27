@@ -76,11 +76,13 @@ public abstract class BaseGitPackage : BasePackage
     {
         if (ShouldIgnoreReleases)
         {
+            var commits = await GithubApi.GetAllCommits(Author, Name, MainBranch).ConfigureAwait(false);
             return new DownloadPackageVersionOptions
             {
                 IsLatest = true,
                 IsPrerelease = false,
-                BranchName = MainBranch
+                BranchName = MainBranch,
+                CommitHash = commits?.FirstOrDefault()?.Sha ?? "unknown"
             };
         }
 

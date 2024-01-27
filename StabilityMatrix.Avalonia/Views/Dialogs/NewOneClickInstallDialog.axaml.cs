@@ -41,6 +41,7 @@ public partial class NewOneClickInstallDialog : UserControlBase
 
             teachingTip.Target = comfyItem;
             teachingTip.IsOpen = true;
+            teachingTip.CloseButtonCommand = null;
         }
     }
 }

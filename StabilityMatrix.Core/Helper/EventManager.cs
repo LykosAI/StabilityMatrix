@@ -30,7 +30,8 @@ public class EventManager
     public delegate Task AddPackageInstallEventHandler(
         object? sender,
         IPackageModificationRunner runner,
-        IReadOnlyList<IPackageStep> steps
+        IReadOnlyList<IPackageStep> steps,
+        Action onCompleted
     );
     public event AddPackageInstallEventHandler? AddPackageInstallWithoutBlocking;
     public event EventHandler? ToggleProgressFlyout;
@@ -97,8 +98,9 @@ public class EventManager
     public void OnAddPackageInstallWithoutBlocking(
         object? sender,
         IPackageModificationRunner runner,
-        IReadOnlyList<IPackageStep> steps
-    ) => AddPackageInstallWithoutBlocking?.Invoke(sender, runner, steps);
+        IReadOnlyList<IPackageStep> steps,
+        Action onCompleted
+    ) => AddPackageInstallWithoutBlocking?.Invoke(sender, runner, steps, onCompleted);
 
     public void OnDownloadsTeachingTipRequested() =>
         DownloadsTeachingTipRequested?.Invoke(this, EventArgs.Empty);

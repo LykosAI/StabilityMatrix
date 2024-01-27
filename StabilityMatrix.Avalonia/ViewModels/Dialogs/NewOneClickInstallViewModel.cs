@@ -5,11 +5,13 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -29,10 +31,12 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [ManagedService]
 public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
 {
+    private readonly IPackageFactory packageFactory;
     private readonly ISettingsManager settingsManager;
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly ILogger<NewOneClickInstallViewModel> logger;
     private readonly IPyRunner pyRunner;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
     public SourceCache<BasePackage, string> AllPackagesCache { get; } = new(p => p.Author + p.Name);
 
     public IObservableCollection<BasePackage> ShownPackages { get; set; } =
@@ -41,18 +45,23 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private bool showIncompatiblePackages;
 
+    private bool isInferenceInstall;
+
     public NewOneClickInstallViewModel(
         IPackageFactory packageFactory,
         ISettingsManager settingsManager,
         IPrerequisiteHelper prerequisiteHelper,
         ILogger<NewOneClickInstallViewModel> logger,
-        IPyRunner pyRunner
+        IPyRunner pyRunner,
+        INavigationService<MainWindowViewModel> navigationService
     )
     {
+        this.packageFactory = packageFactory;
         this.settingsManager = settingsManager;
         this.prerequisiteHelper = prerequisiteHelper;
         this.logger = logger;
         this.pyRunner = pyRunner;
+        this.navigationService = navigationService;
 
         var incompatiblePredicate = this.WhenPropertyChanged(vm => vm.ShowIncompatiblePackages)
             .Select(_ => new Func<BasePackage, bool>(p => p.IsCompatible || ShowIncompatiblePackages))
@@ -75,10 +84,14 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
     }
 
     [RelayCommand]
-    private Task InstallComfyForInference()
+    private async Task InstallComfyForInference()
     {
         var comfyPackage = ShownPackages.FirstOrDefault(x => x is ComfyUI);
-        return comfyPackage != null ? InstallPackage(comfyPackage) : Task.CompletedTask;
+        if (comfyPackage == null)
+            return;
+
+        isInferenceInstall = true;
+        await InstallPackage(comfyPackage);
     }
 
     [RelayCommand]
@@ -150,7 +163,23 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
         steps.Add(addInstalledPackageStep);
 
         var runner = new PackageModificationRunner { ShowDialogOnStart = false, HideCloseButton = false, };
-        EventManager.Instance.OnAddPackageInstallWithoutBlocking(this, runner, steps);
+        EventManager.Instance.OnAddPackageInstallWithoutBlocking(
+            this,
+            runner,
+            steps,
+            () =>
+            {
+                EventManager.Instance.OnOneClickInstallFinished(false);
+
+                if (!isInferenceInstall)
+                    return;
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    navigationService.NavigateTo<InferenceViewModel>();
+                });
+            }
+        );
 
         OnPrimaryButtonClick();
     }

@@ -23,7 +23,8 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
 
     public PackageInstallProgressItemViewModel(
         IPackageModificationRunner packageModificationRunner,
-        IReadOnlyList<IPackageStep>? packageSteps = null
+        IReadOnlyList<IPackageStep>? packageSteps = null,
+        Action? onCompleted = null
     )
     {
         this.packageModificationRunner = packageModificationRunner;
@@ -40,17 +41,22 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
             return;
 
         Progress.Console.StartUpdates();
-
         Progress.Console.Post(string.Join(Environment.NewLine, packageModificationRunner.ConsoleOutput));
 
         packageModificationRunner.ProgressChanged += PackageModificationRunnerOnProgressChanged;
 
-        if (packageSteps is { Count: > 0 })
+        if (packageSteps is not { Count: > 0 })
+            return;
+
+        var task = packageModificationRunner.ExecuteSteps(packageSteps);
+
+        if (onCompleted is not null)
         {
-            packageModificationRunner
-                .ExecuteSteps(packageSteps)
-                .ContinueWith(_ => EventManager.Instance.OnOneClickInstallFinished(false))
-                .SafeFireAndForget();
+            task.ContinueWith(_ => onCompleted.Invoke()).SafeFireAndForget();
+        }
+        else
+        {
+            task.SafeFireAndForget();
         }
     }
 

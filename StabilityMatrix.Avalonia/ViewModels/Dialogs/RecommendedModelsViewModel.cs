@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
@@ -39,6 +40,9 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
 
     public IObservableCollection<RecommendedModelItemViewModel> SdxlModels { get; } =
         new ObservableCollectionExtended<RecommendedModelItemViewModel>();
+
+    [ObservableProperty]
+    private bool isLoading;
 
     public RecommendedModelsViewModel(
         ILogger<RecommendedModelsViewModel> logger,
@@ -80,8 +84,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
         if (Design.IsDesignMode)
             return;
 
-        // See if query is cached
-        CivitModelQueryCacheEntry? cachedQuery = null;
+        IsLoading = true;
 
         var recommendedModels = await lykosApi.GetRecommendedModels();
 
@@ -98,6 +101,8 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
                     }
             )
         );
+
+        IsLoading = false;
     }
 
     [RelayCommand]

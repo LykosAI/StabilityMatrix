@@ -128,7 +128,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Count == 0)
         {
-            var viewModel = dialogFactory.Get<RecommendedModelsViewModel>();
+            var viewModel = dialogFactory.Get<NewOneClickInstallViewModel>();
             var dialog = new BetterContentDialog
             {
                 IsPrimaryButtonEnabled = false,
@@ -136,7 +136,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 IsFooterVisible = false,
                 FullSizeDesired = true,
                 MinDialogHeight = 775,
-                Content = new RecommendedModelsDialog { DataContext = viewModel },
+                Content = new NewOneClickInstallDialog { DataContext = viewModel },
             };
 
             EventManager.Instance.OneClickInstallFinished += (_, skipped) =>
@@ -149,6 +149,23 @@ public partial class MainWindowViewModel : ViewModelBase
             };
 
             await dialog.ShowAsync(App.TopLevel);
+
+            var recommendedModelsViewModel = dialogFactory.Get<RecommendedModelsViewModel>();
+            dialog = new BetterContentDialog
+            {
+                IsPrimaryButtonEnabled = true,
+                FullSizeDesired = true,
+                MinDialogHeight = 900,
+                PrimaryButtonText = Resources.Action_Download,
+                CloseButtonText = Resources.Action_Close,
+                DefaultButton = ContentDialogButton.Primary,
+                PrimaryButtonCommand = recommendedModelsViewModel.DoImportCommand,
+                Content = new RecommendedModelsDialog { DataContext = recommendedModelsViewModel },
+            };
+
+            await dialog.ShowAsync(App.TopLevel);
+
+            EventManager.Instance.OnDownloadsTeachingTipRequested();
         }
     }
 

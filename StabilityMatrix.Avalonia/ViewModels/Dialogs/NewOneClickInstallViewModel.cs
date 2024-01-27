@@ -149,7 +149,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
         var addInstalledPackageStep = new AddInstalledPackageStep(settingsManager, installedPackage);
         steps.Add(addInstalledPackageStep);
 
-        var runner = new PackageModificationRunner { ShowDialogOnStart = true, HideCloseButton = true, };
+        var runner = new PackageModificationRunner { ShowDialogOnStart = false, HideCloseButton = false, };
         EventManager.Instance.OnAddPackageInstallWithoutBlocking(this, runner, steps);
 
         OnPrimaryButtonClick();

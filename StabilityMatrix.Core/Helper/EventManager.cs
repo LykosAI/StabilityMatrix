@@ -42,6 +42,7 @@ public class EventManager
     public event EventHandler<LocalImageFile>? InferenceImageToImageRequested;
     public event EventHandler<LocalImageFile>? InferenceImageToVideoRequested;
     public event EventHandler<int>? NavigateAndFindCivitModelRequested;
+    public event EventHandler? DownloadsTeachingTipRequested;
 
     public void OnGlobalProgressChanged(int progress) => GlobalProgressChanged?.Invoke(this, progress);
 
@@ -98,4 +99,7 @@ public class EventManager
         IPackageModificationRunner runner,
         IReadOnlyList<IPackageStep> steps
     ) => AddPackageInstallWithoutBlocking?.Invoke(sender, runner, steps);
+
+    public void OnDownloadsTeachingTipRequested() =>
+        DownloadsTeachingTipRequested?.Invoke(this, EventArgs.Empty);
 }

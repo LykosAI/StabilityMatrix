@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Models.Api;
 
@@ -24,4 +25,7 @@ public partial class RecommendedModelItemViewModel : ViewModelBase
         ModelVersion.Images?.FirstOrDefault()?.Url == null
             ? Assets.NoImage
             : new Uri(ModelVersion.Images.First().Url);
+
+    [RelayCommand]
+    public void ToggleSelection() => IsSelected = !IsSelected;
 }

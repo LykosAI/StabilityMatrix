@@ -942,4 +942,10 @@
   <data name="Action_CopyDetails" xml:space="preserve">
     <value>Copy Details</value>
   </data>
+  <data name="Action_Download" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="TeachingTip_DownloadsExplanation" xml:space="preserve">
+    <value>Check the progress of your package installations and model downloads here.</value>
+  </data>
 </root>

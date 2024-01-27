@@ -161,5 +161,13 @@
             Target="{Binding #FooterUpdateItem}"
             Title="{x:Static lang:Resources.Label_UpdateAvailable}"
             PreferredPlacement="Right" />
+        
+        <ui:TeachingTip
+            Grid.Row="1"
+            Grid.RowSpan="2"
+            Name="DownloadsTeachingTip"
+            Target="{Binding #FooterDownloadItem}"
+            Title="{x:Static lang:Resources.Label_Downloads}"
+            PreferredPlacement="Right" />
     </Grid>
 </controls:AppWindowBase>

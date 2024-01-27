@@ -213,6 +213,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download.
+        /// </summary>
+        public static string Action_Download {
+            get {
+                return ResourceManager.GetString("Action_Download", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edit.
         /// </summary>
         public static string Action_Edit {
@@ -2423,6 +2432,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string TeachingTip_ClickLaunchToGetStarted {
             get {
                 return ResourceManager.GetString("TeachingTip_ClickLaunchToGetStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Check the progress of your package installations and model downloads here..
+        /// </summary>
+        public static string TeachingTip_DownloadsExplanation {
+            get {
+                return ResourceManager.GetString("TeachingTip_DownloadsExplanation", resourceCulture);
             }
         }
         

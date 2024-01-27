@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Refit;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Lykos;
 
 namespace StabilityMatrix.Core.Api;
@@ -69,5 +70,5 @@ public interface ILykosAuthApi
     );
 
     [Get("/api/Models/recommended")]
-    Task<GetRecommendedModelsResponse> GetRecommendedModels();
+    Task<CivitModelsResponse> GetRecommendedModels();
 }

@@ -570,7 +570,7 @@ public sealed class App : Application
             .AddRefitClient<ILykosAuthApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {
-                c.BaseAddress = new Uri("https://stableauthentication.azurewebsites.net");
+                c.BaseAddress = new Uri("https://auth.lykos.ai");
                 c.Timeout = TimeSpan.FromSeconds(15);
             })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })

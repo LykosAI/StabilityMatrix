@@ -306,21 +306,14 @@ public class VladAutomatic(
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        progress?.Report(
-            new ProgressReport(
-                -1f,
-                message: "Downloading package update...",
-                isIndeterminate: true,
-                type: ProgressType.Update
-            )
-        );
-
-        await PrerequisiteHelper
-            .RunGit(
-                new[] { "checkout", versionOptions.BranchName! },
-                onConsoleOutput,
-                installedPackage.FullPath
-            )
+        var baseUpdateResult = await base.Update(
+            installedPackage,
+            torchVersion,
+            versionOptions,
+            progress,
+            includePrerelease,
+            onConsoleOutput
+        )
             .ConfigureAwait(false);
 
         var venvRunner = new PyVenvRunner(Path.Combine(installedPackage.FullPath!, "venv"));
@@ -361,11 +354,7 @@ public class VladAutomatic(
             );
         }
 
-        return new InstalledPackageVersion
-        {
-            InstalledBranch = installedPackage.Version.InstalledBranch,
-            IsPrerelease = false
-        };
+        return baseUpdateResult;
     }
 
     public override Task SetupModelFolders(

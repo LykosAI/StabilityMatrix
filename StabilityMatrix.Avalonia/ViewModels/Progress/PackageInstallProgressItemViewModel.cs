@@ -47,7 +47,10 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
 
         if (packageSteps is { Count: > 0 })
         {
-            packageModificationRunner.ExecuteSteps(packageSteps).SafeFireAndForget();
+            packageModificationRunner
+                .ExecuteSteps(packageSteps)
+                .ContinueWith(_ => EventManager.Instance.OnOneClickInstallFinished(false))
+                .SafeFireAndForget();
         }
     }
 

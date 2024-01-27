@@ -75,6 +75,43 @@ public class Fooocus(
                 Description = "Override the output directory",
                 Options = { "--output-directory" }
             },
+            new LaunchOptionDefinition
+            {
+                Name = "Language",
+                Type = LaunchOptionType.String,
+                Description = "Change the language of the UI",
+                Options = { "--language" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Auto-Launch",
+                Type = LaunchOptionType.Bool,
+                Options = { "--auto-launch" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Disable Image Log",
+                Type = LaunchOptionType.Bool,
+                Options = { "--disable-image-log" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Disable Analytics",
+                Type = LaunchOptionType.Bool,
+                Options = { "--disable-analytics" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Disable Preset Model Downloads",
+                Type = LaunchOptionType.Bool,
+                Options = { "--disable-preset-download" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Always Download Newer Models",
+                Type = LaunchOptionType.Bool,
+                Options = { "--always-download-new-model" }
+            },
             new()
             {
                 Name = "VRAM",
@@ -107,12 +144,6 @@ public class Fooocus(
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
                 Options = { "--disable-xformers" }
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Auto-Launch",
-                Type = LaunchOptionType.Bool,
-                Options = { "--auto-launch" }
             },
             LaunchOptionDefinition.Extras
         };

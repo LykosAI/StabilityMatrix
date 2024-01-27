@@ -141,7 +141,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
             EventManager.Instance.OneClickInstallFinished += (_, skipped) =>
             {
-                dialog.Hide();
                 if (skipped)
                     return;
 

@@ -57,14 +57,21 @@ public partial class ProgressManagerViewModel : PageViewModelBase
 
         // Attach to the event
         trackedDownloadService.DownloadAdded += TrackedDownloadService_OnDownloadAdded;
-        EventManager.Instance.PackageInstallProgressAdded += InstanceOnPackageInstallProgressAdded;
         EventManager.Instance.ToggleProgressFlyout += (_, _) => IsOpen = !IsOpen;
+        EventManager.Instance.AddPackageInstallWithoutBlocking += InstanceOnAddPackageInstallWithoutBlocking;
+        EventManager.Instance.PackageInstallProgressAdded += InstanceOnPackageInstallProgressAdded;
     }
 
     private void InstanceOnPackageInstallProgressAdded(object? sender, IPackageModificationRunner runner)
     {
         AddPackageInstall(runner).SafeFireAndForget();
     }
+
+    private Task InstanceOnAddPackageInstallWithoutBlocking(
+        object? sender,
+        IPackageModificationRunner runner,
+        IReadOnlyList<IPackageStep> steps
+    ) => AddPackageInstall(runner, steps);
 
     private void TrackedDownloadService_OnDownloadAdded(object? sender, TrackedDownload e)
     {
@@ -165,17 +172,17 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         }
     }
 
-    private Task AddPackageInstall(IPackageModificationRunner packageModificationRunner)
+    private Task AddPackageInstall(
+        IPackageModificationRunner packageModificationRunner,
+        IReadOnlyList<IPackageStep>? steps = null
+    )
     {
         if (ProgressItems.Any(vm => vm.Id == packageModificationRunner.Id))
         {
             return Task.CompletedTask;
         }
 
-        var vm = new PackageInstallProgressItemViewModel(
-            packageModificationRunner,
-            packageModificationRunner.HideCloseButton
-        );
+        var vm = new PackageInstallProgressItemViewModel(packageModificationRunner, steps);
         ProgressItems.Add(vm);
 
         return packageModificationRunner.ShowDialogOnStart ? vm.ShowProgressDialog() : Task.CompletedTask;

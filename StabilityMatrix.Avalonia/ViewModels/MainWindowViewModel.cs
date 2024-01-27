@@ -128,13 +128,15 @@ public partial class MainWindowViewModel : ViewModelBase
 
         if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Count == 0)
         {
-            var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
+            var viewModel = dialogFactory.Get<NewOneClickInstallViewModel>();
             var dialog = new BetterContentDialog
             {
                 IsPrimaryButtonEnabled = false,
                 IsSecondaryButtonEnabled = false,
                 IsFooterVisible = false,
-                Content = new OneClickInstallDialog { DataContext = viewModel },
+                FullSizeDesired = true,
+                MinDialogHeight = 775,
+                Content = new NewOneClickInstallDialog { DataContext = viewModel },
             };
 
             EventManager.Instance.OneClickInstallFinished += (_, skipped) =>
@@ -146,7 +148,27 @@ public partial class MainWindowViewModel : ViewModelBase
                 EventManager.Instance.OnTeachingTooltipNeeded();
             };
 
+            var firstDialogResult = await dialog.ShowAsync(App.TopLevel);
+
+            if (firstDialogResult != ContentDialogResult.Primary)
+                return;
+
+            var recommendedModelsViewModel = dialogFactory.Get<RecommendedModelsViewModel>();
+            dialog = new BetterContentDialog
+            {
+                IsPrimaryButtonEnabled = true,
+                FullSizeDesired = true,
+                MinDialogHeight = 900,
+                PrimaryButtonText = Resources.Action_Download,
+                CloseButtonText = Resources.Action_Close,
+                DefaultButton = ContentDialogButton.Primary,
+                PrimaryButtonCommand = recommendedModelsViewModel.DoImportCommand,
+                Content = new RecommendedModelsDialog { DataContext = recommendedModelsViewModel },
+            };
+
             await dialog.ShowAsync(App.TopLevel);
+
+            EventManager.Instance.OnDownloadsTeachingTipRequested();
         }
     }
 

@@ -520,7 +520,7 @@
     <value>Welcome to Stability Matrix!</value>
   </data>
   <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
-    <value>Choose your preferred interface and click Install to get started</value>
+    <value>Choose your preferred interface to get started</value>
   </data>
   <data name="Label_Installing" xml:space="preserve">
     <value>Installing</value>
@@ -941,5 +941,17 @@
   </data>
   <data name="Action_CopyDetails" xml:space="preserve">
     <value>Copy Details</value>
+  </data>
+  <data name="Action_Download" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="TeachingTip_DownloadsExplanation" xml:space="preserve">
+    <value>Check the progress of your package installations and model downloads here.</value>
+  </data>
+  <data name="Label_RecommendedModels" xml:space="preserve">
+    <value>Recommended Models</value>
+  </data>
+  <data name="Label_RecommendedModelsSubText" xml:space="preserve">
+    <value>While your package is installing, here are some models we recommend to help you get started.</value>
   </data>
 </root>

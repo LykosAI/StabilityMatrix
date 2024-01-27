@@ -97,6 +97,7 @@ public partial class MainWindow : AppWindowBase
         EventManager.Instance.CultureChanged += (_, _) => SetDefaultFonts();
         EventManager.Instance.UpdateAvailable += OnUpdateAvailable;
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
+        EventManager.Instance.DownloadsTeachingTipRequested += InstanceOnDownloadsTeachingTipRequested;
 
         SetDefaultFonts();
 
@@ -140,6 +141,26 @@ public partial class MainWindow : AppWindowBase
                     ignoreMissingLibraryDir: true
                 );
             });
+    }
+
+    private void InstanceOnDownloadsTeachingTipRequested(object? sender, EventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (
+                !settingsManager.Settings.SeenTeachingTips.Contains(
+                    Core.Models.Settings.TeachingTip.DownloadsTip
+                )
+            )
+            {
+                var target = this.FindControl<NavigationViewItem>("FooterDownloadItem")!;
+                var tip = this.FindControl<TeachingTip>("DownloadsTeachingTip")!;
+
+                tip.Target = target;
+                tip.Subtitle = Languages.Resources.TeachingTip_DownloadsExplanation;
+                tip.IsOpen = true;
+            }
+        });
     }
 
     private void OnNavigateAndFindCivitModelRequested(object? sender, int e)

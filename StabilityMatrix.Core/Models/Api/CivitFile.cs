@@ -6,16 +6,16 @@ public class CivitFile
 {
     [JsonPropertyName("sizeKB")]
     public double SizeKb { get; set; }
-    
+
     [JsonPropertyName("pickleScanResult")]
     public string PickleScanResult { get; set; }
-    
+
     [JsonPropertyName("virusScanResult")]
     public string VirusScanResult { get; set; }
-    
+
     [JsonPropertyName("scannedAt")]
     public DateTime? ScannedAt { get; set; }
-    
+
     [JsonPropertyName("metadata")]
     public CivitFileMetadata Metadata { get; set; }
 
@@ -24,19 +24,23 @@ public class CivitFile
 
     [JsonPropertyName("downloadUrl")]
     public string DownloadUrl { get; set; }
-    
+
     [JsonPropertyName("hashes")]
     public CivitFileHashes Hashes { get; set; }
-    
+
     [JsonPropertyName("type")]
     public CivitFileType Type { get; set; }
-    
+
+    [JsonPropertyName("primary")]
+    public bool IsPrimary { get; set; }
+
     private FileSizeType? fullFilesSize;
     public FileSizeType FullFilesSize
     {
         get
         {
-            if (fullFilesSize != null) return fullFilesSize;
+            if (fullFilesSize != null)
+                return fullFilesSize;
             fullFilesSize = new FileSizeType(SizeKb);
             return fullFilesSize;
         }

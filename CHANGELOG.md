@@ -5,6 +5,14 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.8.0-pre.4
+### Added
+- Added Recommended Models dialog after one-click installer
+### Changed
+- Changed one-click installer to match the new package installation style
+### Fixed
+- Fixed Environment Variables not being editable
+
 ## v2.8.0-pre.3
 ### Added
 - Added "Config" Shared Model Folder option for Fooocus

@@ -125,16 +125,15 @@
         </DataTemplate>
     </controls:UserControlBase.Resources>
     <StackPanel>
-        <TextBlock Text="Recommended Models"
-                   TextAlignment="Center"
-                   Margin="8"
+        <TextBlock Text="{x:Static lang:Resources.Label_RecommendedModels}"
+                   TextAlignment="Left"
+                   Margin="8,8"
                    FontSize="26"/>
 
-        <TextBlock Text="While your package is installing, here are some models we recommend to help you get started"
-                   TextAlignment="Center"
-                   Margin="8,0,8,8"
+        <TextBlock Text="{x:Static lang:Resources.Label_RecommendedModelsSubText}"
+                   TextAlignment="Left"
+                   Margin="8,0,0,8"
                    TextWrapping="WrapWithOverflow"/>
-        
         
         <TextBlock Text="Stable Diffusion 1.5"
                    Margin="8,16,8,4"

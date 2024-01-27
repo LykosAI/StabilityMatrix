@@ -191,9 +191,16 @@
             </ui:TeachingTip.HeroContent>
         </ui:TeachingTip>
         
-        <ToggleSwitch IsChecked="{Binding ShowIncompatiblePackages}"
-                      Margin="6, 0"
-                      OffContent="Show All Packages"
-                      OnContent="Show All Packages"/>
+        <Grid ColumnDefinitions="Auto, *" Margin="0,4">
+            <ToggleSwitch IsChecked="{Binding ShowIncompatiblePackages}"
+                          Margin="6, 0"
+                          OffContent="Show All Packages"
+                          OnContent="Show All Packages"/>
+            <Button Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    HorizontalAlignment="Center"
+                    Content="{x:Static lang:Resources.Label_SkipSetup}"
+                    Command="{Binding OnCloseButtonClick}"/>
+        </Grid>
     </StackPanel>
 </controls:UserControlBase>

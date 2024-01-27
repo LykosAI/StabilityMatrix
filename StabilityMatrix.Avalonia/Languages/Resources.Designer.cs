@@ -1896,6 +1896,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Recommended Models.
+        /// </summary>
+        public static string Label_RecommendedModels {
+            get {
+                return ResourceManager.GetString("Label_RecommendedModels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to While your package is installing, here are some models we recommend to help you get started..
+        /// </summary>
+        public static string Label_RecommendedModelsSubText {
+            get {
+                return ResourceManager.GetString("Label_RecommendedModelsSubText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Refiner.
         /// </summary>
         public static string Label_Refiner {
@@ -2463,7 +2481,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Choose your preferred interface and click Install to get started.
+        ///   Looks up a localized string similar to Choose your preferred interface to get started.
         /// </summary>
         public static string Text_OneClickInstaller_SubHeader {
             get {

@@ -148,7 +148,10 @@ public partial class MainWindowViewModel : ViewModelBase
                 EventManager.Instance.OnTeachingTooltipNeeded();
             };
 
-            await dialog.ShowAsync(App.TopLevel);
+            var firstDialogResult = await dialog.ShowAsync(App.TopLevel);
+
+            if (firstDialogResult != ContentDialogResult.Primary)
+                return;
 
             var recommendedModelsViewModel = dialogFactory.Get<RecommendedModelsViewModel>();
             dialog = new BetterContentDialog

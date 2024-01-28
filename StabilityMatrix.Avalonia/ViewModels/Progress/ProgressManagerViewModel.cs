@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Collections;
@@ -60,6 +61,13 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         EventManager.Instance.ToggleProgressFlyout += (_, _) => IsOpen = !IsOpen;
         EventManager.Instance.AddPackageInstallWithoutBlocking += InstanceOnAddPackageInstallWithoutBlocking;
         EventManager.Instance.PackageInstallProgressAdded += InstanceOnPackageInstallProgressAdded;
+        EventManager.Instance.RecommendedModelsDialogClosed += InstanceOnRecommendedModelsDialogClosed;
+    }
+
+    private void InstanceOnRecommendedModelsDialogClosed(object? sender, EventArgs e)
+    {
+        var vm = ProgressItems.OfType<PackageInstallProgressItemViewModel>().FirstOrDefault();
+        vm?.ShowProgressDialog().SafeFireAndForget();
     }
 
     private void InstanceOnPackageInstallProgressAdded(object? sender, IPackageModificationRunner runner)

@@ -44,6 +44,7 @@ public class EventManager
     public event EventHandler<LocalImageFile>? InferenceImageToVideoRequested;
     public event EventHandler<int>? NavigateAndFindCivitModelRequested;
     public event EventHandler? DownloadsTeachingTipRequested;
+    public event EventHandler? RecommendedModelsDialogClosed;
 
     public void OnGlobalProgressChanged(int progress) => GlobalProgressChanged?.Invoke(this, progress);
 
@@ -104,4 +105,7 @@ public class EventManager
 
     public void OnDownloadsTeachingTipRequested() =>
         DownloadsTeachingTipRequested?.Invoke(this, EventArgs.Empty);
+
+    public void OnRecommendedModelsDialogClosed() =>
+        RecommendedModelsDialogClosed?.Invoke(this, EventArgs.Empty);
 }

@@ -184,18 +184,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                         this,
                         runner,
                         steps,
-                        () =>
-                        {
-                            EventManager.Instance.OnOneClickInstallFinished(false);
-
-                            if (!isInferenceInstall)
-                                return;
-
-                            Dispatcher.UIThread.Post(() =>
-                            {
-                                navigationService.NavigateTo<InferenceViewModel>();
-                            });
-                        }
+                        () => EventManager.Instance.OnOneClickInstallFinished(false)
                     );
                 });
             })

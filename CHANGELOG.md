@@ -8,10 +8,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.8.0-pre.4
 ### Added
 - Added Recommended Models dialog after one-click installer
+- Added new launch argument options for Fooocus
 ### Changed
 - Changed one-click installer to match the new package installation style
+- Automatic1111 packages will now use PyTorch v2.1.2. Upgrade will occur during the next package update or upon fresh installation.
+- Updated French translation with the latest changes
 ### Fixed
 - Fixed Environment Variables not being editable
+- Fixed potential SD.Next update issues by moving to shared update process 
 
 ## v2.8.0-pre.3
 ### Added

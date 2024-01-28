@@ -143,8 +143,16 @@
         <TextBlock Text="Compatible with most packages, easier to run on less powerful hardware"
                    FontSize="12"
                    Margin="8,0,8,8"/>
+        
+        <controls:ProgressRing IsIndeterminate="True"
+                               Width="96"
+                               Height="96"
+                               Margin="8"
+                               IsVisible="{Binding IsLoading}"/>
+        
         <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                      Margin="8">
+                      Margin="8"
+                      IsVisible="{Binding !IsLoading}">
             <ItemsControl ItemsSource="{Binding Sd15Models}"
                            ItemTemplate="{StaticResource PackageTemplate}">
                 <ItemsControl.ItemsPanel>
@@ -163,8 +171,15 @@
         <TextBlock Text="Compatible with all packages, requires more powerful hardware"
                    FontSize="12"
                    Margin="8,0,8,8"/>
+        <controls:ProgressRing IsIndeterminate="True"
+                               Width="96"
+                               Height="96"
+                               Margin="8"
+                               IsVisible="{Binding IsLoading}"/>
+        
         <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                      Margin="8,8">
+                      Margin="8"
+                      IsVisible="{Binding !IsLoading}">
             <ItemsControl ItemsSource="{Binding SdxlModels}"
                           ItemTemplate="{StaticResource PackageTemplate}">
                 <ItemsControl.ItemsPanel>

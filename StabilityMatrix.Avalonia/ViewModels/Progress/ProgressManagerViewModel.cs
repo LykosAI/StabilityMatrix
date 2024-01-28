@@ -70,8 +70,9 @@ public partial class ProgressManagerViewModel : PageViewModelBase
     private Task InstanceOnAddPackageInstallWithoutBlocking(
         object? sender,
         IPackageModificationRunner runner,
-        IReadOnlyList<IPackageStep> steps
-    ) => AddPackageInstall(runner, steps);
+        IReadOnlyList<IPackageStep> steps,
+        Action onCompleted
+    ) => AddPackageInstall(runner, steps, onCompleted);
 
     private void TrackedDownloadService_OnDownloadAdded(object? sender, TrackedDownload e)
     {
@@ -174,7 +175,8 @@ public partial class ProgressManagerViewModel : PageViewModelBase
 
     private Task AddPackageInstall(
         IPackageModificationRunner packageModificationRunner,
-        IReadOnlyList<IPackageStep>? steps = null
+        IReadOnlyList<IPackageStep>? steps = null,
+        Action? onCompleted = null
     )
     {
         if (ProgressItems.Any(vm => vm.Id == packageModificationRunner.Id))
@@ -182,7 +184,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
             return Task.CompletedTask;
         }
 
-        var vm = new PackageInstallProgressItemViewModel(packageModificationRunner, steps);
+        var vm = new PackageInstallProgressItemViewModel(packageModificationRunner, steps, onCompleted);
         ProgressItems.Add(vm);
 
         return packageModificationRunner.ShowDialogOnStart ? vm.ShowProgressDialog() : Task.CompletedTask;

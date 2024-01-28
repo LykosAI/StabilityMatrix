@@ -148,7 +148,8 @@ public class A3WebUI(
                 Name = "No Half",
                 Type = LaunchOptionType.Bool,
                 Description = "Do not switch the model to 16-bit floats",
-                InitialValue = HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML(),
+                InitialValue =
+                    HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML() || Compat.IsMacOS,
                 Options = ["--no-half"]
             },
             new()
@@ -171,7 +172,7 @@ public class A3WebUI(
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm, TorchVersion.Mps };
 
     public override string MainBranch => "master";
 
@@ -208,6 +209,7 @@ public class A3WebUI(
                     TorchVersion.Cpu => "cpu",
                     TorchVersion.Cuda => "cu121",
                     TorchVersion.Rocm => "rocm5.6",
+                    TorchVersion.Mps => "nightly/cpu",
                     _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                 }
             )

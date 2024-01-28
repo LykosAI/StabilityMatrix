@@ -283,11 +283,15 @@ public class InvokeAI : BaseGitPackage
     )
     {
         await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
-        await PrerequisiteHelper.RunNpm(["i", "pnpm"], installLocation).ConfigureAwait(false);
+        await PrerequisiteHelper
+            .RunNpm(["i", "pnpm"], installLocation, envVars: envVars)
+            .ConfigureAwait(false);
 
         if (Compat.IsMacOS || Compat.IsLinux)
         {
-            await PrerequisiteHelper.RunNpm(["i", "vite"], installLocation).ConfigureAwait(false);
+            await PrerequisiteHelper
+                .RunNpm(["i", "vite"], installLocation, envVars: envVars)
+                .ConfigureAwait(false);
         }
 
         var pnpmPath = Path.Combine(

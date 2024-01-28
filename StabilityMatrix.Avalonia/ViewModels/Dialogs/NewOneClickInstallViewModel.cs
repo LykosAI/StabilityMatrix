@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -84,102 +85,121 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
     }
 
     [RelayCommand]
-    private async Task InstallComfyForInference()
+    private void InstallComfyForInference()
     {
         var comfyPackage = ShownPackages.FirstOrDefault(x => x is ComfyUI);
         if (comfyPackage == null)
             return;
 
         isInferenceInstall = true;
-        await InstallPackage(comfyPackage);
+        InstallPackage(comfyPackage);
     }
 
     [RelayCommand]
-    private async Task InstallPackage(BasePackage selectedPackage)
+    private void InstallPackage(BasePackage selectedPackage)
     {
-        var steps = new List<IPackageStep>
-        {
-            new SetPackageInstallingStep(settingsManager, selectedPackage.Name),
-            new SetupPrerequisitesStep(prerequisiteHelper, pyRunner)
-        };
-
-        // get latest version & download & install
-        var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", selectedPackage.Name);
-        if (Directory.Exists(installLocation))
-        {
-            var installPath = new DirectoryPath(installLocation);
-            await installPath.DeleteVerboseAsync(logger);
-        }
-
-        var downloadVersion = await selectedPackage.GetLatestVersion();
-        var installedVersion = new InstalledPackageVersion { IsPrerelease = false };
-
-        if (selectedPackage.ShouldIgnoreReleases)
-        {
-            installedVersion.InstalledBranch = downloadVersion.BranchName;
-            installedVersion.InstalledCommitSha = downloadVersion.CommitHash;
-        }
-        else
-        {
-            installedVersion.InstalledReleaseVersion = downloadVersion.VersionTag;
-        }
-
-        var torchVersion = selectedPackage.GetRecommendedTorchVersion();
-        var recommendedSharedFolderMethod = selectedPackage.RecommendedSharedFolderMethod;
-
-        var downloadStep = new DownloadPackageVersionStep(selectedPackage, installLocation, downloadVersion);
-        steps.Add(downloadStep);
-
-        var installStep = new InstallPackageStep(
-            selectedPackage,
-            torchVersion,
-            recommendedSharedFolderMethod,
-            downloadVersion,
-            installLocation
-        );
-        steps.Add(installStep);
-
-        var setupModelFoldersStep = new SetupModelFoldersStep(
-            selectedPackage,
-            recommendedSharedFolderMethod,
-            installLocation
-        );
-        steps.Add(setupModelFoldersStep);
-
-        var installedPackage = new InstalledPackage
-        {
-            DisplayName = selectedPackage.DisplayName,
-            LibraryPath = Path.Combine("Packages", selectedPackage.Name),
-            Id = Guid.NewGuid(),
-            PackageName = selectedPackage.Name,
-            Version = installedVersion,
-            LaunchCommand = selectedPackage.LaunchCommand,
-            LastUpdateCheck = DateTimeOffset.Now,
-            PreferredTorchVersion = torchVersion,
-            PreferredSharedFolderMethod = recommendedSharedFolderMethod
-        };
-
-        var addInstalledPackageStep = new AddInstalledPackageStep(settingsManager, installedPackage);
-        steps.Add(addInstalledPackageStep);
-
-        var runner = new PackageModificationRunner { ShowDialogOnStart = false, HideCloseButton = false, };
-        EventManager.Instance.OnAddPackageInstallWithoutBlocking(
-            this,
-            runner,
-            steps,
-            () =>
+        Task.Run(async () =>
             {
-                EventManager.Instance.OnOneClickInstallFinished(false);
+                var steps = new List<IPackageStep>
+                {
+                    new SetPackageInstallingStep(settingsManager, selectedPackage.Name),
+                    new SetupPrerequisitesStep(prerequisiteHelper, pyRunner)
+                };
 
-                if (!isInferenceInstall)
-                    return;
+                // get latest version & download & install
+                var installLocation = Path.Combine(
+                    settingsManager.LibraryDir,
+                    "Packages",
+                    selectedPackage.Name
+                );
+                if (Directory.Exists(installLocation))
+                {
+                    var installPath = new DirectoryPath(installLocation);
+                    await installPath.DeleteVerboseAsync(logger);
+                }
+
+                var downloadVersion = await selectedPackage.GetLatestVersion();
+                var installedVersion = new InstalledPackageVersion { IsPrerelease = false };
+
+                if (selectedPackage.ShouldIgnoreReleases)
+                {
+                    installedVersion.InstalledBranch = downloadVersion.BranchName;
+                    installedVersion.InstalledCommitSha = downloadVersion.CommitHash;
+                }
+                else
+                {
+                    installedVersion.InstalledReleaseVersion = downloadVersion.VersionTag;
+                }
+
+                var torchVersion = selectedPackage.GetRecommendedTorchVersion();
+                var recommendedSharedFolderMethod = selectedPackage.RecommendedSharedFolderMethod;
+
+                var downloadStep = new DownloadPackageVersionStep(
+                    selectedPackage,
+                    installLocation,
+                    downloadVersion
+                );
+                steps.Add(downloadStep);
+
+                var installStep = new InstallPackageStep(
+                    selectedPackage,
+                    torchVersion,
+                    recommendedSharedFolderMethod,
+                    downloadVersion,
+                    installLocation
+                );
+                steps.Add(installStep);
+
+                var setupModelFoldersStep = new SetupModelFoldersStep(
+                    selectedPackage,
+                    recommendedSharedFolderMethod,
+                    installLocation
+                );
+                steps.Add(setupModelFoldersStep);
+
+                var installedPackage = new InstalledPackage
+                {
+                    DisplayName = selectedPackage.DisplayName,
+                    LibraryPath = Path.Combine("Packages", selectedPackage.Name),
+                    Id = Guid.NewGuid(),
+                    PackageName = selectedPackage.Name,
+                    Version = installedVersion,
+                    LaunchCommand = selectedPackage.LaunchCommand,
+                    LastUpdateCheck = DateTimeOffset.Now,
+                    PreferredTorchVersion = torchVersion,
+                    PreferredSharedFolderMethod = recommendedSharedFolderMethod
+                };
+
+                var addInstalledPackageStep = new AddInstalledPackageStep(settingsManager, installedPackage);
+                steps.Add(addInstalledPackageStep);
 
                 Dispatcher.UIThread.Post(() =>
                 {
-                    navigationService.NavigateTo<InferenceViewModel>();
+                    var runner = new PackageModificationRunner
+                    {
+                        ShowDialogOnStart = false,
+                        HideCloseButton = false,
+                    };
+                    EventManager.Instance.OnAddPackageInstallWithoutBlocking(
+                        this,
+                        runner,
+                        steps,
+                        () =>
+                        {
+                            EventManager.Instance.OnOneClickInstallFinished(false);
+
+                            if (!isInferenceInstall)
+                                return;
+
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                navigationService.NavigateTo<InferenceViewModel>();
+                            });
+                        }
+                    );
                 });
-            }
-        );
+            })
+            .SafeFireAndForget();
 
         OnPrimaryButtonClick();
     }

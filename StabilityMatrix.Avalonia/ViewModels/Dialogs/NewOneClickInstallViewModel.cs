@@ -199,7 +199,9 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                             {
                                 navigationService.NavigateTo<InferenceViewModel>();
                             });
-                        });
+                        })
+                        .SafeFireAndForget();
+
                     EventManager.Instance.OnPackageInstallProgressAdded(runner);
                 });
             })

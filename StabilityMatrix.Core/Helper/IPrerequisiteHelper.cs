@@ -157,7 +157,8 @@ public interface IPrerequisiteHelper
     Task RunNpm(
         ProcessArgs args,
         string? workingDirectory = null,
-        Action<ProcessOutput>? onProcessOutput = null
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null
     );
     Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null);
 }

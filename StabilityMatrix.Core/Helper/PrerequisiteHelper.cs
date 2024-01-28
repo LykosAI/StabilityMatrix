@@ -112,7 +112,8 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     public Task RunNpm(
         ProcessArgs args,
         string? workingDirectory = null,
-        Action<ProcessOutput>? onProcessOutput = null
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null
     )
     {
         throw new NotImplementedException();

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -12,9 +11,9 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -38,6 +37,8 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
     private readonly ILogger<NewOneClickInstallViewModel> logger;
     private readonly IPyRunner pyRunner;
     private readonly INavigationService<MainWindowViewModel> navigationService;
+    private readonly INotificationService notificationService;
+
     public SourceCache<BasePackage, string> AllPackagesCache { get; } = new(p => p.Author + p.Name);
 
     public IObservableCollection<BasePackage> ShownPackages { get; set; } =
@@ -54,7 +55,8 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
         IPrerequisiteHelper prerequisiteHelper,
         ILogger<NewOneClickInstallViewModel> logger,
         IPyRunner pyRunner,
-        INavigationService<MainWindowViewModel> navigationService
+        INavigationService<MainWindowViewModel> navigationService,
+        INotificationService notificationService
     )
     {
         this.packageFactory = packageFactory;
@@ -63,6 +65,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
         this.logger = logger;
         this.pyRunner = pyRunner;
         this.navigationService = navigationService;
+        this.notificationService = notificationService;
 
         var incompatiblePredicate = this.WhenPropertyChanged(vm => vm.ShowIncompatiblePackages)
             .Select(_ => new Func<BasePackage, bool>(p => p.IsCompatible || ShowIncompatiblePackages))
@@ -180,10 +183,13 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                         ShowDialogOnStart = false,
                         HideCloseButton = false,
                     };
+
                     runner
                         .ExecuteSteps(steps)
                         .ContinueWith(_ =>
                         {
+                            notificationService.OnPackageInstallCompleted(runner);
+
                             EventManager.Instance.OnOneClickInstallFinished(false);
 
                             if (!isInferenceInstall)

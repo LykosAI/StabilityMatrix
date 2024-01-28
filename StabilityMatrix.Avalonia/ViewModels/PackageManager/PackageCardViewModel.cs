@@ -256,7 +256,13 @@ public partial class PackageCardViewModel : ProgressViewModel
         {
             var runner = new PackageModificationRunner
             {
-                ModificationCompleteMessage = $"{packageName} Update Complete"
+                ModificationCompleteMessage = $"Updated {packageName}",
+                ModificationFailedMessage = $"Could not update {packageName}"
+            };
+
+            runner.Completed += (_, completedRunner) =>
+            {
+                notificationService.OnPackageInstallCompleted(completedRunner);
             };
 
             var versionOptions = new DownloadPackageVersionOptions { IsLatest = true };

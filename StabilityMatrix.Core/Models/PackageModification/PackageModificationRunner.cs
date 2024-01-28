@@ -31,11 +31,15 @@ public class PackageModificationRunner : IPackageModificationRunner
                 }
                 catch (Exception e)
                 {
+                    var failedMessage = string.IsNullOrWhiteSpace(ModificationFailedMessage)
+                        ? $"Error: {e}"
+                        : ModificationFailedMessage + $" ({e})";
+
                     progress.Report(
                         new ProgressReport(
                             1f,
                             title: ModificationFailedTitle,
-                            message: ModificationFailedMessage ?? $"Error: {e}",
+                            message: failedMessage,
                             isIndeterminate: false
                         )
                     );

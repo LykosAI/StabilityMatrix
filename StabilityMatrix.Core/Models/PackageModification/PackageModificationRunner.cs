@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Core.Models.Progress;
+﻿using System.Diagnostics.CodeAnalysis;
+using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
@@ -18,54 +19,84 @@ public class PackageModificationRunner : IPackageModificationRunner
         });
 
         IsRunning = true;
-        foreach (var step in steps)
+
+        try
         {
-            CurrentStep = step;
-            try
+            foreach (var step in steps)
             {
-                await step.ExecuteAsync(progress).ConfigureAwait(false);
+                CurrentStep = step;
+                try
+                {
+                    await step.ExecuteAsync(progress).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    progress.Report(
+                        new ProgressReport(
+                            1f,
+                            title: ModificationFailedTitle,
+                            message: ModificationFailedMessage ?? $"Error: {e}",
+                            isIndeterminate: false
+                        )
+                    );
+
+                    Exception = e;
+                    Failed = true;
+                    return;
+                }
             }
-            catch (Exception e)
+
+            if (!Failed)
             {
                 progress.Report(
                     new ProgressReport(
                         1f,
-                        title: "Error modifying package",
-                        message: $"Error: {e}",
+                        title: ModificationCompleteTitle,
+                        message: ModificationCompleteMessage,
                         isIndeterminate: false
                     )
                 );
-                Failed = true;
-                break;
             }
         }
-
-        if (!Failed)
+        finally
         {
-            progress.Report(
-                new ProgressReport(
-                    1f,
-                    message: ModificationCompleteMessage ?? "Package Install Complete",
-                    isIndeterminate: false
-                )
-            );
+            IsRunning = false;
+            OnCompleted();
         }
-
-        IsRunning = false;
     }
 
     public bool HideCloseButton { get; init; }
-    public string? ModificationCompleteMessage { get; init; }
+
     public bool ShowDialogOnStart { get; init; }
 
-    public bool IsRunning { get; set; }
-    public bool Failed { get; set; }
+    public string? ModificationCompleteTitle { get; init; } = "Install Complete";
+
+    public string? ModificationCompleteMessage { get; init; }
+
+    public string? ModificationFailedTitle { get; init; } = "Install Failed";
+
+    public string? ModificationFailedMessage { get; init; }
+
+    public bool IsRunning { get; private set; }
+
+    [MemberNotNullWhen(true, nameof(Exception))]
+    public bool Failed { get; private set; }
+
+    public Exception? Exception { get; set; }
+
     public ProgressReport CurrentProgress { get; set; }
+
     public IPackageStep? CurrentStep { get; set; }
+
     public List<string> ConsoleOutput { get; } = new();
+
     public Guid Id { get; } = Guid.NewGuid();
 
     public event EventHandler<ProgressReport>? ProgressChanged;
 
+    public event EventHandler<IPackageModificationRunner>? Completed;
+
     protected virtual void OnProgressChanged(ProgressReport e) => ProgressChanged?.Invoke(this, e);
+
+    protected virtual void OnCompleted() => Completed?.Invoke(this, this);
 }

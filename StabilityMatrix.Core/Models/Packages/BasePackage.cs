@@ -201,10 +201,10 @@ public abstract class BasePackage
         await venvRunner
             .PipInstall(
                 new PipInstallArgs()
-                    .WithTorch("==2.0.1")
-                    .WithTorchVision("==0.15.2")
-                    .WithXFormers("==0.0.20")
-                    .WithTorchExtraIndex("cu118"),
+                    .WithTorch("==2.1.2")
+                    .WithTorchVision("==0.16.2")
+                    .WithXFormers("==0.0.23post1")
+                    .WithTorchExtraIndex("cu121"),
                 onConsoleOutput
             )
             .ConfigureAwait(false);
@@ -230,7 +230,7 @@ public abstract class BasePackage
         progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true));
 
         return venvRunner.PipInstall(
-            new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision(),
+            new PipInstallArgs().WithTorch("==2.1.2").WithTorchVision(),
             onConsoleOutput
         );
     }

@@ -142,7 +142,8 @@ public class StableDiffusionUx(
                 Name = "No Half",
                 Type = LaunchOptionType.Bool,
                 Description = "Do not switch the model to 16-bit floats",
-                InitialValue = HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML(),
+                InitialValue =
+                    HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML() || Compat.IsMacOS,
                 Options = ["--no-half"]
             },
             new()
@@ -165,7 +166,7 @@ public class StableDiffusionUx(
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm, TorchVersion.Mps };
 
     public override string MainBranch => "master";
 
@@ -198,6 +199,17 @@ public class StableDiffusionUx(
                 break;
             case TorchVersion.Rocm:
                 await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
+                break;
+            case TorchVersion.Mps:
+                await venvRunner
+                    .PipInstall(
+                        new PipInstallArgs()
+                            .WithTorch("==2.1.2")
+                            .WithTorchVision()
+                            .WithTorchExtraIndex("nightly/cpu"),
+                        onConsoleOutput
+                    )
+                    .ConfigureAwait(false);
                 break;
         }
 

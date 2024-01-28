@@ -356,7 +356,11 @@ public static class ProcessRunner
         return StartAnsiProcess(fileName, args, workingDirectory, outputDataReceived, environmentVariables);
     }
 
-    public static async Task<ProcessResult> RunBashCommand(string command, string workingDirectory = "")
+    public static async Task<ProcessResult> RunBashCommand(
+        string command,
+        string workingDirectory = "",
+        IReadOnlyDictionary<string, string>? environmentVariables = null
+    )
     {
         // Escape any single quotes in the command
         var escapedCommand = command.Replace("\"", "\\\"");
@@ -371,6 +375,14 @@ public static class ProcessRunner
             RedirectStandardError = true,
             WorkingDirectory = workingDirectory,
         };
+
+        if (environmentVariables != null)
+        {
+            foreach (var (key, value) in environmentVariables)
+            {
+                processInfo.EnvironmentVariables[key] = value;
+            }
+        }
 
         using var process = new Process();
         process.StartInfo = processInfo;
@@ -396,12 +408,13 @@ public static class ProcessRunner
 
     public static Task<ProcessResult> RunBashCommand(
         IEnumerable<string> commands,
-        string workingDirectory = ""
+        string workingDirectory = "",
+        IReadOnlyDictionary<string, string>? environmentVariables = null
     )
     {
         // Quote arguments containing spaces
         var args = string.Join(" ", commands.Select(Quote));
-        return RunBashCommand(args, workingDirectory);
+        return RunBashCommand(args, workingDirectory, environmentVariables);
     }
 
     /// <summary>

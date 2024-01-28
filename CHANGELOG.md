@@ -9,13 +9,16 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added Recommended Models dialog after one-click installer
 - Added new launch argument options for Fooocus
+- Added Automatic1111 & Stable Diffusion WebUI-UX to the compatible macOS packages
 ### Changed
 - Changed one-click installer to match the new package installation style
 - Automatic1111 packages will now use PyTorch v2.1.2. Upgrade will occur during the next package update or upon fresh installation.
 - Updated French translation with the latest changes
 ### Fixed
-- Fixed Environment Variables not being editable
-- Fixed potential SD.Next update issues by moving to shared update process 
+- Fixed [#413](https://github.com/LykosAI/StabilityMatrix/issues/413) - Environment Variables are editable again
+- Fixed potential SD.Next update issues by moving to shared update process
+- Fixed Invoke install trying to use system nodejs
+- Fixed crash on startup when Outputs page failed to load categories properly
 
 ## v2.8.0-pre.3
 ### Added

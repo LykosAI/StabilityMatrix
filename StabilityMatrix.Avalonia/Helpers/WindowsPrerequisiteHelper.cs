@@ -115,11 +115,12 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     public async Task RunNpm(
         ProcessArgs args,
         string? workingDirectory = null,
-        Action<ProcessOutput>? onProcessOutput = null
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null
     )
     {
         var result = await ProcessRunner
-            .GetProcessResultAsync(NodeExistsPath, args, workingDirectory)
+            .GetProcessResultAsync(NodeExistsPath, args, workingDirectory, envVars)
             .ConfigureAwait(false);
 
         result.EnsureSuccessExitCode();

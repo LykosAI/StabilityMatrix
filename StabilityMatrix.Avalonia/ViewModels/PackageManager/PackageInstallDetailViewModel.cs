@@ -221,11 +221,6 @@ public partial class PackageInstallDetailViewModel(
         if (!runner.Failed)
         {
             EventManager.Instance.OnInstalledPackagesChanged();
-            notificationService.Show(
-                "Package Install Complete",
-                $"{InstallName} installed successfully",
-                NotificationType.Success
-            );
         }
     }
 

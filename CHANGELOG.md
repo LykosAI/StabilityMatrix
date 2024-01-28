@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Automatic1111 packages will now use PyTorch v2.1.2. Upgrade will occur during the next package update or upon fresh installation.
 - Updated French translation with the latest changes
 ### Fixed
-- Fixed Environment Variables not being editable
+- Fixed [#413](https://github.com/LykosAI/StabilityMatrix/issues/413) - Environment Variables are editable again
 - Fixed potential SD.Next update issues by moving to shared update process
 - Fixed Invoke install trying to use system nodejs
 - Fixed crash on startup when Outputs page failed to load categories properly

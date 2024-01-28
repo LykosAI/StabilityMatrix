@@ -49,6 +49,22 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
             DisplayName = "Download Canceled"
         };
 
+    public static NotificationKey Package_Install_Completed =>
+        new("Package_Install_Completed")
+        {
+            DefaultOption = NotificationOption.NativePush,
+            Level = NotificationLevel.Success,
+            DisplayName = "Package Install Completed"
+        };
+
+    public static NotificationKey Package_Install_Failed =>
+        new("Package_Install_Failed")
+        {
+            DefaultOption = NotificationOption.NativePush,
+            Level = NotificationLevel.Error,
+            DisplayName = "Package Install Failed"
+        };
+
     public static Dictionary<string, NotificationKey> All { get; } = GetValues<NotificationKey>();
 
     /// <inheritdoc />

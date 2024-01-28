@@ -18,17 +18,11 @@ namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
 {
     private readonly IPackageModificationRunner packageModificationRunner;
-    private readonly IReadOnlyList<IPackageStep>? packageSteps;
     private BetterContentDialog? dialog;
 
-    public PackageInstallProgressItemViewModel(
-        IPackageModificationRunner packageModificationRunner,
-        IReadOnlyList<IPackageStep>? packageSteps = null,
-        Action? onCompleted = null
-    )
+    public PackageInstallProgressItemViewModel(IPackageModificationRunner packageModificationRunner)
     {
         this.packageModificationRunner = packageModificationRunner;
-        this.packageSteps = packageSteps;
 
         Id = packageModificationRunner.Id;
         Name = packageModificationRunner.CurrentStep?.ProgressTitle;
@@ -44,20 +38,6 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
         Progress.Console.Post(string.Join(Environment.NewLine, packageModificationRunner.ConsoleOutput));
 
         packageModificationRunner.ProgressChanged += PackageModificationRunnerOnProgressChanged;
-
-        if (packageSteps is not { Count: > 0 })
-            return;
-
-        var task = packageModificationRunner.ExecuteSteps(packageSteps);
-
-        if (onCompleted is not null)
-        {
-            task.ContinueWith(_ => onCompleted.Invoke()).SafeFireAndForget();
-        }
-        else
-        {
-            task.SafeFireAndForget();
-        }
     }
 
     private void PackageModificationRunnerOnProgressChanged(object? sender, ProgressReport e)

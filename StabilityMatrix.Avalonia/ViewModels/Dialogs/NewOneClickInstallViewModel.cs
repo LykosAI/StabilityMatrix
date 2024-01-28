@@ -180,11 +180,9 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                         ShowDialogOnStart = false,
                         HideCloseButton = false,
                     };
-                    EventManager.Instance.OnAddPackageInstallWithoutBlocking(
-                        this,
-                        runner,
-                        steps,
-                        () =>
+                    runner
+                        .ExecuteSteps(steps)
+                        .ContinueWith(_ =>
                         {
                             EventManager.Instance.OnOneClickInstallFinished(false);
 
@@ -195,8 +193,8 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                             {
                                 navigationService.NavigateTo<InferenceViewModel>();
                             });
-                        }
-                    );
+                        });
+                    EventManager.Instance.OnPackageInstallProgressAdded(runner);
                 });
             })
             .SafeFireAndForget();

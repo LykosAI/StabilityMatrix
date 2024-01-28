@@ -404,8 +404,7 @@ public static class DesignData
                     new PackageModificationRunner
                     {
                         CurrentProgress = new ProgressReport(0.5f, "Installing package...")
-                    },
-                    new List<IPackageStep>()
+                    }
                 )
             }
         );

@@ -202,7 +202,19 @@ public partial class PackageInstallDetailViewModel(
             addInstalledPackageStep
         };
 
-        var runner = new PackageModificationRunner { ShowDialogOnStart = true };
+        var packageName = SelectedPackage.Name;
+
+        var runner = new PackageModificationRunner
+        {
+            ModificationCompleteMessage = $"Installed {packageName}",
+            ModificationFailedMessage = $"Could not install {packageName}",
+            ShowDialogOnStart = true
+        };
+        runner.Completed += (_, completedRunner) =>
+        {
+            notificationService.OnPackageInstallCompleted(completedRunner);
+        };
+
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps(steps.ToList());
 

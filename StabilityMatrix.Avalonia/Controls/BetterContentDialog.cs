@@ -144,6 +144,17 @@ public class BetterContentDialog : ContentDialog
         set => SetValue(MaxDialogWidthProperty, value);
     }
 
+    public static readonly StyledProperty<double> MinDialogHeightProperty = AvaloniaProperty.Register<
+        BetterContentDialog,
+        double
+    >("MinDialogHeight");
+
+    public double MinDialogHeight
+    {
+        get => GetValue(MaxDialogHeightProperty);
+        set => SetValue(MaxDialogHeightProperty, value);
+    }
+
     public static readonly StyledProperty<double> MaxDialogHeightProperty = AvaloniaProperty.Register<
         BetterContentDialog,
         double

@@ -26,20 +26,24 @@ public class EventManager
     public event EventHandler? ScrollToBottomRequested;
     public event EventHandler<ProgressItem>? ProgressChanged;
     public event EventHandler<RunningPackageStatusChangedEventArgs>? RunningPackageStatusChanged;
-
     public event EventHandler<IPackageModificationRunner>? PackageInstallProgressAdded;
+    public delegate Task AddPackageInstallEventHandler(
+        object? sender,
+        IPackageModificationRunner runner,
+        IReadOnlyList<IPackageStep> steps,
+        Action onCompleted
+    );
+    public event AddPackageInstallEventHandler? AddPackageInstallWithoutBlocking;
     public event EventHandler? ToggleProgressFlyout;
-
     public event EventHandler<CultureInfo>? CultureChanged;
-
     public event EventHandler? ModelIndexChanged;
-
     public event EventHandler<FilePath>? ImageFileAdded;
     public event EventHandler<LocalImageFile>? InferenceTextToImageRequested;
     public event EventHandler<LocalImageFile>? InferenceUpscaleRequested;
     public event EventHandler<LocalImageFile>? InferenceImageToImageRequested;
     public event EventHandler<LocalImageFile>? InferenceImageToVideoRequested;
     public event EventHandler<int>? NavigateAndFindCivitModelRequested;
+    public event EventHandler? DownloadsTeachingTipRequested;
 
     public void OnGlobalProgressChanged(int progress) => GlobalProgressChanged?.Invoke(this, progress);
 
@@ -90,4 +94,14 @@ public class EventManager
 
     public void OnNavigateAndFindCivitModelRequested(int modelId) =>
         NavigateAndFindCivitModelRequested?.Invoke(this, modelId);
+
+    public void OnAddPackageInstallWithoutBlocking(
+        object? sender,
+        IPackageModificationRunner runner,
+        IReadOnlyList<IPackageStep> steps,
+        Action onCompleted
+    ) => AddPackageInstallWithoutBlocking?.Invoke(sender, runner, steps, onCompleted);
+
+    public void OnDownloadsTeachingTipRequested() =>
+        DownloadsTeachingTipRequested?.Invoke(this, EventArgs.Empty);
 }

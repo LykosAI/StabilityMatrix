@@ -190,6 +190,9 @@ public class A3WebUI(
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
+        var venvPath = Path.Combine(installLocation, "venv");
+        var exists = Directory.Exists(venvPath);
+
         var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
@@ -197,14 +200,14 @@ public class A3WebUI(
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
         var pipArgs = new PipInstallArgs()
-            .WithTorch("==2.0.1")
-            .WithTorchVision("==0.15.2")
+            .WithTorch("==2.1.2")
+            .WithTorchVision("==0.16.2")
             .WithTorchExtraIndex(
                 torchVersion switch
                 {
                     TorchVersion.Cpu => "cpu",
-                    TorchVersion.Cuda => "cu118",
-                    TorchVersion.Rocm => "rocm5.1.1",
+                    TorchVersion.Cuda => "cu121",
+                    TorchVersion.Rocm => "rocm5.6",
                     _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                 }
             )
@@ -215,7 +218,7 @@ public class A3WebUI(
 
         if (torchVersion == TorchVersion.Cuda)
         {
-            pipArgs = pipArgs.WithXFormers("==0.0.20");
+            pipArgs = pipArgs.WithXFormers("==0.0.23.post1");
         }
 
         // v1.6.0 needs a httpx qualifier to fix a gradio issue
@@ -226,6 +229,12 @@ public class A3WebUI(
 
         // Add jsonmerge to fix https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/12482
         pipArgs = pipArgs.AddArg("jsonmerge");
+
+        if (exists)
+        {
+            pipArgs = pipArgs.AddArg("--upgrade");
+            pipArgs = pipArgs.AddArg("--force-reinstall");
+        }
 
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 

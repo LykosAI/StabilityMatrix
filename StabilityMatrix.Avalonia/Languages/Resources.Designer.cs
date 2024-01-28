@@ -213,6 +213,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download.
+        /// </summary>
+        public static string Action_Download {
+            get {
+                return ResourceManager.GetString("Action_Download", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edit.
         /// </summary>
         public static string Action_Edit {
@@ -1905,6 +1914,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Recommended Models.
+        /// </summary>
+        public static string Label_RecommendedModels {
+            get {
+                return ResourceManager.GetString("Label_RecommendedModels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to While your package is installing, here are some models we recommend to help you get started..
+        /// </summary>
+        public static string Label_RecommendedModelsSubText {
+            get {
+                return ResourceManager.GetString("Label_RecommendedModelsSubText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Refiner.
         /// </summary>
         public static string Label_Refiner {
@@ -2445,6 +2472,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Check the progress of your package installations and model downloads here..
+        /// </summary>
+        public static string TeachingTip_DownloadsExplanation {
+            get {
+                return ResourceManager.GetString("TeachingTip_DownloadsExplanation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Additional folders such as IPAdapters and TextualInversions (embeddings) can be enabled here.
         /// </summary>
         public static string TeachingTip_MoreCheckpointCategories {
@@ -2463,7 +2499,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Choose your preferred interface and click Install to get started.
+        ///   Looks up a localized string similar to Choose your preferred interface to get started.
         /// </summary>
         public static string Text_OneClickInstaller_SubHeader {
             get {

@@ -28,16 +28,20 @@ public class FooocusMre(
 
     public override string LicenseType => "GPL-3.0";
 
-    public override string LicenseUrl => "https://github.com/MoonRide303/Fooocus-MRE/blob/moonride-main/LICENSE";
+    public override string LicenseUrl =>
+        "https://github.com/MoonRide303/Fooocus-MRE/blob/moonride-main/LICENSE";
     public override string LaunchCommand => "launch.py";
 
     public override Uri PreviewImageUri =>
-        new("https://user-images.githubusercontent.com/130458190/265366059-ce430ea0-0995-4067-98dd-cef1d7dc1ab6.png");
+        new(
+            "https://user-images.githubusercontent.com/130458190/265366059-ce430ea0-0995-4067-98dd-cef1d7dc1ab6.png"
+        );
 
     public override string Disclaimer =>
         "This package may no longer receive updates from its author. It may be removed from Stability Matrix in the future.";
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Impossible;
+    public override bool OfferInOneClickInstaller => false;
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()

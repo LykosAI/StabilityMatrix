@@ -206,7 +206,7 @@ public partial class PackageInstallDetailViewModel(
 
         var runner = new PackageModificationRunner
         {
-            ModificationCompleteMessage = $"Installed {packageName}",
+            ModificationCompleteMessage = $"Installed {packageName} at [{installLocation}]",
             ModificationFailedMessage = $"Could not install {packageName}",
             ShowDialogOnStart = true
         };

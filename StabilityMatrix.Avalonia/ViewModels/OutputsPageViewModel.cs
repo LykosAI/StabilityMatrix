@@ -136,8 +136,11 @@ public partial class OutputsPageViewModel : PageViewModelBase
             settings => settings.OutputsImageSize,
             delay: TimeSpan.FromMilliseconds(250)
         );
+    }
 
-        RefreshCategories(false);
+    protected override void OnInitialLoaded()
+    {
+        RefreshCategories();
     }
 
     public override void OnLoaded()
@@ -147,6 +150,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         if (!settingsManager.IsLibraryDirSet)
             return;
+
+        base.OnLoaded();
 
         Directory.CreateDirectory(settingsManager.ImagesDirectory);
 
@@ -528,7 +533,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         }
     }
 
-    private void RefreshCategories(bool updateProperty = true)
+    private void RefreshCategories()
     {
         if (Design.IsDesignMode)
             return;
@@ -542,7 +547,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .Settings.InstalledPackages.Where(x => !x.UseSharedOutputFolder)
             .Select(packageFactory.GetPackagePair)
             .WhereNotNull()
-            .Where(p => p.BasePackage.SharedOutputFolders != null && p.BasePackage.SharedOutputFolders.Any())
+            .Where(
+                p =>
+                    p.BasePackage.SharedOutputFolders is { Count: > 0 } && p.InstalledPackage.FullPath != null
+            )
             .Select(
                 pair =>
                     new PackageOutputCategory
@@ -572,17 +580,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
 
-        if (updateProperty)
-        {
-            SelectedCategory =
-                Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
-                ?? Categories.First();
-        }
-        else
-        {
-            selectedCategory =
-                Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
-                ?? Categories.First();
-        }
+        SelectedCategory =
+            Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name) ?? Categories.First();
     }
 }

@@ -160,6 +160,14 @@ public class InvokeAI : BaseGitPackage
         return base.GetRecommendedTorchVersion();
     }
 
+    public override IEnumerable<PackagePrerequisite> Prerequisites =>
+        [
+            PackagePrerequisite.Python310,
+            PackagePrerequisite.VcRedist,
+            PackagePrerequisite.Git,
+            PackagePrerequisite.Node
+        ];
+
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,

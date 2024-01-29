@@ -130,7 +130,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         var steps = new List<IPackageStep>
         {
             new SetPackageInstallingStep(settingsManager, SelectedPackage.Name),
-            new SetupPrerequisitesStep(prerequisiteHelper, pyRunner)
+            new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, SelectedPackage)
         };
 
         // get latest version & download & install

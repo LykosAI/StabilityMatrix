@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Versioning;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 
@@ -161,4 +162,9 @@ public interface IPrerequisiteHelper
         IReadOnlyDictionary<string, string>? envVars = null
     );
     Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null);
+    Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null);
+    Task InstallPackageRequirements(
+        List<PackagePrerequisite> prerequisites,
+        IProgress<ProgressReport>? progress = null
+    );
 }

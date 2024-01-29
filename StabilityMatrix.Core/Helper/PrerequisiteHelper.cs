@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using Octokit;
 using StabilityMatrix.Core.Exceptions;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -120,6 +122,19 @@ public class PrerequisiteHelper : IPrerequisiteHelper
     }
 
     public Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task InstallPackageRequirements(
+        List<PackagePrerequisite> prerequisites,
+        IProgress<ProgressReport>? progress = null
+    )
     {
         throw new NotImplementedException();
     }

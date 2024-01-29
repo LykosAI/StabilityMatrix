@@ -190,6 +190,9 @@ public abstract class BasePackage
             ? PackageVersionType.Commit
             : PackageVersionType.GithubRelease | PackageVersionType.Commit;
 
+    public virtual IEnumerable<PackagePrerequisite> Prerequisites =>
+        [PackagePrerequisite.Git, PackagePrerequisite.Python310, PackagePrerequisite.VcRedist];
+
     protected async Task InstallCudaTorch(
         PyVenvRunner venvRunner,
         IProgress<ProgressReport>? progress = null,

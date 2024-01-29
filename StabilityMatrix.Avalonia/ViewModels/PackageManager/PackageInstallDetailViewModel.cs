@@ -135,7 +135,7 @@ public partial class PackageInstallDetailViewModel(
             await installPath.DeleteVerboseAsync(logger);
         }
 
-        var prereqStep = new SetupPrerequisitesStep(prerequisiteHelper, pyRunner);
+        var prereqStep = new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, SelectedPackage);
 
         var downloadOptions = new DownloadPackageVersionOptions();
         var installedVersion = new InstalledPackageVersion();

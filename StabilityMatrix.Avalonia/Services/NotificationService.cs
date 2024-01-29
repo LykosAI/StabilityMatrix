@@ -253,14 +253,20 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
             {
                 var context = WindowsApplicationContext.FromCurrentProcess("Stability Matrix");
                 nativeNotificationManager = new WindowsNotificationManager(context);
+
+                await nativeNotificationManager.Initialize();
             }
             else if (Compat.IsLinux)
             {
                 var context = FreeDesktopApplicationContext.FromCurrentProcess();
                 nativeNotificationManager = new FreeDesktopNotificationManager(context);
-            }
 
-            await nativeNotificationManager!.Initialize();
+                await nativeNotificationManager.Initialize();
+            }
+            else
+            {
+                logger.LogInformation("Native notifications are not supported on this platform");
+            }
         }
         catch (Exception e)
         {

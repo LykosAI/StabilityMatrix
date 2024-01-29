@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,7 +24,9 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
+using Notification = DesktopNotifications.Notification;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
@@ -76,24 +80,33 @@ public partial class ProgressManagerViewModel : PageViewModelBase
 
     private void TrackedDownloadService_OnDownloadAdded(object? sender, TrackedDownload e)
     {
-        var vm = new DownloadProgressItemViewModel(e);
-
         // Attach notification handlers
+        // Use Changing because Changed might be called after the download is removed
         e.ProgressStateChanged += (s, state) =>
         {
+            Debug.WriteLine($"Download {e.FileName} state changed to {state}");
             var download = s as TrackedDownload;
 
             switch (state)
             {
                 case ProgressState.Success:
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        notificationService.Show(
-                            "Download Completed",
-                            $"Download of {e.FileName} completed successfully.",
-                            NotificationType.Success
-                        );
-                    });
+                    var imageFile = e.DownloadDirectory.EnumerateFiles(
+                        $"{Path.GetFileNameWithoutExtension(e.FileName)}.preview.*"
+                    )
+                        .FirstOrDefault();
+
+                    notificationService
+                        .ShowAsync(
+                            NotificationKey.Download_Completed,
+                            new Notification
+                            {
+                                Title = "Download Completed",
+                                Body = $"Download of {e.FileName} completed successfully.",
+                                BodyImagePath = imageFile?.FullPath
+                            }
+                        )
+                        .SafeFireAndForget();
+
                     break;
                 case ProgressState.Failed:
                     var msg = "";
@@ -135,27 +148,33 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                             $"({exception.GetType().Name}) {exception.InnerException?.Message ?? exception.Message}";
                     }
 
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        notificationService.ShowPersistent(
-                            "Download Failed",
-                            $"Download of {e.FileName} failed: {msg}",
-                            NotificationType.Error
-                        );
-                    });
+                    notificationService
+                        .ShowAsync(
+                            NotificationKey.Download_Failed,
+                            new Notification
+                            {
+                                Title = "Download Failed",
+                                Body = $"Download of {e.FileName} failed: {msg}"
+                            }
+                        )
+                        .SafeFireAndForget();
                     break;
                 case ProgressState.Cancelled:
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        notificationService.Show(
-                            "Download Cancelled",
-                            $"Download of {e.FileName} was cancelled.",
-                            NotificationType.Warning
-                        );
-                    });
+                    notificationService
+                        .ShowAsync(
+                            NotificationKey.Download_Canceled,
+                            new Notification
+                            {
+                                Title = "Download Cancelled",
+                                Body = $"Download of {e.FileName} was cancelled."
+                            }
+                        )
+                        .SafeFireAndForget();
                     break;
             }
         };
+
+        var vm = new DownloadProgressItemViewModel(e);
 
         ProgressItems.Add(vm);
     }

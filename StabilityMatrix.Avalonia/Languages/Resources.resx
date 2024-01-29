@@ -942,6 +942,12 @@
   <data name="Action_CopyDetails" xml:space="preserve">
     <value>Copy Details</value>
   </data>
+  <data name="Label_Notifications" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Label_NotificationOption_None" xml:space="preserve">
+    <value />
+  </data>
   <data name="Action_Download" xml:space="preserve">
     <value>Download</value>
   </data>

@@ -584,6 +584,9 @@ public static class DesignData
     public static AccountSettingsViewModel AccountSettingsViewModel =>
         Services.GetRequiredService<AccountSettingsViewModel>();
 
+    public static NotificationSettingsViewModel NotificationSettingsViewModel =>
+        Services.GetRequiredService<NotificationSettingsViewModel>();
+
     public static UpdateSettingsViewModel UpdateSettingsViewModel
     {
         get

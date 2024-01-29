@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.8.0-pre.4
 ### Added
 - Added Recommended Models dialog after one-click installer
+- Added native desktop push notifications for some events (i.e. Downloads, Package installs, Inference generation)
+  - Currently available on Windows and Linux, macOS support is pending
+- Added settings options for notifications
 - Added new launch argument options for Fooocus
 - Added Automatic1111 & Stable Diffusion WebUI-UX to the compatible macOS packages
 ### Changed

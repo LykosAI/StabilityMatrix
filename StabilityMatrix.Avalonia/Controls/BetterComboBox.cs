@@ -1,5 +1,4 @@
-﻿using System;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
@@ -8,8 +7,6 @@ namespace StabilityMatrix.Avalonia.Controls;
 
 public class BetterComboBox : ComboBox
 {
-    // protected override Type StyleKeyOverride { get; } = typeof(CheckBox);
-
     public static readonly DirectProperty<BetterComboBox, IDataTemplate?> SelectionBoxItemTemplateProperty =
         AvaloniaProperty.RegisterDirect<BetterComboBox, IDataTemplate?>(
             nameof(SelectionBoxItemTemplate),
@@ -22,7 +19,7 @@ public class BetterComboBox : ComboBox
     public IDataTemplate? SelectionBoxItemTemplate
     {
         get => _selectionBoxItemTemplate;
-        private set => SetAndRaise(SelectionBoxItemTemplateProperty, ref _selectionBoxItemTemplate, value);
+        set => SetAndRaise(SelectionBoxItemTemplateProperty, ref _selectionBoxItemTemplate, value);
     }
 
     /// <inheritdoc />

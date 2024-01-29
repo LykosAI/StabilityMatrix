@@ -5,6 +5,7 @@ using Avalonia.Controls.Notifications;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Settings;
 
 namespace StabilityMatrix.Avalonia.Services;
 
@@ -48,6 +49,20 @@ public interface INotificationService
     );
 
     /// <summary>
+    /// Show a keyed customizable persistent notification with the given parameters.
+    /// </summary>
+    Task ShowPersistentAsync(NotificationKey key, DesktopNotifications.Notification notification);
+
+    /// <summary>
+    /// Show a keyed customizable notification with the given parameters.
+    /// </summary>
+    Task ShowAsync(
+        NotificationKey key,
+        DesktopNotifications.Notification notification,
+        TimeSpan? expiration = null
+    );
+
+    /// <summary>
     /// Show a notification with the given parameters.
     /// </summary>
     void Show(
@@ -77,4 +92,9 @@ public interface INotificationService
         NotificationType appearance = NotificationType.Error,
         LogLevel logLevel = LogLevel.Warning
     );
+
+    /// <summary>
+    /// Get the native notification manager.
+    /// </summary>
+    Task<DesktopNotifications.INotificationManager?> GetNativeNotificationManagerAsync();
 }

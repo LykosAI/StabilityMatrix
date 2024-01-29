@@ -117,7 +117,7 @@
             </Grid>
 
             <!--  General  -->
-            <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,*,*,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -138,7 +138,22 @@
                             Symbol="AppGeneric" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
-                <ui:SettingsExpander Grid.Row="2"
+                <!--  Link to Notifications Sub-Settings  -->
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,0"
+                    ActionIconSource="ChevronRight"
+                    Command="{Binding NavigateToSubPageCommand}"
+                    CommandParameter="{x:Type vmSettings:NotificationSettingsViewModel}"
+                    Header="{x:Static lang:Resources.Label_Notifications}"
+                    IsClickEnabled="True">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            Symbol="Alert" />
+                    </ui:SettingsExpander.IconSource>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander Grid.Row="3"
                                      Header="{x:Static lang:Resources.Label_HolidayMode}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource

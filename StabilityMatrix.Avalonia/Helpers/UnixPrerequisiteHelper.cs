@@ -11,7 +11,9 @@ using NLog;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -60,6 +62,55 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         var result = await ProcessRunner.RunBashCommand("git --version");
         isGitInstalled = result.ExitCode == 0;
         return isGitInstalled == true;
+    }
+
+    public Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null) =>
+        InstallPackageRequirements(package.Prerequisites.ToList(), progress);
+
+    public async Task InstallPackageRequirements(
+        List<PackagePrerequisite> prerequisites,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        await UnpackResourcesIfNecessary(progress);
+
+        if (prerequisites.Contains(PackagePrerequisite.Python310))
+        {
+            await InstallPythonIfNecessary(progress);
+            await InstallVirtualenvIfNecessary(progress);
+        }
+
+        if (prerequisites.Contains(PackagePrerequisite.Git))
+        {
+            await InstallGitIfNecessary(progress);
+        }
+
+        if (prerequisites.Contains(PackagePrerequisite.Node))
+        {
+            await InstallNodeIfNecessary(progress);
+        }
+    }
+
+    private async Task InstallVirtualenvIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        // python stuff
+        if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
+        {
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Python prerequisites...", isIndeterminate: true)
+            );
+
+            await pyRunner.Initialize().ConfigureAwait(false);
+
+            if (!PyRunner.PipInstalled)
+            {
+                await pyRunner.SetupPip().ConfigureAwait(false);
+            }
+            if (!PyRunner.VenvInstalled)
+            {
+                await pyRunner.InstallPackage("virtualenv").ConfigureAwait(false);
+            }
+        }
     }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)

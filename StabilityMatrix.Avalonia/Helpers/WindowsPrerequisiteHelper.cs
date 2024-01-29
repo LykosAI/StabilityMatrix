@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 using NLog;
 using Octokit;
+using PropertyModels.Extensions;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Helpers;
@@ -22,6 +27,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     private readonly IGitHubClient gitHubClient;
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
+    private readonly IPyRunner pyRunner;
 
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
     private const string TkinterDownloadUrl =
@@ -59,12 +65,14 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     public WindowsPrerequisiteHelper(
         IGitHubClient gitHubClient,
         IDownloadService downloadService,
-        ISettingsManager settingsManager
+        ISettingsManager settingsManager,
+        IPyRunner pyRunner
     )
     {
         this.gitHubClient = gitHubClient;
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
+        this.pyRunner = pyRunner;
     }
 
     public async Task RunGit(
@@ -126,6 +134,38 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         result.EnsureSuccessExitCode();
         onProcessOutput?.Invoke(ProcessOutput.FromStdOutLine(result.StandardOutput));
         onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
+    }
+
+    public Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null) =>
+        InstallPackageRequirements(package.Prerequisites.ToList(), progress);
+
+    public async Task InstallPackageRequirements(
+        List<PackagePrerequisite> prerequisites,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        await UnpackResourcesIfNecessary(progress);
+
+        if (prerequisites.Contains(PackagePrerequisite.Python310))
+        {
+            await InstallPythonIfNecessary(progress);
+            await InstallVirtualenvIfNecessary(progress);
+        }
+
+        if (prerequisites.Contains(PackagePrerequisite.Git))
+        {
+            await InstallGitIfNecessary(progress);
+        }
+
+        if (prerequisites.Contains(PackagePrerequisite.VcRedist))
+        {
+            await InstallVcRedistIfNecessary(progress);
+        }
+
+        if (prerequisites.Contains(PackagePrerequisite.Node))
+        {
+            await InstallNodeIfNecessary(progress);
+        }
     }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -262,6 +302,28 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
             if (File.Exists(PythonDownloadPath))
             {
                 File.Delete(PythonDownloadPath);
+            }
+        }
+    }
+
+    private async Task InstallVirtualenvIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        // python stuff
+        if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
+        {
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Python prerequisites...", isIndeterminate: true)
+            );
+
+            await pyRunner.Initialize().ConfigureAwait(false);
+
+            if (!PyRunner.PipInstalled)
+            {
+                await pyRunner.SetupPip().ConfigureAwait(false);
+            }
+            if (!PyRunner.VenvInstalled)
+            {
+                await pyRunner.InstallPackage("virtualenv").ConfigureAwait(false);
             }
         }
     }

@@ -512,18 +512,15 @@ public abstract partial class InferenceGenerationViewModelBase
 
             // Insert to start of images
             var gridImage = new ImageSource(gridPath);
-            // Preload
-            await gridImage.GetBitmapAsync();
-            ImageGalleryCardViewModel.ImageSources.Add(gridImage);
-
+            outputImages.Insert(0, gridImage);
             EventManager.Instance.OnImageFileAdded(gridPath);
         }
 
-        // Add rest of images
         foreach (var img in outputImages)
         {
             // Preload
             await img.GetBitmapAsync();
+            // Add images
             ImageGalleryCardViewModel.ImageSources.Add(img);
         }
 

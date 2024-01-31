@@ -6,6 +6,5 @@ public enum PackagePrerequisite
     VcRedist,
     Git,
     Node,
-    Dotnet7,
-    Dotnet8
+    Dotnet,
 }

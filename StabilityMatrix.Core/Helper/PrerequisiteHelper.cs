@@ -139,6 +139,22 @@ public class PrerequisiteHelper : IPrerequisiteHelper
         throw new NotImplementedException();
     }
 
+    public Task InstallDotnetIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<Process> RunDotnet(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null,
+        bool waitForExit = true
+    )
+    {
+        throw new NotImplementedException();
+    }
+
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         await InstallVcRedistIfNecessary(progress);

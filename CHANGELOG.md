@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed error when finding metadata for archived models
 - Fixed error when extensions folder is missing
 - Fixed error when webp files have incorrect metadata
+- Fixed crash when model was not selected in Inference
 
 ## v2.8.0-pre.4
 ### Added

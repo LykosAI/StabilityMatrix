@@ -16,6 +16,9 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
     public DirectoryInfo Info => info ??= new DirectoryInfo(FullPath);
 
     [JsonIgnore]
+    FileSystemInfo IPathObject.Info => Info;
+
+    [JsonIgnore]
     public bool IsSymbolicLink
     {
         get

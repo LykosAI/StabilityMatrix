@@ -468,20 +468,6 @@ public class SettingsManager : ISettingsManager
         SaveSettings();
     }
 
-    public void SetLastUpdateCheck(InstalledPackage package)
-    {
-        var installedPackage = Settings.InstalledPackages.First(p => p.DisplayName == package.DisplayName);
-        installedPackage.LastUpdateCheck = package.LastUpdateCheck;
-        installedPackage.UpdateAvailable = package.UpdateAvailable;
-        SaveSettings();
-    }
-
-    public List<LaunchOption> GetLaunchArgs(Guid packageId)
-    {
-        var packageData = Settings.InstalledPackages.FirstOrDefault(x => x.Id == packageId);
-        return packageData?.LaunchArgs ?? new();
-    }
-
     public void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs)
     {
         var packageData = Settings.InstalledPackages.FirstOrDefault(x => x.Id == packageId);
@@ -494,58 +480,6 @@ public class SettingsManager : ISettingsManager
 
         packageData.LaunchArgs = toSave;
         SaveSettings();
-    }
-
-    public string? GetActivePackageHost()
-    {
-        var package = Settings.InstalledPackages.FirstOrDefault(
-            x => x.Id == Settings.ActiveInstalledPackageId
-        );
-        if (package == null)
-            return null;
-        var hostOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "host");
-        if (hostOption?.OptionValue != null)
-        {
-            return hostOption.OptionValue as string;
-        }
-        return hostOption?.DefaultValue as string;
-    }
-
-    public string? GetActivePackagePort()
-    {
-        var package = Settings.InstalledPackages.FirstOrDefault(
-            x => x.Id == Settings.ActiveInstalledPackageId
-        );
-        if (package == null)
-            return null;
-        var portOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "port");
-        if (portOption?.OptionValue != null)
-        {
-            return portOption.OptionValue as string;
-        }
-        return portOption?.DefaultValue as string;
-    }
-
-    public void SetSharedFolderCategoryVisible(SharedFolderType type, bool visible)
-    {
-        Settings.SharedFolderVisibleCategories ??= new SharedFolderType();
-        if (visible)
-        {
-            Settings.SharedFolderVisibleCategories |= type;
-        }
-        else
-        {
-            Settings.SharedFolderVisibleCategories &= ~type;
-        }
-        SaveSettings();
-    }
-
-    public bool IsSharedFolderCategoryVisible(SharedFolderType type)
-    {
-        // False for default
-        if (type == 0)
-            return false;
-        return Settings.SharedFolderVisibleCategories?.HasFlag(type) ?? false;
     }
 
     public bool IsEulaAccepted()

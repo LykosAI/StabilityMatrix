@@ -62,7 +62,7 @@ public class Settings
     public bool ShowConnectedModelImages { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter<SharedFolderType>))]
-    public SharedFolderType? SharedFolderVisibleCategories { get; set; } =
+    public SharedFolderType SharedFolderVisibleCategories { get; set; } =
         SharedFolderType.StableDiffusion | SharedFolderType.Lora | SharedFolderType.LyCORIS;
 
     public WindowSettings? WindowSettings { get; set; }

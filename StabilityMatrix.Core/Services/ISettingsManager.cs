@@ -123,13 +123,7 @@ public interface ISettingsManager
     void InsertPathExtensions();
 
     void UpdatePackageVersionNumber(Guid id, InstalledPackageVersion? newVersion);
-    void SetLastUpdateCheck(InstalledPackage package);
-    List<LaunchOption> GetLaunchArgs(Guid packageId);
     void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs);
-    string? GetActivePackageHost();
-    string? GetActivePackagePort();
-    void SetSharedFolderCategoryVisible(SharedFolderType type, bool visible);
-    bool IsSharedFolderCategoryVisible(SharedFolderType type);
     bool IsEulaAccepted();
     void SetEulaAccepted();
     void IndexCheckpoints();

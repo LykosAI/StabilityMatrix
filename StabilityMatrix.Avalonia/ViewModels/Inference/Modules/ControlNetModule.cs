@@ -24,7 +24,11 @@ public class ControlNetModule : ModuleBase
 
     protected override IEnumerable<ImageSource> GetInputImages()
     {
-        if (GetCard<ControlNetCardViewModel>().SelectImageCardViewModel.ImageSource is { } image)
+        if (
+            IsEnabled
+            && GetCard<ControlNetCardViewModel>().SelectImageCardViewModel
+                is { ImageSource: { } image, IsImageFileNotFound: false }
+        )
         {
             yield return image;
         }

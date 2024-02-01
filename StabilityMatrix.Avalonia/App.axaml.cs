@@ -297,7 +297,10 @@ public sealed class App : Application
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
 
-        settingsManager.LibraryDirOverride = Program.Args.DataDirectoryOverride;
+        if (Program.Args.DataDirectoryOverride is not null)
+        {
+            settingsManager.SetLibraryDirOverride(Program.Args.DataDirectoryOverride);
+        }
 
         if (settingsManager.TryFindLibrary())
         {

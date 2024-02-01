@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
@@ -20,11 +21,11 @@ public class SettingsManager : ISettingsManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ReaderWriterLockSlim FileLock = new();
-    private bool isLoaded;
-
     private static string GlobalSettingsPath => Path.Combine(Compat.AppDataHome, "global.json");
 
-    public string? LibraryDirOverride { private get; set; }
+    private bool isLoaded;
+
+    private DirectoryPath? libraryDirOverride;
 
     private readonly string? originalEnvPath = Environment.GetEnvironmentVariable(
         "PATH",
@@ -33,15 +34,17 @@ public class SettingsManager : ISettingsManager
 
     // Library properties
     public bool IsPortableMode { get; private set; }
-    private string? libraryDir;
-    public string LibraryDir
+
+    private DirectoryPath? libraryDir;
+    public DirectoryPath LibraryDir
     {
         get
         {
-            if (string.IsNullOrWhiteSpace(libraryDir))
+            if (libraryDir is null)
             {
                 throw new InvalidOperationException("LibraryDir is not set");
             }
+
             return libraryDir;
         }
         private set
@@ -57,22 +60,22 @@ public class SettingsManager : ISettingsManager
             }
         }
     }
-    public bool IsLibraryDirSet => !string.IsNullOrWhiteSpace(libraryDir);
+
+    [MemberNotNullWhen(true, nameof(libraryDir))]
+    public bool IsLibraryDirSet => libraryDir is not null;
 
     // Dynamic paths from library
-    public string DatabasePath => Path.Combine(LibraryDir, "StabilityMatrix.db");
-    private string SettingsPath => Path.Combine(LibraryDir, "settings.json");
+    private FilePath SettingsFile => LibraryDir.JoinFile("settings.json");
     public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
     public string DownloadsDirectory => Path.Combine(LibraryDir, ".downloads");
-    public List<string> PackageInstallsInProgress { get; set; } = new();
-
-    public DirectoryPath TagsDirectory => new(LibraryDir, "Tags");
-
-    public DirectoryPath ImagesDirectory => new(LibraryDir, "Images");
+    public DirectoryPath TagsDirectory => LibraryDir.JoinDir("Tags");
+    public DirectoryPath ImagesDirectory => LibraryDir.JoinDir("Images");
     public DirectoryPath ImagesInferenceDirectory => ImagesDirectory.JoinDir("Inference");
     public DirectoryPath ConsolidatedImagesDirectory => ImagesDirectory.JoinDir("Consolidated");
 
     public Settings Settings { get; private set; } = new();
+
+    public List<string> PackageInstallsInProgress { get; set; } = [];
 
     /// <inheritdoc />
     public event EventHandler<string>? LibraryDirChanged;
@@ -82,6 +85,12 @@ public class SettingsManager : ISettingsManager
 
     /// <inheritdoc />
     public event EventHandler? Loaded;
+
+    /// <inheritdoc />
+    public void SetLibraryDirOverride(DirectoryPath path)
+    {
+        libraryDirOverride = path;
+    }
 
     /// <inheritdoc />
     public void RegisterOnLibraryDirSet(Action<string> handler)
@@ -270,11 +279,11 @@ public class SettingsManager : ISettingsManager
             return true;
 
         // 0. Check Override
-        if (!string.IsNullOrEmpty(LibraryDirOverride))
+        if (libraryDirOverride is not null)
         {
-            var fullOverridePath = Path.GetFullPath(LibraryDirOverride);
+            var fullOverridePath = libraryDirOverride.Info.FullName;
             Logger.Info("Using library override path: {Path}", fullOverridePath);
-            LibraryDir = fullOverridePath;
+            LibraryDir = libraryDirOverride;
             SetStaticLibraryPaths();
             LoadSettings();
             return true;
@@ -607,22 +616,23 @@ public class SettingsManager : ISettingsManager
         FileLock.EnterReadLock();
         try
         {
-            var settingsFile = new FilePath(SettingsPath);
-
-            if (!settingsFile.Exists)
+            if (!SettingsFile.Exists)
             {
-                settingsFile.Directory?.Create();
-                settingsFile.Create();
+                SettingsFile.Directory?.Create();
+                SettingsFile.Create();
 
-                var settingsJson = JsonSerializer.Serialize(Settings);
-                settingsFile.WriteAllText(settingsJson);
+                var settingsJson = JsonSerializer.Serialize(
+                    Settings,
+                    SettingsSerializerContext.Default.Settings
+                );
+                SettingsFile.WriteAllText(settingsJson);
 
                 Loaded?.Invoke(this, EventArgs.Empty);
                 isLoaded = true;
                 return;
             }
 
-            using var fileStream = settingsFile.Info.OpenRead();
+            using var fileStream = SettingsFile.Info.OpenRead();
 
             if (fileStream.Length == 0)
             {
@@ -653,18 +663,17 @@ public class SettingsManager : ISettingsManager
         FileLock.TryEnterWriteLock(TimeSpan.FromSeconds(30));
         try
         {
-            var settingsFile = new FilePath(SettingsPath);
-
-            if (!settingsFile.Exists)
-            {
-                settingsFile.Directory?.Create();
-                settingsFile.Create();
-            }
-
             if (!isLoaded)
                 return;
 
-            if (SystemInfo.GetDiskFreeSpaceBytes(SettingsPath) is < 1 * SystemInfo.Mebibyte)
+            // Create empty settings file if it doesn't exist
+            if (!SettingsFile.Exists)
+            {
+                SettingsFile.Directory?.Create();
+                SettingsFile.Create();
+            }
+
+            if (SystemInfo.GetDiskFreeSpaceBytes(SettingsFile) is < 1 * SystemInfo.Mebibyte)
             {
                 Logger.Warn("Not enough disk space to save settings");
                 return;
@@ -681,7 +690,7 @@ public class SettingsManager : ISettingsManager
                 return;
             }
 
-            using var fs = File.Open(SettingsPath, FileMode.Open);
+            using var fs = File.Open(SettingsFile, FileMode.Open);
             if (fs.CanWrite)
             {
                 fs.Write(jsonBytes, 0, jsonBytes.Length);

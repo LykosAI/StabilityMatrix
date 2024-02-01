@@ -188,14 +188,13 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
     {
         // Validate the prompts
         if (!await PromptCardViewModel.ValidatePrompts())
-        {
             return;
-        }
+
+        if (!await ModelCardViewModel.ValidateModel())
+            return;
 
         if (!await CheckClientConnectedWithPrompt() || !ClientManager.IsConnected)
-        {
             return;
-        }
 
         // If enabled, randomize the seed
         var seedCard = StackCardViewModel.GetCard<SeedCardViewModel>();

@@ -509,7 +509,7 @@ public static class DialogHelper
                     models.Select(m => m.FileNameWithoutExtension)
                 );
 
-                if (result.Score > 40)
+                if (result is { Score: > 40 })
                 {
                     mainGrid.Children.Add(
                         new InfoBar

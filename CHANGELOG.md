@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.8.0-pre.5
 ### Fixed
 - Fixed error when ControlNet module image paths are not found, even if the module is disabled
+- Fixed error when finding metadata for archived models
+- Fixed error when extensions folder is missing
+- Fixed error when webp files have incorrect metadata
 
 ## v2.8.0-pre.4
 ### Added

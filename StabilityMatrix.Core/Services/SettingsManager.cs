@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AsyncAwaitBestPractices;
 using NLog;
 using StabilityMatrix.Core.Attributes;
@@ -26,11 +25,6 @@ public class SettingsManager : ISettingsManager
     private bool isLoaded;
 
     private DirectoryPath? libraryDirOverride;
-
-    private readonly string? originalEnvPath = Environment.GetEnvironmentVariable(
-        "PATH",
-        EnvironmentVariableTarget.Process
-    );
 
     // Library properties
     public bool IsPortableMode { get; private set; }

@@ -107,23 +107,7 @@ public interface ISettingsManager
     /// </summary>
     void SetPortableMode();
 
-    /// <summary>
-    /// Iterable of installed packages using the old absolute path format.
-    /// Can be called with Any() to check if the user needs to migrate.
-    /// </summary>
-    IEnumerable<InstalledPackage> GetOldInstalledPackages();
-
-    Guid GetOldActivePackageId();
-    void AddPathExtension(string pathExtension);
-    string GetPathExtensionsAsString();
-
-    /// <summary>
-    /// Insert path extensions to the front of the PATH environment variable
-    /// </summary>
-    void InsertPathExtensions();
-
-    void UpdatePackageVersionNumber(Guid id, InstalledPackageVersion? newVersion);
-    void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs);
+    void SaveLaunchArgs(Guid packageId, IEnumerable<LaunchOption> launchArgs);
     bool IsEulaAccepted();
     void SetEulaAccepted();
     void IndexCheckpoints();

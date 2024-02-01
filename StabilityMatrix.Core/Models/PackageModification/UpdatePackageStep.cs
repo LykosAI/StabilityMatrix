@@ -27,8 +27,7 @@ public class UpdatePackageStep : IPackageStep
 
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        var torchVersion =
-            installedPackage.PreferredTorchVersion ?? basePackage.GetRecommendedTorchVersion();
+        var torchVersion = installedPackage.PreferredTorchVersion ?? basePackage.GetRecommendedTorchVersion();
 
         void OnConsoleOutput(ProcessOutput output)
         {
@@ -45,9 +44,9 @@ public class UpdatePackageStep : IPackageStep
             )
             .ConfigureAwait(false);
 
-        settingsManager.UpdatePackageVersionNumber(installedPackage.Id, updateResult);
         await using (settingsManager.BeginTransaction())
         {
+            installedPackage.Version = updateResult;
             installedPackage.UpdateAvailable = false;
         }
     }

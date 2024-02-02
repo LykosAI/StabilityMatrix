@@ -305,9 +305,9 @@ public class Fooocus(
         if (fooocusConfigPath.Exists)
         {
             fooocusConfig =
-                await JsonSerializer
-                    .DeserializeAsync<JsonObject>(fooocusConfigPath.Info.OpenRead())
-                    .ConfigureAwait(false) ?? new JsonObject();
+                JsonSerializer.Deserialize<JsonObject>(
+                    await fooocusConfigPath.ReadAllTextAsync().ConfigureAwait(false)
+                ) ?? new JsonObject();
         }
 
         fooocusConfig["path_checkpoints"] = Path.Combine(settingsManager.ModelsDirectory, "StableDiffusion");
@@ -345,9 +345,9 @@ public class Fooocus(
         if (fooocusConfigPath.Exists)
         {
             fooocusConfig =
-                await JsonSerializer
-                    .DeserializeAsync<JsonObject>(fooocusConfigPath.Info.OpenRead())
-                    .ConfigureAwait(false) ?? new JsonObject();
+                JsonSerializer.Deserialize<JsonObject>(
+                    await fooocusConfigPath.ReadAllTextAsync().ConfigureAwait(false)
+                ) ?? new JsonObject();
         }
 
         fooocusConfig["path_checkpoints"] = Path.Combine(installDirectory, "models", "checkpoints");

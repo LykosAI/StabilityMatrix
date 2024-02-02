@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed error when extensions folder is missing
 - Fixed error when webp files have incorrect metadata
 - Fixed crash when model was not selected in Inference
+- Fixed Fooocus Config shared folder mode overwriting unknown config keys
 
 ## v2.8.0-pre.4
 ### Added

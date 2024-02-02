@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace StabilityMatrix.Core.Models.FileInterfaces;
 
 [PublicAPI]
-public class FileSystemPath : IEquatable<FileSystemPath>, IEquatable<string>, IFormattable
+public class FileSystemPath : IEquatable<FileSystemPath>, IFormattable
 {
     public string FullPath { get; }
 
@@ -63,15 +63,6 @@ public class FileSystemPath : IEquatable<FileSystemPath>, IEquatable<string>, IF
             GetNormalizedPath(other.FullPath),
             OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal
         );
-    }
-
-    /// <inheritdoc />
-    public bool Equals(string? other)
-    {
-        if (ReferenceEquals(null, other))
-            return false;
-
-        return Equals((FileSystemPath)other);
     }
 
     /// <inheritdoc />

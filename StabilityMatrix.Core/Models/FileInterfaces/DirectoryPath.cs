@@ -1,19 +1,21 @@
 ﻿using System.Collections;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Core.Models.FileInterfaces;
 
-[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+[PublicAPI]
 [JsonConverter(typeof(StringJsonConverter<DirectoryPath>))]
 public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystemPath>
 {
     private DirectoryInfo? info;
 
-    // ReSharper disable once MemberCanBePrivate.Global
     [JsonIgnore]
     public DirectoryInfo Info => info ??= new DirectoryInfo(FullPath);
+
+    [JsonIgnore]
+    FileSystemInfo IPathObject.Info => Info;
 
     [JsonIgnore]
     public bool IsSymbolicLink

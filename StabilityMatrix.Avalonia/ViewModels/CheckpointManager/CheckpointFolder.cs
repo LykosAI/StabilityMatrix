@@ -228,7 +228,7 @@ public partial class CheckpointFolder : ViewModelBase
         var result = Enum.TryParse(Title, out SharedFolderType type);
         FolderType = result ? type : new SharedFolderType();
 
-        IsCategoryEnabled = settingsManager.IsSharedFolderCategoryVisible(FolderType);
+        IsCategoryEnabled = settingsManager.Settings.SharedFolderVisibleCategories.HasFlag(FolderType);
     }
 
     partial void OnSearchFilterChanged(string value)
@@ -248,10 +248,16 @@ public partial class CheckpointFolder : ViewModelBase
     {
         if (!useCategoryVisibility)
             return;
-        if (value != settingsManager.IsSharedFolderCategoryVisible(FolderType))
+
+        if (value == settingsManager.Settings.SharedFolderVisibleCategories.HasFlag(FolderType))
+            return;
+
+        settingsManager.Transaction(settings =>
         {
-            settingsManager.SetSharedFolderCategoryVisible(FolderType, value);
-        }
+            settings.SharedFolderVisibleCategories = value
+                ? settings.SharedFolderVisibleCategories | FolderType
+                : settings.SharedFolderVisibleCategories & ~FolderType;
+        });
     }
 
     private void OnCheckpointFilesChanged(object? sender, NotifyCollectionChangedEventArgs e)

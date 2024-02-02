@@ -162,7 +162,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
     private IEnumerable<UnknownInstalledPackage> IndexUnknownPackages()
     {
-        var packageDir = new DirectoryPath(settingsManager.LibraryDir).JoinDir("Packages");
+        var packageDir = settingsManager.LibraryDir.JoinDir("Packages");
 
         if (!packageDir.Exists)
         {

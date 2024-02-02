@@ -1,4 +1,5 @@
-﻿using DynamicData.Tests;
+﻿using System.Text.Json;
+using DynamicData.Tests;
 using MetadataExtractor.Formats.Exif;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -89,9 +90,18 @@ public record LocalImageFile
                 filePath,
                 ExifDirectoryBase.TagImageDescription
             );
-            var parameters = string.IsNullOrWhiteSpace(paramsJson)
-                ? null
-                : JsonSerializer.Deserialize<GenerationParameters>(paramsJson);
+
+            GenerationParameters? parameters = null;
+            try
+            {
+                parameters = string.IsNullOrWhiteSpace(paramsJson)
+                    ? null
+                    : JsonSerializer.Deserialize<GenerationParameters>(paramsJson);
+            }
+            catch (JsonException)
+            {
+                // just don't load params I guess, no logger here <_<
+            }
 
             filePath.Info.Refresh();
 

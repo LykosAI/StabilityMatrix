@@ -171,6 +171,9 @@ public partial class InferenceImageToVideoViewModel
             return;
         }
 
+        if (!await ModelCardViewModel.ValidateModel())
+            return;
+
         // If enabled, randomize the seed
         var seedCard = StackCardViewModel.GetCard<SeedCardViewModel>();
         if (overrides is not { UseCurrentSeed: true } && seedCard.IsRandomizeEnabled)

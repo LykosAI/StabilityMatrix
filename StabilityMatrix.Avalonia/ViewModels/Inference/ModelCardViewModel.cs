@@ -2,8 +2,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -50,6 +52,19 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
     private int clipSkip = 1;
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
+
+    public async Task<bool> ValidateModel()
+    {
+        if (SelectedModel != null)
+            return true;
+
+        var dialog = DialogHelper.CreateMarkdownDialog(
+            "Please select a model to continue.",
+            "No Model Selected"
+        );
+        await dialog.ShowAsync();
+        return false;
+    }
 
     /// <inheritdoc />
     public virtual void ApplyStep(ModuleApplyStepEventArgs e)

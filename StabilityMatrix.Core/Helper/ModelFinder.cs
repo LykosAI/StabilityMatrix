@@ -56,9 +56,13 @@ public class ModelFinder
             // VersionResponse is not actually the full data of ModelVersion, so find it again
             var version = model.ModelVersions!.First(version => version.Id == versionResponse.Id);
 
-            var file = versionResponse.Files.First(
+            var file = versionResponse.Files.FirstOrDefault(
                 file => hashBlake3.Equals(file.Hashes.BLAKE3, StringComparison.OrdinalIgnoreCase)
             );
+
+            // Archived models do not have files
+            if (file == null)
+                return null;
 
             return new ModelSearchResult(model, version, file);
         }

@@ -82,6 +82,12 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            // Skip directory if not exists
+            if (!indexDirectory.Exists)
+            {
+                continue;
+            }
+
             // Check subdirectories of the index directory
             foreach (var subDirectory in indexDirectory.EnumerateDirectories())
             {

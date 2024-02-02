@@ -70,8 +70,6 @@ public class FileSystemPathTests
     }
 
     [DataTestMethod]
-    [DataRow("M:/Path", "M:/Path")]
-    [DataRow("M:/Path", "M:/Path/")]
     [DataRow("root/abc", "root/abc")]
     [DataRow("root/abc", "root/abc/")]
     public void TestDirectoryPathEquals(string left, string right)

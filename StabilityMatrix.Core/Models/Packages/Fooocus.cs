@@ -274,7 +274,7 @@ public class Fooocus(
             SharedFolderMethod.Symlink
                 => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
             SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
-            SharedFolderMethod.None => WriteDefaultConfig(installDirectory),
+            SharedFolderMethod.None => Task.CompletedTask,
             _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
         };
     }

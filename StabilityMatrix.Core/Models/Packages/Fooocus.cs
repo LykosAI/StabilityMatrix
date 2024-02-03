@@ -1,6 +1,6 @@
-﻿using System.Collections.Immutable;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Attributes;
@@ -274,7 +274,7 @@ public class Fooocus(
             SharedFolderMethod.Symlink
                 => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
             SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
-            SharedFolderMethod.None => WriteDefaultConfig(installDirectory),
+            SharedFolderMethod.None => Task.CompletedTask,
             _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
         };
     }
@@ -299,26 +299,26 @@ public class Fooocus(
     private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)
     {
         var fooocusConfigPath = installDirectory.JoinFile("config.txt");
-        var fooocusConfig = new FooocusConfig();
+
+        var fooocusConfig = new JsonObject();
+
         if (fooocusConfigPath.Exists)
         {
-            var configText = await fooocusConfigPath.ReadAllTextAsync().ConfigureAwait(false);
-            fooocusConfig = JsonSerializer.Deserialize<FooocusConfig>(configText) ?? new FooocusConfig();
-        }
-        else
-        {
-            fooocusConfigPath.Create();
+            fooocusConfig =
+                JsonSerializer.Deserialize<JsonObject>(
+                    await fooocusConfigPath.ReadAllTextAsync().ConfigureAwait(false)
+                ) ?? new JsonObject();
         }
 
-        fooocusConfig.PathCheckpoints = Path.Combine(settingsManager.ModelsDirectory, "StableDiffusion");
-        fooocusConfig.PathLoras = Path.Combine(settingsManager.ModelsDirectory, "Lora");
-        fooocusConfig.PathEmbeddings = Path.Combine(settingsManager.ModelsDirectory, "TextualInversion");
-        fooocusConfig.PathVaeApprox = Path.Combine(settingsManager.ModelsDirectory, "ApproxVAE");
-        fooocusConfig.PathUpscaleModels = Path.Combine(settingsManager.ModelsDirectory, "ESRGAN");
-        fooocusConfig.PathInpaint = Path.Combine(installDirectory, "models", "inpaint");
-        fooocusConfig.PathControlnet = Path.Combine(settingsManager.ModelsDirectory, "ControlNet");
-        fooocusConfig.PathClipVision = Path.Combine(settingsManager.ModelsDirectory, "CLIP");
-        fooocusConfig.PathFooocusExpansion = Path.Combine(
+        fooocusConfig["path_checkpoints"] = Path.Combine(settingsManager.ModelsDirectory, "StableDiffusion");
+        fooocusConfig["path_loras"] = Path.Combine(settingsManager.ModelsDirectory, "Lora");
+        fooocusConfig["path_embeddings"] = Path.Combine(settingsManager.ModelsDirectory, "TextualInversion");
+        fooocusConfig["path_vae_approx"] = Path.Combine(settingsManager.ModelsDirectory, "ApproxVAE");
+        fooocusConfig["path_upscale_models"] = Path.Combine(settingsManager.ModelsDirectory, "ESRGAN");
+        fooocusConfig["path_inpaint"] = Path.Combine(installDirectory, "models", "inpaint");
+        fooocusConfig["path_controlnet"] = Path.Combine(settingsManager.ModelsDirectory, "ControlNet");
+        fooocusConfig["path_clip_vision"] = Path.Combine(settingsManager.ModelsDirectory, "CLIP");
+        fooocusConfig["path_fooocus_expansion"] = Path.Combine(
             installDirectory,
             "models",
             "prompt_expansion",
@@ -329,7 +329,7 @@ public class Fooocus(
 
         // doesn't always exist on first install
         Directory.CreateDirectory(outputsPath);
-        fooocusConfig.PathOutputs = outputsPath;
+        fooocusConfig["path_outputs"] = outputsPath;
 
         await fooocusConfigPath
             .WriteAllTextAsync(JsonSerializer.Serialize(fooocusConfig, jsonSerializerOptions))
@@ -339,32 +339,32 @@ public class Fooocus(
     private async Task WriteDefaultConfig(DirectoryPath installDirectory)
     {
         var fooocusConfigPath = installDirectory.JoinFile("config.txt");
-        var fooocusConfig = new FooocusConfig();
+
+        var fooocusConfig = new JsonObject();
+
         if (fooocusConfigPath.Exists)
         {
-            var configText = await fooocusConfigPath.ReadAllTextAsync().ConfigureAwait(false);
-            fooocusConfig = JsonSerializer.Deserialize<FooocusConfig>(configText) ?? new FooocusConfig();
-        }
-        else
-        {
-            fooocusConfigPath.Create();
+            fooocusConfig =
+                JsonSerializer.Deserialize<JsonObject>(
+                    await fooocusConfigPath.ReadAllTextAsync().ConfigureAwait(false)
+                ) ?? new JsonObject();
         }
 
-        fooocusConfig.PathCheckpoints = Path.Combine(installDirectory, "models", "checkpoints");
-        fooocusConfig.PathLoras = Path.Combine(installDirectory, "models", "loras");
-        fooocusConfig.PathEmbeddings = Path.Combine(installDirectory, "models", "embeddings");
-        fooocusConfig.PathVaeApprox = Path.Combine(installDirectory, "models", "vae_approx");
-        fooocusConfig.PathUpscaleModels = Path.Combine(installDirectory, "models", "upscale_models");
-        fooocusConfig.PathInpaint = Path.Combine(installDirectory, "models", "inpaint");
-        fooocusConfig.PathControlnet = Path.Combine(installDirectory, "models", "controlnet");
-        fooocusConfig.PathClipVision = Path.Combine(installDirectory, "models", "clip_vision");
-        fooocusConfig.PathFooocusExpansion = Path.Combine(
+        fooocusConfig["path_checkpoints"] = Path.Combine(installDirectory, "models", "checkpoints");
+        fooocusConfig["path_loras"] = Path.Combine(installDirectory, "models", "loras");
+        fooocusConfig["path_embeddings"] = Path.Combine(installDirectory, "models", "embeddings");
+        fooocusConfig["path_vae_approx"] = Path.Combine(installDirectory, "models", "vae_approx");
+        fooocusConfig["path_upscale_models"] = Path.Combine(installDirectory, "models", "upscale_models");
+        fooocusConfig["path_inpaint"] = Path.Combine(installDirectory, "models", "inpaint");
+        fooocusConfig["path_controlnet"] = Path.Combine(installDirectory, "models", "controlnet");
+        fooocusConfig["path_clip_vision"] = Path.Combine(installDirectory, "models", "clip_vision");
+        fooocusConfig["path_fooocus_expansion"] = Path.Combine(
             installDirectory,
             "models",
             "prompt_expansion",
             "fooocus_expansion"
         );
-        fooocusConfig.PathOutputs = Path.Combine(installDirectory, OutputFolderName);
+        fooocusConfig["path_outputs"] = Path.Combine(installDirectory, OutputFolderName);
 
         await fooocusConfigPath
             .WriteAllTextAsync(JsonSerializer.Serialize(fooocusConfig, jsonSerializerOptions))

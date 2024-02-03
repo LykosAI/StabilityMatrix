@@ -51,7 +51,7 @@
                   IsVisible="{Binding !HideCloseButton}"
                   Margin="4" Content="{x:Static lang:Resources.Label_CloseDialogWhenFinished}"/>
         
-        <Button Grid.Row="5" Content="{x:Static lang:Resources.Action_Close}"
+        <Button Grid.Row="5" Content="{x:Static lang:Resources.Action_Hide}"
                 FontSize="20"
                 HorizontalAlignment="Center"
                 IsVisible="{Binding !HideCloseButton}"

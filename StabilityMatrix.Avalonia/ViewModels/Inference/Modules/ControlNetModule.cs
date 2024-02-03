@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -26,7 +24,11 @@ public class ControlNetModule : ModuleBase
 
     protected override IEnumerable<ImageSource> GetInputImages()
     {
-        if (GetCard<ControlNetCardViewModel>().SelectImageCardViewModel.ImageSource is { } image)
+        if (
+            IsEnabled
+            && GetCard<ControlNetCardViewModel>().SelectImageCardViewModel
+                is { ImageSource: { } image, IsImageFileNotFound: false }
+        )
         {
             yield return image;
         }
@@ -81,8 +83,8 @@ public class ControlNetModule : ModuleBase
                     Name = e.Nodes.GetUniqueName("Refiner_ControlNetApply"),
                     Image = imageLoad.Output1,
                     ControlNet = controlNetLoader.Output,
-                    Positive = e.Temp.RefinerConditioning.Value.Positive,
-                    Negative = e.Temp.RefinerConditioning.Value.Negative,
+                    Positive = e.Temp.RefinerConditioning.Positive,
+                    Negative = e.Temp.RefinerConditioning.Negative,
                     Strength = card.Strength,
                     StartPercent = card.StartPercent,
                     EndPercent = card.EndPercent,

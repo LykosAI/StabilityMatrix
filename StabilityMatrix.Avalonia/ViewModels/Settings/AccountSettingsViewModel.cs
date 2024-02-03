@@ -23,7 +23,7 @@ using StabilityMatrix.Core.Models.Api.Lykos;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
@@ -42,8 +42,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     public override string Title => "Accounts";
 
     /// <inheritdoc />
-    public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Person, IsFilled = true };
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Person, IsFilled = true };
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ConnectLykosCommand))]
@@ -59,12 +58,10 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LykosProfileImageUrl))]
-    private LykosAccountStatusUpdateEventArgs lykosStatus =
-        LykosAccountStatusUpdateEventArgs.Disconnected;
+    private LykosAccountStatusUpdateEventArgs lykosStatus = LykosAccountStatusUpdateEventArgs.Disconnected;
 
     [ObservableProperty]
-    private CivitAccountStatusUpdateEventArgs civitStatus =
-        CivitAccountStatusUpdateEventArgs.Disconnected;
+    private CivitAccountStatusUpdateEventArgs civitStatus = CivitAccountStatusUpdateEventArgs.Disconnected;
 
     public AccountSettingsViewModel(
         IAccountsService accountsService,
@@ -116,11 +113,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     private async Task<bool> BeforeConnectCheck()
     {
         // Show credentials storage notice if not seen
-        if (
-            !settingsManager.Settings.SeenTeachingTips.Contains(
-                TeachingTip.AccountsCredentialsStorageNotice
-            )
-        )
+        if (!settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.AccountsCredentialsStorageNotice))
         {
             var dialog = new BetterContentDialog
             {
@@ -242,10 +235,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         );
         dialog.PrimaryButtonText = Resources.Action_Connect;
 
-        if (
-            await dialog.ShowAsync() != ContentDialogResult.Primary
-            || textFields[0].Text is not { } apiToken
-        )
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary || textFields[0].Text is not { } apiToken)
         {
             return;
         }

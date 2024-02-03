@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
+using Avalonia.Controls;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
@@ -17,24 +20,22 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
     private readonly IPackageModificationRunner packageModificationRunner;
     private BetterContentDialog? dialog;
 
-    public PackageInstallProgressItemViewModel(
-        IPackageModificationRunner packageModificationRunner,
-        bool hideCloseButton = false
-    )
+    public PackageInstallProgressItemViewModel(IPackageModificationRunner packageModificationRunner)
     {
         this.packageModificationRunner = packageModificationRunner;
+
         Id = packageModificationRunner.Id;
         Name = packageModificationRunner.CurrentStep?.ProgressTitle;
         Progress.Value = packageModificationRunner.CurrentProgress.Percentage;
         Progress.Text = packageModificationRunner.ConsoleOutput.LastOrDefault();
         Progress.IsIndeterminate = packageModificationRunner.CurrentProgress.IsIndeterminate;
-        Progress.HideCloseButton = hideCloseButton;
+        Progress.HideCloseButton = packageModificationRunner.HideCloseButton;
+
+        if (Design.IsDesignMode)
+            return;
 
         Progress.Console.StartUpdates();
-
-        Progress.Console.Post(
-            string.Join(Environment.NewLine, packageModificationRunner.ConsoleOutput)
-        );
+        Progress.Console.Post(string.Join(Environment.NewLine, packageModificationRunner.ConsoleOutput));
 
         packageModificationRunner.ProgressChanged += PackageModificationRunnerOnProgressChanged;
     }

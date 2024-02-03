@@ -28,7 +28,8 @@ public class StableDiffusionUx(
     public override string DisplayName { get; set; } = "Stable Diffusion Web UI-UX";
     public override string Author => "anapnoe";
     public override string LicenseType => "AGPL-3.0";
-    public override string LicenseUrl => "https://github.com/anapnoe/stable-diffusion-webui-ux/blob/master/LICENSE.txt";
+    public override string LicenseUrl =>
+        "https://github.com/anapnoe/stable-diffusion-webui-ux/blob/master/LICENSE.txt";
     public override string Blurb =>
         "A pixel perfect design, mobile friendly, customizable interface that adds accessibility, "
         + "ease of use and extended functionallity to the stable diffusion web ui.";
@@ -38,7 +39,7 @@ public class StableDiffusionUx(
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
@@ -141,7 +142,8 @@ public class StableDiffusionUx(
                 Name = "No Half",
                 Type = LaunchOptionType.Bool,
                 Description = "Do not switch the model to 16-bit floats",
-                InitialValue = HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML(),
+                InitialValue =
+                    HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML() || Compat.IsMacOS,
                 Options = ["--no-half"]
             },
             new()
@@ -164,7 +166,7 @@ public class StableDiffusionUx(
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm, TorchVersion.Mps };
 
     public override string MainBranch => "master";
 
@@ -197,6 +199,17 @@ public class StableDiffusionUx(
                 break;
             case TorchVersion.Rocm:
                 await InstallRocmTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
+                break;
+            case TorchVersion.Mps:
+                await venvRunner
+                    .PipInstall(
+                        new PipInstallArgs()
+                            .WithTorch("==2.1.2")
+                            .WithTorchVision()
+                            .WithTorchExtraIndex("nightly/cpu"),
+                        onConsoleOutput
+                    )
+                    .ConfigureAwait(false);
                 break;
         }
 

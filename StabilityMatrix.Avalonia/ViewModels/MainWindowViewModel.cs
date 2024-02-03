@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -51,6 +52,19 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public ProgressManagerViewModel ProgressManagerViewModel { get; init; }
     public UpdateViewModel UpdateViewModel { get; init; }
+
+    public double PaneWidth =>
+        Cultures.Current switch
+        {
+            { Name: "it-IT" } => 250,
+            { Name: "fr-FR" } => 250,
+            { Name: "es" } => 250,
+            { Name: "ru-RU" } => 250,
+            { Name: "tr-TR" } => 235,
+            { Name: "de" } => 250,
+            { Name: "pt-PT" } => 300,
+            _ => 200
+        };
 
     public MainWindowViewModel(
         ISettingsManager settingsManager,
@@ -112,30 +126,49 @@ public partial class MainWindowViewModel : ViewModelBase
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
         Logger.Info($"App started ({startupTime})");
 
-        if (
-            Program.Args.DebugOneClickInstall
-            || settingsManager.Settings.InstalledPackages.Count == 0
-        )
+        if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Count == 0)
         {
-            var viewModel = dialogFactory.Get<OneClickInstallViewModel>();
+            var viewModel = dialogFactory.Get<NewOneClickInstallViewModel>();
             var dialog = new BetterContentDialog
             {
                 IsPrimaryButtonEnabled = false,
                 IsSecondaryButtonEnabled = false,
                 IsFooterVisible = false,
-                Content = new OneClickInstallDialog { DataContext = viewModel },
+                FullSizeDesired = true,
+                MinDialogHeight = 775,
+                Content = new NewOneClickInstallDialog { DataContext = viewModel },
             };
 
             EventManager.Instance.OneClickInstallFinished += (_, skipped) =>
             {
-                dialog.Hide();
                 if (skipped)
                     return;
 
                 EventManager.Instance.OnTeachingTooltipNeeded();
             };
 
+            var firstDialogResult = await dialog.ShowAsync(App.TopLevel);
+
+            if (firstDialogResult != ContentDialogResult.Primary)
+                return;
+
+            var recommendedModelsViewModel = dialogFactory.Get<RecommendedModelsViewModel>();
+            dialog = new BetterContentDialog
+            {
+                IsPrimaryButtonEnabled = true,
+                FullSizeDesired = true,
+                MinDialogHeight = 900,
+                PrimaryButtonText = Resources.Action_Download,
+                CloseButtonText = Resources.Action_Close,
+                DefaultButton = ContentDialogButton.Primary,
+                PrimaryButtonCommand = recommendedModelsViewModel.DoImportCommand,
+                Content = new RecommendedModelsDialog { DataContext = recommendedModelsViewModel },
+            };
+
             await dialog.ShowAsync(App.TopLevel);
+
+            EventManager.Instance.OnRecommendedModelsDialogClosed();
+            EventManager.Instance.OnDownloadsTeachingTipRequested();
         }
     }
 
@@ -148,8 +181,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 .Where(p => p.GetType().GetCustomAttributes(typeof(PreloadAttribute), true).Any())
         )
         {
-            Dispatcher.UIThread
-                .InvokeAsync(
+            Dispatcher
+                .UIThread.InvokeAsync(
                     async () =>
                     {
                         var stopwatch = Stopwatch.StartNew();

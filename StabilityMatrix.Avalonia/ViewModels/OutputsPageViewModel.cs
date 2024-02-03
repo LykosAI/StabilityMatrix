@@ -39,7 +39,7 @@ using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Size = StabilityMatrix.Core.Models.Settings.Size;
 using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -93,6 +93,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
             ? Resources.Label_OneImageSelected
             : string.Format(Resources.Label_NumImagesSelected, NumItemsSelected);
 
+    private string[] allowedExtensions = [".png", ".webp"];
+
     public OutputsPageViewModel(
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
@@ -134,8 +136,11 @@ public partial class OutputsPageViewModel : PageViewModelBase
             settings => settings.OutputsImageSize,
             delay: TimeSpan.FromMilliseconds(250)
         );
+    }
 
-        RefreshCategories(false);
+    protected override void OnInitialLoaded()
+    {
+        RefreshCategories();
     }
 
     public override void OnLoaded()
@@ -145,6 +150,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         if (!settingsManager.IsLibraryDirSet)
             return;
+
+        base.OnLoaded();
 
         Directory.CreateDirectory(settingsManager.ImagesDirectory);
 
@@ -313,6 +320,18 @@ public partial class OutputsPageViewModel : PageViewModelBase
         EventManager.Instance.OnInferenceUpscaleRequested(vm.ImageFile);
     }
 
+    public void SendToImageToImage(OutputImageViewModel vm)
+    {
+        navigationService.NavigateTo<InferenceViewModel>();
+        EventManager.Instance.OnInferenceImageToImageRequested(vm.ImageFile);
+    }
+
+    public void SendToImageToVideo(OutputImageViewModel vm)
+    {
+        navigationService.NavigateTo<InferenceViewModel>();
+        EventManager.Instance.OnInferenceImageToVideoRequested(vm.ImageFile);
+    }
+
     public void ClearSelection()
     {
         foreach (var output in Outputs)
@@ -434,11 +453,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
             var directory = category.Tag.ToString();
 
-            foreach (var path in Directory.EnumerateFiles(directory, "*.png", SearchOption.AllDirectories))
+            foreach (var path in Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories))
             {
                 try
                 {
                     var file = new FilePath(path);
+                    if (!allowedExtensions.Contains(file.Extension))
+                        continue;
+
                     var newPath = settingsManager.ConsolidatedImagesDirectory + file.Name;
                     if (file.FullPath == newPath)
                         continue;
@@ -496,7 +518,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
         }
 
         var files = Directory
-            .EnumerateFiles(directory, "*.png", SearchOption.AllDirectories)
+            .EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
+            .Where(path => allowedExtensions.Contains(new FilePath(path).Extension))
             .Select(file => LocalImageFile.FromPath(file))
             .ToList();
 
@@ -510,7 +533,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         }
     }
 
-    private void RefreshCategories(bool updateProperty = true)
+    private void RefreshCategories()
     {
         if (Design.IsDesignMode)
             return;
@@ -524,7 +547,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .Settings.InstalledPackages.Where(x => !x.UseSharedOutputFolder)
             .Select(packageFactory.GetPackagePair)
             .WhereNotNull()
-            .Where(p => p.BasePackage.SharedOutputFolders != null && p.BasePackage.SharedOutputFolders.Any())
+            .Where(
+                p =>
+                    p.BasePackage.SharedOutputFolders is { Count: > 0 } && p.InstalledPackage.FullPath != null
+            )
             .Select(
                 pair =>
                     new PackageOutputCategory
@@ -554,17 +580,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
 
-        if (updateProperty)
-        {
-            SelectedCategory =
-                Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
-                ?? Categories.First();
-        }
-        else
-        {
-            selectedCategory =
-                Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name)
-                ?? Categories.First();
-        }
+        SelectedCategory =
+            Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name) ?? Categories.First();
     }
 }

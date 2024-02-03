@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Data;
 using Avalonia.Input;
@@ -79,7 +80,10 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
             .Group(i => i.ModelCategory)
             .Transform(
                 g =>
-                    new CategoryViewModel(g.Cache.Items)
+                    new CategoryViewModel(
+                        g.Cache.Items,
+                        Design.IsDesignMode ? string.Empty : settingsManager.ModelsDirectory
+                    )
                     {
                         Title = g.Key.GetDescription() ?? g.Key.ToString()
                     }
@@ -149,7 +153,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
                 var sharedFolderType = viewModel.Item.ModelCategory.ConvertTo<SharedFolderType>();
                 var downloadPath = new FilePath(
                     Path.Combine(
-                        settingsManager.ModelsDirectory,
+                        Design.IsDesignMode ? string.Empty : settingsManager.ModelsDirectory,
                         sharedFolderType.ToString(),
                         viewModel.Item.Subfolder ?? string.Empty,
                         file

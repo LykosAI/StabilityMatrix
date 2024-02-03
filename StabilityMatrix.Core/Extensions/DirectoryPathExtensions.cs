@@ -1,12 +1,9 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 using Polly;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
-namespace StabilityMatrix.Avalonia.Extensions;
+namespace StabilityMatrix.Core.Extensions;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public static class DirectoryPathExtensions
@@ -15,21 +12,32 @@ public static class DirectoryPathExtensions
     /// Deletes a directory and all of its contents recursively.
     /// Uses Polly to retry the deletion if it fails, up to 5 times with an exponential backoff.
     /// </summary>
-    public static Task DeleteVerboseAsync(this DirectoryPath directory, ILogger? logger = default)
+    public static Task DeleteVerboseAsync(
+        this DirectoryPath directory,
+        ILogger? logger = default,
+        CancellationToken cancellationToken = default
+    )
     {
-        var policy = Policy.Handle<IOException>()
-            .WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(50 * Math.Pow(2, attempt)),
+        var policy = Policy
+            .Handle<IOException>()
+            .WaitAndRetryAsync(
+                3,
+                attempt => TimeSpan.FromMilliseconds(50 * Math.Pow(2, attempt)),
                 onRetry: (exception, calculatedWaitDuration) =>
                 {
                     logger?.LogWarning(
                         exception,
                         "Deletion of {TargetDirectory} failed. Retrying in {CalculatedWaitDuration}",
-                        directory, calculatedWaitDuration);
-                });
+                        directory,
+                        calculatedWaitDuration
+                    );
+                }
+            );
 
         return policy.ExecuteAsync(async () =>
         {
-            await Task.Run(() => { DeleteVerbose(directory, logger); });
+            await Task.Run(() => DeleteVerbose(directory, logger, cancellationToken), cancellationToken)
+                .ConfigureAwait(false);
         });
     }
 
@@ -37,8 +45,14 @@ public static class DirectoryPathExtensions
     /// Deletes a directory and all of its contents recursively.
     /// Removes link targets without deleting the source.
     /// </summary>
-    public static void DeleteVerbose(this DirectoryPath directory, ILogger? logger = default)
+    public static void DeleteVerbose(
+        this DirectoryPath directory,
+        ILogger? logger = default,
+        CancellationToken cancellationToken = default
+    )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Skip if directory does not exist
         if (!directory.Exists)
         {
@@ -47,7 +61,7 @@ public static class DirectoryPathExtensions
         // For junction points, delete with recursive false
         if (directory.IsSymbolicLink)
         {
-            logger?.LogInformation("Removing junction point {TargetDirectory}", directory);
+            logger?.LogInformation("Removing junction point {TargetDirectory}", directory.FullPath);
             try
             {
                 directory.Delete(false);
@@ -55,29 +69,31 @@ public static class DirectoryPathExtensions
             }
             catch (IOException ex)
             {
-                throw new IOException($"Failed to delete junction point {directory}", ex);
+                throw new IOException($"Failed to delete junction point {directory.FullPath}", ex);
             }
         }
         // Recursively delete all subdirectories
-        foreach (var subDir in directory.Info.EnumerateDirectories())
+        foreach (var subDir in directory.EnumerateDirectories())
         {
-            DeleteVerbose(subDir, logger);
+            DeleteVerbose(subDir, logger, cancellationToken);
         }
-        
+
         // Delete all files in the directory
-        foreach (var filePath in directory.Info.EnumerateFiles())
+        foreach (var filePath in directory.EnumerateFiles())
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
-                filePath.Attributes = FileAttributes.Normal;
+                filePath.Info.Attributes = FileAttributes.Normal;
                 filePath.Delete();
             }
             catch (IOException ex)
             {
-                throw new IOException($"Failed to delete file {filePath.FullName}", ex);
+                throw new IOException($"Failed to delete file {filePath.FullPath}", ex);
             }
         }
-        
+
         // Delete this directory
         try
         {

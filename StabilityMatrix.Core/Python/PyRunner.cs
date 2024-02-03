@@ -12,13 +12,7 @@ using StabilityMatrix.Core.Python.Interop;
 namespace StabilityMatrix.Core.Python;
 
 [SuppressMessage("ReSharper", "NotAccessedPositionalProperty.Global")]
-public record struct PyVersionInfo(
-    int Major,
-    int Minor,
-    int Micro,
-    string ReleaseLevel,
-    int Serial
-);
+public record struct PyVersionInfo(int Major, int Minor, int Micro, string ReleaseLevel, int Serial);
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 [Singleton(typeof(IPyRunner))]
@@ -32,8 +26,7 @@ public class PyRunner : IPyRunner
     // This is same for all platforms
     public const string PythonDirName = "Python310";
 
-    public static string PythonDir =>
-        Path.Combine(GlobalConfig.LibraryDir, "Assets", PythonDirName);
+    public static string PythonDir => Path.Combine(GlobalConfig.LibraryDir, "Assets", PythonDirName);
 
     /// <summary>
     /// Path to the Python Linked library relative from the Python directory.
@@ -61,8 +54,7 @@ public class PyRunner : IPyRunner
 
     public static string GetPipPath => Path.Combine(PythonDir, "get-pip.pyc");
 
-    public static string VenvPath =>
-        Path.Combine(PythonDir, "Scripts", "virtualenv" + Compat.ExeExtension);
+    public static string VenvPath => Path.Combine(PythonDir, "Scripts", "virtualenv" + Compat.ExeExtension);
 
     public static bool PipInstalled => File.Exists(PipExePath);
     public static bool VenvInstalled => File.Exists(VenvPath);
@@ -107,8 +99,7 @@ public class PyRunner : IPyRunner
         await RunInThreadWithLock(() =>
             {
                 var sys =
-                    Py.Import("sys") as PyModule
-                    ?? throw new NullReferenceException("sys module not found");
+                    Py.Import("sys") as PyModule ?? throw new NullReferenceException("sys module not found");
                 sys.Set("stdout", StdOutStream);
                 sys.Set("stderr", StdErrStream);
             })
@@ -141,7 +132,7 @@ public class PyRunner : IPyRunner
             throw new FileNotFoundException("pip not found", PipExePath);
         }
         var result = await ProcessRunner
-            .GetProcessResultAsync(PipExePath, $"install {package}")
+            .GetProcessResultAsync(PythonExePath, $"-m pip install {package}")
             .ConfigureAwait(false);
         result.EnsureSuccessExitCode();
     }

@@ -32,7 +32,7 @@ public class KohyaSs(
 
     public override Uri PreviewImageUri =>
         new(
-            "https://camo.githubusercontent.com/2170d2204816f428eec57ff87218f06344e0b4d91966343a6c5f0a76df91ec75/68747470733a2f2f696d672e796f75747562652e636f6d2f76692f6b35696d713031757655592f302e6a7067"
+            "https://camo.githubusercontent.com/5154eea62c113d5c04393e51a0d0f76ef25a723aad29d256dcc85ead1961cd41/68747470733a2f2f696d672e796f75747562652e636f6d2f76692f6b35696d713031757655592f302e6a7067"
         );
     public override string OutputFolderName => string.Empty;
 
@@ -40,14 +40,16 @@ public class KohyaSs(
 
     public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.Cuda;
 
-    public override string Disclaimer => "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
+    public override string Disclaimer =>
+        "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.UltraNightmare;
-
+    public override PackageType PackageType => PackageType.SdTraining;
     public override bool OfferInOneClickInstaller => false;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
-    public override IEnumerable<TorchVersion> AvailableTorchVersions => new[] { TorchVersion.Cuda };
-    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => new[] { SharedFolderMethod.None };
+    public override IEnumerable<TorchVersion> AvailableTorchVersions => [TorchVersion.Cuda];
+    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
+        new[] { SharedFolderMethod.None };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
@@ -189,7 +191,9 @@ public class KohyaSs(
                 """
             );
 
-            var replacementAcceleratePath = Compat.IsWindows ? @".\venv\scripts\accelerate" : "./venv/bin/accelerate";
+            var replacementAcceleratePath = Compat.IsWindows
+                ? @".\venv\scripts\accelerate"
+                : "./venv/bin/accelerate";
 
             var replacer = scope.InvokeMethod(
                 "StringReplacer",
@@ -238,7 +242,6 @@ public class KohyaSs(
 
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
-        VenvRunner.EnvironmentVariables = GetEnvVars(installedPackagePath);
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
     }
 
@@ -246,23 +249,4 @@ public class KohyaSs(
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
 
     public override string MainBranch => "master";
-
-    private Dictionary<string, string> GetEnvVars(string installDirectory)
-    {
-        // Set additional required environment variables
-        var env = new Dictionary<string, string>();
-        if (SettingsManager.Settings.EnvironmentVariables is not null)
-        {
-            env.Update(SettingsManager.Settings.EnvironmentVariables);
-        }
-
-        if (!Compat.IsWindows)
-            return env;
-
-        var tkPath = Path.Combine(SettingsManager.LibraryDir, "Assets", "Python310", "tcl", "tcl8.6");
-        env["TCL_LIBRARY"] = tkPath;
-        env["TK_LIBRARY"] = tkPath;
-
-        return env;
-    }
 }

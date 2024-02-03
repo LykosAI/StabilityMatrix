@@ -168,6 +168,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy Details.
+        /// </summary>
+        public static string Action_CopyDetails {
+            get {
+                return ResourceManager.GetString("Action_CopyDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Copy Trigger Words.
         /// </summary>
         public static string Action_CopyTriggerWords {
@@ -204,6 +213,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download.
+        /// </summary>
+        public static string Action_Download {
+            get {
+                return ResourceManager.GetString("Action_Download", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Edit.
         /// </summary>
         public static string Action_Edit {
@@ -218,6 +236,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_ExitApplication {
             get {
                 return ResourceManager.GetString("Action_ExitApplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hide.
+        /// </summary>
+        public static string Action_Hide {
+            get {
+                return ResourceManager.GetString("Action_Hide", resourceCulture);
             }
         }
         
@@ -708,6 +735,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Augmentation Level.
+        /// </summary>
+        public static string Label_AugmentationLevel {
+            get {
+                return ResourceManager.GetString("Label_AugmentationLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Auto Completion.
         /// </summary>
         public static string Label_AutoCompletion {
@@ -830,6 +866,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_CivitAiLoginRequired {
             get {
                 return ResourceManager.GetString("Label_CivitAiLoginRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CLIP Skip.
+        /// </summary>
+        public static string Label_CLIPSkip {
+            get {
+                return ResourceManager.GetString("Label_CLIPSkip", resourceCulture);
             }
         }
         
@@ -1167,6 +1212,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Find in Model Browser.
+        /// </summary>
+        public static string Label_FindInModelBrowser {
+            get {
+                return ResourceManager.GetString("Label_FindInModelBrowser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to First Page.
         /// </summary>
         public static string Label_FirstPage {
@@ -1181,6 +1235,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Folder {
             get {
                 return ResourceManager.GetString("Label_Folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Frames Per Second.
+        /// </summary>
+        public static string Label_Fps {
+            get {
+                return ResourceManager.GetString("Label_Fps", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Frames.
+        /// </summary>
+        public static string Label_Frames {
+            get {
+                return ResourceManager.GetString("Label_Frames", resourceCulture);
             }
         }
         
@@ -1226,6 +1298,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ImageToImage {
             get {
                 return ResourceManager.GetString("Label_ImageToImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Image to Video.
+        /// </summary>
+        public static string Label_ImageToVideo {
+            get {
+                return ResourceManager.GetString("Label_ImageToVideo", resourceCulture);
             }
         }
         
@@ -1329,6 +1410,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Installed.
+        /// </summary>
+        public static string Label_Installed {
+            get {
+                return ResourceManager.GetString("Label_Installed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Installing.
         /// </summary>
         public static string Label_Installing {
@@ -1428,6 +1518,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Lossless.
+        /// </summary>
+        public static string Label_Lossless {
+            get {
+                return ResourceManager.GetString("Label_Lossless", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Min CFG.
+        /// </summary>
+        public static string Label_MinCfg {
+            get {
+                return ResourceManager.GetString("Label_MinCfg", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Missing Image File.
         /// </summary>
         public static string Label_MissingImageFile {
@@ -1482,6 +1590,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Motion Bucket ID.
+        /// </summary>
+        public static string Label_MotionBucketId {
+            get {
+                return ResourceManager.GetString("Label_MotionBucketId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Networks (Lora / LyCORIS).
         /// </summary>
         public static string Label_NetworksLoraOrLycoris {
@@ -1523,6 +1640,33 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_No {
             get {
                 return ResourceManager.GetString("Label_No", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No extensions found..
+        /// </summary>
+        public static string Label_NoExtensionsFound {
+            get {
+                return ResourceManager.GetString("Label_NoExtensionsFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string Label_NotificationOption_None {
+            get {
+                return ResourceManager.GetString("Label_NotificationOption_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Notifications.
+        /// </summary>
+        public static string Label_Notifications {
+            get {
+                return ResourceManager.GetString("Label_Notifications", resourceCulture);
             }
         }
         
@@ -1766,6 +1910,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ReadAndAgree {
             get {
                 return ResourceManager.GetString("Label_ReadAndAgree", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Recommended Models.
+        /// </summary>
+        public static string Label_RecommendedModels {
+            get {
+                return ResourceManager.GetString("Label_RecommendedModels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to While your package is installing, here are some models we recommend to help you get started..
+        /// </summary>
+        public static string Label_RecommendedModelsSubText {
+            get {
+                return ResourceManager.GetString("Label_RecommendedModelsSubText", resourceCulture);
             }
         }
         
@@ -2157,6 +2319,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Method.
+        /// </summary>
+        public static string Label_VideoOutputMethod {
+            get {
+                return ResourceManager.GetString("Label_VideoOutputMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Quality.
+        /// </summary>
+        public static string Label_VideoQuality {
+            get {
+                return ResourceManager.GetString("Label_VideoQuality", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Waiting to connect....
         /// </summary>
         public static string Label_WaitingToConnectEllipsis {
@@ -2292,6 +2472,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Check the progress of your package installations and model downloads here..
+        /// </summary>
+        public static string TeachingTip_DownloadsExplanation {
+            get {
+                return ResourceManager.GetString("TeachingTip_DownloadsExplanation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Additional folders such as IPAdapters and TextualInversions (embeddings) can be enabled here.
         /// </summary>
         public static string TeachingTip_MoreCheckpointCategories {
@@ -2310,7 +2499,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Choose your preferred interface and click Install to get started.
+        ///   Looks up a localized string similar to Choose your preferred interface to get started.
         /// </summary>
         public static string Text_OneClickInstaller_SubHeader {
             get {

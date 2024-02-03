@@ -7,11 +7,13 @@
              xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
              mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="850"
              x:DataType="dialogs:SelectModelVersionViewModel"
-             xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+             xmlns:fluentAvalonia="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
              xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
              xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
              xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
              xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
+             xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
              d:DataContext="{x:Static designData:DesignData.SelectModelVersionViewModel}"
              x:Class="StabilityMatrix.Avalonia.Views.Dialogs.SelectModelVersionDialog">
     
@@ -21,6 +23,11 @@
         MinWidth="700"
         RowDefinitions="Auto, *, Auto"
         ColumnDefinitions="*,Auto,*">
+        
+        <Grid.Resources>
+            <input:StandardUICommand x:Key="ImportCommand"
+                                     Command="{Binding Import}"/>
+        </Grid.Resources>
 
         <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto, Auto, Auto">
            <Carousel Grid.Row="0"
@@ -135,6 +142,15 @@
                 <DataTemplate DataType="{x:Type dialogs:CivitFileViewModel}">
                     <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="Auto, *"
                           Margin="0,4,0,4">
+                        <Grid.ContextFlyout>
+                            <controls1:FAMenuFlyout>
+                                <controls1:MenuFlyoutItem
+                                    IsVisible="{Binding IsInstalled}"
+                                    Command="{StaticResource ImportCommand}"
+                                    IconSource="Download"
+                                    Text="{x:Static lang:Resources.Action_Import}" />
+                            </controls1:FAMenuFlyout>
+                        </Grid.ContextFlyout>
                         <fluentAvalonia:SymbolIcon Grid.Row="0" Grid.RowSpan="2"
                                                    Grid.Column="0"
                                                    Margin="0, 0, 8, 0"
@@ -191,9 +207,17 @@
                 Content="{x:Static lang:Resources.Action_Import}"
                 Command="{Binding Import}"
                 IsEnabled="{Binding IsImportEnabled}"
+                IsVisible="{Binding !SelectedFile.IsInstalled, TargetNullValue=True, FallbackValue=True}"
                 ToolTip.Tip="{Binding ImportTooltip}"
                 markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
                 Classes="accent" />
+            
+            <Button
+                Margin="8, 0"
+                Command="{Binding Delete}"
+                Content="{x:Static lang:Resources.Action_Delete}"
+                IsVisible="{Binding SelectedFile.IsInstalled, TargetNullValue=False, FallbackValue=False}"
+                Classes="danger" />
         </StackPanel>
 
     </Grid>

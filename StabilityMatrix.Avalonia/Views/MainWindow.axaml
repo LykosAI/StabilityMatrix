@@ -9,13 +9,14 @@
                         xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                         xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
                         xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                        xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+                        xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
                         d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
                         x:DataType="vm:MainWindowViewModel"
                         Icon="/Assets/Icon.ico"
                         Width="1100"
                         Height="750"
+                        BackRequested="TopLevel_OnBackRequested"
                         Title="Stability Matrix"
                         DockProperties.IsDragEnabled="True" 
                         DockProperties.IsDropEnabled="True"
@@ -71,8 +72,9 @@
             ItemInvoked="NavigationView_OnItemInvoked"
             PaneDisplayMode="Left"
             IsPaneOpen="False"
-            OpenPaneLength="200"
+            OpenPaneLength="{Binding PaneWidth}"
             IsSettingsVisible="False"
+            IsBackEnabled="False"
             MenuItemsSource="{Binding Pages, Mode=OneWay}"
             FooterMenuItemsSource="{Binding FooterPages, Mode=OneWay}"
             SelectedItem="{Binding SelectedCategory}">
@@ -158,6 +160,14 @@
             Name="UpdateAvailableTeachingTip"
             Target="{Binding #FooterUpdateItem}"
             Title="{x:Static lang:Resources.Label_UpdateAvailable}"
+            PreferredPlacement="Right" />
+        
+        <ui:TeachingTip
+            Grid.Row="1"
+            Grid.RowSpan="2"
+            Name="DownloadsTeachingTip"
+            Target="{Binding #FooterDownloadItem}"
+            Title="{x:Static lang:Resources.Label_Downloads}"
             PreferredPlacement="Right" />
     </Grid>
 </controls:AppWindowBase>

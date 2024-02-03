@@ -122,8 +122,10 @@ public class BetterContentDialog : ContentDialog
         set => SetValue(ContentVerticalScrollBarVisibilityProperty, value);
     }
 
-    public static readonly StyledProperty<double> MinDialogWidthProperty =
-        AvaloniaProperty.Register<BetterContentDialog, double>("MinDialogWidth");
+    public static readonly StyledProperty<double> MinDialogWidthProperty = AvaloniaProperty.Register<
+        BetterContentDialog,
+        double
+    >("MinDialogWidth");
 
     public double MinDialogWidth
     {
@@ -131,8 +133,10 @@ public class BetterContentDialog : ContentDialog
         set => SetValue(MinDialogWidthProperty, value);
     }
 
-    public static readonly StyledProperty<double> MaxDialogWidthProperty =
-        AvaloniaProperty.Register<BetterContentDialog, double>("MaxDialogWidth");
+    public static readonly StyledProperty<double> MaxDialogWidthProperty = AvaloniaProperty.Register<
+        BetterContentDialog,
+        double
+    >("MaxDialogWidth");
 
     public double MaxDialogWidth
     {
@@ -140,8 +144,21 @@ public class BetterContentDialog : ContentDialog
         set => SetValue(MaxDialogWidthProperty, value);
     }
 
-    public static readonly StyledProperty<double> MaxDialogHeightProperty =
-        AvaloniaProperty.Register<BetterContentDialog, double>("MaxDialogHeight");
+    public static readonly StyledProperty<double> MinDialogHeightProperty = AvaloniaProperty.Register<
+        BetterContentDialog,
+        double
+    >("MinDialogHeight");
+
+    public double MinDialogHeight
+    {
+        get => GetValue(MaxDialogHeightProperty);
+        set => SetValue(MaxDialogHeightProperty, value);
+    }
+
+    public static readonly StyledProperty<double> MaxDialogHeightProperty = AvaloniaProperty.Register<
+        BetterContentDialog,
+        double
+    >("MaxDialogHeight");
 
     public double MaxDialogHeight
     {
@@ -149,8 +166,10 @@ public class BetterContentDialog : ContentDialog
         set => SetValue(MaxDialogHeightProperty, value);
     }
 
-    public static readonly StyledProperty<Thickness> ContentMarginProperty =
-        AvaloniaProperty.Register<BetterContentDialog, Thickness>("ContentMargin");
+    public static readonly StyledProperty<Thickness> ContentMarginProperty = AvaloniaProperty.Register<
+        BetterContentDialog,
+        Thickness
+    >("ContentMargin");
 
     public Thickness ContentMargin
     {
@@ -158,8 +177,10 @@ public class BetterContentDialog : ContentDialog
         set => SetValue(ContentMarginProperty, value);
     }
 
-    public static readonly StyledProperty<bool> CloseOnClickOutsideProperty =
-        AvaloniaProperty.Register<BetterContentDialog, bool>("CloseOnClickOutside");
+    public static readonly StyledProperty<bool> CloseOnClickOutsideProperty = AvaloniaProperty.Register<
+        BetterContentDialog,
+        bool
+    >("CloseOnClickOutside");
 
     /// <summary>
     /// Whether to close the dialog when clicking outside of it (on the blurred background)
@@ -187,12 +208,17 @@ public class BetterContentDialog : ContentDialog
 
             var point = e.GetPosition(this);
 
-            if (
-                !backgroundPart.Bounds.Contains(point)
-                && (Content as Control)?.DataContext is ContentDialogViewModelBase vm
-            )
+            if (!backgroundPart.Bounds.Contains(point))
             {
-                vm.OnCloseButtonClick();
+                // Use vm if available
+                if ((Content as Control)?.DataContext is ContentDialogViewModelBase vm)
+                {
+                    vm.OnCloseButtonClick();
+                }
+                else
+                {
+                    Hide(ContentDialogResult.None);
+                }
             }
         }
     }
@@ -211,10 +237,7 @@ public class BetterContentDialog : ContentDialog
             viewModelDirect.SecondaryButtonClick += OnDialogButtonClick;
             viewModelDirect.CloseButtonClick += OnDialogButtonClick;
         }
-        else if (
-            (Content as Control)?.DataContext
-            is ContentDialogProgressViewModelBase progressViewModel
-        )
+        else if ((Content as Control)?.DataContext is ContentDialogProgressViewModelBase progressViewModel)
         {
             progressViewModel.PrimaryButtonClick += OnDialogButtonClick;
             progressViewModel.SecondaryButtonClick += OnDialogButtonClick;
@@ -234,8 +257,7 @@ public class BetterContentDialog : ContentDialog
             }
             else
             {
-                PrimaryButton.IsVisible =
-                    IsPrimaryButtonEnabled && !string.IsNullOrEmpty(PrimaryButtonText);
+                PrimaryButton.IsVisible = IsPrimaryButtonEnabled && !string.IsNullOrEmpty(PrimaryButtonText);
             }
         }
 

@@ -2,6 +2,8 @@
 using System.Text.Json.Serialization;
 using Semver;
 using StabilityMatrix.Core.Converters.Json;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
@@ -60,7 +62,7 @@ public class Settings
     public bool ShowConnectedModelImages { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter<SharedFolderType>))]
-    public SharedFolderType? SharedFolderVisibleCategories { get; set; } =
+    public SharedFolderType SharedFolderVisibleCategories { get; set; } =
         SharedFolderType.StableDiffusion | SharedFolderType.Lora | SharedFolderType.LyCORIS;
 
     public WindowSettings? WindowSettings { get; set; }
@@ -106,6 +108,14 @@ public class Settings
     public HashSet<int> FavoriteModels { get; set; } = new();
 
     public HashSet<TeachingTip> SeenTeachingTips { get; set; } = new();
+
+    public Dictionary<NotificationKey, NotificationOption> NotificationOptions { get; set; } = new();
+
+    public List<string> SelectedBaseModels { get; set; } =
+        Enum.GetValues<CivitBaseModelType>()
+            .Where(x => x != CivitBaseModelType.All)
+            .Select(x => x.GetStringValue())
+            .ToList();
 
     public Size InferenceImageSize { get; set; } = new(150, 190);
     public Size OutputsImageSize { get; set; } = new(300, 300);
@@ -170,7 +180,10 @@ public class Settings
     }
 }
 
-[JsonSourceGenerationOptions(WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
 [JsonSerializable(typeof(Settings))]
 [JsonSerializable(typeof(bool))]
 [JsonSerializable(typeof(int))]

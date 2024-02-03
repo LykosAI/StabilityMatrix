@@ -15,10 +15,8 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
     private readonly ISettingsManager settingsManager;
     private readonly IModelIndexService modelIndexService;
 
-    private readonly ConcurrentDictionary<
-        Guid,
-        (TrackedDownload Download, FileStream Stream)
-    > downloads = new();
+    private readonly ConcurrentDictionary<Guid, (TrackedDownload Download, FileStream Stream)> downloads =
+        new();
 
     public IEnumerable<TrackedDownload> Downloads => downloads.Values.Select(x => x.Download);
 
@@ -51,6 +49,7 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
 
     private void OnDownloadAdded(TrackedDownload download)
     {
+        logger.LogInformation("Download added: ({Download}, {State})", download.Id, download.ProgressState);
         DownloadAdded?.Invoke(this, download);
     }
 
@@ -67,11 +66,7 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         var downloadsDir = new DirectoryPath(settingsManager.DownloadsDirectory);
         downloadsDir.Create();
         var jsonFile = downloadsDir.JoinFile($"{download.Id}.json");
-        var jsonFileStream = jsonFile.Info.Open(
-            FileMode.CreateNew,
-            FileAccess.ReadWrite,
-            FileShare.Read
-        );
+        var jsonFileStream = jsonFile.Info.Open(FileMode.CreateNew, FileAccess.ReadWrite, FileShare.Read);
 
         // Serialize to json
         var json = JsonSerializer.Serialize(download);
@@ -84,7 +79,6 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         // Connect to state changed event to update json file
         AttachHandlers(download);
 
-        logger.LogDebug("Added download {Download}", download.FileName);
         OnDownloadAdded(download);
     }
 

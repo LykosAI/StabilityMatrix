@@ -1,19 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <OutputType>WinExe</OutputType>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' != 'win-x64'">
         <TargetFramework>net8.0</TargetFramework>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+        <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <CFBundleName>Stability Matrix</CFBundleName>
+        <CFBundleIconFile>Assets/AppIcon.icns</CFBundleIconFile>
+        <CFBundlePackageType>APPL</CFBundlePackageType>
+        <OutputType>WinExe</OutputType>
         <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
-        <Version>2.7.0-pre.999</Version>
+        <Version>2.8.0-dev.999</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
-
+   
+    <ItemGroup>
+        <CFBundleURLTypes Include="dummy">
+            <CFBundleURLName>StabilityMatrix.URL</CFBundleURLName>
+            <CFBundleURLSchemes>stabilitymatrix;stabilitymatrix://</CFBundleURLSchemes>
+        </CFBundleURLTypes>
+    </ItemGroup>
+    
     <ItemGroup>
         <InternalsVisibleTo Include="StabilityMatrix.Tests" />
         <InternalsVisibleTo Include="StabilityMatrix.UITests" />
@@ -22,30 +38,35 @@
     <ItemGroup>
         <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.2.1" />
         <PackageReference Include="AutoComplete.Net" Version="1.2211.2014.42"/>
-        <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.0.5" />
+        <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.0.6" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.7" />
         <PackageReference Include="Avalonia.Controls.PanAndZoom" Version="11.0.0.2" />
-        <PackageReference Include="Avalonia" Version="11.0.5" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.0.5" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.5" />
+        <PackageReference Include="Avalonia" Version="11.0.7" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.0.7" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.7" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.5" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.7" />
         <PackageReference Include="Avalonia.HtmlRenderer" Version="11.0.0" />
-        <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.5" />
-        <PackageReference Include="AvaloniaEdit.TextMate" Version="11.0.5" />
-        <PackageReference Include="bodong.Avalonia.PropertyGrid" Version="11.0.5.1" />
-        <PackageReference Include="bodong.PropertyModels" Version="11.0.5.1" />
+        <PackageReference Include="Avalonia.Labs.Controls" Version="11.0.3" />
+        <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.6" />
+        <PackageReference Include="AvaloniaEdit.TextMate" Version="11.0.6" />
+        <PackageReference Include="bodong.Avalonia.PropertyGrid" Version="11.0.6.3" />
+        <PackageReference Include="bodong.PropertyModels" Version="11.0.6.2" />
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+        <PackageReference Include="DesktopNotifications" Version="1.3.1" />
+        <PackageReference Include="DesktopNotifications.Avalonia" Version="1.3.1" />
         <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
         <PackageReference Include="Dock.Avalonia" Version="11.0.0.5" />
         <PackageReference Include="Dock.Model.Avalonia" Version="11.0.0.5" />
         <PackageReference Include="Dock.Serializer" Version="11.0.0.5" />
         <PackageReference Include="DynamicData" Version="8.3.27" />
+        <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
         <PackageReference Include="Exceptionless.DateTimeExtensions" Version="3.4.3" />
         <PackageReference Include="FluentAvalonia.BreadcrumbBar" Version="2.0.2" />
-        <PackageReference Include="FluentAvaloniaUI" Version="2.0.4" />
-        <PackageReference Include="FluentIcons.Avalonia" Version="1.1.224" />
-        <PackageReference Include="FluentIcons.FluentAvalonia" Version="1.1.224" />
+        <PackageReference Include="FluentAvaloniaUI" Version="2.0.5" />
+        <PackageReference Include="FluentIcons.Avalonia" Version="1.1.225" />
+        <PackageReference Include="FluentIcons.Avalonia.Fluent" Version="1.1.225" />
         <PackageReference Include="FuzzySharp" Version="2.0.2" />
         <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
         <PackageReference Include="Markdown.Avalonia" Version="11.0.2" />
@@ -56,17 +77,17 @@
         <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.1" />
         <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
-        <PackageReference Include="NLog" Version="5.2.7" />
-        <PackageReference Include="NLog.Extensions.Logging" Version="5.3.7" />
+        <PackageReference Include="NLog" Version="5.2.8" />
+        <PackageReference Include="NLog.Extensions.Logging" Version="5.3.8" />
         <PackageReference Include="NSubstitute" Version="5.1.0" />
-        <PackageReference Include="Polly" Version="8.2.0" />
+        <PackageReference Include="Polly" Version="8.2.1" />
         <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
         <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.0.1" />
-        <PackageReference Include="RockLib.Reflection.Optimized" Version="2.0.0" />
+        <PackageReference Include="RockLib.Reflection.Optimized" Version="3.0.0" />
         <PackageReference Include="Sentry" Version="3.41.3" />
         <PackageReference Include="Sentry.NLog" Version="3.41.3" />
         <PackageReference Include="SpacedGrid-Avalonia" Version="11.0.0" />
@@ -91,6 +112,7 @@
     </ItemGroup>
     
     <ItemGroup>
+        <ProjectReference Include="..\Avalonia.Gif\Avalonia.Gif.csproj" />
         <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
     </ItemGroup>
 
@@ -128,6 +150,12 @@
       <!-- Only for osx-arm64 -->
       <AvaloniaResource Include="Assets\macos-arm64\**" Condition="'$(RuntimeIdentifier)' == 'osx-arm64'" />
     </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Assets\AppIcon.icns" Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
     
     <ItemGroup>
       <EmbeddedResource Update="Languages\Resources.resx">
@@ -141,6 +169,30 @@
         <DesignTime>True</DesignTime>
         <AutoGen>True</AutoGen>
         <DependentUpon>Resources.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Views\Inference\InferenceImageToVideoView.axaml.cs">
+        <DependentUpon>InferenceImageToVideoView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\VideoGenerationSettingsCard.axaml.cs">
+        <DependentUpon>VideoGenerationSettingsCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Controls\VideoOutputSettingsCard.axaml.cs">
+        <DependentUpon>VideoOutputSettingsCard.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\NewPackageManagerPage.axaml.cs">
+        <DependentUpon>NewPackageManagerPage.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\PackageManager\PackageInstallDetailView.axaml.cs">
+        <DependentUpon>PackageInstallDetailView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\PackageManager\PackageInstallBrowserView.axaml.cs">
+        <DependentUpon>NewInstallerDialog.axaml</DependentUpon>
+        <SubType>Code</SubType>
       </Compile>
     </ItemGroup>
 

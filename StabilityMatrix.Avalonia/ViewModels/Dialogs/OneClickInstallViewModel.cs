@@ -12,6 +12,7 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -87,15 +88,12 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         SubHeaderText = Resources.Text_OneClickInstaller_SubHeader;
         ShowInstallButton = true;
 
-        var filteredPackages = this.packageFactory
-            .GetAllAvailablePackages()
+        var filteredPackages = this.packageFactory.GetAllAvailablePackages()
             .Where(p => p is { OfferInOneClickInstaller: true, IsCompatible: true })
             .ToList();
 
         AllPackages = new ObservableCollection<BasePackage>(
-            filteredPackages.Any()
-                ? filteredPackages
-                : this.packageFactory.GetAllAvailablePackages()
+            filteredPackages.Any() ? filteredPackages : this.packageFactory.GetAllAvailablePackages()
         );
         SelectedPackage = AllPackages[0];
     }
@@ -132,15 +130,11 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         var steps = new List<IPackageStep>
         {
             new SetPackageInstallingStep(settingsManager, SelectedPackage.Name),
-            new SetupPrerequisitesStep(prerequisiteHelper, pyRunner)
+            new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, SelectedPackage)
         };
 
         // get latest version & download & install
-        var installLocation = Path.Combine(
-            settingsManager.LibraryDir,
-            "Packages",
-            SelectedPackage.Name
-        );
+        var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", SelectedPackage.Name);
         if (Directory.Exists(installLocation))
         {
             var installPath = new DirectoryPath(installLocation);
@@ -163,11 +157,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         var torchVersion = SelectedPackage.GetRecommendedTorchVersion();
         var recommendedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
 
-        var downloadStep = new DownloadPackageVersionStep(
-            SelectedPackage,
-            installLocation,
-            downloadVersion
-        );
+        var downloadStep = new DownloadPackageVersionStep(SelectedPackage, installLocation, downloadVersion);
         steps.Add(downloadStep);
 
         var installStep = new InstallPackageStep(
@@ -199,17 +189,10 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
             PreferredSharedFolderMethod = recommendedSharedFolderMethod
         };
 
-        var addInstalledPackageStep = new AddInstalledPackageStep(
-            settingsManager,
-            installedPackage
-        );
+        var addInstalledPackageStep = new AddInstalledPackageStep(settingsManager, installedPackage);
         steps.Add(addInstalledPackageStep);
 
-        var runner = new PackageModificationRunner
-        {
-            ShowDialogOnStart = true,
-            HideCloseButton = true,
-        };
+        var runner = new PackageModificationRunner { ShowDialogOnStart = true, HideCloseButton = true, };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps(steps);
 

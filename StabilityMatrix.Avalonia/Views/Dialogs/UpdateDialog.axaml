@@ -8,7 +8,7 @@
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                           xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
                           xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                          xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+                          xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
                           d:DataContext="{x:Static mocks:DesignData.UpdateViewModel}"
                           x:DataType="dialogs:UpdateViewModel"
                           mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="550"

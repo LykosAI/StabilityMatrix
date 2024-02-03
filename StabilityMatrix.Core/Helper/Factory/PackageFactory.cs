@@ -39,4 +39,7 @@ public class PackageFactory : IPackageFactory
             ? null
             : new PackagePair(installedPackage, basePackage);
     }
+
+    public IEnumerable<BasePackage> GetPackagesByType(PackageType packageType) =>
+        basePackages.Values.Where(p => p.PackageType == packageType);
 }

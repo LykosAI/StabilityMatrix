@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed model links not working in RuinedFooocus for new installations
 - Fixed incorrect nodejs download link on Linux (thanks to slogonomo for the fix)
+- Fixed failing InvokeAI install on macOS due to missing nodejs
+- Increased timeout on Recommended Models call to prevent potential timeout errors on slow connections
 
 ## v2.8.0
 ### Added

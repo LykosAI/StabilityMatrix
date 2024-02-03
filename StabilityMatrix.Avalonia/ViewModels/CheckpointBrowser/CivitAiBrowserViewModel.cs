@@ -438,6 +438,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
 
             if (modelRequest.Sort is CivitSortMode.Favorites or CivitSortMode.Installed)
             {
+                SortMode = CivitSortMode.HighestRated;
                 modelRequest.Sort = CivitSortMode.HighestRated;
             }
         }

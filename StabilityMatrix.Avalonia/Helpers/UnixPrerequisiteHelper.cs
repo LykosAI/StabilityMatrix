@@ -298,7 +298,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     {
         var command = args.Prepend([NpmPath]);
 
-        var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "");
+        var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "", envVars);
         if (result.ExitCode != 0)
         {
             Logger.Error(

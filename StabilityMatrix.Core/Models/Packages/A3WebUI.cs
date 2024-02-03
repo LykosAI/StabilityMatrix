@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using NLog;
@@ -7,6 +8,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -146,7 +148,8 @@ public class A3WebUI(
                 Name = "No Half",
                 Type = LaunchOptionType.Bool,
                 Description = "Do not switch the model to 16-bit floats",
-                InitialValue = HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML(),
+                InitialValue =
+                    HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML() || Compat.IsMacOS,
                 Options = ["--no-half"]
             },
             new()
@@ -169,11 +172,13 @@ public class A3WebUI(
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
+        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm, TorchVersion.Mps };
 
     public override string MainBranch => "master";
 
     public override string OutputFolderName => "outputs";
+
+    public override IPackageExtensionManager ExtensionManager => new A3WebUiExtensionManager(this);
 
     public override async Task InstallPackage(
         string installLocation,
@@ -186,23 +191,25 @@ public class A3WebUI(
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
+        var venvPath = Path.Combine(installLocation, "venv");
+        var exists = Directory.Exists(venvPath);
 
+        var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-
         var pipArgs = new PipInstallArgs()
-            .WithTorch("==2.0.1")
-            .WithTorchVision("==0.15.2")
+            .WithTorch("==2.1.2")
+            .WithTorchVision("==0.16.2")
             .WithTorchExtraIndex(
                 torchVersion switch
                 {
                     TorchVersion.Cpu => "cpu",
-                    TorchVersion.Cuda => "cu118",
-                    TorchVersion.Rocm => "rocm5.1.1",
+                    TorchVersion.Cuda => "cu121",
+                    TorchVersion.Rocm => "rocm5.6",
+                    TorchVersion.Mps => "nightly/cpu",
                     _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                 }
             )
@@ -213,13 +220,22 @@ public class A3WebUI(
 
         if (torchVersion == TorchVersion.Cuda)
         {
-            pipArgs = pipArgs.WithXFormers("==0.0.20");
+            pipArgs = pipArgs.WithXFormers("==0.0.23.post1");
         }
 
         // v1.6.0 needs a httpx qualifier to fix a gradio issue
         if (versionOptions.VersionTag?.Contains("1.6.0") ?? false)
         {
             pipArgs = pipArgs.AddArg("httpx==0.24.1");
+        }
+
+        // Add jsonmerge to fix https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/12482
+        pipArgs = pipArgs.AddArg("jsonmerge");
+
+        if (exists)
+        {
+            pipArgs = pipArgs.AddArg("--upgrade");
+            pipArgs = pipArgs.AddArg("--force-reinstall");
         }
 
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
@@ -266,5 +282,47 @@ public class A3WebUI(
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+    }
+
+    private class A3WebUiExtensionManager(A3WebUI package)
+        : GitPackageExtensionManager(package.PrerequisiteHelper)
+    {
+        public override string RelativeInstallDirectory => "extensions";
+
+        public override IEnumerable<ExtensionManifest> DefaultManifests =>
+            [
+                new ExtensionManifest(
+                    new Uri(
+                        "https://raw.githubusercontent.com/AUTOMATIC1111/stable-diffusion-webui-extensions/master/index.json"
+                    )
+                )
+            ];
+
+        public override async Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(
+            ExtensionManifest manifest,
+            CancellationToken cancellationToken = default
+        )
+        {
+            try
+            {
+                // Get json
+                var content = await package
+                    .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
+                    .ConfigureAwait(false);
+
+                // Parse json
+                var jsonManifest = JsonSerializer.Deserialize<A1111ExtensionManifest>(
+                    content,
+                    A1111ExtensionManifestSerializerContext.Default.Options
+                );
+
+                return jsonManifest?.GetPackageExtensions() ?? Enumerable.Empty<PackageExtension>();
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to get extensions from manifest");
+                return Enumerable.Empty<PackageExtension>();
+            }
+        }
     }
 }

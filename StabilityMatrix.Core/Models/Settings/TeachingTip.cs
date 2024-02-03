@@ -9,9 +9,10 @@ namespace StabilityMatrix.Core.Models.Settings;
 [JsonConverter(typeof(StringJsonConverter<TeachingTip>))]
 public record TeachingTip(string Value) : StringValue(Value)
 {
-    public static TeachingTip AccountsCredentialsStorageNotice =>
-        new("AccountsCredentialsStorageNotice");
+    public static TeachingTip AccountsCredentialsStorageNotice => new("AccountsCredentialsStorageNotice");
     public static TeachingTip CheckpointCategoriesTip => new("CheckpointCategoriesTip");
+    public static TeachingTip PackageExtensionsInstallNotice => new("PackageExtensionsInstallNotice");
+    public static TeachingTip DownloadsTip => new("DownloadsTip");
 
     /// <inheritdoc />
     public override string ToString()

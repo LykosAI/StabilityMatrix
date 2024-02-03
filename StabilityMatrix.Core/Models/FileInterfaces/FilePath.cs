@@ -15,6 +15,9 @@ public partial class FilePath : FileSystemPath, IPathObject
     public FileInfo Info => _info ??= new FileInfo(FullPath);
 
     [JsonIgnore]
+    FileSystemInfo IPathObject.Info => Info;
+
+    [JsonIgnore]
     public bool IsSymbolicLink
     {
         get
@@ -70,6 +73,11 @@ public partial class FilePath : FileSystemPath, IPathObject
 
     public FilePath(params string[] paths)
         : base(paths) { }
+
+    public FilePath RelativeTo(DirectoryPath path)
+    {
+        return new FilePath(Path.GetRelativePath(path.FullPath, FullPath));
+    }
 
     public long GetSize()
     {

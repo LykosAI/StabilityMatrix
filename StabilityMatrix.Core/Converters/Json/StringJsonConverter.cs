@@ -12,8 +12,9 @@ namespace StabilityMatrix.Core.Converters.Json;
 /// Types implementing <see cref="IFormattable"/> will be formatted with <see cref="CultureInfo.InvariantCulture"/>
 /// </summary>
 [PublicAPI]
-public class StringJsonConverter<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>
-    : JsonConverter<T>
+public class StringJsonConverter<
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T
+> : JsonConverter<T>
 {
     /// <inheritdoc />
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -33,12 +34,52 @@ public class StringJsonConverter<[DynamicallyAccessedMembers(DynamicallyAccessed
     }
 
     /// <inheritdoc />
+    public override T ReadAsPropertyName(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
+    {
+        if (reader.TokenType != JsonTokenType.String)
+        {
+            throw new JsonException();
+        }
+
+        var value = reader.GetString();
+        if (value is null)
+        {
+            throw new JsonException("Property name cannot be null");
+        }
+
+        return (T?)Activator.CreateInstance(typeToConvert, value)
+            ?? throw new JsonException("Property name cannot be null");
+    }
+
+    /// <inheritdoc />
     public override void Write(Utf8JsonWriter writer, T? value, JsonSerializerOptions options)
     {
         if (value is null)
         {
             writer.WriteNullValue();
             return;
+        }
+
+        if (value is IFormattable formattable)
+        {
+            writer.WriteStringValue(formattable.ToString(null, CultureInfo.InvariantCulture));
+        }
+        else
+        {
+            writer.WriteStringValue(value.ToString());
+        }
+    }
+
+    /// <inheritdoc />
+    public override void WriteAsPropertyName(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
+    {
+        if (value is null)
+        {
+            throw new JsonException("Property name cannot be null");
         }
 
         if (value is IFormattable formattable)

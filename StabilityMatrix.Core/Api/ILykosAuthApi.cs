@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Refit;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Lykos;
 
 namespace StabilityMatrix.Core.Api;
@@ -45,15 +46,12 @@ public interface ILykosAuthApi
         CancellationToken cancellationToken = default
     )
     {
-        var result = await GetPatreonOAuthRedirect(redirectUrl, cancellationToken)
-            .ConfigureAwait(false);
+        var result = await GetPatreonOAuthRedirect(redirectUrl, cancellationToken).ConfigureAwait(false);
 
         if (result.StatusCode != HttpStatusCode.Redirect)
         {
             result.EnsureSuccessStatusCode();
-            throw new InvalidOperationException(
-                $"Expected a redirect 302 response, got {result.StatusCode}"
-            );
+            throw new InvalidOperationException($"Expected a redirect 302 response, got {result.StatusCode}");
         }
 
         return result.Headers.Location?.ToString()
@@ -70,4 +68,7 @@ public interface ILykosAuthApi
         string path,
         CancellationToken cancellationToken = default
     );
+
+    [Get("/api/Models/recommended")]
+    Task<CivitModelsResponse> GetRecommendedModels();
 }

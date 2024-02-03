@@ -1,4 +1,5 @@
 ﻿using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
 
@@ -8,36 +9,23 @@ public class SetupPrerequisitesStep : IPackageStep
 {
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly IPyRunner pyRunner;
+    private readonly BasePackage package;
 
-    public SetupPrerequisitesStep(IPrerequisiteHelper prerequisiteHelper, IPyRunner pyRunner)
+    public SetupPrerequisitesStep(
+        IPrerequisiteHelper prerequisiteHelper,
+        IPyRunner pyRunner,
+        BasePackage package
+    )
     {
         this.prerequisiteHelper = prerequisiteHelper;
         this.pyRunner = pyRunner;
+        this.package = package;
     }
 
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        // git, vcredist, etc...
-        await prerequisiteHelper.InstallAllIfNecessary(progress).ConfigureAwait(false);
-
-        // python stuff
-        if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
-        {
-            progress?.Report(
-                new ProgressReport(-1f, "Installing Python prerequisites...", isIndeterminate: true)
-            );
-
-            await pyRunner.Initialize().ConfigureAwait(false);
-
-            if (!PyRunner.PipInstalled)
-            {
-                await pyRunner.SetupPip().ConfigureAwait(false);
-            }
-            if (!PyRunner.VenvInstalled)
-            {
-                await pyRunner.InstallPackage("virtualenv").ConfigureAwait(false);
-            }
-        }
+        // package and platform-specific requirements install
+        await prerequisiteHelper.InstallPackageRequirements(package, progress).ConfigureAwait(false);
     }
 
     public string ProgressTitle => "Installing prerequisites...";

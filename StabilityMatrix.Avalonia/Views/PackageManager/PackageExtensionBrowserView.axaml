@@ -1,0 +1,350 @@
+<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:ui="using:FluentAvalonia.UI.Controls"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                          xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
+                          xmlns:extensions="clr-namespace:StabilityMatrix.Core.Models.Packages.Extensions;assembly=StabilityMatrix.Core"
+                          xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+                          xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+                          xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+                          xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+                          xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+                          xmlns:models1="clr-namespace:StabilityMatrix.Avalonia.Models"
+                          d:DataContext="{x:Static mocks:DesignData.PackageExtensionBrowserViewModel}"
+                          x:DataType="packageManager:PackageExtensionBrowserViewModel"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          x:Class="StabilityMatrix.Avalonia.Views.PackageManager.PackageExtensionBrowserView">
+    <controls:UserControlBase.Resources>
+        <!--<input:StandardUICommand x:Key="InstallExtensionCommand"
+                                 Command="{Binding InstallExtensionCommand}" />-->
+        <converters:FileUriConverter x:Key="FileUriConverter" />
+
+        <DataTemplate x:Key="PackageExtensionTemplate">
+            <DataTemplate.DataType>
+                <x:Type TypeName="models1:SelectableItem" x:TypeArguments="extensions:PackageExtension" />
+            </DataTemplate.DataType>
+            <Button Background="Transparent"
+                    Padding="-5"
+                    Margin="4, 0, 0, 8"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    Classes="transparent-full"
+                    BorderBrush="Transparent"
+                    CornerRadius="8"
+                    Command="{Binding ToggleSelectedCommand}">
+                <controls:Card
+                    Padding="12,12"
+                    Margin="4"
+                    Classes="transparent-full"
+                    CornerRadius="8">
+
+                    <sg:SpacedGrid ColumnDefinitions="Auto,*,Auto">
+                        <!--<controls:BetterAdvancedImage
+                        Grid.Column="0"
+                        MaxHeight="128"
+                        MaxWidth="128"
+                        Stretch="UniformToFill"
+                        CornerRadius="4"
+                        Source="{Binding PreviewImageUri}" />-->
+                        <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="4">
+                            <TextBlock Text="{Binding Item.Title}"
+                                       FontWeight="Light"
+                                       FontSize="16" />
+
+                            <TextBlock Text="{Binding Item.Author}"
+                                       FontWeight="Light"
+                                       FontSize="13" />
+
+                            <TextBlock TextWrapping="Wrap"
+                                       Text="{Binding Item.Description}"
+                                       Foreground="{DynamicResource TextFillColorSecondary}"
+                                       FontWeight="Light"
+                                       FontSize="13" />
+
+                            <controls:HyperlinkIconButton
+                                Margin="0"
+                                Padding="0,2"
+                                NavigateUri="{Binding Item.Reference}"
+                                Content="GitHub" />
+                        </StackPanel>
+
+                        <TextBlock 
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding Item.IsInstalled}"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            Text="{Binding Source={x:Static lang:Resources.Label_Installed}, StringFormat='{}({0})'}"
+                            Margin="0,0,16,0"/>
+                        <CheckBox
+                            IsVisible="{Binding !Item.IsInstalled}"
+                            IsChecked="{Binding IsSelected}"
+                            Margin="0,0,16,0"
+                            Grid.Column="2" />
+
+                    </sg:SpacedGrid>
+                </controls:Card>
+            </Button>
+        </DataTemplate>
+
+        <DataTemplate x:Key="InstalledPackageExtensionTemplate">
+            <DataTemplate.DataType>
+                <x:Type TypeName="models1:SelectableItem" x:TypeArguments="extensions:InstalledPackageExtension" />
+            </DataTemplate.DataType>
+            <Button Background="Transparent"
+                    Padding="-5"
+                    Margin="4, 0, 0, 8"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    Classes="transparent-full"
+                    BorderBrush="Transparent"
+                    CornerRadius="8"
+                    Command="{Binding ToggleSelectedCommand}">
+                <controls:Card
+                    Padding="12,12"
+                    Margin="4"
+                    Classes="transparent-full"
+                    CornerRadius="8">
+
+                    <sg:SpacedGrid ColumnDefinitions="*,Auto">
+                        <StackPanel
+                            DataContext="{Binding Item}"
+                            Orientation="Vertical" Spacing="4">
+                            <TextBlock
+                                Text="{Binding Title}"
+                                FontWeight="Light"
+                                FontSize="16" />
+                            <TextBlock Text="{Binding Version, FallbackValue=''}"
+                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                       FontSize="13" />
+                            <TextBlock TextWrapping="Wrap"
+                                       Text="{Binding Definition.Description, FallbackValue=''}"
+                                       Foreground="{DynamicResource TextFillColorSecondary}"
+                                       FontWeight="Light"
+                                       FontSize="13" />
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <controls:HyperlinkIconButton
+                                    IsEnabled="{Binding Definition, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                    Margin="0"
+                                    Padding="0,2"
+                                    NavigateUri="{Binding Definition.Reference, FallbackValue=''}"
+                                    Content="GitHub" />
+
+                                <Ellipse
+                                    Width="3"
+                                    Height="3"
+                                    Opacity="0.8"
+                                    VerticalAlignment="Center"
+                                    Fill="{DynamicResource TextFillColorTertiaryBrush}" />
+
+                                <controls:HyperlinkIconButton
+                                    IsEnabled="{Binding Definition, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                    Margin="0"
+                                    Padding="0,2"
+                                    NavigateUri="{Binding PrimaryPath.FullPath, Converter={StaticResource FileUriConverter}}"
+                                    Content="{Binding DisplayPath}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <CheckBox
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            IsChecked="{Binding IsSelected}"
+                            Margin="0,0,16,0" />
+                    </sg:SpacedGrid>
+                </controls:Card>
+            </Button>
+        </DataTemplate>
+    </controls:UserControlBase.Resources>
+
+    <TabControl TabStripPlacement="Top" SelectionChanged="TabControl_OnSelectionChanged">
+        <TabControl.Items>
+            <TabItem FontSize="18" Header="Available Extensions" Margin="8,0,0,0">
+                <sg:SpacedGrid
+                    RowDefinitions="Auto,*,Auto"
+                    RowSpacing="12"
+                    Margin="8">
+                    <sg:SpacedGrid
+                        ColumnDefinitions="*,Auto,Auto"
+                        ColumnSpacing="8">
+                        <TextBox
+                            Classes="search"
+                            Margin="4, 0,0,0"
+                            Watermark="{x:Static lang:Resources.Action_Search}"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Center"
+                            Text="{Binding AvailableItemsSearchCollection.Query, Mode=TwoWay}" />
+
+                        <!-- Refresh Button -->
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Padding="16,6"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Stretch"
+                            Command="{Binding RefreshCommand}">
+                            <ui:SymbolIcon FontSize="16" Symbol="Refresh" />
+                        </Button>
+
+                        <!-- Settings / Edit Manifests Button -->
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Command="{Binding OpenExtensionsSettingsDialogCommand}"
+                            Padding="16,6"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Stretch">
+                            <ui:SymbolIcon FontSize="16" Symbol="Settings" />
+                        </Button>
+                    </sg:SpacedGrid>
+                    
+                    <TextBlock Grid.Row="1"
+                               HorizontalAlignment="Center"
+                               IsVisible="{Binding ShowNoExtensionsFoundMessage}"
+                               Text="{x:Static lang:Resources.Label_NoExtensionsFound}"/>
+
+                    <ScrollViewer
+                        IsVisible="{Binding !IsLoading}"
+                        Grid.Row="1">
+                        <ItemsRepeater
+                            DataContext="{Binding AvailableItemsSearchCollection}"
+                            ItemTemplate="{StaticResource PackageExtensionTemplate}"
+                            ItemsSource="{Binding FilteredItems}">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Orientation="Vertical" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                    </ScrollViewer>
+
+                    <Panel
+                        IsVisible="{Binding IsLoading}"
+                        Grid.Row="1">
+                        <ProgressBar
+                            Margin="32,16"
+                            IsIndeterminate="True"
+                            IsEnabled="{Binding IsLoading}"
+                            IsVisible="{Binding IsLoading}" />
+                    </Panel>
+
+                    <ui:InfoBar
+                        Grid.Row="2"
+                        IsOpen="{Binding !!SelectedAvailableItems.Count}"
+                        HorizontalContentAlignment="Right"
+                        HorizontalAlignment="Right"
+                        CloseButtonCommand="{Binding ClearSelection}"
+                        IsIconVisible="False">
+                        <ui:InfoBar.Title>
+                            <MultiBinding StringFormat="{}{0} Selected">
+                                <Binding Path="SelectedAvailableItems.Count" />
+                            </MultiBinding>
+                        </ui:InfoBar.Title>
+                        <ui:InfoBar.ActionButton>
+                            <Button
+                                Classes="accent"
+                                Command="{Binding InstallSelectedExtensionsCommand}"
+                                Content="{x:Static lang:Resources.Action_Install}" />
+                        </ui:InfoBar.ActionButton>
+                    </ui:InfoBar>
+
+                </sg:SpacedGrid>
+            </TabItem>
+
+            <TabItem FontSize="18" Header="Installed Extensions" Margin="0,0,0,0">
+
+                <sg:SpacedGrid
+                    RowDefinitions="Auto,*,Auto"
+                    RowSpacing="12"
+                    Margin="8">
+                    <sg:SpacedGrid
+                        ColumnDefinitions="*,Auto"
+                        ColumnSpacing="8">
+                        <TextBox
+                            Classes="search"
+                            Margin="4, 0,0,0"
+                            DataContext="{Binding InstalledItemsSearchCollection}"
+                            Watermark="{x:Static lang:Resources.Action_Search}"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Center"
+                            Text="{Binding Query, Mode=TwoWay}" />
+
+                        <!-- Refresh Button -->
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Padding="16,6"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Stretch"
+                            Command="{Binding RefreshCommand}">
+                            <ui:SymbolIcon FontSize="16" Symbol="Refresh" />
+                        </Button>
+
+                        <!-- Settings / Edit Manifests Button -->
+                        <!--<Button
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            Padding="16,6"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Stretch">
+                            <ui:SymbolIcon FontSize="16" Symbol="Settings" />
+                        </Button>-->
+                    </sg:SpacedGrid>
+
+                    <ScrollViewer
+                        IsVisible="{Binding !IsLoading}"
+                        Grid.Row="1">
+                        <ItemsRepeater
+                            DataContext="{Binding InstalledItemsSearchCollection}"
+                            ItemTemplate="{StaticResource InstalledPackageExtensionTemplate}"
+                            ItemsSource="{Binding FilteredItems}">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Orientation="Vertical" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                    </ScrollViewer>
+
+                    <Panel
+                        IsVisible="{Binding IsLoading}"
+                        Grid.Row="1">
+                        <ProgressBar
+                            Margin="32,16"
+                            IsIndeterminate="True"
+                            IsEnabled="{Binding IsLoading}"
+                            IsVisible="{Binding IsLoading}" />
+                    </Panel>
+
+                    <ui:InfoBar
+                        Grid.Row="2"
+                        IsOpen="{Binding !!SelectedInstalledItems.Count}"
+                        HorizontalContentAlignment="Right"
+                        HorizontalAlignment="Right"
+                        CloseButtonCommand="{Binding ClearSelection}"
+                        IsIconVisible="False">
+                        <ui:InfoBar.Title>
+                            <MultiBinding StringFormat="{}{0} Selected">
+                                <Binding Path="SelectedInstalledItems.Count" />
+                            </MultiBinding>
+                        </ui:InfoBar.Title>
+                        <ui:InfoBar.ActionButton>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button
+                                    Classes="accent"
+                                    Command="{Binding UpdateSelectedExtensionsCommand}"
+                                    Content="{x:Static lang:Resources.Action_Update}" />
+                                <Button
+                                    Command="{Binding UninstallSelectedExtensionsCommand}"
+                                    Content="{x:Static lang:Resources.Action_Uninstall}" />
+                            </StackPanel>
+
+                        </ui:InfoBar.ActionButton>
+                    </ui:InfoBar>
+
+                </sg:SpacedGrid>
+
+            </TabItem>
+        </TabControl.Items>
+    </TabControl>
+</controls:UserControlBase>

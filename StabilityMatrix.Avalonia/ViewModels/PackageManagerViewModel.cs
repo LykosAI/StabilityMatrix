@@ -9,10 +9,12 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -28,7 +30,7 @@ using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -37,17 +39,17 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 /// </summary>
 
 [View(typeof(PackageManagerPage))]
-[Singleton]
+[Singleton, ManagedService]
 public partial class PackageManagerViewModel : PageViewModelBase
 {
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
+    private readonly INavigationService<NewPackageManagerViewModel> packageNavigationService;
     private readonly ILogger<PackageManagerViewModel> logger;
 
     public override string Title => "Packages";
-    public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Box, IsFilled = true };
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Box, IsFilled = true };
 
     /// <summary>
     /// List of installed packages
@@ -71,12 +73,14 @@ public partial class PackageManagerViewModel : PageViewModelBase
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
         INotificationService notificationService,
+        INavigationService<NewPackageManagerViewModel> packageNavigationService,
         ILogger<PackageManagerViewModel> logger
     )
     {
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.notificationService = notificationService;
+        this.packageNavigationService = packageNavigationService;
         this.logger = logger;
 
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
@@ -118,10 +122,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
         if (Design.IsDesignMode)
             return;
 
-        installedPackages.EditDiff(
-            settingsManager.Settings.InstalledPackages,
-            InstalledPackage.Comparer
-        );
+        installedPackages.EditDiff(settingsManager.Settings.InstalledPackages, InstalledPackage.Comparer);
 
         var currentUnknown = await Task.Run(IndexUnknownPackages);
         unknownInstalledPackages.Edit(s => s.Load(currentUnknown));
@@ -135,43 +136,9 @@ public partial class PackageManagerViewModel : PageViewModelBase
         base.OnUnloaded();
     }
 
-    public async Task ShowInstallDialog(BasePackage? selectedPackage = null)
+    public void ShowInstallDialog(BasePackage? selectedPackage = null)
     {
-        var viewModel = dialogFactory.Get<InstallerViewModel>();
-        viewModel.SelectedPackage = selectedPackage ?? viewModel.AvailablePackages[0];
-
-        var dialog = new BetterContentDialog
-        {
-            MaxDialogWidth = 900,
-            MinDialogWidth = 900,
-            FullSizeDesired = true,
-            DefaultButton = ContentDialogButton.Close,
-            IsPrimaryButtonEnabled = false,
-            IsSecondaryButtonEnabled = false,
-            IsFooterVisible = false,
-            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            Content = new InstallerDialog { DataContext = viewModel }
-        };
-
-        var result = await dialog.ShowAsync();
-        if (result == ContentDialogResult.Primary)
-        {
-            var runner = new PackageModificationRunner { ShowDialogOnStart = true };
-            var steps = viewModel.Steps;
-
-            EventManager.Instance.OnPackageInstallProgressAdded(runner);
-            await runner.ExecuteSteps(steps.ToList());
-
-            if (!runner.Failed)
-            {
-                EventManager.Instance.OnInstalledPackagesChanged();
-                notificationService.Show(
-                    "Package Install Complete",
-                    $"{viewModel.InstallName} installed successfully",
-                    NotificationType.Success
-                );
-            }
-        }
+        NavigateToSubPage(typeof(PackageInstallBrowserViewModel));
     }
 
     private async Task CheckPackagesForUpdates()
@@ -195,7 +162,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
     private IEnumerable<UnknownInstalledPackage> IndexUnknownPackages()
     {
-        var packageDir = new DirectoryPath(settingsManager.LibraryDir).JoinDir("Packages");
+        var packageDir = settingsManager.LibraryDir.JoinDir("Packages");
 
         if (!packageDir.Exists)
         {
@@ -204,11 +171,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
         var currentPackages = settingsManager.Settings.InstalledPackages.ToImmutableArray();
 
-        foreach (
-            var subDir in packageDir.Info
-                .EnumerateDirectories()
-                .Select(info => new DirectoryPath(info))
-        )
+        foreach (var subDir in packageDir.Info.EnumerateDirectories().Select(info => new DirectoryPath(info)))
         {
             var expectedLibraryPath = $"Packages{Path.DirectorySeparatorChar}{subDir.Name}";
 
@@ -225,6 +188,19 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
             yield return UnknownInstalledPackage.FromDirectoryName(subDir.Name);
         }
+    }
+
+    [RelayCommand]
+    private void NavigateToSubPage(Type viewModelType)
+    {
+        Dispatcher.UIThread.Post(
+            () =>
+                packageNavigationService.NavigateTo(
+                    viewModelType,
+                    BetterSlideNavigationTransition.PageSlideFromRight
+                ),
+            DispatcherPriority.Send
+        );
     }
 
     private void OnInstalledPackagesChanged(object? sender, EventArgs e) =>

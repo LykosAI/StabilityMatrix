@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Attributes;
 using CivitAiBrowserViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.CivitAiBrowserViewModel;
 

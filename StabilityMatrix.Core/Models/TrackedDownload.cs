@@ -71,42 +71,33 @@ public class TrackedDownload
     private int attempts;
 
     #region Events
-    private WeakEventManager<ProgressReport>? progressUpdateEventManager;
+    public event EventHandler<ProgressReport>? ProgressUpdate;
 
-    public event EventHandler<ProgressReport> ProgressUpdate
-    {
-        add
-        {
-            progressUpdateEventManager ??= new WeakEventManager<ProgressReport>();
-            progressUpdateEventManager.AddEventHandler(value);
-        }
-        remove => progressUpdateEventManager?.RemoveEventHandler(value);
-    }
-
-    protected void OnProgressUpdate(ProgressReport e)
+    private void OnProgressUpdate(ProgressReport e)
     {
         // Update downloaded and total bytes
         DownloadedBytes = Convert.ToInt64(e.Current);
         TotalBytes = Convert.ToInt64(e.Total);
 
-        progressUpdateEventManager?.RaiseEvent(this, e, nameof(ProgressUpdate));
+        ProgressUpdate?.Invoke(this, e);
     }
 
-    private WeakEventManager<ProgressState>? progressStateChangedEventManager;
+    public event EventHandler<ProgressState>? ProgressStateChanging;
 
-    public event EventHandler<ProgressState> ProgressStateChanged
+    private void OnProgressStateChanging(ProgressState e)
     {
-        add
-        {
-            progressStateChangedEventManager ??= new WeakEventManager<ProgressState>();
-            progressStateChangedEventManager.AddEventHandler(value);
-        }
-        remove => progressStateChangedEventManager?.RemoveEventHandler(value);
+        Logger.Debug("Download {Download}: State changing to {State}", FileName, e);
+
+        ProgressStateChanging?.Invoke(this, e);
     }
 
-    protected void OnProgressStateChanged(ProgressState e)
+    public event EventHandler<ProgressState>? ProgressStateChanged;
+
+    private void OnProgressStateChanged(ProgressState e)
     {
-        progressStateChangedEventManager?.RaiseEvent(this, e, nameof(ProgressStateChanged));
+        Logger.Debug("Download {Download}: State changed to {State}", FileName, e);
+
+        ProgressStateChanged?.Invoke(this, e);
     }
     #endregion
 
@@ -134,9 +125,7 @@ public class TrackedDownload
         // If hash validation is enabled, validate the hash
         if (ValidateHash)
         {
-            OnProgressUpdate(
-                new ProgressReport(0, isIndeterminate: true, type: ProgressType.Hashing)
-            );
+            OnProgressUpdate(new ProgressReport(0, isIndeterminate: true, type: ProgressType.Hashing));
             var hash = await FileHash
                 .GetSha256Async(DownloadDirectory.JoinFile(TempFileName), progress)
                 .ConfigureAwait(false);
@@ -167,6 +156,7 @@ public class TrackedDownload
         downloadTask = StartDownloadTask(0, AggregateCancellationTokenSource.Token)
             .ContinueWith(OnDownloadTaskCompleted);
 
+        OnProgressStateChanging(ProgressState.Working);
         ProgressState = ProgressState.Working;
         OnProgressStateChanged(ProgressState);
     }
@@ -200,6 +190,7 @@ public class TrackedDownload
         downloadTask = StartDownloadTask(tempSize, AggregateCancellationTokenSource.Token)
             .ContinueWith(OnDownloadTaskCompleted);
 
+        OnProgressStateChanging(ProgressState.Working);
         ProgressState = ProgressState.Working;
         OnProgressStateChanged(ProgressState);
     }
@@ -244,6 +235,7 @@ public class TrackedDownload
         {
             DoCleanup();
 
+            OnProgressStateChanging(ProgressState.Cancelled);
             ProgressState = ProgressState.Cancelled;
             OnProgressStateChanged(ProgressState);
         }
@@ -287,11 +279,13 @@ public class TrackedDownload
             // If the task was cancelled, set the state to cancelled
             if (downloadCancellationTokenSource?.IsCancellationRequested == true)
             {
+                OnProgressStateChanging(ProgressState.Cancelled);
                 ProgressState = ProgressState.Cancelled;
             }
             // If the task was not cancelled, set the state to paused
             else if (downloadPauseTokenSource?.IsCancellationRequested == true)
             {
+                OnProgressStateChanging(ProgressState.Inactive);
                 ProgressState = ProgressState.Inactive;
             }
             else
@@ -307,10 +301,7 @@ public class TrackedDownload
             // Set the exception
             Exception = task.Exception;
 
-            if (
-                (Exception is IOException || Exception?.InnerException is IOException)
-                && attempts < 3
-            )
+            if ((Exception is IOException || Exception?.InnerException is IOException) && attempts < 3)
             {
                 attempts++;
                 Logger.Warn(
@@ -319,16 +310,20 @@ public class TrackedDownload
                     Exception,
                     attempts
                 );
+
+                OnProgressStateChanging(ProgressState.Inactive);
                 ProgressState = ProgressState.Inactive;
                 Resume();
                 return;
             }
 
+            OnProgressStateChanging(ProgressState.Failed);
             ProgressState = ProgressState.Failed;
         }
         // Otherwise success
         else
         {
+            OnProgressStateChanging(ProgressState.Success);
             ProgressState = ProgressState.Success;
         }
 

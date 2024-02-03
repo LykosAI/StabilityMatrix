@@ -1,0 +1,70 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Settings.NotificationSettingsPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models.Settings;assembly=StabilityMatrix.Core"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
+    d:DataContext="{x:Static mocks:DesignData.NotificationSettingsViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vmSettings:NotificationSettingsViewModel"
+    mc:Ignorable="d">
+
+    <controls:UserControlBase.Resources>
+        <DataTemplate x:Key="ItemTemplate" DataType="vmSettings:NotificationSettingsItem">
+            <controls:Card Padding="16">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Key.DisplayName}" />
+                    </StackPanel>
+
+                    <controls:BetterComboBox
+                        Grid.Column="1"
+                        MinWidth="100"
+                        ItemsSource="{x:Static vmSettings:NotificationSettingsItem.AvailableOptions}"
+                        SelectedItem="{Binding Option}">
+                        <controls:BetterComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="models:NotificationOption">
+                                <TextBlock>
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0} - {1}">
+                                            <Binding Converter="{x:Static converters:EnumAttributeConverters.DisplayName}" />
+                                            <Binding Converter="{x:Static converters:EnumAttributeConverters.DisplayDescription}" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </controls:BetterComboBox.ItemTemplate>
+                        <controls:BetterComboBox.SelectionBoxItemTemplate>
+                            <DataTemplate x:DataType="models:NotificationOption">
+                                <TextBlock Text="{Binding Converter={x:Static converters:EnumAttributeConverters.DisplayName}}" />
+                            </DataTemplate>
+                        </controls:BetterComboBox.SelectionBoxItemTemplate>
+                    </controls:BetterComboBox>
+                </Grid>
+
+            </controls:Card>
+        </DataTemplate>
+    </controls:UserControlBase.Resources>
+
+    <ScrollViewer Padding="16" VerticalScrollBarVisibility="Auto">
+        <ItemsControl 
+            ItemTemplate="{StaticResource ItemTemplate}" 
+            ItemsSource="{Binding Items}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Spacing="8" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+    </ScrollViewer>
+
+</controls:UserControlBase>

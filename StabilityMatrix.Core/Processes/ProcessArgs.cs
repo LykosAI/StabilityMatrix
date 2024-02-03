@@ -21,8 +21,7 @@ public partial class ProcessArgs : OneOfBase<string, string[]>, IEnumerable<stri
     /// Whether the argument string contains the given substring,
     /// or any of the given arguments if the input is an array.
     /// </summary>
-    public bool Contains(string arg) =>
-        Match(str => str.Contains(arg), arr => arr.Any(x => x.Contains(arg)));
+    public bool Contains(string arg) => Match(str => str.Contains(arg), arr => arr.Any(x => x.Contains(arg)));
 
     public ProcessArgs Concat(ProcessArgs other) =>
         Match(
@@ -55,10 +54,7 @@ public partial class ProcessArgs : OneOfBase<string, string[]>, IEnumerable<stri
     }
 
     public string[] ToArray() =>
-        Match(
-            str => ArgumentsRegex().Matches(str).Select(x => x.Value.Trim('"')).ToArray(),
-            arr => arr
-        );
+        Match(str => ArgumentsRegex().Matches(str).Select(x => x.Value.Trim('"')).ToArray(), arr => arr);
 
     // Implicit conversions
 

@@ -19,10 +19,7 @@ public interface INavigationService<[SuppressMessage("ReSharper", "UnusedTypePar
     /// <summary>
     /// Navigate to the view of the given view model type.
     /// </summary>
-    void NavigateTo<TViewModel>(
-        NavigationTransitionInfo? transitionInfo = null,
-        object? param = null
-    )
+    void NavigateTo<TViewModel>(NavigationTransitionInfo? transitionInfo = null, object? param = null)
         where TViewModel : ViewModelBase;
 
     /// <summary>
@@ -38,4 +35,6 @@ public interface INavigationService<[SuppressMessage("ReSharper", "UnusedTypePar
     /// Navigate to the view of the given view model.
     /// </summary>
     void NavigateTo(ViewModelBase viewModel, NavigationTransitionInfo? transitionInfo = null);
+
+    bool GoBack();
 }

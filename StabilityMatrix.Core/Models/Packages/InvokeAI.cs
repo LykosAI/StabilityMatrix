@@ -160,6 +160,14 @@ public class InvokeAI : BaseGitPackage
         return base.GetRecommendedTorchVersion();
     }
 
+    public override IEnumerable<PackagePrerequisite> Prerequisites =>
+        [
+            PackagePrerequisite.Python310,
+            PackagePrerequisite.VcRedist,
+            PackagePrerequisite.Git,
+            PackagePrerequisite.Node
+        ];
+
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
@@ -283,11 +291,15 @@ public class InvokeAI : BaseGitPackage
     )
     {
         await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
-        await PrerequisiteHelper.RunNpm(["i", "pnpm"], installLocation).ConfigureAwait(false);
+        await PrerequisiteHelper
+            .RunNpm(["i", "pnpm"], installLocation, envVars: envVars)
+            .ConfigureAwait(false);
 
         if (Compat.IsMacOS || Compat.IsLinux)
         {
-            await PrerequisiteHelper.RunNpm(["i", "vite"], installLocation).ConfigureAwait(false);
+            await PrerequisiteHelper
+                .RunNpm(["i", "vite"], installLocation, envVars: envVars)
+                .ConfigureAwait(false);
         }
 
         var pnpmPath = Path.Combine(

@@ -4,17 +4,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:fluentAvalonia="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
-    xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
-    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmBase="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
     xmlns:progress="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Progress"
-    MaxHeight="250"
+    MaxHeight="550"
     d:DataContext="{x:Static mocks:DesignData.ProgressManagerViewModel}"
-    d:DesignHeight="250"
+    d:DesignHeight="550"
     d:DesignWidth="300"
     x:DataType="progress:ProgressManagerViewModel"
     mc:Ignorable="d">
@@ -137,6 +134,8 @@
                                     <!--  non-indeterminate progress  -->
                                     <TextBlock
                                         Margin="0,0"
+                                        MaxWidth="250"
+                                        HorizontalAlignment="Left"
                                         IsVisible="{Binding !Progress.IsIndeterminate}">
                                         <Run Text="{Binding Progress.Text, Mode=OneWay}" />
                                         <Run Text="{Binding Progress.Value, Mode=OneWay}" /><Run Text="%" />
@@ -144,6 +143,8 @@
 
                                     <!--  indeterminate progress  -->
                                     <TextBlock
+                                        MaxWidth="250"
+                                        HorizontalAlignment="Left"
                                         Margin="0,4"
                                         IsVisible="{Binding Progress.IsIndeterminate}"
                                         Text="{Binding Progress.Text, Mode=OneWay}" />
@@ -182,6 +183,10 @@
 
                                 <StackPanel Grid.Row="0" Grid.Column="0">
                                     <TextBlock Margin="0,0" 
+                                               MaxWidth="250"
+                                               HorizontalAlignment="Left"
+                                               TextWrapping="NoWrap"
+                                               TextTrimming="CharacterEllipsis"
                                                Text="{Binding Progress.Text, Mode=OneWay}" />
                                     
                                     <!--  non-indeterminate progress  -->

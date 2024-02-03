@@ -107,9 +107,7 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
         // If upscale is enabled, add another upscale group
         if (IsUpscaleEnabled)
         {
-            var upscaleSize = builder.Connections.PrimarySize.WithScale(
-                UpscalerCardViewModel.Scale
-            );
+            var upscaleSize = builder.Connections.PrimarySize.WithScale(UpscalerCardViewModel.Scale);
 
             // Build group
             builder.Connections.Primary = builder
@@ -144,10 +142,7 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
     }
 
     /// <inheritdoc />
-    protected override async Task GenerateImageImpl(
-        GenerateOverrides overrides,
-        CancellationToken cancellationToken
-    )
+    protected override async Task GenerateImageImpl(GenerateOverrides overrides, CancellationToken cancellationToken)
     {
         if (!ClientManager.IsConnected)
         {
@@ -174,10 +169,7 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
             Client = ClientManager.Client,
             Nodes = buildPromptArgs.Builder.ToNodeDictionary(),
             OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
-            Parameters = new GenerationParameters
-            {
-                ModelName = UpscalerCardViewModel.SelectedUpscaler?.Name,
-            },
+            Parameters = new GenerationParameters { ModelName = UpscalerCardViewModel.SelectedUpscaler?.Name, },
             Project = InferenceProjectDocument.FromLoadable(this)
         };
 

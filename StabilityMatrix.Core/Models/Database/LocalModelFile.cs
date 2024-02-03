@@ -6,13 +6,13 @@ namespace StabilityMatrix.Core.Models.Database;
 /// <summary>
 /// Represents a locally indexed model file.
 /// </summary>
-public class LocalModelFile
+public record LocalModelFile
 {
     /// <summary>
     /// Relative path to the file from the root model directory.
     /// </summary>
     [BsonId]
-    public required string RelativePath { get; set; }
+    public required string RelativePath { get; init; }
 
     /// <summary>
     /// Type of the model file.
@@ -30,6 +30,21 @@ public class LocalModelFile
     public string? PreviewImageRelativePath { get; set; }
 
     /// <summary>
+    /// Optional preview image full path. Takes priority over <see cref="PreviewImageRelativePath"/>.
+    /// </summary>
+    public string? PreviewImageFullPath { get; set; }
+
+    /// <summary>
+    /// Whether or not an update is available for this model
+    /// </summary>
+    public bool HasUpdate { get; set; }
+
+    /// <summary>
+    /// Last time this model was checked for an update
+    /// </summary>
+    public DateTimeOffset LastUpdateCheck { get; set; }
+
+    /// <summary>
     /// File name of the relative path.
     /// </summary>
     [BsonIgnore]
@@ -45,7 +60,33 @@ public class LocalModelFile
     /// Relative file path from the shared folder type model directory.
     /// </summary>
     [BsonIgnore]
-    public string RelativePathFromSharedFolder => Path.GetRelativePath(SharedFolderType.GetStringValue(), RelativePath);
+    public string RelativePathFromSharedFolder =>
+        Path.GetRelativePath(SharedFolderType.GetStringValue(), RelativePath);
+
+    /// <summary>
+    /// Blake3 hash of the file.
+    /// </summary>
+    public string? HashBlake3 => ConnectedModelInfo?.Hashes.BLAKE3;
+
+    [BsonIgnore]
+    public string FullPathGlobal => GetFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+
+    [BsonIgnore]
+    public string? PreviewImageFullPathGlobal =>
+        PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+
+    [BsonIgnore]
+    public Uri? PreviewImageUriGlobal =>
+        PreviewImageFullPathGlobal == null ? null : new Uri(PreviewImageFullPathGlobal);
+
+    [BsonIgnore]
+    public string DisplayModelName => ConnectedModelInfo?.ModelName ?? FileNameWithoutExtension;
+
+    [BsonIgnore]
+    public string DisplayModelVersion => ConnectedModelInfo?.VersionName ?? string.Empty;
+
+    [BsonIgnore]
+    public string DisplayModelFileName => FileName;
 
     public string GetFullPath(string rootModelDirectory)
     {
@@ -54,16 +95,15 @@ public class LocalModelFile
 
     public string? GetPreviewImageFullPath(string rootModelDirectory)
     {
-        return PreviewImageRelativePath == null ? null : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
+        if (PreviewImageFullPath != null)
+            return PreviewImageFullPath;
+
+        return PreviewImageRelativePath == null
+            ? null
+            : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
 
-    [BsonIgnore]
-    public string FullPathGlobal => GetFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
-
-    [BsonIgnore]
-    public string? PreviewImageFullPathGlobal => GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
-
-    protected bool Equals(LocalModelFile other)
+    /*protected bool Equals(LocalModelFile other)
     {
         return RelativePath == other.RelativePath;
     }
@@ -84,7 +124,7 @@ public class LocalModelFile
     public override int GetHashCode()
     {
         return RelativePath.GetHashCode();
-    }
+    }*/
 
     public static readonly HashSet<string> SupportedCheckpointExtensions =
     [
@@ -94,6 +134,6 @@ public class LocalModelFile
         ".pth",
         ".bin"
     ];
-    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".gif"];
+    public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".webp"];
     public static readonly HashSet<string> SupportedMetadataExtensions = [".json"];
 }

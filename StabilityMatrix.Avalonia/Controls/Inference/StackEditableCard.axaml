@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
         xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
-        xmlns:fluentIcons="clr-namespace:FluentIcons.FluentAvalonia;assembly=FluentIcons.FluentAvalonia"
+        xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
         xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
         xmlns:modules="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference.Modules"
         xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"

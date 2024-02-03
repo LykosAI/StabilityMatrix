@@ -1,4 +1,5 @@
 ﻿<controls:UserControlBase
+    Focusable="True"
     x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ImageViewerDialog"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -10,6 +11,9 @@
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:gif="clr-namespace:Avalonia.Gif;assembly=Avalonia.Gif"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     HorizontalContentAlignment="Stretch"
     VerticalContentAlignment="Stretch"
     d:DataContext="{x:Static mocks:DesignData.ImageViewerViewModel}"
@@ -46,24 +50,55 @@
         HorizontalAlignment="Stretch"
         VerticalAlignment="Stretch"
         RowDefinitions="*,Auto">
+        <Grid.Resources>
+            <input:StandardUICommand 
+                x:Key="CopyImageCommand" 
+                Command="{Binding CopyImageCommand}"/>
+        </Grid.Resources>
 
-        <controls:AdvancedImageBox
-            Name="ImageBox"
-            Image="{Binding ImageSource.BitmapAsync^}" 
-            SizeMode="Fit">
-            <controls:AdvancedImageBox.ContextFlyout>
-                <ui:FAMenuFlyout>
-                    <ui:MenuFlyoutItem 
-                        x:Name="CopyMenuItem"
-                        IsEnabled="{OnPlatform Windows=True, Default=False}"
-                        Command="{Binding CopyImageCommand}"
-                        CommandParameter="{Binding #ImageBox.Image}"
-                        Text="Copy"
-                        HotKey="Ctrl+C"
-                        IconSource="Copy" />
-                </ui:FAMenuFlyout>
-            </controls:AdvancedImageBox.ContextFlyout>
-        </controls:AdvancedImageBox>
+        <!-- Tag is not used but sets TemplateKey which is used to select the DataTemplate later -->
+        <ContentPresenter Grid.Row="0"
+                          Tag="{Binding TemplateKeyAsync^}"
+                          DataContext="{Binding ImageSource}" 
+                          Content="{Binding }">
+            <ContentPresenter.ContentTemplate>
+                <controls:DataTemplateSelector x:TypeArguments="models:ImageSourceTemplateType">
+                    <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.WebpAnimation}" DataType="models:ImageSource">
+                        <gif:GifImage
+                            Stretch="Uniform"
+                            SourceUri="{Binding LocalFile.FullPath}"/>
+                    </DataTemplate>
+                    
+                    <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.Image}" DataType="models:ImageSource">
+                        <controls:AdvancedImageBox
+                            Name="ImageBox"
+                            CornerRadius="4"
+                            Image="{Binding BitmapAsync^}"
+                            SizeMode="Fit">
+                            <controls:AdvancedImageBox.ContextFlyout>
+                                <ui:FAMenuFlyout>
+                                    <ui:MenuFlyoutItem
+                                        x:Name="CopyMenuItem"
+                                        Command="{StaticResource CopyImageCommand}"
+                                        CommandParameter="{Binding $parent[controls:AdvancedImageBox].Image}"
+                                        HotKey="Ctrl+C"
+                                        IconSource="Copy"
+                                        IsEnabled="{OnPlatform Windows=True, Default=False}"
+                                        Text="Copy" />
+                                </ui:FAMenuFlyout>
+                            </controls:AdvancedImageBox.ContextFlyout>
+                        </controls:AdvancedImageBox>
+                    </DataTemplate>
+                    
+                    <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.Default}" DataType="models:ImageSource">
+                        <TextBlock 
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Text="Unsupported Format"/>
+                    </DataTemplate>
+                </controls:DataTemplateSelector>
+            </ContentPresenter.ContentTemplate>
+        </ContentPresenter>
 
         <!--  Info button  -->
         <Grid

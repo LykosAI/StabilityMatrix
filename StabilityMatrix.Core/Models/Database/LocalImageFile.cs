@@ -1,4 +1,6 @@
-﻿using DynamicData.Tests;
+﻿using System.Text.Json;
+using DynamicData.Tests;
+using MetadataExtractor.Formats.Exif;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using JsonSerializer = System.Text.Json.JsonSerializer;
@@ -48,19 +50,20 @@ public record LocalImageFile
     /// </summary>
     public string FileNameWithoutExtension => Path.GetFileNameWithoutExtension(AbsolutePath);
 
-    public (
-        string? Parameters,
-        string? ParametersJson,
-        string? SMProject,
-        string? ComfyNodes
-    ) ReadMetadata()
+    public (string? Parameters, string? ParametersJson, string? SMProject, string? ComfyNodes) ReadMetadata()
     {
-        using var stream = new FileStream(
-            AbsolutePath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read
-        );
+        if (AbsolutePath.EndsWith("webp"))
+        {
+            var paramsJson = ImageMetadata.ReadTextChunkFromWebp(
+                AbsolutePath,
+                ExifDirectoryBase.TagImageDescription
+            );
+            var smProj = ImageMetadata.ReadTextChunkFromWebp(AbsolutePath, ExifDirectoryBase.TagSoftware);
+
+            return (null, paramsJson, smProj, null);
+        }
+
+        using var stream = new FileStream(AbsolutePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         using var reader = new BinaryReader(stream);
 
         var parameters = ImageMetadata.ReadTextChunk(reader, "parameters");
@@ -79,8 +82,39 @@ public record LocalImageFile
     public static LocalImageFile FromPath(FilePath filePath)
     {
         // TODO: Support other types
-        const LocalImageFileType imageType =
-            LocalImageFileType.Inference | LocalImageFileType.TextToImage;
+        const LocalImageFileType imageType = LocalImageFileType.Inference | LocalImageFileType.TextToImage;
+
+        if (filePath.Extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
+        {
+            var paramsJson = ImageMetadata.ReadTextChunkFromWebp(
+                filePath,
+                ExifDirectoryBase.TagImageDescription
+            );
+
+            GenerationParameters? parameters = null;
+            try
+            {
+                parameters = string.IsNullOrWhiteSpace(paramsJson)
+                    ? null
+                    : JsonSerializer.Deserialize<GenerationParameters>(paramsJson);
+            }
+            catch (JsonException)
+            {
+                // just don't load params I guess, no logger here <_<
+            }
+
+            filePath.Info.Refresh();
+
+            return new LocalImageFile
+            {
+                AbsolutePath = filePath,
+                ImageType = imageType,
+                CreatedAt = filePath.Info.CreationTimeUtc,
+                LastModifiedAt = filePath.Info.LastWriteTimeUtc,
+                GenerationParameters = parameters,
+                ImageSize = new Size(parameters?.Width ?? 0, parameters?.Height ?? 0)
+            };
+        }
 
         // Get metadata
         using var stream = filePath.Info.OpenRead();
@@ -116,5 +150,11 @@ public record LocalImageFile
     }
 
     public static readonly HashSet<string> SupportedImageExtensions =
-        new() { ".png", ".jpg", ".jpeg", ".webp" };
+    [
+        ".png",
+        ".jpg",
+        ".jpeg",
+        ".gif",
+        ".webp"
+    ];
 }

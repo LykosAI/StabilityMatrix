@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Management;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +14,8 @@ using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
+using ExifLibrary;
+using MetadataExtractor.Formats.Exif;
 using NLog;
 using Refit;
 using SkiaSharp;
@@ -24,6 +27,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
+using StabilityMatrix.Core.Animation;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -33,7 +37,9 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
+using Notification = DesktopNotifications.Notification;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
@@ -42,7 +48,9 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 /// This includes a progress reporter, image output view model, and generation virtual methods.
 /// </summary>
 [SuppressMessage("ReSharper", "VirtualMemberNeverOverridden.Global")]
-public abstract partial class InferenceGenerationViewModelBase : InferenceTabViewModelBase, IImageGalleryComponent
+public abstract partial class InferenceGenerationViewModelBase
+    : InferenceTabViewModelBase,
+        IImageGalleryComponent
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -91,13 +99,22 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
         ImageGenerationEventArgs args,
         int batchNum = 0,
         int batchTotal = 0,
-        bool isGrid = false
+        bool isGrid = false,
+        string fileExtension = "png"
     )
     {
         var defaultOutputDir = settingsManager.ImagesInferenceDirectory;
         defaultOutputDir.Create();
 
-        return WriteOutputImageAsync(imageStream, defaultOutputDir, args, batchNum, batchTotal, isGrid);
+        return WriteOutputImageAsync(
+            imageStream,
+            defaultOutputDir,
+            args,
+            batchNum,
+            batchTotal,
+            isGrid,
+            fileExtension
+        );
     }
 
     /// <summary>
@@ -109,7 +126,8 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
         ImageGenerationEventArgs args,
         int batchNum = 0,
         int batchTotal = 0,
-        bool isGrid = false
+        bool isGrid = false,
+        string fileExtension = "png"
     )
     {
         var formatTemplateStr = settingsManager.Settings.InferenceOutputImageFileNameFormat;
@@ -128,7 +146,10 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
         )
         {
             // Fallback to default
-            Logger.Warn("Failed to parse format template: {FormatTemplate}, using default", formatTemplateStr);
+            Logger.Warn(
+                "Failed to parse format template: {FormatTemplate}, using default",
+                formatTemplateStr
+            );
 
             format = FileNameFormat.Parse(FileNameFormat.DefaultTemplate, formatProvider);
         }
@@ -144,7 +165,7 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
         }
 
         var fileName = format.GetFileName();
-        var file = outputDir.JoinFile($"{fileName}.png");
+        var file = outputDir.JoinFile($"{fileName}.{fileExtension}");
 
         // Until the file is free, keep adding _{i} to the end
         for (var i = 0; i < 100; i++)
@@ -152,14 +173,19 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
             if (!file.Exists)
                 break;
 
-            file = outputDir.JoinFile($"{fileName}_{i + 1}.png");
+            file = outputDir.JoinFile($"{fileName}_{i + 1}.{fileExtension}");
         }
 
         // If that fails, append an 7-char uuid
         if (file.Exists)
         {
             var uuid = Guid.NewGuid().ToString("N")[..7];
-            file = outputDir.JoinFile($"{fileName}_{uuid}.png");
+            file = outputDir.JoinFile($"{fileName}_{uuid}.{fileExtension}");
+        }
+
+        if (file.Info.DirectoryName != null)
+        {
+            Directory.CreateDirectory(file.Info.DirectoryName);
         }
 
         await using var fileStream = file.Info.OpenWrite();
@@ -271,17 +297,14 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
             Task.Run(
                     async () =>
                     {
-                        try
+                        var delayTime = 250 - (int)timer.ElapsedMilliseconds;
+                        if (delayTime > 0)
                         {
-                            var delayTime = 250 - (int)timer.ElapsedMilliseconds;
-                            if (delayTime > 0)
-                            {
-                                await Task.Delay(delayTime, cancellationToken);
-                            }
-                            // ReSharper disable once AccessToDisposedClosure
-                            AttachRunningNodeChangedHandler(promptTask);
+                            await Task.Delay(delayTime, cancellationToken);
                         }
-                        catch (TaskCanceledException) { }
+
+                        // ReSharper disable once AccessToDisposedClosure
+                        AttachRunningNodeChangedHandler(promptTask);
                     },
                     cancellationToken
                 )
@@ -305,10 +328,17 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
             // Get output images
             var imageOutputs = await client.GetImagesForExecutedPromptAsync(promptTask.Id, cancellationToken);
 
-            if (imageOutputs.Values.All(images => images is null or { Count: 0 }))
+            if (
+                !imageOutputs.TryGetValue(args.OutputNodeNames[0], out var images)
+                || images is not { Count: > 0 }
+            )
             {
                 // No images match
-                notificationService.Show("No output", "Did not receive any output images", NotificationType.Warning);
+                notificationService.Show(
+                    "No output",
+                    "Did not receive any output images",
+                    NotificationType.Warning
+                );
                 return;
             }
 
@@ -320,7 +350,19 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
                 ImageGalleryCardViewModel.ImageSources.Clear();
             }
 
-            await ProcessAllOutputImages(imageOutputs, args);
+            var outputImages = await ProcessOutputImages(images, args);
+
+            var notificationImage = outputImages.FirstOrDefault()?.LocalFile;
+
+            await notificationService.ShowAsync(
+                NotificationKey.Inference_PromptCompleted,
+                new Notification
+                {
+                    Title = "Prompt Completed",
+                    Body = $"Prompt [{promptTask.Id[..7].ToLower()}] completed successfully",
+                    BodyImagePath = notificationImage?.FullPath
+                }
+            );
         }
         finally
         {
@@ -338,30 +380,12 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
         }
     }
 
-    private async Task ProcessAllOutputImages(
-        IReadOnlyDictionary<string, List<ComfyImage>?> images,
-        ImageGenerationEventArgs args
-    )
-    {
-        foreach (var (nodeName, imageList) in images)
-        {
-            if (imageList is null)
-            {
-                Logger.Warn("No images for node {NodeName}", nodeName);
-                continue;
-            }
-
-            await ProcessOutputImages(imageList, args, nodeName.Replace('_', ' '));
-        }
-    }
-
     /// <summary>
     /// Handles image output metadata for generation runs
     /// </summary>
-    private async Task ProcessOutputImages(
+    private async Task<List<ImageSource>> ProcessOutputImages(
         IReadOnlyCollection<ComfyImage> images,
-        ImageGenerationEventArgs args,
-        string? imageLabel = null
+        ImageGenerationEventArgs args
     )
     {
         var client = args.Client;
@@ -405,14 +429,64 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
                 );
             }
 
-            var bytesWithMetadata = PngDataHelper.AddMetadata(imageArray, parameters, project);
+            if (comfyImage.FileName.EndsWith(".png"))
+            {
+                var bytesWithMetadata = PngDataHelper.AddMetadata(imageArray, parameters, project);
 
-            // Write using generated name
-            var filePath = await WriteOutputImageAsync(new MemoryStream(bytesWithMetadata), args, i + 1, images.Count);
+                // Write using generated name
+                var filePath = await WriteOutputImageAsync(
+                    new MemoryStream(bytesWithMetadata),
+                    args,
+                    i + 1,
+                    images.Count
+                );
 
-            outputImages.Add(new ImageSource(filePath) { Label = imageLabel });
+                outputImages.Add(new ImageSource(filePath));
+                EventManager.Instance.OnImageFileAdded(filePath);
+            }
+            else if (comfyImage.FileName.EndsWith(".webp"))
+            {
+                var opts = new JsonSerializerOptions
+                {
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                    Converters = { new JsonStringEnumConverter() }
+                };
+                var paramsJson = JsonSerializer.Serialize(parameters, opts);
+                var smProject = JsonSerializer.Serialize(project, opts);
+                var metadata = new Dictionary<ExifTag, string>
+                {
+                    { ExifTag.ImageDescription, paramsJson },
+                    { ExifTag.Software, smProject }
+                };
 
-            EventManager.Instance.OnImageFileAdded(filePath);
+                var bytesWithMetadata = ImageMetadata.AddMetadataToWebp(imageArray, metadata);
+
+                // Write using generated name
+                var filePath = await WriteOutputImageAsync(
+                    new MemoryStream(bytesWithMetadata.ToArray()),
+                    args,
+                    i + 1,
+                    images.Count,
+                    fileExtension: Path.GetExtension(comfyImage.FileName).Replace(".", "")
+                );
+
+                outputImages.Add(new ImageSource(filePath));
+                EventManager.Instance.OnImageFileAdded(filePath);
+            }
+            else
+            {
+                // Write using generated name
+                var filePath = await WriteOutputImageAsync(
+                    new MemoryStream(imageArray),
+                    args,
+                    i + 1,
+                    images.Count,
+                    fileExtension: Path.GetExtension(comfyImage.FileName).Replace(".", "")
+                );
+
+                outputImages.Add(new ImageSource(filePath));
+                EventManager.Instance.OnImageFileAdded(filePath);
+            }
         }
 
         // Download all images to make grid, if multiple
@@ -430,25 +504,27 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
             var gridBytesWithMetadata = PngDataHelper.AddMetadata(gridBytes, args.Parameters!, args.Project!);
 
             // Save to disk
-            var gridPath = await WriteOutputImageAsync(new MemoryStream(gridBytesWithMetadata), args, isGrid: true);
+            var gridPath = await WriteOutputImageAsync(
+                new MemoryStream(gridBytesWithMetadata),
+                args,
+                isGrid: true
+            );
 
             // Insert to start of images
-            var gridImage = new ImageSource(gridPath) { Label = imageLabel };
-
-            // Preload
-            await gridImage.GetBitmapAsync();
-            ImageGalleryCardViewModel.ImageSources.Add(gridImage);
-
+            var gridImage = new ImageSource(gridPath);
+            outputImages.Insert(0, gridImage);
             EventManager.Instance.OnImageFileAdded(gridPath);
         }
 
-        // Add rest of images
         foreach (var img in outputImages)
         {
             // Preload
             await img.GetBitmapAsync();
+            // Add images
             ImageGalleryCardViewModel.ImageSources.Add(img);
         }
+
+        return outputImages;
     }
 
     /// <summary>
@@ -465,7 +541,10 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
     /// <param name="options">Optional overrides (side buttons)</param>
     /// <param name="cancellationToken">Cancellation token</param>
     [RelayCommand(IncludeCancelCommand = true, FlowExceptionsToTaskScheduler = true)]
-    private async Task GenerateImage(GenerateFlags options = default, CancellationToken cancellationToken = default)
+    private async Task GenerateImage(
+        GenerateFlags options = default,
+        CancellationToken cancellationToken = default
+    )
     {
         var overrides = GenerateOverrides.FromFlags(options);
 
@@ -475,12 +554,7 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
         }
         catch (OperationCanceledException)
         {
-            Logger.Debug("Image Generation Canceled");
-        }
-        catch (ValidationException e)
-        {
-            Logger.Debug("Image Generation Validation Error: {Message}", e.Message);
-            notificationService.Show("Validation Error", e.Message, NotificationType.Error);
+            Logger.Debug($"Image Generation Canceled");
         }
     }
 
@@ -513,17 +587,15 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
     /// </summary>
     protected virtual void OnProgressUpdateReceived(object? sender, ComfyProgressUpdateEventArgs args)
     {
-        Dispatcher
-            .UIThread
-            .Post(() =>
-            {
-                OutputProgress.Value = args.Value;
-                OutputProgress.Maximum = args.Maximum;
-                OutputProgress.IsIndeterminate = false;
+        Dispatcher.UIThread.Post(() =>
+        {
+            OutputProgress.Value = args.Value;
+            OutputProgress.Maximum = args.Maximum;
+            OutputProgress.IsIndeterminate = false;
 
-                OutputProgress.Text =
-                    $"({args.Value} / {args.Maximum})" + (args.RunningNode != null ? $" {args.RunningNode}" : "");
-            });
+            OutputProgress.Text =
+                $"({args.Value} / {args.Maximum})" + (args.RunningNode != null ? $" {args.RunningNode}" : "");
+        });
     }
 
     private void AttachRunningNodeChangedHandler(ComfyTask comfyTask)
@@ -548,15 +620,13 @@ public abstract partial class InferenceGenerationViewModelBase : InferenceTabVie
             return;
         }
 
-        Dispatcher
-            .UIThread
-            .Post(() =>
-            {
-                OutputProgress.IsIndeterminate = true;
-                OutputProgress.Value = 100;
-                OutputProgress.Maximum = 100;
-                OutputProgress.Text = nodeName;
-            });
+        Dispatcher.UIThread.Post(() =>
+        {
+            OutputProgress.IsIndeterminate = true;
+            OutputProgress.Value = 100;
+            OutputProgress.Maximum = 100;
+            OutputProgress.Text = nodeName;
+        });
     }
 
     public class ImageGenerationEventArgs : EventArgs

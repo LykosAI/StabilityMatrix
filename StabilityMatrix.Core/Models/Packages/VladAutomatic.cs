@@ -204,7 +204,9 @@ public class VladAutomatic(
                 break;
             default:
                 // CPU
-                await venvRunner.CustomInstall("launch.py --debug --test", onConsoleOutput).ConfigureAwait(false);
+                await venvRunner
+                    .CustomInstall("launch.py --debug --test", onConsoleOutput)
+                    .ConfigureAwait(false);
                 break;
         }
 
@@ -304,17 +306,14 @@ public class VladAutomatic(
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        progress?.Report(
-            new ProgressReport(
-                -1f,
-                message: "Downloading package update...",
-                isIndeterminate: true,
-                type: ProgressType.Update
-            )
-        );
-
-        await PrerequisiteHelper
-            .RunGit(new[] { "checkout", versionOptions.BranchName! }, onConsoleOutput, installedPackage.FullPath)
+        var baseUpdateResult = await base.Update(
+            installedPackage,
+            torchVersion,
+            versionOptions,
+            progress,
+            includePrerelease,
+            onConsoleOutput
+        )
             .ConfigureAwait(false);
 
         var venvRunner = new PyVenvRunner(Path.Combine(installedPackage.FullPath!, "venv"));
@@ -325,14 +324,17 @@ public class VladAutomatic(
 
         try
         {
-            var output = await PrerequisiteHelper
-                .GetGitOutput(installedPackage.FullPath, "rev-parse", "HEAD")
+            var result = await PrerequisiteHelper
+                .GetGitOutput(["rev-parse", "HEAD"], installedPackage.FullPath)
+                .EnsureSuccessExitCode()
                 .ConfigureAwait(false);
 
             return new InstalledPackageVersion
             {
                 InstalledBranch = versionOptions.BranchName,
-                InstalledCommitSha = output.Replace(Environment.NewLine, "").Replace("\n", ""),
+                InstalledCommitSha = result
+                    .StandardOutput?.Replace(Environment.NewLine, "")
+                    .Replace("\n", ""),
                 IsPrerelease = false
             };
         }
@@ -343,18 +345,22 @@ public class VladAutomatic(
         finally
         {
             progress?.Report(
-                new ProgressReport(1f, message: "Update Complete", isIndeterminate: false, type: ProgressType.Update)
+                new ProgressReport(
+                    1f,
+                    message: "Update Complete",
+                    isIndeterminate: false,
+                    type: ProgressType.Update
+                )
             );
         }
 
-        return new InstalledPackageVersion
-        {
-            InstalledBranch = installedPackage.Version.InstalledBranch,
-            IsPrerelease = false
-        };
+        return baseUpdateResult;
     }
 
-    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod)
+    public override Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    )
     {
         switch (sharedFolderMethod)
         {
@@ -404,13 +410,19 @@ public class VladAutomatic(
         configRoot["clip_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "CLIP");
         configRoot["control_net_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ControlNet");
 
-        var configJsonStr = JsonSerializer.Serialize(configRoot, new JsonSerializerOptions { WriteIndented = true });
+        var configJsonStr = JsonSerializer.Serialize(
+            configRoot,
+            new JsonSerializerOptions { WriteIndented = true }
+        );
         File.WriteAllText(configJsonPath, configJsonStr);
 
         return Task.CompletedTask;
     }
 
-    public override Task UpdateModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) =>
+    public override Task UpdateModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    ) =>
         sharedFolderMethod switch
         {
             SharedFolderMethod.Symlink => base.UpdateModelFolders(installDirectory, sharedFolderMethod),
@@ -476,7 +488,10 @@ public class VladAutomatic(
         configRoot.Remove("clip_models_path");
         configRoot.Remove("control_net_models_path");
 
-        var configJsonStr = JsonSerializer.Serialize(configRoot, new JsonSerializerOptions { WriteIndented = true });
+        var configJsonStr = JsonSerializer.Serialize(
+            configRoot,
+            new JsonSerializerOptions { WriteIndented = true }
+        );
         File.WriteAllText(configJsonPath, configJsonStr);
 
         return Task.CompletedTask;

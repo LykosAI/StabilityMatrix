@@ -9,20 +9,19 @@ namespace StabilityMatrix.Core.Services;
 public interface ISettingsManager
 {
     bool IsPortableMode { get; }
-    string? LibraryDirOverride { set; }
-    string LibraryDir { get; }
+    DirectoryPath LibraryDir { get; }
     bool IsLibraryDirSet { get; }
-    string DatabasePath { get; }
+
     string ModelsDirectory { get; }
     string DownloadsDirectory { get; }
     DirectoryPath TagsDirectory { get; }
     DirectoryPath ImagesDirectory { get; }
     DirectoryPath ImagesInferenceDirectory { get; }
-
-    List<string> PackageInstallsInProgress { get; set; }
+    DirectoryPath ConsolidatedImagesDirectory { get; }
 
     Settings Settings { get; }
-    DirectoryPath ConsolidatedImagesDirectory { get; }
+
+    List<string> PackageInstallsInProgress { get; set; }
 
     /// <summary>
     /// Event fired when the library directory is changed
@@ -35,15 +34,20 @@ public interface ISettingsManager
     event EventHandler<RelayPropertyChangedEventArgs>? SettingsPropertyChanged;
 
     /// <summary>
+    /// Event fired when Settings are loaded from disk
+    /// </summary>
+    event EventHandler? Loaded;
+
+    /// <summary>
+    /// Set an override for the library directory.
+    /// </summary>
+    void SetLibraryDirOverride(DirectoryPath path);
+
+    /// <summary>
     /// Register a handler that fires once when LibraryDir is first set.
     /// Will fire instantly if it is already set.
     /// </summary>
     void RegisterOnLibraryDirSet(Action<string> handler);
-
-    /// <summary>
-    /// Event fired when Settings are loaded from disk
-    /// </summary>
-    event EventHandler? Loaded;
 
     /// <summary>
     /// Return a SettingsTransaction that can be used to modify Settings
@@ -56,6 +60,7 @@ public interface ISettingsManager
     /// Commits changes after the function returns.
     /// </summary>
     /// <param name="func">Function accepting Settings to modify</param>
+    /// <param name="ignoreMissingLibraryDir">Ignore missing library dir when committing changes</param>
     void Transaction(Action<Settings> func, bool ignoreMissingLibraryDir = false);
 
     /// <summary>
@@ -102,29 +107,7 @@ public interface ISettingsManager
     /// </summary>
     void SetPortableMode();
 
-    /// <summary>
-    /// Iterable of installed packages using the old absolute path format.
-    /// Can be called with Any() to check if the user needs to migrate.
-    /// </summary>
-    IEnumerable<InstalledPackage> GetOldInstalledPackages();
-
-    Guid GetOldActivePackageId();
-    void AddPathExtension(string pathExtension);
-    string GetPathExtensionsAsString();
-
-    /// <summary>
-    /// Insert path extensions to the front of the PATH environment variable
-    /// </summary>
-    void InsertPathExtensions();
-
-    void UpdatePackageVersionNumber(Guid id, InstalledPackageVersion? newVersion);
-    void SetLastUpdateCheck(InstalledPackage package);
-    List<LaunchOption> GetLaunchArgs(Guid packageId);
-    void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs);
-    string? GetActivePackageHost();
-    string? GetActivePackagePort();
-    void SetSharedFolderCategoryVisible(SharedFolderType type, bool visible);
-    bool IsSharedFolderCategoryVisible(SharedFolderType type);
+    void SaveLaunchArgs(Guid packageId, IEnumerable<LaunchOption> launchArgs);
     bool IsEulaAccepted();
     void SetEulaAccepted();
     void IndexCheckpoints();

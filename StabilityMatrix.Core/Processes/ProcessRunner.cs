@@ -30,6 +30,28 @@ public static class ProcessRunner
     }
 
     /// <summary>
+    /// Start an executable or .app on macOS.
+    /// </summary>
+    public static Process StartApp(string path, ProcessArgs args)
+    {
+        var startInfo = new ProcessStartInfo();
+
+        if (Compat.IsMacOS)
+        {
+            startInfo.FileName = "open";
+            startInfo.Arguments = args.Prepend(path).ToString();
+            startInfo.UseShellExecute = true;
+        }
+        else
+        {
+            startInfo.FileName = path;
+            startInfo.Arguments = args;
+        }
+
+        return Process.Start(startInfo) ?? throw new NullReferenceException("Process.Start returned null");
+    }
+
+    /// <summary>
     /// Opens the given folder in the system file explorer.
     /// </summary>
     public static async Task OpenFolderBrowser(string directoryPath)
@@ -92,7 +114,7 @@ public static class ProcessRunner
         else if (Compat.IsMacOS)
         {
             using var process = new Process();
-            process.StartInfo.FileName = "explorer";
+            process.StartInfo.FileName = "open";
             process.StartInfo.Arguments = $"-R {Quote(filePath)}";
             process.Start();
             await process.WaitForExitAsync().ConfigureAwait(false);
@@ -331,18 +353,13 @@ public static class ProcessRunner
     {
         // Quote arguments containing spaces
         var args = string.Join(" ", arguments.Where(s => !string.IsNullOrEmpty(s)).Select(Quote));
-        return StartAnsiProcess(
-            fileName,
-            args,
-            workingDirectory,
-            outputDataReceived,
-            environmentVariables
-        );
+        return StartAnsiProcess(fileName, args, workingDirectory, outputDataReceived, environmentVariables);
     }
 
     public static async Task<ProcessResult> RunBashCommand(
         string command,
-        string workingDirectory = ""
+        string workingDirectory = "",
+        IReadOnlyDictionary<string, string>? environmentVariables = null
     )
     {
         // Escape any single quotes in the command
@@ -358,6 +375,14 @@ public static class ProcessRunner
             RedirectStandardError = true,
             WorkingDirectory = workingDirectory,
         };
+
+        if (environmentVariables != null)
+        {
+            foreach (var (key, value) in environmentVariables)
+            {
+                processInfo.EnvironmentVariables[key] = value;
+            }
+        }
 
         using var process = new Process();
         process.StartInfo = processInfo;
@@ -383,12 +408,13 @@ public static class ProcessRunner
 
     public static Task<ProcessResult> RunBashCommand(
         IEnumerable<string> commands,
-        string workingDirectory = ""
+        string workingDirectory = "",
+        IReadOnlyDictionary<string, string>? environmentVariables = null
     )
     {
         // Quote arguments containing spaces
         var args = string.Join(" ", commands.Select(Quote));
-        return RunBashCommand(args, workingDirectory);
+        return RunBashCommand(args, workingDirectory, environmentVariables);
     }
 
     /// <summary>

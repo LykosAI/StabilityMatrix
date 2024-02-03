@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -28,40 +29,27 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.FluentAvalonia.SymbolIconSource;
+using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(NewCheckpointsPage))]
 [Singleton]
-public partial class NewCheckpointsPageViewModel : PageViewModelBase
+public partial class NewCheckpointsPageViewModel(
+    ILogger<NewCheckpointsPageViewModel> logger,
+    ISettingsManager settingsManager,
+    ILiteDbContext liteDbContext,
+    ICivitApi civitApi,
+    ServiceManager<ViewModelBase> dialogFactory,
+    INotificationService notificationService,
+    IDownloadService downloadService,
+    ModelFinder modelFinder,
+    IMetadataImportService metadataImportService
+) : PageViewModelBase
 {
-    private readonly ILogger<NewCheckpointsPageViewModel> logger;
-    private readonly ISettingsManager settingsManager;
-    private readonly ILiteDbContext liteDbContext;
-    private readonly ICivitApi civitApi;
-    private readonly ServiceManager<ViewModelBase> dialogFactory;
-    private readonly INotificationService notificationService;
     public override string Title => "Checkpoint Manager";
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Cellular5g, IsFilled = true };
-
-    public NewCheckpointsPageViewModel(
-        ILogger<NewCheckpointsPageViewModel> logger,
-        ISettingsManager settingsManager,
-        ILiteDbContext liteDbContext,
-        ICivitApi civitApi,
-        ServiceManager<ViewModelBase> dialogFactory,
-        INotificationService notificationService
-    )
-    {
-        this.logger = logger;
-        this.settingsManager = settingsManager;
-        this.liteDbContext = liteDbContext;
-        this.civitApi = civitApi;
-        this.dialogFactory = dialogFactory;
-        this.notificationService = notificationService;
-    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ConnectedCheckpoints))]
@@ -89,7 +77,61 @@ public partial class NewCheckpointsPageViewModel : PageViewModelBase
         if (Design.IsDesignMode)
             return;
 
-        var files = CheckpointFile.GetAllCheckpointFiles(settingsManager.ModelsDirectory);
+        var files = CheckpointFile.GetAllCheckpointFiles(settingsManager.ModelsDirectory).ToList();
+
+        var uniqueSubFolders = files
+            .Select(
+                x =>
+                    x.FilePath.Replace(settingsManager.ModelsDirectory, string.Empty)
+                        .Replace(x.FileName, string.Empty)
+                        .Trim(Path.DirectorySeparatorChar)
+            )
+            .Distinct()
+            .Where(x => x.Contains(Path.DirectorySeparatorChar))
+            .Where(x => Directory.Exists(Path.Combine(settingsManager.ModelsDirectory, x)))
+            .ToList();
+
+        var checkpointFolders = Enum.GetValues<SharedFolderType>()
+            .Where(x => Directory.Exists(Path.Combine(settingsManager.ModelsDirectory, x.ToString())))
+            .Select(
+                folderType =>
+                    new CheckpointFolder(
+                        settingsManager,
+                        downloadService,
+                        modelFinder,
+                        notificationService,
+                        metadataImportService
+                    )
+                    {
+                        Title = folderType.ToString(),
+                        DirectoryPath = Path.Combine(settingsManager.ModelsDirectory, folderType.ToString()),
+                        FolderType = folderType,
+                        IsExpanded = true,
+                    }
+            )
+            .ToList();
+
+        foreach (var folder in uniqueSubFolders)
+        {
+            var folderType = Enum.Parse<SharedFolderType>(folder.Split(Path.DirectorySeparatorChar)[0]);
+            var parentFolder = checkpointFolders.FirstOrDefault(x => x.FolderType == folderType);
+            var checkpointFolder = new CheckpointFolder(
+                settingsManager,
+                downloadService,
+                modelFinder,
+                notificationService,
+                metadataImportService
+            )
+            {
+                Title = folderType.ToString(),
+                DirectoryPath = Path.Combine(settingsManager.ModelsDirectory, folder),
+                FolderType = folderType,
+                ParentFolder = parentFolder,
+                IsExpanded = true,
+            };
+            parentFolder?.SubFolders.Add(checkpointFolder);
+        }
+
         AllCheckpoints = new ObservableCollection<CheckpointFile>(files);
 
         var connectedModelIds = ConnectedCheckpoints.Select(x => x.ConnectedModel.ModelId);
@@ -99,8 +141,8 @@ public partial class NewCheckpointsPageViewModel : PageViewModelBase
         };
 
         // See if query is cached
-        var cachedQuery = await liteDbContext.CivitModelQueryCache
-            .IncludeAll()
+        var cachedQuery = await liteDbContext
+            .CivitModelQueryCache.IncludeAll()
             .FindByIdAsync(ObjectHash.GetMd5Guid(modelRequest));
 
         // If cached, update model cards

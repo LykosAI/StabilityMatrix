@@ -7,9 +7,9 @@ using System.Threading.Tasks.Dataflow;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
+using NLog;
 using Nito.AsyncEx;
 using Nito.AsyncEx.Synchronous;
-using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Processes;
 

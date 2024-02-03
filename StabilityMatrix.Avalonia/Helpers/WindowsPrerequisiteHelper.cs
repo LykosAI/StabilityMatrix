@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 using NLog;
 using Octokit;
+using PropertyModels.Extensions;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Helpers;
@@ -22,6 +27,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     private readonly IGitHubClient gitHubClient;
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
+    private readonly IPyRunner pyRunner;
 
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
     private const string TkinterDownloadUrl =
@@ -59,12 +65,14 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     public WindowsPrerequisiteHelper(
         IGitHubClient gitHubClient,
         IDownloadService downloadService,
-        ISettingsManager settingsManager
+        ISettingsManager settingsManager,
+        IPyRunner pyRunner
     )
     {
         this.gitHubClient = gitHubClient;
         this.downloadService = downloadService;
         this.settingsManager = settingsManager;
+        this.pyRunner = pyRunner;
     }
 
     public async Task RunGit(
@@ -99,34 +107,65 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         result.EnsureSuccessExitCode();
     }
 
-    public async Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)
+    public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
     {
-        var process = await ProcessRunner.GetProcessOutputAsync(
+        return ProcessRunner.GetProcessResultAsync(
             GitExePath,
-            string.Join(" ", args),
+            args,
             workingDirectory: workingDirectory,
             environmentVariables: new Dictionary<string, string>
             {
                 { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) }
             }
         );
-
-        return process;
     }
 
     public async Task RunNpm(
         ProcessArgs args,
         string? workingDirectory = null,
-        Action<ProcessOutput>? onProcessOutput = null
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null
     )
     {
         var result = await ProcessRunner
-            .GetProcessResultAsync(NodeExistsPath, args, workingDirectory)
+            .GetProcessResultAsync(NodeExistsPath, args, workingDirectory, envVars)
             .ConfigureAwait(false);
 
         result.EnsureSuccessExitCode();
         onProcessOutput?.Invoke(ProcessOutput.FromStdOutLine(result.StandardOutput));
         onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
+    }
+
+    public Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null) =>
+        InstallPackageRequirements(package.Prerequisites.ToList(), progress);
+
+    public async Task InstallPackageRequirements(
+        List<PackagePrerequisite> prerequisites,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        await UnpackResourcesIfNecessary(progress);
+
+        if (prerequisites.Contains(PackagePrerequisite.Python310))
+        {
+            await InstallPythonIfNecessary(progress);
+            await InstallVirtualenvIfNecessary(progress);
+        }
+
+        if (prerequisites.Contains(PackagePrerequisite.Git))
+        {
+            await InstallGitIfNecessary(progress);
+        }
+
+        if (prerequisites.Contains(PackagePrerequisite.VcRedist))
+        {
+            await InstallVcRedistIfNecessary(progress);
+        }
+
+        if (prerequisites.Contains(PackagePrerequisite.Node))
+        {
+            await InstallNodeIfNecessary(progress);
+        }
     }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -141,15 +180,9 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         // Array of (asset_uri, extract_to)
-        var assets = new[]
-        {
-            (Assets.SevenZipExecutable, AssetsDir),
-            (Assets.SevenZipLicense, AssetsDir),
-        };
+        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir), };
 
-        progress?.Report(
-            new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true));
 
         Directory.CreateDirectory(AssetsDir);
         foreach (var (asset, extractDir) in assets)
@@ -157,9 +190,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
             await asset.ExtractToDir(extractDir);
         }
 
-        progress?.Report(
-            new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false)
-        );
+        progress?.Report(new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false));
     }
 
     public async Task InstallPythonIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -275,17 +306,35 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         }
     }
 
+    private async Task InstallVirtualenvIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        // python stuff
+        if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
+        {
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Python prerequisites...", isIndeterminate: true)
+            );
+
+            await pyRunner.Initialize().ConfigureAwait(false);
+
+            if (!PyRunner.PipInstalled)
+            {
+                await pyRunner.SetupPip().ConfigureAwait(false);
+            }
+            if (!PyRunner.VenvInstalled)
+            {
+                await pyRunner.InstallPackage("virtualenv").ConfigureAwait(false);
+            }
+        }
+    }
+
     [SupportedOSPlatform("windows")]
     public async Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         if (!Directory.Exists(TkinterExistsPath))
         {
             Logger.Info("Downloading Tkinter");
-            await downloadService.DownloadToFileAsync(
-                TkinterDownloadUrl,
-                TkinterZipPath,
-                progress: progress
-            );
+            await downloadService.DownloadToFileAsync(TkinterDownloadUrl, TkinterZipPath, progress: progress);
             progress?.Report(
                 new ProgressReport(
                     progress: 1f,
@@ -300,11 +349,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         }
 
         progress?.Report(
-            new ProgressReport(
-                progress: 1f,
-                message: "Tkinter install complete",
-                type: ProgressType.Generic
-            )
+            new ProgressReport(progress: 1f, message: "Tkinter install complete", type: ProgressType.Generic)
         );
     }
 
@@ -338,10 +383,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
     public async Task InstallVcRedistIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         var registry = Registry.LocalMachine;
-        var key = registry.OpenSubKey(
-            @"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64",
-            false
-        );
+        var key = registry.OpenSubKey(@"SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\X64", false);
         if (key != null)
         {
             var buildId = Convert.ToUInt32(key.GetValue("Bld"));
@@ -375,10 +417,7 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
                 message: "Installing prerequisites..."
             )
         );
-        var process = ProcessRunner.StartAnsiProcess(
-            VcRedistDownloadPath,
-            "/install /quiet /norestart"
-        );
+        var process = ProcessRunner.StartAnsiProcess(VcRedistDownloadPath, "/install /quiet /norestart");
         await process.WaitForExitAsync();
         progress?.Report(
             new ProgressReport(

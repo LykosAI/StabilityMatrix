@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AsyncImageLoader;
 using Avalonia.Media.Imaging;
 using Blake3;
+using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Webp;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Avalonia.Models;
 
-public record ImageSource : IDisposable
+public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
 {
     private Hash? contentHashBlake3;
 
@@ -54,6 +57,80 @@ public record ImageSource : IDisposable
     {
         Bitmap = bitmap;
     }
+
+    /// <inheritdoc />
+    public ImageSourceTemplateType TemplateKey { get; private set; }
+
+    private async Task<bool> TryRefreshTemplateKeyAsync()
+    {
+        if ((LocalFile?.Extension ?? Path.GetExtension(RemoteUrl?.ToString())) is not { } extension)
+        {
+            return false;
+        }
+
+        if (extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
+        {
+            if (LocalFile is not null && LocalFile.Exists)
+            {
+                await using var stream = LocalFile.Info.OpenRead();
+                using var reader = new WebpReader(stream);
+
+                try
+                {
+                    TemplateKey = reader.GetIsAnimatedFlag()
+                        ? ImageSourceTemplateType.WebpAnimation
+                        : ImageSourceTemplateType.Image;
+                }
+                catch (InvalidDataException)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            if (RemoteUrl is not null)
+            {
+                var httpClientFactory = App.Services.GetRequiredService<IHttpClientFactory>();
+                using var client = httpClientFactory.CreateClient();
+
+                try
+                {
+                    await using var stream = await client.GetStreamAsync(RemoteUrl);
+                    using var reader = new WebpReader(stream);
+
+                    TemplateKey = reader.GetIsAnimatedFlag()
+                        ? ImageSourceTemplateType.WebpAnimation
+                        : ImageSourceTemplateType.Image;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        TemplateKey = ImageSourceTemplateType.Image;
+
+        return true;
+    }
+
+    public async Task<ImageSourceTemplateType> GetOrRefreshTemplateKeyAsync()
+    {
+        if (TemplateKey is ImageSourceTemplateType.Default)
+        {
+            await TryRefreshTemplateKeyAsync();
+        }
+
+        return TemplateKey;
+    }
+
+    [JsonIgnore]
+    public Task<ImageSourceTemplateType> TemplateKeyAsync => GetOrRefreshTemplateKeyAsync();
 
     [JsonIgnore]
     public Task<Bitmap?> BitmapAsync => GetBitmapAsync();

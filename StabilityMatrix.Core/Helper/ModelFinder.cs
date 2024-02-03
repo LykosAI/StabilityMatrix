@@ -56,9 +56,13 @@ public class ModelFinder
             // VersionResponse is not actually the full data of ModelVersion, so find it again
             var version = model.ModelVersions!.First(version => version.Id == versionResponse.Id);
 
-            var file = versionResponse
-                .Files
-                .First(file => hashBlake3.Equals(file.Hashes.BLAKE3, StringComparison.OrdinalIgnoreCase));
+            var file = versionResponse.Files.FirstOrDefault(
+                file => hashBlake3.Equals(file.Hashes.BLAKE3, StringComparison.OrdinalIgnoreCase)
+            );
+
+            // Archived models do not have files
+            if (file == null)
+                return null;
 
             return new ModelSearchResult(model, version, file);
         }
@@ -79,7 +83,12 @@ public class ModelFinder
             }
             else
             {
-                Logger.Warn(e, "Could not find remote model version using hash {Hash}: {Error}", hashBlake3, e.Message);
+                Logger.Warn(
+                    e,
+                    "Could not find remote model version using hash {Hash}: {Error}",
+                    hashBlake3,
+                    e.Message
+                );
             }
 
             return null;
@@ -94,5 +103,36 @@ public class ModelFinder
             );
             return null;
         }
+    }
+
+    public async Task<IEnumerable<CivitModel>> FindRemoteModelsById(IEnumerable<int> ids)
+    {
+        var results = new List<CivitModel>();
+
+        // split ids into batches of 20
+        var batches = ids.Select((id, index) => (id, index))
+            .GroupBy(tuple => tuple.index / 20)
+            .Select(group => group.Select(tuple => tuple.id));
+
+        foreach (var batch in batches)
+        {
+            try
+            {
+                var response = await civitApi
+                    .GetModels(new CivitModelsRequest { CommaSeparatedModelIds = string.Join(",", batch) })
+                    .ConfigureAwait(false);
+
+                if (response.Items == null || response.Items.Count == 0)
+                    continue;
+
+                results.AddRange(response.Items);
+            }
+            catch (Exception e)
+            {
+                Logger.Error("Error while finding remote models by id: {Error}", e.Message);
+            }
+        }
+
+        return results;
     }
 }

@@ -22,6 +22,7 @@ using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -42,6 +43,8 @@ public partial class CheckpointFolder : ViewModelBase
     public SourceCache<CheckpointFolder, string> SubFoldersCache { get; } = new(x => x.DirectoryPath);
 
     private readonly SourceCache<CheckpointFile, string> checkpointFilesCache = new(x => x.FilePath);
+
+    public readonly SourceCache<string, string> BaseModelOptionsCache = new(x => x);
 
     // ReSharper disable once FieldCanBeMadeReadOnly.Local
     private bool useCategoryVisibility;
@@ -105,6 +108,9 @@ public partial class CheckpointFolder : ViewModelBase
     public IObservableCollection<CheckpointFile> DisplayedCheckpointFiles { get; set; } =
         new ObservableCollectionExtended<CheckpointFile>();
 
+    public IObservableCollection<string> BaseModelOptions { get; } =
+        new ObservableCollectionExtended<string>();
+
     public CheckpointFolder(
         ISettingsManager settingsManager,
         IDownloadService downloadService,
@@ -131,15 +137,12 @@ public partial class CheckpointFolder : ViewModelBase
                         .Subscribe(_ => checkpointFilesCache.Remove(file))
             )
             .Bind(CheckpointFiles)
+            .Filter(ContainsSearchFilter)
+            .Filter(BaseModelFilter)
             .Sort(
                 SortExpressionComparer<CheckpointFile>
                     .Descending(f => f.IsConnectedModel)
                     .ThenByAscending(f => f.IsConnectedModel ? f.ConnectedModel!.ModelName : f.FileName)
-            )
-            .Filter(
-                f =>
-                    f.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
-                    || f.Title.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
             )
             .Bind(DisplayedCheckpointFiles)
             .Subscribe();
@@ -157,8 +160,59 @@ public partial class CheckpointFolder : ViewModelBase
             .Bind(SubFolders)
             .Subscribe();
 
+        BaseModelOptionsCache
+            .Connect()
+            .DeferUntilLoaded()
+            .Bind(BaseModelOptions)
+            .Subscribe(_ =>
+            {
+                foreach (var subFolder in SubFolders)
+                {
+                    subFolder.BaseModelOptionsCache.EditDiff(BaseModelOptions);
+                }
+
+                checkpointFilesCache.Refresh();
+                SubFoldersCache.Refresh();
+            });
+
+        BaseModelOptionsCache.AddOrUpdate(
+            Enum.GetValues<CivitBaseModelType>()
+                .Where(x => x != CivitBaseModelType.All)
+                .Select(x => x.GetStringValue())
+        );
+
         CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
         // DisplayedCheckpointFiles = CheckpointFiles;
+    }
+
+    private bool BaseModelFilter(CheckpointFile file)
+    {
+        return file.IsConnectedModel
+            ? BaseModelOptions.Contains(file.ConnectedModel!.BaseModel)
+            : BaseModelOptions.Contains("Other");
+    }
+
+    private bool ContainsSearchFilter(CheckpointFile file)
+    {
+        ArgumentNullException.ThrowIfNull(file);
+
+        if (string.IsNullOrWhiteSpace(SearchFilter))
+        {
+            return true;
+        }
+
+        // Check files in the current folder
+        return file.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+            || file.Title.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+            || file.ConnectedModel?.ModelName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+                == true
+            || file.ConnectedModel?.Tags.Any(
+                t => t.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+            ) == true
+            || file.ConnectedModel?.TrainedWordsString.Contains(
+                SearchFilter,
+                StringComparison.OrdinalIgnoreCase
+            ) == true;
     }
 
     /// <summary>
@@ -174,7 +228,7 @@ public partial class CheckpointFolder : ViewModelBase
         var result = Enum.TryParse(Title, out SharedFolderType type);
         FolderType = result ? type : new SharedFolderType();
 
-        IsCategoryEnabled = settingsManager.IsSharedFolderCategoryVisible(FolderType);
+        IsCategoryEnabled = settingsManager.Settings.SharedFolderVisibleCategories.HasFlag(FolderType);
     }
 
     partial void OnSearchFilterChanged(string value)
@@ -194,10 +248,16 @@ public partial class CheckpointFolder : ViewModelBase
     {
         if (!useCategoryVisibility)
             return;
-        if (value != settingsManager.IsSharedFolderCategoryVisible(FolderType))
+
+        if (value == settingsManager.Settings.SharedFolderVisibleCategories.HasFlag(FolderType))
+            return;
+
+        settingsManager.Transaction(settings =>
         {
-            settingsManager.SetSharedFolderCategoryVisible(FolderType, value);
-        }
+            settings.SharedFolderVisibleCategories = value
+                ? settings.SharedFolderVisibleCategories | FolderType
+                : settings.SharedFolderVisibleCategories & ~FolderType;
+        });
     }
 
     private void OnCheckpointFilesChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -393,7 +453,9 @@ public partial class CheckpointFolder : ViewModelBase
                 Progress.Value = report.Percentage;
                 // For multiple files, add count
                 Progress.Text =
-                    copyPaths.Count > 1 ? $"Importing {report.Title} ({report.Message})" : $"Importing {report.Title}";
+                    copyPaths.Count > 1
+                        ? $"Importing {report.Title} ({report.Message})"
+                        : $"Importing {report.Title}";
             });
 
             await FileTransfers.CopyFiles(copyPaths, progress);
@@ -603,15 +665,11 @@ public partial class CheckpointFolder : ViewModelBase
         SubFoldersCache.EditDiff(updatedFolders, (a, b) => a.Title == b.Title);
 
         // Index files
-        Dispatcher
-            .UIThread
-            .Post(
-                () =>
-                {
-                    var files = GetCheckpointFiles();
-                    checkpointFilesCache.EditDiff(files, CheckpointFile.FilePathComparer);
-                },
-                DispatcherPriority.Background
-            );
+        var files = GetCheckpointFiles();
+
+        Dispatcher.UIThread.Post(
+            () => checkpointFilesCache.EditDiff(files, CheckpointFile.FilePathComparer),
+            DispatcherPriority.Background
+        );
     }
 }

@@ -5,6 +5,171 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.8.0
+### Added
+- Added Image to Video project type
+- Added CLIP Skip setting to inference, toggleable from the model settings button
+- Added image and model details in model selection boxes
+- Added new package: [OneTrainer](https://github.com/Nerogar/OneTrainer)
+- Added native desktop push notifications for some events (i.e. Downloads, Package installs, Inference generation)
+  - Currently available on Windows and Linux, macOS support is pending
+- Added Package Extensions (Plugins) management - accessible from the Packages' 3-dot menu. Currently supports ComfyUI and Automatic1111.
+- Added new launch argument options for Fooocus
+- Added "Config" Shared Model Folder option for Fooocus
+- Added Recommended Models dialog after one-click installer
+- Added "Copy Details" button to Unexpected Error dialog
+- Added German language option, thanks to Mario da Graca for the translation
+- Added Portuguese language options, thanks to nextosai for the translation
+- Added base model filter to Checkpoints page
+- Added "Compatible Images" category when selecting images for Inference projects
+- Added "Find in Model Browser" option to the right-click menu on the Checkpoints page
+- Added `--use-directml` launch argument for SDWebUI DirectML fork
+- Added release builds for macOS (Apple Silicon)
+- Added ComfyUI launch argument configs: Cross Attention Method, Force Floating Point Precision, VAE Precision
+- Added Delete button to the CivitAI Model Browser details dialog
+- Added "Copy Link to Clipboard" for connected models in the Checkpoints page
+- Added support for webp files to the Output Browser
+- Added "Send to Image to Image" and "Send to Image to Video" options to the context menu
+### Changed
+- New package installation flow
+- Changed one-click installer to match the new package installation style
+- Automatic1111 packages will now use PyTorch v2.1.2. Upgrade will occur during the next package update or upon fresh installation.
+- Search box on Checkpoints page now searches tags and trigger words
+- Changed the Close button on the package install dialog to "Hide"
+  - Functionality remains the same, just a name change
+- Updated translations for the following languages:
+  - Spanish
+  - French
+  - Japanese
+  - Turkish
+- Inference file name patterns with directory separator characters will now have the subdirectories created automatically
+- Changed how settings file is written to disk to reduce potential data loss risk
+- (Internal) Updated to Avalonia 11.0.7
+### Fixed
+- Fixed error when ControlNet module image paths are not found, even if the module is disabled
+- Fixed error when finding metadata for archived models
+- Fixed error when extensions folder is missing
+- Fixed crash when model was not selected in Inference
+- Fixed Fooocus Config shared folder mode overwriting unknown config keys
+- Fixed potential SD.Next update issues by moving to shared update process
+- Fixed crash on startup when Outputs page failed to load categories properly
+- Fixed image gallery arrow key navigation requiring clicking before responding
+- Fixed crash when loading extensions list with no internet connection
+- Fixed crash when invalid launch arguments are passed
+- Fixed missing up/downgrade buttons on the Python Packages dialog when the version was not semver compatible
+
+
+## v2.8.0-pre.5
+### Fixed
+- Fixed error when ControlNet module image paths are not found, even if the module is disabled
+- Fixed error when finding metadata for archived models
+- Fixed error when extensions folder is missing
+- Fixed error when webp files have incorrect metadata
+- Fixed crash when model was not selected in Inference
+- Fixed Fooocus Config shared folder mode overwriting unknown config keys
+
+## v2.8.0-pre.4
+### Added
+- Added Recommended Models dialog after one-click installer
+- Added native desktop push notifications for some events (i.e. Downloads, Package installs, Inference generation)
+  - Currently available on Windows and Linux, macOS support is pending
+- Added settings options for notifications
+- Added new launch argument options for Fooocus
+- Added Automatic1111 & Stable Diffusion WebUI-UX to the compatible macOS packages
+### Changed
+- Changed one-click installer to match the new package installation style
+- Automatic1111 packages will now use PyTorch v2.1.2. Upgrade will occur during the next package update or upon fresh installation.
+- Updated French translation with the latest changes
+### Fixed
+- Fixed [#413](https://github.com/LykosAI/StabilityMatrix/issues/413) - Environment Variables are editable again
+- Fixed potential SD.Next update issues by moving to shared update process
+- Fixed Invoke install trying to use system nodejs
+- Fixed crash on startup when Outputs page failed to load categories properly
+
+## v2.8.0-pre.3
+### Added
+- Added "Config" Shared Model Folder option for Fooocus
+- Added "Copy Details" button to Unexpected Error dialog
+### Changed
+- (Internal) Updated to Avalonia 11.0.7
+- Changed the Close button on the package install dialog to "Hide" 
+  - Functionality remains the same, just a name change
+- Updated French translation (thanks Greg!)
+### Fixed
+- Webp static images can now be shown alongside existing webp animation support
+- Fixed image gallery arrow key navigation requiring clicking before responding
+- Fixed crash when loading extensions list with no internet connection
+- Fixed crash when invalid launch arguments are passed
+- Fixed "must give at least one requirement to install" error when installing extensions with empty requirements.txt
+
+## v2.8.0-pre.2
+### Added
+- Added German language option, thanks to Mario da Graca for the translation
+- Added Portuguese language options, thanks to nextosai for the translation
+### Changed
+- Updated translations for the following languages:
+  - Spanish
+  - French
+  - Japanese
+  - Turkish
+### Fixed
+- Fixed Auto-update failing to start new version on Windows and Linux when path contains spaces
+- Fixed InvokeAI v3.6.0 `"detail": "Not Found"` error when opening the UI
+- Install button will now be properly disabled when the duplicate warning is shown
+
+## v2.8.0-pre.1
+### Added
+- Added Package Extensions (Plugins) management - accessible from the Packages' 3-dot menu. Currently supports ComfyUI and A1111.
+- Added base model filter to Checkpoints page
+- Search box on Checkpoints page now searches tags and trigger words
+- Added "Compatible Images" category when selecting images for Inference projects
+- Added "Find in Model Browser" option to the right-click menu on the Checkpoints page
+### Changed
+- Removed "Failed to load image" notification when loading some images on the Checkpoints page
+- Installed models will no longer be selectable on the Hugging Face tab of the model browser
+### Fixed
+- Inference file name patterns with directory separator characters will now have the subdirectories created automatically
+- Fixed missing up/downgrade buttons on the Python Packages dialog when the version was not semver compatible
+- Automatic1111 package installs will now install the missing `jsonmerge` package
+
+## v2.8.0-dev.4
+### Added
+- Auto-update support for macOS
+- New package installation flow
+- Added `--use-directml` launch argument for SDWebUI DirectML fork
+### Changed
+- Changed default Period to "AllTime" in the Model Browser
+### Fixed
+- Fixed SDTurboScheduler's missing denoise parameter
+
+## v2.8.0-dev.3
+### Added
+- Added release builds for macOS (Apple Silicon)
+- Added new package: [OneTrainer](https://github.com/Nerogar/OneTrainer)
+- Added ComfyUI launch argument configs: Cross Attention Method, Force Floating Point Precision, VAE Precision
+- Added Delete button to the CivitAI Model Browser details dialog
+- Added "Copy Link to Clipboard" for connected models in the Checkpoints page
+### Changed
+- Python Packages install dialog now allows entering multiple arguments or option flags
+### Fixed
+- Fixed environment variables grid not being editable related to [Avalonia #13843](https://github.com/AvaloniaUI/Avalonia/issues/13843)
+
+## v2.8.0-dev.2
+### Added
+#### Inference
+- Added Image to Video project type
+#### Output Browser
+- Added support for webp files
+- Added "Send to Image to Image" and "Send to Image to Video" options to the context menu
+### Changed
+- Changed how settings file is written to disk to reduce potential data loss risk
+
+## v2.8.0-dev.1
+### Added
+#### Inference
+- Added image and model details in model selection boxes
+- Added CLIP Skip setting, toggleable from the model settings button
+
 ## v2.7.9
 ### Fixed
 - Fixed InvokeAI v3.6.0 `"detail": "Not Found"` error when opening the UI

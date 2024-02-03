@@ -6,6 +6,7 @@
                         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                         xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                         xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+                        xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
                         d:DataContext="{x:Static mocks:DesignData.ExceptionViewModel}"
                         x:DataType="dialogs:ExceptionViewModel"
                         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
@@ -73,16 +74,38 @@
                     </ScrollViewer>
                 </Expander>
             </DockPanel>
-            <!--  Close Button  -->
-            <Button
-                Name="ExitButton"
-                IsDefault="True"
-                Content="{x:Static lang:Resources.Action_ExitApplication}"
-                Click="ExitButton_OnClick"
-                Grid.Row="2"
-                HorizontalAlignment="Right"
+            
+            <StackPanel
+                Spacing="12"
+                Orientation="Horizontal"
                 Margin="16"
-                Padding="8" />
+                HorizontalAlignment="Right"
+                Grid.Row="2">
+                <!--  Copy Button  -->
+                <Button
+                    Name="CopyButton"
+                    Click="CopyButton_OnClick"
+                    Padding="12,8">
+                    <StackPanel Spacing="6" Orientation="Horizontal">
+                        <fluentIcons:SymbolIcon 
+                            FontSize="15"
+                            Symbol="Copy" 
+                            Margin="0,1,0,0"
+                            VerticalAlignment="Center"/>
+                        <TextBlock 
+                            Text="{x:Static lang:Resources.Action_CopyDetails}"/>
+                    </StackPanel>
+                </Button>
+
+                <!--  Close Button  -->
+                <Button
+                    Name="ExitButton"
+                    IsDefault="True"
+                    Content="{x:Static lang:Resources.Action_ExitApplication}"
+                    Click="ExitButton_OnClick"
+                    Padding="12,8" />
+            </StackPanel>
+
         </Grid>
     </Grid>
     

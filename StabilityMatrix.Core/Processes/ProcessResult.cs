@@ -22,3 +22,13 @@ public readonly record struct ProcessResult
         }
     }
 }
+
+public static class ProcessResultTaskExtensions
+{
+    public static async Task<ProcessResult> EnsureSuccessExitCode(this Task<ProcessResult> task)
+    {
+        var result = await task.ConfigureAwait(false);
+        result.EnsureSuccessExitCode();
+        return result;
+    }
+}

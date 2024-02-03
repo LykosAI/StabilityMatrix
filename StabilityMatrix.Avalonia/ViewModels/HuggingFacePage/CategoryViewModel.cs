@@ -15,7 +15,8 @@ public partial class CategoryViewModel : ViewModelBase
     private IObservableCollection<HuggingfaceItemViewModel> items =
         new ObservableCollectionExtended<HuggingfaceItemViewModel>();
 
-    public SourceCache<HuggingfaceItem, string> ItemsCache { get; } = new(i => i.RepositoryPath + i.ModelName);
+    public SourceCache<HuggingfaceItem, string> ItemsCache { get; } =
+        new(i => i.RepositoryPath + i.ModelName);
 
     [ObservableProperty]
     private string? title;
@@ -26,12 +27,12 @@ public partial class CategoryViewModel : ViewModelBase
     [ObservableProperty]
     private int numSelected;
 
-    public CategoryViewModel(IEnumerable<HuggingfaceItem> items)
+    public CategoryViewModel(IEnumerable<HuggingfaceItem> items, string modelsDir)
     {
         ItemsCache
             .Connect()
             .DeferUntilLoaded()
-            .Transform(i => new HuggingfaceItemViewModel { Item = i })
+            .Transform(i => new HuggingfaceItemViewModel { Item = i, ModelsDir = modelsDir })
             .Bind(Items)
             .WhenPropertyChanged(p => p.IsSelected)
             .Subscribe(_ => NumSelected = Items.Count(i => i.IsSelected));
@@ -46,6 +47,9 @@ public partial class CategoryViewModel : ViewModelBase
 
         foreach (var item in Items)
         {
+            if (item.Exists)
+                continue;
+
             item.IsSelected = value;
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
@@ -10,7 +11,9 @@ using NLog;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -61,6 +64,55 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         return isGitInstalled == true;
     }
 
+    public Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null) =>
+        InstallPackageRequirements(package.Prerequisites.ToList(), progress);
+
+    public async Task InstallPackageRequirements(
+        List<PackagePrerequisite> prerequisites,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        await UnpackResourcesIfNecessary(progress);
+
+        if (prerequisites.Contains(PackagePrerequisite.Python310))
+        {
+            await InstallPythonIfNecessary(progress);
+            await InstallVirtualenvIfNecessary(progress);
+        }
+
+        if (prerequisites.Contains(PackagePrerequisite.Git))
+        {
+            await InstallGitIfNecessary(progress);
+        }
+
+        if (prerequisites.Contains(PackagePrerequisite.Node))
+        {
+            await InstallNodeIfNecessary(progress);
+        }
+    }
+
+    private async Task InstallVirtualenvIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        // python stuff
+        if (!PyRunner.PipInstalled || !PyRunner.VenvInstalled)
+        {
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Python prerequisites...", isIndeterminate: true)
+            );
+
+            await pyRunner.Initialize().ConfigureAwait(false);
+
+            if (!PyRunner.PipInstalled)
+            {
+                await pyRunner.SetupPip().ConfigureAwait(false);
+            }
+            if (!PyRunner.VenvInstalled)
+            {
+                await pyRunner.InstallPackage("virtualenv").ConfigureAwait(false);
+            }
+        }
+    }
+
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         await UnpackResourcesIfNecessary(progress);
@@ -70,15 +122,9 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         // Array of (asset_uri, extract_to)
-        var assets = new[]
-        {
-            (Assets.SevenZipExecutable, AssetsDir),
-            (Assets.SevenZipLicense, AssetsDir),
-        };
+        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir), };
 
-        progress?.Report(
-            new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true)
-        );
+        progress?.Report(new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true));
 
         Directory.CreateDirectory(AssetsDir);
         foreach (var (asset, extractDir) in assets)
@@ -86,9 +132,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
             await asset.ExtractToDir(extractDir);
         }
 
-        progress?.Report(
-            new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false)
-        );
+        progress?.Report(new ProgressReport(1, message: "Unpacking resources", isIndeterminate: false));
     }
 
     public async Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -150,8 +194,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         if (result.ExitCode != 0)
         {
             Logger.Error(
-                "Git command [{Command}] failed with exit code "
-                    + "{ExitCode}:\n{StdOut}\n{StdErr}",
+                "Git command [{Command}] failed with exit code " + "{ExitCode}:\n{StdOut}\n{StdErr}",
                 command,
                 result.ExitCode,
                 result.StandardOutput,
@@ -239,9 +282,9 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
         progress?.Report(new ProgressReport(1, "Installing Python", isIndeterminate: false));
     }
 
-    public Task<string> GetGitOutput(string? workingDirectory = null, params string[] args)
+    public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
     {
-        throw new NotImplementedException();
+        return ProcessRunner.RunBashCommand(args.Prepend("git").ToArray(), workingDirectory ?? "");
     }
 
     [SupportedOSPlatform("Linux")]
@@ -249,7 +292,8 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
     public async Task RunNpm(
         ProcessArgs args,
         string? workingDirectory = null,
-        Action<ProcessOutput>? onProcessOutput = null
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null
     )
     {
         var command = args.Prepend([NpmPath]);

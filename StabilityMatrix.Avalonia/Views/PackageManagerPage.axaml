@@ -17,12 +17,6 @@
                           x:Class="StabilityMatrix.Avalonia.Views.PackageManagerPage">
 
     <Grid Margin="16" RowDefinitions="Auto,*,Auto">
-        <!-- Title -->
-        <TextBlock Grid.Row="0" Text="{Binding Title}"
-                   Margin="0,0,0,16"
-                   FontSize="24" />
-
-        <!-- Cards -->
         <ScrollViewer Grid.Row="1">
             <ItemsRepeater
                 ItemsSource="{Binding PackageCards}">
@@ -72,6 +66,18 @@
                                                 </MenuItem.Icon>
                                             </MenuItem>
                                             <MenuItem
+                                                Header="{x:Static lang:Resources.Action_OpenGithub}"
+                                                IsVisible="{Binding !IsUnknownPackage}"
+                                                Command="{Binding OpenOnGitHubCommand}">
+                                                <MenuItem.Icon>
+                                                    <icons:Icon
+                                                        Value="fa-brands fa-github" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                            
+                                            <Separator/>
+                                            
+                                            <MenuItem
                                                 Header="{x:Static lang:Resources.Label_PythonPackages}"
                                                 IsVisible="{Binding !IsUnknownPackage}"
                                                 Command="{Binding OpenPythonPackagesDialogCommand}">
@@ -80,14 +86,13 @@
                                                         Value="fa-brands fa-python" />
                                                 </MenuItem.Icon>
                                             </MenuItem>
-                                            
                                             <MenuItem
-                                                Header="{x:Static lang:Resources.Action_OpenGithub}"
-                                                IsVisible="{Binding !IsUnknownPackage}"
-                                                Command="{Binding OpenOnGitHubCommand}">
+                                                Header="Extensions"
+                                                IsVisible="{Binding CanUseExtensions}"
+                                                Command="{Binding OpenExtensionsDialogCommand}">
                                                 <MenuItem.Icon>
                                                     <icons:Icon
-                                                        Value="fa-brands fa-github" />
+                                                        Value="fa-solid fa-puzzle-piece" />
                                                 </MenuItem.Icon>
                                             </MenuItem>
                                             

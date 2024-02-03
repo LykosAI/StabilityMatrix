@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using AsyncAwaitBestPractices;
 using NLog;
 using StabilityMatrix.Core.Attributes;
@@ -20,28 +20,25 @@ public class SettingsManager : ISettingsManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private static readonly ReaderWriterLockSlim FileLock = new();
-    private bool isLoaded;
-
     private static string GlobalSettingsPath => Path.Combine(Compat.AppDataHome, "global.json");
 
-    public string? LibraryDirOverride { private get; set; }
+    private bool isLoaded;
 
-    private readonly string? originalEnvPath = Environment.GetEnvironmentVariable(
-        "PATH",
-        EnvironmentVariableTarget.Process
-    );
+    private DirectoryPath? libraryDirOverride;
 
     // Library properties
     public bool IsPortableMode { get; private set; }
-    private string? libraryDir;
-    public string LibraryDir
+
+    private DirectoryPath? libraryDir;
+    public DirectoryPath LibraryDir
     {
         get
         {
-            if (string.IsNullOrWhiteSpace(libraryDir))
+            if (libraryDir is null)
             {
                 throw new InvalidOperationException("LibraryDir is not set");
             }
+
             return libraryDir;
         }
         private set
@@ -57,22 +54,22 @@ public class SettingsManager : ISettingsManager
             }
         }
     }
-    public bool IsLibraryDirSet => !string.IsNullOrWhiteSpace(libraryDir);
+
+    [MemberNotNullWhen(true, nameof(libraryDir))]
+    public bool IsLibraryDirSet => libraryDir is not null;
 
     // Dynamic paths from library
-    public string DatabasePath => Path.Combine(LibraryDir, "StabilityMatrix.db");
-    private string SettingsPath => Path.Combine(LibraryDir, "settings.json");
+    private FilePath SettingsFile => LibraryDir.JoinFile("settings.json");
     public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
     public string DownloadsDirectory => Path.Combine(LibraryDir, ".downloads");
-    public List<string> PackageInstallsInProgress { get; set; } = new();
-
-    public DirectoryPath TagsDirectory => new(LibraryDir, "Tags");
-
-    public DirectoryPath ImagesDirectory => new(LibraryDir, "Images");
+    public DirectoryPath TagsDirectory => LibraryDir.JoinDir("Tags");
+    public DirectoryPath ImagesDirectory => LibraryDir.JoinDir("Images");
     public DirectoryPath ImagesInferenceDirectory => ImagesDirectory.JoinDir("Inference");
     public DirectoryPath ConsolidatedImagesDirectory => ImagesDirectory.JoinDir("Consolidated");
 
     public Settings Settings { get; private set; } = new();
+
+    public List<string> PackageInstallsInProgress { get; set; } = [];
 
     /// <inheritdoc />
     public event EventHandler<string>? LibraryDirChanged;
@@ -82,6 +79,12 @@ public class SettingsManager : ISettingsManager
 
     /// <inheritdoc />
     public event EventHandler? Loaded;
+
+    /// <inheritdoc />
+    public void SetLibraryDirOverride(DirectoryPath path)
+    {
+        libraryDirOverride = path;
+    }
 
     /// <inheritdoc />
     public void RegisterOnLibraryDirSet(Action<string> handler)
@@ -270,11 +273,11 @@ public class SettingsManager : ISettingsManager
             return true;
 
         // 0. Check Override
-        if (!string.IsNullOrEmpty(LibraryDirOverride))
+        if (libraryDirOverride is not null)
         {
-            var fullOverridePath = Path.GetFullPath(LibraryDirOverride);
+            var fullOverridePath = libraryDirOverride.Info.FullName;
             Logger.Info("Using library override path: {Path}", fullOverridePath);
-            LibraryDir = fullOverridePath;
+            LibraryDir = libraryDirOverride;
             SetStaticLibraryPaths();
             LoadSettings();
             return true;
@@ -361,119 +364,7 @@ public class SettingsManager : ISettingsManager
         dataDir.JoinFile(".sm-portable").Create();
     }
 
-    /// <summary>
-    /// Iterable of installed packages using the old absolute path format.
-    /// Can be called with Any() to check if the user needs to migrate.
-    /// </summary>
-    public IEnumerable<InstalledPackage> GetOldInstalledPackages()
-    {
-        var oldSettingsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "StabilityMatrix",
-            "settings.json"
-        );
-
-        if (!File.Exists(oldSettingsPath))
-            yield break;
-
-        var oldSettingsJson = File.ReadAllText(oldSettingsPath);
-        var oldSettings = JsonSerializer.Deserialize<Settings>(
-            oldSettingsJson,
-            new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } }
-        );
-
-        // Absolute paths are old formats requiring migration
-#pragma warning disable CS0618
-        var oldPackages = oldSettings?.InstalledPackages.Where(package => package.Path != null);
-#pragma warning restore CS0618
-
-        if (oldPackages == null)
-            yield break;
-
-        foreach (var package in oldPackages)
-        {
-            yield return package;
-        }
-    }
-
-    public Guid GetOldActivePackageId()
-    {
-        var oldSettingsPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "StabilityMatrix",
-            "settings.json"
-        );
-
-        if (!File.Exists(oldSettingsPath))
-            return default;
-
-        var oldSettingsJson = File.ReadAllText(oldSettingsPath);
-        var oldSettings = JsonSerializer.Deserialize<Settings>(
-            oldSettingsJson,
-            new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } }
-        );
-
-        if (oldSettings == null)
-            return default;
-
-        return oldSettings.ActiveInstalledPackageId ?? default;
-    }
-
-    public void AddPathExtension(string pathExtension)
-    {
-        Settings.PathExtensions ??= new List<string>();
-        Settings.PathExtensions.Add(pathExtension);
-        SaveSettings();
-    }
-
-    public string GetPathExtensionsAsString()
-    {
-        return string.Join(";", Settings.PathExtensions ?? new List<string>());
-    }
-
-    /// <summary>
-    /// Insert path extensions to the front of the PATH environment variable
-    /// </summary>
-    public void InsertPathExtensions()
-    {
-        if (Settings.PathExtensions == null)
-            return;
-        var toInsert = GetPathExtensionsAsString();
-        // Append the original path, if any
-        if (originalEnvPath != null)
-        {
-            toInsert += $";{originalEnvPath}";
-        }
-        Environment.SetEnvironmentVariable("PATH", toInsert, EnvironmentVariableTarget.Process);
-    }
-
-    public void UpdatePackageVersionNumber(Guid id, InstalledPackageVersion? newVersion)
-    {
-        var package = Settings.InstalledPackages.FirstOrDefault(x => x.Id == id);
-        if (package == null || newVersion == null)
-        {
-            return;
-        }
-
-        package.Version = newVersion;
-        SaveSettings();
-    }
-
-    public void SetLastUpdateCheck(InstalledPackage package)
-    {
-        var installedPackage = Settings.InstalledPackages.First(p => p.DisplayName == package.DisplayName);
-        installedPackage.LastUpdateCheck = package.LastUpdateCheck;
-        installedPackage.UpdateAvailable = package.UpdateAvailable;
-        SaveSettings();
-    }
-
-    public List<LaunchOption> GetLaunchArgs(Guid packageId)
-    {
-        var packageData = Settings.InstalledPackages.FirstOrDefault(x => x.Id == packageId);
-        return packageData?.LaunchArgs ?? new();
-    }
-
-    public void SaveLaunchArgs(Guid packageId, List<LaunchOption> launchArgs)
+    public void SaveLaunchArgs(Guid packageId, IEnumerable<LaunchOption> launchArgs)
     {
         var packageData = Settings.InstalledPackages.FirstOrDefault(x => x.Id == packageId);
         if (packageData == null)
@@ -485,58 +376,6 @@ public class SettingsManager : ISettingsManager
 
         packageData.LaunchArgs = toSave;
         SaveSettings();
-    }
-
-    public string? GetActivePackageHost()
-    {
-        var package = Settings.InstalledPackages.FirstOrDefault(
-            x => x.Id == Settings.ActiveInstalledPackageId
-        );
-        if (package == null)
-            return null;
-        var hostOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "host");
-        if (hostOption?.OptionValue != null)
-        {
-            return hostOption.OptionValue as string;
-        }
-        return hostOption?.DefaultValue as string;
-    }
-
-    public string? GetActivePackagePort()
-    {
-        var package = Settings.InstalledPackages.FirstOrDefault(
-            x => x.Id == Settings.ActiveInstalledPackageId
-        );
-        if (package == null)
-            return null;
-        var portOption = package.LaunchArgs?.FirstOrDefault(x => x.Name.ToLowerInvariant() == "port");
-        if (portOption?.OptionValue != null)
-        {
-            return portOption.OptionValue as string;
-        }
-        return portOption?.DefaultValue as string;
-    }
-
-    public void SetSharedFolderCategoryVisible(SharedFolderType type, bool visible)
-    {
-        Settings.SharedFolderVisibleCategories ??= new SharedFolderType();
-        if (visible)
-        {
-            Settings.SharedFolderVisibleCategories |= type;
-        }
-        else
-        {
-            Settings.SharedFolderVisibleCategories &= ~type;
-        }
-        SaveSettings();
-    }
-
-    public bool IsSharedFolderCategoryVisible(SharedFolderType type)
-    {
-        // False for default
-        if (type == 0)
-            return false;
-        return Settings.SharedFolderVisibleCategories?.HasFlag(type) ?? false;
     }
 
     public bool IsEulaAccepted()
@@ -607,22 +446,23 @@ public class SettingsManager : ISettingsManager
         FileLock.EnterReadLock();
         try
         {
-            var settingsFile = new FilePath(SettingsPath);
-
-            if (!settingsFile.Exists)
+            if (!SettingsFile.Exists)
             {
-                settingsFile.Directory?.Create();
-                settingsFile.Create();
+                SettingsFile.Directory?.Create();
+                SettingsFile.Create();
 
-                var settingsJson = JsonSerializer.Serialize(Settings);
-                settingsFile.WriteAllText(settingsJson);
+                var settingsJson = JsonSerializer.Serialize(
+                    Settings,
+                    SettingsSerializerContext.Default.Settings
+                );
+                SettingsFile.WriteAllText(settingsJson);
 
                 Loaded?.Invoke(this, EventArgs.Empty);
                 isLoaded = true;
                 return;
             }
 
-            using var fileStream = settingsFile.Info.OpenRead();
+            using var fileStream = SettingsFile.Info.OpenRead();
 
             if (fileStream.Length == 0)
             {
@@ -653,18 +493,17 @@ public class SettingsManager : ISettingsManager
         FileLock.TryEnterWriteLock(TimeSpan.FromSeconds(30));
         try
         {
-            var settingsFile = new FilePath(SettingsPath);
-
-            if (!settingsFile.Exists)
-            {
-                settingsFile.Directory?.Create();
-                settingsFile.Create();
-            }
-
             if (!isLoaded)
                 return;
 
-            if (SystemInfo.GetDiskFreeSpaceBytes(SettingsPath) is < 1 * SystemInfo.Mebibyte)
+            // Create empty settings file if it doesn't exist
+            if (!SettingsFile.Exists)
+            {
+                SettingsFile.Directory?.Create();
+                SettingsFile.Create();
+            }
+
+            if (SystemInfo.GetDiskFreeSpaceBytes(SettingsFile) is < 1 * SystemInfo.Mebibyte)
             {
                 Logger.Warn("Not enough disk space to save settings");
                 return;
@@ -675,7 +514,20 @@ public class SettingsManager : ISettingsManager
                 SettingsSerializerContext.Default.Settings
             );
 
-            File.WriteAllBytes(SettingsPath, jsonBytes);
+            if (jsonBytes.Length == 0)
+            {
+                Logger.Error("JsonSerializer returned empty bytes for some reason");
+                return;
+            }
+
+            using var fs = File.Open(SettingsFile, FileMode.Open);
+            if (fs.CanWrite)
+            {
+                fs.Write(jsonBytes, 0, jsonBytes.Length);
+                fs.Flush();
+                fs.SetLength(jsonBytes.Length);
+            }
+            fs.Close();
         }
         finally
         {

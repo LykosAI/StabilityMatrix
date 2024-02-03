@@ -333,7 +333,7 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
 
         var downloadUrl = Compat.IsMacOS
             ? "https://nodejs.org/dist/v20.11.0/node-v20.11.0-darwin-arm64.tar.gz"
-            : "https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz";
+            : "https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.gz";
 
         var nodeDownloadPath = AssetsDir.JoinFile(Path.GetFileName(downloadUrl));
 

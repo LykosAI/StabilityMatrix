@@ -19,8 +19,10 @@ namespace StabilityMatrix.Core.Services;
 public class SettingsManager : ISettingsManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private static readonly ReaderWriterLockSlim FileLock = new();
+
     private static string GlobalSettingsPath => Path.Combine(Compat.AppDataHome, "global.json");
+
+    private readonly SemaphoreSlim fileLock = new(1, 1);
 
     private bool isLoaded;
 
@@ -113,7 +115,7 @@ public class SettingsManager : ISettingsManager
         {
             throw new InvalidOperationException("LibraryDir not set when BeginTransaction was called");
         }
-        return new SettingsTransaction(this, SaveSettingsAsync);
+        return new SettingsTransaction(this, () => SaveSettings(), () => SaveSettingsAsync());
     }
 
     /// <inheritdoc />
@@ -438,27 +440,17 @@ public class SettingsManager : ISettingsManager
     }
 
     /// <summary>
-    /// Loads settings from the settings file
-    /// If the settings file does not exist, it will be created with default values
+    /// Loads settings from the settings file. Continues without loading if the file does not exist or is empty.
+    /// Will set <see cref="isLoaded"/> to true when finished in any case.
     /// </summary>
-    protected virtual void LoadSettings()
+    protected virtual void LoadSettings(CancellationToken cancellationToken = default)
     {
-        FileLock.EnterReadLock();
+        fileLock.Wait(cancellationToken);
+
         try
         {
             if (!SettingsFile.Exists)
             {
-                SettingsFile.Directory?.Create();
-                SettingsFile.Create();
-
-                var settingsJson = JsonSerializer.Serialize(
-                    Settings,
-                    SettingsSerializerContext.Default.Settings
-                );
-                SettingsFile.WriteAllText(settingsJson);
-
-                Loaded?.Invoke(this, EventArgs.Empty);
-                isLoaded = true;
                 return;
             }
 
@@ -467,35 +459,83 @@ public class SettingsManager : ISettingsManager
             if (fileStream.Length == 0)
             {
                 Logger.Warn("Settings file is empty, using default settings");
-                isLoaded = true;
                 return;
             }
 
-            if (
-                JsonSerializer.Deserialize(fileStream, SettingsSerializerContext.Default.Settings) is
-                { } loadedSettings
-            )
+            var loadedSettings = JsonSerializer.Deserialize(
+                fileStream,
+                SettingsSerializerContext.Default.Settings
+            );
+
+            if (loadedSettings is not null)
             {
                 Settings = loadedSettings;
-                isLoaded = true;
+            }
+        }
+        finally
+        {
+            fileLock.Release();
+
+            isLoaded = true;
+
+            Loaded?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    /// <summary>
+    /// Loads settings from the settings file. Continues without loading if the file does not exist or is empty.
+    /// Will set <see cref="isLoaded"/> to true when finished in any case.
+    /// </summary>
+    protected virtual async Task LoadSettingsAsync(CancellationToken cancellationToken = default)
+    {
+        await fileLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            if (!SettingsFile.Exists)
+            {
+                return;
+            }
+
+            await using var fileStream = SettingsFile.Info.OpenRead();
+
+            if (fileStream.Length == 0)
+            {
+                Logger.Warn("Settings file is empty, using default settings");
+                return;
+            }
+
+            var loadedSettings = await JsonSerializer
+                .DeserializeAsync(fileStream, SettingsSerializerContext.Default.Settings, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (loadedSettings is not null)
+            {
+                Settings = loadedSettings;
             }
 
             Loaded?.Invoke(this, EventArgs.Empty);
         }
         finally
         {
-            FileLock.ExitReadLock();
+            fileLock.Release();
+
+            isLoaded = true;
+
+            Loaded?.Invoke(this, EventArgs.Empty);
         }
     }
 
-    protected virtual void SaveSettings()
+    protected virtual void SaveSettings(CancellationToken cancellationToken = default)
     {
-        FileLock.TryEnterWriteLock(TimeSpan.FromSeconds(30));
+        // Skip saving if not loaded yet
+        if (!isLoaded)
+            return;
+
+        fileLock.Wait(cancellationToken);
+
         try
         {
-            if (!isLoaded)
-                return;
-
             // Create empty settings file if it doesn't exist
             if (!SettingsFile.Exists)
             {
@@ -503,6 +543,7 @@ public class SettingsManager : ISettingsManager
                 SettingsFile.Create();
             }
 
+            // Check disk space
             if (SystemInfo.GetDiskFreeSpaceBytes(SettingsFile) is < 1 * SystemInfo.Mebibyte)
             {
                 Logger.Warn("Not enough disk space to save settings");
@@ -527,20 +568,63 @@ public class SettingsManager : ISettingsManager
                 fs.Flush();
                 fs.SetLength(jsonBytes.Length);
             }
-            fs.Close();
         }
         finally
         {
-            FileLock.ExitWriteLock();
+            fileLock.Release();
         }
     }
 
-    private Task SaveSettingsAsync()
+    protected virtual async Task SaveSettingsAsync(CancellationToken cancellationToken = default)
     {
-        return Task.Run(SaveSettings);
+        // Skip saving if not loaded yet
+        if (!isLoaded)
+            return;
+
+        await fileLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+        try
+        {
+            // Create empty settings file if it doesn't exist
+            if (!SettingsFile.Exists)
+            {
+                SettingsFile.Directory?.Create();
+                SettingsFile.Create();
+            }
+
+            // Check disk space
+            if (SystemInfo.GetDiskFreeSpaceBytes(SettingsFile) is < 1 * SystemInfo.Mebibyte)
+            {
+                Logger.Warn("Not enough disk space to save settings");
+                return;
+            }
+
+            var jsonBytes = JsonSerializer.SerializeToUtf8Bytes(
+                Settings,
+                SettingsSerializerContext.Default.Settings
+            );
+
+            if (jsonBytes.Length == 0)
+            {
+                Logger.Error("JsonSerializer returned empty bytes for some reason");
+                return;
+            }
+
+            await using var fs = File.Open(SettingsFile, FileMode.Open);
+            if (fs.CanWrite)
+            {
+                await fs.WriteAsync(jsonBytes, cancellationToken).ConfigureAwait(false);
+                await fs.FlushAsync(cancellationToken).ConfigureAwait(false);
+                fs.SetLength(jsonBytes.Length);
+            }
+        }
+        finally
+        {
+            fileLock.Release();
+        }
     }
 
-    private CancellationTokenSource? delayedSaveCts;
+    private volatile CancellationTokenSource? delayedSaveCts;
 
     private Task SaveSettingsDelayed(TimeSpan delay)
     {
@@ -561,7 +645,7 @@ public class SettingsManager : ISettingsManager
                 {
                     await Task.Delay(delay, cts.Token).ConfigureAwait(false);
 
-                    await SaveSettingsAsync().ConfigureAwait(false);
+                    await SaveSettingsAsync(cts.Token).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException) { }
                 finally

@@ -34,8 +34,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - New package installation flow
 - Changed one-click installer to match the new package installation style
 - Automatic1111 packages will now use PyTorch v2.1.2. Upgrade will occur during the next package update or upon fresh installation.
-- Updated French translation with the latest changes
-- (Internal) Updated to Avalonia 11.0.7
 - Search box on Checkpoints page now searches tags and trigger words
 - Changed the Close button on the package install dialog to "Hide"
   - Functionality remains the same, just a name change
@@ -46,6 +44,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - Turkish
 - Inference file name patterns with directory separator characters will now have the subdirectories created automatically
 - Changed how settings file is written to disk to reduce potential data loss risk
+- (Internal) Updated to Avalonia 11.0.7
 ### Fixed
 - Fixed error when ControlNet module image paths are not found, even if the module is disabled
 - Fixed error when finding metadata for archived models

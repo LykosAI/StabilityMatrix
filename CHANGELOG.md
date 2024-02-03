@@ -30,7 +30,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Copy Link to Clipboard" for connected models in the Checkpoints page
 - Added support for webp files to the Output Browser
 - Added "Send to Image to Image" and "Send to Image to Video" options to the context menu
-
 ### Changed
 - New package installation flow
 - Changed one-click installer to match the new package installation style

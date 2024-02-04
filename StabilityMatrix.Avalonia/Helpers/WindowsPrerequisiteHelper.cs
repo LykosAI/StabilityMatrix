@@ -21,15 +21,12 @@ namespace StabilityMatrix.Avalonia.Helpers;
 
 [SupportedOSPlatform("windows")]
 public class WindowsPrerequisiteHelper(
-    IGitHubClient gitHubClient,
     IDownloadService downloadService,
     ISettingsManager settingsManager,
     IPyRunner pyRunner
 ) : IPrerequisiteHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-    private readonly IGitHubClient gitHubClient = gitHubClient;
 
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
     private const string TkinterDownloadUrl =

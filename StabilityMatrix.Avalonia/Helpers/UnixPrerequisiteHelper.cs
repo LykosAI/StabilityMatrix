@@ -322,7 +322,7 @@ public class UnixPrerequisiteHelper(
     {
         var command = args.Prepend([NpmPath]);
 
-        var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "");
+        var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "", envVars);
         if (result.ExitCode != 0)
         {
             Logger.Error(
@@ -397,7 +397,7 @@ public class UnixPrerequisiteHelper(
 
         var downloadUrl = Compat.IsMacOS
             ? "https://nodejs.org/dist/v20.11.0/node-v20.11.0-darwin-arm64.tar.gz"
-            : "https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.xz";
+            : "https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.gz";
 
         var nodeDownloadPath = AssetsDir.JoinFile(Path.GetFileName(downloadUrl));
 

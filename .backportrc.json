@@ -1,9 +1,0 @@
-{
-  "repoOwner": "ionite34",
-  "repoName": "StabilityMatrix",
-  "branches": ["main"],
-  "targetBranchChoices": ["dev"],
-  "fork": false,
-  "targetPRLabels": ["backport"],
-  "prTitle": "[{{sourceBranch}} to {{targetBranch}}] backport: {{sourcePullRequest.title}} ({{sourcePullRequest.number}})"
-}

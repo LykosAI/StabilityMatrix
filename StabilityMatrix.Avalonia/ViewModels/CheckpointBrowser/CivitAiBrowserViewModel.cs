@@ -435,6 +435,12 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             modelRequest.BaseModel = null;
             modelRequest.Types = null;
             modelRequest.CommaSeparatedModelIds = SearchQuery[2..];
+
+            if (modelRequest.Sort is CivitSortMode.Favorites or CivitSortMode.Installed)
+            {
+                SortMode = CivitSortMode.HighestRated;
+                modelRequest.Sort = CivitSortMode.HighestRated;
+            }
         }
         else
         {

@@ -26,6 +26,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
@@ -454,9 +455,13 @@ public partial class PackageCardViewModel : ProgressViewModel
         try
         {
             var hasUpdate = await basePackage.CheckForUpdates(Package);
-            Package.UpdateAvailable = hasUpdate;
-            Package.LastUpdateCheck = DateTimeOffset.Now;
-            settingsManager.SetLastUpdateCheck(Package);
+
+            await using (settingsManager.BeginTransaction())
+            {
+                Package.UpdateAvailable = hasUpdate;
+                Package.LastUpdateCheck = DateTimeOffset.Now;
+            }
+
             return hasUpdate;
         }
         catch (Exception e)

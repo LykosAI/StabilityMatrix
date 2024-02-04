@@ -15,6 +15,9 @@ public partial class FilePath : FileSystemPath, IPathObject
     public FileInfo Info => _info ??= new FileInfo(FullPath);
 
     [JsonIgnore]
+    FileSystemInfo IPathObject.Info => Info;
+
+    [JsonIgnore]
     public bool IsSymbolicLink
     {
         get

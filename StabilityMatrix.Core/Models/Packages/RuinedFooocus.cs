@@ -27,6 +27,9 @@ public class RuinedFooocus(
     public override Uri PreviewImageUri =>
         new("https://raw.githubusercontent.com/runew0lf/pmmconfigs/main/RuinedFooocus_ss.png");
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
+    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
+        [SharedFolderMethod.Symlink, SharedFolderMethod.None];
+    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         new()

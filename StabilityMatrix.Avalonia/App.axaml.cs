@@ -297,7 +297,10 @@ public sealed class App : Application
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
 
-        settingsManager.LibraryDirOverride = Program.Args.DataDirectoryOverride;
+        if (Program.Args.DataDirectoryOverride is not null)
+        {
+            settingsManager.SetLibraryDirOverride(Program.Args.DataDirectoryOverride);
+        }
 
         if (settingsManager.TryFindLibrary())
         {
@@ -571,7 +574,7 @@ public sealed class App : Application
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://auth.lykos.ai");
-                c.Timeout = TimeSpan.FromSeconds(15);
+                c.Timeout = TimeSpan.FromSeconds(60);
             })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy)

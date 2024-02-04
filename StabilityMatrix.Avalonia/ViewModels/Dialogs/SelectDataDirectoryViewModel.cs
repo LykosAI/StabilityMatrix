@@ -66,8 +66,6 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
             FailToolTipText = InvalidDirectoryText
         };
 
-    public bool HasOldData => settingsManager.GetOldInstalledPackages().Any();
-
     public SelectDataDirectoryViewModel(ISettingsManager settingsManager)
     {
         this.settingsManager = settingsManager;

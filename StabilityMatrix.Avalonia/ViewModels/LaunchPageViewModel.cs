@@ -301,7 +301,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         );
 
         // Load user launch args from settings and convert to string
-        var userArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
+        var userArgs = activeInstall.LaunchArgs ?? [];
         var userArgsString = string.Join(" ", userArgs.Select(opt => opt.ToArgString()));
 
         // Join with extras, if any
@@ -343,7 +343,6 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             return;
         }
 
-        var definitions = package.LaunchOptions;
         // Check if package supports IArgParsable
         // Use dynamic parsed args over static
         /*if (package is IArgParsable parsable)
@@ -355,9 +354,10 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         }*/
 
         // Open a config page
-        var userLaunchArgs = settingsManager.GetLaunchArgs(activeInstall.Id);
         var viewModel = dialogFactory.Get<LaunchOptionsViewModel>();
-        viewModel.Cards = LaunchOptionCard.FromDefinitions(definitions, userLaunchArgs).ToImmutableArray();
+        viewModel.Cards = LaunchOptionCard
+            .FromDefinitions(package.LaunchOptions, activeInstall.LaunchArgs ?? [])
+            .ToImmutableArray();
 
         logger.LogDebug("Launching config dialog with cards: {CardsCount}", viewModel.Cards.Count);
 

@@ -7,6 +7,7 @@ using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FDS;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -40,11 +41,70 @@ public class StableSwarm(
         );
     public override string OutputFolderName => "Output";
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        [SharedFolderMethod.Configuration, SharedFolderMethod.None];
+        [SharedFolderMethod.Symlink, SharedFolderMethod.Configuration, SharedFolderMethod.None];
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
-    public override List<LaunchOptionDefinition> LaunchOptions => [LaunchOptionDefinition.Extras];
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
-    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
+
+    public override List<LaunchOptionDefinition> LaunchOptions =>
+        [
+            new LaunchOptionDefinition
+            {
+                Name = "Host",
+                Type = LaunchOptionType.String,
+                DefaultValue = "127.0.0.1",
+                Options = ["--host"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Port",
+                Type = LaunchOptionType.String,
+                DefaultValue = "7801",
+                Options = ["--port"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Ngrok Path",
+                Type = LaunchOptionType.String,
+                Options = ["--ngrok-path"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Ngrok Basic Auth",
+                Type = LaunchOptionType.String,
+                Options = ["--ngrok-basic-auth"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Cloudflared Path",
+                Type = LaunchOptionType.String,
+                Options = ["--cloudflared-path"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Proxy Region",
+                Type = LaunchOptionType.String,
+                Options = ["--proxy-region"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Launch Mode",
+                Type = LaunchOptionType.Bool,
+                Options = ["--launch-mode web", "--launch-mode webinstall"]
+            },
+            LaunchOptionDefinition.Extras
+        ];
+
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
+        new()
+        {
+            [SharedFolderType.StableDiffusion] = ["Models/Stable-Diffusion"],
+            [SharedFolderType.Lora] = ["Models/Lora"],
+            [SharedFolderType.VAE] = ["Models/VAE"],
+            [SharedFolderType.TextualInversion] = ["Models/Embeddings"],
+            [SharedFolderType.ControlNet] = ["Models/controlnet"],
+            [SharedFolderType.InvokeClipVision] = ["Models/clip_vision"]
+        };
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
+        new() { [SharedOutputType.Text2Img] = [OutputFolderName] };
     public override string MainBranch => "master";
     public override bool ShouldIgnoreReleases => true;
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
@@ -58,6 +118,12 @@ public class StableSwarm(
             PackagePrerequisite.VcRedist
         ];
 
+    private FilePath GetSettingsPath(string installLocation) =>
+        Path.Combine(installLocation, "Data", "Settings.fds");
+
+    private FilePath GetBackendsPath(string installLocation) =>
+        Path.Combine(installLocation, "Data", "Backends.fds");
+
     public override async Task InstallPackage(
         string installLocation,
         TorchVersion torchVersion,
@@ -68,6 +134,15 @@ public class StableSwarm(
     )
     {
         progress?.Report(new ProgressReport(-1f, "Installing StableSwarmUI...", isIndeterminate: true));
+
+        var comfy = settingsManager.Settings.InstalledPackages.FirstOrDefault(
+            x => x.PackageName == nameof(ComfyUI)
+        );
+
+        if (comfy == null)
+        {
+            throw new InvalidOperationException("ComfyUI must be installed to use StableSwarmUI");
+        }
 
         try
         {
@@ -107,10 +182,11 @@ public class StableSwarm(
             .ConfigureAwait(false);
 
         // set default settings
-        var settings = new StableSwarmSettings
+        var settings = new StableSwarmSettings { IsInstalled = true };
+
+        if (selectedSharedFolderMethod is SharedFolderMethod.Configuration)
         {
-            IsInstalled = true,
-            Paths = new StableSwarmSettings.PathsData
+            settings.Paths = new StableSwarmSettings.PathsData
             {
                 ModelRoot = settingsManager.ModelsDirectory,
                 SDModelFolder = Path.Combine(
@@ -134,25 +210,25 @@ public class StableSwarm(
                     settingsManager.ModelsDirectory,
                     SharedFolderType.InvokeClipVision.ToString()
                 )
-            }
-        };
-
-        settings.Save(true).SaveToFile(Path.Combine(installLocation, "Data", "Settings.fds"));
-
-        var backendsFile = new FDSSection();
-        var comfy = settingsManager.Settings.InstalledPackages.FirstOrDefault(
-            x => x.PackageName == nameof(ComfyUI)
-        );
-
-        if (comfy == null)
-        {
-            throw new InvalidOperationException("ComfyUI must be installed to use StableSwarmUI");
+            };
         }
 
+        settings.Save(true).SaveToFile(GetSettingsPath(installLocation));
+
+        var backendsFile = new FDSSection();
         var dataSection = new FDSSection();
         dataSection.Set("type", "comfyui_selfstart");
         dataSection.Set("title", "StabilityMatrix ComfyUI Self-Start");
         dataSection.Set("enabled", true);
+
+        var launchArgs = comfy.LaunchArgs ?? [];
+        var comfyArgs = string.Join(
+            ' ',
+            launchArgs
+                .Select(arg => arg.ToArgString()?.TrimEnd())
+                .Where(arg => !string.IsNullOrWhiteSpace(arg))
+        );
+
         dataSection.Set(
             "settings",
             new ComfyUiSelfStartSettings
@@ -160,12 +236,12 @@ public class StableSwarm(
                 StartScript = $"../{comfy.DisplayName}/main.py",
                 DisableInternalArgs = false,
                 AutoUpdate = false,
-                // TODO: ??? ExtraLaunchArguments = comfy.LaunchArgs.Select(x => x.???)
+                ExtraArgs = comfyArgs
             }.Save(true)
         );
 
         backendsFile.Set("0", dataSection);
-        backendsFile.SaveToFile(Path.Combine(installLocation, "Data", "Backends.fds"));
+        backendsFile.SaveToFile(GetBackendsPath(installLocation));
     }
 
     public override async Task RunPackage(
@@ -178,8 +254,7 @@ public class StableSwarm(
         var aspEnvVars = new Dictionary<string, string>
         {
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
-            ["ASPNETCORE_URLS"] = "http://*:7801",
-            ["DOTNET_ROOT(x86)"] = Path.Combine(settingsManager.LibraryDir, "Assets", "dotnet8")
+            ["ASPNETCORE_URLS"] = "http://*:7801"
         };
 
         void HandleConsoleOutput(ProcessOutput s)
@@ -200,7 +275,7 @@ public class StableSwarm(
 
         dotnetProcess = await prerequisiteHelper
             .RunDotnet(
-                ["src\\bin\\live_release\\StableSwarmUI.dll"],
+                args: $"src\\bin\\live_release\\StableSwarmUI.dll {arguments.TrimEnd()}",
                 workingDirectory: installedPackagePath,
                 envVars: aspEnvVars,
                 onProcessOutput: HandleConsoleOutput,
@@ -208,6 +283,29 @@ public class StableSwarm(
             )
             .ConfigureAwait(false);
     }
+
+    public override Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    ) =>
+        sharedFolderMethod switch
+        {
+            SharedFolderMethod.Symlink
+                => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
+            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory), // TODO
+            _ => Task.CompletedTask
+        };
+
+    public override Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    ) =>
+        sharedFolderMethod switch
+        {
+            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
+            SharedFolderMethod.Configuration => RemoveModelFoldersConfig(installDirectory),
+            _ => Task.CompletedTask
+        };
 
     public override async Task WaitForShutdown()
     {
@@ -228,5 +326,61 @@ public class StableSwarm(
 
         dotnetProcess = null;
         GC.SuppressFinalize(this);
+    }
+
+    private Task SetupModelFoldersConfig(DirectoryPath installDirectory)
+    {
+        var settingsPath = GetSettingsPath(installDirectory);
+        var existingSettings = new StableSwarmSettings();
+        var settingsExists = File.Exists(settingsPath);
+        if (settingsExists)
+        {
+            var section = FDSUtility.ReadFile(settingsPath);
+            existingSettings.Load(section);
+        }
+
+        existingSettings.Paths = new StableSwarmSettings.PathsData
+        {
+            ModelRoot = settingsManager.ModelsDirectory,
+            SDModelFolder = Path.Combine(
+                settingsManager.ModelsDirectory,
+                SharedFolderType.StableDiffusion.ToString()
+            ),
+            SDLoraFolder = Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.Lora.ToString()),
+            SDVAEFolder = Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.VAE.ToString()),
+            SDEmbeddingFolder = Path.Combine(
+                settingsManager.ModelsDirectory,
+                SharedFolderType.TextualInversion.ToString()
+            ),
+            SDControlNetsFolder = Path.Combine(
+                settingsManager.ModelsDirectory,
+                SharedFolderType.ControlNet.ToString()
+            ),
+            SDClipVisionFolder = Path.Combine(
+                settingsManager.ModelsDirectory,
+                SharedFolderType.InvokeClipVision.ToString()
+            )
+        };
+
+        existingSettings.Save(true).SaveToFile(settingsPath);
+
+        return Task.CompletedTask;
+    }
+
+    private Task RemoveModelFoldersConfig(DirectoryPath installDirectory)
+    {
+        var settingsPath = GetSettingsPath(installDirectory);
+        var existingSettings = new StableSwarmSettings();
+        var settingsExists = File.Exists(settingsPath);
+        if (settingsExists)
+        {
+            var section = FDSUtility.ReadFile(settingsPath);
+            existingSettings.Load(section);
+        }
+
+        existingSettings.Paths = new StableSwarmSettings.PathsData();
+        existingSettings.Save(true).SaveToFile(settingsPath);
+
+        return Task.CompletedTask;
     }
 }

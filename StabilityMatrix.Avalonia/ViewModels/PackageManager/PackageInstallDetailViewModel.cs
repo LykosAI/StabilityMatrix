@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -18,6 +19,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -38,7 +40,8 @@ public partial class PackageInstallDetailViewModel(
     ILogger<PackageInstallDetailViewModel> logger,
     IPyRunner pyRunner,
     IPrerequisiteHelper prerequisiteHelper,
-    INavigationService<NewPackageManagerViewModel> packageNavigationService
+    INavigationService<NewPackageManagerViewModel> packageNavigationService,
+    IPackageFactory packageFactory
 ) : PageViewModelBase
 {
     public BasePackage SelectedPackage { get; } = package;
@@ -124,6 +127,48 @@ public partial class PackageInstallDetailViewModel(
                 )
             );
             return;
+        }
+
+        if (SelectedPackage is StableSwarm)
+        {
+            var comfy = settingsManager.Settings.InstalledPackages.FirstOrDefault(
+                x => x.PackageName == nameof(ComfyUI)
+            );
+
+            if (comfy == null)
+            {
+                // show dialog to install comfy
+                var dialog = new BetterContentDialog
+                {
+                    Title = Resources.Label_ComfyRequiredTitle,
+                    Content = Resources.Label_ComfyRequiredDetail,
+                    PrimaryButtonText = Resources.Action_Yes,
+                    CloseButtonText = Resources.Label_No,
+                    DefaultButton = ContentDialogButton.Primary
+                };
+
+                var result = await dialog.ShowAsync();
+                if (result != ContentDialogResult.Primary)
+                    return;
+
+                packageNavigationService.GoBack();
+                var comfyPackage = packageFactory.FindPackageByName(nameof(ComfyUI));
+                if (comfyPackage is null)
+                    return;
+
+                var vm = new PackageInstallDetailViewModel(
+                    comfyPackage,
+                    settingsManager,
+                    notificationService,
+                    logger,
+                    pyRunner,
+                    prerequisiteHelper,
+                    packageNavigationService,
+                    packageFactory
+                );
+                packageNavigationService.NavigateTo(vm);
+                return;
+            }
         }
 
         InstallName = InstallName.Trim();

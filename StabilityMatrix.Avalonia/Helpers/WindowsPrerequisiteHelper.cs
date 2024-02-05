@@ -20,14 +20,13 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.Helpers;
 
 [SupportedOSPlatform("windows")]
-public class WindowsPrerequisiteHelper : IPrerequisiteHelper
+public class WindowsPrerequisiteHelper(
+    IDownloadService downloadService,
+    ISettingsManager settingsManager,
+    IPyRunner pyRunner
+) : IPrerequisiteHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-    private readonly IGitHubClient gitHubClient;
-    private readonly IDownloadService downloadService;
-    private readonly ISettingsManager settingsManager;
-    private readonly IPyRunner pyRunner;
 
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
     private const string TkinterDownloadUrl =
@@ -61,19 +60,6 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
 
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
-
-    public WindowsPrerequisiteHelper(
-        IGitHubClient gitHubClient,
-        IDownloadService downloadService,
-        ISettingsManager settingsManager,
-        IPyRunner pyRunner
-    )
-    {
-        this.gitHubClient = gitHubClient;
-        this.downloadService = downloadService;
-        this.settingsManager = settingsManager;
-        this.pyRunner = pyRunner;
-    }
 
     public async Task RunGit(
         ProcessArgs args,
@@ -165,6 +151,11 @@ public class WindowsPrerequisiteHelper : IPrerequisiteHelper
         if (prerequisites.Contains(PackagePrerequisite.Node))
         {
             await InstallNodeIfNecessary(progress);
+        }
+
+        if (prerequisites.Contains(PackagePrerequisite.Tkinter))
+        {
+            await InstallTkinterIfNecessary(progress);
         }
     }
 

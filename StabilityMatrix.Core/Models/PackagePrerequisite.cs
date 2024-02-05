@@ -7,5 +7,6 @@ public enum PackagePrerequisite
     Git,
     Node,
     Dotnet7,
-    Dotnet8
+    Dotnet8,
+    Tkinter,
 }

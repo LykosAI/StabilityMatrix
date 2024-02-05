@@ -21,7 +21,6 @@ namespace StabilityMatrix.Avalonia.Helpers;
 
 [SupportedOSPlatform("windows")]
 public class WindowsPrerequisiteHelper(
-    IGitHubClient gitHubClient,
     IDownloadService downloadService,
     ISettingsManager settingsManager,
     IPyRunner pyRunner
@@ -167,6 +166,11 @@ public class WindowsPrerequisiteHelper(
         if (prerequisites.Contains(PackagePrerequisite.Dotnet))
         {
             await InstallDotnetIfNecessary(progress);
+        }
+        
+        if (prerequisites.Contains(PackagePrerequisite.Tkinter))
+        {
+            await InstallTkinterIfNecessary(progress);
         }
     }
 

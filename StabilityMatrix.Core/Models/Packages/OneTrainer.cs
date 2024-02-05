@@ -41,6 +41,8 @@ public class OneTrainer(
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Nightmare;
     public override bool OfferInOneClickInstaller => false;
     public override bool ShouldIgnoreReleases => true;
+    public override IEnumerable<PackagePrerequisite> Prerequisites =>
+        base.Prerequisites.Concat([PackagePrerequisite.Tkinter]);
 
     public override async Task InstallPackage(
         string installLocation,

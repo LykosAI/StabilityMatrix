@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Increased timeout on Recommended Models call to prevent potential timeout errors on slow connections
 - Fixed SynchronizationLockException when saving settings
 - Improved error messages with process output for 7z extraction errors
+- Fixed missing tkinter dependency for OneTrainer on Windows
 
 ## v2.8.0
 ### Added

@@ -23,13 +23,13 @@ namespace StabilityMatrix.Avalonia.Helpers;
 
 [SupportedOSPlatform("macos")]
 [SupportedOSPlatform("linux")]
-public class UnixPrerequisiteHelper : IPrerequisiteHelper
+public class UnixPrerequisiteHelper(
+    IDownloadService downloadService,
+    ISettingsManager settingsManager,
+    IPyRunner pyRunner
+) : IPrerequisiteHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-    private readonly IDownloadService downloadService;
-    private readonly ISettingsManager settingsManager;
-    private readonly IPyRunner pyRunner;
 
     private DirectoryPath HomeDir => settingsManager.LibraryDir;
     private DirectoryPath AssetsDir => HomeDir.JoinDir("Assets");
@@ -45,17 +45,6 @@ public class UnixPrerequisiteHelper : IPrerequisiteHelper
 
     // Cached store of whether or not git is installed
     private bool? isGitInstalled;
-
-    public UnixPrerequisiteHelper(
-        IDownloadService downloadService,
-        ISettingsManager settingsManager,
-        IPyRunner pyRunner
-    )
-    {
-        this.downloadService = downloadService;
-        this.settingsManager = settingsManager;
-        this.pyRunner = pyRunner;
-    }
 
     private async Task<bool> CheckIsGitInstalled()
     {

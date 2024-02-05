@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed failing InvokeAI install on macOS due to missing nodejs
 - Increased timeout on Recommended Models call to prevent potential timeout errors on slow connections
 - Fixed SynchronizationLockException when saving settings
+- Improved error messages with process output for 7z extraction errors
 
 ## v2.8.0
 ### Added

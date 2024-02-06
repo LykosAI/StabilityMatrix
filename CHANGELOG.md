@@ -5,6 +5,17 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.8.1
+### Fixed
+- Fixed model links not working in RuinedFooocus for new installations
+- Fixed incorrect nodejs download link on Linux (thanks to slogonomo for the fix)
+- Fixed failing InvokeAI install on macOS due to missing nodejs
+- Increased timeout on Recommended Models call to prevent potential timeout errors on slow connections
+- Fixed SynchronizationLockException when saving settings
+- Improved error messages with process output for 7z extraction errors
+- Fixed missing tkinter dependency for OneTrainer on Windows
+- Fixed auto-update on macOS not starting new version from an issue in starting .app bundles with arguments
+
 ## v2.8.0
 ### Added
 - Added Image to Video project type

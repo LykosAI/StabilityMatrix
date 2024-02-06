@@ -50,6 +50,8 @@ public class KohyaSs(
     public override IEnumerable<TorchVersion> AvailableTorchVersions => [TorchVersion.Cuda];
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.None };
+    public override IEnumerable<PackagePrerequisite> Prerequisites =>
+        base.Prerequisites.Concat([PackagePrerequisite.Tkinter]);
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
@@ -114,12 +116,6 @@ public class KohyaSs(
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        if (Compat.IsWindows)
-        {
-            progress?.Report(new ProgressReport(-1f, "Installing prerequisites...", isIndeterminate: true));
-            await PrerequisiteHelper.InstallTkinterIfNecessary(progress).ConfigureAwait(false);
-        }
-
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));

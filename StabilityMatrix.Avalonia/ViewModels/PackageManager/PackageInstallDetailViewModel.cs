@@ -126,6 +126,8 @@ public partial class PackageInstallDetailViewModel(
             return;
         }
 
+        InstallName = InstallName.Trim();
+
         var setPackageInstallingStep = new SetPackageInstallingStep(settingsManager, InstallName);
 
         var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);

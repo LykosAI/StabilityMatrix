@@ -6,7 +6,7 @@ namespace StabilityMatrix.Core.Models.Settings;
 /// <summary>
 /// Transaction object which saves settings manager changes when disposed.
 /// </summary>
-public class SettingsTransaction(ISettingsManager settingsManager, Func<Task> onCommit)
+public class SettingsTransaction(ISettingsManager settingsManager, Action onCommit, Func<Task> onCommitAsync)
     : IDisposable,
         IAsyncDisposable
 {
@@ -14,13 +14,13 @@ public class SettingsTransaction(ISettingsManager settingsManager, Func<Task> on
 
     public void Dispose()
     {
-        onCommit().SafeFireAndForget();
+        onCommit();
         GC.SuppressFinalize(this);
     }
 
     public async ValueTask DisposeAsync()
     {
-        await onCommit().ConfigureAwait(false);
+        await onCommitAsync().ConfigureAwait(false);
         GC.SuppressFinalize(this);
     }
 }

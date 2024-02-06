@@ -1,0 +1,37 @@
+name: Automatic Backport
+
+on:
+  pull_request_target:
+    types: ["labeled", "closed"]
+
+jobs:
+  backport:
+    if: startsWith(github.event.pull_request.labels.*.name, 'backport-to-')
+    name: Backport PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write json
+        id: create-json
+        uses: jsdaniell/create-json@v1.2.3
+        with:
+          name: ".backportrc.json"
+          json: |
+            {
+              "targetPRLabels": "backport",
+              "prTitle": "[{{sourceBranch}} to {{targetBranch}}] backport: {{sourcePullRequest.title}} ({{sourcePullRequest.number}})"
+            }
+        
+      - name: Backport Action
+        uses: sorenlouv/backport-github-action@v9.3.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          auto_backport_label_prefix: backport-to-
+
+      - name: Info log
+        if: ${{ success() }}
+        run: cat ~/.backport/backport.info.log
+
+      - name: Debug log
+        if: ${{ failure() }}
+        run: cat ~/.backport/backport.debug.log        
+          

@@ -9,21 +9,37 @@
 [download-macos-arm64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-macos-arm64.dmg
 
 [auto1111]: https://github.com/AUTOMATIC1111/stable-diffusion-webui
+[auto1111-directml]: https://github.com/lshqqytiger/stable-diffusion-webui-directml
+[webui-ux]: https://github.com/anapnoe/stable-diffusion-webui-ux
 [comfy]: https://github.com/comfyanonymous/ComfyUI
 [sdnext]: https://github.com/vladmandic/automatic
 [voltaml]: https://github.com/VoltaML/voltaML-fast-stable-diffusion
 [invokeai]: https://github.com/invoke-ai/InvokeAI
 [fooocus]: https://github.com/lllyasviel/Fooocus
 [fooocus-mre]: https://github.com/MoonRide303/Fooocus-MRE
+[ruined-fooocus]: https://github.com/runew0lf/RuinedFooocus
+[fooocus-controlnet]: https://github.com/fenneishi/Fooocus-ControlNet-SDXL
+[kohya-ss]: https://github.com/bmaltais/kohya_ss
+[onetrainer]: https://github.com/Nerogar/OneTrainer
 
 [civitai]: https://civitai.com/
+[huggingface]: https://huggingface.co/
 
 Multi-Platform Package Manager and Inference UI for Stable Diffusion
 
 ### ✨ New in 2.5 - [Inference](#inference-A-reimagined-built-in-Stable-Diffusion-experience), a built-in interface for Stable Diffusion powered by ComfyUI
 
 ### 🖱️ One click install and update for Stable Diffusion Web UI Packages
-- Supports [Automatic 1111][auto1111], [Comfy UI][comfy], [SD.Next (Vladmandic)][sdnext], [VoltaML][voltaml], [InvokeAI][invokeai], [Fooocus][fooocus], and [Fooocus MRE][fooocus-mre]
+- Supports:
+  - [Automatic 1111][auto1111], [Automatic 1111 DirectML][auto1111-directml], [SD Web UI-UX][webui-ux], [SD.Next][sdnext]
+  - [Fooocus][fooocus], [Fooocus MRE][fooocus-mre], [Fooocus ControlNet SDXL][fooocus-controlnet], [Ruined Fooocus][ruined-fooocus]
+  - [ComfyUI][comfy]
+  - [VoltaML][voltaml]
+  - [InvokeAI][invokeai]
+  - [Kohya's GUI][kohya-ss]
+  - [OneTrainer][onetrainer]
+- Manage plugins / extensions for supported packages ([Automatic 1111][auto1111], [Comfy UI][comfy])
+- Easily install or update Python dependencies for each package
 - Embedded Git and Python dependencies, with no need for either to be globally installed
 - Fully portable - move Stability Matrix's Data Directory to a new drive or computer at any time
 
@@ -34,7 +50,7 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
 ### 🗃️ Checkpoint Manager, configured to be shared by all Package installs
 - Option to find CivitAI metadata and preview thumbnails for new local imports
 
-### ☁️ Model Browser to import from [CivitAI][civitai]
+### ☁️ Model Browser to import from [CivitAI][civitai] and [HuggingFace][huggingface]
 - Automatically imports to the associated model folder depending on the model type
 - Downloads relevant metadata files and preview image
 
@@ -42,7 +58,7 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
 
 [![Release](https://img.shields.io/github/v/release/LykosAI/StabilityMatrix?label=Latest%20Release&link=https%3A%2F%2Fgithub.com%2FLykosAI%2FStabilityMatrix%2Freleases%2Flatest)][release]
 
-[![Windows](https://img.shields.io/badge/Windows-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)][download-win-x64]
+[![Windows](https://img.shields.io/badge/Windows%2010,%2011-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)][download-win-x64]
 [![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)][download-linux-x64]
 [![macOS](https://img.shields.io/badge/mac%20os%20%28apple%20silicon%29-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)][download-macos-arm64]
 

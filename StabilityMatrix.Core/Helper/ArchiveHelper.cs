@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using NLog;
 using SharpCompress.Common;
 using SharpCompress.Readers;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -89,9 +90,10 @@ public static partial class ArchiveHelper
     {
         var args = $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y";
 
-        var result = await ProcessRunner.GetProcessResultAsync(SevenZipPath, args).ConfigureAwait(false);
-
-        result.EnsureSuccessExitCode();
+        var result = await ProcessRunner
+            .GetProcessResultAsync(SevenZipPath, args)
+            .EnsureSuccessExitCode()
+            .ConfigureAwait(false);
 
         var output = result.StandardOutput ?? "";
 
@@ -145,7 +147,10 @@ public static partial class ArchiveHelper
         Logger.Debug($"Starting process '{SevenZipPath}' with arguments '{args}'");
 
         using var process = ProcessRunner.StartProcess(SevenZipPath, args, outputDataReceived: onOutput);
-        await ProcessRunner.WaitForExitConditionAsync(process).ConfigureAwait(false);
+
+        await process.WaitForExitAsync().ConfigureAwait(false);
+
+        ProcessException.ThrowIfNonZeroExitCode(process, outputStore);
 
         progress.Report(new ProgressReport(1f, "Finished extracting", type: ProgressType.Extract));
 

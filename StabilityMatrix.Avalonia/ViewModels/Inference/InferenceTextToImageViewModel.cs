@@ -114,14 +114,6 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 SamplerCardViewModel.IsRefinerStepsEnabled =
                     e.Sender is { IsRefinerSelectionEnabled: true, SelectedRefiner: not null };
             });
-
-        SamplerCardViewModel
-            .WhenPropertyChanged(x => x.SelectedScheduler)
-            .Subscribe(e =>
-            {
-                e.Sender.IsDenoiseStrengthEnabled =
-                    e.Sender.SelectedScheduler?.DisplayName.Equals("SD Turbo") ?? false;
-            });
     }
 
     /// <inheritdoc />

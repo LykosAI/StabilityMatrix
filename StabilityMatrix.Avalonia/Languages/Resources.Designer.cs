@@ -888,6 +888,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ComfyUI is required to install this package. Would you like to install it now?.
+        /// </summary>
+        public static string Label_ComfyRequiredDetail {
+            get {
+                return ResourceManager.GetString("Label_ComfyRequiredDetail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ComfyUI Required.
+        /// </summary>
+        public static string Label_ComfyRequiredTitle {
+            get {
+                return ResourceManager.GetString("Label_ComfyRequiredTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Comments.
         /// </summary>
         public static string Label_Comments {

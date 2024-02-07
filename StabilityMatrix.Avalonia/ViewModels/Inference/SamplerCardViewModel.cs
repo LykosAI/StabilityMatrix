@@ -42,6 +42,12 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     [ObservableProperty]
     private bool isDenoiseStrengthEnabled;
 
+    /// <summary>
+    /// Temporary enable for denoise strength, used for SDTurbo.
+    /// Denoise will be enabled if either this or <see cref="IsDenoiseStrengthEnabled"/> is true.
+    /// </summary>
+    public bool IsDenoiseStrengthTempEnabled => SelectedScheduler == ComfyScheduler.SDTurbo;
+
     [ObservableProperty]
     private double denoiseStrength = 0.7f;
 
@@ -77,6 +83,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     private bool isSchedulerSelectionEnabled;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDenoiseStrengthTempEnabled))]
     [Required]
     private ComfyScheduler? selectedScheduler = ComfyScheduler.Normal;
 

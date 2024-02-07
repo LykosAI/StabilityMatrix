@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.8.2
+### Fixed
+- Fixed Inference Image to Image Denoise setting becoming hidden after changing schedulers
+
 ## v2.8.1
 ### Fixed
 - Fixed model links not working in RuinedFooocus for new installations

@@ -43,6 +43,7 @@ public class StableSwarm(
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         [SharedFolderMethod.Symlink, SharedFolderMethod.Configuration, SharedFolderMethod.None];
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
+    public override bool OfferInOneClickInstaller => false;
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [

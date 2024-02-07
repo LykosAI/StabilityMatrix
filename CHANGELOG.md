@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Improved error messages with process output for 7z extraction errors
 - Fixed missing tkinter dependency for OneTrainer on Windows
 - Fixed auto-update on macOS not starting new version from an issue in starting .app bundles with arguments
+- Fixed [#436](https://github.com/LykosAI/StabilityMatrix/issues/436) - Crash on invalid json files during checkpoint indexing
 
 ## v2.8.0
 ### Added

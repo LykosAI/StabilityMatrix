@@ -595,6 +595,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
                             AppDataHome: {Compat.AppDataHome}
                             AppCurrentDir: {Compat.AppCurrentDir}
                             ExecutableName: {Compat.GetExecutableName()}
+                            AppName: {Compat.GetAppName()}
                             -- Settings --
                             Expected Portable Marker file: {expectedPortableFile}
                             Portable Marker file exists: {isPortableMode}

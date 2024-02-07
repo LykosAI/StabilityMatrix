@@ -39,7 +39,7 @@ public static class ProcessRunner
         if (Compat.IsMacOS)
         {
             startInfo.FileName = "open";
-            startInfo.Arguments = args.Prepend(path).ToString();
+            startInfo.Arguments = args.Prepend([path, "--args"]).ToString();
             startInfo.UseShellExecute = true;
         }
         else

@@ -21,7 +21,6 @@ namespace StabilityMatrix.Avalonia.Helpers;
 
 [SupportedOSPlatform("windows")]
 public class WindowsPrerequisiteHelper(
-    IGitHubClient gitHubClient,
     IDownloadService downloadService,
     ISettingsManager settingsManager,
     IPyRunner pyRunner
@@ -29,6 +28,8 @@ public class WindowsPrerequisiteHelper(
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private const string PortableGitDownloadUrl =
+        "https://github.com/git-for-windows/git/releases/download/v2.41.0.windows.1/PortableGit-2.41.0-64-bit.7z.exe";
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
     private const string TkinterDownloadUrl =
         "https://cdn.lykos.ai/tkinter-cpython-embedded-3.10.11-win-x64.zip";
@@ -167,6 +168,11 @@ public class WindowsPrerequisiteHelper(
         if (prerequisites.Contains(PackagePrerequisite.Dotnet))
         {
             await InstallDotnetIfNecessary(progress);
+        }
+        
+        if (prerequisites.Contains(PackagePrerequisite.Tkinter))
+        {
+            await InstallTkinterIfNecessary(progress);
         }
     }
 
@@ -365,13 +371,11 @@ public class WindowsPrerequisiteHelper(
 
         Logger.Info("Git not found at {GitExePath}, downloading...", GitExePath);
 
-        var portableGitUrl =
-            "https://github.com/git-for-windows/git/releases/download/v2.41.0.windows.1/PortableGit-2.41.0-64-bit.7z.exe";
-
+        // Download
         if (!File.Exists(PortableGitDownloadPath))
         {
             await downloadService.DownloadToFileAsync(
-                portableGitUrl,
+                PortableGitDownloadUrl,
                 PortableGitDownloadPath,
                 progress: progress
             );

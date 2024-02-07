@@ -123,7 +123,13 @@
                         
                         <StackPanel>
                             <!-- Denoise Strength -->
-                            <StackPanel IsVisible="{Binding IsDenoiseStrengthEnabled}">
+                            <StackPanel>
+                                <StackPanel.IsVisible>
+                                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                        <Binding Path="IsDenoiseStrengthEnabled"/>
+                                        <Binding Path="IsDenoiseStrengthTempEnabled"/>
+                                    </MultiBinding>
+                                </StackPanel.IsVisible>
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBlock 
                                         VerticalAlignment="Center"

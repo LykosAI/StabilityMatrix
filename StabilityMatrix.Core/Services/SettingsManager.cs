@@ -425,11 +425,22 @@ public class SettingsManager : ISettingsManager
         foreach (var jsonFile in connectedModelJsons)
         {
             var json = File.ReadAllText(jsonFile);
-            var connectedModel = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
 
-            if (connectedModel?.Hashes.BLAKE3 != null)
+            if (string.IsNullOrWhiteSpace(json))
+                continue;
+
+            try
             {
-                modelHashes.Add(connectedModel.Hashes.BLAKE3);
+                var connectedModel = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
+
+                if (connectedModel?.Hashes.BLAKE3 != null)
+                {
+                    modelHashes.Add(connectedModel.Hashes.BLAKE3);
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Warn(e, "Failed to parse connected model info from {JsonFile}", jsonFile);
             }
         }
 

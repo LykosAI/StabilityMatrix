@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.8.2
 ### Fixed
 - Fixed Inference Image to Image Denoise setting becoming hidden after changing schedulers
+- Fixed Inference ControlNet models showing as downloadable even when they are already installed
+- Fixed Inference Sampler Addon conditioning not applying (i.e. ControlNet)
 
 ## v2.8.1
 ### Fixed

@@ -15,6 +15,11 @@ public class PackageModificationRunner : IPackageModificationRunner
                 ConsoleOutput.Add(report.Message);
             }
 
+            if (!string.IsNullOrWhiteSpace(report.Title))
+            {
+                ConsoleOutput.Add(report.Title);
+            }
+
             OnProgressChanged(report);
         });
 

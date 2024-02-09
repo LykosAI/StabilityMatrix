@@ -1,12 +1,12 @@
 name: Automatic Backport
 
 on:
-  pull_request_target:
-    types: ["labeled", "closed"]
+  pull_request:
+    types: ["closed", "labeled"]
 
 jobs:
   backport:
-    if: startsWith(github.event.pull_request.labels.*.name, 'backport-to-')
+    if: ${{ (github.event.pull_request.merged == true) && (contains(github.event.pull_request.labels.*.name, 'backport-to-main') == true) }}
     name: Backport PR
     runs-on: ubuntu-latest
     steps:

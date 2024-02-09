@@ -155,13 +155,15 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            progress?.Report(new ProgressReport(0f, $"Cloning {repositoryUri}", isIndeterminate: true));
+            progress?.Report(
+                new ProgressReport(0f, message: $"Cloning {repositoryUri}", isIndeterminate: true)
+            );
 
             await prerequisiteHelper
                 .CloneGitRepository(cloneRoot, repositoryUri.ToString(), version)
                 .ConfigureAwait(false);
 
-            progress?.Report(new ProgressReport(1f, $"Cloned {repositoryUri}"));
+            progress?.Report(new ProgressReport(1f, message: $"Cloned {repositoryUri}"));
         }
     }
 
@@ -191,7 +193,11 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
                 .ConfigureAwait(false);
 
             progress?.Report(
-                new ProgressReport(0f, $"Updating git repository {repoPath.Name}", isIndeterminate: true)
+                new ProgressReport(
+                    0f,
+                    message: $"Updating git repository {repoPath.Name}",
+                    isIndeterminate: true
+                )
             );
 
             // If version not provided, use current branch
@@ -206,7 +212,7 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
                 .UpdateGitRepository(repoPath, remoteUrlResult.StandardOutput!.Trim(), version)
                 .ConfigureAwait(false);
 
-            progress?.Report(new ProgressReport(1f, $"Updated git repository {repoPath.Name}"));
+            progress?.Report(new ProgressReport(1f, message: $"Updated git repository {repoPath.Name}"));
         }
     }
 
@@ -233,5 +239,7 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
                 await path.DeleteAsync().ConfigureAwait(false);
             }
         }
+
+        progress?.Report(new ProgressReport(1f, message: "Uninstalled extension"));
     }
 }

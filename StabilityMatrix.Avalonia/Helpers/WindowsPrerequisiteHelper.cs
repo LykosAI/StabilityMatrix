@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
@@ -7,7 +8,6 @@ using System.Threading.Tasks;
 using Microsoft.Win32;
 using NLog;
 using Octokit;
-using PropertyModels.Extensions;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -35,6 +35,12 @@ public class WindowsPrerequisiteHelper(
         "https://cdn.lykos.ai/tkinter-cpython-embedded-3.10.11-win-x64.zip";
     private const string NodeDownloadUrl = "https://nodejs.org/dist/v20.11.0/node-v20.11.0-win-x64.zip";
 
+    private const string Dotnet7DownloadUrl =
+        "https://download.visualstudio.microsoft.com/download/pr/2133b143-9c4f-4daa-99b0-34fa6035d67b/193ede446d922eb833f1bfe0239be3fc/dotnet-sdk-7.0.405-win-x64.zip";
+
+    private const string Dotnet8DownloadUrl =
+        "https://download.visualstudio.microsoft.com/download/pr/6902745c-34bd-4d66-8e84-d5b61a17dfb7/e61732b00f7e144e162d7e6914291f16/dotnet-sdk-8.0.101-win-x64.zip";
+
     private string HomeDir => settingsManager.LibraryDir;
 
     private string VcRedistDownloadPath => Path.Combine(HomeDir, "vcredist.x64.exe");
@@ -59,6 +65,10 @@ public class WindowsPrerequisiteHelper(
     private string TkinterExistsPath => Path.Combine(PythonDir, "tkinter");
     private string NodeExistsPath => Path.Combine(AssetsDir, "nodejs", "npm.cmd");
     private string NodeDownloadPath => Path.Combine(AssetsDir, "nodejs.zip");
+    private string Dotnet7DownloadPath => Path.Combine(AssetsDir, "dotnet-sdk-7.0.405-win-x64.zip");
+    private string Dotnet8DownloadPath => Path.Combine(AssetsDir, "dotnet-sdk-8.0.101-win-x64.zip");
+    private string DotnetExtractPath => Path.Combine(AssetsDir, "dotnet");
+    private string DotnetExistsPath => Path.Combine(DotnetExtractPath, "dotnet.exe");
 
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
@@ -155,6 +165,11 @@ public class WindowsPrerequisiteHelper(
             await InstallNodeIfNecessary(progress);
         }
 
+        if (prerequisites.Contains(PackagePrerequisite.Dotnet))
+        {
+            await InstallDotnetIfNecessary(progress);
+        }
+        
         if (prerequisites.Contains(PackagePrerequisite.Tkinter))
         {
             await InstallTkinterIfNecessary(progress);
@@ -425,15 +440,86 @@ public class WindowsPrerequisiteHelper(
     public async Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         if (File.Exists(NodeExistsPath))
-        {
-            Logger.Info("node already installed");
             return;
+
+        await DownloadAndExtractPrerequisite(progress, NodeDownloadUrl, NodeDownloadPath, AssetsDir);
+
+        var extractedNodeDir = Path.Combine(AssetsDir, "node-v20.11.0-win-x64");
+        if (Directory.Exists(extractedNodeDir))
+        {
+            Directory.Move(extractedNodeDir, Path.Combine(AssetsDir, "nodejs"));
         }
+    }
 
-        Logger.Info("Downloading node");
-        await downloadService.DownloadToFileAsync(NodeDownloadUrl, NodeDownloadPath, progress: progress);
+    [SupportedOSPlatform("windows")]
+    public async Task InstallDotnetIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (File.Exists(DotnetExistsPath))
+            return;
 
-        Logger.Info("Installing node");
+        await DownloadAndExtractPrerequisite(
+            progress,
+            Dotnet7DownloadUrl,
+            Dotnet7DownloadPath,
+            DotnetExtractPath
+        );
+        await DownloadAndExtractPrerequisite(
+            progress,
+            Dotnet8DownloadUrl,
+            Dotnet8DownloadPath,
+            DotnetExtractPath
+        );
+    }
+
+    public async Task<Process> RunDotnet(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null,
+        bool waitForExit = true
+    )
+    {
+        var process = ProcessRunner.StartAnsiProcess(
+            DotnetExistsPath,
+            args,
+            workingDirectory,
+            onProcessOutput,
+            envVars
+        );
+
+        if (!waitForExit)
+            return process;
+
+        await process.WaitForExitAsync();
+
+        if (process.ExitCode == 0)
+            return process;
+
+        Logger.Error(
+            "dotnet8 with args [{Args}] failed with exit code " + "{ExitCode}:\n{StdOut}\n{StdErr}",
+            args,
+            process.ExitCode,
+            process.StandardOutput,
+            process.StandardError
+        );
+
+        throw new ProcessException(
+            $"dotnet8 with args [{args}] failed with exit code"
+                + $" {process.ExitCode}:\n{process.StandardOutput}\n{process.StandardError}"
+        );
+    }
+
+    private async Task DownloadAndExtractPrerequisite(
+        IProgress<ProgressReport>? progress,
+        string downloadUrl,
+        string downloadPath,
+        string extractPath
+    )
+    {
+        Logger.Info($"Downloading {downloadUrl} to {downloadPath}");
+        await downloadService.DownloadToFileAsync(downloadUrl, downloadPath, progress: progress);
+
+        Logger.Info("Extracting prerequisite");
         progress?.Report(
             new ProgressReport(
                 progress: 0.5f,
@@ -443,18 +529,20 @@ public class WindowsPrerequisiteHelper(
             )
         );
 
-        // unzip
-        await ArchiveHelper.Extract(NodeDownloadPath, AssetsDir, progress);
+        Directory.CreateDirectory(extractPath);
 
-        // move to assets dir
-        var existingNodeDir = Path.Combine(AssetsDir, "node-v20.11.0-win-x64");
-        Directory.Move(existingNodeDir, Path.Combine(AssetsDir, "nodejs"));
+        // unzip
+        await ArchiveHelper.Extract(downloadPath, extractPath, progress);
 
         progress?.Report(
-            new ProgressReport(progress: 1f, message: "Node install complete", type: ProgressType.Generic)
+            new ProgressReport(
+                progress: 1f,
+                message: "Prerequisite install complete",
+                type: ProgressType.Generic
+            )
         );
 
-        File.Delete(NodeDownloadPath);
+        File.Delete(downloadPath);
     }
 
     private async Task UnzipGit(IProgress<ProgressReport>? progress = null)

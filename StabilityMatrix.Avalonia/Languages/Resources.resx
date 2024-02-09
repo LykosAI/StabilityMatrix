@@ -960,4 +960,10 @@
   <data name="Label_RecommendedModelsSubText" xml:space="preserve">
     <value>While your package is installing, here are some models we recommend to help you get started.</value>
   </data>
+  <data name="Label_ComfyRequiredTitle" xml:space="preserve">
+    <value>ComfyUI Required</value>
+  </data>
+  <data name="Label_ComfyRequiredDetail" xml:space="preserve">
+    <value>ComfyUI is required to install this package. Would you like to install it now?</value>
+  </data>
 </root>

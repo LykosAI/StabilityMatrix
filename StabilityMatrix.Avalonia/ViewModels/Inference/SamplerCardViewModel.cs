@@ -42,6 +42,12 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     [ObservableProperty]
     private bool isDenoiseStrengthEnabled;
 
+    /// <summary>
+    /// Temporary enable for denoise strength, used for SDTurbo.
+    /// Denoise will be enabled if either this or <see cref="IsDenoiseStrengthEnabled"/> is true.
+    /// </summary>
+    public bool IsDenoiseStrengthTempEnabled => SelectedScheduler == ComfyScheduler.SDTurbo;
+
     [ObservableProperty]
     private double denoiseStrength = 0.7f;
 
@@ -77,6 +83,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     private bool isSchedulerSelectionEnabled;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsDenoiseStrengthTempEnabled))]
     [Required]
     private ComfyScheduler? selectedScheduler = ComfyScheduler.Normal;
 
@@ -154,6 +161,10 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         var primaryScheduler = SelectedScheduler ?? throw new ValidationException("Scheduler not selected");
         e.Builder.Connections.PrimaryScheduler = primaryScheduler;
 
+        // Use Temp Conditioning that may be modified by addons
+        var conditioning = e.Temp.Conditioning.Unwrap();
+        var refinerConditioning = e.Temp.RefinerConditioning;
+
         // Use custom sampler if SDTurbo scheduler is selected
         if (e.Builder.Connections.PrimaryScheduler == ComfyScheduler.SDTurbo)
         {
@@ -189,8 +200,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     AddNoise = true,
                     NoiseSeed = e.Builder.Connections.Seed,
                     Cfg = CfgScale,
-                    Positive = e.Temp.Conditioning?.Positive!,
-                    Negative = e.Temp.Conditioning?.Negative!,
+                    Positive = conditioning.Positive,
+                    Negative = conditioning.Negative,
                     Sampler = kSamplerSelect.Output,
                     Sigmas = turboScheduler.Output,
                     LatentImage = primaryLatent
@@ -218,8 +229,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     Scheduler = primaryScheduler.Name,
                     Steps = Steps,
                     Cfg = CfgScale,
-                    Positive = baseConditioning.Positive,
-                    Negative = baseConditioning.Negative,
+                    Positive = conditioning.Positive,
+                    Negative = conditioning.Negative,
                     LatentImage = primaryLatent,
                     Denoise = DenoiseStrength,
                 }
@@ -229,9 +240,6 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         }
         else
         {
-            var baseConditioning = e.Builder.Connections.Base.Conditioning.Unwrap();
-            var refinerConditioning = e.Builder.Connections.Refiner.Conditioning.Unwrap();
-
             // Advanced base sampler for refiner
             var sampler = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.KSamplerAdvanced
@@ -244,8 +252,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     Cfg = CfgScale,
                     SamplerName = primarySampler.Name,
                     Scheduler = primaryScheduler.Name,
-                    Positive = baseConditioning.Positive,
-                    Negative = baseConditioning.Negative,
+                    Positive = conditioning.Positive,
+                    Negative = conditioning.Negative,
                     LatentImage = primaryLatent,
                     StartAtStep = 0,
                     EndAtStep = Steps,
@@ -265,7 +273,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     Cfg = CfgScale,
                     SamplerName = primarySampler.Name,
                     Scheduler = primaryScheduler.Name,
-                    Positive = refinerConditioning.Positive,
+                    Positive = refinerConditioning!.Positive,
                     Negative = refinerConditioning.Negative,
                     // Connect to previous sampler
                     LatentImage = sampler.Output,

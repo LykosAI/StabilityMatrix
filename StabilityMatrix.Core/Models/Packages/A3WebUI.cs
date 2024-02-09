@@ -48,6 +48,7 @@ public class A3WebUI(
         {
             [SharedFolderType.StableDiffusion] = new[] { "models/Stable-diffusion" },
             [SharedFolderType.ESRGAN] = new[] { "models/ESRGAN" },
+            [SharedFolderType.GFPGAN] = new[] { "models/GFPGAN" },
             [SharedFolderType.RealESRGAN] = new[] { "models/RealESRGAN" },
             [SharedFolderType.SwinIR] = new[] { "models/SwinIR" },
             [SharedFolderType.Lora] = new[] { "models/Lora" },

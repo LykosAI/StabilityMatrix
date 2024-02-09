@@ -6,10 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.8.2
+### Added
+- Added missing GFPGAN link to Automatic1111 packages
 ### Fixed
 - Fixed Inference Image to Image Denoise setting becoming hidden after changing schedulers
 - Fixed Inference ControlNet models showing as downloadable even when they are already installed
 - Fixed Inference Sampler Addon conditioning not applying (i.e. ControlNet)
+- Fixed extension modification dialog not showing any progress messages
 
 ## v2.8.1
 ### Fixed

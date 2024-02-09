@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
+using Refit;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Api;
@@ -86,21 +87,34 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
 
         IsLoading = true;
 
-        var recommendedModels = await lykosApi.GetRecommendedModels();
+        try
+        {
+            var recommendedModels = await lykosApi.GetRecommendedModels();
 
-        CivitModels.AddOrUpdate(
-            recommendedModels.Items.Select(
-                model =>
-                    new RecommendedModelItemViewModel
-                    {
-                        ModelVersion = model.ModelVersions.First(
-                            x => !x.BaseModel.Contains("Turbo", StringComparison.OrdinalIgnoreCase)
-                        ),
-                        Author = $"by {model.Creator.Username}",
-                        CivitModel = model
-                    }
-            )
-        );
+            CivitModels.AddOrUpdate(
+                recommendedModels.Items.Select(
+                    model =>
+                        new RecommendedModelItemViewModel
+                        {
+                            ModelVersion = model.ModelVersions.First(
+                                x => !x.BaseModel.Contains("Turbo", StringComparison.OrdinalIgnoreCase)
+                            ),
+                            Author = $"by {model.Creator.Username}",
+                            CivitModel = model
+                        }
+                )
+            );
+        }
+        catch (ApiException e)
+        {
+            // hide dialog and show error msg
+            logger.LogError(e, "Failed to get recommended models");
+            notificationService.Show(
+                "Failed to get recommended models",
+                "Please try again later or check the Model Browser tab for more models."
+            );
+            OnCloseButtonClick();
+        }
 
         IsLoading = false;
     }

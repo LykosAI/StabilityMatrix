@@ -179,7 +179,12 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             .Cast<IPackageStep>()
             .ToArray();
 
-        var runner = new PackageModificationRunner { ShowDialogOnStart = true };
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteTitle = "Installed Extensions",
+            ModificationCompleteMessage = "Finished installing extensions"
+        };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
         await runner.ExecuteSteps(steps);
@@ -209,7 +214,12 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             .Cast<IPackageStep>()
             .ToArray();
 
-        var runner = new PackageModificationRunner { ShowDialogOnStart = true };
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteTitle = "Updated Extensions",
+            ModificationCompleteMessage = "Finished updating extensions"
+        };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
         await runner.ExecuteSteps(steps);
@@ -239,7 +249,12 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             .Cast<IPackageStep>()
             .ToArray();
 
-        var runner = new PackageModificationRunner { ShowDialogOnStart = true };
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteTitle = "Uninstalled Extensions",
+            ModificationCompleteMessage = "Finished uninstalling extensions"
+        };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
         await runner.ExecuteSteps(steps);

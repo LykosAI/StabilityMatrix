@@ -45,11 +45,7 @@ public class SecretsManager : ISecretsManager
         }
         catch (Exception e)
         {
-            logger.LogWarning(
-                e,
-                "Failed to load secrets ({ExcType}), saving new instance",
-                e.GetType().Name
-            );
+            logger.LogError(e, "Failed to load secrets ({ExcType}), saving new instance", e.GetType().Name);
 
             var secrets = new Secrets();
             await SaveAsync(secrets).ConfigureAwait(false);

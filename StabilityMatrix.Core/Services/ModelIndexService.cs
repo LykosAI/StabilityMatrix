@@ -158,6 +158,12 @@ public partial class ModelIndexService : IModelIndexService
                 localModel.PreviewImageRelativePath = Path.GetRelativePath(modelsDir, previewImagePath);
             }
 
+            // Try to find a config file (same name as model file but with .yaml extension)
+            if (file.WithName($"{file.NameWithoutExtension}.yaml") is { Exists: true } configFile)
+            {
+                localModel.ConfigFullPath = configFile;
+            }
+
             // Insert into database
             await localModelFiles.InsertAsync(localModel).ConfigureAwait(false);
 

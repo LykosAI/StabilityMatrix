@@ -317,6 +317,8 @@ public class TrackedDownload
                 return;
             }
 
+            Logger.Warn(Exception, "Download {Download} failed", FileName);
+
             OnProgressStateChanging(ProgressState.Failed);
             ProgressState = ProgressState.Failed;
         }

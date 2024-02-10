@@ -326,7 +326,7 @@ public class DownloadService : IDownloadService
         if (url.Host.Equals("civitai.com", StringComparison.OrdinalIgnoreCase))
         {
             // Add auth if we have it
-            if (await secretsManager.LoadAsync().ConfigureAwait(false) is { CivitApi: { } civitApi })
+            if (await secretsManager.SafeLoadAsync().ConfigureAwait(false) is { CivitApi: { } civitApi })
             {
                 logger.LogTrace(
                     "Adding Civit auth header {Signature} for download {Url}",

@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added new package: [Stable Diffusion WebUI Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge) by lllyasviel
 - Added extension management for SD.Next and Stable Diffusion WebUI-UX
 
+## v2.8.3
+### Fixed
+- Fixed user tokens read error causing failed downloads
+- Failed downloads will now log error messages
+
 ## v2.8.2
 ### Added
 - Added missing GFPGAN link to Automatic1111 packages

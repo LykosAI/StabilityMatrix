@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added new package: [StableSwarmUI](https://github.com/Stability-AI/StableSwarmUI) by Stability AI
 - Added new package: [Stable Diffusion WebUI Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge) by lllyasviel
 - Added extension management for SD.Next and Stable Diffusion WebUI-UX
+- Added the ability to choose where CivitAI model downloads are saved
 
 ## v2.8.3
 ### Fixed

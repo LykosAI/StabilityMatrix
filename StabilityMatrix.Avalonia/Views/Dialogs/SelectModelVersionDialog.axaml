@@ -197,7 +197,7 @@
                     Orientation="Vertical"
                     HorizontalAlignment="Center"
                     IsVisible="{Binding !SelectedFile.IsInstalled}">
-            <TextBlock Text="Choose Download Location:"
+            <TextBlock Text="{x:Static lang:Resources.Label_SelectDownloadLocation}"
                        TextAlignment="Center"
                        HorizontalAlignment="Center"
                        Margin="0,4"/>
@@ -210,12 +210,17 @@
                         HorizontalAlignment="Center"
                         IsVisible="{Binding IsCustomSelected}">
                 <TextBox Text="{Binding CustomInstallLocation}"
-                         MinWidth="300"/>
-                <Button Margin="4,0"
+                         MinWidth="260"/>
+                <Button Margin="4,0,0,0"
+                        VerticalAlignment="Stretch"
                         Command="{Binding SelectCustomFolder}">
                     <controls1:SymbolIcon Symbol="OpenFolder" />
                 </Button>
             </StackPanel>
+            <TextBlock Text="{x:Static lang:Resources.Error_PleaseSelectDownloadLocation}"
+                       IsVisible="{Binding ShowEmptyPathWarning}"
+                       Foreground="{DynamicResource ThemeRedColor}"
+                       TextAlignment="Center"/>
         </StackPanel>
         
         <Expander Grid.Column="0"

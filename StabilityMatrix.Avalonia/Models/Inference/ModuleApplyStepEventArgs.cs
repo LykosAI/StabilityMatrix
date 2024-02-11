@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
 
@@ -15,16 +15,6 @@ public class ModuleApplyStepEventArgs : EventArgs
     public NodeDictionary Nodes => Builder.Nodes;
 
     public ModuleApplyStepTemporaryArgs Temp { get; } = new();
-
-    /// <summary>
-    /// Index of the step in the pipeline.
-    /// </summary>
-    public int StepIndex { get; init; }
-
-    /// <summary>
-    /// Index
-    /// </summary>
-    public int StepTypeIndex { get; init; }
 
     /// <summary>
     /// Generation overrides (like hires fix generate, current seed generate, etc.)

@@ -21,7 +21,7 @@
         Margin="8"
         MinHeight="450"
         MinWidth="700"
-        RowDefinitions="Auto, *, Auto"
+        RowDefinitions="Auto, Auto, *, Auto"
         ColumnDefinitions="*,Auto,*">
         
         <Grid.Resources>
@@ -86,8 +86,12 @@
             </StackPanel>
         </Grid>
 
+        <Border Grid.Row="0" Grid.Column="1"
+                MaxHeight="360"
+                Background="#33000000"
+                CornerRadius="4"/>
         <ListBox Grid.Row="0" Grid.Column="1"
-                  Margin="8"
+                  Margin="0, 8, 0, 8"
                   MaxHeight="360"
                   VerticalAlignment="Top"
                   ItemsSource="{Binding Versions}"
@@ -120,15 +124,22 @@
             <ListBox.Template>
                 <ControlTemplate>
                     <ScrollViewer>
-                        <ItemsPresenter />
+                        <ItemsPresenter Margin="8" />
                     </ScrollViewer>
                 </ControlTemplate>
             </ListBox.Template>
         </ListBox>
 
+        <Border Grid.Row="0" Grid.Column="2"
+                MaxHeight="360"
+                Background="#33000000"
+                Margin="8,0"
+                CornerRadius="4"/>
         <ListBox Grid.Row="0" Grid.Column="2"
                  MaxHeight="360"
+                 Margin="8,8,8,0"
                  VerticalAlignment="Top"
+                 Background="#AA000000"
                  ItemsSource="{Binding SelectedVersionViewModel.CivitFileViewModels}"
                  SelectedItem="{Binding SelectedFile}">
             <ListBox.Template>
@@ -179,20 +190,53 @@
             </ListBox.ItemTemplate>
         </ListBox>
         
+        <StackPanel Grid.Row="1"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="3"
+                    Margin="0,8"
+                    Orientation="Vertical"
+                    HorizontalAlignment="Center"
+                    IsVisible="{Binding !SelectedFile.IsInstalled}">
+            <TextBlock Text="{x:Static lang:Resources.Label_SelectDownloadLocation}"
+                       TextAlignment="Center"
+                       HorizontalAlignment="Center"
+                       Margin="0,4"/>
+            <ComboBox ItemsSource="{Binding AvailableInstallLocations}"
+                      SelectedItem="{Binding SelectedInstallLocation}"
+                      HorizontalAlignment="Center"
+                      MinWidth="300"/>
+            <StackPanel Orientation="Horizontal"
+                        Margin="0,4"
+                        HorizontalAlignment="Center"
+                        IsVisible="{Binding IsCustomSelected}">
+                <TextBox Text="{Binding CustomInstallLocation}"
+                         MinWidth="260"/>
+                <Button Margin="4,0,0,0"
+                        VerticalAlignment="Stretch"
+                        Command="{Binding SelectCustomFolder}">
+                    <controls1:SymbolIcon Symbol="OpenFolder" />
+                </Button>
+            </StackPanel>
+            <TextBlock Text="{x:Static lang:Resources.Error_PleaseSelectDownloadLocation}"
+                       IsVisible="{Binding ShowEmptyPathWarning}"
+                       Foreground="{DynamicResource ThemeRedColor}"
+                       TextAlignment="Center"/>
+        </StackPanel>
+        
         <Expander Grid.Column="0"
                   Grid.ColumnSpan="3"
-                  Grid.Row="1"
+                  Grid.Row="2"
                   Header="{x:Static lang:Resources.Label_ModelDescription}"
                   ExpandDirection="Down"
-                  Margin="8, 16">
+                  Margin="8, 8">
             <ScrollViewer MaxHeight="200">
                 <TextBlock Text="{Binding Description}"
                            TextWrapping="Wrap"
                            Margin="4"/>
             </ScrollViewer>
         </Expander>
-
-        <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2"
+        
+        <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="3"
                     Orientation="Horizontal"
                     Margin="0,8,0,0"
                     HorizontalAlignment="Center">

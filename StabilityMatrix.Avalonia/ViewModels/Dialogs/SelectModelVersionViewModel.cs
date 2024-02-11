@@ -72,15 +72,18 @@ public partial class SelectModelVersionViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsCustomSelected))]
+    [NotifyPropertyChangedFor(nameof(ShowEmptyPathWarning))]
     private string selectedInstallLocation = string.Empty;
 
     [ObservableProperty]
     private ObservableCollection<string> availableInstallLocations = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowEmptyPathWarning))]
     private string customInstallLocation = string.Empty;
 
     public bool IsCustomSelected => SelectedInstallLocation == "Custom...";
+    public bool ShowEmptyPathWarning => IsCustomSelected && string.IsNullOrWhiteSpace(CustomInstallLocation);
 
     public int DisplayedPageNumber => SelectedImageIndex + 1;
 
@@ -145,7 +148,26 @@ public partial class SelectModelVersionViewModel(
             ImportTooltip = "Please set the library directory in settings";
         }
 
-        IsImportEnabled = value?.CivitFile != null && canImport;
+        IsImportEnabled = value?.CivitFile != null && canImport && !ShowEmptyPathWarning;
+    }
+
+    partial void OnSelectedInstallLocationChanged(string value)
+    {
+        if (value.Equals("Custom...", StringComparison.OrdinalIgnoreCase))
+        {
+            Dispatcher.UIThread.InvokeAsync(SelectCustomFolder);
+        }
+        else
+        {
+            CustomInstallLocation = string.Empty;
+        }
+
+        IsImportEnabled = !ShowEmptyPathWarning;
+    }
+
+    partial void OnCustomInstallLocationChanged(string value)
+    {
+        IsImportEnabled = !ShowEmptyPathWarning;
     }
 
     public void Cancel()
@@ -239,18 +261,6 @@ public partial class SelectModelVersionViewModel(
             settingsManager.Transaction(settings => settings.InstalledModelHashes?.Remove(hash));
             fileToDelete.IsInstalled = false;
             originalSelectedVersionVm?.RefreshInstallStatus();
-        }
-    }
-
-    partial void OnSelectedInstallLocationChanged(string value)
-    {
-        if (value.Equals("Custom...", StringComparison.OrdinalIgnoreCase))
-        {
-            Dispatcher.UIThread.InvokeAsync(SelectCustomFolder);
-        }
-        else
-        {
-            CustomInstallLocation = string.Empty;
         }
     }
 

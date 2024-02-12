@@ -120,6 +120,7 @@ public class Settings
     public Size InferenceImageSize { get; set; } = new(150, 190);
     public Size OutputsImageSize { get; set; } = new(300, 300);
     public HolidayMode HolidayModeSetting { get; set; } = HolidayMode.Automatic;
+    public bool IsWorkflowInfiniteScrollEnabled { get; set; } = true;
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

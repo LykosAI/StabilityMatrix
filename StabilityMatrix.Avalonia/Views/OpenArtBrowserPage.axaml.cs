@@ -23,7 +23,7 @@ public partial class OpenArtBrowserPage : UserControlBase
         if (scrollViewer.Offset.Y == 0)
             return;
 
-        var isAtEnd = Math.Abs(scrollViewer.Offset.Y - scrollViewer.ScrollBarMaximum.Y) < 0.1f;
+        var isAtEnd = Math.Abs(scrollViewer.Offset.Y - scrollViewer.ScrollBarMaximum.Y) < 1f;
         if (isAtEnd && DataContext is IInfinitelyScroll scroll)
         {
             scroll.LoadNextPageAsync().SafeFireAndForget();

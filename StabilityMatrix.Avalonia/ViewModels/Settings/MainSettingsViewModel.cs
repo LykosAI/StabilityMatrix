@@ -129,6 +129,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private HolidayMode holidayModeSetting;
 
+    [ObservableProperty]
+    private bool infinitelyScrollWorkflowBrowser;
+
     #region System Info
 
     private static Lazy<IReadOnlyList<GpuInfo>> GpuInfosLazy { get; } =
@@ -215,6 +218,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.HolidayModeSetting,
             settings => settings.HolidayModeSetting
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.InfinitelyScrollWorkflowBrowser,
+            settings => settings.IsWorkflowInfiniteScrollEnabled
         );
 
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
@@ -66,16 +67,41 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
         return false;
     }
 
+    private static ComfyTypedNodeBase<
+        ModelNodeConnection,
+        ClipNodeConnection,
+        VAENodeConnection
+    > GetModelLoader(ModuleApplyStepEventArgs e, string nodeName, HybridModelFile model)
+    {
+        // Check if config
+        if (model.Local?.ConfigFullPath is { } configPath)
+        {
+            // We'll need to upload the config file to `models/configs` later
+            var uploadConfigPath = e.AddFileTransferToConfigs(configPath);
+
+            return new ComfyNodeBuilder.CheckpointLoader
+            {
+                Name = nodeName,
+                // Only the file name is needed
+                ConfigName = Path.GetFileName(uploadConfigPath),
+                CkptName = model.RelativePath
+            };
+        }
+
+        // Simple loader if no config
+        return new ComfyNodeBuilder.CheckpointLoaderSimple { Name = nodeName, CkptName = model.RelativePath };
+    }
+
     /// <inheritdoc />
     public virtual void ApplyStep(ModuleApplyStepEventArgs e)
     {
         // Load base checkpoint
         var baseLoader = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.CheckpointLoaderSimple
-            {
-                Name = "CheckpointLoader_Base",
-                CkptName = SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected")
-            }
+            GetModelLoader(
+                e,
+                "CheckpointLoader_Base",
+                SelectedModel ?? throw new ValidationException("Model not selected")
+            )
         );
 
         e.Builder.Connections.Base.Model = baseLoader.Output1;
@@ -86,13 +112,11 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
         if (IsRefinerSelectionEnabled && SelectedRefiner is { IsNone: false })
         {
             var refinerLoader = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.CheckpointLoaderSimple
-                {
-                    Name = "CheckpointLoader_Refiner",
-                    CkptName =
-                        SelectedRefiner?.RelativePath
-                        ?? throw new ValidationException("Refiner Model enabled but not selected")
-                }
+                GetModelLoader(
+                    e,
+                    "CheckpointLoader_Refiner",
+                    SelectedRefiner ?? throw new ValidationException("Refiner Model enabled but not selected")
+                )
             );
 
             e.Builder.Connections.Refiner.Model = refinerLoader.Output1;

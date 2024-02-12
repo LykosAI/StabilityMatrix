@@ -333,7 +333,8 @@ public sealed class App : Application
                         provider.GetRequiredService<NewPackageManagerViewModel>(),
                         provider.GetRequiredService<CheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
-                        provider.GetRequiredService<OutputsPageViewModel>()
+                        provider.GetRequiredService<OutputsPageViewModel>(),
+                        provider.GetRequiredService<OpenArtBrowserViewModel>()
                     },
                     FooterPages = { provider.GetRequiredService<SettingsViewModel>() }
                 }
@@ -556,7 +557,7 @@ public sealed class App : Application
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://civitai.com");
-                c.Timeout = TimeSpan.FromSeconds(15);
+                c.Timeout = TimeSpan.FromSeconds(30);
             })
             .AddPolicyHandler(retryPolicy);
 
@@ -565,7 +566,7 @@ public sealed class App : Application
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://civitai.com");
-                c.Timeout = TimeSpan.FromSeconds(15);
+                c.Timeout = TimeSpan.FromSeconds(30);
             })
             .AddPolicyHandler(retryPolicy);
 
@@ -582,6 +583,15 @@ public sealed class App : Application
                 serviceProvider =>
                     new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
             );
+
+        services
+            .AddRefitClient<IOpenArtApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://openart.ai/api/public/workflows");
+                c.Timeout = TimeSpan.FromSeconds(30);
+            })
+            .AddPolicyHandler(retryPolicy);
 
         // Add Refit client managers
         services.AddHttpClient("A3Client").AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));

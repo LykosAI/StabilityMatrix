@@ -2,6 +2,9 @@
 
 namespace StabilityMatrix.Core.Models.Api.OpenArt;
 
+/// <summary>
+/// Note that parameters Category, Custom Node and Sort should be used separately
+/// </summary>
 public class OpenArtFeedRequest
 {
     [AliasAs("category")]

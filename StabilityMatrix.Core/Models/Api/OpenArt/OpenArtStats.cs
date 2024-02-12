@@ -14,7 +14,7 @@ public class OpenArtStats
     public int NumReviews { get; set; }
 
     [JsonPropertyName("rating")]
-    public int Rating { get; set; }
+    public double Rating { get; set; }
 
     [JsonPropertyName("num_comments")]
     public int NumComments { get; set; }

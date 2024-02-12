@@ -32,7 +32,7 @@ public class OpenArtSearchResult
     public IEnumerable<string> Categories { get; set; }
 
     [JsonPropertyName("thumbnails")]
-    public IEnumerable<OpenArtThumbnail> Thumbnails { get; set; }
+    public List<OpenArtThumbnail> Thumbnails { get; set; }
 
     [JsonPropertyName("nodes_count")]
     public NodesCount NodesCount { get; set; }

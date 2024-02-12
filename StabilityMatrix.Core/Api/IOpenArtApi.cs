@@ -10,7 +10,7 @@ public interface IOpenArtApi
     Task<OpenArtSearchResponse> GetFeedAsync([Query] OpenArtFeedRequest request);
 
     [Get("/list")]
-    Task<OpenArtSearchResponse> SearchAsync([Query] OpenArtFeedRequest request);
+    Task<OpenArtSearchResponse> SearchAsync([Query] OpenArtSearchRequest request);
 
     [Post("/download")]
     Task<OpenArtDownloadResponse> DownloadWorkflowAsync([Body] OpenArtDownloadRequest request);

@@ -20,5 +20,5 @@ public class OpenArtCreator
     public string Username { get; set; }
 
     [JsonPropertyName("dev_profile_url")]
-    public Uri DevProfileUrl { get; set; }
+    public string DevProfileUrl { get; set; }
 }

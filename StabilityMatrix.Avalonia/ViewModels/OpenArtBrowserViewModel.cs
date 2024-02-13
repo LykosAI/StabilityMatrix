@@ -151,6 +151,9 @@ public partial class OpenArtBrowserViewModel(IOpenArtApi openArtApi, INotificati
 
     public async Task LoadNextPageAsync()
     {
+        if (!CanGoForward)
+            return;
+
         try
         {
             DisplayedPageNumber++;

@@ -223,7 +223,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
         settingsManager.RelayPropertyFor(
             this,
             vm => vm.InfinitelyScrollWorkflowBrowser,
-            settings => settings.IsWorkflowInfiniteScrollEnabled
+            settings => settings.IsWorkflowInfiniteScrollEnabled,
+            true
         );
 
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);

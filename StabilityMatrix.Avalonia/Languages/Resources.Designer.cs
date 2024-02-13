@@ -1392,6 +1392,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Infinite Scrolling.
+        /// </summary>
+        public static string Label_InfiniteScrolling {
+            get {
+                return ResourceManager.GetString("Label_InfiniteScrolling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Inner exception.
         /// </summary>
         public static string Label_InnerException {
@@ -2405,6 +2414,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_WipFeatureDescription {
             get {
                 return ResourceManager.GetString("Label_WipFeatureDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workflow Browser.
+        /// </summary>
+        public static string Label_WorkflowBrowser {
+            get {
+                return ResourceManager.GetString("Label_WorkflowBrowser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workflows.
+        /// </summary>
+        public static string Label_Workflows {
+            get {
+                return ResourceManager.GetString("Label_Workflows", resourceCulture);
             }
         }
         

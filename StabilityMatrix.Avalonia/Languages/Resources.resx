@@ -972,4 +972,13 @@
   <data name="Label_SelectDownloadLocation" xml:space="preserve">
     <value>Select Download Location:</value>
   </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>Workflows</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>Infinite Scrolling</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>Workflow Browser</value>
+  </data>
 </root>

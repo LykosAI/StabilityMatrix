@@ -196,6 +196,24 @@
                 </ui:SettingsExpander>
             </Grid>
             
+            <sg:SpacedGrid RowDefinitions="Auto, Auto">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_WorkflowBrowser}" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0,8,4"
+                    Header="{x:Static lang:Resources.Label_InfiniteScrolling}">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-list" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding InfinitelyScrollWorkflowBrowser}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+            </sg:SpacedGrid>
+            
             <!--  Theme  -->
             <Grid RowDefinitions="Auto,*,*,*">
                 <TextBlock

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -53,6 +54,28 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
     private int clipSkip = 1;
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
+
+    [RelayCommand]
+    private static async Task OnConfigClickAsync()
+    {
+        await DialogHelper
+            .CreateMarkdownDialog(
+                """
+                                                 You can use a config (.yaml) file to load a model with specific settings.
+                                                 
+                                                 Place the config file next to the model file with the same name:
+                                                 ```md
+                                                 Models/
+                                                     StableDiffusion/
+                                                         my_model.safetensors
+                                                         my_model.yaml <-
+                                                 ```
+                                                 """,
+                "Using Model Configs",
+                TextEditorPreset.Console
+            )
+            .ShowAsync();
+    }
 
     public async Task<bool> ValidateModel()
     {

@@ -972,4 +972,7 @@
   <data name="Label_SelectDownloadLocation" xml:space="preserve">
     <value>Select Download Location:</value>
   </data>
+  <data name="Label_Config" xml:space="preserve">
+    <value>Config</value>
+  </data>
 </root>

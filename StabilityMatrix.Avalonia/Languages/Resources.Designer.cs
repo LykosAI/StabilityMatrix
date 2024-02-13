@@ -942,6 +942,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Config.
+        /// </summary>
+        public static string Label_Config {
+            get {
+                return ResourceManager.GetString("Label_Config", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Confirm Delete.
         /// </summary>
         public static string Label_ConfirmDelete {

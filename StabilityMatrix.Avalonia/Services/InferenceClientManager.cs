@@ -369,6 +369,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         inferenceInputs.Create();
     }
 
+    [MemberNotNull(nameof(Client))]
     private async Task ConnectAsyncImpl(Uri uri, CancellationToken cancellationToken = default)
     {
         if (IsConnected)
@@ -480,11 +481,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         await ConnectAsyncImpl(uri, cancellationToken);
 
-        var packageDir = new DirectoryPath(packagePair.InstalledPackage.FullPath);
-
-        // Set package paths
-        Client!.OutputImagesDir = packageDir.JoinDir("output");
-        Client!.InputImagesDir = packageDir.JoinDir("input");
+        // Set package path as server path
+        Client.LocalServerPath = packagePair.InstalledPackage.FullPath!;
     }
 
     public async Task CloseAsync()

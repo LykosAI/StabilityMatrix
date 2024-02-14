@@ -10,7 +10,10 @@
 
     <Design.PreviewWith>
         <Panel Width="450" Height="600">
-            <StackPanel Margin="8" Spacing="4" Width="250">
+            <StackPanel
+                Width="250"
+                Margin="8"
+                Spacing="4">
                 <controls:BetterComboBox
                     HorizontalAlignment="Stretch"
                     ItemsSource="{x:Static mocks:DesignData.SampleHybridModels}"
@@ -83,7 +86,7 @@
             </Template>
         </Setter>
     </ControlTheme>
-    
+
     <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
     <ControlTheme
         x:Key="{x:Type controls:BetterComboBox}"
@@ -139,11 +142,16 @@
                         <sg:SpacedGrid
                             Grid.Row="1"
                             Grid.Column="1"
+                            ColumnDefinitions="Auto,*"
                             RowDefinitions="Auto,Auto,Auto"
                             RowSpacing="1">
-                            <TextBlock Text="{Binding Local.DisplayModelName}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Grid.ColumnSpan="2"
+                                Text="{Binding Local.DisplayModelName}"
+                                TextTrimming="CharacterEllipsis" />
                             <TextBlock
                                 Grid.Row="1"
+                                Grid.Column="0"
                                 FontSize="12"
                                 FontWeight="Regular"
                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
@@ -151,10 +159,27 @@
                                 TextTrimming="CharacterEllipsis" />
                             <TextBlock
                                 Grid.Row="2"
+                                Grid.Column="0"
                                 FontSize="11"
                                 FontWeight="Normal"
                                 Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                 Text="{Binding Local.DisplayModelFileName}" />
+
+                            <!--  Badges  -->
+                            <StackPanel
+                                Grid.Row="1"
+                                Grid.RowSpan="2"
+                                Grid.Column="1"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom"
+                                Orientation="Horizontal">
+                                <fluentIcons:SymbolIcon
+                                    Margin="4"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    IsVisible="{Binding Local.ConfigFullPath, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
+                                    Symbol="BeakerSettings"
+                                    ToolTip.Tip="{Binding Local.DisplayConfigFileName}" />
+                            </StackPanel>
                         </sg:SpacedGrid>
                     </sg:SpacedGrid>
                 </DataTemplate>
@@ -236,7 +261,7 @@
         <Setter Property="SelectionBoxItemTemplate" Value="{StaticResource HybridModelSelectionBoxTemplateSelector}" />
         <Setter Property="ItemTemplate" Value="{StaticResource HybridModelTemplateSelector}" />
         <Setter Property="ItemContainerTheme" Value="{StaticResource BetterComboBoxItemHybridModelTheme}" />
-        
+
         <Style Selector="^ /template/ Popup#PART_Popup">
             <Setter Property="Width" Value="400" />
             <Setter Property="Placement" Value="Bottom" />

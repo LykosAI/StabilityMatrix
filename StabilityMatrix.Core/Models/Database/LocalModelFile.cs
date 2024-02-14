@@ -35,6 +35,11 @@ public record LocalModelFile
     public string? PreviewImageFullPath { get; set; }
 
     /// <summary>
+    /// Optional full path to the model's configuration (.yaml) file.
+    /// </summary>
+    public string? ConfigFullPath { get; set; }
+
+    /// <summary>
     /// Whether or not an update is available for this model
     /// </summary>
     public bool HasUpdate { get; set; }
@@ -88,6 +93,9 @@ public record LocalModelFile
     [BsonIgnore]
     public string DisplayModelFileName => FileName;
 
+    [BsonIgnore]
+    public string DisplayConfigFileName => Path.GetFileName(ConfigFullPath) ?? string.Empty;
+
     public string GetFullPath(string rootModelDirectory)
     {
         return Path.Combine(rootModelDirectory, RelativePath);
@@ -102,29 +110,6 @@ public record LocalModelFile
             ? null
             : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
-
-    /*protected bool Equals(LocalModelFile other)
-    {
-        return RelativePath == other.RelativePath;
-    }
-
-    /// <inheritdoc />
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(null, obj))
-            return false;
-        if (ReferenceEquals(this, obj))
-            return true;
-        if (obj.GetType() != this.GetType())
-            return false;
-        return Equals((LocalModelFile)obj);
-    }
-
-    /// <inheritdoc />
-    public override int GetHashCode()
-    {
-        return RelativePath.GetHashCode();
-    }*/
 
     public static readonly HashSet<string> SupportedCheckpointExtensions =
     [

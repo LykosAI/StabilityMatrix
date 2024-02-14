@@ -200,6 +200,26 @@ public abstract partial class InferenceGenerationViewModelBase
     protected virtual void BuildPrompt(BuildPromptEventArgs args) { }
 
     /// <summary>
+    /// Uploads files required for the prompt
+    /// </summary>
+    protected virtual async Task UploadPromptFiles(
+        IEnumerable<(string SourcePath, string DestinationRelativePath)> files,
+        ComfyClient client
+    )
+    {
+        foreach (var (sourcePath, destinationRelativePath) in files)
+        {
+            Logger.Debug(
+                "Uploading prompt file {SourcePath} to relative path {DestinationPath}",
+                sourcePath,
+                destinationRelativePath
+            );
+
+            await client.UploadFileAsync(sourcePath, destinationRelativePath);
+        }
+    }
+
+    /// <summary>
     /// Gets ImageSources that need to be uploaded as inputs
     /// </summary>
     protected virtual IEnumerable<ImageSource> GetInputImages()
@@ -256,6 +276,9 @@ public abstract partial class InferenceGenerationViewModelBase
 
         // Upload input images
         await UploadInputImages(client);
+
+        // Upload required files
+        await UploadPromptFiles(args.FilesToTransfer, client);
 
         // Connect preview image handler
         client.PreviewImageReceived += OnPreviewImageReceived;
@@ -637,6 +660,7 @@ public abstract partial class InferenceGenerationViewModelBase
         public GenerationParameters? Parameters { get; init; }
         public InferenceProjectDocument? Project { get; init; }
         public bool ClearOutputImages { get; init; } = true;
+        public List<(string SourcePath, string DestinationRelativePath)> FilesToTransfer { get; init; } = [];
     }
 
     public class BuildPromptEventArgs : EventArgs
@@ -644,17 +668,28 @@ public abstract partial class InferenceGenerationViewModelBase
         public ComfyNodeBuilder Builder { get; } = new();
         public GenerateOverrides Overrides { get; init; } = new();
         public long? SeedOverride { get; init; }
+        public List<(string SourcePath, string DestinationRelativePath)> FilesToTransfer { get; init; } = [];
 
-        public static implicit operator ModuleApplyStepEventArgs(BuildPromptEventArgs args)
+        public ModuleApplyStepEventArgs ToModuleApplyStepEventArgs()
         {
             var overrides = new Dictionary<Type, bool>();
 
-            if (args.Overrides.IsHiresFixEnabled.HasValue)
+            if (Overrides.IsHiresFixEnabled.HasValue)
             {
-                overrides[typeof(HiresFixModule)] = args.Overrides.IsHiresFixEnabled.Value;
+                overrides[typeof(HiresFixModule)] = Overrides.IsHiresFixEnabled.Value;
             }
 
-            return new ModuleApplyStepEventArgs { Builder = args.Builder, IsEnabledOverrides = overrides };
+            return new ModuleApplyStepEventArgs
+            {
+                Builder = Builder,
+                IsEnabledOverrides = overrides,
+                FilesToTransfer = FilesToTransfer
+            };
+        }
+
+        public static implicit operator ModuleApplyStepEventArgs(BuildPromptEventArgs args)
+        {
+            return args.ToModuleApplyStepEventArgs();
         }
     }
 }

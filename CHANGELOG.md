@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 #### Inference
 - Added option to load a .yaml config file next to the model with the same name. Can be used with VPred and other models that require a config file.
+### Fixed
+- Fixed icon sizes of Inference Addons and Steps buttons
 
 ## v2.9.0-dev.1
 ### Added

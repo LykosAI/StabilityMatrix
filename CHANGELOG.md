@@ -5,6 +5,13 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.8.3
+### Fixed
+- Fixed user tokens read error causing failed downloads
+- Failed downloads will now log error messages
+- Fixed [#458](https://github.com/LykosAI/StabilityMatrix/issues/458) - Save Intermediate Image not working
+- Fixed [#453](https://github.com/LykosAI/StabilityMatrix/issues/453) - Update Fooocus `--output-directory` argument to `--output-path`
+
 ## v2.8.2
 ### Added
 - Added missing GFPGAN link to Automatic1111 packages

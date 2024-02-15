@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed user tokens read error causing failed downloads
 - Failed downloads will now log error messages
 - Fixed [#458](https://github.com/LykosAI/StabilityMatrix/issues/458) - Save Intermediate Image not working
+- Fixed [#453](https://github.com/LykosAI/StabilityMatrix/issues/453) - Update Fooocus `--output-directory` argument to `--output-path`
 
 ## v2.8.2
 ### Added

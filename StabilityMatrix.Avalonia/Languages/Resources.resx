@@ -981,4 +981,7 @@
   <data name="Label_WorkflowBrowser" xml:space="preserve">
     <value>Workflow Browser</value>
   </data>
+  <data name="Label_Config" xml:space="preserve">
+    <value>Config</value>
+  </data>
 </root>

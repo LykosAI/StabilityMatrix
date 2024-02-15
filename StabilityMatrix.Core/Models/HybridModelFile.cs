@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Models.Database;
-using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Models;
 
@@ -125,9 +124,14 @@ public record HybridModelFile
             if (x.GetType() != y.GetType())
                 return false;
 
-            return Equals(x.RelativePath, y.RelativePath)
-                && x.IsNone == y.IsNone
-                && x.IsDefault == y.IsDefault;
+            if (!Equals(x.RelativePath, y.RelativePath))
+                return false;
+
+            // This equality affects replacements of remote over local models
+            // We want local and remote models to be considered equal if they have the same relative path
+            // But 2 local models with the same path but different config paths should be considered different
+
+            return !(x.Type == y.Type && x.Local?.ConfigFullPath != y.Local?.ConfigFullPath);
         }
 
         public int GetHashCode(HybridModelFile obj)

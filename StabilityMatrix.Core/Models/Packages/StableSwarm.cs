@@ -1,5 +1,4 @@
-﻿using System.Configuration;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
 using FreneticUtilities.FreneticDataSyntax;
 using StabilityMatrix.Core.Attributes;
@@ -276,7 +275,7 @@ public class StableSwarm(
 
         dotnetProcess = await prerequisiteHelper
             .RunDotnet(
-                args: $"src\\bin\\live_release\\StableSwarmUI.dll {arguments.TrimEnd()}",
+                args: $"src{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}live_release{Path.DirectorySeparatorChar}StableSwarmUI.dll {arguments.TrimEnd()}",
                 workingDirectory: installedPackagePath,
                 envVars: aspEnvVars,
                 onProcessOutput: HandleConsoleOutput,

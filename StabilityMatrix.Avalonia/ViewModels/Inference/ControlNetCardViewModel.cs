@@ -76,30 +76,13 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
         if (modelFile?.DownloadableResource is not { } resource)
             return;
 
-        var sharedFolderType =
-            resource.ContextType as SharedFolderType?
-            ?? throw new InvalidOperationException("ContextType is not SharedFolderType");
-
         var confirmDialog = vmFactory.Get<DownloadResourceViewModel>();
         confirmDialog.Resource = resource;
         confirmDialog.FileName = modelFile.FileName;
 
-        if (await confirmDialog.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+        if (await confirmDialog.GetDialog().ShowAsync() == ContentDialogResult.Primary)
         {
-            return;
+            confirmDialog.StartDownload();
         }
-
-        var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory).JoinDir(
-            sharedFolderType.GetStringValue()
-        );
-
-        var download = trackedDownloadService.NewDownload(
-            resource.Url,
-            modelsDir.JoinFile(modelFile.FileName)
-        );
-        download.ContextAction = new ModelPostDownloadContextAction();
-        download.Start();
-
-        EventManager.Instance.OnToggleProgressFlyout();
     }
 }

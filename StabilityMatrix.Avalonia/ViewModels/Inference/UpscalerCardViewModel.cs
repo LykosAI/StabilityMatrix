@@ -27,8 +27,6 @@ public partial class UpscalerCardViewModel : LoadableViewModelBase
     public const string ModuleKey = "Upscaler";
 
     private readonly INotificationService notificationService;
-    private readonly ITrackedDownloadService trackedDownloadService;
-    private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
@@ -42,14 +40,10 @@ public partial class UpscalerCardViewModel : LoadableViewModelBase
     public UpscalerCardViewModel(
         IInferenceClientManager clientManager,
         INotificationService notificationService,
-        ITrackedDownloadService trackedDownloadService,
-        ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> vmFactory
     )
     {
         this.notificationService = notificationService;
-        this.trackedDownloadService = trackedDownloadService;
-        this.settingsManager = settingsManager;
         this.vmFactory = vmFactory;
 
         ClientManager = clientManager;

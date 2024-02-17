@@ -24,8 +24,6 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "ControlNet";
 
-    private readonly ITrackedDownloadService trackedDownloadService;
-    private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
@@ -56,14 +54,10 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
     public IInferenceClientManager ClientManager { get; }
 
     public ControlNetCardViewModel(
-        ITrackedDownloadService trackedDownloadService,
-        ISettingsManager settingsManager,
         IInferenceClientManager clientManager,
         ServiceManager<ViewModelBase> vmFactory
     )
     {
-        this.trackedDownloadService = trackedDownloadService;
-        this.settingsManager = settingsManager;
         this.vmFactory = vmFactory;
 
         ClientManager = clientManager;

@@ -946,7 +946,7 @@
     <value>Notifications</value>
   </data>
   <data name="Label_NotificationOption_None" xml:space="preserve">
-    <value />
+    <value>None</value>
   </data>
   <data name="Action_Download" xml:space="preserve">
     <value>Download</value>
@@ -959,5 +959,20 @@
   </data>
   <data name="Label_RecommendedModelsSubText" xml:space="preserve">
     <value>While your package is installing, here are some models we recommend to help you get started.</value>
+  </data>
+  <data name="Label_ComfyRequiredTitle" xml:space="preserve">
+    <value>ComfyUI Required</value>
+  </data>
+  <data name="Label_ComfyRequiredDetail" xml:space="preserve">
+    <value>ComfyUI is required to install this package. Would you like to install it now?</value>
+  </data>
+  <data name="Error_PleaseSelectDownloadLocation" xml:space="preserve">
+    <value>Please select a download location.</value>
+  </data>
+  <data name="Label_SelectDownloadLocation" xml:space="preserve">
+    <value>Select Download Location:</value>
+  </data>
+  <data name="Label_Config" xml:space="preserve">
+    <value>Config</value>
   </data>
 </root>

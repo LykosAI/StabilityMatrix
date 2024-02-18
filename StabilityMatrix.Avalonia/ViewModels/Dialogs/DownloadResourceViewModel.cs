@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -8,8 +9,10 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
@@ -18,15 +21,17 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [View(typeof(DownloadResourceDialog))]
 [ManagedService]
 [Transient]
-public partial class DownloadResourceViewModel : ContentDialogViewModelBase
+public partial class DownloadResourceViewModel(
+    IDownloadService downloadService,
+    ISettingsManager settingsManager,
+    ITrackedDownloadService trackedDownloadService
+) : ContentDialogViewModelBase
 {
-    private readonly IDownloadService downloadService;
-
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FileNameWithHash))]
     private string? fileName;
 
-    public string FileNameWithHash => $"{FileName} [{Resource.HashSha256.ToLowerInvariant()[..7]}]";
+    public string FileNameWithHash => $"{FileName} [{Resource.HashSha256?.ToLowerInvariant()[..7]}]";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FileSizeText))]
@@ -37,12 +42,7 @@ public partial class DownloadResourceViewModel : ContentDialogViewModelBase
 
     public string? FileSizeText => FileSize == 0 ? null : Size.FormatBase10Bytes(FileSize);
 
-    public string ShortHash => Resource.HashSha256.ToLowerInvariant();
-
-    public DownloadResourceViewModel(IDownloadService downloadService)
-    {
-        this.downloadService = downloadService;
-    }
+    public string? ShortHash => Resource.HashSha256?.ToLowerInvariant()[..7];
 
     /// <inheritdoc />
     public override async Task OnLoadedAsync()
@@ -63,6 +63,33 @@ public partial class DownloadResourceViewModel : ContentDialogViewModelBase
         {
             ProcessRunner.OpenUrl(url);
         }
+    }
+
+    public TrackedDownload StartDownload()
+    {
+        var sharedFolderType =
+            Resource.ContextType as SharedFolderType?
+            ?? throw new InvalidOperationException("ContextType is not SharedFolderType");
+
+        var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory).JoinDir(
+            sharedFolderType.GetStringValue()
+        );
+
+        var download = trackedDownloadService.NewDownload(
+            Resource.Url,
+            modelsDir.JoinFile(Resource.FileName)
+        );
+
+        // Set extraction properties
+        download.AutoExtractArchive = Resource.AutoExtractArchive;
+        download.ExtractRelativePath = Resource.ExtractRelativePath;
+
+        download.ContextAction = new ModelPostDownloadContextAction();
+        download.Start();
+
+        EventManager.Instance.OnToggleProgressFlyout();
+
+        return download;
     }
 
     public BetterContentDialog GetDialog()

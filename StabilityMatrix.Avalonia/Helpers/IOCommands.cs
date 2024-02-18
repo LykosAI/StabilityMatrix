@@ -16,4 +16,28 @@ public static class IOCommands
             },
             url => !string.IsNullOrWhiteSpace(url)
         );
+
+    public static AsyncRelayCommand<string?> OpenFileBrowserCommand { get; } =
+        new(
+            async path =>
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                    return;
+
+                await ProcessRunner.OpenFileBrowser(path);
+            },
+            path => !string.IsNullOrWhiteSpace(path)
+        );
+
+    public static AsyncRelayCommand<string?> OpenFolderBrowserCommand { get; } =
+        new(
+            async path =>
+            {
+                if (string.IsNullOrWhiteSpace(path))
+                    return;
+
+                await ProcessRunner.OpenFolderBrowser(path);
+            },
+            path => !string.IsNullOrWhiteSpace(path)
+        );
 }

@@ -272,13 +272,19 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             settingsManager.SaveLaunchArgs(activeInstall.Id, args);
         }
 
-        await pyRunner.Initialize();
+        if (basePackage is not StableSwarm)
+        {
+            await pyRunner.Initialize();
+        }
 
         // Get path from package
         var packagePath = new DirectoryPath(settingsManager.LibraryDir, activeInstall.LibraryPath!);
 
-        // Unpack sitecustomize.py to venv
-        await UnpackSiteCustomize(packagePath.JoinDir("venv"));
+        if (basePackage is not StableSwarm)
+        {
+            // Unpack sitecustomize.py to venv
+            await UnpackSiteCustomize(packagePath.JoinDir("venv"));
+        }
 
         basePackage.Exited += OnProcessExited;
         basePackage.StartupComplete += RunningPackageOnStartupComplete;

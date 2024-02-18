@@ -226,6 +226,13 @@ public class ComfyNodeBuilder
         };
     }
 
+    public record CheckpointLoader
+        : ComfyTypedNodeBase<ModelNodeConnection, ClipNodeConnection, VAENodeConnection>
+    {
+        public required string ConfigName { get; init; }
+        public required string CkptName { get; init; }
+    }
+
     public record CheckpointLoaderSimple
         : ComfyTypedNodeBase<ModelNodeConnection, ClipNodeConnection, VAENodeConnection>
     {

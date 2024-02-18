@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reactive.Linq;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -25,6 +26,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 [Transient, ManagedService]
 public partial class PackageInstallBrowserViewModel : PageViewModelBase
 {
+    private readonly IPackageFactory packageFactory;
     private readonly INavigationService<NewPackageManagerViewModel> packageNavigationService;
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
@@ -56,6 +58,7 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
         IPrerequisiteHelper prerequisiteHelper
     )
     {
+        this.packageFactory = packageFactory;
         this.packageNavigationService = packageNavigationService;
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
@@ -127,7 +130,8 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
             logger,
             pyRunner,
             prerequisiteHelper,
-            packageNavigationService
+            packageNavigationService,
+            packageFactory
         );
 
         Dispatcher.UIThread.Post(

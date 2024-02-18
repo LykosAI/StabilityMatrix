@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Nodes;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Attributes;
@@ -7,6 +7,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -40,6 +41,8 @@ public class StableDiffusionUx(
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
+
+    public override IPackageExtensionManager? ExtensionManager => new A3WebUiExtensionManager(this);
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
@@ -271,5 +274,47 @@ public class StableDiffusionUx(
                 onConsoleOutput
             )
             .ConfigureAwait(false);
+    }
+
+    private class A3WebUiExtensionManager(StableDiffusionUx package)
+        : GitPackageExtensionManager(package.PrerequisiteHelper)
+    {
+        public override string RelativeInstallDirectory => "extensions";
+
+        public override IEnumerable<ExtensionManifest> DefaultManifests =>
+            [
+                new ExtensionManifest(
+                    new Uri(
+                        "https://raw.githubusercontent.com/AUTOMATIC1111/stable-diffusion-webui-extensions/master/index.json"
+                    )
+                )
+            ];
+
+        public override async Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(
+            ExtensionManifest manifest,
+            CancellationToken cancellationToken = default
+        )
+        {
+            try
+            {
+                // Get json
+                var content = await package
+                    .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
+                    .ConfigureAwait(false);
+
+                // Parse json
+                var jsonManifest = JsonSerializer.Deserialize<A1111ExtensionManifest>(
+                    content,
+                    A1111ExtensionManifestSerializerContext.Default.Options
+                );
+
+                return jsonManifest?.GetPackageExtensions() ?? Enumerable.Empty<PackageExtension>();
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to get extensions from manifest");
+                return Enumerable.Empty<PackageExtension>();
+            }
+        }
     }
 }

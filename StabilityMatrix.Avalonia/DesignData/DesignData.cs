@@ -1008,6 +1008,8 @@ The gallery images are often inpainted, but you will get something very similar 
     public static ControlNetCardViewModel ControlNetCardViewModel =>
         DialogFactory.Get<ControlNetCardViewModel>();
 
+    public static string CurrentDirectory => Directory.GetCurrentDirectory();
+
     public static Indexer Types { get; } = new();
 
     public class Indexer

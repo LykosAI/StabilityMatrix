@@ -10,9 +10,6 @@ public class OpenArtSearchResult
     [JsonPropertyName("creator")]
     public OpenArtCreator Creator { get; set; }
 
-    [JsonPropertyName("updated_at")]
-    public DateTimeOffset UpdatedAt { get; set; }
-
     [JsonPropertyName("stats")]
     public OpenArtStats Stats { get; set; }
 
@@ -24,9 +21,6 @@ public class OpenArtSearchResult
 
     [JsonPropertyName("description")]
     public string Description { get; set; }
-
-    [JsonPropertyName("created_at")]
-    public DateTimeOffset CreatedAt { get; set; }
 
     [JsonPropertyName("categories")]
     public IEnumerable<string> Categories { get; set; }

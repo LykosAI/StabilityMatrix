@@ -375,6 +375,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open on OpenArt.
+        /// </summary>
+        public static string Action_OpenOnOpenArt {
+            get {
+                return ResourceManager.GetString("Action_OpenOnOpenArt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open Project....
         /// </summary>
         public static string Action_OpenProjectEllipsis {
@@ -1689,6 +1698,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Node Details.
+        /// </summary>
+        public static string Label_NodeDetails {
+            get {
+                return ResourceManager.GetString("Label_NodeDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No extensions found..
         /// </summary>
         public static string Label_NoExtensionsFound {
@@ -2432,6 +2450,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_WorkflowBrowser {
             get {
                 return ResourceManager.GetString("Label_WorkflowBrowser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workflow Description.
+        /// </summary>
+        public static string Label_WorkflowDescription {
+            get {
+                return ResourceManager.GetString("Label_WorkflowDescription", resourceCulture);
             }
         }
         

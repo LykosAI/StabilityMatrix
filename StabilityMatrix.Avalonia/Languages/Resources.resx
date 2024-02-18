@@ -984,4 +984,13 @@
   <data name="Label_Config" xml:space="preserve">
     <value>Config</value>
   </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>Open on OpenArt</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>Node Details</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>Workflow Description</value>
+  </data>
 </root>

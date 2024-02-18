@@ -66,6 +66,11 @@
         <input:StandardUICommand
             x:Key="OpenModelCommand"
             Command="{Binding OpenModelCommand}" />
+        
+        <input:StandardUICommand
+            x:Key="OpenWorkflowCommand"
+            Command="{Binding OpenWorkflowCommand}" />
+        
         <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter" />
         <DataTemplate x:Key="OpenArtWorkflowTemplate" DataType="{x:Type openArt:OpenArtSearchResult}">
             <Border
@@ -90,10 +95,9 @@
                     Padding="0"
                     BorderThickness="0"
                     VerticalContentAlignment="Top"
-                    CornerRadius="8">
-                    <!-- Command="{Binding ShowVersionDialogCommand}" -->
-                    <!-- CommandParameter="{Binding CivitModel}" -->
-                    <!-- IsEnabled="{Binding !IsImporting}"> -->
+                    CornerRadius="8"
+                    Command="{StaticResource OpenWorkflowCommand}"
+                    CommandParameter="{Binding }">
                     <Grid RowDefinitions="*, Auto">
                         <controls:BetterAdvancedImage
                             Grid.Row="0"
@@ -221,7 +225,7 @@
                                         <MenuFlyout>
                                             <MenuItem Command="{StaticResource OpenModelCommand}"
                                                       CommandParameter="{Binding }"
-                                                      Header="{x:Static lang:Resources.Action_OpenOnCivitAi}">
+                                                      Header="{x:Static lang:Resources.Action_OpenOnOpenArt}">
                                                 <MenuItem.Icon>
                                                     <ui:SymbolIcon Symbol="Open" />
                                                 </MenuItem.Icon>

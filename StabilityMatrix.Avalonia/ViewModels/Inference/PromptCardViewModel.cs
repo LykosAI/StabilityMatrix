@@ -9,17 +9,20 @@ using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Core.ViewModels;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -43,6 +46,8 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
     public TextDocument PromptDocument { get; } = new();
     public TextDocument NegativePromptDocument { get; } = new();
 
+    public StackEditableCardViewModel StackEditableCardViewModel { get; }
+
     [ObservableProperty]
     private bool isAutoCompletionEnabled;
 
@@ -52,6 +57,7 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
         ITokenizerProvider tokenizerProvider,
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
+        ServiceManager<ViewModelBase> vmFactory,
         SharedState sharedState
     )
     {
@@ -59,6 +65,12 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
         CompletionProvider = completionProvider;
         TokenizerProvider = tokenizerProvider;
         SharedState = sharedState;
+
+        StackEditableCardViewModel = vmFactory.Get<StackEditableCardViewModel>(vm =>
+        {
+            vm.Title = "Styles";
+            vm.AvailableModules = [typeof(PromptExpansionModule)];
+        });
 
         settingsManager.RelayPropertyFor(
             this,
@@ -98,7 +110,12 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
                 var loras = positivePrompt.GetExtraNetworksAsLocalModels(modelIndexService).ToList();
 
                 // Add group to load loras onto model and clip in series
-                var lorasGroup = e.Builder.Group_LoraLoadMany($"Loras_{modelConnections.Name}", model, clip, loras);
+                var lorasGroup = e.Builder.Group_LoraLoadMany(
+                    $"Loras_{modelConnections.Name}",
+                    model,
+                    clip,
+                    loras
+                );
 
                 // Set last outputs as model and clip
                 modelConnections.Model = lorasGroup.Output1;
@@ -342,6 +359,10 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
     /// <inheritdoc />
     public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
     {
-        return parameters with { PositivePrompt = PromptDocument.Text, NegativePrompt = NegativePromptDocument.Text };
+        return parameters with
+        {
+            PositivePrompt = PromptDocument.Text,
+            NegativePrompt = NegativePromptDocument.Text
+        };
     }
 }

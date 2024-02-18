@@ -19,11 +19,13 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(FreeUCardViewModel), FreeUCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(UpscalerCardViewModel), UpscalerCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(ControlNetCardViewModel), ControlNetCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(PromptExpansionCardViewModel), PromptExpansionCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(FreeUModule))]
 [JsonDerivedType(typeof(HiresFixModule))]
 [JsonDerivedType(typeof(UpscalerModule))]
 [JsonDerivedType(typeof(ControlNetModule))]
 [JsonDerivedType(typeof(SaveImageModule))]
+[JsonDerivedType(typeof(PromptExpansionModule))]
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -32,7 +34,8 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 
     private static readonly string[] SerializerIgnoredNames = { nameof(HasErrors) };
 
-    private static readonly JsonSerializerOptions SerializerOptions = new() { IgnoreReadOnlyProperties = true };
+    private static readonly JsonSerializerOptions SerializerOptions =
+        new() { IgnoreReadOnlyProperties = true };
 
     private static bool ShouldIgnoreProperty(PropertyInfo property)
     {
@@ -243,7 +246,11 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
             }
             else
             {
-                Logger.ConditionalTrace("Serializing {Property} ({Type})", property.Name, property.PropertyType);
+                Logger.ConditionalTrace(
+                    "Serializing {Property} ({Type})",
+                    property.Name,
+                    property.PropertyType
+                );
                 var value = property.GetValue(this);
                 if (value is not null)
                 {
@@ -266,7 +273,8 @@ public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
     protected static JsonObject SerializeModel<T>(T model)
     {
         var node = JsonSerializer.SerializeToNode(model);
-        return node?.AsObject() ?? throw new NullReferenceException("Failed to serialize state to JSON object.");
+        return node?.AsObject()
+            ?? throw new NullReferenceException("Failed to serialize state to JSON object.");
     }
 
     /// <summary>

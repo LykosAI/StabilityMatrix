@@ -20,7 +20,7 @@
             <ui:SettingsExpander 
                 Command="{Binding OpenInfoUrlCommand}"
                 Header="{Binding FileNameWithHash}" 
-                Description="{Binding Resource.ByAuthor}"
+                Description="{Binding Resource.Author, StringFormat={}by {0}}"
                 Footer="{Binding FileSizeText}">
             </ui:SettingsExpander>
             

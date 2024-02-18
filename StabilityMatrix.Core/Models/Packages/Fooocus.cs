@@ -73,7 +73,7 @@ public class Fooocus(
                 Name = "Output Directory",
                 Type = LaunchOptionType.String,
                 Description = "Override the output directory",
-                Options = { "--output-directory" }
+                Options = { "--output-path" }
             },
             new LaunchOptionDefinition
             {

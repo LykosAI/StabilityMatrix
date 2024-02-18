@@ -1,0 +1,65 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:system="using:System"
+    xmlns:treeFileExplorer="clr-namespace:StabilityMatrix.Avalonia.Models.TreeFileExplorer"
+    xmlns:mock="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent">
+    <Design.PreviewWith>
+        <StackPanel Spacing="16">
+            <Panel Height="300" Margin="4">
+                <controls:TreeFileExplorer 
+                    RootPath="{x:Static mock:DesignData.CurrentDirectory}" />
+            </Panel>
+        
+            <Panel Height="300" Margin="4">
+                <controls:TreeFileExplorer 
+                    IndexFiles="False"
+                    CanSelectFiles="False"
+                    RootPath="{x:Static mock:DesignData.CurrentDirectory}" />
+            </Panel>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|TreeFileExplorer">
+        <!--  Set Defaults  -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid>
+                    <TreeView 
+                        ScrollViewer.VerticalScrollBarVisibility="Auto"
+                        ItemsSource="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=RootItem.Children}">
+                        <TreeView.DataTemplates>
+                            <DataTemplate 
+                                DataType="treeFileExplorer:TreeFileExplorerFile">
+                                <sg:SpacedGrid ColumnDefinitions="Auto,*" RowSpacing="0" ColumnSpacing="4">
+                                    <fluentIcons:SymbolIcon
+                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                        Symbol="Document" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Text="{Binding Path.Name}" />   
+                                </sg:SpacedGrid>
+                            </DataTemplate>
+                            <TreeDataTemplate 
+                                DataType="treeFileExplorer:TreeFileExplorerDirectory" 
+                                ItemsSource="{Binding Children}">
+                                <sg:SpacedGrid ColumnDefinitions="Auto,*" RowSpacing="0" ColumnSpacing="4">
+                                    <fluentIcons:SymbolIcon
+                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                        IsFilled="True"
+                                        Symbol="Folder" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Text="{Binding Path.Name}" />   
+                                </sg:SpacedGrid>
+                            </TreeDataTemplate>
+                        </TreeView.DataTemplates>
+                    </TreeView>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

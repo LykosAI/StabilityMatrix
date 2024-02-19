@@ -519,7 +519,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         await ConnectAsyncImpl(uri, cancellationToken);
 
-        // Set package path as server path
+        Client.LocalServerPackage = packagePair;
         Client.LocalServerPath = packagePair.InstalledPackage.FullPath!;
     }
 

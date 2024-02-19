@@ -298,7 +298,7 @@ public class InvokeAI : BaseGitPackage
         if (Compat.IsMacOS || Compat.IsLinux)
         {
             await PrerequisiteHelper
-                .RunNpm(["i", "vite"], installLocation, envVars: envVars)
+                .RunNpm(["i", "vite", "--ignore-scripts=true"], installLocation, envVars: envVars)
                 .ConfigureAwait(false);
         }
 

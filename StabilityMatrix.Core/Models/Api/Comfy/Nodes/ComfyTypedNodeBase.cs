@@ -8,7 +8,25 @@ namespace StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 public abstract record ComfyTypedNodeBase
 {
-    protected virtual string ClassType => GetType().Name;
+    protected virtual string ClassType
+    {
+        get
+        {
+            var type = GetType();
+
+            // Use options name if available
+            if (type.GetCustomAttribute<TypedNodeOptionsAttribute>() is { } options)
+            {
+                if (!string.IsNullOrEmpty(options.Name))
+                {
+                    return options.Name;
+                }
+            }
+
+            // Otherwise use class name
+            return type.Name;
+        }
+    }
 
     [JsonIgnore]
     public required string Name { get; init; }

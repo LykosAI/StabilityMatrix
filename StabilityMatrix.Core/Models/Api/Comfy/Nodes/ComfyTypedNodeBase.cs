@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.ComponentModel;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
@@ -8,6 +9,7 @@ namespace StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 public abstract record ComfyTypedNodeBase
 {
+    [Localizable(false)]
     protected virtual string ClassType
     {
         get
@@ -28,6 +30,7 @@ public abstract record ComfyTypedNodeBase
         }
     }
 
+    [Localizable(false)]
     [JsonIgnore]
     public required string Name { get; init; }
 

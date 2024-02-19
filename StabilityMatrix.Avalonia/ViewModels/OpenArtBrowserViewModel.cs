@@ -162,27 +162,30 @@ public partial class OpenArtBrowserViewModel(
         if (result != ContentDialogResult.Primary)
             return;
 
-        var steps = new List<IPackageStep>();
-        foreach (var node in vm.CustomNodes.Where(x => x.IsInstalled is false))
+        if (existingComfy == null || comfyPair == null)
         {
-            if (ComfyNodeMap.Lookup.TryGetValue(node.Title, out var url))
-            {
-                steps.Add(
-                    new InstallExtensionStep(
-                        comfyPair.BasePackage.ExtensionManager,
-                        comfyPair.InstalledPackage,
-                        new PackageExtension
-                        {
-                            Title = node.Title,
-                            Reference = new Uri(url),
-                            Files = [new Uri(url)],
-                            InstallType = "git-clone",
-                            Author = node.Title
-                        }
-                    )
-                );
-            }
+            notificationService.Show(
+                Resources.Label_ComfyRequiredTitle,
+                "ComfyUI is required to import workflows from OpenArt"
+            );
+            return;
         }
+
+        var extensionManager = comfyPair.BasePackage.ExtensionManager!;
+        var extensions = (
+            await extensionManager.GetManifestExtensionsAsync(
+                extensionManager.GetManifests(comfyPair.InstalledPackage)
+            )
+        ).ToList();
+
+        var steps = vm.CustomNodes.Where(x => x.IsInstalled is false)
+            .Select(node => extensions.FirstOrDefault(x => x.Title == node.Title))
+            .OfType<PackageExtension>()
+            .Select(
+                extension => new InstallExtensionStep(extensionManager, comfyPair.InstalledPackage, extension)
+            )
+            .Cast<IPackageStep>()
+            .ToList();
 
         steps.Add(new DownloadOpenArtWorkflowStep(openArtApi, vm.Workflow, settingsManager));
 

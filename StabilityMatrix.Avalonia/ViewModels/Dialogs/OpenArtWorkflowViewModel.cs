@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -11,7 +10,6 @@ using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.OpenArt;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -22,7 +20,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class OpenArtWorkflowViewModel : ContentDialogViewModelBase
 {
     public required OpenArtSearchResult Workflow { get; init; }
-    public string? InstalledComfyPath { get; init; }
+    public PackagePair? InstalledComfy { get; init; }
 
     [ObservableProperty]
     private ObservableCollection<OpenArtCustomNode> customNodes = [];
@@ -30,14 +28,16 @@ public partial class OpenArtWorkflowViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private string prunedDescription = string.Empty;
 
-    public override void OnLoaded()
+    public override async Task OnLoadedAsync()
     {
-        CustomNodes = new ObservableCollection<OpenArtCustomNode>(ParseNodes(Workflow.NodesIndex.ToList()));
+        CustomNodes = new ObservableCollection<OpenArtCustomNode>(
+            await ParseNodes(Workflow.NodesIndex.ToList())
+        );
         PrunedDescription = Utilities.RemoveHtml(Workflow.Description);
     }
 
     [Localizable(false)]
-    private List<OpenArtCustomNode> ParseNodes(List<string> nodes)
+    private async Task<List<OpenArtCustomNode>> ParseNodes(List<string> nodes)
     {
         var indexOfFirstDot = nodes.IndexOf(".");
         if (indexOfFirstDot != -1)
@@ -46,14 +46,14 @@ public partial class OpenArtWorkflowViewModel : ContentDialogViewModelBase
         }
 
         var installedNodes = new List<string>();
-        if (!string.IsNullOrWhiteSpace(InstalledComfyPath))
+        if (InstalledComfy != null)
         {
-            installedNodes = Directory
-                .EnumerateDirectories(InstalledComfyPath)
-                .Select(
-                    x => x.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).Last()
+            installedNodes = (
+                await InstalledComfy.BasePackage.ExtensionManager?.GetInstalledExtensionsAsync(
+                    InstalledComfy.InstalledPackage
                 )
-                .Where(x => ComfyNodeMap.Lookup.Values.FirstOrDefault(y => y.EndsWith(x)) != null)
+            )
+                .Select(x => x.PrimaryPath?.Name)
                 .ToList();
         }
 

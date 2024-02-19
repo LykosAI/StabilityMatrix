@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -18,11 +18,14 @@ using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Factory;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.OpenArt;
+using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
-using Symbol = FluentIcons.Common.Symbol;
-using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -31,13 +34,14 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class OpenArtBrowserViewModel(
     IOpenArtApi openArtApi,
     INotificationService notificationService,
-    ISettingsManager settingsManager
+    ISettingsManager settingsManager,
+    IPackageFactory packageFactory
 ) : PageViewModelBase, IInfinitelyScroll
 {
     private const int PageSize = 20;
 
     public override string Title => Resources.Label_Workflows;
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Whiteboard };
+    public override IconSource IconSource => new FASymbolIconSource { Symbol = "fa-solid fa-circle-nodes" };
 
     private readonly SourceCache<OpenArtSearchResult, string> searchResultsCache = new(x => x.Id);
 
@@ -135,6 +139,10 @@ public partial class OpenArtBrowserViewModel(
             x => x.PackageName is "ComfyUI"
         );
 
+        var comfyPair = packageFactory.GetPackagePair(existingComfy);
+
+        var vm = new OpenArtWorkflowViewModel { Workflow = workflow, InstalledComfy = comfyPair };
+
         var dialog = new BetterContentDialog
         {
             IsPrimaryButtonEnabled = true,
@@ -146,16 +154,47 @@ public partial class OpenArtBrowserViewModel(
             MaxDialogWidth = 750,
             MaxDialogHeight = 850,
             CloseOnClickOutside = true,
-            Content = new OpenArtWorkflowViewModel
-            {
-                Workflow = workflow,
-                InstalledComfyPath = existingComfy is null
-                    ? null
-                    : Path.Combine(settingsManager.LibraryDir, existingComfy.LibraryPath!, "custom_nodes")
-            },
+            Content = vm
         };
 
-        await dialog.ShowAsync();
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary)
+            return;
+
+        var steps = new List<IPackageStep>();
+        foreach (var node in vm.CustomNodes.Where(x => x.IsInstalled is false))
+        {
+            if (ComfyNodeMap.Lookup.TryGetValue(node.Title, out var url))
+            {
+                steps.Add(
+                    new InstallExtensionStep(
+                        comfyPair.BasePackage.ExtensionManager,
+                        comfyPair.InstalledPackage,
+                        new PackageExtension
+                        {
+                            Title = node.Title,
+                            Reference = new Uri(url),
+                            Files = [new Uri(url)],
+                            InstallType = "git-clone",
+                            Author = node.Title
+                        }
+                    )
+                );
+            }
+        }
+
+        steps.Add(new DownloadOpenArtWorkflowStep(openArtApi, vm.Workflow, settingsManager));
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteTitle = "Workflow Imported",
+            ModificationCompleteMessage = "Finished importing workflow and custom nodes"
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+
+        await runner.ExecuteSteps(steps);
     }
 
     private async Task DoSearch(int page = 0)

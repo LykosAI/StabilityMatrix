@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -311,6 +312,7 @@ public class UnixPrerequisiteHelper(
         return ProcessRunner.RunBashCommand(args.Prepend("git").ToArray(), workingDirectory ?? "");
     }
 
+    [Localizable(false)]
     [SupportedOSPlatform("Linux")]
     [SupportedOSPlatform("macOS")]
     public async Task RunNpm(
@@ -320,27 +322,33 @@ public class UnixPrerequisiteHelper(
         IReadOnlyDictionary<string, string>? envVars = null
     )
     {
-        var command = args.Prepend([NpmPath]);
+        var process = ProcessRunner.StartAnsiProcess(
+            NpmPath,
+            args,
+            workingDirectory,
+            onProcessOutput,
+            envVars
+        );
 
-        var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "", envVars);
-        if (result.ExitCode != 0)
-        {
-            Logger.Error(
-                "npm command [{Command}] failed with exit code " + "{ExitCode}:\n{StdOut}\n{StdErr}",
-                command,
-                result.ExitCode,
-                result.StandardOutput,
-                result.StandardError
-            );
+        await process.WaitForExitAsync();
 
-            throw new ProcessException(
-                $"npm command [{command}] failed with exit code"
-                    + $" {result.ExitCode}:\n{result.StandardOutput}\n{result.StandardError}"
-            );
-        }
+        if (process.ExitCode == 0)
+            return;
 
-        onProcessOutput?.Invoke(ProcessOutput.FromStdOutLine(result.StandardOutput));
-        onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
+        var stdOut = await process.StandardOutput.ReadToEndAsync();
+        var stdErr = await process.StandardError.ReadToEndAsync();
+
+        Logger.Error(
+            "RunNpm with args [{Args}] failed with exit code " + "{ExitCode}:\n{StdOut}\n{StdErr}",
+            args,
+            process.ExitCode,
+            stdOut,
+            stdErr
+        );
+
+        throw new ProcessException(
+            $"RunNpm with args [{args}] failed with exit code" + $" {process.ExitCode}:\n{stdOut}\n{stdErr}"
+        );
     }
 
     [SupportedOSPlatform("Linux")]

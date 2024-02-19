@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed StableSwarmUI not installing properly on macOS
 - Fixed output sharing for Stable Diffusion WebUI Forge
+- Hopefully actually fixed [#464](https://github.com/LykosAI/StabilityMatrix/issues/464) - error when installing InvokeAI on macOS
+- Fixed default command line args for SDWebUI Forge on macOS
 
 ## v2.9.0-dev.2
 ### Added
@@ -25,6 +27,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added new package: [Stable Diffusion WebUI Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge) by lllyasviel
 - Added extension management for SD.Next and Stable Diffusion WebUI-UX
 - Added the ability to choose where CivitAI model downloads are saved
+
+## v2.8.4
+### Fixed
+- Hopefully actually fixed [#464](https://github.com/LykosAI/StabilityMatrix/issues/464) - error when installing InvokeAI on macOS
 
 ## v2.8.3
 ### Fixed

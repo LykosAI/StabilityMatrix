@@ -10,10 +10,5 @@ public class TypedNodeOptionsAttribute : Attribute
 {
     public string? Name { get; init; }
 
-    public TypedNodeOptionsAttribute() { }
-
-    public TypedNodeOptionsAttribute(string name)
-    {
-        Name = name;
-    }
+    public string[]? RequiredExtensions { get; init; }
 }

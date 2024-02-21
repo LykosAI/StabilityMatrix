@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -8,9 +7,7 @@ using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using OneOf;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Core.ViewModels;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -23,7 +20,6 @@ using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
-using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -343,7 +339,12 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
     public override JsonObject SaveStateToJsonObject()
     {
         return SerializeModel(
-            new PromptCardModel { Prompt = PromptDocument.Text, NegativePrompt = NegativePromptDocument.Text }
+            new PromptCardModel
+            {
+                Prompt = PromptDocument.Text,
+                NegativePrompt = NegativePromptDocument.Text,
+                ModulesCardState = ModulesCardViewModel.SaveStateToJsonObject()
+            }
         );
     }
 
@@ -354,6 +355,11 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
 
         PromptDocument.Text = model.Prompt ?? "";
         NegativePromptDocument.Text = model.NegativePrompt ?? "";
+
+        if (model.ModulesCardState is not null)
+        {
+            ModulesCardViewModel.LoadStateFromJsonObject(model.ModulesCardState);
+        }
     }
 
     /// <inheritdoc />

@@ -8,6 +8,7 @@ using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OneOf;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Core.ViewModels;
 using StabilityMatrix.Avalonia.Languages;
@@ -46,7 +47,7 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
     public TextDocument PromptDocument { get; } = new();
     public TextDocument NegativePromptDocument { get; } = new();
 
-    public StackEditableCardViewModel StackEditableCardViewModel { get; }
+    public StackEditableCardViewModel ModulesCardViewModel { get; }
 
     [ObservableProperty]
     private bool isAutoCompletionEnabled;
@@ -66,7 +67,7 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
         TokenizerProvider = tokenizerProvider;
         SharedState = sharedState;
 
-        StackEditableCardViewModel = vmFactory.Get<StackEditableCardViewModel>(vm =>
+        ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(vm =>
         {
             vm.Title = "Styles";
             vm.AvailableModules = [typeof(PromptExpansionModule)];
@@ -96,8 +97,14 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
         // Load prompts
         var positivePrompt = GetPrompt();
         positivePrompt.Process();
+        e.Builder.Connections.PositivePrompt = positivePrompt.ProcessedText;
+
         var negativePrompt = GetNegativePrompt();
         negativePrompt.Process();
+        e.Builder.Connections.NegativePrompt = negativePrompt.ProcessedText;
+
+        // Apply modules / styles that may modify the prompt
+        ModulesCardViewModel.ApplyStep(e);
 
         foreach (var modelConnections in e.Builder.Connections.Models.Values)
         {
@@ -128,7 +135,7 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
                 {
                     Name = $"PositiveCLIP_{modelConnections.Name}",
                     Clip = e.Builder.Connections.Base.Clip!,
-                    Text = positivePrompt.ProcessedText
+                    Text = e.Builder.Connections.PositivePrompt
                 }
             );
             var negativeClip = e.Nodes.AddTypedNode(
@@ -136,7 +143,7 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
                 {
                     Name = $"NegativeCLIP_{modelConnections.Name}",
                     Clip = e.Builder.Connections.Base.Clip!,
-                    Text = negativePrompt.ProcessedText
+                    Text = e.Builder.Connections.NegativePrompt
                 }
             );
 

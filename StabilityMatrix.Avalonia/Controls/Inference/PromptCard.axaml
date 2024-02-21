@@ -148,7 +148,7 @@
                         
                         <controls:StackEditableCard
                             Margin="2,0,0,0"
-                            DataContext="{Binding StackEditableCardViewModel}"
+                            DataContext="{Binding ModulesCardViewModel}"
                             Grid.Row="4">
                             
                         </controls:StackEditableCard>

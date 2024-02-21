@@ -33,7 +33,11 @@ public class ComfyClient : InferenceClientBase
         new()
         {
             PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower,
-            Converters = { new OneOfJsonConverter<string, StringNodeConnection>() }
+            Converters =
+            {
+                new NodeConnectionBaseJsonConverter(),
+                new OneOfJsonConverter<string, StringNodeConnection>()
+            }
         };
 
     // ReSharper disable once MemberCanBePrivate.Global

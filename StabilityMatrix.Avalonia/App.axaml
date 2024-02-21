@@ -78,6 +78,7 @@
         <StyleInclude Source="Controls/Inference/SharpenCard.axaml"/>
         <StyleInclude Source="Controls/Inference/FreeUCard.axaml"/>
         <StyleInclude Source="Controls/Inference/ControlNetCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/PromptExpansionCard.axaml"/>
         
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />

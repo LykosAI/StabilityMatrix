@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using OneOf;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
@@ -83,6 +84,10 @@ public class NodeDictionary : Dictionary<string, ComfyNode>
                     if (input is NodeConnectionBase connection)
                     {
                         node.Inputs[key] = connection.Data;
+                    }
+                    else if (input is IOneOf { Value: NodeConnectionBase oneOfConnection })
+                    {
+                        node.Inputs[key] = oneOfConnection.Data;
                     }
                 }
             }

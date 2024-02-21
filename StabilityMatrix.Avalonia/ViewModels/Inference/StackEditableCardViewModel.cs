@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
@@ -16,7 +17,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(StackEditableCard))]
 [ManagedService]
 [Transient]
-public partial class StackEditableCardViewModel : StackViewModelBase
+public partial class StackEditableCardViewModel : StackViewModelBase, IComfyStep
 {
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
@@ -65,6 +66,15 @@ public partial class StackEditableCardViewModel : StackViewModelBase
         foreach (var module in Cards.OfType<StackExpanderViewModel>())
         {
             module.IsEditEnabled = value;
+        }
+    }
+
+    /// <inheritdoc />
+    public void ApplyStep(ModuleApplyStepEventArgs e)
+    {
+        foreach (var module in Cards.OfType<IComfyStep>())
+        {
+            module.ApplyStep(e);
         }
     }
 

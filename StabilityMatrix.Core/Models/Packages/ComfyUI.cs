@@ -68,6 +68,7 @@ public class ComfyUI(
             [SharedFolderType.InvokeIpAdapters15] = new[] { "models/ipadapter/sd15" },
             [SharedFolderType.InvokeIpAdaptersXl] = new[] { "models/ipadapter/sdxl" },
             [SharedFolderType.T2IAdapter] = new[] { "models/controlnet/T2IAdapter" },
+            [SharedFolderType.PromptExpansion] = new[] { "models/prompt_expansion" }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -373,6 +374,7 @@ public class ComfyUI(
                 Path.Combine(modelsDir, "InvokeIpAdapters15"),
                 Path.Combine(modelsDir, "InvokeIpAdaptersXl")
             );
+            nodeValue.Children["prompt_expansion"] = Path.Combine(modelsDir, "PromptExpansion");
         }
         else
         {
@@ -410,7 +412,8 @@ public class ComfyUI(
                             Path.Combine(modelsDir, "InvokeIpAdapters15"),
                             Path.Combine(modelsDir, "InvokeIpAdaptersXl")
                         )
-                    }
+                    },
+                    { "prompt_expansion", Path.Combine(modelsDir, "PromptExpansion") }
                 }
             );
         }
@@ -476,9 +479,8 @@ public class ComfyUI(
 
         public override IEnumerable<ExtensionManifest> DefaultManifests =>
             [
-                new ExtensionManifest(
-                    new Uri("https://cdn.jsdelivr.net/gh/ltdrdata/ComfyUI-Manager/custom-node-list.json")
-                )
+                "https://cdn.jsdelivr.net/gh/ltdrdata/ComfyUI-Manager/custom-node-list.json",
+                "https://cdn.jsdelivr.net/gh/LykosAI/ComfyUI-Extensions-Index/custom-node-list.json"
             ];
 
         public override async Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(

@@ -32,17 +32,8 @@ public class PromptExpansionModule : ModuleBase
                 Name = e.Nodes.GetUniqueName("PromptExpansion_Positive"),
                 ModelName = model.RelativePath,
                 Text = e.Builder.Connections.PositivePrompt,
-                Seed = e.Builder.Connections.Seed
-            }
-        ).Output;
-
-        e.Builder.Connections.NegativePrompt = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.PromptExpansion
-            {
-                Name = e.Nodes.GetUniqueName("PromptExpansion_Negative"),
-                ModelName = model.RelativePath,
-                Text = e.Builder.Connections.NegativePrompt,
-                Seed = e.Builder.Connections.Seed
+                Seed = e.Builder.Connections.Seed,
+                LogPrompt = promptExpansionCard.IsLogOutputEnabled
             }
         ).Output;
     }

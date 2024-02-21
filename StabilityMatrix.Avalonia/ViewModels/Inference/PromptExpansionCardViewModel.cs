@@ -26,6 +26,9 @@ public partial class PromptExpansionCardViewModel(
     [ObservableProperty]
     private HybridModelFile? selectedModel;
 
+    [ObservableProperty]
+    private bool isLogOutputEnabled = true;
+
     [RelayCommand]
     private async Task RemoteDownload(HybridModelFile? model)
     {

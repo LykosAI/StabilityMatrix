@@ -197,6 +197,9 @@
         <DependentUpon>NewInstallerDialog.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Models\OpenArtMetadata.cs">
+        <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
+      </Compile>
     </ItemGroup>
 
     <!-- set HUSKY to 0 to disable, or opt-in during CI by setting HUSKY to 1 -->

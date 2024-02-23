@@ -82,7 +82,7 @@
                 CornerRadius="8">
                 <Border.ContextFlyout>
                     <MenuFlyout>
-                        <MenuItem Header="{x:Static lang:Resources.Action_OpenOnCivitAi}">
+                        <MenuItem Header="{x:Static lang:Resources.Action_OpenOnOpenArt}">
                             <MenuItem.Icon>
                                 <ui:SymbolIcon Symbol="Open" />
                             </MenuItem.Icon>
@@ -243,13 +243,8 @@
     </UserControl.Resources>
 
     <Grid RowDefinitions="Auto, Auto, *, Auto">
-        <TextBlock Text="OpenArt Workflow Browser"
-                   FontSize="24"
-                   Margin="8,8" />
-        
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto"
-              Margin="8,0">
-
+              Margin="8,8,8,0">
             <TextBox
                 HorizontalAlignment="Stretch"
                 Text="{Binding SearchQuery, Mode=TwoWay}"

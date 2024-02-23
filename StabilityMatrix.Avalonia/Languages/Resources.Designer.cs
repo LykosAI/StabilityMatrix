@@ -1608,6 +1608,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Model Browser.
+        /// </summary>
+        public static string Label_ModelBrowser {
+            get {
+                return ResourceManager.GetString("Label_ModelBrowser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Model Description.
         /// </summary>
         public static string Label_ModelDescription {
@@ -1757,6 +1766,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_OnlyAvailableOnWindows {
             get {
                 return ResourceManager.GetString("Label_OnlyAvailableOnWindows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to OpenArt Browser.
+        /// </summary>
+        public static string Label_OpenArtBrowser {
+            get {
+                return ResourceManager.GetString("Label_OpenArtBrowser", resourceCulture);
             }
         }
         

@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
@@ -10,7 +10,6 @@ using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -20,12 +19,12 @@ using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
-using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.OpenArt;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
+using Resources = StabilityMatrix.Avalonia.Languages.Resources;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -36,12 +35,11 @@ public partial class OpenArtBrowserViewModel(
     INotificationService notificationService,
     ISettingsManager settingsManager,
     IPackageFactory packageFactory
-) : PageViewModelBase, IInfinitelyScroll
+) : TabViewModelBase, IInfinitelyScroll
 {
     private const int PageSize = 20;
 
-    public override string Title => Resources.Label_Workflows;
-    public override IconSource IconSource => new FASymbolIconSource { Symbol = "fa-solid fa-circle-nodes" };
+    public override string Header => Resources.Label_OpenArtBrowser;
 
     private readonly SourceCache<OpenArtSearchResult, string> searchResultsCache = new(x => x.Id);
 
@@ -80,14 +78,6 @@ public partial class OpenArtBrowserViewModel(
     protected override void OnInitialLoaded()
     {
         searchResultsCache.Connect().DeferUntilLoaded().Bind(SearchResults).Subscribe();
-    }
-
-    public override async Task OnLoadedAsync()
-    {
-        if (SearchResults.Any())
-            return;
-
-        await DoSearch();
     }
 
     [RelayCommand]
@@ -198,6 +188,12 @@ public partial class OpenArtBrowserViewModel(
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
         await runner.ExecuteSteps(steps);
+
+        notificationService.Show(
+            "Workflow Imported",
+            "The workflow and custom nodes have been imported.",
+            NotificationType.Success
+        );
     }
 
     private async Task DoSearch(int page = 0)

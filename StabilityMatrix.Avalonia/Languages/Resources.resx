@@ -993,4 +993,10 @@
   <data name="Label_WorkflowDescription" xml:space="preserve">
     <value>Workflow Description</value>
   </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>OpenArt Browser</value>
+  </data>
+  <data name="Label_ModelBrowser" xml:space="preserve">
+    <value>Model Browser</value>
+  </data>
 </root>

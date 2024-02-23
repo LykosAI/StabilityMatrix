@@ -334,7 +334,7 @@ public sealed class App : Application
                         provider.GetRequiredService<CheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
                         provider.GetRequiredService<OutputsPageViewModel>(),
-                        provider.GetRequiredService<OpenArtBrowserViewModel>()
+                        provider.GetRequiredService<WorkflowsPageViewModel>()
                     },
                     FooterPages = { provider.GetRequiredService<SettingsViewModel>() }
                 }

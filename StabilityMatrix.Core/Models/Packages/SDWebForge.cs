@@ -66,6 +66,20 @@ public class SDWebForge(
                 InitialValue = HardwareHelper.PreferDirectML(),
                 Options = ["--directml"]
             },
+            new LaunchOptionDefinition
+            {
+                Name = "Skip Torch CUDA Test",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS,
+                Options = ["--skip-torch-cuda-test"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "No half-precision VAE",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS,
+                Options = ["--no-half-vae"]
+            },
             LaunchOptionDefinition.Extras
         ];
 

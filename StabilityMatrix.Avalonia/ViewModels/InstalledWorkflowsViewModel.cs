@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Platform.Storage;
-using Avalonia.Xaml.Interactions.DragAndDrop;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
@@ -16,8 +13,6 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api.OpenArt;
 using StabilityMatrix.Core.Services;
-using Windows.Storage;
-using IStorageFile = Avalonia.Platform.Storage.IStorageFile;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 

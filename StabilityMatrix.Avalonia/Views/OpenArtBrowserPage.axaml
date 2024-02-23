@@ -243,8 +243,8 @@
     </UserControl.Resources>
 
     <Grid RowDefinitions="Auto, Auto, *, Auto">
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto"
-              Margin="8,8,8,0">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto"
+              Margin="8">
             <TextBox
                 HorizontalAlignment="Stretch"
                 Text="{Binding SearchQuery, Mode=TwoWay}"
@@ -274,6 +274,17 @@
                 </Grid>
             </Button>
         </Grid>
+        
+        <StackPanel Grid.Row="1"
+                    Margin="8,0,0,8" 
+                    Orientation="Vertical"
+                    IsVisible="{Binding SearchQuery, Converter={x:Static StringConverters.IsNullOrEmpty}}">
+            <Label Content="{x:Static lang:Resources.Label_Sort}" />
+            <ComboBox
+                MinWidth="100"
+                ItemsSource="{Binding AllSortModes}"
+                SelectedItem="{Binding SelectedSortMode}"/>
+        </StackPanel>
         
         <controls:ProgressRing Grid.Row="2"
                                IsVisible="{Binding  IsLoading}"

@@ -78,12 +78,11 @@
                 
                 <controls1:CommandBarElementContainer>
                     <StackPanel Orientation="Horizontal">
-                        <controls1:SymbolIcon Symbol="Important" 
-                                              Margin="8,0"
-                                              FontSize="20"/>
+                        <avalonia:Icon FontSize="18"
+                                       Value="fa-solid fa-info"
+                                       Margin="8,0"/>
                         <TextBlock Text="Drag &amp; drop one of the cards below into ComfyUI to load the workflow"
-                                   VerticalAlignment="Center"
-                                   Margin="0,-2,0,0"/>
+                                   VerticalAlignment="Center"/>
                     </StackPanel>
                 </controls1:CommandBarElementContainer>
             </controls1:CommandBar.PrimaryCommands>

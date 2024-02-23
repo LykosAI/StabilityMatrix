@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -69,21 +71,32 @@ public partial class OpenArtBrowserViewModel(
             Convert.ToInt32(Math.Ceiling((LatestSearchResponse?.Total ?? 0) / Convert.ToDouble(PageSize)))
         );
 
-    public bool CanGoBack => InternalPageNumber > 0;
+    public bool CanGoBack =>
+        string.IsNullOrWhiteSpace(LatestSearchResponse?.NextCursor) && InternalPageNumber > 0;
 
-    public bool CanGoForward => PageCount > InternalPageNumber + 1;
+    public bool CanGoForward =>
+        !string.IsNullOrWhiteSpace(LatestSearchResponse?.NextCursor) || PageCount > InternalPageNumber + 1;
 
-    public bool CanGoToEnd => PageCount > InternalPageNumber + 1;
+    public bool CanGoToEnd =>
+        string.IsNullOrWhiteSpace(LatestSearchResponse?.NextCursor) && PageCount > InternalPageNumber + 1;
+
+    public IEnumerable<string> AllSortModes => ["Trending", "Latest", "Most Downloaded", "Most Liked"];
+
+    [ObservableProperty]
+    private string? selectedSortMode;
 
     protected override void OnInitialLoaded()
     {
         searchResultsCache.Connect().DeferUntilLoaded().Bind(SearchResults).Subscribe();
+        SelectedSortMode = AllSortModes.First();
     }
 
     [RelayCommand]
     private async Task FirstPage()
     {
         DisplayedPageNumber = 1;
+        searchResultsCache.Clear();
+
         await DoSearch();
     }
 
@@ -91,20 +104,32 @@ public partial class OpenArtBrowserViewModel(
     private async Task PreviousPage()
     {
         DisplayedPageNumber--;
+        searchResultsCache.Clear();
+
         await DoSearch(InternalPageNumber);
     }
 
     [RelayCommand]
     private async Task NextPage()
     {
-        DisplayedPageNumber++;
+        if (string.IsNullOrWhiteSpace(LatestSearchResponse?.NextCursor))
+        {
+            DisplayedPageNumber++;
+        }
+
+        searchResultsCache.Clear();
         await DoSearch(InternalPageNumber);
     }
 
     [RelayCommand]
     private async Task LastPage()
     {
-        DisplayedPageNumber = PageCount;
+        if (string.IsNullOrWhiteSpace(LatestSearchResponse?.NextCursor))
+        {
+            DisplayedPageNumber = PageCount;
+        }
+
+        searchResultsCache.Clear();
         await DoSearch(PageCount - 1);
     }
 
@@ -119,6 +144,9 @@ public partial class OpenArtBrowserViewModel(
     private async Task SearchButton()
     {
         DisplayedPageNumber = 1;
+        LatestSearchResponse = null;
+        searchResultsCache.Clear();
+
         await DoSearch();
     }
 
@@ -202,16 +230,34 @@ public partial class OpenArtBrowserViewModel(
 
         try
         {
-            var response = await openArtApi.SearchAsync(
-                new OpenArtSearchRequest
+            OpenArtSearchResponse? response = null;
+            if (string.IsNullOrWhiteSpace(SearchQuery))
+            {
+                var request = new OpenArtFeedRequest { Sort = GetSortMode(SelectedSortMode) };
+                if (!string.IsNullOrWhiteSpace(LatestSearchResponse?.NextCursor))
                 {
-                    Keyword = SearchQuery,
-                    PageSize = PageSize,
-                    CurrentPage = page
+                    request.Cursor = LatestSearchResponse.NextCursor;
                 }
-            );
 
-            searchResultsCache.EditDiff(response.Items, (a, b) => a.Id == b.Id);
+                response = await openArtApi.GetFeedAsync(request);
+            }
+            else
+            {
+                response = await openArtApi.SearchAsync(
+                    new OpenArtSearchRequest
+                    {
+                        Keyword = SearchQuery,
+                        PageSize = PageSize,
+                        CurrentPage = page
+                    }
+                );
+            }
+
+            foreach (var item in response.Items)
+            {
+                searchResultsCache.AddOrUpdate(item);
+            }
+
             LatestSearchResponse = response;
         }
         catch (ApiException e)
@@ -224,6 +270,17 @@ public partial class OpenArtBrowserViewModel(
         }
     }
 
+    partial void OnSelectedSortModeChanged(string? value)
+    {
+        if (value is null || SearchResults.Count == 0)
+            return;
+
+        searchResultsCache.Clear();
+        LatestSearchResponse = null;
+
+        DoSearch().SafeFireAndForget();
+    }
+
     public async Task LoadNextPageAsync()
     {
         if (!CanGoForward)
@@ -231,22 +288,52 @@ public partial class OpenArtBrowserViewModel(
 
         try
         {
-            DisplayedPageNumber++;
-            var response = await openArtApi.SearchAsync(
-                new OpenArtSearchRequest
+            OpenArtSearchResponse? response = null;
+            if (string.IsNullOrWhiteSpace(SearchQuery))
+            {
+                var request = new OpenArtFeedRequest { Sort = GetSortMode(SelectedSortMode) };
+                if (!string.IsNullOrWhiteSpace(LatestSearchResponse?.NextCursor))
                 {
-                    Keyword = SearchQuery,
-                    PageSize = PageSize,
-                    CurrentPage = InternalPageNumber
+                    request.Cursor = LatestSearchResponse.NextCursor;
                 }
-            );
 
-            searchResultsCache.AddOrUpdate(response.Items);
+                response = await openArtApi.GetFeedAsync(request);
+            }
+            else
+            {
+                DisplayedPageNumber++;
+                response = await openArtApi.SearchAsync(
+                    new OpenArtSearchRequest
+                    {
+                        Keyword = SearchQuery,
+                        PageSize = PageSize,
+                        CurrentPage = InternalPageNumber
+                    }
+                );
+            }
+
+            foreach (var item in response.Items)
+            {
+                searchResultsCache.AddOrUpdate(item);
+            }
+
             LatestSearchResponse = response;
         }
         catch (ApiException e)
         {
             notificationService.Show("Unable to load the next page", e.Message);
         }
+    }
+
+    private static string GetSortMode(string? sortMode)
+    {
+        return sortMode switch
+        {
+            "Trending" => "trending",
+            "Latest" => "latest",
+            "Most Downloaded" => "most_downloaded",
+            "Most Liked" => "most_liked",
+            _ => "trending"
+        };
     }
 }

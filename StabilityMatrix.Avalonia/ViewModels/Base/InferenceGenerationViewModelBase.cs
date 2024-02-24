@@ -17,6 +17,7 @@ using CommunityToolkit.Mvvm.Input;
 using ExifLibrary;
 using FluentAvalonia.UI.Controls;
 using KGySoft.CoreLibraries;
+using Microsoft.Extensions.DependencyInjection;
 using Nito.Disposables.Internals;
 using NLog;
 using Refit;
@@ -715,7 +716,28 @@ public abstract partial class InferenceGenerationViewModelBase
             };
             EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
-            runner.ExecuteSteps(steps).SafeFireAndForget();
+            runner
+                .ExecuteSteps(steps)
+                .ContinueWith(async _ =>
+                {
+                    if (runner.Failed)
+                        return;
+
+                    // Restart Package
+                    // TODO: This should be handled by some DI package manager service
+                    var launchPage = App.Services.GetRequiredService<LaunchPageViewModel>();
+
+                    try
+                    {
+                        await launchPage.Stop();
+                        await launchPage.LaunchAsync();
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e, "Error while restarting package");
+                    }
+                })
+                .SafeFireAndForget();
         }
 
         return false;

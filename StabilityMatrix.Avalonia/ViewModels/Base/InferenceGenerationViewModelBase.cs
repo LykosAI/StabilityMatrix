@@ -16,7 +16,6 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using ExifLibrary;
 using FluentAvalonia.UI.Controls;
-using KGySoft.CoreLibraries;
 using Microsoft.Extensions.DependencyInjection;
 using Nito.Disposables.Internals;
 using NLog;
@@ -44,7 +43,6 @@ using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
-using Windows.ApplicationModel;
 using Notification = DesktopNotifications.Notification;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;

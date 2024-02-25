@@ -115,7 +115,11 @@ public class SDWebForge(
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
+        var venvPath = Path.Combine(installLocation, "venv");
+
+        await using var venvRunner = new PyVenvRunner(venvPath);
+        venvRunner.WorkingDirectory = installLocation;
+        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));

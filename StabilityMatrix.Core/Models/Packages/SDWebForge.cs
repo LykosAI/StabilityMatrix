@@ -38,6 +38,17 @@ public class SDWebForge(
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
     public override IPackageExtensionManager ExtensionManager => null;
+    public override string OutputFolderName => "output";
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+        new()
+        {
+            [SharedOutputType.Extras] = new[] { "output/extras-images" },
+            [SharedOutputType.Saved] = new[] { "log/images" },
+            [SharedOutputType.Img2Img] = new[] { "output/img2img-images" },
+            [SharedOutputType.Text2Img] = new[] { "output/txt2img-images" },
+            [SharedOutputType.Img2ImgGrids] = new[] { "output/img2img-grids" },
+            [SharedOutputType.Text2ImgGrids] = new[] { "output/txt2img-grids" }
+        };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [

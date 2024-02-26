@@ -727,12 +727,22 @@ public abstract partial class InferenceGenerationViewModelBase
 
                     try
                     {
-                        await launchPage.Stop();
-                        await launchPage.LaunchAsync();
+                        await Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            await launchPage.Stop();
+                            await launchPage.LaunchAsync();
+                        });
                     }
                     catch (Exception e)
                     {
                         Logger.Error(e, "Error while restarting package");
+
+                        notificationService.ShowPersistent(
+                            new AppException(
+                                "Could not restart package",
+                                "Please manually restart the package for extension changes to take effect"
+                            )
+                        );
                     }
                 })
                 .SafeFireAndForget();

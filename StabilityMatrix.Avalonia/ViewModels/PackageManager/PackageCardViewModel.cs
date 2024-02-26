@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -38,11 +41,13 @@ public partial class PackageCardViewModel(
     IPackageFactory packageFactory,
     INotificationService notificationService,
     ISettingsManager settingsManager,
-    INavigationService<MainWindowViewModel> navigationService,
+    INavigationService<NewPackageManagerViewModel> navigationService,
     ServiceManager<ViewModelBase> vmFactory,
     RunningPackageService runningPackageService
 ) : ProgressViewModel
 {
+    private string webUiUrl = string.Empty;
+
     [ObservableProperty]
     private InstalledPackage? package;
 
@@ -82,6 +87,12 @@ public partial class PackageCardViewModel(
     [ObservableProperty]
     private bool canUseExtensions;
 
+    [ObservableProperty]
+    private bool isRunning;
+
+    [ObservableProperty]
+    private bool showWebUiButton;
+
     partial void OnPackageChanged(InstalledPackage? value)
     {
         if (string.IsNullOrWhiteSpace(value?.PackageName))
@@ -115,6 +126,12 @@ public partial class PackageCardViewModel(
 
     public override async Task OnLoadedAsync()
     {
+        if (Design.IsDesignMode && Package?.DisplayName == "Running Comfy")
+        {
+            IsRunning = true;
+            ShowWebUiButton = true;
+        }
+
         if (Design.IsDesignMode || !settingsManager.IsLibraryDirSet || Package is not { } currentPackage)
             return;
 
@@ -151,14 +168,19 @@ public partial class PackageCardViewModel(
         if (Package == null)
             return;
 
-        var packageId = await runningPackageService.StartPackage(Package);
+        var packagePair = await runningPackageService.StartPackage(Package);
 
-        if (packageId != null)
+        if (packagePair != null)
         {
-            var vm = runningPackageService.GetRunningPackageViewModel(packageId.Value);
+            IsRunning = true;
+
+            packagePair.BasePackage.Exited += BasePackageOnExited;
+            packagePair.BasePackage.StartupComplete += RunningPackageOnStartupComplete;
+
+            var vm = runningPackageService.GetRunningPackageViewModel(packagePair.InstalledPackage.Id);
             if (vm != null)
             {
-                navigationService.NavigateTo(vm, new BetterDrillInNavigationTransition());
+                navigationService.NavigateTo(vm, new BetterEntranceNavigationTransition());
             }
         }
 
@@ -166,6 +188,69 @@ public partial class PackageCardViewModel(
         //
         // navigationService.NavigateTo<LaunchPageViewModel>(new BetterDrillInNavigationTransition());
         // EventManager.Instance.OnPackageLaunchRequested(Package.Id);
+    }
+
+    public void NavToConsole()
+    {
+        if (Package == null)
+            return;
+
+        var vm = runningPackageService.GetRunningPackageViewModel(Package.Id);
+        if (vm != null)
+        {
+            navigationService.NavigateTo(vm, new BetterEntranceNavigationTransition());
+        }
+    }
+
+    public void LaunchWebUi()
+    {
+        if (string.IsNullOrEmpty(webUiUrl))
+            return;
+
+        notificationService.TryAsync(
+            Task.Run(() => ProcessRunner.OpenUrl(webUiUrl)),
+            "Failed to open URL",
+            $"{webUiUrl}"
+        );
+    }
+
+    private void BasePackageOnExited(object? sender, int exitCode)
+    {
+        EventManager.Instance.OnRunningPackageStatusChanged(null);
+        Dispatcher
+            .UIThread.InvokeAsync(async () =>
+            {
+                logger.LogTrace("Process exited ({Code}) at {Time:g}", exitCode, DateTimeOffset.Now);
+
+                // Need to wait for streams to finish before detaching handlers
+                if (sender is BaseGitPackage { VenvRunner: not null } package)
+                {
+                    var process = package.VenvRunner.Process;
+                    if (process is not null)
+                    {
+                        // Max 5 seconds
+                        var ct = new CancellationTokenSource(5000).Token;
+                        try
+                        {
+                            await process.WaitUntilOutputEOF(ct);
+                        }
+                        catch (OperationCanceledException e)
+                        {
+                            logger.LogWarning("Waiting for process EOF timed out: {Message}", e.Message);
+                        }
+                    }
+                }
+
+                // Detach handlers
+                if (sender is BasePackage basePackage)
+                {
+                    basePackage.Exited -= BasePackageOnExited;
+                    basePackage.StartupComplete -= RunningPackageOnStartupComplete;
+                }
+
+                IsRunning = false;
+            })
+            .SafeFireAndForget();
     }
 
     public async Task Uninstall()
@@ -558,5 +643,11 @@ public partial class PackageCardViewModel(
             IsSharedModelSymlink = false;
             IsSharedModelConfig = false;
         }
+    }
+
+    private void RunningPackageOnStartupComplete(object? sender, string e)
+    {
+        webUiUrl = e.Replace("0.0.0.0", "127.0.0.1");
+        ShowWebUiButton = !string.IsNullOrWhiteSpace(webUiUrl);
     }
 }

@@ -58,6 +58,10 @@ public partial class NewPackageManagerViewModel : PageViewModelBase
         {
             CurrentPagePath.Add(value);
         }
+        else if (value is RunningPackageViewModel)
+        {
+            CurrentPagePath.Add(value);
+        }
         else
         {
             CurrentPagePath.Clear();

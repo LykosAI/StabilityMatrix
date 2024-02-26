@@ -32,7 +32,7 @@ public partial class RunningPackageService(
     [ObservableProperty]
     private ObservableDictionary<Guid, RunningPackageViewModel> runningPackages = [];
 
-    public async Task<Guid?> StartPackage(InstalledPackage installedPackage, string? command = null)
+    public async Task<PackagePair?> StartPackage(InstalledPackage installedPackage, string? command = null)
     {
         var activeInstallName = installedPackage.PackageName;
         var basePackage = string.IsNullOrWhiteSpace(activeInstallName)
@@ -119,7 +119,7 @@ public partial class RunningPackageService(
         var viewModel = new RunningPackageViewModel(runningPackage, console);
         RunningPackages.Add(runningPackage.InstalledPackage.Id, viewModel);
 
-        return runningPackage.InstalledPackage.Id;
+        return runningPackage;
     }
 
     public RunningPackageViewModel? GetRunningPackageViewModel(Guid id) =>

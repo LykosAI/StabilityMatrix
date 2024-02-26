@@ -1,9 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Controls.Primitives;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
-using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Core.Helper;
 
@@ -16,18 +14,9 @@ public partial class AdvancedImageBoxView : UserControl
         InitializeComponent();
     }
 
-    /// <inheritdoc />
-    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
-    {
-        base.OnApplyTemplate(e);
+    public static AsyncRelayCommand<Bitmap?> FlyoutCopyCommand { get; } = new(FlyoutCopy);
 
-        if (this.FindControl<MenuFlyoutItem>("CopyMenuItem") is { } copyMenuItem)
-        {
-            copyMenuItem.Command = new AsyncRelayCommand<Bitmap?>(FlyoutCopy);
-        }
-    }
-
-    private static async Task FlyoutCopy(Bitmap? image)
+    public static async Task FlyoutCopy(Bitmap? image)
     {
         if (image is null || !Compat.IsWindows)
             return;

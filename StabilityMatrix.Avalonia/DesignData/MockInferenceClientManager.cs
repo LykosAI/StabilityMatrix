@@ -27,6 +27,9 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
     public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    public IObservableCollection<HybridModelFile> PromptExpansionModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     public IObservableCollection<ComfySampler> Samplers { get; } =
         new ObservableCollectionExtended<ComfySampler>(ComfySampler.Defaults);
 
@@ -64,28 +67,19 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
     }
 
     /// <inheritdoc />
-    public Task CopyImageToInputAsync(
-        FilePath imageFile,
-        CancellationToken cancellationToken = default
-    )
+    public Task CopyImageToInputAsync(FilePath imageFile, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
-    public Task UploadInputImageAsync(
-        ImageSource image,
-        CancellationToken cancellationToken = default
-    )
+    public Task UploadInputImageAsync(ImageSource image, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
-    public Task WriteImageToInputAsync(
-        ImageSource imageSource,
-        CancellationToken cancellationToken = default
-    )
+    public Task WriteImageToInputAsync(ImageSource imageSource, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }

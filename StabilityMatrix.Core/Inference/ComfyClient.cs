@@ -6,10 +6,13 @@ using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Refit;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using Websocket.Client;
@@ -26,8 +29,16 @@ public class ComfyClient : InferenceClientBase
     private readonly IComfyApi comfyApi;
     private bool isDisposed;
 
-    private JsonSerializerOptions jsonSerializerOptions =
-        new() { PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower, };
+    private readonly JsonSerializerOptions jsonSerializerOptions =
+        new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower,
+            Converters =
+            {
+                new NodeConnectionBaseJsonConverter(),
+                new OneOfJsonConverter<string, StringNodeConnection>()
+            }
+        };
 
     // ReSharper disable once MemberCanBePrivate.Global
     public string ClientId { get; } = Guid.NewGuid().ToString();
@@ -38,6 +49,11 @@ public class ComfyClient : InferenceClientBase
     /// If available, the local path to the server root directory.
     /// </summary>
     public DirectoryPath? LocalServerPath { get; set; }
+
+    /// <summary>
+    /// If available, the local server package pair
+    /// </summary>
+    public PackagePair? LocalServerPackage { get; set; }
 
     /// <summary>
     /// Path to the "output" folder from LocalServerPath
@@ -81,7 +97,13 @@ public class ComfyClient : InferenceClientBase
 
     public ComfyClient(IApiFactory apiFactory, Uri baseAddress)
     {
-        comfyApi = apiFactory.CreateRefitClient<IComfyApi>(baseAddress);
+        comfyApi = apiFactory.CreateRefitClient<IComfyApi>(
+            baseAddress,
+            new RefitSettings
+            {
+                ContentSerializer = new SystemTextJsonContentSerializer(jsonSerializerOptions),
+            }
+        );
         BaseAddress = baseAddress;
 
         // Setup websocket client

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.9.0-dev.3
 ### Added
+- Added Inference Prompt Styles, with Prompt Expansion model support (i.e. Fooocus V2)
 - Added copy image support on linux and macOS for Inference outputs viewer menu
 ### Fixed
 - Fixed StableSwarmUI not installing properly on macOS

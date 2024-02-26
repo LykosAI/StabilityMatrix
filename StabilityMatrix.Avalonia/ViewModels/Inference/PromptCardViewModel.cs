@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -13,12 +12,13 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Services;
 
@@ -43,6 +43,8 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
     public TextDocument PromptDocument { get; } = new();
     public TextDocument NegativePromptDocument { get; } = new();
 
+    public StackEditableCardViewModel ModulesCardViewModel { get; }
+
     [ObservableProperty]
     private bool isAutoCompletionEnabled;
 
@@ -52,6 +54,7 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
         ITokenizerProvider tokenizerProvider,
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
+        ServiceManager<ViewModelBase> vmFactory,
         SharedState sharedState
     )
     {
@@ -59,6 +62,12 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
         CompletionProvider = completionProvider;
         TokenizerProvider = tokenizerProvider;
         SharedState = sharedState;
+
+        ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(vm =>
+        {
+            vm.Title = "Styles";
+            vm.AvailableModules = [typeof(PromptExpansionModule)];
+        });
 
         settingsManager.RelayPropertyFor(
             this,
@@ -84,8 +93,14 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
         // Load prompts
         var positivePrompt = GetPrompt();
         positivePrompt.Process();
+        e.Builder.Connections.PositivePrompt = positivePrompt.ProcessedText;
+
         var negativePrompt = GetNegativePrompt();
         negativePrompt.Process();
+        e.Builder.Connections.NegativePrompt = negativePrompt.ProcessedText;
+
+        // Apply modules / styles that may modify the prompt
+        ModulesCardViewModel.ApplyStep(e);
 
         foreach (var modelConnections in e.Builder.Connections.Models.Values)
         {
@@ -98,7 +113,12 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
                 var loras = positivePrompt.GetExtraNetworksAsLocalModels(modelIndexService).ToList();
 
                 // Add group to load loras onto model and clip in series
-                var lorasGroup = e.Builder.Group_LoraLoadMany($"Loras_{modelConnections.Name}", model, clip, loras);
+                var lorasGroup = e.Builder.Group_LoraLoadMany(
+                    $"Loras_{modelConnections.Name}",
+                    model,
+                    clip,
+                    loras
+                );
 
                 // Set last outputs as model and clip
                 modelConnections.Model = lorasGroup.Output1;
@@ -111,7 +131,7 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
                 {
                     Name = $"PositiveCLIP_{modelConnections.Name}",
                     Clip = e.Builder.Connections.Base.Clip!,
-                    Text = positivePrompt.ProcessedText
+                    Text = e.Builder.Connections.PositivePrompt
                 }
             );
             var negativeClip = e.Nodes.AddTypedNode(
@@ -119,7 +139,7 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
                 {
                     Name = $"NegativeCLIP_{modelConnections.Name}",
                     Clip = e.Builder.Connections.Base.Clip!,
-                    Text = negativePrompt.ProcessedText
+                    Text = e.Builder.Connections.NegativePrompt
                 }
             );
 
@@ -319,7 +339,12 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
     public override JsonObject SaveStateToJsonObject()
     {
         return SerializeModel(
-            new PromptCardModel { Prompt = PromptDocument.Text, NegativePrompt = NegativePromptDocument.Text }
+            new PromptCardModel
+            {
+                Prompt = PromptDocument.Text,
+                NegativePrompt = NegativePromptDocument.Text,
+                ModulesCardState = ModulesCardViewModel.SaveStateToJsonObject()
+            }
         );
     }
 
@@ -330,6 +355,11 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
 
         PromptDocument.Text = model.Prompt ?? "";
         NegativePromptDocument.Text = model.NegativePrompt ?? "";
+
+        if (model.ModulesCardState is not null)
+        {
+            ModulesCardViewModel.LoadStateFromJsonObject(model.ModulesCardState);
+        }
     }
 
     /// <inheritdoc />
@@ -342,6 +372,10 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
     /// <inheritdoc />
     public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
     {
-        return parameters with { PositivePrompt = PromptDocument.Text, NegativePrompt = NegativePromptDocument.Text };
+        return parameters with
+        {
+            PositivePrompt = PromptDocument.Text,
+            NegativePrompt = NegativePromptDocument.Text
+        };
     }
 }

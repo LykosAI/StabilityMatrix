@@ -26,7 +26,6 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
-using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
@@ -34,15 +33,16 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [ManagedService]
 [Transient]
-public partial class PackageCardViewModel : ProgressViewModel
+public partial class PackageCardViewModel(
+    ILogger<PackageCardViewModel> logger,
+    IPackageFactory packageFactory,
+    INotificationService notificationService,
+    ISettingsManager settingsManager,
+    INavigationService<MainWindowViewModel> navigationService,
+    ServiceManager<ViewModelBase> vmFactory,
+    RunningPackageService runningPackageService
+) : ProgressViewModel
 {
-    private readonly ILogger<PackageCardViewModel> logger;
-    private readonly IPackageFactory packageFactory;
-    private readonly INotificationService notificationService;
-    private readonly ISettingsManager settingsManager;
-    private readonly INavigationService<MainWindowViewModel> navigationService;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
-
     [ObservableProperty]
     private InstalledPackage? package;
 
@@ -81,23 +81,6 @@ public partial class PackageCardViewModel : ProgressViewModel
 
     [ObservableProperty]
     private bool canUseExtensions;
-
-    public PackageCardViewModel(
-        ILogger<PackageCardViewModel> logger,
-        IPackageFactory packageFactory,
-        INotificationService notificationService,
-        ISettingsManager settingsManager,
-        INavigationService<MainWindowViewModel> navigationService,
-        ServiceManager<ViewModelBase> vmFactory
-    )
-    {
-        this.logger = logger;
-        this.packageFactory = packageFactory;
-        this.notificationService = notificationService;
-        this.settingsManager = settingsManager;
-        this.navigationService = navigationService;
-        this.vmFactory = vmFactory;
-    }
 
     partial void OnPackageChanged(InstalledPackage? value)
     {
@@ -163,15 +146,26 @@ public partial class PackageCardViewModel : ProgressViewModel
         }
     }
 
-    public void Launch()
+    public async Task Launch()
     {
         if (Package == null)
             return;
 
-        settingsManager.Transaction(s => s.ActiveInstalledPackageId = Package.Id);
+        var packageId = await runningPackageService.StartPackage(Package);
 
-        navigationService.NavigateTo<LaunchPageViewModel>(new BetterDrillInNavigationTransition());
-        EventManager.Instance.OnPackageLaunchRequested(Package.Id);
+        if (packageId != null)
+        {
+            var vm = runningPackageService.GetRunningPackageViewModel(packageId.Value);
+            if (vm != null)
+            {
+                navigationService.NavigateTo(vm, new BetterDrillInNavigationTransition());
+            }
+        }
+
+        // settingsManager.Transaction(s => s.ActiveInstalledPackageId = Package.Id);
+        //
+        // navigationService.NavigateTo<LaunchPageViewModel>(new BetterDrillInNavigationTransition());
+        // EventManager.Instance.OnPackageLaunchRequested(Package.Id);
     }
 
     public async Task Uninstall()

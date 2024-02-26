@@ -1,0 +1,22 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+             xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="viewModels:RunningPackageViewModel"
+             x:Class="StabilityMatrix.Avalonia.Views.ConsoleOutputPage">
+    <avaloniaEdit:TextEditor
+        x:Name="Console"
+        Margin="8,8,16,10"
+        DataContext="{Binding Console}"
+        Document="{Binding Document}"
+        FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+        IsReadOnly="True"
+        LineNumbersForeground="DarkSlateGray"
+        ShowLineNumbers="True"
+        VerticalScrollBarVisibility="Auto"
+        WordWrap="True" />
+</controls:UserControlBase>

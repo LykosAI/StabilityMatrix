@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed default command line args for SDWebUI Forge on macOS
 - Fixed output paths and output sharing for SDWebUI Forge
 - Maybe fixed update hanging for Auto1111 and SDWebUI Forge
+- Fixed Inference output viewer menu "Copy" not copying image 
 
 ## v2.9.0-dev.2
 ### Added

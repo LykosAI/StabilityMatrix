@@ -1,8 +1,9 @@
 ﻿using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia.Controls;
@@ -14,19 +15,26 @@ public partial class AdvancedImageBoxView : UserControl
         InitializeComponent();
     }
 
-    public static AsyncRelayCommand<Bitmap?> FlyoutCopyCommand { get; } = new(FlyoutCopy);
+    public static AsyncRelayCommand<ImageSource?> FlyoutCopyCommand { get; } = new(FlyoutCopy);
 
-    public static async Task FlyoutCopy(Bitmap? image)
+    private static async Task FlyoutCopy(ImageSource? imageSource)
     {
-        if (image is null || !Compat.IsWindows)
+        if (imageSource is null)
             return;
 
-        await Task.Run(() =>
+        if (Compat.IsWindows && imageSource.Bitmap is { } bitmap)
         {
-            if (Compat.IsWindows)
+            // Use bitmap on Windows if available
+            await Task.Run(() =>
             {
-                WindowsClipboard.SetBitmap(image);
-            }
-        });
+                WindowsClipboard.SetBitmap(bitmap);
+            });
+        }
+        else if (imageSource.LocalFile is { } imagePath)
+        {
+            // Other OS or no bitmap, use image source
+            var clipboard = App.Clipboard;
+            await clipboard.SetFileDataObjectAsync(imagePath);
+        }
     }
 }

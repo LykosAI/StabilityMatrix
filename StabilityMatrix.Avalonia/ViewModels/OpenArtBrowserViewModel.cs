@@ -188,21 +188,23 @@ public partial class OpenArtBrowserViewModel(
             return;
         }
 
-        if (vm.MissingNodes is not { Count: > 0 } missingNodes)
-        {
-            // Skip if no missing nodes
-            return;
-        }
-
-        var extensionManager = comfyPair.BasePackage.ExtensionManager!;
-
         List<IPackageStep> steps =
         [
-            new DownloadOpenArtWorkflowStep(openArtApi, vm.Workflow, settingsManager),
-            ..missingNodes.Select(
-                extension => new InstallExtensionStep(extensionManager, comfyPair.InstalledPackage, extension)
-            )
+            new DownloadOpenArtWorkflowStep(openArtApi, vm.Workflow, settingsManager)
         ];
+
+        // Add install steps if missing nodes
+        if (vm.MissingNodes is { Count: > 0 } missingNodes)
+        {
+            var extensionManager = comfyPair.BasePackage.ExtensionManager!;
+
+            steps.AddRange(
+                missingNodes.Select(
+                    extension =>
+                        new InstallExtensionStep(extensionManager, comfyPair.InstalledPackage, extension)
+                )
+            );
+        }
 
         var runner = new PackageModificationRunner
         {

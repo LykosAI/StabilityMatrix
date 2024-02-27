@@ -2247,6 +2247,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Auto-Scroll to End.
+        /// </summary>
+        public static string Label_ToggleAutoScrolling {
+            get {
+                return ResourceManager.GetString("Label_ToggleAutoScrolling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Trigger words:.
         /// </summary>
         public static string Label_TriggerWords {

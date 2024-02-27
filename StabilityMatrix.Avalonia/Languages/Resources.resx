@@ -975,4 +975,7 @@
   <data name="Label_Config" xml:space="preserve">
     <value>Config</value>
   </data>
+  <data name="Label_ToggleAutoScrolling" xml:space="preserve">
+    <value>Auto-Scroll to End</value>
+  </data>
 </root>

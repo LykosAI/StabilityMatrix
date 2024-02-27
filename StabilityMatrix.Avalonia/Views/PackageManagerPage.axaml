@@ -193,6 +193,30 @@
                                            VerticalAlignment="Center"
                                            Text="{Binding InstalledVersion}" />
 
+                                <Border Grid.Row="2"
+                                      Grid.Column="0"
+                                      Grid.ColumnSpan="2"
+                                      Margin="0,8"
+                                      Background="#AA000000"
+                                      IsVisible="{Binding IsRunning}"
+                                      CornerRadius="4"
+                                      ZIndex="1">
+                                    <Button Classes="danger"
+                                            FontSize="16"
+                                            MinWidth="100"
+                                            MinHeight="40"
+                                            Command="{Binding StopCommand}"
+                                            HorizontalAlignment="Center"
+                                            HorizontalContentAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                        <icons:Icon Value="fa-solid fa-stop"
+                                                    FontSize="20"
+                                                    Margin="0,0,8,0"/>
+                                        <TextBlock Text="{x:Static lang:Resources.Action_Stop}"/>
+                                        </StackPanel>
+                                    </Button>
+                                </Border>
+                                
                                 <!-- Normal packages shows image -->
                                 <controls:BetterAdvancedImage
                                     Grid.Row="2"

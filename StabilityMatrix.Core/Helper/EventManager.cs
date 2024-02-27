@@ -23,6 +23,7 @@ public class EventManager
     public event EventHandler<bool>? DevModeSettingChanged;
     public event EventHandler<UpdateInfo>? UpdateAvailable;
     public event EventHandler<Guid>? PackageLaunchRequested;
+    public event EventHandler<InstalledPackage>? PackageRelaunchRequested;
     public event EventHandler? ScrollToBottomRequested;
     public event EventHandler<ProgressItem>? ProgressChanged;
     public event EventHandler<RunningPackageStatusChangedEventArgs>? RunningPackageStatusChanged;
@@ -100,4 +101,7 @@ public class EventManager
 
     public void OnRecommendedModelsDialogClosed() =>
         RecommendedModelsDialogClosed?.Invoke(this, EventArgs.Empty);
+
+    public void OnPackageRelaunchRequested(InstalledPackage package) =>
+        PackageRelaunchRequested?.Invoke(this, package);
 }

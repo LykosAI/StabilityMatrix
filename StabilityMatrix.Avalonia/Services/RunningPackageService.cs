@@ -116,10 +116,25 @@ public partial class RunningPackageService(
 
         EventManager.Instance.OnRunningPackageStatusChanged(runningPackage);
 
-        var viewModel = new RunningPackageViewModel(runningPackage, console);
+        var viewModel = new RunningPackageViewModel(
+            settingsManager,
+            notificationService,
+            runningPackage,
+            console
+        );
         RunningPackages.Add(runningPackage.InstalledPackage.Id, viewModel);
 
         return runningPackage;
+    }
+
+    public async Task StopPackage(Guid id)
+    {
+        if (RunningPackages.TryGetValue(id, out var vm))
+        {
+            var runningPackage = vm.RunningPackage;
+            await runningPackage.BasePackage.WaitForShutdown();
+            RunningPackages.Remove(id);
+        }
     }
 
     public RunningPackageViewModel? GetRunningPackageViewModel(Guid id) =>

@@ -124,6 +124,15 @@ public partial class PackageCardViewModel(
         }
     }
 
+    private void InstanceOnPackageRelaunchRequested(object? sender, InstalledPackage e)
+    {
+        if (e.Id != Package?.Id)
+            return;
+
+        navigationService.GoBack();
+        Launch().SafeFireAndForget();
+    }
+
     public override async Task OnLoadedAsync()
     {
         if (Design.IsDesignMode && Package?.DisplayName == "Running Comfy")
@@ -134,6 +143,8 @@ public partial class PackageCardViewModel(
 
         if (Design.IsDesignMode || !settingsManager.IsLibraryDirSet || Package is not { } currentPackage)
             return;
+
+        EventManager.Instance.PackageRelaunchRequested += InstanceOnPackageRelaunchRequested;
 
         if (
             packageFactory.FindPackageByName(currentPackage.PackageName)
@@ -161,6 +172,11 @@ public partial class PackageCardViewModel(
 
             IsUpdateAvailable = await HasUpdate();
         }
+    }
+
+    public override void OnUnloaded()
+    {
+        EventManager.Instance.PackageRelaunchRequested -= InstanceOnPackageRelaunchRequested;
     }
 
     public async Task Launch()
@@ -248,7 +264,13 @@ public partial class PackageCardViewModel(
                     basePackage.StartupComplete -= RunningPackageOnStartupComplete;
                 }
 
+                if (Package?.Id != null)
+                {
+                    runningPackageService.RunningPackages.Remove(Package.Id);
+                }
+
                 IsRunning = false;
+                ShowWebUiButton = false;
             })
             .SafeFireAndForget();
     }
@@ -512,6 +534,16 @@ public partial class PackageCardViewModel(
         }
 
         ProcessRunner.OpenUrl(basePackage.GithubUrl);
+    }
+
+    [RelayCommand]
+    private async Task Stop()
+    {
+        if (Package is null)
+            return;
+
+        await runningPackageService.StopPackage(Package.Id);
+        IsRunning = false;
     }
 
     private async Task<bool> HasUpdate()

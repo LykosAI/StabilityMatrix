@@ -54,6 +54,7 @@
         <StyleInclude Source="Styles/DockStyles.axaml"/>
         <StyleInclude Source="Styles/BorderStyles.axaml"/>
         <StyleInclude Source="Styles/TextBoxStyles.axaml"/>
+        <StyleInclude Source="Styles/CommandBarButtonStyles.axaml"/>
         <StyleInclude Source="Controls/AdvancedImageBox.axaml"/>
         <StyleInclude Source="Controls/FrameCarousel.axaml"/>
         <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml"/>

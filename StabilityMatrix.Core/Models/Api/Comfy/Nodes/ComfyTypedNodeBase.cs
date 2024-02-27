@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.ComponentModel;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
@@ -8,8 +9,28 @@ namespace StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 public abstract record ComfyTypedNodeBase
 {
-    protected virtual string ClassType => GetType().Name;
+    [Localizable(false)]
+    protected virtual string ClassType
+    {
+        get
+        {
+            var type = GetType();
 
+            // Use options name if available
+            if (type.GetCustomAttribute<TypedNodeOptionsAttribute>() is { } options)
+            {
+                if (!string.IsNullOrEmpty(options.Name))
+                {
+                    return options.Name;
+                }
+            }
+
+            // Otherwise use class name
+            return type.Name;
+        }
+    }
+
+    [Localizable(false)]
     [JsonIgnore]
     public required string Name { get; init; }
 

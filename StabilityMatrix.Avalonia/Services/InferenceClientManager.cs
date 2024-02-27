@@ -74,6 +74,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    private readonly SourceCache<HybridModelFile, string> promptExpansionModelsSource = new(p => p.GetId());
+
+    private readonly SourceCache<HybridModelFile, string> downloadablePromptExpansionModelsSource =
+        new(p => p.GetId());
+
+    public IObservableCollection<HybridModelFile> PromptExpansionModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     private readonly SourceCache<ComfySampler, string> samplersSource = new(p => p.Name);
 
     public IObservableCollection<ComfySampler> Samplers { get; } =
@@ -128,6 +136,18 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(ControlNetModels)
+            .Subscribe();
+
+        promptExpansionModelsSource
+            .Connect()
+            .Or(downloadablePromptExpansionModelsSource.Connect())
+            .Sort(
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
+            )
+            .DeferUntilLoaded()
+            .Bind(PromptExpansionModels)
             .Subscribe();
 
         vaeModelsDefaults.AddOrUpdate(HybridModelFile.Default);
@@ -198,6 +218,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 HybridModelFile.Comparer
             );
         }
+
+        // Prompt Expansion indexing is local only
 
         // Fetch sampler names from KSampler node
         if (await Client.GetSamplerNamesAsync() is { } samplerNames)
@@ -276,6 +298,22 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             u => !controlNetModelsSource.Lookup(u.GetId()).HasValue
         );
         downloadableControlNetModelsSource.EditDiff(downloadableControlNets, HybridModelFile.Comparer);
+
+        // Load local prompt expansion models
+        promptExpansionModelsSource.EditDiff(
+            modelIndexService
+                .GetFromModelIndex(SharedFolderType.PromptExpansion)
+                .Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
+
+        // Downloadable PromptExpansion models
+        downloadablePromptExpansionModelsSource.EditDiff(
+            RemoteModels.PromptExpansionModels.Where(
+                u => !promptExpansionModelsSource.Lookup(u.GetId()).HasValue
+            ),
+            HybridModelFile.Comparer
+        );
 
         // Load local VAE models
         vaeModelsSource.EditDiff(
@@ -481,7 +519,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         await ConnectAsyncImpl(uri, cancellationToken);
 
-        // Set package path as server path
+        Client.LocalServerPackage = packagePair;
         Client.LocalServerPath = packagePair.InstalledPackage.FullPath!;
     }
 

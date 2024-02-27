@@ -53,6 +53,35 @@ public interface IPackageExtensionManager
     }
 
     /// <summary>
+    /// Get unique extensions from all provided manifests. As a mapping of their reference.
+    /// </summary>
+    async Task<IDictionary<string, PackageExtension>> GetManifestExtensionsMapAsync(
+        IEnumerable<ExtensionManifest> manifests,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = new Dictionary<string, PackageExtension>();
+
+        foreach (
+            var extension in await GetManifestExtensionsAsync(manifests, cancellationToken)
+                .ConfigureAwait(false)
+        )
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var key = extension.Reference.ToString();
+
+            if (!result.TryAdd(key, extension))
+            {
+                // Replace
+                result[key] = extension;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// Get all installed extensions for the provided package.
     /// </summary>
     Task<IEnumerable<InstalledPackageExtension>> GetInstalledExtensionsAsync(

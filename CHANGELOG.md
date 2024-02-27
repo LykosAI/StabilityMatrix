@@ -5,14 +5,22 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-## v2.9.0-dev.3
+## v2.10.0-dev.1
 ### Added
 - Added OpenArt.AI workflow browser for ComfyUI workflows
+
+## v2.9.0-pre.1
+### Added
+- Added Inference Prompt Styles, with Prompt Expansion model support (i.e. Fooocus V2)
+- Added copy image support on linux and macOS for Inference outputs viewer menu
 ### Fixed
 - Fixed StableSwarmUI not installing properly on macOS
 - Fixed output sharing for Stable Diffusion WebUI Forge
 - Hopefully actually fixed [#464](https://github.com/LykosAI/StabilityMatrix/issues/464) - error when installing InvokeAI on macOS
 - Fixed default command line args for SDWebUI Forge on macOS
+- Fixed output paths and output sharing for SDWebUI Forge
+- Maybe fixed update hanging for Auto1111 and SDWebUI Forge
+- Fixed Inference output viewer menu "Copy" not copying image 
 
 ## v2.9.0-dev.2
 ### Added

@@ -1,0 +1,96 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
+    x:DataType="inference:PromptExpansionCardViewModel">
+    
+    <Design.PreviewWith>
+        <Panel Width="400" Height="200">
+            <StackPanel Width="300" VerticalAlignment="Center">
+                <controls:PromptExpansionCard />
+            </StackPanel>
+        </Panel>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|PromptExpansionCard">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card Padding="12">
+                    <sg:SpacedGrid
+                        ColumnDefinitions="Auto,*"
+                        ColumnSpacing="8"
+                        RowDefinitions="*,*,*,*"
+                        RowSpacing="0">
+                        <!--  Model  -->
+                        <TextBlock
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Text="{x:Static lang:Resources.Label_Model}"
+                            TextAlignment="Left" />
+
+                        <ui:FAComboBox
+                            x:Name="PART_ModelComboBox"
+                            Grid.Row="0"
+                            Grid.Column="1"
+                                HorizontalAlignment="Stretch"
+                                ItemContainerTheme="{StaticResource FAComboBoxItemHybridModelTheme}"
+                                ItemsSource="{Binding ClientManager.PromptExpansionModels}"
+                                SelectedItem="{Binding SelectedModel}">
+
+                                <ui:FAComboBox.Resources>
+                                    <input:StandardUICommand x:Key="RemoteDownloadCommand" 
+                                                             Command="{Binding RemoteDownloadCommand}" />
+                                </ui:FAComboBox.Resources>
+
+                                <ui:FAComboBox.DataTemplates>
+                                    <controls:HybridModelTemplateSelector>
+                                        <DataTemplate x:Key="{x:Static models:HybridModelType.Downloadable}" DataType="models:HybridModelFile">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Foreground="{DynamicResource ThemeGreyColor}" Text="{Binding ShortDisplayName}" />
+                                                <Button
+                                                    Grid.Column="1"
+                                                    Margin="8,0,0,0"
+                                                    Padding="0"
+                                                    Classes="transparent-full">
+                                                    <fluentIcons:SymbolIcon
+                                                        VerticalAlignment="Center"
+                                                        FontSize="18"
+                                                        Foreground="{DynamicResource ThemeGreyColor}"
+                                                        IsFilled="True"
+                                                        Symbol="CloudArrowDown" />
+                                                </Button>
+                                            </Grid>
+                                        </DataTemplate>
+                                        <DataTemplate x:Key="{x:Static models:HybridModelType.None}" DataType="models:HybridModelFile">
+                                            <TextBlock Text="{Binding ShortDisplayName}" />
+                                        </DataTemplate>
+                                    </controls:HybridModelTemplateSelector>
+                                </ui:FAComboBox.DataTemplates>
+
+                            </ui:FAComboBox>
+                        
+                        <!--<controls:BetterComboBox
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Padding="8,6,4,6"
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding ClientManager.Upscalers}"
+                            SelectedItem="{Binding SelectedModel}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />-->
+                    </sg:SpacedGrid>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

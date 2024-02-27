@@ -1,10 +1,10 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json.Nodes;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
 
-[JsonSerializable(typeof(PromptCardModel))]
 public class PromptCardModel
 {
-    public string? Prompt { get; set; }
-    public string? NegativePrompt { get; set; }
+    public string? Prompt { get; init; }
+    public string? NegativePrompt { get; init; }
+    public JsonObject? ModulesCardState { get; init; }
 }

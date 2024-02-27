@@ -206,7 +206,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     }
 
     [RelayCommand]
-    private async Task LaunchAsync(string? command = null)
+    public async Task LaunchAsync(string? command = null)
     {
         await notificationService.TryAsync(LaunchImpl(command));
     }

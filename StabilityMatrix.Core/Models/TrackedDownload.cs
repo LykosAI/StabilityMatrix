@@ -124,6 +124,8 @@ public class TrackedDownload
     {
         var progress = new Progress<ProgressReport>(OnProgressUpdate);
 
+        DownloadDirectory.Create();
+
         await downloadService!
             .ResumeDownloadToFileAsync(
                 SourceUrl.ToString(),

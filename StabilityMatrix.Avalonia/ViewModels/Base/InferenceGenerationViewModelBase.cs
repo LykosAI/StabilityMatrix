@@ -15,11 +15,15 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using ExifLibrary;
+using FluentAvalonia.UI.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using Nito.Disposables.Internals;
 using NLog;
 using Refit;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -35,6 +39,8 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 using Notification = DesktopNotifications.Notification;
@@ -271,6 +277,15 @@ public abstract partial class InferenceGenerationViewModelBase
             throw new InvalidOperationException("OutputNodeNames is empty");
         if (client.OutputImagesDir is null)
             throw new InvalidOperationException("OutputImagesDir is null");
+
+        // Only check extensions for first batch index
+        if (args.BatchIndex == 0)
+        {
+            if (!await CheckPromptExtensionsInstalled(args.Nodes))
+            {
+                throw new ValidationException("Prompt extensions not installed");
+            }
+        }
 
         // Upload input images
         await UploadInputImages(client);
@@ -622,6 +637,121 @@ public abstract partial class InferenceGenerationViewModelBase
     }
 
     /// <summary>
+    /// Shows a dialog and return false if prompt required extensions not installed
+    /// </summary>
+    private async Task<bool> CheckPromptExtensionsInstalled(NodeDictionary nodeDictionary)
+    {
+        // Get prompt required extensions
+        // Just static for now but could do manifest lookup when we support custom workflows
+        var requiredExtensions = nodeDictionary
+            .ClassTypeRequiredExtensions.Values.SelectMany(x => x)
+            .ToHashSet();
+
+        // Skip if no extensions required
+        if (requiredExtensions.Count == 0)
+        {
+            return true;
+        }
+
+        // Get installed extensions
+        var localPackagePair = ClientManager.Client?.LocalServerPackage.Unwrap()!;
+        var manager = localPackagePair.BasePackage.ExtensionManager.Unwrap();
+
+        var localExtensions = (
+            await ((GitPackageExtensionManager)manager).GetInstalledExtensionsLiteAsync(
+                localPackagePair.InstalledPackage
+            )
+        ).ToImmutableArray();
+
+        var missingExtensions = requiredExtensions
+            .Except(localExtensions.Select(ext => ext.GitRepositoryUrl).WhereNotNull())
+            .ToImmutableArray();
+
+        if (missingExtensions.Length == 0)
+        {
+            return true;
+        }
+
+        var dialog = DialogHelper.CreateMarkdownDialog(
+            $"#### The following extensions are required for this workflow:\n"
+                + $"{string.Join("\n- ", missingExtensions)}",
+            "Install Required Extensions?"
+        );
+
+        dialog.IsPrimaryButtonEnabled = true;
+        dialog.DefaultButton = ContentDialogButton.Primary;
+        dialog.PrimaryButtonText =
+            $"{Resources.Action_Install} ({localPackagePair.InstalledPackage.DisplayName.ToRepr()} will restart)";
+        dialog.CloseButtonText = Resources.Action_Cancel;
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var manifestExtensionsMap = await manager.GetManifestExtensionsMapAsync(
+                manager.GetManifests(localPackagePair.InstalledPackage)
+            );
+
+            var steps = new List<IPackageStep>();
+
+            foreach (var missingExtensionUrl in missingExtensions)
+            {
+                if (!manifestExtensionsMap.TryGetValue(missingExtensionUrl, out var extension))
+                {
+                    Logger.Warn(
+                        "Extension {MissingExtensionUrl} not found in manifests",
+                        missingExtensionUrl
+                    );
+                    continue;
+                }
+
+                steps.Add(new InstallExtensionStep(manager, localPackagePair.InstalledPackage, extension));
+            }
+
+            var runner = new PackageModificationRunner
+            {
+                ShowDialogOnStart = true,
+                ModificationCompleteTitle = "Extensions Installed",
+                ModificationCompleteMessage = "Finished installing required extensions"
+            };
+            EventManager.Instance.OnPackageInstallProgressAdded(runner);
+
+            runner
+                .ExecuteSteps(steps)
+                .ContinueWith(async _ =>
+                {
+                    if (runner.Failed)
+                        return;
+
+                    // Restart Package
+                    // TODO: This should be handled by some DI package manager service
+                    var launchPage = App.Services.GetRequiredService<LaunchPageViewModel>();
+
+                    try
+                    {
+                        await Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            await launchPage.Stop();
+                            await launchPage.LaunchAsync();
+                        });
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e, "Error while restarting package");
+
+                        notificationService.ShowPersistent(
+                            new AppException(
+                                "Could not restart package",
+                                "Please manually restart the package for extension changes to take effect"
+                            )
+                        );
+                    }
+                })
+                .SafeFireAndForget();
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Handles the preview image received event from the websocket.
     /// Updates the preview image in the image gallery.
     /// </summary>
@@ -683,6 +813,7 @@ public abstract partial class InferenceGenerationViewModelBase
         public required ComfyClient Client { get; init; }
         public required NodeDictionary Nodes { get; init; }
         public required IReadOnlyList<string> OutputNodeNames { get; init; }
+        public int BatchIndex { get; init; }
         public GenerationParameters? Parameters { get; init; }
         public InferenceProjectDocument? Project { get; init; }
         public bool ClearOutputImages { get; init; } = true;

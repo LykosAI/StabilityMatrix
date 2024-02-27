@@ -200,6 +200,7 @@ public partial class InferenceImageToVideoViewModel
                 Parameters = SaveStateToParameters(new GenerationParameters()),
                 Project = InferenceProjectDocument.FromLoadable(this),
                 FilesToTransfer = buildPromptArgs.FilesToTransfer,
+                BatchIndex = i,
                 // Only clear output images on the first batch
                 ClearOutputImages = i == 0
             };

@@ -71,6 +71,7 @@ public record HybridModelFile
 
             if (
                 !fileName.Equals("diffusion_pytorch_model", StringComparison.OrdinalIgnoreCase)
+                && !fileName.Equals("pytorch_model", StringComparison.OrdinalIgnoreCase)
                 && !fileName.Equals("ip_adapter", StringComparison.OrdinalIgnoreCase)
             )
             {

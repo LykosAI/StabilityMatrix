@@ -1,99 +1,133 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-                          xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                          xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
-                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
-                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                          xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
-                          mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="650"
-                          x:DataType="dialogs:OpenArtWorkflowViewModel"
-                          d:DataContext="{x:Static designData:DesignData.OpenArtWorkflowViewModel}"
-                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.OpenArtWorkflowDialog">
-    <Grid RowDefinitions="Auto, Auto, Auto, Auto"
-          ColumnDefinitions="*, 2*"
-          HorizontalAlignment="Stretch"
-          Width="600">
-        <TextBlock Grid.Row="0"
-                   Grid.Column="0"
-                   Grid.ColumnSpan="2"
-                   FontSize="20"
-                   TextAlignment="Left"
-                   Margin="8,8,0,4"
-                   ToolTip.Tip="{Binding Workflow.Name}">
-            <Run Text="{Binding Workflow.Name}"/>
-            <Run Text="- by"/>
-            <Run Text="{Binding Workflow.Creator.Name}"/>
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.OpenArtWorkflowDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    d:DataContext="{x:Static designData:DesignData.OpenArtWorkflowViewModel}"
+    d:DesignHeight="650"
+    d:DesignWidth="600"
+    x:DataType="dialogs:OpenArtWorkflowViewModel"
+    mc:Ignorable="d">
+    <Grid
+        Width="600"
+        HorizontalAlignment="Stretch"
+        ColumnDefinitions="*, 2*"
+        RowDefinitions="Auto, Auto, Auto, Auto, Auto">
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="8,8,0,4"
+            FontSize="20"
+            TextAlignment="Left"
+            ToolTip.Tip="{Binding Workflow.Name}">
+            <Run Text="{Binding Workflow.Name}" />
+            <Run Text="- by" />
+            <Run Text="{Binding Workflow.Creator.Name}" />
         </TextBlock>
 
-        <controls:BetterAdvancedImage Grid.Column="0"
-                                      Grid.Row="2"
-                                      Source="{Binding Workflow.Thumbnails[0].Url}"
-                                      Height="300"
-                                      Margin="8"
-                                      Stretch="UniformToFill"
-                                      CornerRadius="8" />
-        
-        <controls:Card Grid.Row="2" Grid.Column="1"
-                       VerticalAlignment="Top"
-                       Margin="8">
+        <controls:BetterAdvancedImage
+            Grid.Row="2"
+            Grid.Column="0"
+            Height="300"
+            Margin="8"
+            CornerRadius="8"
+            Source="{Binding Workflow.Thumbnails[0].Url}"
+            Stretch="UniformToFill" />
+
+        <controls:Card
+            Grid.Row="2"
+            Grid.Column="1"
+            Margin="8"
+            VerticalAlignment="Top">
             <ScrollViewer MaxHeight="270">
-                <TextBlock Text="{Binding PrunedDescription}"
-                           TextWrapping="Wrap"
-                           Margin="4"/>
+                <TextBlock
+                    Margin="4"
+                    Text="{Binding PrunedDescription}"
+                    TextWrapping="Wrap" />
             </ScrollViewer>
         </controls:Card>
 
-        <Expander Grid.Row="3"
-                  Grid.Column="0"
-                  Grid.ColumnSpan="2"
-                  Header="{x:Static lang:Resources.Label_NodeDetails}"
-                  ExpandDirection="Down"
-                  Margin="8, 8">
+        <Expander
+            Grid.Row="3"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="8,8"
+            ExpandDirection="Down"
+            Header="{x:Static lang:Resources.Label_NodeDetails}">
             <ScrollViewer MaxHeight="225">
-                    <ItemsControl ItemsSource="{Binding CustomNodes}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Vertical" Spacing="4" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type models:OpenArtCustomNode}">
-                                <StackPanel Orientation="Vertical">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Title}"
-                                                   FontWeight="SemiBold"
-                                                   FontSize="16" />
-                                        <avalonia:Icon Value="fa-solid fa-circle-check"
-                                                       Foreground="Lime"
-                                                       VerticalAlignment="Center"
-                                                       Margin="4"
-                                                       IsVisible="{Binding IsInstalled}"/>
-                                    </StackPanel>
-                                    <ItemsControl Margin="0,4"
-                                                  ItemsSource="{Binding Children}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <StackPanel Orientation="Vertical" Spacing="4" />
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate DataType="{x:Type system:String}">
-                                                <StackPanel Orientation="Vertical">
-                                                    <TextBlock Text="{Binding ., StringFormat={} - {0}}"
-                                                               Margin="4,0,0,0" />
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
+                <ItemsControl ItemsSource="{Binding CustomNodes}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Vertical" Spacing="4" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models:OpenArtCustomNode}">
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock
+                                        FontSize="16"
+                                        FontWeight="SemiBold"
+                                        Text="{Binding Title}" />
+                                    <avalonia:Icon
+                                        Margin="4"
+                                        VerticalAlignment="Center"
+                                        Foreground="Lime"
+                                        IsVisible="{Binding IsInstalled}"
+                                        Value="fa-solid fa-circle-check" />
                                 </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+                                <ItemsControl Margin="0,4" ItemsSource="{Binding Children}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Vertical" Spacing="4" />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type system:String}">
+                                            <StackPanel Orientation="Vertical">
+                                                <TextBlock Margin="4,0,0,0" Text="{Binding ., StringFormat={} - {0}}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Expander>
+
+        <Expander
+            Grid.Row="4"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="8"
+            Header="Options">
+            <StackPanel Spacing="4">
+                <ui:SettingsExpanderItem Content="Install Required Nodes">
+                    <ui:SettingsExpanderItem.Footer>
+                        <CheckBox IsChecked="{Binding InstallRequiredNodes}" />
+                    </ui:SettingsExpanderItem.Footer>
+                </ui:SettingsExpanderItem>
+                <ui:SettingsExpanderItem Content="Target Package">
+                    <ui:SettingsExpanderItem.Footer>
+                        <ComboBox 
+                            DisplayMemberBinding="{Binding DisplayName}"
+                            ItemsSource="{Binding AvailablePackages}" 
+                            SelectedItem="{Binding SelectedPackage}"/>
+                    </ui:SettingsExpanderItem.Footer>
+                </ui:SettingsExpanderItem>
+            </StackPanel>
         </Expander>
 
     </Grid>

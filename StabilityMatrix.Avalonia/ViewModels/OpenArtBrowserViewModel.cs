@@ -35,7 +35,8 @@ public partial class OpenArtBrowserViewModel(
     IOpenArtApi openArtApi,
     INotificationService notificationService,
     ISettingsManager settingsManager,
-    IPackageFactory packageFactory
+    IPackageFactory packageFactory,
+    ServiceManager<ViewModelBase> vmFactory
 ) : TabViewModelBase, IInfinitelyScroll
 {
     private const int PageSize = 20;
@@ -158,7 +159,7 @@ public partial class OpenArtBrowserViewModel(
 
         var comfyPair = packageFactory.GetPackagePair(existingComfy);
 
-        var vm = new OpenArtWorkflowViewModel { Workflow = workflow, InstalledComfy = comfyPair };
+        var vm = new OpenArtWorkflowViewModel(settingsManager, packageFactory) { Workflow = workflow };
 
         var dialog = new BetterContentDialog
         {
@@ -193,8 +194,8 @@ public partial class OpenArtBrowserViewModel(
             new DownloadOpenArtWorkflowStep(openArtApi, vm.Workflow, settingsManager)
         ];
 
-        // Add install steps if missing nodes
-        if (vm.MissingNodes is { Count: > 0 } missingNodes)
+        // Add install steps if missing nodes and preferred
+        if (vm is { InstallRequiredNodes: true, MissingNodes: { Count: > 0 } missingNodes })
         {
             var extensionManager = comfyPair.BasePackage.ExtensionManager!;
 

@@ -1033,7 +1033,7 @@ The gallery images are often inpainted, but you will get something very similar 
         DialogFactory.Get<ControlNetCardViewModel>();
 
     public static OpenArtWorkflowViewModel OpenArtWorkflowViewModel =>
-        new()
+        new(Services.GetRequiredService<ISettingsManager>(), Services.GetRequiredService<IPackageFactory>())
         {
             Workflow = new OpenArtSearchResult
             {

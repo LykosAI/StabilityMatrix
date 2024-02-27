@@ -11,6 +11,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.OpenArt;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
@@ -27,6 +28,8 @@ public partial class OpenArtWorkflowViewModel : ContentDialogViewModelBase
 
     [ObservableProperty]
     private string prunedDescription = string.Empty;
+
+    public List<PackageExtension> MissingNodes { get; } = [];
 
     public override async Task OnLoadedAsync()
     {
@@ -45,16 +48,44 @@ public partial class OpenArtWorkflowViewModel : ContentDialogViewModelBase
             nodes = nodes[(indexOfFirstDot + 1)..];
         }
 
-        var installedNodes = new List<string>();
-        if (InstalledComfy != null)
+        var installedNodesNames = new HashSet<string>();
+        var nameToManifestNodes = new Dictionary<string, PackageExtension>();
+
+        if (InstalledComfy?.BasePackage.ExtensionManager is { } extensionManager)
         {
-            installedNodes = (
-                await InstalledComfy.BasePackage.ExtensionManager?.GetInstalledExtensionsAsync(
-                    InstalledComfy.InstalledPackage
-                )
-            )
-                .Select(x => x.PrimaryPath?.Name)
+            var installedNodes = (
+                await extensionManager.GetInstalledExtensionsLiteAsync(InstalledComfy.InstalledPackage)
+            ).ToList();
+
+            var manifestExtensionsMap = await extensionManager.GetManifestExtensionsMapAsync(
+                extensionManager.GetManifests(InstalledComfy.InstalledPackage)
+            );
+
+            // Add manifestExtensions definition to installedNodes if matching git repository url
+            installedNodes = installedNodes
+                .Select(installedNode =>
+                {
+                    if (
+                        installedNode.GitRepositoryUrl is not null
+                        && manifestExtensionsMap.TryGetValue(
+                            installedNode.GitRepositoryUrl,
+                            out var manifestExtension
+                        )
+                    )
+                    {
+                        installedNode = installedNode with { Definition = manifestExtension };
+                    }
+
+                    return installedNode;
+                })
                 .ToList();
+
+            // There may be duplicate titles, deduplicate by using the first one
+            nameToManifestNodes = manifestExtensionsMap
+                .GroupBy(x => x.Value.Title)
+                .ToDictionary(x => x.Key, x => x.First().Value);
+
+            installedNodesNames = installedNodes.Select(x => x.Title).ToHashSet();
         }
 
         var sections = new List<OpenArtCustomNode>();
@@ -73,8 +104,17 @@ public partial class OpenArtWorkflowViewModel : ContentDialogViewModelBase
                 currentSection = new OpenArtCustomNode
                 {
                     Title = node,
-                    IsInstalled = installedNodes.Contains(node)
+                    IsInstalled = installedNodesNames.Contains(node)
                 };
+
+                // Add missing nodes to the list
+                if (
+                    !currentSection.IsInstalled && nameToManifestNodes.TryGetValue(node, out var manifestNode)
+                )
+                {
+                    MissingNodes.Add(manifestNode);
+                }
+
                 sections.Add(currentSection);
             }
             else

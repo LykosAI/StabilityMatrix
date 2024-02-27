@@ -23,7 +23,6 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models.Api.OpenArt;
 using StabilityMatrix.Core.Models.PackageModification;
-using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Resources = StabilityMatrix.Avalonia.Languages.Resources;
@@ -189,23 +188,21 @@ public partial class OpenArtBrowserViewModel(
             return;
         }
 
-        var extensionManager = comfyPair.BasePackage.ExtensionManager!;
-        var extensions = (
-            await extensionManager.GetManifestExtensionsAsync(
-                extensionManager.GetManifests(comfyPair.InstalledPackage)
-            )
-        ).ToList();
+        if (vm.MissingNodes is not { Count: > 0 } missingNodes)
+        {
+            // Skip if no missing nodes
+            return;
+        }
 
-        var steps = vm.CustomNodes.Where(x => x.IsInstalled is false)
-            .Select(node => extensions.FirstOrDefault(x => x.Title == node.Title))
-            .OfType<PackageExtension>()
-            .Select(
+        var extensionManager = comfyPair.BasePackage.ExtensionManager!;
+
+        List<IPackageStep> steps =
+        [
+            new DownloadOpenArtWorkflowStep(openArtApi, vm.Workflow, settingsManager),
+            ..missingNodes.Select(
                 extension => new InstallExtensionStep(extensionManager, comfyPair.InstalledPackage, extension)
             )
-            .Cast<IPackageStep>()
-            .ToList();
-
-        steps.Add(new DownloadOpenArtWorkflowStep(openArtApi, vm.Workflow, settingsManager));
+        ];
 
         var runner = new PackageModificationRunner
         {

@@ -27,6 +27,7 @@ public partial class RunningPackageService(
     IPyRunner pyRunner
 ) : ObservableObject
 {
+    // 🤔 what if we put the ConsoleViewModel inside the BasePackage? 🤔
     [ObservableProperty]
     private ObservableDictionary<Guid, RunningPackageViewModel> runningPackages = [];
 
@@ -115,6 +116,7 @@ public partial class RunningPackageService(
         var viewModel = new RunningPackageViewModel(
             settingsManager,
             notificationService,
+            this,
             runningPackage,
             console
         );

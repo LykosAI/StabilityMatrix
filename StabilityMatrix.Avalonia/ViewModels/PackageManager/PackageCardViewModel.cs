@@ -37,7 +37,15 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [ManagedService]
 [Transient]
-public partial class PackageCardViewModel : ProgressViewModel
+public partial class PackageCardViewModel(
+    ILogger<PackageCardViewModel> logger,
+    IPackageFactory packageFactory,
+    INotificationService notificationService,
+    ISettingsManager settingsManager,
+    INavigationService<NewPackageManagerViewModel> navigationService,
+    ServiceManager<ViewModelBase> vmFactory,
+    RunningPackageService runningPackageService
+) : ProgressViewModel
 {
     private string webUiUrl = string.Empty;
 
@@ -85,36 +93,6 @@ public partial class PackageCardViewModel : ProgressViewModel
 
     [ObservableProperty]
     private bool showWebUiButton;
-
-    private readonly ILogger<PackageCardViewModel> logger;
-    private readonly IPackageFactory packageFactory;
-    private readonly INotificationService notificationService;
-    private readonly ISettingsManager settingsManager;
-    private readonly INavigationService<NewPackageManagerViewModel> navigationService;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
-    private readonly RunningPackageService runningPackageService;
-
-    /// <inheritdoc/>
-    public PackageCardViewModel(
-        ILogger<PackageCardViewModel> logger,
-        IPackageFactory packageFactory,
-        INotificationService notificationService,
-        ISettingsManager settingsManager,
-        INavigationService<NewPackageManagerViewModel> navigationService,
-        ServiceManager<ViewModelBase> vmFactory,
-        RunningPackageService runningPackageService
-    )
-    {
-        this.logger = logger;
-        this.packageFactory = packageFactory;
-        this.notificationService = notificationService;
-        this.settingsManager = settingsManager;
-        this.navigationService = navigationService;
-        this.vmFactory = vmFactory;
-        this.runningPackageService = runningPackageService;
-
-        runningPackageService.RunningPackages.CollectionChanged += RunningPackagesOnCollectionChanged;
-    }
 
     private void RunningPackagesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
@@ -167,6 +145,9 @@ public partial class PackageCardViewModel : ProgressViewModel
             UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
             CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
             CanUseExtensions = basePackage?.SupportsExtensions ?? false;
+
+            runningPackageService.RunningPackages.CollectionChanged += RunningPackagesOnCollectionChanged;
+            EventManager.Instance.PackageRelaunchRequested += InstanceOnPackageRelaunchRequested;
         }
     }
 
@@ -189,8 +170,6 @@ public partial class PackageCardViewModel : ProgressViewModel
 
         if (Design.IsDesignMode || !settingsManager.IsLibraryDirSet || Package is not { } currentPackage)
             return;
-
-        EventManager.Instance.PackageRelaunchRequested += InstanceOnPackageRelaunchRequested;
 
         if (
             packageFactory.FindPackageByName(currentPackage.PackageName)
@@ -217,12 +196,27 @@ public partial class PackageCardViewModel : ProgressViewModel
             }
 
             IsUpdateAvailable = await HasUpdate();
+
+            if (
+                Package != null
+                && !IsRunning
+                && runningPackageService.RunningPackages.TryGetValue(Package.Id, out var runningPackageVm)
+            )
+            {
+                IsRunning = true;
+                runningPackageVm.RunningPackage.BasePackage.Exited += BasePackageOnExited;
+                runningPackageVm.RunningPackage.BasePackage.StartupComplete +=
+                    RunningPackageOnStartupComplete;
+                webUiUrl = runningPackageVm.WebUiUrl;
+                ShowWebUiButton = !string.IsNullOrWhiteSpace(webUiUrl);
+            }
         }
     }
 
     public override void OnUnloaded()
     {
         EventManager.Instance.PackageRelaunchRequested -= InstanceOnPackageRelaunchRequested;
+        runningPackageService.RunningPackages.CollectionChanged -= RunningPackagesOnCollectionChanged;
     }
 
     public async Task Launch()

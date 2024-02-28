@@ -20,7 +20,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, IAsyncDisposable
 {
     private readonly INotificationService notificationService;
-    private string webUiUrl = string.Empty;
+    private readonly RunningPackageService runningPackageService;
 
     public PackagePair RunningPackage { get; }
     public ConsoleViewModel Console { get; }
@@ -34,17 +34,23 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     private bool showWebUiButton;
 
     [ObservableProperty]
+    private string webUiUrl = string.Empty;
+
+    [ObservableProperty]
     private bool isRunning = true;
 
     /// <inheritdoc/>
     public RunningPackageViewModel(
         ISettingsManager settingsManager,
         INotificationService notificationService,
+        RunningPackageService runningPackageService,
         PackagePair runningPackage,
         ConsoleViewModel console
     )
     {
         this.notificationService = notificationService;
+        this.runningPackageService = runningPackageService;
+
         RunningPackage = runningPackage;
         Console = console;
         Console.Document.LineCountChanged += DocumentOnLineCountChanged;
@@ -66,12 +72,13 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
         Console.Document.LineCountChanged -= DocumentOnLineCountChanged;
         RunningPackage.BasePackage.StartupComplete -= BasePackageOnStartupComplete;
         RunningPackage.BasePackage.Exited -= BasePackageOnExited;
+        runningPackageService.RunningPackages.Remove(RunningPackage.InstalledPackage.Id);
     }
 
     private void BasePackageOnStartupComplete(object? sender, string url)
     {
-        webUiUrl = url.Replace("0.0.0.0", "127.0.0.1");
-        ShowWebUiButton = !string.IsNullOrWhiteSpace(webUiUrl);
+        WebUiUrl = url.Replace("0.0.0.0", "127.0.0.1");
+        ShowWebUiButton = !string.IsNullOrWhiteSpace(WebUiUrl);
     }
 
     private void DocumentOnLineCountChanged(object? sender, EventArgs e)
@@ -91,7 +98,7 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     [RelayCommand]
     private async Task Stop()
     {
-        await RunningPackage.BasePackage.WaitForShutdown();
+        await runningPackageService.StopPackage(RunningPackage.InstalledPackage.Id);
         Console.PostLine($"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}");
         await Console.StopUpdatesAsync();
         IsRunning = false;
@@ -100,13 +107,13 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     [RelayCommand]
     private void LaunchWebUi()
     {
-        if (string.IsNullOrEmpty(webUiUrl))
+        if (string.IsNullOrEmpty(WebUiUrl))
             return;
 
         notificationService.TryAsync(
-            Task.Run(() => ProcessRunner.OpenUrl(webUiUrl)),
+            Task.Run(() => ProcessRunner.OpenUrl(WebUiUrl)),
             "Failed to open URL",
-            $"{webUiUrl}"
+            $"{WebUiUrl}"
         );
     }
 

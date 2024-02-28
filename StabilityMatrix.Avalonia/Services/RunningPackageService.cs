@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
@@ -10,7 +9,6 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
-using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -113,8 +111,6 @@ public partial class RunningPackageService(
 
         await basePackage.RunPackage(packagePath, command, userArgsString, o => console.Post(o));
         var runningPackage = new PackagePair(installedPackage, basePackage);
-
-        EventManager.Instance.OnRunningPackageStatusChanged(runningPackage);
 
         var viewModel = new RunningPackageViewModel(
             settingsManager,

@@ -2,6 +2,7 @@
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Helper.Factory;
@@ -13,6 +14,7 @@ public class PackageFactory : IPackageFactory
     private readonly ISettingsManager settingsManager;
     private readonly IDownloadService downloadService;
     private readonly IPrerequisiteHelper prerequisiteHelper;
+    private readonly IPyRunner pyRunner;
 
     /// <summary>
     /// Mapping of package.Name to package
@@ -24,13 +26,15 @@ public class PackageFactory : IPackageFactory
         IGithubApiCache githubApiCache,
         ISettingsManager settingsManager,
         IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
+        IPrerequisiteHelper prerequisiteHelper,
+        IPyRunner pyRunner
     )
     {
         this.githubApiCache = githubApiCache;
         this.settingsManager = settingsManager;
         this.downloadService = downloadService;
         this.prerequisiteHelper = prerequisiteHelper;
+        this.pyRunner = pyRunner;
         this.basePackages = basePackages.ToDictionary(x => x.Name);
     }
 
@@ -44,7 +48,44 @@ public class PackageFactory : IPackageFactory
                 => new A3WebUI(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             "Fooocus-ControlNet-SDXL"
                 => new FocusControlNet(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
-            _ => throw new ArgumentOutOfRangeException()
+            "Fooocus-MRE"
+                => new FooocusMre(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "InvokeAI" => new InvokeAI(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "kohya_ss"
+                => new KohyaSs(
+                    githubApiCache,
+                    settingsManager,
+                    downloadService,
+                    prerequisiteHelper,
+                    pyRunner
+                ),
+            "OneTrainer"
+                => new OneTrainer(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "RuinedFooocus"
+                => new RuinedFooocus(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "stable-diffusion-webui-forge"
+                => new SDWebForge(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "stable-diffusion-webui-directml"
+                => new StableDiffusionDirectMl(
+                    githubApiCache,
+                    settingsManager,
+                    downloadService,
+                    prerequisiteHelper
+                ),
+            "stable-diffusion-webui-ux"
+                => new StableDiffusionUx(
+                    githubApiCache,
+                    settingsManager,
+                    downloadService,
+                    prerequisiteHelper
+                ),
+            "StableSwarmUI"
+                => new StableSwarm(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "automatic"
+                => new VladAutomatic(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "voltaML-fast-stable-diffusion"
+                => new VoltaML(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            _ => throw new ArgumentOutOfRangeException(nameof(installedPackage))
         };
     }
 

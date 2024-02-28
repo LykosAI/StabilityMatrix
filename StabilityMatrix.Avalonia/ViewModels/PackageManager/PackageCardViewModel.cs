@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,15 +37,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [ManagedService]
 [Transient]
-public partial class PackageCardViewModel(
-    ILogger<PackageCardViewModel> logger,
-    IPackageFactory packageFactory,
-    INotificationService notificationService,
-    ISettingsManager settingsManager,
-    INavigationService<NewPackageManagerViewModel> navigationService,
-    ServiceManager<ViewModelBase> vmFactory,
-    RunningPackageService runningPackageService
-) : ProgressViewModel
+public partial class PackageCardViewModel : ProgressViewModel
 {
     private string webUiUrl = string.Empty;
 
@@ -92,6 +85,59 @@ public partial class PackageCardViewModel(
 
     [ObservableProperty]
     private bool showWebUiButton;
+
+    private readonly ILogger<PackageCardViewModel> logger;
+    private readonly IPackageFactory packageFactory;
+    private readonly INotificationService notificationService;
+    private readonly ISettingsManager settingsManager;
+    private readonly INavigationService<NewPackageManagerViewModel> navigationService;
+    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly RunningPackageService runningPackageService;
+
+    /// <inheritdoc/>
+    public PackageCardViewModel(
+        ILogger<PackageCardViewModel> logger,
+        IPackageFactory packageFactory,
+        INotificationService notificationService,
+        ISettingsManager settingsManager,
+        INavigationService<NewPackageManagerViewModel> navigationService,
+        ServiceManager<ViewModelBase> vmFactory,
+        RunningPackageService runningPackageService
+    )
+    {
+        this.logger = logger;
+        this.packageFactory = packageFactory;
+        this.notificationService = notificationService;
+        this.settingsManager = settingsManager;
+        this.navigationService = navigationService;
+        this.vmFactory = vmFactory;
+        this.runningPackageService = runningPackageService;
+
+        runningPackageService.RunningPackages.CollectionChanged += RunningPackagesOnCollectionChanged;
+    }
+
+    private void RunningPackagesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (
+            e.NewItems?.OfType<KeyValuePair<Guid, RunningPackageViewModel>>().Select(x => x.Value)
+            is not { } newItems
+        )
+            return;
+
+        var runningViewModel = newItems.FirstOrDefault(
+            x => x.RunningPackage.InstalledPackage.Id == Package?.Id
+        );
+        if (runningViewModel is not null)
+        {
+            IsRunning = true;
+            runningViewModel.RunningPackage.BasePackage.Exited += BasePackageOnExited;
+            runningViewModel.RunningPackage.BasePackage.StartupComplete += RunningPackageOnStartupComplete;
+        }
+        else if (runningViewModel is null && IsRunning)
+        {
+            IsRunning = false;
+        }
+    }
 
     partial void OnPackageChanged(InstalledPackage? value)
     {
@@ -232,7 +278,6 @@ public partial class PackageCardViewModel(
 
     private void BasePackageOnExited(object? sender, int exitCode)
     {
-        EventManager.Instance.OnRunningPackageStatusChanged(null);
         Dispatcher
             .UIThread.InvokeAsync(async () =>
             {

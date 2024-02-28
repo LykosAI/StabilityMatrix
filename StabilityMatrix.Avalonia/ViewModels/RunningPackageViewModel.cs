@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Avalonia.Threading;
-using AvaloniaEdit;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -19,7 +17,7 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(ConsoleOutputPage))]
-public partial class RunningPackageViewModel : PageViewModelBase
+public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, IAsyncDisposable
 {
     private readonly INotificationService notificationService;
     private string webUiUrl = string.Empty;
@@ -51,7 +49,7 @@ public partial class RunningPackageViewModel : PageViewModelBase
         Console = console;
         Console.Document.LineCountChanged += DocumentOnLineCountChanged;
         RunningPackage.BasePackage.StartupComplete += BasePackageOnStartupComplete;
-        runningPackage.BasePackage.Exited += BasePackageOnExited;
+        RunningPackage.BasePackage.Exited += BasePackageOnExited;
 
         settingsManager.RelayPropertyFor(
             this,
@@ -65,6 +63,9 @@ public partial class RunningPackageViewModel : PageViewModelBase
     {
         IsRunning = false;
         ShowWebUiButton = false;
+        Console.Document.LineCountChanged -= DocumentOnLineCountChanged;
+        RunningPackage.BasePackage.StartupComplete -= BasePackageOnStartupComplete;
+        RunningPackage.BasePackage.Exited -= BasePackageOnExited;
     }
 
     private void BasePackageOnStartupComplete(object? sender, string url)
@@ -122,5 +123,15 @@ public partial class RunningPackageViewModel : PageViewModelBase
                 await process.StandardInput.WriteLineAsync(input);
             }
         }
+    }
+
+    public void Dispose()
+    {
+        Console.Dispose();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await Console.DisposeAsync();
     }
 }

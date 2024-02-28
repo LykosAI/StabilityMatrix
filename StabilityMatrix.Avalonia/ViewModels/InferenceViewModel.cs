@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
@@ -51,6 +53,8 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private readonly ServiceManager<ViewModelBase> vmFactory;
     private readonly IModelIndexService modelIndexService;
     private readonly ILiteDbContext liteDbContext;
+    private readonly RunningPackageService runningPackageService;
+    private Guid? selectedPackageId;
 
     public override string Title => "Inference";
     public override IconSource IconSource =>
@@ -86,6 +90,8 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
     public bool IsComfyRunning => RunningPackage?.BasePackage is ComfyUI;
 
+    private IDisposable? onStartupComplete;
+
     public InferenceViewModel(
         ServiceManager<ViewModelBase> vmFactory,
         INotificationService notificationService,
@@ -93,6 +99,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
         ILiteDbContext liteDbContext,
+        RunningPackageService runningPackageService,
         SharedState sharedState
     )
     {
@@ -101,12 +108,13 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         this.settingsManager = settingsManager;
         this.modelIndexService = modelIndexService;
         this.liteDbContext = liteDbContext;
+        this.runningPackageService = runningPackageService;
 
         ClientManager = inferenceClientManager;
         SharedState = sharedState;
 
         // Keep RunningPackage updated with the current package pair
-        EventManager.Instance.RunningPackageStatusChanged += OnRunningPackageStatusChanged;
+        runningPackageService.RunningPackages.CollectionChanged += RunningPackagesOnCollectionChanged;
 
         // "Send to Inference"
         EventManager.Instance.InferenceTextToImageRequested += OnInferenceTextToImageRequested;
@@ -118,54 +126,77 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         MenuOpenProjectCommand.WithConditionalNotificationErrorHandler(notificationService);
     }
 
+    private void DisconnectFromComfy()
+    {
+        RunningPackage = null;
+
+        // Cancel any pending connection
+        if (ConnectCancelCommand.CanExecute(null))
+        {
+            ConnectCancelCommand.Execute(null);
+        }
+        onStartupComplete?.Dispose();
+        onStartupComplete = null;
+        IsWaitingForConnection = false;
+
+        // Disconnect
+        Logger.Trace("On package close - disconnecting");
+        DisconnectCommand.Execute(null);
+    }
+
     /// <summary>
     /// Updates the RunningPackage property when the running package changes.
     /// Also starts a connection to the backend if a new ComfyUI package is running.
     /// And disconnects if the package is closed.
     /// </summary>
-    private void OnRunningPackageStatusChanged(object? sender, RunningPackageStatusChangedEventArgs e)
+    private void RunningPackagesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        RunningPackage = e.CurrentPackagePair;
-
-        IDisposable? onStartupComplete = null;
-
-        Dispatcher.UIThread.Post(() =>
+        if (
+            e.NewItems?.OfType<KeyValuePair<Guid, RunningPackageViewModel>>().Select(x => x.Value)
+            is not { } newItems
+        )
         {
-            if (e.CurrentPackagePair?.BasePackage is ComfyUI package)
+            if (RunningPackage != null)
             {
-                IsWaitingForConnection = true;
-                onStartupComplete = Observable
-                    .FromEventPattern<string>(package, nameof(package.StartupComplete))
-                    .Take(1)
-                    .Subscribe(_ =>
-                    {
-                        Dispatcher.UIThread.Post(() =>
-                        {
-                            if (ConnectCommand.CanExecute(null))
-                            {
-                                Logger.Trace("On package launch - starting connection");
-                                ConnectCommand.Execute(null);
-                            }
-                            IsWaitingForConnection = false;
-                        });
-                    });
+                DisconnectFromComfy();
             }
-            else
-            {
-                // Cancel any pending connection
-                if (ConnectCancelCommand.CanExecute(null))
-                {
-                    ConnectCancelCommand.Execute(null);
-                }
-                onStartupComplete?.Dispose();
-                onStartupComplete = null;
-                IsWaitingForConnection = false;
+            return;
+        }
 
-                // Disconnect
-                Logger.Trace("On package close - disconnecting");
-                DisconnectCommand.Execute(null);
-            }
-        });
+        var comfyViewModel = newItems.FirstOrDefault(
+            vm =>
+                vm.RunningPackage.InstalledPackage.Id == selectedPackageId
+                || vm.RunningPackage.BasePackage is ComfyUI
+        );
+
+        if (comfyViewModel is null && RunningPackage?.BasePackage is ComfyUI)
+        {
+            DisconnectFromComfy();
+        }
+        else if (comfyViewModel != null && RunningPackage == null)
+        {
+            IsWaitingForConnection = true;
+            RunningPackage = comfyViewModel.RunningPackage;
+            onStartupComplete = Observable
+                .FromEventPattern<string>(
+                    comfyViewModel.RunningPackage.BasePackage,
+                    nameof(comfyViewModel.RunningPackage.BasePackage.StartupComplete)
+                )
+                .Take(1)
+                .Subscribe(_ =>
+                {
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        if (ConnectCommand.CanExecute(null))
+                        {
+                            Logger.Trace("On package launch - starting connection");
+                            ConnectCommand.Execute(null);
+                        }
+
+                        IsWaitingForConnection = false;
+                    });
+                });
+        }
     }
 
     public override void OnLoaded()
@@ -390,7 +421,12 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private async Task ShowConnectionHelp()
     {
         var vm = vmFactory.Get<InferenceConnectionHelpViewModel>();
-        await vm.CreateDialog().ShowAsync();
+        var result = await vm.CreateDialog().ShowAsync();
+
+        if (result != ContentDialogResult.Primary)
+            return;
+
+        selectedPackageId = vm.SelectedPackage?.Id;
     }
 
     /// <summary>

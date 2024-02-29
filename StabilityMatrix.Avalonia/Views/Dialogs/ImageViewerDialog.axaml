@@ -59,7 +59,7 @@
         <!-- Tag is not used but sets TemplateKey which is used to select the DataTemplate later -->
         <ContentPresenter Grid.Row="0"
                           Tag="{Binding TemplateKeyAsync^}"
-                          DataContext="{Binding ImageSource}" 
+                          DataContext="{Binding ImageSource}"
                           Content="{Binding }">
             <ContentPresenter.ContentTemplate>
                 <controls:DataTemplateSelector x:TypeArguments="models:ImageSourceTemplateType">
@@ -72,6 +72,7 @@
                     <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.Image}" DataType="models:ImageSource">
                         <controls:AdvancedImageBox
                             Name="ImageBox"
+                            Focusable="False"
                             CornerRadius="4"
                             Image="{Binding BitmapAsync^}"
                             SizeMode="Fit">

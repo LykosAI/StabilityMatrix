@@ -471,8 +471,9 @@ public class ComfyClient : InferenceClientBase
     {
         var response = await comfyApi.GetObjectInfo(nodeName, cancellationToken).ConfigureAwait(false);
 
-        var info = response[nodeName];
-        return info.Input.GetOptionalValueAsNestedList(optionName);
+        var info = response.GetValueOrDefault(nodeName);
+
+        return info?.Input.GetOptionalValueAsNestedList(optionName);
     }
 
     protected override void Dispose(bool disposing)

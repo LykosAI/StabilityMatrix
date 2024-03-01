@@ -181,6 +181,26 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         }
     }
 
+    protected override Task OnInitialLoadedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Program.Args.LaunchPackageName))
+            return base.OnInitialLoadedAsync();
+
+        var package = InstalledPackages.FirstOrDefault(x => x.DisplayName == Program.Args.LaunchPackageName);
+        if (package is not null)
+        {
+            SelectedPackage = package;
+            return LaunchAsync();
+        }
+
+        package = InstalledPackages.FirstOrDefault(x => x.Id.ToString() == Program.Args.LaunchPackageName);
+        if (package is null)
+            return base.OnInitialLoadedAsync();
+
+        SelectedPackage = package;
+        return LaunchAsync();
+    }
+
     public override void OnLoaded()
     {
         // Load installed packages
@@ -203,6 +223,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         // Load active package
         SelectedPackage = settingsManager.Settings.ActiveInstalledPackage;
         AutoScrollToEnd = settingsManager.Settings.AutoScrollLaunchConsoleToEnd;
+
+        base.OnLoaded();
     }
 
     [RelayCommand]

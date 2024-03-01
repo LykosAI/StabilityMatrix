@@ -101,6 +101,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<ComfyScheduler> Schedulers { get; } =
         new ObservableCollectionExtended<ComfyScheduler>();
 
+    public IObservableCollection<HybridModelFile> Preprocessors { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
+    private readonly SourceCache<HybridModelFile, string> preprocessorsSource = new(p => p.GetId());
+
     public InferenceClientManager(
         ILogger<InferenceClientManager> logger,
         IApiFactory apiFactory,
@@ -165,6 +170,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .Subscribe();
 
         schedulersSource.Connect().DeferUntilLoaded().Bind(Schedulers).Subscribe();
+
+        preprocessorsSource.Connect().DeferUntilLoaded().Bind(Preprocessors).Subscribe();
 
         settingsManager.RegisterOnLibraryDirSet(_ =>
         {
@@ -269,6 +276,18 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 );
             });
             logger.LogTrace("Loaded scheduler methods: {@Schedulers}", schedulerNames);
+        }
+
+        // Add preprocessor names from Inference_Core_AIO_Preprocessor node (might not exist if no extension)
+        if (
+            await Client.GetOptionalNodeOptionNamesAsync("Inference_Core_AIO_Preprocessor", "preprocessor") is
+            { } preprocessorNames
+        )
+        {
+            preprocessorsSource.EditDiff(
+                preprocessorNames.Select(HybridModelFile.FromRemote),
+                HybridModelFile.Comparer
+            );
         }
     }
 

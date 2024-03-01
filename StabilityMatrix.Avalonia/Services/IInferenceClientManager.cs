@@ -44,6 +44,7 @@ public interface IInferenceClientManager : IDisposable, INotifyPropertyChanged, 
     IObservableCollection<ComfySampler> Samplers { get; }
     IObservableCollection<ComfyUpscaler> Upscalers { get; }
     IObservableCollection<ComfyScheduler> Schedulers { get; }
+    IObservableCollection<HybridModelFile> Preprocessors { get; }
 
     Task CopyImageToInputAsync(FilePath imageFile, CancellationToken cancellationToken = default);
 

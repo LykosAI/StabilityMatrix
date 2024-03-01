@@ -47,18 +47,16 @@
                                 DataContext="{Binding SelectImageCardViewModel}"
                                 FontSize="13" />
 
-                            <!--  TODO: Preprocessor Model  -->
+                            <!--  Preprocessor Model  -->
                             <ui:FAComboBox
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 Margin="0,0,0,4"
+                                SelectedItem="{Binding SelectedPreprocessor}"
+                                ItemsSource="{Binding ClientManager.Preprocessors}"
                                 HorizontalAlignment="Stretch"
-                                markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
                                 Header="{x:Static lang:Resources.Label_Preprocessor}"
-                                IsEnabled="False"
-                                Theme="{StaticResource FAComboBoxHybridModelTheme}"
-                                ToolTip.ShowDelay="1200"
-                                ToolTip.Tip="{StaticResource WipFeatureToolTip}" />
+                                Theme="{StaticResource FAComboBoxHybridModelTheme}"/>
 
                             <!--  ControlNet Model  -->
                             <ui:FAComboBox

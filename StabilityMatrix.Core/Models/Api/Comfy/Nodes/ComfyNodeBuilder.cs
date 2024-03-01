@@ -342,6 +342,20 @@ public class ComfyNodeBuilder
         public bool LogPrompt { get; init; }
     }
 
+    [TypedNodeOptions(
+        Name = "Inference_Core_AIO_Preprocessor",
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes"]
+    )]
+    public record AIOPreprocessor : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required ImageNodeConnection Image { get; init; }
+
+        public required string Preprocessor { get; init; }
+
+        [Range(64, 2048)]
+        public int Resolution { get; init; } = 512;
+    }
+
     public ImageNodeConnection Lambda_LatentToImage(LatentNodeConnection latent, VAENodeConnection vae)
     {
         var name = GetUniqueName("VAEDecode");

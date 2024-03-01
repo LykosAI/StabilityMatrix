@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - (Internal) Updated to Avalonia 11.0.9
 ### Fixed
 - Fixed image viewer dialog arrow key navigation not working
+- Fixed CivitAI login prompt not showing when downloading models that require CivitAI logins
 
 ## v2.9.0-pre.1
 ### Added

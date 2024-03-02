@@ -90,9 +90,18 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
     partial void OnImageSourceChanged(ImageSource? value)
     {
         // Cache the hash for later upload use
-        if (value?.LocalFile is { Exists: true })
+        if (value?.LocalFile is { Exists: true } localFile)
         {
-            value.GetBlake3HashAsync().SafeFireAndForget();
+            value
+                .GetBlake3HashAsync()
+                .SafeFireAndForget(ex =>
+                {
+                    Logger.Warn(ex, "Error getting hash for image {Path}", localFile.Name);
+                    notificationService.ShowPersistent(
+                        $"Error getting hash for image {localFile.Name}",
+                        $"{ex.GetType().Name}: {ex.Message}"
+                    );
+                });
         }
     }
 

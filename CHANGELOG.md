@@ -5,6 +5,17 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.9.0-pre.2
+### Added
+- Added `--launch-package` argument to launch a specific package on startup, using display name or package ID (i.e. `--launch-package "Stable Diffusion WebUI Forge"` or `--launch-package c0b3ecc5-9664-4be9-952d-a10b3dcaee14`)
+- Added more Base Model search options to the CivitAI Model Browser
+- Added Stable Cascade to the HuggingFace Model Browser
+### Changed
+- (Internal) Updated to Avalonia 11.0.9
+### Fixed
+- Fixed image viewer dialog arrow key navigation not working
+- Fixed CivitAI login prompt not showing when downloading models that require CivitAI logins
+
 ## v2.9.0-pre.1
 ### Added
 - Added Inference Prompt Styles, with Prompt Expansion model support (i.e. Fooocus V2)

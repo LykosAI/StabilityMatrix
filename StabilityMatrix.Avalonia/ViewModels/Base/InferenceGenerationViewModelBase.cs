@@ -17,9 +17,9 @@ using CommunityToolkit.Mvvm.Input;
 using ExifLibrary;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.DependencyInjection;
-using Nito.Disposables.Internals;
 using NLog;
 using Refit;
+using Semver;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
@@ -643,12 +643,10 @@ public abstract partial class InferenceGenerationViewModelBase
     {
         // Get prompt required extensions
         // Just static for now but could do manifest lookup when we support custom workflows
-        var requiredExtensions = nodeDictionary
-            .ClassTypeRequiredExtensions.Values.SelectMany(x => x)
-            .ToHashSet();
+        var requiredExtensionSpecifiers = nodeDictionary.RequiredExtensions.ToList();
 
         // Skip if no extensions required
-        if (requiredExtensions.Count == 0)
+        if (requiredExtensionSpecifiers.Count == 0)
         {
             return true;
         }
@@ -661,20 +659,63 @@ public abstract partial class InferenceGenerationViewModelBase
             await ((GitPackageExtensionManager)manager).GetInstalledExtensionsLiteAsync(
                 localPackagePair.InstalledPackage
             )
-        ).ToImmutableArray();
+        ).ToList();
 
-        var missingExtensions = requiredExtensions
-            .Except(localExtensions.Select(ext => ext.GitRepositoryUrl).WhereNotNull())
-            .ToImmutableArray();
+        var localExtensionsByGitUrl = localExtensions
+            .Where(ext => ext.GitRepositoryUrl is not null)
+            .ToDictionary(ext => ext.GitRepositoryUrl!, ext => ext);
 
-        if (missingExtensions.Length == 0)
+        var requiredExtensionReferences = requiredExtensionSpecifiers
+            .Select(specifier => specifier.Name)
+            .ToHashSet();
+
+        var missingExtensions = new List<ExtensionSpecifier>();
+        var outOfDateExtensions =
+            new List<(ExtensionSpecifier Specifier, InstalledPackageExtension Installed)>();
+
+        // Check missing extensions and out of date extensions
+        foreach (var specifier in requiredExtensionSpecifiers)
+        {
+            if (!localExtensionsByGitUrl.TryGetValue(specifier.Name, out var localExtension))
+            {
+                missingExtensions.Add(specifier);
+                continue;
+            }
+
+            // Check if constraint is specified
+            if (specifier.Constraint is not null && specifier.TryGetSemVersionRange(out var semVersionRange))
+            {
+                // Get version to compare
+                localExtension = await manager.GetInstalledExtensionInfoAsync(localExtension);
+
+                // Try to parse local tag to semver
+                if (
+                    localExtension.Version?.Tag is not null
+                    && SemVersion.TryParse(
+                        localExtension.Version.Tag,
+                        SemVersionStyles.AllowV,
+                        out var localSemVersion
+                    )
+                )
+                {
+                    // Check if not satisfied
+                    if (!semVersionRange.Contains(localSemVersion))
+                    {
+                        outOfDateExtensions.Add((specifier, localExtension));
+                    }
+                }
+            }
+        }
+
+        if (missingExtensions.Count == 0 && outOfDateExtensions.Count == 0)
         {
             return true;
         }
 
         var dialog = DialogHelper.CreateMarkdownDialog(
             $"#### The following extensions are required for this workflow:\n"
-                + $"{string.Join("\n- ", missingExtensions)}",
+                + $"{string.Join("\n- ", missingExtensions.Select(ext => ext.Name))}"
+                + $"{string.Join("\n- ", outOfDateExtensions.Select(pair => $"{pair.Item1.Name} {pair.Specifier.Constraint} {pair.Specifier.Version} (Current Version: {pair.Installed.Version?.Tag})"))}",
             "Install Required Extensions?"
         );
 
@@ -692,13 +733,13 @@ public abstract partial class InferenceGenerationViewModelBase
 
             var steps = new List<IPackageStep>();
 
-            foreach (var missingExtensionUrl in missingExtensions)
+            foreach (var missingExtension in missingExtensions)
             {
-                if (!manifestExtensionsMap.TryGetValue(missingExtensionUrl, out var extension))
+                if (!manifestExtensionsMap.TryGetValue(missingExtension.Name, out var extension))
                 {
                     Logger.Warn(
                         "Extension {MissingExtensionUrl} not found in manifests",
-                        missingExtensionUrl
+                        missingExtension.Name
                     );
                     continue;
                 }

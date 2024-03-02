@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
@@ -96,13 +97,10 @@ public partial class PackageCardViewModel(
 
     private void RunningPackagesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (
-            e.NewItems?.OfType<KeyValuePair<Guid, RunningPackageViewModel>>().Select(x => x.Value)
-            is not { } newItems
-        )
+        if (runningPackageService.RunningPackages.Select(x => x.Value) is not { } runningPackages)
             return;
 
-        var runningViewModel = newItems.FirstOrDefault(
+        var runningViewModel = runningPackages.FirstOrDefault(
             x => x.RunningPackage.InstalledPackage.Id == Package?.Id
         );
         if (runningViewModel is not null)
@@ -114,6 +112,7 @@ public partial class PackageCardViewModel(
         else if (runningViewModel is null && IsRunning)
         {
             IsRunning = false;
+            ShowWebUiButton = false;
         }
     }
 
@@ -165,6 +164,7 @@ public partial class PackageCardViewModel(
         if (Design.IsDesignMode && Package?.DisplayName == "Running Comfy")
         {
             IsRunning = true;
+            IsUpdateAvailable = true;
             ShowWebUiButton = true;
         }
 
@@ -422,6 +422,21 @@ public partial class PackageCardViewModel(
                 versionOptions.CommitHash = latest.Sha;
             }
 
+            var confirmationDialog = new BetterContentDialog
+            {
+                Title = Resources.Label_AreYouSure,
+                Content =
+                    $"{Package.DisplayName} will be updated to the latest version ({versionOptions.GetReadableVersionString()})",
+                PrimaryButtonText = Resources.Action_Continue,
+                SecondaryButtonText = Resources.Action_Cancel,
+                DefaultButton = ContentDialogButton.Primary,
+                IsSecondaryButtonEnabled = true,
+            };
+
+            var dialogResult = await confirmationDialog.ShowAsync();
+            if (dialogResult != ContentDialogResult.Primary)
+                return;
+
             var updatePackageStep = new UpdatePackageStep(
                 settingsManager,
                 Package,
@@ -583,6 +598,54 @@ public partial class PackageCardViewModel(
 
         await runningPackageService.StopPackage(Package.Id);
         IsRunning = false;
+        ShowWebUiButton = false;
+    }
+
+    [RelayCommand]
+    private async Task Restart()
+    {
+        await Stop();
+        await Launch();
+    }
+
+    [RelayCommand]
+    private async Task ShowLaunchOptions()
+    {
+        var basePackage = packageFactory.FindPackageByName(Package?.PackageName);
+        if (basePackage == null)
+        {
+            logger.LogWarning("Package {Name} not found", Package?.PackageName);
+            return;
+        }
+
+        var viewModel = vmFactory.Get<LaunchOptionsViewModel>();
+        viewModel.Cards = LaunchOptionCard
+            .FromDefinitions(basePackage.LaunchOptions, Package?.LaunchArgs ?? [])
+            .ToImmutableArray();
+
+        logger.LogDebug("Launching config dialog with cards: {CardsCount}", viewModel.Cards.Count);
+
+        var dialog = new BetterContentDialog
+        {
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            IsPrimaryButtonEnabled = true,
+            PrimaryButtonText = Resources.Action_Save,
+            CloseButtonText = Resources.Action_Cancel,
+            FullSizeDesired = true,
+            DefaultButton = ContentDialogButton.Primary,
+            ContentMargin = new Thickness(32, 16),
+            Padding = new Thickness(0, 16),
+            Content = new LaunchOptionsDialog { DataContext = viewModel, }
+        };
+
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary && Package != null)
+        {
+            // Save config
+            var args = viewModel.AsLaunchArgs();
+            settingsManager.SaveLaunchArgs(Package.Id, args);
+        }
     }
 
     private async Task<bool> HasUpdate()

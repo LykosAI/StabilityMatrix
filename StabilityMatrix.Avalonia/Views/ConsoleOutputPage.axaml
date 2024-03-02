@@ -73,14 +73,14 @@
             WordWrap="True" />
         
         <Grid Grid.Row="2" ColumnDefinitions="*, Auto"
-              Margin="8,4,8,8">
-            <TextBox Grid.Column="0" Name="ManualInputBox" 
+              Margin="16,4,16,16">
+            <TextBox Grid.Column="0" Text="{Binding ConsoleInput, Mode=TwoWay}"
                      Margin="0,0,8,0"/>
             <Button Grid.Column="1"
                     Classes="accent"
+                    IsDefault="True"
                     Content="{x:Static lang:Resources.Action_Send}"
-                    Command="{Binding SendToConsoleCommand}"
-                    CommandParameter="{Binding #ManualInputBox.Text}"/>
+                    Command="{Binding SendToConsoleCommand}"/>
         </Grid>
     </Grid>
 </controls:UserControlBase>

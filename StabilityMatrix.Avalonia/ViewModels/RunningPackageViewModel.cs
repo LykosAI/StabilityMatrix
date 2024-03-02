@@ -39,6 +39,9 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     [ObservableProperty]
     private bool isRunning = true;
 
+    [ObservableProperty]
+    private string consoleInput = string.Empty;
+
     /// <inheritdoc/>
     public RunningPackageViewModel(
         ISettingsManager settingsManager,
@@ -118,18 +121,20 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     }
 
     [RelayCommand]
-    private async Task SendToConsole(string input)
+    private async Task SendToConsole()
     {
-        Console.PostLine(input);
+        Console.PostLine(ConsoleInput);
         if (RunningPackage?.BasePackage is BaseGitPackage gitPackage)
         {
             var venv = gitPackage.VenvRunner;
             var process = venv?.Process;
             if (process is not null)
             {
-                await process.StandardInput.WriteLineAsync(input);
+                await process.StandardInput.WriteLineAsync(ConsoleInput);
             }
         }
+
+        ConsoleInput = string.Empty;
     }
 
     public void Dispose()

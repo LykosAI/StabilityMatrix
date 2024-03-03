@@ -18,6 +18,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -56,7 +57,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private readonly RunningPackageService runningPackageService;
     private Guid? selectedPackageId;
 
-    public override string Title => "Inference";
+    public override string Title => Resources.Label_Inference;
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.AppGeneric, IsFilled = true };
 
@@ -66,7 +67,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             State = ProgressState.Failed,
             FailToolTipText = "Not connected",
             FailIcon = FluentAvalonia.UI.Controls.Symbol.Refresh,
-            SuccessToolTipText = "Connected",
+            SuccessToolTipText = Resources.Label_Connected,
         };
 
     public IInferenceClientManager ClientManager { get; }

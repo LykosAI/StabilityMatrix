@@ -13,6 +13,7 @@ using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
@@ -42,7 +43,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
     private readonly INavigationService<NewPackageManagerViewModel> packageNavigationService;
     private readonly ILogger<PackageManagerViewModel> logger;
 
-    public override string Title => "Packages";
+    public override string Title => Resources.Label_Packages;
     public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Box, IsFilled = true };
 
     /// <summary>

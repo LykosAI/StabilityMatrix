@@ -672,6 +672,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This action cannot be undone..
+        /// </summary>
+        public static string Label_ActionCannotBeUndone {
+            get {
+                return ResourceManager.GetString("Label_ActionCannotBeUndone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Addons.
         /// </summary>
         public static string Label_Addons {
@@ -740,6 +749,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_AreYouSure {
             get {
                 return ResourceManager.GetString("Label_AreYouSure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete {0} images?.
+        /// </summary>
+        public static string Label_AreYouSureDeleteImages {
+            get {
+                return ResourceManager.GetString("Label_AreYouSureDeleteImages", resourceCulture);
             }
         }
         
@@ -852,11 +870,29 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to We&apos;re checking some hardware specifications to determine compatibility..
+        /// </summary>
+        public static string Label_CheckingHardware {
+            get {
+                return ResourceManager.GetString("Label_CheckingHardware", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Checkpoint Manager.
         /// </summary>
         public static string Label_CheckpointManager {
             get {
                 return ResourceManager.GetString("Label_CheckpointManager", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checkpoints.
+        /// </summary>
+        public static string Label_Checkpoints {
+            get {
+                return ResourceManager.GetString("Label_Checkpoints", resourceCulture);
             }
         }
         
@@ -1257,6 +1293,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Everything looks good!.
+        /// </summary>
+        public static string Label_EverythingLooksGood {
+            get {
+                return ResourceManager.GetString("Label_EverythingLooksGood", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You may encounter errors when using a FAT32 or exFAT drive. Select a different drive for a smoother experience..
         /// </summary>
         public static string Label_FatWarning {
@@ -1617,6 +1662,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Model Browser.
+        /// </summary>
+        public static string Label_ModelBrowser {
+            get {
+                return ResourceManager.GetString("Label_ModelBrowser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Model Description.
         /// </summary>
         public static string Label_ModelDescription {
@@ -1743,6 +1797,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to We recommend a GPU with CUDA support for the best experience. You can continue without one, but some packages may not work, and inference may be slower..
+        /// </summary>
+        public static string Label_NvidiaGpuRecommended {
+            get {
+                return ResourceManager.GetString("Label_NvidiaGpuRecommended", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 1 image selected.
         /// </summary>
         public static string Label_OneImageSelected {
@@ -1802,6 +1865,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_PackageEnvironment {
             get {
                 return ResourceManager.GetString("Label_PackageEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Packages.
+        /// </summary>
+        public static string Label_Packages {
+            get {
+                return ResourceManager.GetString("Label_Packages", resourceCulture);
             }
         }
         

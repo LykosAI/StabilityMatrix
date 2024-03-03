@@ -14,6 +14,7 @@ using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
@@ -47,7 +48,7 @@ public partial class NewCheckpointsPageViewModel(
     IMetadataImportService metadataImportService
 ) : PageViewModelBase
 {
-    public override string Title => "Checkpoint Manager";
+    public override string Title => Resources.Label_CheckpointManager;
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Cellular5g, IsFilled = true };
 

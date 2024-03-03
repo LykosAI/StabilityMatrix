@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -18,7 +19,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [Singleton]
 public partial class NewPackageManagerViewModel : PageViewModelBase
 {
-    public override string Title => "Packages";
+    public override string Title => Resources.Label_Packages;
     public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Box, IsFilled = true };
 
     public IReadOnlyList<PageViewModelBase> SubPages { get; }

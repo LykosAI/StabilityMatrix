@@ -23,10 +23,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - (Internal) Updated to Avalonia 11.0.9
 ### Fixed
 - Fixed StableSwarmUI not installing properly on macOS
-- Hopefully actually fixed [#464](https://github.com/LykosAI/StabilityMatrix/issues/464) - error when installing InvokeAI on macOS
+- Fixed [#464](https://github.com/LykosAI/StabilityMatrix/issues/464) - error when installing InvokeAI on macOS
 - Fixed default command line args for SDWebUI Forge on macOS
 - Fixed output paths and output sharing for SDWebUI Forge
-- Maybe fixed update hanging for Auto1111 and SDWebUI Forge
+- Fixed [#335](https://github.com/LykosAI/StabilityMatrix/issues/335) Update hanging indefinitely after git step for Auto1111 and SDWebUI Forge
 - Fixed Inference output viewer menu "Copy" not copying image
 - Fixed image viewer dialog arrow key navigation not working
 - Fixed CivitAI login prompt not showing when downloading models that require CivitAI logins

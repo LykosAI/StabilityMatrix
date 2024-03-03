@@ -1,7 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
@@ -31,6 +33,16 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
 
     [ObservableProperty]
     [Required]
+    [Range(0, 2048)]
+    private int width;
+
+    [ObservableProperty]
+    [Required]
+    [Range(0, 2048)]
+    private int height;
+
+    [ObservableProperty]
+    [Required]
     [Range(0d, 10d)]
     private double strength = 1.0;
 
@@ -57,6 +69,18 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
 
         ClientManager = clientManager;
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>();
+
+        // Update our width and height when the image changes
+        SelectImageCardViewModel
+            .WhenPropertyChanged(card => card.CurrentBitmapSize)
+            .Subscribe(propertyValue =>
+            {
+                if (!propertyValue.Value.IsEmpty)
+                {
+                    Width = propertyValue.Value.Width;
+                    Height = propertyValue.Value.Height;
+                }
+            });
     }
 
     [RelayCommand]

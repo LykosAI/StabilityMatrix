@@ -56,7 +56,9 @@ public class ControlNetModule : ModuleBase
                 {
                     Name = e.Nodes.GetUniqueName("ControlNet_Preprocessor"),
                     Image = image,
-                    Preprocessor = preprocessor.RelativePath
+                    Preprocessor = preprocessor.RelativePath,
+                    // Use width if valid, else default of 512
+                    Resolution = card.Width is <= 2048 and > 0 ? card.Width : 512
                 }
             );
 

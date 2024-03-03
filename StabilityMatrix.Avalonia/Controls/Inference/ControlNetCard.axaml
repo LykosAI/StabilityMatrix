@@ -36,12 +36,12 @@
                         <sg:SpacedGrid
                             ColumnDefinitions="0.34*,0.65*"
                             ColumnSpacing="8"
-                            RowDefinitions="Auto,Auto,Auto"
+                            RowDefinitions="Auto,Auto,Auto,Auto"
                             RowSpacing="4">
 
                             <!--  Image Select  -->
                             <controls:SelectImageCard
-                                Grid.RowSpan="2"
+                                Grid.RowSpan="3"
                                 Padding="6"
                                 VerticalAlignment="Stretch"
                                 DataContext="{Binding SelectImageCardViewModel}"
@@ -99,6 +99,45 @@
                                 </ui:FAComboBox.DataTemplates>
 
                             </ui:FAComboBox>
+                            
+                            <!-- Dimensions -->
+                            <Grid
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Margin="0,4,0,0"
+                                ColumnDefinitions="*,Auto,*" 
+                                RowDefinitions="Auto,*">
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="0,0,4,4"
+                                    Text="{x:Static lang:Resources.Label_Width}"/>
+                                <ui:NumberBox
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Margin="0,0,4,0"
+                                    PlaceholderText="128"
+                                    SmallChange="128"
+                                    Value="{Binding Width}"
+                                    ValidationMode="InvalidInputOverwritten"
+                                    HorizontalAlignment="Stretch"
+                                    SpinButtonPlacementMode="Compact"/>
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="2"
+                                    Margin="4,0,0,4"
+                                    Text="{x:Static lang:Resources.Label_Height}"/>
+                                <ui:NumberBox
+                                    Grid.Row="1"
+                                    Grid.Column="2"
+                                    Margin="4,0,0,0"
+                                    PlaceholderText="128"
+                                    SmallChange="128"
+                                    Value="{Binding Height}"
+                                    ValidationMode="InvalidInputOverwritten"
+                                    HorizontalAlignment="Stretch"
+                                    SpinButtonPlacementMode="Compact"/>
+                            </Grid>
 
                         </sg:SpacedGrid>
                         <sg:SpacedGrid

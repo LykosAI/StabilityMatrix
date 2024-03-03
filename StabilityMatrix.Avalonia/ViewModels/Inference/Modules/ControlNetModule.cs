@@ -6,6 +6,7 @@ using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
@@ -49,14 +50,14 @@ public class ControlNetModule : ModuleBase
             }
         ).Output1;
 
-        if (card.SelectedPreprocessor is { } preprocessor && preprocessor.RelativePath != "none")
+        if (card.SelectedPreprocessor is { } preprocessor && preprocessor != ComfyAuxPreprocessor.None)
         {
             var aioPreprocessor = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.AIOPreprocessor
                 {
                     Name = e.Nodes.GetUniqueName("ControlNet_Preprocessor"),
                     Image = image,
-                    Preprocessor = preprocessor.RelativePath,
+                    Preprocessor = preprocessor.ToString(),
                     // Use width if valid, else default of 512
                     Resolution = card.Width is <= 2048 and > 0 ? card.Width : 512
                 }

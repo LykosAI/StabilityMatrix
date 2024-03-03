@@ -14,6 +14,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
 using StabilityMatrix.Core.Models;
@@ -101,10 +102,10 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<ComfyScheduler> Schedulers { get; } =
         new ObservableCollectionExtended<ComfyScheduler>();
 
-    public IObservableCollection<HybridModelFile> Preprocessors { get; } =
-        new ObservableCollectionExtended<HybridModelFile>();
+    public IObservableCollection<ComfyAuxPreprocessor> Preprocessors { get; } =
+        new ObservableCollectionExtended<ComfyAuxPreprocessor>();
 
-    private readonly SourceCache<HybridModelFile, string> preprocessorsSource = new(p => p.GetId());
+    private readonly SourceCache<ComfyAuxPreprocessor, string> preprocessorsSource = new(p => p.Value);
 
     public InferenceClientManager(
         ILogger<InferenceClientManager> logger,
@@ -284,10 +285,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             { } preprocessorNames
         )
         {
-            preprocessorsSource.EditDiff(
-                preprocessorNames.Select(HybridModelFile.FromRemote),
-                HybridModelFile.Comparer
-            );
+            preprocessorsSource.EditDiff(preprocessorNames.Select(n => new ComfyAuxPreprocessor(n)));
         }
     }
 
@@ -361,6 +359,9 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             u => !modelUpscalersSource.Lookup(u.Name).HasValue
         );
         downloadableUpscalersSource.EditDiff(remoteUpscalers, ComfyUpscaler.Comparer);
+
+        // Default Preprocessors
+        preprocessorsSource.EditDiff(ComfyAuxPreprocessor.Defaults);
     }
 
     /// <inheritdoc />

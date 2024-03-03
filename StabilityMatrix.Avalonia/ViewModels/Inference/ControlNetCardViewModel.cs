@@ -11,6 +11,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -29,7 +30,7 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
 
     [ObservableProperty]
     [Required]
-    private HybridModelFile? selectedPreprocessor;
+    private ComfyAuxPreprocessor? selectedPreprocessor;
 
     [ObservableProperty]
     [Required]

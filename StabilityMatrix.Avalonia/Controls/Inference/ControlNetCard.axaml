@@ -54,9 +54,9 @@
                                 Margin="0,0,0,4"
                                 SelectedItem="{Binding SelectedPreprocessor}"
                                 ItemsSource="{Binding ClientManager.Preprocessors}"
+                                DisplayMemberBinding="{Binding DisplayName}"
                                 HorizontalAlignment="Stretch"
-                                Header="{x:Static lang:Resources.Label_Preprocessor}"
-                                Theme="{StaticResource FAComboBoxHybridModelTheme}"/>
+                                Header="{x:Static lang:Resources.Label_Preprocessor}"/>
 
                             <!--  ControlNet Model  -->
                             <ui:FAComboBox

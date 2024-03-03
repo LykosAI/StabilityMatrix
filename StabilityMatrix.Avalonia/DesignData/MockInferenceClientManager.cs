@@ -41,8 +41,8 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
     public IObservableCollection<ComfyScheduler> Schedulers { get; } =
         new ObservableCollectionExtended<ComfyScheduler>(ComfyScheduler.Defaults);
 
-    public IObservableCollection<HybridModelFile> Preprocessors { get; } =
-        new ObservableCollectionExtended<HybridModelFile>();
+    public IObservableCollection<ComfyAuxPreprocessor> Preprocessors { get; } =
+        new ObservableCollectionExtended<ComfyAuxPreprocessor>(ComfyAuxPreprocessor.Defaults);
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanUserConnect))]

@@ -24,8 +24,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed StableSwarmUI not installing properly on macOS
 - Fixed [#464](https://github.com/LykosAI/StabilityMatrix/issues/464) - error when installing InvokeAI on macOS
-- Fixed default command line args for SDWebUI Forge on macOS
-- Fixed output paths and output sharing for SDWebUI Forge
 - Fixed [#335](https://github.com/LykosAI/StabilityMatrix/issues/335) Update hanging indefinitely after git step for Auto1111 and SDWebUI Forge
 - Fixed Inference output viewer menu "Copy" not copying image
 - Fixed image viewer dialog arrow key navigation not working

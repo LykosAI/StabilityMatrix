@@ -6,8 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
-using Avalonia.Controls.Notifications;
-using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
@@ -15,18 +13,14 @@ using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
-using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.Views;
-using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
-using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -84,6 +78,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
         this.logger = logger;
 
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
+        EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
 
         var installed = installedPackages.Connect();
         var unknown = unknownInstalledPackages.Connect();
@@ -105,6 +100,11 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
         timer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(60), IsEnabled = true };
         timer.Tick += async (_, _) => await CheckPackagesForUpdates();
+    }
+
+    private void OnOneClickInstallFinished(object? sender, bool e)
+    {
+        OnLoadedAsync().SafeFireAndForget();
     }
 
     public void SetPackages(IEnumerable<InstalledPackage> packages)

@@ -960,6 +960,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Confirm Exit.
+        /// </summary>
+        public static string Label_ConfirmExit {
+            get {
+                return ResourceManager.GetString("Label_ConfirmExit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to exit? This will also close any currently running packages..
+        /// </summary>
+        public static string Label_ConfirmExitDetail {
+            get {
+                return ResourceManager.GetString("Label_ConfirmExitDetail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Confirm Password.
         /// </summary>
         public static string Label_ConfirmPassword {
@@ -1001,6 +1019,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ConnectingEllipsis {
             get {
                 return ResourceManager.GetString("Label_ConnectingEllipsis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Console.
+        /// </summary>
+        public static string Label_Console {
+            get {
+                return ResourceManager.GetString("Label_Console", resourceCulture);
             }
         }
         
@@ -2396,6 +2423,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_WaitingToConnectEllipsis {
             get {
                 return ResourceManager.GetString("Label_WaitingToConnectEllipsis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Web UI.
+        /// </summary>
+        public static string Label_WebUi {
+            get {
+                return ResourceManager.GetString("Label_WebUi", resourceCulture);
             }
         }
         

@@ -978,4 +978,16 @@
   <data name="Label_ToggleAutoScrolling" xml:space="preserve">
     <value>Auto-Scroll to End</value>
   </data>
+  <data name="Label_ConfirmExit" xml:space="preserve">
+    <value>Confirm Exit</value>
+  </data>
+  <data name="Label_ConfirmExitDetail" xml:space="preserve">
+    <value>Are you sure you want to exit? This will also close any currently running packages.</value>
+  </data>
+  <data name="Label_Console" xml:space="preserve">
+    <value>Console</value>
+  </data>
+  <data name="Label_WebUi" xml:space="preserve">
+    <value>Web UI</value>
+  </data>
 </root>

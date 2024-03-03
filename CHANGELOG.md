@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.9.0-pre.3
+### Changed
+- Updated translations for German, Spanish, French, Japanese, Portuguese, and Turkish
 ### Fixed
 - Improved error handling for Inference Select Image hash calculation in case file is being written to while being read
 

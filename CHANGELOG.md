@@ -6,9 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.9.0
+### Added
+- Added new package: [StableSwarmUI](https://github.com/Stability-AI/StableSwarmUI) by Stability AI
+- Added new package: [Stable Diffusion WebUI Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge) by lllyasviel
+- Added extension management for SD.Next and Stable Diffusion WebUI-UX
+- Added the ability to choose where CivitAI model downloads are saved
+- Added `--launch-package` argument to launch a specific package on startup, using display name or package ID (i.e. `--launch-package "Stable Diffusion WebUI Forge"` or `--launch-package c0b3ecc5-9664-4be9-952d-a10b3dcaee14`)
+- Added more Base Model search options to the CivitAI Model Browser
+- Added Stable Cascade to the HuggingFace Model Browser
+#### Inference
+- Added Inference Prompt Styles, with Prompt Expansion model support (i.e. Fooocus V2)
+- Added option to load a .yaml config file next to the model with the same name. Can be used with VPred and other models that require a config file.
+- Added copy image support on linux and macOS for Inference outputs viewer menu
 ### Changed
 - Updated translations for German, Spanish, French, Japanese, Portuguese, and Turkish
+- (Internal) Updated to Avalonia 11.0.9
 ### Fixed
+- Fixed StableSwarmUI not installing properly on macOS
+- Hopefully actually fixed [#464](https://github.com/LykosAI/StabilityMatrix/issues/464) - error when installing InvokeAI on macOS
+- Fixed default command line args for SDWebUI Forge on macOS
+- Fixed output paths and output sharing for SDWebUI Forge
+- Maybe fixed update hanging for Auto1111 and SDWebUI Forge
+- Fixed Inference output viewer menu "Copy" not copying image
+- Fixed image viewer dialog arrow key navigation not working
+- Fixed CivitAI login prompt not showing when downloading models that require CivitAI logins
 - Fixed unknown model types not showing on checkpoints page (thanks Jerry!)
 - Improved error handling for Inference Select Image hash calculation in case file is being written to while being read
 

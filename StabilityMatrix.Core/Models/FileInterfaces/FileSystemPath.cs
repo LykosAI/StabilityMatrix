@@ -1,9 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 
 namespace StabilityMatrix.Core.Models.FileInterfaces;
 
 [PublicAPI]
+[Localizable(false)]
 public class FileSystemPath : IEquatable<FileSystemPath>, IFormattable
 {
     public string FullPath { get; }

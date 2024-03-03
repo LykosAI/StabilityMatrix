@@ -191,13 +191,6 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     }
 
     [RelayCommand]
-    private async Task Import(CivitModel model)
-    {
-        await DoImport(model);
-        CheckIfInstalled();
-    }
-
-    [RelayCommand]
     private async Task ShowVersionDialog(CivitModel model)
     {
         var versions = model.ModelVersions;
@@ -220,7 +213,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
             MaxDialogWidth = 750,
-            MaxDialogHeight = 850,
+            MaxDialogHeight = 950,
         };
 
         var prunedDescription = PruneDescription(model);
@@ -229,6 +222,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         viewModel.Dialog = dialog;
         viewModel.Title = model.Name;
         viewModel.Description = prunedDescription;
+        viewModel.CivitModel = model;
         viewModel.Versions = versions
             .Select(
                 version =>
@@ -252,8 +246,21 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         var selectedVersion = viewModel?.SelectedVersionViewModel?.ModelVersion;
         var selectedFile = viewModel?.SelectedFile?.CivitFile;
 
+        DirectoryPath downloadPath;
+        if (viewModel?.IsCustomSelected is true)
+        {
+            downloadPath = viewModel.CustomInstallLocation;
+        }
+        else
+        {
+            var subFolder =
+                viewModel?.SelectedInstallLocation
+                ?? Path.Combine("Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
+            downloadPath = Path.Combine(settingsManager.LibraryDir, subFolder);
+        }
+
         await Task.Delay(100);
-        await DoImport(model, selectedVersion, selectedFile);
+        await DoImport(model, downloadPath, selectedVersion, selectedFile);
     }
 
     private static string PruneDescription(CivitModel model)
@@ -322,6 +329,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
     private async Task DoImport(
         CivitModel model,
+        DirectoryPath downloadFolder,
         CivitModelVersion? selectedVersion = null,
         CivitFile? selectedFile = null
     )
@@ -362,18 +370,13 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             return;
         }
 
-        var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
-
-        var downloadDirectory = rootModelsDirectory.JoinDir(
-            model.Type.ConvertTo<SharedFolderType>().GetStringValue()
-        );
         // Folders might be missing if user didn't install any packages yet
-        downloadDirectory.Create();
+        downloadFolder.Create();
 
-        var downloadPath = downloadDirectory.JoinFile(modelFile.Name);
+        var downloadPath = downloadFolder.JoinFile(modelFile.Name);
 
         // Download model info and preview first
-        var cmInfoPath = await SaveCmInfo(model, modelVersion, modelFile, downloadDirectory);
+        var cmInfoPath = await SaveCmInfo(model, modelVersion, modelFile, downloadFolder);
         var previewImagePath = await SavePreviewImage(modelVersion, downloadPath);
 
         // Create tracked download

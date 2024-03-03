@@ -645,6 +645,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please select a download location..
+        /// </summary>
+        public static string Error_PleaseSelectDownloadLocation {
+            get {
+                return ResourceManager.GetString("Error_PleaseSelectDownloadLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to About.
         /// </summary>
         public static string Label_About {
@@ -888,6 +897,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ComfyUI is required to install this package. Would you like to install it now?.
+        /// </summary>
+        public static string Label_ComfyRequiredDetail {
+            get {
+                return ResourceManager.GetString("Label_ComfyRequiredDetail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ComfyUI Required.
+        /// </summary>
+        public static string Label_ComfyRequiredTitle {
+            get {
+                return ResourceManager.GetString("Label_ComfyRequiredTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Comments.
         /// </summary>
         public static string Label_Comments {
@@ -911,6 +938,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_CompletionReplaceUnderscoresWithSpaces {
             get {
                 return ResourceManager.GetString("Label_CompletionReplaceUnderscoresWithSpaces", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Config.
+        /// </summary>
+        public static string Label_Config {
+            get {
+                return ResourceManager.GetString("Label_Config", resourceCulture);
             }
         }
         
@@ -1653,7 +1689,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to None.
         /// </summary>
         public static string Label_NotificationOption_None {
             get {
@@ -2018,6 +2054,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_SearchEllipsis {
             get {
                 return ResourceManager.GetString("Label_SearchEllipsis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select Download Location:.
+        /// </summary>
+        public static string Label_SelectDownloadLocation {
+            get {
+                return ResourceManager.GetString("Label_SelectDownloadLocation", resourceCulture);
             }
         }
         

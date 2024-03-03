@@ -39,7 +39,7 @@
                                         Padding="12,4"
                                         IsEnabled="{Binding !!Cards.Count}"
                                         IsChecked="{Binding IsEditEnabled}">
-                                    <fluentIcons:SymbolIcon Symbol="Edit" />
+                                    <fluentIcons:SymbolIcon Symbol="Edit" FontSize="14" />
                                 </ToggleButton>
                                 <!-- Add button -->
                                 <Button Grid.Column="3"
@@ -47,7 +47,7 @@
                                         VerticalAlignment="Bottom"
                                         CornerRadius="4"
                                         Padding="12,4" >
-                                    <fluentIcons:SymbolIcon Symbol="Add" IsFilled="True" />
+                                    <fluentIcons:SymbolIcon Symbol="Add" IsFilled="True" FontSize="14" />
                                 </Button>
                             </sg:SpacedGrid>
 

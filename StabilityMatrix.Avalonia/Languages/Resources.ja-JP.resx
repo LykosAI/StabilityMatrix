@@ -530,6 +530,7 @@
   </data>
   <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
     <value>好きなUIをインストールして始めよう</value>
+    <comment>Fuzzy</comment>
   </data>
   <data name="Label_Installing" xml:space="preserve">
     <value>インストール中</value>
@@ -706,6 +707,24 @@
   <data name="Action_Refresh" xml:space="preserve">
     <value>更新</value>
   </data>
+  <data name="Action_OpenGithub" xml:space="preserve">
+    <value>GitHubで開く</value>
+  </data>
+  <data name="Label_Username" xml:space="preserve">
+    <value>ユーザ名</value>
+  </data>
+  <data name="Label_Password" xml:space="preserve">
+    <value>パスワード</value>
+  </data>
+  <data name="Action_Login" xml:space="preserve">
+    <value>ログイン</value>
+  </data>
+  <data name="Action_Signup" xml:space="preserve">
+    <value>サインアップ</value>
+  </data>
+  <data name="Label_ConfirmPassword" xml:space="preserve">
+    <value>パスワード再確認</value>
+  </data>
   <data name="Label_CivitAiLoginRequired" xml:space="preserve">
     <value>ダウンロードにはCivitAIのログインが必要です。SettingからAPIキーを入力してください。</value>
   </data>
@@ -714,6 +733,9 @@
   </data>
   <data name="Label_UpdatesDevChannelDescription" xml:space="preserve">
     <value>Devビルドはテクニカルなユーザ向けです。新機能をいち早く利用できます。荒削りな部分やバグがあるかもしれません。</value>
+  </data>
+  <data name="TeachingTip_MoreCheckpointCategories" xml:space="preserve">
+    <value>IPAdaptersやTextualInversions(embeddings)などのフォルダは、ここで有効にできます。</value>
   </data>
   <data name="Action_OpenOnHuggingFace" xml:space="preserve">
     <value>Hugging Faceで開く</value>
@@ -733,5 +755,14 @@
   </data>
   <data name="Label_Lossless" xml:space="preserve">
     <value>非圧縮</value>
+  </data>
+  <data name="TeachingTip_DownloadsExplanation" xml:space="preserve">
+    <value>Packageのインストール・Modelのダウンロードの進捗状況はこちらで確認できます。</value>
+  </data>
+  <data name="Label_RecommendedModels" xml:space="preserve">
+    <value>推奨Model</value>
+  </data>
+  <data name="Label_RecommendedModelsSubText" xml:space="preserve">
+    <value>Packageのインストール中に、推奨Modelをいくつかご紹介しましょう。</value>
   </data>
 </root>

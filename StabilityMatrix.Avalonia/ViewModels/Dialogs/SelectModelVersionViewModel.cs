@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
@@ -15,7 +16,10 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
 
@@ -23,17 +27,20 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [ManagedService]
 [Transient]
-public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
+public partial class SelectModelVersionViewModel(
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IModelIndexService modelIndexService,
+    INotificationService notificationService
+) : ContentDialogViewModelBase
 {
-    private readonly ISettingsManager settingsManager;
-    private readonly IDownloadService downloadService;
-    private readonly IModelIndexService modelIndexService;
-    private readonly INotificationService notificationService;
+    private readonly IDownloadService downloadService = downloadService;
 
     public required ContentDialog Dialog { get; set; }
     public required IReadOnlyList<ModelVersionViewModel> Versions { get; set; }
     public required string Description { get; set; }
     public required string Title { get; set; }
+    public required CivitModel CivitModel { get; set; }
 
     [ObservableProperty]
     private Bitmap? previewImage;
@@ -63,25 +70,28 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private string importTooltip = string.Empty;
 
-    public int DisplayedPageNumber => SelectedImageIndex + 1;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCustomSelected))]
+    [NotifyPropertyChangedFor(nameof(ShowEmptyPathWarning))]
+    private string selectedInstallLocation = string.Empty;
 
-    public SelectModelVersionViewModel(
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IModelIndexService modelIndexService,
-        INotificationService notificationService
-    )
-    {
-        this.settingsManager = settingsManager;
-        this.downloadService = downloadService;
-        this.modelIndexService = modelIndexService;
-        this.notificationService = notificationService;
-    }
+    [ObservableProperty]
+    private ObservableCollection<string> availableInstallLocations = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowEmptyPathWarning))]
+    private string customInstallLocation = string.Empty;
+
+    public bool IsCustomSelected => SelectedInstallLocation == "Custom...";
+    public bool ShowEmptyPathWarning => IsCustomSelected && string.IsNullOrWhiteSpace(CustomInstallLocation);
+
+    public int DisplayedPageNumber => SelectedImageIndex + 1;
 
     public override void OnLoaded()
     {
         SelectedVersionViewModel = Versions[0];
         CanGoToNextImage = true;
+        LoadInstallLocations();
     }
 
     partial void OnSelectedVersionViewModelChanged(ModelVersionViewModel? value)
@@ -138,7 +148,26 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
             ImportTooltip = "Please set the library directory in settings";
         }
 
-        IsImportEnabled = value?.CivitFile != null && canImport;
+        IsImportEnabled = value?.CivitFile != null && canImport && !ShowEmptyPathWarning;
+    }
+
+    partial void OnSelectedInstallLocationChanged(string value)
+    {
+        if (value.Equals("Custom...", StringComparison.OrdinalIgnoreCase))
+        {
+            Dispatcher.UIThread.InvokeAsync(SelectCustomFolder);
+        }
+        else
+        {
+            CustomInstallLocation = string.Empty;
+        }
+
+        IsImportEnabled = !ShowEmptyPathWarning;
+    }
+
+    partial void OnCustomInstallLocationChanged(string value)
+    {
+        IsImportEnabled = !ShowEmptyPathWarning;
     }
 
     public void Cancel()
@@ -249,5 +278,49 @@ public partial class SelectModelVersionViewModel : ContentDialogViewModelBase
             SelectedImageIndex++;
         CanGoToPreviousImage = SelectedImageIndex > 0;
         CanGoToNextImage = SelectedImageIndex < ImageUrls.Count - 1;
+    }
+
+    public async Task SelectCustomFolder()
+    {
+        var files = await App.StorageProvider.OpenFolderPickerAsync(
+            new FolderPickerOpenOptions
+            {
+                Title = "Select Download Folder",
+                AllowMultiple = false,
+                SuggestedStartLocation = await App.StorageProvider.TryGetFolderFromPathAsync(
+                    Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        CivitModel.Type.ConvertTo<SharedFolderType>().GetStringValue()
+                    )
+                )
+            }
+        );
+
+        if (files.FirstOrDefault()?.TryGetLocalPath() is { } path)
+        {
+            CustomInstallLocation = path;
+        }
+    }
+
+    private void LoadInstallLocations()
+    {
+        var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
+        var downloadDirectory = rootModelsDirectory.JoinDir(
+            CivitModel.Type.ConvertTo<SharedFolderType>().GetStringValue()
+        );
+        var installLocations = new ObservableCollection<string>
+        {
+            downloadDirectory.ToString().Replace(rootModelsDirectory, "Models")
+        };
+
+        foreach (var directory in downloadDirectory.EnumerateDirectories())
+        {
+            installLocations.Add(directory.ToString().Replace(rootModelsDirectory, "Models"));
+        }
+
+        installLocations.Add("Custom...");
+
+        AvailableInstallLocations = installLocations;
+        SelectedInstallLocation = installLocations.FirstOrDefault();
     }
 }

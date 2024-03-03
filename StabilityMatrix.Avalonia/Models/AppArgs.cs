@@ -78,6 +78,13 @@ public class AppArgs
     public string? DataDirectoryOverride { get; set; }
 
     /// <summary>
+    /// Launch an installed package on startup
+    /// Can use package ID or name
+    /// </summary>
+    [Option("launch-package", HelpText = "Package ID or name to launch on startup")]
+    public string? LaunchPackageName { get; set; }
+
+    /// <summary>
     /// Custom Uri protocol handler
     /// This will send the Uri to the running instance of the app via IPC and exit
     /// </summary>

@@ -1,4 +1,9 @@
-﻿using StabilityMatrix.Core.Helper;
+﻿using System.ComponentModel;
+using System.Reflection;
+using System.Text.Json.Serialization;
+using OneOf;
+using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
 namespace StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -11,9 +16,15 @@ public class NodeDictionary : Dictionary<string, ComfyNode>
     private readonly Dictionary<string, int> _baseNameIndex = new();
 
     /// <summary>
+    /// When inserting TypedNodes, this holds a mapping of ClassType to required extensions
+    /// </summary>
+    [JsonIgnore]
+    public Dictionary<string, string[]> ClassTypeRequiredExtensions { get; } = new();
+
+    /// <summary>
     /// Finds a unique node name given a base name, by appending _2, _3, etc.
     /// </summary>
-    public string GetUniqueName(string nameBase)
+    public string GetUniqueName([Localizable(false)] string nameBase)
     {
         if (_baseNameIndex.TryGetValue(nameBase, out var index))
         {
@@ -43,7 +54,19 @@ public class NodeDictionary : Dictionary<string, ComfyNode>
     public TTypedNode AddTypedNode<TTypedNode>(TTypedNode node)
         where TTypedNode : ComfyTypedNodeBase
     {
-        Add(node.Name, node);
+        var namedNode = (NamedComfyNode)node;
+
+        Add(node.Name, namedNode);
+
+        // Check statically annotated stuff for TypedNodeOptionsAttribute
+        if (node.GetType().GetCustomAttribute<TypedNodeOptionsAttribute>() is { } options)
+        {
+            if (options.RequiredExtensions != null)
+            {
+                ClassTypeRequiredExtensions[namedNode.ClassType] = options.RequiredExtensions;
+            }
+        }
+
         return node;
     }
 
@@ -61,6 +84,10 @@ public class NodeDictionary : Dictionary<string, ComfyNode>
                     if (input is NodeConnectionBase connection)
                     {
                         node.Inputs[key] = connection.Data;
+                    }
+                    else if (input is IOneOf { Value: NodeConnectionBase oneOfConnection })
+                    {
+                        node.Inputs[key] = oneOfConnection.Data;
                     }
                 }
             }

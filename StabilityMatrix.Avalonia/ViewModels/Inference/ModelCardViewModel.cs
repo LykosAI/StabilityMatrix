@@ -1,9 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -53,6 +55,28 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
 
+    [RelayCommand]
+    private static async Task OnConfigClickAsync()
+    {
+        await DialogHelper
+            .CreateMarkdownDialog(
+                """
+                                                 You can use a config (.yaml) file to load a model with specific settings.
+                                                 
+                                                 Place the config file next to the model file with the same name:
+                                                 ```md
+                                                 Models/
+                                                     StableDiffusion/
+                                                         my_model.safetensors
+                                                         my_model.yaml <-
+                                                 ```
+                                                 """,
+                "Using Model Configs",
+                TextEditorPreset.Console
+            )
+            .ShowAsync();
+    }
+
     public async Task<bool> ValidateModel()
     {
         if (SelectedModel != null)
@@ -66,16 +90,41 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
         return false;
     }
 
+    private static ComfyTypedNodeBase<
+        ModelNodeConnection,
+        ClipNodeConnection,
+        VAENodeConnection
+    > GetModelLoader(ModuleApplyStepEventArgs e, string nodeName, HybridModelFile model)
+    {
+        // Check if config
+        if (model.Local?.ConfigFullPath is { } configPath)
+        {
+            // We'll need to upload the config file to `models/configs` later
+            var uploadConfigPath = e.AddFileTransferToConfigs(configPath);
+
+            return new ComfyNodeBuilder.CheckpointLoader
+            {
+                Name = nodeName,
+                // Only the file name is needed
+                ConfigName = Path.GetFileName(uploadConfigPath),
+                CkptName = model.RelativePath
+            };
+        }
+
+        // Simple loader if no config
+        return new ComfyNodeBuilder.CheckpointLoaderSimple { Name = nodeName, CkptName = model.RelativePath };
+    }
+
     /// <inheritdoc />
     public virtual void ApplyStep(ModuleApplyStepEventArgs e)
     {
         // Load base checkpoint
         var baseLoader = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.CheckpointLoaderSimple
-            {
-                Name = "CheckpointLoader_Base",
-                CkptName = SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected")
-            }
+            GetModelLoader(
+                e,
+                "CheckpointLoader_Base",
+                SelectedModel ?? throw new ValidationException("Model not selected")
+            )
         );
 
         e.Builder.Connections.Base.Model = baseLoader.Output1;
@@ -86,13 +135,11 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
         if (IsRefinerSelectionEnabled && SelectedRefiner is { IsNone: false })
         {
             var refinerLoader = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.CheckpointLoaderSimple
-                {
-                    Name = "CheckpointLoader_Refiner",
-                    CkptName =
-                        SelectedRefiner?.RelativePath
-                        ?? throw new ValidationException("Refiner Model enabled but not selected")
-                }
+                GetModelLoader(
+                    e,
+                    "CheckpointLoader_Refiner",
+                    SelectedRefiner ?? throw new ValidationException("Refiner Model enabled but not selected")
+                )
             );
 
             e.Builder.Connections.Refiner.Model = refinerLoader.Output1;

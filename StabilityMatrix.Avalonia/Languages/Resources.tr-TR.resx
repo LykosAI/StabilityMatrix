@@ -133,7 +133,7 @@
     <value>Dil</value>
   </data>
   <data name="Text_RelaunchRequiredToApplyLanguage" xml:space="preserve">
-    <value>Yeni dil seçeneğinin etkili olması için yeniden başlatma gerekiyor</value>
+    <value>Yeni dil seçeneğinin etkili olması için yeniden başlatma gerekir.</value>
   </data>
   <data name="Action_Relaunch" xml:space="preserve">
     <value>Yeniden başlat</value>
@@ -166,7 +166,7 @@
     <value>Dallar</value>
   </data>
   <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
-    <value>İçe aktarmak için chekpoints&apos;leri buraya sürükleyip bırakın</value>
+    <value>İçe aktarmak için chekpoints&apos;leri buraya sürükleyip bırakın.</value>
   </data>
   <data name="Label_Emphasis" xml:space="preserve">
     <value>Vurgu</value>
@@ -235,7 +235,7 @@
     <value>Sponsor Ol</value>
   </data>
   <data name="Label_JoinDiscord" xml:space="preserve">
-    <value>Discord Sunucusuna Katıl</value>
+    <value>Discord Sunucumuza Katıl</value>
   </data>
   <data name="Label_Downloads" xml:space="preserve">
     <value>İndirmeler</value>
@@ -313,7 +313,7 @@
     <value>Tüm Sürümler</value>
   </data>
   <data name="Label_ModelSearchWatermark" xml:space="preserve">
-    <value>Modelleri, #etiketleri veya @kullanıcıları ara</value>
+    <value>Modelleri,Tagları (#tag) veya Kullanıcıları (@user) Buradan Arayabilirsin</value>
   </data>
   <data name="Action_Search" xml:space="preserve">
     <value>Ara</value>
@@ -322,13 +322,13 @@
     <value>Sırala</value>
   </data>
   <data name="Label_TimePeriod" xml:space="preserve">
-    <value>Süre</value>
+    <value>Sıralama Tarihi</value>
   </data>
   <data name="Label_ModelType" xml:space="preserve">
     <value>Model Türü</value>
   </data>
   <data name="Label_BaseModel" xml:space="preserve">
-    <value>Temel Model</value>
+    <value>Model Altyapısı</value>
   </data>
   <data name="Label_ShowNsfwContent" xml:space="preserve">
     <value>NSFW İçerik Göster</value>
@@ -376,10 +376,10 @@
     <value>Klasör</value>
   </data>
   <data name="Label_DropFileToImport" xml:space="preserve">
-    <value>İçe aktarma için dosyayı buraya bırakın</value>
+    <value>Dosyayı içeri aktarmak için lütfen sürükleyip işaretlenen alana bırakın.</value>
   </data>
   <data name="Label_ImportAsConnected" xml:space="preserve">
-    <value>Metadata ile içeri aktar</value>
+    <value>Dosyaları metadata ile içeri aktar</value>
   </data>
   <data name="Label_ImportAsConnectedExplanation" xml:space="preserve">
     <value>Yeni yerel içe aktarmalar için bağlı meta veri arayın</value>
@@ -448,7 +448,7 @@
     <value>Entegrasyonlar</value>
   </data>
   <data name="Label_DiscordRichPresence" xml:space="preserve">
-    <value>Discord Zengin Varlık</value>
+    <value>Discord Etkinliğini StabilityMatrix Olarak Göster.</value>
   </data>
   <data name="Label_System" xml:space="preserve">
     <value>Sistem</value>
@@ -469,10 +469,10 @@
     <value>Tüm Kullanıcılar İçin Ekle</value>
   </data>
   <data name="Label_SelectNewDataDirectory" xml:space="preserve">
-    <value>Yeni Veri Dizini Seç</value>
+    <value>Yeni Dosya Dizinini Seç</value>
   </data>
   <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
-    <value>Mevcut veriyi taşımaz</value>
+    <value>Bu işlem mevcut veriyi yeni dizine taşımaz.</value>
   </data>
   <data name="Action_SelectDirectory" xml:space="preserve">
     <value>Dizin Seçin</value>
@@ -490,7 +490,7 @@
     <value>Başlamak için Başlat&apos;a tıklayın!</value>
   </data>
   <data name="Action_Stop" xml:space="preserve">
-    <value>Dur</value>
+    <value>Durdur</value>
   </data>
   <data name="Action_SendInput" xml:space="preserve">
     <value>Giriş Gönder</value>
@@ -521,6 +521,7 @@
   </data>
   <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
     <value>Tercih ettiğiniz arayüzü seçin ve başlamak için Yükle&apos;ye tıklayın</value>
+    <comment>Fuzzy</comment>
   </data>
   <data name="Label_Installing" xml:space="preserve">
     <value>Yükleniyor</value>
@@ -694,10 +695,10 @@
     <value>{0} resim seçildi</value>
   </data>
   <data name="Label_OutputFolder" xml:space="preserve">
-    <value>Çıkış Klasörü</value>
+    <value>Çıktı Klasörü</value>
   </data>
   <data name="Label_OutputType" xml:space="preserve">
-    <value>Çıkış Türü</value>
+    <value>Çıktı Türü</value>
   </data>
   <data name="Action_ClearSelection" xml:space="preserve">
     <value>Seçimi Temizle</value>
@@ -721,7 +722,7 @@
     <value>Upscale</value>
   </data>
   <data name="Label_OutputsPageTitle" xml:space="preserve">
-    <value>Çıkış Tarayıcısı</value>
+    <value>Medya Kitaplığı</value>
   </data>
   <data name="Label_OneImageSelected" xml:space="preserve">
     <value>1 resim seçildi</value>
@@ -932,5 +933,32 @@
   </data>
   <data name="Label_VideoQuality" xml:space="preserve">
     <value>Kalite</value>
+  </data>
+  <data name="Label_FindInModelBrowser" xml:space="preserve">
+    <value>Model Tarayıcıda Bul</value>
+  </data>
+  <data name="Label_Installed" xml:space="preserve">
+    <value>Kurulmuş</value>
+  </data>
+  <data name="Label_NoExtensionsFound" xml:space="preserve">
+    <value>Uzantı bulunamadı.</value>
+  </data>
+  <data name="Action_Hide" xml:space="preserve">
+    <value>Gizle</value>
+  </data>
+  <data name="Action_CopyDetails" xml:space="preserve">
+    <value>Ayrıntıları Kopyala</value>
+  </data>
+  <data name="Action_Download" xml:space="preserve">
+    <value>İndir</value>
+  </data>
+  <data name="TeachingTip_DownloadsExplanation" xml:space="preserve">
+    <value>Paket kurulumlarınızın ve model indirmelerinizin ilerlemesini buradan kontrol edin.</value>
+  </data>
+  <data name="Label_RecommendedModels" xml:space="preserve">
+    <value>Önerilen Modeller</value>
+  </data>
+  <data name="Label_RecommendedModelsSubText" xml:space="preserve">
+    <value>Paketiniz yüklenirken başlamanıza yardımcı olması için önerdiğimiz bazı modeller aşağıda verilmiştir.</value>
   </data>
 </root>

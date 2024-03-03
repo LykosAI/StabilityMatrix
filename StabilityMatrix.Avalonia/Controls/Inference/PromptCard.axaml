@@ -33,7 +33,7 @@
                         </Style>
                     </controls:Card.Styles>
 
-                    <Grid RowDefinitions="*,16,*">
+                    <Grid RowDefinitions="*,16,*,16,Auto">
                         <!--  Prompt  -->
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,*">
                             <StackPanel
@@ -137,6 +137,54 @@
 
                             </Border>
                         </Grid>
+                        
+                        <GridSplitter
+                            Grid.Row="3"
+                            MaxWidth="45"
+                            VerticalAlignment="Center"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Opacity="0.3" />
+                        
+                        <controls:StackEditableCard
+                            Margin="2,0,0,0"
+                            DataContext="{Binding ModulesCardViewModel}"
+                            Grid.Row="4">
+                            
+                        </controls:StackEditableCard>
+                        
+                        <!--  Styles and Prompt Expansions  -->
+                        <!--<Grid Grid.Row="4" RowDefinitions="Auto,*">
+                            <StackPanel Margin="4,0,4,8" Orientation="Horizontal">
+                                <TextBlock FontSize="14" Text="Styles" />
+                                <icons:Icon
+                                    Margin="8,0"
+                                    FontSize="10"
+                                    Value="fa-solid fa-caret-down" />
+                            </StackPanel>
+
+                            <Border
+                                Grid.Row="1"
+                                Classes="theme-dark"
+                                VerticalAlignment="Stretch"
+                                CornerRadius="4">
+
+                                <avaloniaEdit:TextEditor
+                                    x:Name="ExtraPromptEditor"
+                                    Document="{Binding NegativePromptDocument}"
+                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace">
+                                    <i:Interaction.Behaviors>
+                                        <behaviors:TextEditorCompletionBehavior
+                                            CompletionProvider="{Binding CompletionProvider}"
+                                            IsEnabled="{Binding IsAutoCompletionEnabled}"
+                                            TokenizerProvider="{Binding TokenizerProvider}" />
+                                        <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
+                                    </i:Interaction.Behaviors>
+                                </avaloniaEdit:TextEditor>
+
+
+                            </Border>
+                        </Grid>-->
                     </Grid>
                 </controls:Card>
             </ControlTemplate>

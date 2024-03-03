@@ -24,8 +24,6 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "ControlNet";
 
-    private readonly ITrackedDownloadService trackedDownloadService;
-    private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
@@ -56,14 +54,10 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
     public IInferenceClientManager ClientManager { get; }
 
     public ControlNetCardViewModel(
-        ITrackedDownloadService trackedDownloadService,
-        ISettingsManager settingsManager,
         IInferenceClientManager clientManager,
         ServiceManager<ViewModelBase> vmFactory
     )
     {
-        this.trackedDownloadService = trackedDownloadService;
-        this.settingsManager = settingsManager;
         this.vmFactory = vmFactory;
 
         ClientManager = clientManager;
@@ -76,30 +70,13 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
         if (modelFile?.DownloadableResource is not { } resource)
             return;
 
-        var sharedFolderType =
-            resource.ContextType as SharedFolderType?
-            ?? throw new InvalidOperationException("ContextType is not SharedFolderType");
-
         var confirmDialog = vmFactory.Get<DownloadResourceViewModel>();
         confirmDialog.Resource = resource;
         confirmDialog.FileName = modelFile.FileName;
 
-        if (await confirmDialog.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+        if (await confirmDialog.GetDialog().ShowAsync() == ContentDialogResult.Primary)
         {
-            return;
+            confirmDialog.StartDownload();
         }
-
-        var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory).JoinDir(
-            sharedFolderType.GetStringValue()
-        );
-
-        var download = trackedDownloadService.NewDownload(
-            resource.Url,
-            modelsDir.JoinFile(modelFile.FileName)
-        );
-        download.ContextAction = new ModelPostDownloadContextAction();
-        download.Start();
-
-        EventManager.Instance.OnToggleProgressFlyout();
     }
 }

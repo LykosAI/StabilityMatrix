@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 using Polly.Contrib.WaitAndRetry;
 using StabilityMatrix.Core.Attributes;
@@ -183,6 +184,10 @@ public class DownloadService : IDownloadService
                 {
                     throw new UnauthorizedAccessException();
                 }
+            }
+            else if (noRedirectResponse.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                throw new UnauthorizedAccessException();
             }
 
             using var redirectRequest = new HttpRequestMessage();

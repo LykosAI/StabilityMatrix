@@ -181,6 +181,26 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         }
     }
 
+    protected override Task OnInitialLoadedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Program.Args.LaunchPackageName))
+            return base.OnInitialLoadedAsync();
+
+        var package = InstalledPackages.FirstOrDefault(x => x.DisplayName == Program.Args.LaunchPackageName);
+        if (package is not null)
+        {
+            SelectedPackage = package;
+            return LaunchAsync();
+        }
+
+        package = InstalledPackages.FirstOrDefault(x => x.Id.ToString() == Program.Args.LaunchPackageName);
+        if (package is null)
+            return base.OnInitialLoadedAsync();
+
+        SelectedPackage = package;
+        return LaunchAsync();
+    }
+
     public override void OnLoaded()
     {
         // Load installed packages
@@ -203,10 +223,12 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         // Load active package
         SelectedPackage = settingsManager.Settings.ActiveInstalledPackage;
         AutoScrollToEnd = settingsManager.Settings.AutoScrollLaunchConsoleToEnd;
+
+        base.OnLoaded();
     }
 
     [RelayCommand]
-    private async Task LaunchAsync(string? command = null)
+    public async Task LaunchAsync(string? command = null)
     {
         await notificationService.TryAsync(LaunchImpl(command));
     }
@@ -272,13 +294,19 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
             settingsManager.SaveLaunchArgs(activeInstall.Id, args);
         }
 
-        await pyRunner.Initialize();
+        if (basePackage is not StableSwarm)
+        {
+            await pyRunner.Initialize();
+        }
 
         // Get path from package
         var packagePath = new DirectoryPath(settingsManager.LibraryDir, activeInstall.LibraryPath!);
 
-        // Unpack sitecustomize.py to venv
-        await UnpackSiteCustomize(packagePath.JoinDir("venv"));
+        if (basePackage is not StableSwarm)
+        {
+            // Unpack sitecustomize.py to venv
+            await UnpackSiteCustomize(packagePath.JoinDir("venv"));
+        }
 
         basePackage.Exited += OnProcessExited;
         basePackage.StartupComplete += RunningPackageOnStartupComplete;

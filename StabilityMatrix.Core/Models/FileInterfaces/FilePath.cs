@@ -1,11 +1,13 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.ComponentModel;
 using System.Text;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Core.Models.FileInterfaces;
 
-[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+[PublicAPI]
+[Localizable(false)]
 [JsonConverter(typeof(StringJsonConverter<FilePath>))]
 public partial class FilePath : FileSystemPath, IPathObject
 {
@@ -59,7 +61,7 @@ public partial class FilePath : FileSystemPath, IPathObject
         }
     }
 
-    public FilePath(string path)
+    public FilePath([Localizable(false)] string path)
         : base(path) { }
 
     public FilePath(FileInfo fileInfo)
@@ -71,7 +73,7 @@ public partial class FilePath : FileSystemPath, IPathObject
     public FilePath(FileSystemPath path)
         : base(path) { }
 
-    public FilePath(params string[] paths)
+    public FilePath([Localizable(false)] params string[] paths)
         : base(paths) { }
 
     public FilePath RelativeTo(DirectoryPath path)
@@ -151,7 +153,7 @@ public partial class FilePath : FileSystemPath, IPathObject
     /// <summary>
     /// Rename the file.
     /// </summary>
-    public FilePath Rename(string fileName)
+    public FilePath Rename([Localizable(false)] string fileName)
     {
         if (Path.GetDirectoryName(FullPath) is { } directory && !string.IsNullOrWhiteSpace(directory))
         {
@@ -245,5 +247,5 @@ public partial class FilePath : FileSystemPath, IPathObject
     // Implicit conversions to and from string
     public static implicit operator string(FilePath path) => path.FullPath;
 
-    public static implicit operator FilePath(string path) => new(path);
+    public static implicit operator FilePath([Localizable(false)] string path) => new(path);
 }

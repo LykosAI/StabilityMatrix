@@ -6,7 +6,6 @@ public enum PackagePrerequisite
     VcRedist,
     Git,
     Node,
-    Dotnet7,
-    Dotnet8,
-    Tkinter,
+    Dotnet,
+    Tkinter
 }

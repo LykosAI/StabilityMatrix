@@ -26,6 +26,18 @@ public enum CivitBaseModelType
     [StringValue("SDXL 1.0 LCM")]
     Sdxl10Lcm,
 
+    [StringValue("SDXL Distilled")]
+    SdxlDistilled,
+
+    [StringValue("SDXL Lightning")]
+    SdxlLightning,
+
+    [StringValue("SVD")]
+    SVD,
+
+    [StringValue("Stable Cascade")]
+    StableCascade,
+
     [StringValue("SDXL Turbo")]
     SdxlTurbo,
     Other,

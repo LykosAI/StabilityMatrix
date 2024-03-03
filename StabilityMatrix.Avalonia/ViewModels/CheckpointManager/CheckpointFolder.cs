@@ -111,6 +111,10 @@ public partial class CheckpointFolder : ViewModelBase
     public IObservableCollection<string> BaseModelOptions { get; } =
         new ObservableCollectionExtended<string>();
 
+    private IEnumerable<string> allModelOptions = Enum.GetValues<CivitBaseModelType>()
+        .Where(x => x != CivitBaseModelType.All)
+        .Select(x => x.GetStringValue());
+
     public CheckpointFolder(
         ISettingsManager settingsManager,
         IDownloadService downloadService,
@@ -175,11 +179,7 @@ public partial class CheckpointFolder : ViewModelBase
                 SubFoldersCache.Refresh();
             });
 
-        BaseModelOptionsCache.AddOrUpdate(
-            Enum.GetValues<CivitBaseModelType>()
-                .Where(x => x != CivitBaseModelType.All)
-                .Select(x => x.GetStringValue())
-        );
+        BaseModelOptionsCache.AddOrUpdate(allModelOptions);
 
         CheckpointFiles.CollectionChanged += OnCheckpointFilesChanged;
         // DisplayedCheckpointFiles = CheckpointFiles;
@@ -187,7 +187,7 @@ public partial class CheckpointFolder : ViewModelBase
 
     private bool BaseModelFilter(CheckpointFile file)
     {
-        return file.IsConnectedModel
+        return file.IsConnectedModel && allModelOptions.Contains(file.ConnectedModel!.BaseModel)
             ? BaseModelOptions.Contains(file.ConnectedModel!.BaseModel)
             : BaseModelOptions.Contains("Other");
     }

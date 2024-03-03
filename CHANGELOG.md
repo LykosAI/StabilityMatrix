@@ -5,8 +5,9 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-## v2.9.0-pre.3
+## v2.9.0
 ### Fixed
+- Fixed unknown model types not showing on checkpoints page (thanks Jerry!)
 - Improved error handling for Inference Select Image hash calculation in case file is being written to while being read
 
 ## v2.9.0-pre.2

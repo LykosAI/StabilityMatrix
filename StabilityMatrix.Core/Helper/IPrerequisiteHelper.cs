@@ -1,4 +1,5 @@
-﻿using System.Runtime.Versioning;
+﻿using System.Diagnostics;
+using System.Runtime.Versioning;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
@@ -166,5 +167,15 @@ public interface IPrerequisiteHelper
     Task InstallPackageRequirements(
         List<PackagePrerequisite> prerequisites,
         IProgress<ProgressReport>? progress = null
+    );
+
+    Task InstallDotnetIfNecessary(IProgress<ProgressReport>? progress = null);
+
+    Task<Process> RunDotnet(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null,
+        bool waitForExit = true
     );
 }

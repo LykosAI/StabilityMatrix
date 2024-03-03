@@ -1,4 +1,6 @@
+using System.Text.RegularExpressions;
 using KGySoft.CoreLibraries;
+using Microsoft.Extensions.Caching.Memory;
 using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -8,10 +10,13 @@ using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Models.Packages.Extensions;
 
-public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisiteHelper)
+public abstract partial class GitPackageExtensionManager(IPrerequisiteHelper prerequisiteHelper)
     : IPackageExtensionManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    // Cache checks of installed extensions
+    private readonly MemoryCache installedExtensionsCache = new(new MemoryCacheOptions());
 
     public abstract string RelativeInstallDirectory { get; }
 
@@ -121,6 +126,74 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
                             ? remoteUrlResult.StandardOutput?.Trim()
                             : null
                     }
+                );
+            }
+        }
+
+        return extensions;
+    }
+
+    /// <summary>
+    /// Like <see cref="GetInstalledExtensionsAsync"/>, but does not check git version and repository url.
+    /// </summary>
+    public virtual async Task<IEnumerable<InstalledPackageExtension>> GetInstalledExtensionsLiteAsync(
+        InstalledPackage installedPackage,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (installedPackage.FullPath is not { } packagePath)
+        {
+            return Enumerable.Empty<InstalledPackageExtension>();
+        }
+
+        var extensions = new List<InstalledPackageExtension>();
+
+        // Search for installed extensions in the package's index directories.
+        foreach (
+            var indexDirectory in IndexRelativeDirectories.Select(
+                path => new DirectoryPath(packagePath, path)
+            )
+        )
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Skip directory if not exists
+            if (!indexDirectory.Exists)
+            {
+                continue;
+            }
+
+            // Check subdirectories of the index directory
+            foreach (var subDirectory in indexDirectory.EnumerateDirectories())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Skip if not valid git repository
+                if (!subDirectory.JoinDir(".git").Exists)
+                {
+                    continue;
+                }
+
+                // Get remote url with manual parsing
+                string? remoteUrl = null;
+
+                var gitConfigPath = subDirectory.JoinDir(".git").JoinFile("config");
+                if (
+                    gitConfigPath.Exists
+                    && await gitConfigPath.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)
+                        is { } gitConfigText
+                )
+                {
+                    var pattern = GitConfigRemoteOriginUrlRegex();
+                    var match = pattern.Match(gitConfigText);
+                    if (match.Success)
+                    {
+                        remoteUrl = match.Groups[1].Value;
+                    }
+                }
+
+                extensions.Add(
+                    new InstalledPackageExtension { Paths = [subDirectory], GitRepositoryUrl = remoteUrl }
                 );
             }
         }
@@ -242,4 +315,7 @@ public abstract class GitPackageExtensionManager(IPrerequisiteHelper prerequisit
 
         progress?.Report(new ProgressReport(1f, message: "Uninstalled extension"));
     }
+
+    [GeneratedRegex("""\[remote "origin"\][\s\S]*?url\s*=\s*(.+)""")]
+    private static partial Regex GitConfigRemoteOriginUrlRegex();
 }

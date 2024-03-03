@@ -12,10 +12,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-public interface IInferenceClientManager
-    : IDisposable,
-        INotifyPropertyChanged,
-        INotifyPropertyChanging
+public interface IInferenceClientManager : IDisposable, INotifyPropertyChanged, INotifyPropertyChanging
 {
     ComfyClient? Client { get; set; }
 
@@ -43,6 +40,7 @@ public interface IInferenceClientManager
     IObservableCollection<HybridModelFile> Models { get; }
     IObservableCollection<HybridModelFile> VaeModels { get; }
     IObservableCollection<HybridModelFile> ControlNetModels { get; }
+    IObservableCollection<HybridModelFile> PromptExpansionModels { get; }
     IObservableCollection<ComfySampler> Samplers { get; }
     IObservableCollection<ComfyUpscaler> Upscalers { get; }
     IObservableCollection<ComfyScheduler> Schedulers { get; }
@@ -51,10 +49,7 @@ public interface IInferenceClientManager
 
     Task UploadInputImageAsync(ImageSource image, CancellationToken cancellationToken = default);
 
-    Task WriteImageToInputAsync(
-        ImageSource imageSource,
-        CancellationToken cancellationToken = default
-    );
+    Task WriteImageToInputAsync(ImageSource imageSource, CancellationToken cancellationToken = default);
 
     Task ConnectAsync(CancellationToken cancellationToken = default);
 

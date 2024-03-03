@@ -132,8 +132,7 @@ public static class RemoteModels
             }
         };
 
-    private static Uri ControlNetRoot { get; } =
-        new("https://huggingface.co/lllyasviel/ControlNet/");
+    private static Uri ControlNetRoot { get; } = new("https://huggingface.co/lllyasviel/ControlNet/");
 
     private static RemoteResource ControlNetCommon(string path, string sha256)
     {
@@ -170,4 +169,23 @@ public static class RemoteModels
 
     public static IReadOnlyList<HybridModelFile> ControlNetModels { get; } =
         ControlNets.Select(HybridModelFile.FromDownloadable).ToImmutableArray();
+
+    private static IEnumerable<RemoteResource> PromptExpansions =>
+        [
+            new RemoteResource
+            {
+                Url = new Uri("https://cdn.lykos.ai/models/GPT-Prompt-Expansion-Fooocus-v2.zip"),
+                HashSha256 = "82e69311787c0bb6736389710d80c0a2b653ed9bbe6ea6e70c6b90820fe42d88",
+                InfoUrl = new Uri("https://huggingface.co/LykosAI/GPT-Prompt-Expansion-Fooocus-v2"),
+                Author = "lllyasviel, LykosAI",
+                LicenseType = "GPLv3",
+                LicenseUrl = new Uri("https://github.com/lllyasviel/Fooocus/blob/main/LICENSE"),
+                ContextType = SharedFolderType.PromptExpansion,
+                AutoExtractArchive = true,
+                ExtractRelativePath = "GPT-Prompt-Expansion-Fooocus-v2"
+            }
+        ];
+
+    public static IEnumerable<HybridModelFile> PromptExpansionModels =>
+        PromptExpansions.Select(HybridModelFile.FromDownloadable);
 }

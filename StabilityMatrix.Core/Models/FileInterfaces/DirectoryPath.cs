@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.ComponentModel;
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using StabilityMatrix.Core.Converters.Json;
@@ -6,6 +7,7 @@ using StabilityMatrix.Core.Converters.Json;
 namespace StabilityMatrix.Core.Models.FileInterfaces;
 
 [PublicAPI]
+[Localizable(false)]
 [JsonConverter(typeof(StringJsonConverter<DirectoryPath>))]
 public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystemPath>
 {
@@ -43,7 +45,7 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
     [JsonIgnore]
     public DirectoryPath? Parent => Info.Parent == null ? null : new DirectoryPath(Info.Parent);
 
-    public DirectoryPath(string path)
+    public DirectoryPath([Localizable(false)] string path)
         : base(path) { }
 
     public DirectoryPath(FileSystemPath path)
@@ -56,7 +58,7 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
         this.info = info;
     }
 
-    public DirectoryPath(params string[] paths)
+    public DirectoryPath([Localizable(false)] params string[] paths)
         : base(paths) { }
 
     public DirectoryPath RelativeTo(DirectoryPath path)
@@ -226,13 +228,13 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
     /// <summary>
     /// Join with other paths to form a new directory path.
     /// </summary>
-    public DirectoryPath JoinDir(params DirectoryPath[] paths) =>
+    public DirectoryPath JoinDir([Localizable(false)] params DirectoryPath[] paths) =>
         new(Path.Combine(FullPath, Path.Combine(paths.Select(path => path.FullPath).ToArray())));
 
     /// <summary>
     /// Join with other paths to form a new file path.
     /// </summary>
-    public FilePath JoinFile(params FilePath[] paths) =>
+    public FilePath JoinFile([Localizable(false)] params FilePath[] paths) =>
         new(Path.Combine(FullPath, Path.Combine(paths.Select(path => path.FullPath).ToArray())));
 
     /// <summary>
@@ -305,12 +307,13 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
         new(Path.Combine(path, other.FullName));
 
     // DirectoryPath + string = string
-    public static string operator +(DirectoryPath path, string other) => Path.Combine(path, other);
+    public static string operator +(DirectoryPath path, [Localizable(false)] string other) =>
+        Path.Combine(path, other);
 
     // Implicit conversions to and from string
     public static implicit operator string(DirectoryPath path) => path.FullPath;
 
-    public static implicit operator DirectoryPath(string path) => new(path);
+    public static implicit operator DirectoryPath([Localizable(false)] string path) => new(path);
 
     // Implicit conversions to and from DirectoryInfo
     public static implicit operator DirectoryInfo(DirectoryPath path) => path.Info;

@@ -28,5 +28,13 @@ public readonly record struct RemoteResource
 
     public string? Author { get; init; }
 
-    public string? ByAuthor => string.IsNullOrEmpty(Author) ? null : $"by {Author}";
+    /// <summary>
+    /// Whether to auto-extract the archive after download
+    /// </summary>
+    public bool AutoExtractArchive { get; init; }
+
+    /// <summary>
+    /// Optional relative path to extract the archive to, if AutoExtractArchive is true
+    /// </summary>
+    public string? ExtractRelativePath { get; init; }
 }

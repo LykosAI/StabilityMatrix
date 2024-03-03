@@ -521,6 +521,7 @@
   </data>
   <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
     <value>Wählen Sie Ihre bevorzugte Schnittstelle und klicken Sie auf Installieren, um loszulegen.</value>
+    <comment>Fuzzy</comment>
   </data>
   <data name="Label_Installing" xml:space="preserve">
     <value>Installiert</value>
@@ -776,6 +777,9 @@
   </data>
   <data name="Label_ApiKey" xml:space="preserve">
     <value>API Schlüssel</value>
+  </data>
+  <data name="Label_Accounts" xml:space="preserve">
+    <value>Accounts</value>
   </data>
   <data name="Label_Preprocessor" xml:space="preserve">
     <value>Preprocessor</value>

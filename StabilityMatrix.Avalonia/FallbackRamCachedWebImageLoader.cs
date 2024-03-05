@@ -103,4 +103,13 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
             }
         }
     }
+
+    public void ClearCache()
+    {
+        var cache =
+            this.GetPrivateField<ConcurrentDictionary<string, Task<Bitmap?>>>("_memoryCache")
+            ?? throw new NullReferenceException("Memory cache not found");
+
+        cache.Clear();
+    }
 }

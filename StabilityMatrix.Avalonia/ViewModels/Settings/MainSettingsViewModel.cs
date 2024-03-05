@@ -14,6 +14,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
@@ -774,7 +775,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
         [
             new CommandItem(DebugFindLocalModelFromIndexCommand),
             new CommandItem(DebugExtractDmgCommand),
-            new CommandItem(DebugShowNativeNotificationCommand)
+            new CommandItem(DebugShowNativeNotificationCommand),
+            new CommandItem(DebugClearImageCacheCommand),
+            new CommandItem(DebugGCCollectCommand)
         ];
 
     [RelayCommand]
@@ -887,6 +890,21 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 Buttons = { ("Action", "__Debug_Action"), ("Close", "__Debug_Close"), }
             }
         );
+    }
+
+    [RelayCommand]
+    private void DebugClearImageCache()
+    {
+        if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
+        {
+            loader.ClearCache();
+        }
+    }
+
+    [RelayCommand]
+    private void DebugGCCollect()
+    {
+        GC.Collect();
     }
 
     #endregion

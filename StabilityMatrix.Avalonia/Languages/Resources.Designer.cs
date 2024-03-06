@@ -2652,6 +2652,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The &apos;Open Web UI&apos; button has moved to the command bar.
+        /// </summary>
+        public static string TeachingTip_WebUiButtonMoved {
+            get {
+                return ResourceManager.GetString("TeachingTip_WebUiButtonMoved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The app will relaunch after updating.
         /// </summary>
         public static string Text_AppWillRelaunchAfterUpdate {

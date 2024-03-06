@@ -13,12 +13,14 @@ using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
+using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(ConsoleOutputPage))]
 public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, IAsyncDisposable
 {
+    private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
     private readonly RunningPackageService runningPackageService;
 
@@ -42,6 +44,9 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     [ObservableProperty]
     private string consoleInput = string.Empty;
 
+    [ObservableProperty]
+    private bool showWebUiTeachingTip;
+
     /// <inheritdoc/>
     public RunningPackageViewModel(
         ISettingsManager settingsManager,
@@ -51,6 +56,7 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
         ConsoleViewModel console
     )
     {
+        this.settingsManager = settingsManager;
         this.notificationService = notificationService;
         this.runningPackageService = runningPackageService;
 
@@ -82,6 +88,12 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     {
         WebUiUrl = url.Replace("0.0.0.0", "127.0.0.1");
         ShowWebUiButton = !string.IsNullOrWhiteSpace(WebUiUrl);
+
+        if (settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.WebUiButtonMovedTip))
+            return;
+
+        ShowWebUiTeachingTip = true;
+        settingsManager.Transaction(s => s.SeenTeachingTips.Add(TeachingTip.WebUiButtonMovedTip));
     }
 
     private void DocumentOnLineCountChanged(object? sender, EventArgs e)

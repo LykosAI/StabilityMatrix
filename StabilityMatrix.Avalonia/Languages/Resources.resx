@@ -1014,4 +1014,7 @@
   <data name="Label_ModelBrowser" xml:space="preserve">
     <value>Model Browser</value>
   </data>
+  <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
+    <value>The 'Open Web UI' button has moved to the command bar</value>
+  </data>
 </root>

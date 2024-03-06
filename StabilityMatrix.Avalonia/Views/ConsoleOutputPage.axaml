@@ -51,6 +51,7 @@
                     Command="{Binding LaunchWebUiCommand}"
                     IsVisible="{Binding ShowWebUiButton}"
                     VerticalAlignment="Center"
+                    x:Name="OpenWebUiButton"
                     Label="{x:Static lang:Resources.Action_OpenWebUI}">
                     <ui:CommandBarButton.IconSource>
                         <controls:FASymbolIconSource Symbol="fa-solid fa-up-right-from-square"/>
@@ -82,5 +83,11 @@
                     Content="{x:Static lang:Resources.Action_Send}"
                     Command="{Binding SendToConsoleCommand}"/>
         </Grid>
+        
+        <ui:TeachingTip Grid.Row="0" Grid.Column="0" Name="TeachingTip1"
+                        Target="{Binding #OpenWebUiButton}"
+                        Title="{x:Static lang:Resources.TeachingTip_WebUiButtonMoved}"
+                        PreferredPlacement="Bottom"
+                        IsOpen="True"/>
     </Grid>
 </controls:UserControlBase>

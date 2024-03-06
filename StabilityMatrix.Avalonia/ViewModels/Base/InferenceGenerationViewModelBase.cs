@@ -59,6 +59,7 @@ public abstract partial class InferenceGenerationViewModelBase
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly ISettingsManager settingsManager;
+    private readonly RunningPackageService runningPackageService;
     private readonly INotificationService notificationService;
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
@@ -79,12 +80,14 @@ public abstract partial class InferenceGenerationViewModelBase
         ServiceManager<ViewModelBase> vmFactory,
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
-        ISettingsManager settingsManager
+        ISettingsManager settingsManager,
+        RunningPackageService runningPackageService
     )
         : base(notificationService)
     {
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
+        this.runningPackageService = runningPackageService;
         this.vmFactory = vmFactory;
 
         ClientManager = inferenceClientManager;
@@ -722,15 +725,12 @@ public abstract partial class InferenceGenerationViewModelBase
                         return;
 
                     // Restart Package
-                    // TODO: This should be handled by some DI package manager service
-                    var launchPage = App.Services.GetRequiredService<LaunchPageViewModel>();
-
                     try
                     {
                         await Dispatcher.UIThread.InvokeAsync(async () =>
                         {
-                            await launchPage.Stop();
-                            await launchPage.LaunchAsync();
+                            await runningPackageService.StopPackage(localPackagePair.InstalledPackage.Id);
+                            await runningPackageService.StartPackage(localPackagePair.InstalledPackage);
                         });
                     }
                     catch (Exception e)

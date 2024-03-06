@@ -273,8 +273,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         var confirmationDialog = new BetterContentDialog
         {
-            Title = "Are you sure you want to delete this image?",
-            Content = "This action cannot be undone.",
+            Title = Resources.Label_AreYouSure,
+            Content = Resources.Label_ActionCannotBeUndone,
             PrimaryButtonText = Resources.Action_Delete,
             SecondaryButtonText = Resources.Action_Cancel,
             DefaultButton = ContentDialogButton.Primary,
@@ -352,8 +352,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
     {
         var confirmationDialog = new BetterContentDialog
         {
-            Title = $"Are you sure you want to delete {NumItemsSelected} images?",
-            Content = "This action cannot be undone.",
+            Title = string.Format(Resources.Label_AreYouSureDeleteImages, NumItemsSelected),
+            Content = Resources.Label_ActionCannotBeUndone,
             PrimaryButtonText = Resources.Action_Delete,
             SecondaryButtonText = Resources.Action_Cancel,
             DefaultButton = ContentDialogButton.Primary,

@@ -975,4 +975,46 @@
   <data name="Label_Config" xml:space="preserve">
     <value>Config</value>
   </data>
+  <data name="Label_ToggleAutoScrolling" xml:space="preserve">
+    <value>Auto-Scroll to End</value>
+  </data>
+  <data name="Label_ConfirmExit" xml:space="preserve">
+    <value>Confirm Exit</value>
+  </data>
+  <data name="Label_ConfirmExitDetail" xml:space="preserve">
+    <value>Are you sure you want to exit? This will also close any currently running packages.</value>
+  </data>
+  <data name="Label_Console" xml:space="preserve">
+    <value>Console</value>
+  </data>
+  <data name="Label_WebUi" xml:space="preserve">
+    <value>Web UI</value>
+  </data>
+  <data name="Label_Packages" xml:space="preserve">
+    <value>Packages</value>
+  </data>
+  <data name="Label_ActionCannotBeUndone" xml:space="preserve">
+    <value>This action cannot be undone.</value>
+  </data>
+  <data name="Label_AreYouSureDeleteImages" xml:space="preserve">
+    <value>Are you sure you want to delete {0} images?</value>
+  </data>
+  <data name="Label_CheckingHardware" xml:space="preserve">
+    <value>We're checking some hardware specifications to determine compatibility.</value>
+  </data>
+  <data name="Label_EverythingLooksGood" xml:space="preserve">
+    <value>Everything looks good!</value>
+  </data>
+  <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
+    <value>We recommend a GPU with CUDA support for the best experience. You can continue without one, but some packages may not work, and inference may be slower.</value>
+  </data>
+  <data name="Label_Checkpoints" xml:space="preserve">
+    <value>Checkpoints</value>
+  </data>
+  <data name="Label_ModelBrowser" xml:space="preserve">
+    <value>Model Browser</value>
+  </data>
+  <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
+    <value>The 'Open Web UI' button has moved to the command bar</value>
+  </data>
 </root>

@@ -596,6 +596,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private ObservableCollection<PackageOutputCategory> GetSubfolders(string strPath)
     {
         var subfolders = new ObservableCollection<PackageOutputCategory>();
+
+        if (!Directory.Exists(strPath))
+            return subfolders;
+
         var directories = Directory.EnumerateDirectories(strPath, "*", SearchOption.TopDirectoryOnly);
 
         foreach (var dir in directories)

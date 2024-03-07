@@ -16,8 +16,6 @@
     xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
-    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     d:DataContext="{x:Static mocks:DesignData.OutputsPageViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="800"
@@ -25,20 +23,29 @@
     x:DataType="vm:OutputsPageViewModel"
     Focusable="True"
     mc:Ignorable="d">
-    
-    <controls:UserControlBase.Resources>
-        <converters:BooleanChoiceMultiConverter x:Key="BooleanChoiceMultiConverter" />
-        <system:String x:Key="LoadingClass">loading</system:String>
-        <system:String x:Key="EmptyClass"> </system:String>
-    </controls:UserControlBase.Resources>
-    
-    <Grid Margin="16" RowDefinitions="Auto,*">
-        <Grid
-            Grid.Row="0"
-            Margin="0,0,0,16"
-            ColumnDefinitions="Auto,Auto,*,Auto"
-            RowDefinitions="Auto,*">
-            
+    <Grid Margin="16" RowDefinitions="Auto,*"
+          ColumnDefinitions="Auto, *">
+
+        <TreeView Grid.Row="1"
+                  Grid.Column="0"
+                  IsVisible="{Binding ShowFolders}"
+                  Margin="0,0,12,0"
+                  ItemsSource="{Binding Categories}"
+                  SelectedItem="{Binding SelectedCategory}">
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate ItemsSource="{Binding SubDirectories}">
+                    <TextBlock Text="{Binding Name}" />
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+        <Grid Grid.Column="0"
+              Grid.ColumnSpan="2"
+              Grid.Row="0"
+              Margin="0,0,0,16"
+              ColumnDefinitions="Auto,Auto,*,Auto"
+              RowDefinitions="Auto,*">
+
             <Grid.Styles>
                 <Style Selector="TextBox">
                     <Setter Property="MinHeight" Value="40" />
@@ -97,8 +104,8 @@
                     <ui:CommandBarSeparator />
                     <ui:CommandBarButton
                         Command="{Binding SelectAll}"
-                        IconSource="SelectAll"
                         IsEnabled="{Binding !IsLoading}"
+                        IconSource="SelectAll"
                         Label="{x:Static lang:Resources.Action_SelectAll}" />
                     <ui:CommandBarButton
                         Command="{Binding ClearSelection}"
@@ -106,11 +113,11 @@
                         IsEnabled="{Binding !!NumItemsSelected}"
                         Label="{x:Static lang:Resources.Action_ClearSelection}" />
                     <ui:CommandBarSeparator />
-                    <ui:CommandBarButton 
+                    <ui:CommandBarButton
                         IconSource="Refresh"
                         Classes.loading="{Binding IsLoading}"
-                        IsEnabled="{Binding !IsLoading}"
                         Command="{Binding Refresh}"
+                        IsEnabled="{Binding !IsLoading}"
                         Label="{x:Static lang:Resources.Action_Refresh}">
                         <ui:CommandBarButton.Styles>
                             <Style Selector="ui|CommandBarButton:disabled.loading">
@@ -144,15 +151,14 @@
             </ui:CommandBar>
         </Grid>
 
-        <scroll:BetterScrollViewer Grid.Row="1"
-                                   x:Name="MainScrollViewer"
-                                   PointerWheelChanged="ScrollViewer_MouseWheelChanged">
+        <scroll:BetterScrollViewer Grid.Column="1"
+                                   Grid.Row="1" PointerWheelChanged="ScrollViewer_MouseWheelChanged">
             <ItemsRepeater
                 x:Name="ImageRepeater"
                 VerticalAlignment="Top"
                 ItemsSource="{Binding Outputs}">
                 <ItemsRepeater.Layout>
-                    <WrapLayout Orientation="Horizontal" HorizontalSpacing="12" VerticalSpacing="12"/>
+                    <UniformGridLayout MinColumnSpacing="8" MinRowSpacing="8" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type outputsPage:OutputImageViewModel}">
@@ -162,7 +168,7 @@
                             ImageHeight="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).ImageSize.Height}"
                             ImageWidth="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).ImageSize.Width}"
                             IsSelected="{Binding IsSelected}"
-                            Source="{Binding ImageFile.AbsolutePathUriString}">
+                            Source="{Binding ImageFile.AbsolutePath}">
                             <selectableImageCard:SelectableImageButton.ContextFlyout>
                                 <ui:FAMenuFlyout>
                                     <ui:MenuFlyoutItem

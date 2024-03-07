@@ -54,12 +54,7 @@
                     <Setter Property="MinHeight" Value="40" />
                 </Style>
             </Grid.Styles>
-
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="2"
-                Margin="4"
-                Text="{x:Static lang:Resources.Action_Search}" />
+            
             <TextBox
                 Grid.Row="1"
                 Grid.Column="2"

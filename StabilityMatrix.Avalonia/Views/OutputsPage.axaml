@@ -16,6 +16,8 @@
     xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     d:DataContext="{x:Static mocks:DesignData.OutputsPageViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="800"
@@ -23,6 +25,13 @@
     x:DataType="vm:OutputsPageViewModel"
     Focusable="True"
     mc:Ignorable="d">
+    
+    <controls:UserControlBase.Resources>
+        <converters:BooleanChoiceMultiConverter x:Key="BooleanChoiceMultiConverter" />
+        <system:String x:Key="LoadingClass">loading</system:String>
+        <system:String x:Key="EmptyClass"> </system:String>
+    </controls:UserControlBase.Resources>
+    
     <Grid Margin="16" RowDefinitions="Auto,*">
         <Grid
             Grid.Row="0"
@@ -138,7 +147,8 @@
                     <ui:CommandBarSeparator />
                     <ui:CommandBarButton 
                         Command="{Binding SelectAll}"
-                        IconSource="SelectAll" 
+                        IconSource="SelectAll"
+                        IsEnabled="{Binding !IsLoading}"
                         Label="{x:Static lang:Resources.Action_SelectAll}" />
                     <ui:CommandBarButton 
                         Command="{Binding ClearSelection}"
@@ -147,9 +157,28 @@
                         Label="{x:Static lang:Resources.Action_ClearSelection}" />
                     <ui:CommandBarSeparator />
                     <ui:CommandBarButton 
-                        IconSource="Refresh" 
+                        IconSource="Refresh"
+                        Classes.loading="{Binding IsLoading}"
+                        IsEnabled="{Binding !IsLoading}"
                         Command="{Binding Refresh}"
-                        Label="{x:Static lang:Resources.Action_Refresh}" />
+                        Label="{x:Static lang:Resources.Action_Refresh}">
+                        <ui:CommandBarButton.Styles>
+                            <Style Selector="ui|CommandBarButton:disabled.loading">
+                                <Style Selector="^ ui|SymbolIcon">
+                                    <Style.Animations>
+                                        <Animation Duration="0:0:2" IterationCount="INFINITE">
+                                            <KeyFrame Cue="0%">
+                                                <Setter Property="RotateTransform.Angle" Value="0"/>
+                                            </KeyFrame>
+                                            <KeyFrame Cue="100%">
+                                                <Setter Property="RotateTransform.Angle" Value="360"/>
+                                            </KeyFrame>
+                                        </Animation>
+                                    </Style.Animations>
+                                </Style>
+                            </Style>
+                        </ui:CommandBarButton.Styles>
+                    </ui:CommandBarButton>
                 </ui:CommandBar.PrimaryCommands>
 
                 <ui:CommandBar.SecondaryCommands>
@@ -161,13 +190,15 @@
             </ui:CommandBar>
         </Grid>
 
-        <scroll:BetterScrollViewer Grid.Row="1" PointerWheelChanged="ScrollViewer_MouseWheelChanged">
+        <scroll:BetterScrollViewer Grid.Row="1"
+                                   x:Name="MainScrollViewer"
+                                   PointerWheelChanged="ScrollViewer_MouseWheelChanged">
             <ItemsRepeater
                 x:Name="ImageRepeater"
                 VerticalAlignment="Top"
                 ItemsSource="{Binding Outputs}">
                 <ItemsRepeater.Layout>
-                    <UniformGridLayout MinColumnSpacing="8" MinRowSpacing="8" />
+                    <WrapLayout Orientation="Horizontal" HorizontalSpacing="12" VerticalSpacing="12"/>
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type outputsPage:OutputImageViewModel}">
@@ -177,7 +208,7 @@
                             ImageHeight="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).ImageSize.Height}"
                             ImageWidth="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).ImageSize.Width}"
                             IsSelected="{Binding IsSelected}"
-                            Source="{Binding ImageFile.AbsolutePath}">
+                            Source="{Binding ImageFile.AbsolutePathUriString}">
                             <selectableImageCard:SelectableImageButton.ContextFlyout>
                                 <ui:FAMenuFlyout>
                                     <ui:MenuFlyoutItem

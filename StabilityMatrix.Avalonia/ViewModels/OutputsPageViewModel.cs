@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
@@ -28,8 +31,6 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Exceptions;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -86,6 +87,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isConsolidating;
 
+    [ObservableProperty]
+    private bool isLoading;
+
     public bool CanShowOutputTypes => SelectedCategory?.Name?.Equals("Shared Output Folder") ?? false;
 
     public string NumImagesSelected =>
@@ -94,6 +98,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
             : string.Format(Resources.Label_NumImagesSelected, NumItemsSelected);
 
     private string[] allowedExtensions = [".png", ".webp"];
+
+    private PackageOutputCategory? lastOutputCategory;
+    private CancellationTokenSource getOutputsTokenSource = new();
 
     public OutputsPageViewModel(
         ISettingsManager settingsManager,
@@ -113,7 +120,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         // Observable predicate from SearchQuery changes
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
-            .Throttle(TimeSpan.FromMilliseconds(50))!
+            .Throttle(TimeSpan.FromMilliseconds(100))!
             .Select(property => searcher.GetPredicate(property.Value))
             .AsObservable();
 
@@ -122,9 +129,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .DeferUntilLoaded()
             .Filter(searchPredicate)
             .Transform(file => new OutputImageViewModel(file))
-            .SortBy(vm => vm.ImageFile.CreatedAt, SortDirection.Descending)
+            .Sort(
+                SortExpressionComparer<OutputImageViewModel>
+                    .Descending(vm => vm.ImageFile.CreatedAt)
+                    .ThenByDescending(vm => vm.ImageFile.FileName)
+            )
             .Bind(Outputs)
             .WhenPropertyChanged(p => p.IsSelected)
+            .Throttle(TimeSpan.FromMilliseconds(50))
             .Subscribe(_ =>
             {
                 NumItemsSelected = Outputs.Count(o => o.IsSelected);
@@ -159,6 +171,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         SelectedOutputType ??= SharedOutputType.All;
         SearchQuery = string.Empty;
         ImageSize = settingsManager.Settings.OutputsImageSize;
+        lastOutputCategory = SelectedCategory;
 
         var path =
             CanShowOutputTypes && SelectedOutputType != SharedOutputType.All
@@ -169,7 +182,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     partial void OnSelectedCategoryChanged(PackageOutputCategory? oldValue, PackageOutputCategory? newValue)
     {
-        if (oldValue == newValue || newValue == null)
+        if (oldValue == newValue || oldValue == null || newValue == null)
             return;
 
         var path =
@@ -177,11 +190,12 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 ? Path.Combine(newValue.Path, SelectedOutputType.ToString())
                 : SelectedCategory.Path;
         GetOutputs(path);
+        lastOutputCategory = newValue;
     }
 
     partial void OnSelectedOutputTypeChanged(SharedOutputType? oldValue, SharedOutputType? newValue)
     {
-        if (oldValue == newValue || newValue == null)
+        if (oldValue == newValue || oldValue == null || newValue == null)
             return;
 
         var path =
@@ -262,8 +276,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public void Refresh()
     {
-        Dispatcher.UIThread.Post(() => RefreshCategories());
-        Dispatcher.UIThread.Post(OnLoaded);
+        Dispatcher.UIThread.Post(RefreshCategories);
+        OnLoaded();
     }
 
     public async Task DeleteImage(OutputImageViewModel? item)
@@ -517,20 +531,38 @@ public partial class OutputsPageViewModel : PageViewModelBase
             return;
         }
 
-        var files = Directory
-            .EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
-            .Where(path => allowedExtensions.Contains(new FilePath(path).Extension))
-            .Select(file => LocalImageFile.FromPath(file))
-            .ToList();
-
-        if (files.Count == 0)
+        if (lastOutputCategory?.Path.Equals(directory) is not true)
         {
             OutputsCache.Clear();
         }
-        else
-        {
-            OutputsCache.EditDiff(files);
-        }
+
+        getOutputsTokenSource.Cancel();
+        getOutputsTokenSource = new CancellationTokenSource();
+
+        IsLoading = true;
+
+        Task.Run(
+            () =>
+            {
+                var sw = Stopwatch.StartNew();
+                var files = Directory
+                    .EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
+                    .Where(file => allowedExtensions.Contains(new FilePath(file).Extension))
+                    .Select(file => LocalImageFile.FromPath(file));
+
+                OutputsCache.EditDiff(
+                    files,
+                    (oldItem, newItem) => oldItem.AbsolutePath == newItem.AbsolutePath
+                );
+
+                sw.Stop();
+                Console.WriteLine(
+                    $"Finished with {OutputsCache.Count} files, took {sw.Elapsed.TotalMilliseconds}ms"
+                );
+                Dispatcher.UIThread.Post(() => IsLoading = false);
+            },
+            getOutputsTokenSource.Token
+        );
     }
 
     private void RefreshCategories()

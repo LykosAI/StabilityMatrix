@@ -50,6 +50,8 @@ public record LocalImageFile
     /// </summary>
     public string FileNameWithoutExtension => Path.GetFileNameWithoutExtension(AbsolutePath);
 
+    public Uri AbsolutePathUriString => new($"file://{AbsolutePath}");
+
     public (string? Parameters, string? ParametersJson, string? SMProject, string? ComfyNodes) ReadMetadata()
     {
         if (AbsolutePath.EndsWith("webp"))

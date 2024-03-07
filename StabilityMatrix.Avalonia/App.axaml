@@ -4,6 +4,7 @@
              xmlns:local="using:StabilityMatrix.Avalonia"
              xmlns:idcr="using:Dock.Avalonia.Controls.Recycling"
              xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
+             xmlns:controls="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
              Name="Stability Matrix"
              RequestedThemeVariant="Dark">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
@@ -80,6 +81,7 @@
         <StyleInclude Source="Controls/Inference/FreeUCard.axaml"/>
         <StyleInclude Source="Controls/Inference/ControlNetCard.axaml"/>
         <StyleInclude Source="Controls/Inference/PromptExpansionCard.axaml"/>
+        <controls:ControlThemes/>
         
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />

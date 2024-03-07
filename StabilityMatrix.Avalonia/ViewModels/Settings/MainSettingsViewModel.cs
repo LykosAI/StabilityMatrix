@@ -777,7 +777,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugExtractDmgCommand),
             new CommandItem(DebugShowNativeNotificationCommand),
             new CommandItem(DebugClearImageCacheCommand),
-            new CommandItem(DebugGCCollectCommand)
+            new CommandItem(DebugGCCollectCommand),
+            new CommandItem(DebugExtractImagePromptsToTxtCommand)
         ];
 
     [RelayCommand]
@@ -905,6 +906,45 @@ public partial class MainSettingsViewModel : PageViewModelBase
     private void DebugGCCollect()
     {
         GC.Collect();
+    }
+
+    [RelayCommand]
+    private async Task DebugExtractImagePromptsToTxt()
+    {
+        // Choose images
+        var provider = App.StorageProvider;
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions { AllowMultiple = true });
+
+        if (files.Count == 0)
+            return;
+
+        var images = await Task.Run(
+            () => files.Select(f => LocalImageFile.FromPath(f.TryGetLocalPath()!)).ToList()
+        );
+
+        var successfulFiles = new List<LocalImageFile>();
+
+        foreach (var localImage in images)
+        {
+            var imageFile = new FilePath(localImage.AbsolutePath);
+
+            // Write a txt with the same name as the image
+            var txtFile = imageFile.WithName(imageFile.NameWithoutExtension + ".txt");
+
+            // Read metadata
+            if (localImage.GenerationParameters?.PositivePrompt is { } positivePrompt)
+            {
+                await File.WriteAllTextAsync(txtFile, positivePrompt);
+
+                successfulFiles.Add(localImage);
+            }
+        }
+
+        notificationService.Show(
+            "Extracted prompts",
+            $"Extracted prompts from {successfulFiles.Count}/{images.Count} images.",
+            NotificationType.Success
+        );
     }
 
     #endregion

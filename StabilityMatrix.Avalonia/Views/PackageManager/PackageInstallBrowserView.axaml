@@ -40,151 +40,151 @@
                             CornerRadius="4"
                             Source="{Binding PreviewImageUri}" />
                         <StackPanel Grid.Column="1" Orientation="Vertical">
-                        <TextBlock Text="{Binding DisplayName}"
-                                   FontWeight="Light"
-                                   Margin="16,0,0,0"
-                                   FontSize="20" />
-                        
-                        <TextBlock Text="{Binding ByAuthor}"
-                                   FontWeight="Light"
-                                   Margin="16,0,0,0"
-                                   FontSize="13" />
+                            <TextBlock Text="{Binding DisplayName}"
+                                       FontWeight="Light"
+                                       Margin="16,0,0,0"
+                                       FontSize="20" />
+                            
+                            <TextBlock Text="{Binding ByAuthor}"
+                                       FontWeight="Light"
+                                       Margin="16,0,0,0"
+                                       FontSize="13" />
 
-                        <TextBlock TextWrapping="Wrap"
-                                   Text="{Binding Blurb}"
-                                   FontWeight="Light"
-                                   Margin="16,8,0,8"
-                                   FontSize="16" />
-                        
-                        <TextBlock TextWrapping="Wrap"
-                                   Text="{Binding Disclaimer}"
-                                   IsVisible="{Binding Disclaimer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                   Foreground="OrangeRed"
-                                   FontWeight="Light"
-                                   Margin="16,-4,0,4"
-                                   FontSize="14" />
+                            <TextBlock TextWrapping="Wrap"
+                                       Text="{Binding Blurb}"
+                                       FontWeight="Light"
+                                       Margin="16,8,0,8"
+                                       FontSize="16" />
+                            
+                            <TextBlock TextWrapping="Wrap"
+                                       Text="{Binding Disclaimer}"
+                                       IsVisible="{Binding Disclaimer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                       Foreground="OrangeRed"
+                                       FontWeight="Light"
+                                       Margin="16,-4,0,4"
+                                       FontSize="14" />
 
-                        <ItemsRepeater Margin="16, 8, 0, 0"
-                                       ItemsSource="{Binding AvailableTorchVersions}">
-                            <ItemsRepeater.Layout>
-                                <StackLayout Orientation="Horizontal" />
-                            </ItemsRepeater.Layout>
-                            <ItemsRepeater.ItemTemplate>
-                                <DataTemplate DataType="{x:Type models:TorchVersion}">
-                                    <controls:Card
-                                        Tag="{Binding }"
-                                        HorizontalAlignment="Left"
-                                        Padding="4"
-                                        Margin="0,0,8,0"
-                                        VerticalAlignment="Top">
+                            <ItemsRepeater Margin="16, 8, 0, 0"
+                                           ItemsSource="{Binding AvailableTorchVersions}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Orientation="Horizontal" />
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type models:TorchVersion}">
+                                        <controls:Card
+                                            Tag="{Binding }"
+                                            HorizontalAlignment="Left"
+                                            Padding="4"
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Top">
 
-                                        <controls:Card.Styles>
-                                            <Style Selector="controls|Card[Tag=Cuda]">
-                                                <Setter Property="Background"
-                                                        Value="{DynamicResource ThemeGreenColorTransparent}" />
-                                                <Setter Property="BorderBrush"
-                                                        Value="{DynamicResource ThemeGreenColorTransparent}" />
-                                                <Style
-                                                    Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                                                    <Setter Property="Foreground"
-                                                            Value="{DynamicResource ButtonForeground}" />
+                                            <controls:Card.Styles>
+                                                <Style Selector="controls|Card[Tag=Cuda]">
+                                                    <Setter Property="Background"
+                                                            Value="{DynamicResource ThemeGreenColorTransparent}" />
+                                                    <Setter Property="BorderBrush"
+                                                            Value="{DynamicResource ThemeGreenColorTransparent}" />
+                                                    <Style
+                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground"
+                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    </Style>
+                                                    <Setter Property="Content">
+                                                        <Template>
+                                                            <TextBlock
+                                                                FontWeight="Medium"
+                                                                HorizontalAlignment="Center"
+                                                                Text="NVIDIA"
+                                                                TextAlignment="Center"
+                                                                VerticalAlignment="Center" />
+                                                        </Template>
+                                                    </Setter>
                                                 </Style>
-                                                <Setter Property="Content">
-                                                    <Template>
-                                                        <TextBlock
-                                                            FontWeight="Medium"
-                                                            HorizontalAlignment="Center"
-                                                            Text="NVIDIA"
-                                                            TextAlignment="Center"
-                                                            VerticalAlignment="Center" />
-                                                    </Template>
-                                                </Setter>
-                                            </Style>
-                                            <Style Selector="controls|Card[Tag=Rocm]">
-                                                <Setter Property="Background"
-                                                        Value="{DynamicResource ThemeDarkRedColor}" />
-                                                <Setter Property="BorderBrush"
-                                                        Value="{DynamicResource ThemeDarkRedColor}" />
-                                                <Style
-                                                    Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                                                    <Setter Property="Foreground"
-                                                            Value="{DynamicResource ButtonForeground}" />
+                                                <Style Selector="controls|Card[Tag=Rocm]">
+                                                    <Setter Property="Background"
+                                                            Value="{DynamicResource ThemeDarkRedColor}" />
+                                                    <Setter Property="BorderBrush"
+                                                            Value="{DynamicResource ThemeDarkRedColor}" />
+                                                    <Style
+                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground"
+                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    </Style>
+                                                    <Setter Property="Content">
+                                                        <Template>
+                                                            <TextBlock
+                                                                FontWeight="Medium"
+                                                                HorizontalAlignment="Center"
+                                                                Text="AMD (Linux)"
+                                                                TextAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                ToolTip.Tip="For AMD GPUs that support ROCm on Linux" />
+                                                        </Template>
+                                                    </Setter>
                                                 </Style>
-                                                <Setter Property="Content">
-                                                    <Template>
-                                                        <TextBlock
-                                                            FontWeight="Medium"
-                                                            HorizontalAlignment="Center"
-                                                            Text="AMD (Linux)"
-                                                            TextAlignment="Center"
-                                                            VerticalAlignment="Center"
-                                                            ToolTip.Tip="For AMD GPUs that support ROCm on Linux" />
-                                                    </Template>
-                                                </Setter>
-                                            </Style>
-                                            <Style Selector="controls|Card[Tag=DirectMl]">
-                                                <Setter Property="Background"
-                                                        Value="{DynamicResource ThemeDarkBlueColor}" />
-                                                <Setter Property="BorderBrush"
-                                                        Value="{DynamicResource ThemeDarkBlueColor}" />
-                                                <Setter Property="Content">
-                                                    <Template>
-                                                        <TextBlock
-                                                            FontWeight="Medium"
-                                                            HorizontalAlignment="Center"
-                                                            Text="DirectML"
-                                                            TextAlignment="Center"
-                                                            VerticalAlignment="Center"
-                                                            ToolTip.Tip="For any DirectX compatible GPU on Windows" />
-                                                    </Template>
-                                                </Setter>
-                                            </Style>
-                                            <Style Selector="controls|Card[Tag=Mps]">
-                                                <Setter Property="Background" Value="White" />
-                                                <Setter Property="BorderBrush" Value="White" />
-                                                <Style
-                                                    Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                                                    <Setter Property="Foreground"
-                                                            Value="{DynamicResource ButtonForeground}" />
+                                                <Style Selector="controls|Card[Tag=DirectMl]">
+                                                    <Setter Property="Background"
+                                                            Value="{DynamicResource ThemeDarkBlueColor}" />
+                                                    <Setter Property="BorderBrush"
+                                                            Value="{DynamicResource ThemeDarkBlueColor}" />
+                                                    <Setter Property="Content">
+                                                        <Template>
+                                                            <TextBlock
+                                                                FontWeight="Medium"
+                                                                HorizontalAlignment="Center"
+                                                                Text="DirectML"
+                                                                TextAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                ToolTip.Tip="For any DirectX compatible GPU on Windows" />
+                                                        </Template>
+                                                    </Setter>
                                                 </Style>
-                                                <Setter Property="Content">
-                                                    <Template>
-                                                        <TextBlock
-                                                            FontWeight="Medium"
-                                                            HorizontalAlignment="Center"
-                                                            Text="macOS"
-                                                            TextAlignment="Center"
-                                                            Foreground="Black"
-                                                            VerticalAlignment="Center" />
-                                                    </Template>
-                                                </Setter>
-                                            </Style>
-                                            <Style Selector="controls|Card[Tag=Cpu]">
-                                                <Setter Property="Background"
-                                                        Value="{DynamicResource ThemeBlueGreyColor}" />
-                                                <Setter Property="BorderBrush"
-                                                        Value="{DynamicResource ThemeBlueGreyColor}" />
-                                                <Style
-                                                    Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                                                    <Setter Property="Foreground"
-                                                            Value="{DynamicResource ButtonForeground}" />
+                                                <Style Selector="controls|Card[Tag=Mps]">
+                                                    <Setter Property="Background" Value="White" />
+                                                    <Setter Property="BorderBrush" Value="White" />
+                                                    <Style
+                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground"
+                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    </Style>
+                                                    <Setter Property="Content">
+                                                        <Template>
+                                                            <TextBlock
+                                                                FontWeight="Medium"
+                                                                HorizontalAlignment="Center"
+                                                                Text="macOS"
+                                                                TextAlignment="Center"
+                                                                Foreground="Black"
+                                                                VerticalAlignment="Center" />
+                                                        </Template>
+                                                    </Setter>
                                                 </Style>
-                                                <Setter Property="Content">
-                                                    <Template>
-                                                        <TextBlock
-                                                            FontWeight="Medium"
-                                                            HorizontalAlignment="Center"
-                                                            Text="CPU"
-                                                            TextAlignment="Center"
-                                                            VerticalAlignment="Center" />
-                                                    </Template>
-                                                </Setter>
-                                            </Style>
-                                        </controls:Card.Styles>
-                                    </controls:Card>
-                                </DataTemplate>
-                            </ItemsRepeater.ItemTemplate>
-                        </ItemsRepeater>
+                                                <Style Selector="controls|Card[Tag=Cpu]">
+                                                    <Setter Property="Background"
+                                                            Value="{DynamicResource ThemeBlueGreyColor}" />
+                                                    <Setter Property="BorderBrush"
+                                                            Value="{DynamicResource ThemeBlueGreyColor}" />
+                                                    <Style
+                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground"
+                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    </Style>
+                                                    <Setter Property="Content">
+                                                        <Template>
+                                                            <TextBlock
+                                                                FontWeight="Medium"
+                                                                HorizontalAlignment="Center"
+                                                                Text="CPU"
+                                                                TextAlignment="Center"
+                                                                VerticalAlignment="Center" />
+                                                        </Template>
+                                                    </Setter>
+                                                </Style>
+                                            </controls:Card.Styles>
+                                        </controls:Card>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
                         
                         </StackPanel>
 

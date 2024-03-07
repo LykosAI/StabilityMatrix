@@ -27,9 +27,17 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,
-        IModelIndexService modelIndexService
+        IModelIndexService modelIndexService,
+        RunningPackageService runningPackageService
     )
-        : base(notificationService, inferenceClientManager, settingsManager, vmFactory, modelIndexService)
+        : base(
+            notificationService,
+            inferenceClientManager,
+            settingsManager,
+            vmFactory,
+            modelIndexService,
+            runningPackageService
+        )
     {
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>();
 
@@ -77,12 +85,12 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         var mainImages = SelectImageCardViewModel.GetInputImages();
 
         var samplerImages = SamplerCardViewModel
-            .ModulesCardViewModel
-            .Cards
-            .OfType<IInputImageProvider>()
+            .ModulesCardViewModel.Cards.OfType<IInputImageProvider>()
             .SelectMany(m => m.GetInputImages());
 
-        var moduleImages = ModulesCardViewModel.Cards.OfType<IInputImageProvider>().SelectMany(m => m.GetInputImages());
+        var moduleImages = ModulesCardViewModel
+            .Cards.OfType<IInputImageProvider>()
+            .SelectMany(m => m.GetInputImages());
 
         return mainImages.Concat(samplerImages).Concat(moduleImages);
     }

@@ -10,4 +10,5 @@ public interface IPackageFactory
     BasePackage? this[string packageName] { get; }
     PackagePair? GetPackagePair(InstalledPackage? installedPackage);
     IEnumerable<BasePackage> GetPackagesByType(PackageType packageType);
+    BasePackage GetNewBasePackage(InstalledPackage installedPackage);
 }

@@ -48,56 +48,6 @@
                 </Style>
             </Grid.Styles>
             
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="0"
-                Margin="4"
-                Text="{x:Static lang:Resources.Label_OutputFolder}" />
-            <ComboBox
-                Grid.Row="1"
-                Grid.Column="0"
-                MinWidth="150"
-                Margin="4,0"
-                VerticalAlignment="Center"
-                ItemsSource="{Binding Categories}"
-                SelectedItem="{Binding SelectedCategory}">
-                <ComboBox.Styles>
-                    <Style Selector="ComboBox /template/ ContentControl#ContentPresenter &gt; StackPanel &gt; TextBlock:nth-child(2)">
-                        <Setter Property="IsVisible" Value="False" />
-                    </Style>
-                </ComboBox.Styles>
-                <ComboBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type models1:PackageOutputCategory}">
-                        <StackPanel>
-                            <TextBlock Margin="0,4,0,4" Text="{Binding Name, Mode=OneWay}" />
-                            <TextBlock Text="{Binding Path, Mode=OneWay}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="1"
-                Margin="4"
-                IsVisible="{Binding CanShowOutputTypes}"
-                Text="{x:Static lang:Resources.Label_OutputType}" />
-            <ComboBox
-                Grid.Row="1"
-                Grid.Column="1"
-                MinWidth="150"
-                Margin="4,0"
-                VerticalAlignment="Center"
-                VerticalContentAlignment="Center"
-                IsVisible="{Binding CanShowOutputTypes}"
-                ItemsSource="{Binding OutputTypes}"
-                SelectedItem="{Binding SelectedOutputType}" />
-
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="2"
-                Margin="4"
-                Text="{x:Static lang:Resources.Action_Search}" />
             <TextBox
                 Grid.Row="1"
                 Grid.Column="2"
@@ -113,8 +63,8 @@
                         <Button Classes="transparent-full"
                                 IsVisible="{Binding SearchQuery.Length}"
                                 Command="{Binding ClearSearchQuery}">
-                                <ui:SymbolIcon Symbol="Cancel" />
-                            </Button>
+                            <ui:SymbolIcon Symbol="Cancel" />
+                        </Button>
                         <ui:SymbolIcon
                             IsVisible="{Binding !SearchQuery.Length}"
                             Margin="0,0,10,0"
@@ -138,21 +88,21 @@
                 VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
                 DefaultLabelPosition="Right">
-                
+
                 <ui:CommandBar.PrimaryCommands>
-                    <ui:CommandBarButton 
+                    <ui:CommandBarButton
                         IsEnabled="{Binding !!NumItemsSelected}"
                         Command="{Binding DeleteAllSelected}"
                         IconSource="Delete" />
                     <ui:CommandBarSeparator />
-                    <ui:CommandBarButton 
+                    <ui:CommandBarButton
                         Command="{Binding SelectAll}"
                         IconSource="SelectAll"
                         IsEnabled="{Binding !IsLoading}"
                         Label="{x:Static lang:Resources.Action_SelectAll}" />
-                    <ui:CommandBarButton 
+                    <ui:CommandBarButton
                         Command="{Binding ClearSelection}"
-                        IconSource="ClearSelection" 
+                        IconSource="ClearSelection"
                         IsEnabled="{Binding !!NumItemsSelected}"
                         Label="{x:Static lang:Resources.Action_ClearSelection}" />
                     <ui:CommandBarSeparator />
@@ -179,6 +129,10 @@
                             </Style>
                         </ui:CommandBarButton.Styles>
                     </ui:CommandBarButton>
+                    <ui:CommandBarToggleButton
+                        IconSource="List"
+                        IsChecked="{Binding ShowFolders}"
+                        Label="Show Folders"/>
                 </ui:CommandBar.PrimaryCommands>
 
                 <ui:CommandBar.SecondaryCommands>
@@ -237,7 +191,8 @@
                                         IconSource="Delete"
                                         Text="{x:Static lang:Resources.Action_Delete}" />
 
-                                    <ui:MenuFlyoutSeparator IsVisible="{Binding ImageFile.GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                    <ui:MenuFlyoutSeparator
+                                        IsVisible="{Binding ImageFile.GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
                                     <ui:MenuFlyoutSubItem
                                         IconSource="Share"

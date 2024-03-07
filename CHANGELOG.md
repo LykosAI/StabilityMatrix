@@ -5,6 +5,13 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.10.0-dev.1
+### Changed
+- Revamped the Packages page to enable running multiple packages at the same time
+- Changed the Outputs Page to use a TreeView for the directory selection instead of a dropdown selector
+### Removed
+- Removed the main Launch page, as it is no longer needed with the new Packages page
+
 ## v2.9.0
 ### Added
 - Added new package: [StableSwarmUI](https://github.com/Stability-AI/StableSwarmUI) by Stability AI

@@ -98,6 +98,19 @@ public static class DesignData
                                 },
                                 LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                                 LastUpdateCheck = DateTimeOffset.Now
+                            },
+                            new()
+                            {
+                                Id = Guid.NewGuid(),
+                                DisplayName = "Running Comfy",
+                                PackageName = "ComfyUI",
+                                Version = new InstalledPackageVersion
+                                {
+                                    InstalledBranch = "master",
+                                    InstalledCommitSha = "abc12uwu345568972abaedf7g7e679a98879e879f87ga8"
+                                },
+                                LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
+                                LastUpdateCheck = DateTimeOffset.Now
                             }
                         },
                         ActiveInstalledPackageId = activePackageId
@@ -507,6 +520,16 @@ public static class DesignData
                     }
                 )
             };
+            vm.Categories =
+            [
+                new PackageOutputCategory
+                {
+                    Name = "Category 1",
+                    Path = "path1",
+                    SubDirectories = [new PackageOutputCategory { Name = "SubCategory 1", Path = "path3" }]
+                },
+                new PackageOutputCategory { Name = "Category 2", Path = "path2" }
+            ];
             return vm;
         }
     }

@@ -196,7 +196,7 @@
     <value>Passos - Refinamento</value>
   </data>
   <data name="Label_CFGScale" xml:space="preserve">
-    <value>Escale de CFG</value>
+    <value>Escala de CFG</value>
   </data>
   <data name="Label_DenoisingStrength" xml:space="preserve">
     <value>Nível de Denoising</value>
@@ -391,7 +391,7 @@
     <value>Pasta de Modelos</value>
   </data>
   <data name="Label_Categories" xml:space="preserve">
-    <value>Catagorias</value>
+    <value>Categorias</value>
   </data>
   <data name="Label_LetsGetStarted" xml:space="preserve">
     <value>Vamos começar!</value>
@@ -409,7 +409,7 @@
     <value>Exibir imagens dos Modelos</value>
   </data>
   <data name="Label_Appearance" xml:space="preserve">
-    <value>Aparencia</value>
+    <value>Aparência</value>
   </data>
   <data name="Label_Theme" xml:space="preserve">
     <value>Tema</value>
@@ -521,6 +521,7 @@
   </data>
   <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
     <value>Escolha sua interface preferida e clique em Instalar para começar</value>
+    <comment>Fuzzy</comment>
   </data>
   <data name="Label_Installing" xml:space="preserve">
     <value>Instalando</value>
@@ -840,7 +841,7 @@
     <comment>The Inference feature page</comment>
   </data>
   <data name="Label_Prompt" xml:space="preserve">
-    <value>Incitar</value>
+    <value>Prompt</value>
     <comment>A settings category for Inference generation prompts</comment>
   </data>
   <data name="Label_OutputImageFiles" xml:space="preserve">
@@ -853,17 +854,17 @@
     <value>Preenchimento automático</value>
   </data>
   <data name="Label_CompletionReplaceUnderscoresWithSpaces" xml:space="preserve">
-    <value>Substitua sublinhados por espaços ao inserir conclusões</value>
+    <value>Substitua caracteres sublinhados por espaços ao inserir conclusões</value>
   </data>
   <data name="Label_PromptTags" xml:space="preserve">
-    <value>Etiquetas de prompt</value>
+    <value>Etiquetas de Prompt</value>
     <comment>Tags for image generation prompts</comment>
   </data>
   <data name="Label_PromptTagsImport" xml:space="preserve">
-    <value>Tags de prompt de importação</value>
+    <value>Importar Tags de Prompt</value>
   </data>
   <data name="Label_PromptTagsDescription" xml:space="preserve">
-    <value>Arquivo de tags a ser usado para sugerir conclusões (suporta o formato .csv a1111-sd-webui-tagcomplete)</value>
+    <value>Arquivo de tags a ser usado para Sugestão de Completions (suporta o formato .csv a1111-sd-webui-tagcomplete)</value>
   </data>
   <data name="Label_SystemInformation" xml:space="preserve">
     <value>Informação do sistema</value>
@@ -872,7 +873,7 @@
     <value>CivitAI</value>
   </data>
   <data name="Label_HuggingFace" xml:space="preserve">
-    <value>Abraçando o rosto</value>
+    <value>Hugging Face</value>
   </data>
   <data name="Label_Addons" xml:space="preserve">
     <value>Complementos</value>
@@ -901,7 +902,7 @@
     <value>Arquivo de imagem não encontrado</value>
   </data>
   <data name="Label_HolidayMode" xml:space="preserve">
-    <value>Modo Férias</value>
+    <value>Modo Feriado</value>
   </data>
   <data name="Label_CLIPSkip" xml:space="preserve">
     <value>Pular CLIPE</value>
@@ -929,5 +930,8 @@
   </data>
   <data name="Label_VideoOutputMethod" xml:space="preserve">
     <value>Método</value>
+  </data>
+  <data name="Label_VideoQuality" xml:space="preserve">
+    <value>Qualidade</value>
   </data>
 </root>

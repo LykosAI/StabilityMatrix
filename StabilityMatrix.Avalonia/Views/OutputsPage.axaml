@@ -23,13 +23,29 @@
     x:DataType="vm:OutputsPageViewModel"
     Focusable="True"
     mc:Ignorable="d">
-    <Grid Margin="16" RowDefinitions="Auto,*">
-        <Grid
-            Grid.Row="0"
-            Margin="0,0,0,16"
-            ColumnDefinitions="Auto,Auto,*,Auto"
-            RowDefinitions="Auto,*">
-            
+    <Grid Margin="16" RowDefinitions="Auto,*"
+          ColumnDefinitions="Auto, *">
+
+        <TreeView Grid.Row="1"
+                  Grid.Column="0"
+                  IsVisible="{Binding ShowFolders}"
+                  Margin="0,0,12,0"
+                  ItemsSource="{Binding Categories}"
+                  SelectedItem="{Binding SelectedCategory}">
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate ItemsSource="{Binding SubDirectories}">
+                    <TextBlock Text="{Binding Name}" />
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+        <Grid Grid.Column="0"
+              Grid.ColumnSpan="2"
+              Grid.Row="0"
+              Margin="0,0,0,16"
+              ColumnDefinitions="Auto,Auto,*,Auto"
+              RowDefinitions="Auto,*">
+
             <Grid.Styles>
                 <Style Selector="TextBox">
                     <Setter Property="MinHeight" Value="40" />
@@ -39,56 +55,6 @@
                 </Style>
             </Grid.Styles>
             
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="0"
-                Margin="4"
-                Text="{x:Static lang:Resources.Label_OutputFolder}" />
-            <ComboBox
-                Grid.Row="1"
-                Grid.Column="0"
-                MinWidth="150"
-                Margin="4,0"
-                VerticalAlignment="Center"
-                ItemsSource="{Binding Categories}"
-                SelectedItem="{Binding SelectedCategory}">
-                <ComboBox.Styles>
-                    <Style Selector="ComboBox /template/ ContentControl#ContentPresenter &gt; StackPanel &gt; TextBlock:nth-child(2)">
-                        <Setter Property="IsVisible" Value="False" />
-                    </Style>
-                </ComboBox.Styles>
-                <ComboBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type models1:PackageOutputCategory}">
-                        <StackPanel>
-                            <TextBlock Margin="0,4,0,4" Text="{Binding Name, Mode=OneWay}" />
-                            <TextBlock Text="{Binding Path, Mode=OneWay}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="1"
-                Margin="4"
-                IsVisible="{Binding CanShowOutputTypes}"
-                Text="{x:Static lang:Resources.Label_OutputType}" />
-            <ComboBox
-                Grid.Row="1"
-                Grid.Column="1"
-                MinWidth="150"
-                Margin="4,0"
-                VerticalAlignment="Center"
-                VerticalContentAlignment="Center"
-                IsVisible="{Binding CanShowOutputTypes}"
-                ItemsSource="{Binding OutputTypes}"
-                SelectedItem="{Binding SelectedOutputType}" />
-
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="2"
-                Margin="4"
-                Text="{x:Static lang:Resources.Action_Search}" />
             <TextBox
                 Grid.Row="1"
                 Grid.Column="2"
@@ -104,8 +70,8 @@
                         <Button Classes="transparent-full"
                                 IsVisible="{Binding SearchQuery.Length}"
                                 Command="{Binding ClearSearchQuery}">
-                                <ui:SymbolIcon Symbol="Cancel" />
-                            </Button>
+                            <ui:SymbolIcon Symbol="Cancel" />
+                        </Button>
                         <ui:SymbolIcon
                             IsVisible="{Binding !SearchQuery.Length}"
                             Margin="0,0,10,0"
@@ -129,27 +95,31 @@
                 VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
                 DefaultLabelPosition="Right">
-                
+
                 <ui:CommandBar.PrimaryCommands>
-                    <ui:CommandBarButton 
+                    <ui:CommandBarButton
                         IsEnabled="{Binding !!NumItemsSelected}"
                         Command="{Binding DeleteAllSelected}"
                         IconSource="Delete" />
                     <ui:CommandBarSeparator />
-                    <ui:CommandBarButton 
+                    <ui:CommandBarButton
                         Command="{Binding SelectAll}"
-                        IconSource="SelectAll" 
+                        IconSource="SelectAll"
                         Label="{x:Static lang:Resources.Action_SelectAll}" />
-                    <ui:CommandBarButton 
+                    <ui:CommandBarButton
                         Command="{Binding ClearSelection}"
-                        IconSource="ClearSelection" 
+                        IconSource="ClearSelection"
                         IsEnabled="{Binding !!NumItemsSelected}"
                         Label="{x:Static lang:Resources.Action_ClearSelection}" />
                     <ui:CommandBarSeparator />
-                    <ui:CommandBarButton 
-                        IconSource="Refresh" 
+                    <ui:CommandBarButton
+                        IconSource="Refresh"
                         Command="{Binding Refresh}"
                         Label="{x:Static lang:Resources.Action_Refresh}" />
+                    <ui:CommandBarToggleButton
+                        IconSource="List"
+                        IsChecked="{Binding ShowFolders}"
+                        Label="Show Folders"/>
                 </ui:CommandBar.PrimaryCommands>
 
                 <ui:CommandBar.SecondaryCommands>
@@ -161,7 +131,8 @@
             </ui:CommandBar>
         </Grid>
 
-        <scroll:BetterScrollViewer Grid.Row="1" PointerWheelChanged="ScrollViewer_MouseWheelChanged">
+        <scroll:BetterScrollViewer Grid.Column="1"
+                                   Grid.Row="1" PointerWheelChanged="ScrollViewer_MouseWheelChanged">
             <ItemsRepeater
                 x:Name="ImageRepeater"
                 VerticalAlignment="Top"
@@ -206,7 +177,8 @@
                                         IconSource="Delete"
                                         Text="{x:Static lang:Resources.Action_Delete}" />
 
-                                    <ui:MenuFlyoutSeparator IsVisible="{Binding ImageFile.GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                    <ui:MenuFlyoutSeparator
+                                        IsVisible="{Binding ImageFile.GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
                                     <ui:MenuFlyoutSubItem
                                         IconSource="Share"

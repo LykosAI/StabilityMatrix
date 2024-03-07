@@ -114,6 +114,9 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         EventManager.Instance.InferenceImageToImageRequested += OnInferenceImageToImageRequested;
         EventManager.Instance.InferenceImageToVideoRequested += OnInferenceImageToVideoRequested;
 
+        // Global requests for custom prompt queueing
+        EventManager.Instance.InferenceQueueCustomPrompt += OnInferenceQueueCustomPromptRequested;
+
         MenuSaveAsCommand.WithConditionalNotificationErrorHandler(notificationService);
         MenuOpenProjectCommand.WithConditionalNotificationErrorHandler(notificationService);
     }
@@ -166,6 +169,34 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                 DisconnectCommand.Execute(null);
             }
         });
+    }
+
+    private void OnInferenceQueueCustomPromptRequested(object? sender, InferenceQueueCustomPromptEventArgs e)
+    {
+        // Get currently selected tab
+        var currentTab = SelectedTab;
+
+        if (currentTab is InferenceGenerationViewModelBase generationViewModel)
+        {
+            Dispatcher
+                .UIThread.InvokeAsync(async () =>
+                {
+                    await generationViewModel.RunCustomGeneration(e);
+                })
+                .SafeFireAndForget(ex =>
+                {
+                    Logger.Error(ex, "Failed to queue prompt");
+
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        notificationService.ShowPersistent(
+                            "Failed to queue prompt",
+                            $"{ex.GetType().Name}: {ex.Message}",
+                            NotificationType.Error
+                        );
+                    });
+                });
+        }
     }
 
     public override void OnLoaded()

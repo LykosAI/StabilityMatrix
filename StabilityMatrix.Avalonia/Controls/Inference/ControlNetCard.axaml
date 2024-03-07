@@ -48,15 +48,34 @@
                                 FontSize="13" />
 
                             <!--  Preprocessor Model  -->
-                            <ui:FAComboBox
+                            <sg:SpacedGrid
                                 Grid.Row="0"
                                 Grid.Column="1"
-                                Margin="0,0,0,4"
-                                SelectedItem="{Binding SelectedPreprocessor}"
-                                ItemsSource="{Binding ClientManager.Preprocessors}"
-                                DisplayMemberBinding="{Binding DisplayName}"
-                                HorizontalAlignment="Stretch"
-                                Header="{x:Static lang:Resources.Label_Preprocessor}"/>
+                                ColumnDefinitions="*,Auto">
+                                <ui:FAComboBox
+                                    Margin="0,0,0,4"
+                                    SelectedItem="{Binding SelectedPreprocessor}"
+                                    ItemsSource="{Binding ClientManager.Preprocessors}"
+                                    DisplayMemberBinding="{Binding DisplayName}"
+                                    HorizontalAlignment="Stretch"
+                                    Header="{x:Static lang:Resources.Label_Preprocessor}"/>
+                                
+                                <Button 
+                                    ToolTip.Tip="{x:Static lang:Resources.Action_PreviewPreprocessor}"
+                                    Padding="7"
+                                    VerticalAlignment="Center"
+                                    Margin="0,23,0,0"
+                                    Command="{Binding PreviewPreprocessorCommand}"
+                                    CommandParameter="{Binding SelectedPreprocessor}"
+                                    Grid.Column="1">
+                                    <fluentIcons:SymbolIcon
+                                        VerticalAlignment="Center"
+                                        FontSize="15"
+                                        IsFilled="True"
+                                        Symbol="Play" />
+                                </Button>
+                            </sg:SpacedGrid>
+
 
                             <!--  ControlNet Model  -->
                             <ui:FAComboBox

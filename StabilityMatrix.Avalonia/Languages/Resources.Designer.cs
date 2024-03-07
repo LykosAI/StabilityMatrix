@@ -393,6 +393,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Preview Preprocessor.
+        /// </summary>
+        public static string Action_PreviewPreprocessor {
+            get {
+                return ResourceManager.GetString("Action_PreviewPreprocessor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Quit.
         /// </summary>
         public static string Action_Quit {

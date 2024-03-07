@@ -259,6 +259,30 @@ public abstract partial class InferenceGenerationViewModelBase
         }
     }
 
+    public async Task RunCustomGeneration(
+        InferenceQueueCustomPromptEventArgs args,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (ClientManager.Client is not { } client)
+        {
+            throw new InvalidOperationException("Client is not connected");
+        }
+
+        var generationArgs = new ImageGenerationEventArgs
+        {
+            Client = client,
+            Nodes = args.Builder.ToNodeDictionary(),
+            OutputNodeNames = args.Builder.Connections.OutputNodeNames.ToArray(),
+            Project = InferenceProjectDocument.FromLoadable(this),
+            FilesToTransfer = args.FilesToTransfer,
+            Parameters = new GenerationParameters(),
+            ClearOutputImages = true
+        };
+
+        await RunGeneration(generationArgs, cancellationToken);
+    }
+
     /// <summary>
     /// Runs a generation task
     /// </summary>

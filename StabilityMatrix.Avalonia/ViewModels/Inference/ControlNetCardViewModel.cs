@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
@@ -10,8 +11,10 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
+using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -98,5 +101,58 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
         {
             confirmDialog.StartDownload();
         }
+    }
+
+    [RelayCommand]
+    private async Task PreviewPreprocessor(ComfyAuxPreprocessor? preprocessor)
+    {
+        if (
+            preprocessor is null
+            || SelectImageCardViewModel.ImageSource is not { } imageSource
+            || SelectImageCardViewModel.IsImageFileNotFound
+        )
+            return;
+
+        var args = new InferenceQueueCustomPromptEventArgs();
+
+        var images = SelectImageCardViewModel.GetInputImages();
+
+        await ClientManager.UploadInputImageAsync(imageSource);
+
+        var image = args.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.LoadImage
+            {
+                Name = args.Nodes.GetUniqueName("Preprocessor_LoadImage"),
+                Image =
+                    SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
+                    ?? throw new ValidationException("No ImageSource")
+            }
+        ).Output1;
+
+        var aioPreprocessor = args.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.AIOPreprocessor
+            {
+                Name = args.Nodes.GetUniqueName("Preprocessor"),
+                Image = image,
+                Preprocessor = preprocessor.ToString(),
+                Resolution = Width is <= 2048 and > 0 ? Width : 512
+            }
+        );
+
+        args.Builder.Connections.OutputNodes.Add(
+            args.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.PreviewImage
+                {
+                    Name = args.Nodes.GetUniqueName("Preprocessor_OutputImage"),
+                    Images = aioPreprocessor.Output
+                }
+            )
+        );
+
+        // Queue
+        Dispatcher.UIThread.Post(() => EventManager.Instance.OnInferenceQueueCustomPrompt(args));
+
+        // We don't know when it's done so wait a bit?
+        await Task.Delay(1000);
     }
 }

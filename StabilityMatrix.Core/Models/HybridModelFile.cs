@@ -20,7 +20,7 @@ public record HybridModelFile
     /// </summary>
     public static HybridModelFile None { get; } = FromRemote("@none");
 
-    private string? RemoteName { get; init; }
+    public string? RemoteName { get; init; }
 
     public LocalModelFile? Local { get; init; }
 

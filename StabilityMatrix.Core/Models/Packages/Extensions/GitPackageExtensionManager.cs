@@ -201,6 +201,31 @@ public abstract partial class GitPackageExtensionManager(IPrerequisiteHelper pre
         return extensions;
     }
 
+    public virtual async Task<InstalledPackageExtension> GetInstalledExtensionInfoAsync(
+        InstalledPackageExtension installedExtension
+    )
+    {
+        if (installedExtension.PrimaryPath is not DirectoryPath extensionDirectory)
+        {
+            return installedExtension;
+        }
+
+        // Get git version
+        var version = await prerequisiteHelper
+            .GetGitRepositoryVersion(extensionDirectory)
+            .ConfigureAwait(false);
+
+        return installedExtension with
+        {
+            Version = new PackageExtensionVersion
+            {
+                Tag = version.Tag,
+                Branch = version.Branch,
+                CommitSha = version.CommitSha
+            }
+        };
+    }
+
     /// <inheritdoc />
     public virtual async Task InstallExtensionAsync(
         PackageExtension extension,

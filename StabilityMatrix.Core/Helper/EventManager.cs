@@ -42,6 +42,7 @@ public class EventManager
     public event EventHandler<LocalImageFile>? InferenceUpscaleRequested;
     public event EventHandler<LocalImageFile>? InferenceImageToImageRequested;
     public event EventHandler<LocalImageFile>? InferenceImageToVideoRequested;
+    public event EventHandler<InferenceQueueCustomPromptEventArgs>? InferenceQueueCustomPrompt;
     public event EventHandler<int>? NavigateAndFindCivitModelRequested;
     public event EventHandler? DownloadsTeachingTipRequested;
     public event EventHandler? RecommendedModelsDialogClosed;
@@ -92,6 +93,9 @@ public class EventManager
 
     public void OnInferenceImageToVideoRequested(LocalImageFile imageFile) =>
         InferenceImageToVideoRequested?.Invoke(this, imageFile);
+
+    public void OnInferenceQueueCustomPrompt(InferenceQueueCustomPromptEventArgs e) =>
+        InferenceQueueCustomPrompt?.Invoke(this, e);
 
     public void OnNavigateAndFindCivitModelRequested(int modelId) =>
         NavigateAndFindCivitModelRequested?.Invoke(this, modelId);

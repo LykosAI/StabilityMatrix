@@ -86,6 +86,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isConsolidating;
 
+    [ObservableProperty]
+    private bool showFolders;
+
     public bool CanShowOutputTypes => SelectedCategory?.Name?.Equals("Shared Output Folder") ?? false;
 
     public string NumImagesSelected =>
@@ -135,6 +138,13 @@ public partial class OutputsPageViewModel : PageViewModelBase
             vm => vm.ImageSize,
             settings => settings.OutputsImageSize,
             delay: TimeSpan.FromMilliseconds(250)
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ShowFolders,
+            settings => settings.IsOutputsTreeViewEnabled,
+            true
         );
     }
 
@@ -273,8 +283,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         var confirmationDialog = new BetterContentDialog
         {
-            Title = "Are you sure you want to delete this image?",
-            Content = "This action cannot be undone.",
+            Title = Resources.Label_AreYouSure,
+            Content = Resources.Label_ActionCannotBeUndone,
             PrimaryButtonText = Resources.Action_Delete,
             SecondaryButtonText = Resources.Action_Cancel,
             DefaultButton = ContentDialogButton.Primary,
@@ -352,8 +362,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
     {
         var confirmationDialog = new BetterContentDialog
         {
-            Title = $"Are you sure you want to delete {NumItemsSelected} images?",
-            Content = "This action cannot be undone.",
+            Title = string.Format(Resources.Label_AreYouSureDeleteImages, NumItemsSelected),
+            Content = Resources.Label_ActionCannotBeUndone,
             PrimaryButtonText = Resources.Action_Delete,
             SecondaryButtonText = Resources.Action_Cancel,
             DefaultButton = ContentDialogButton.Primary,
@@ -559,7 +569,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
                             pair.InstalledPackage.FullPath!,
                             pair.BasePackage.OutputFolderName
                         ),
-                        Name = pair.InstalledPackage.DisplayName ?? ""
+                        Name = pair.InstalledPackage.DisplayName ?? "",
+                        SubDirectories = GetSubfolders(
+                            Path.Combine(pair.InstalledPackage.FullPath!, pair.BasePackage.OutputFolderName)
+                        )
                     }
             )
             .ToList();
@@ -569,18 +582,38 @@ public partial class OutputsPageViewModel : PageViewModelBase
             new PackageOutputCategory
             {
                 Path = settingsManager.ImagesDirectory,
-                Name = "Shared Output Folder"
+                Name = "Shared Output Folder",
+                SubDirectories = GetSubfolders(settingsManager.ImagesDirectory)
             }
-        );
-
-        packageCategories.Insert(
-            1,
-            new PackageOutputCategory { Path = settingsManager.ImagesInferenceDirectory, Name = "Inference" }
         );
 
         Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
 
         SelectedCategory =
             Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name) ?? Categories.First();
+    }
+
+    private ObservableCollection<PackageOutputCategory> GetSubfolders(string strPath)
+    {
+        var subfolders = new ObservableCollection<PackageOutputCategory>();
+
+        if (!Directory.Exists(strPath))
+            return subfolders;
+
+        var directories = Directory.EnumerateDirectories(strPath, "*", SearchOption.TopDirectoryOnly);
+
+        foreach (var dir in directories)
+        {
+            var category = new PackageOutputCategory { Name = Path.GetFileName(dir), Path = dir };
+
+            if (Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly).Length > 0)
+            {
+                category.SubDirectories = GetSubfolders(dir);
+            }
+
+            subfolders.Add(category);
+        }
+
+        return subfolders;
     }
 }

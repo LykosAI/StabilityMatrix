@@ -59,9 +59,10 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> vmFactory,
-        IModelIndexService modelIndexService
+        IModelIndexService modelIndexService,
+        RunningPackageService runningPackageService
     )
-        : base(vmFactory, inferenceClientManager, notificationService, settingsManager)
+        : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
     {
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;

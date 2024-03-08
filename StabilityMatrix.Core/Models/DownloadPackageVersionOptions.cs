@@ -7,4 +7,7 @@ public class DownloadPackageVersionOptions
     public string? VersionTag { get; set; }
     public bool IsLatest { get; set; }
     public bool IsPrerelease { get; set; }
+
+    public string GetReadableVersionString() =>
+        !string.IsNullOrWhiteSpace(VersionTag) ? VersionTag : $"{BranchName}@{CommitHash?[..7]}";
 }

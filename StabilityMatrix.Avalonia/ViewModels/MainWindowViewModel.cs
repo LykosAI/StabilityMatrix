@@ -139,14 +139,6 @@ public partial class MainWindowViewModel : ViewModelBase
                 Content = new NewOneClickInstallDialog { DataContext = viewModel },
             };
 
-            EventManager.Instance.OneClickInstallFinished += (_, skipped) =>
-            {
-                if (skipped)
-                    return;
-
-                EventManager.Instance.OnTeachingTooltipNeeded();
-            };
-
             var firstDialogResult = await dialog.ShowAsync(App.TopLevel);
 
             if (firstDialogResult != ContentDialogResult.Primary)

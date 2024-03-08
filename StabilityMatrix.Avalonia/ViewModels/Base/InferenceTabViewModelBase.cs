@@ -98,11 +98,7 @@ public abstract partial class InferenceTabViewModelBase
     protected async Task<ViewState> SaveViewState()
     {
         var eventArgs = new SaveViewStateEventArgs();
-        saveViewStateRequestedEventManager?.RaiseEvent(
-            this,
-            eventArgs,
-            nameof(SaveViewStateRequested)
-        );
+        saveViewStateRequestedEventManager?.RaiseEvent(this, eventArgs, nameof(SaveViewStateRequested));
 
         if (eventArgs.StateTask is not { } stateTask)
         {
@@ -128,7 +124,7 @@ public abstract partial class InferenceTabViewModelBase
         // TODO: Dock reset not working, using this hack for now to get a new view
 
         var navService = App.Services.GetRequiredService<INavigationService<MainWindowViewModel>>();
-        navService.NavigateTo<LaunchPageViewModel>(new SuppressNavigationTransitionInfo());
+        navService.NavigateTo<NewPackageManagerViewModel>(new SuppressNavigationTransitionInfo());
         ((IPersistentViewProvider)this).AttachedPersistentView = null;
         navService.NavigateTo<InferenceViewModel>(new BetterEntranceNavigationTransition());
     }
@@ -157,9 +153,7 @@ public abstract partial class InferenceTabViewModelBase
 
         if (result == ContentDialogResult.Primary && textFields[0].Text is { } json)
         {
-            LoadViewState(
-                new LoadViewStateEventArgs { State = new ViewState { DockLayout = json } }
-            );
+            LoadViewState(new LoadViewStateEventArgs { State = new ViewState { DockLayout = json } });
         }
     }
 
@@ -226,9 +220,7 @@ public abstract partial class InferenceTabViewModelBase
 
             if (this is IParametersLoadableState paramsLoadableVm)
             {
-                Dispatcher.UIThread.Invoke(
-                    () => paramsLoadableVm.LoadStateFromParameters(parameters)
-                );
+                Dispatcher.UIThread.Invoke(() => paramsLoadableVm.LoadStateFromParameters(parameters));
             }
             else
             {

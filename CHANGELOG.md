@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.10.0-dev.2
+### Changed
+- Revisited the way images are loaded on the outputs page, with improvements to loading speed & not freezing the UI while loading
+### Fixed
+- Fixed Outputs page not remembering where the user last was in the TreeView in certain circumstances
+
 ## v2.10.0-dev.1
 ### Changed
 - Revamped the Packages page to enable running multiple packages at the same time

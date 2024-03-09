@@ -2,15 +2,12 @@
     x:Class="StabilityMatrix.Avalonia.Views.OutputsPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-    xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentAvalonia="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:models1="clr-namespace:StabilityMatrix.Avalonia.Models"
     xmlns:outputsPage="clr-namespace:StabilityMatrix.Avalonia.ViewModels.OutputsPage"
     xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
     xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
@@ -34,7 +31,11 @@
                   SelectedItem="{Binding SelectedCategory}">
             <TreeView.ItemTemplate>
                 <TreeDataTemplate ItemsSource="{Binding SubDirectories}">
-                    <TextBlock Text="{Binding Name}" />
+                    <TextBlock Text="{Binding Name}"
+                               MaxWidth="250"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip.Tip="{Binding Name}"/>
                 </TreeDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
@@ -81,13 +82,6 @@
                 </TextBox.InnerRightContent>
             </TextBox>
 
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="3"
-                Margin="4"
-                IsVisible="{Binding !!NumItemsSelected}"
-                Text="{Binding NumImagesSelected}" />
-
             <ui:CommandBar
                 Grid.Row="1"
                 Grid.Column="3"
@@ -97,8 +91,13 @@
                 DefaultLabelPosition="Right">
 
                 <ui:CommandBar.PrimaryCommands>
+                    <ui:CommandBarElementContainer>
+                        <TextBlock Text="{Binding NumImagesSelected}"
+                                   IsVisible="{Binding NumItemsSelected}"
+                                   VerticalAlignment="Center"/>
+                    </ui:CommandBarElementContainer>
                     <ui:CommandBarButton
-                        IsEnabled="{Binding !!NumItemsSelected}"
+                        IsEnabled="{Binding NumItemsSelected}"
                         Command="{Binding DeleteAllSelected}"
                         IconSource="Delete" />
                     <ui:CommandBarSeparator />
@@ -110,7 +109,7 @@
                     <ui:CommandBarButton
                         Command="{Binding ClearSelection}"
                         IconSource="ClearSelection"
-                        IsEnabled="{Binding !!NumItemsSelected}"
+                        IsEnabled="{Binding NumItemsSelected}"
                         Label="{x:Static lang:Resources.Action_ClearSelection}" />
                     <ui:CommandBarSeparator />
                     <ui:CommandBarButton
@@ -150,12 +149,22 @@
                 </ui:CommandBar.SecondaryCommands>
             </ui:CommandBar>
         </Grid>
+        
+        <controls:ProgressRing Grid.Row="1"
+                               Grid.Column="1"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Width="200"
+                               Height="200"
+                               IsIndeterminate="True"
+                               IsVisible="{Binding IsChangingCategory}"/>
 
         <scroll:BetterScrollViewer Grid.Column="1"
                                    Grid.Row="1" PointerWheelChanged="ScrollViewer_MouseWheelChanged">
             <ItemsRepeater
                 x:Name="ImageRepeater"
                 VerticalAlignment="Top"
+                HorizontalAlignment="Center"
                 ItemsSource="{Binding Outputs}">
                 <ItemsRepeater.Layout>
                     <UniformGridLayout MinColumnSpacing="8" MinRowSpacing="8" />

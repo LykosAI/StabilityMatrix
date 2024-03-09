@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,19 +51,21 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private readonly INotificationService notificationService;
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly ILogger<OutputsPageViewModel> logger;
+    private readonly List<CancellationTokenSource> cancellationTokenSources = [];
+
     public override string Title => Resources.Label_OutputsPageTitle;
 
     public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Grid, IsFilled = true };
 
     public SourceCache<LocalImageFile, string> OutputsCache { get; } = new(file => file.AbsolutePath);
 
+    private SourceCache<PackageOutputCategory, string> categoriesCache = new(category => category.Path);
+
     public IObservableCollection<OutputImageViewModel> Outputs { get; set; } =
         new ObservableCollectionExtended<OutputImageViewModel>();
 
-    public IEnumerable<SharedOutputType> OutputTypes { get; } = Enum.GetValues<SharedOutputType>();
-
-    [ObservableProperty]
-    private ObservableCollection<PackageOutputCategory> categories;
+    public IObservableCollection<PackageOutputCategory> Categories { get; set; } =
+        new ObservableCollectionExtended<PackageOutputCategory>();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanShowOutputTypes))]
@@ -93,6 +93,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
     [ObservableProperty]
     private bool showFolders;
 
+    [ObservableProperty]
+    private bool isChangingCategory;
+
     public bool CanShowOutputTypes => SelectedCategory?.Name?.Equals("Shared Output Folder") ?? false;
 
     public string NumImagesSelected =>
@@ -103,7 +106,6 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private string[] allowedExtensions = [".png", ".webp"];
 
     private PackageOutputCategory? lastOutputCategory;
-    private CancellationTokenSource getOutputsTokenSource = new();
 
     public OutputsPageViewModel(
         ISettingsManager settingsManager,
@@ -145,6 +147,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 NumItemsSelected = Outputs.Count(o => o.IsSelected);
             });
 
+        categoriesCache.Connect().DeferUntilLoaded().Bind(Categories).Subscribe();
+
         settingsManager.RelayPropertyFor(
             this,
             vm => vm.ImageSize,
@@ -162,26 +166,23 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     protected override void OnInitialLoaded()
     {
-        RefreshCategories();
-    }
-
-    public override void OnLoaded()
-    {
         if (Design.IsDesignMode)
             return;
 
         if (!settingsManager.IsLibraryDirSet)
             return;
 
-        base.OnLoaded();
-
         Directory.CreateDirectory(settingsManager.ImagesDirectory);
+
+        RefreshCategories();
 
         SelectedCategory ??= Categories.First();
         SelectedOutputType ??= SharedOutputType.All;
         SearchQuery = string.Empty;
         ImageSize = settingsManager.Settings.OutputsImageSize;
         lastOutputCategory = SelectedCategory;
+
+        IsChangingCategory = true;
 
         var path =
             CanShowOutputTypes && SelectedOutputType != SharedOutputType.All
@@ -287,7 +288,12 @@ public partial class OutputsPageViewModel : PageViewModelBase
     public void Refresh()
     {
         Dispatcher.UIThread.Post(RefreshCategories);
-        OnLoaded();
+
+        var path =
+            CanShowOutputTypes && SelectedOutputType != SharedOutputType.All
+                ? Path.Combine(SelectedCategory.Path, SelectedOutputType.ToString())
+                : SelectedCategory.Path;
+        GetOutputs(path);
     }
 
     public async Task DeleteImage(OutputImageViewModel? item)
@@ -515,7 +521,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             }
         }
 
-        OnLoaded();
+        Refresh();
         IsConsolidating = false;
     }
 
@@ -544,35 +550,55 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (lastOutputCategory?.Path.Equals(directory) is not true)
         {
             OutputsCache.Clear();
+            IsChangingCategory = true;
         }
-
-        getOutputsTokenSource.Cancel();
-        getOutputsTokenSource = new CancellationTokenSource();
 
         IsLoading = true;
 
-        Task.Run(
-            () =>
+        cancellationTokenSources.ForEach(cts => cts.Cancel());
+
+        Task.Run(() =>
+        {
+            var getOutputsTokenSource = new CancellationTokenSource();
+            cancellationTokenSources.Add(getOutputsTokenSource);
+
+            if (getOutputsTokenSource.IsCancellationRequested)
             {
-                var sw = Stopwatch.StartNew();
-                var files = Directory
-                    .EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
-                    .Where(file => allowedExtensions.Contains(new FilePath(file).Extension))
-                    .Select(file => LocalImageFile.FromPath(file));
+                cancellationTokenSources.Remove(getOutputsTokenSource);
+                return;
+            }
+
+            var files = Directory
+                .EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
+                .Where(file => allowedExtensions.Contains(new FilePath(file).Extension))
+                .Select(file => LocalImageFile.FromPath(file))
+                .ToList();
+
+            if (getOutputsTokenSource.IsCancellationRequested)
+            {
+                cancellationTokenSources.Remove(getOutputsTokenSource);
+                return;
+            }
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (files.Count == 0 && OutputsCache.Count == 0)
+                {
+                    IsLoading = false;
+                    IsChangingCategory = false;
+                    return;
+                }
 
                 OutputsCache.EditDiff(
                     files,
                     (oldItem, newItem) => oldItem.AbsolutePath == newItem.AbsolutePath
                 );
 
-                sw.Stop();
-                Console.WriteLine(
-                    $"Finished with {OutputsCache.Count} files, took {sw.Elapsed.TotalMilliseconds}ms"
-                );
-                Dispatcher.UIThread.Post(() => IsLoading = false);
-            },
-            getOutputsTokenSource.Token
-        );
+                IsLoading = false;
+                IsChangingCategory = false;
+            });
+            cancellationTokenSources.Remove(getOutputsTokenSource);
+        });
     }
 
     private void RefreshCategories()
@@ -619,10 +645,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
             }
         );
 
-        Categories = new ObservableCollection<PackageOutputCategory>(packageCategories);
+        categoriesCache.EditDiff(packageCategories, (a, b) => a.Path == b.Path);
 
-        SelectedCategory =
-            Categories.FirstOrDefault(x => x.Name == previouslySelectedCategory?.Name) ?? Categories.First();
+        SelectedCategory = previouslySelectedCategory ?? Categories.First();
     }
 
     private ObservableCollection<PackageOutputCategory> GetSubfolders(string strPath)

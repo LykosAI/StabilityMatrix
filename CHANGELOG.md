@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Outputs page not remembering where the user last was in the TreeView in certain circumstances
 
 ## v2.10.0-dev.1
+### Added
+- Inference ControlNet module now supports over 42 preprocessors, a new button next to the preprocessors dropdown allows previewing the output of the selected preprocessor on the image.
+- Added resolution selection for Inference ControlNet module, this controls preprocessor resolution too.
 ### Changed
 - Revamped the Packages page to enable running multiple packages at the same time
 - Changed the Outputs Page to use a TreeView for the directory selection instead of a dropdown selector

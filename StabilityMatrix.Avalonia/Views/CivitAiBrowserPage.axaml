@@ -15,6 +15,7 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+    xmlns:controls1="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     d:DataContext="{x:Static designData:DesignData.CivitAiBrowserViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
@@ -100,7 +101,7 @@
                     CommandParameter="{Binding CivitModel}"
                     IsEnabled="{Binding !IsImporting}">
                     <Grid RowDefinitions="*, Auto">
-                        <controls:BetterAdvancedImage Grid.Row="0"
+                        <controls1:AsyncImage Grid.Row="0"
                                                       CornerRadius="8"
                                                       VerticalAlignment="Top"
                                                       HorizontalAlignment="Center"
@@ -112,16 +113,15 @@
                             <!-- <controls:BetterAdvancedImage.RenderTransform> -->
                             <!--     <RotateTransform Angle="315"></RotateTransform> -->
                             <!-- </controls:BetterAdvancedImage.RenderTransform> -->
-                        </controls:BetterAdvancedImage>
-                        <controls:BetterAdvancedImage
+                        </controls1:AsyncImage>
+                        <controls1:AsyncImage
                             Grid.Row="0"
                             Grid.RowSpan="2"
                             CornerRadius="8"
                             Width="330"
                             Height="400"
                             Source="{Binding CardImage}"
-                            Stretch="UniformToFill"
-                            StretchDirection="Both"/>
+                            Stretch="UniformToFill"/>
 
                         <StackPanel
                             Grid.Row="0"
@@ -180,7 +180,7 @@
                                 Classes="transparent"
                                 Padding="10,4">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <controls:BetterAdvancedImage
+                                    <controls1:AsyncImage
                                         Width="22"
                                         Height="22"
                                         Effect="{StaticResource ImageDropShadowEffect}"

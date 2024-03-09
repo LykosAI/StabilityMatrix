@@ -520,16 +520,16 @@ public static class DesignData
                     }
                 )
             };
-            vm.Categories =
-            [
-                new PackageOutputCategory
+            vm.Categories = new ObservableCollectionExtended<PackageOutputCategory>
+            {
+                new()
                 {
                     Name = "Category 1",
                     Path = "path1",
                     SubDirectories = [new PackageOutputCategory { Name = "SubCategory 1", Path = "path3" }]
                 },
-                new PackageOutputCategory { Name = "Category 2", Path = "path2" }
-            ];
+                new() { Name = "Category 2", Path = "path2" }
+            };
             return vm;
         }
     }

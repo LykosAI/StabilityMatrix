@@ -857,6 +857,13 @@ public class ComfyNodeBuilder
                 ?? throw new NullReferenceException("No Refiner or Base Conditioning");
         }
 
+        public ConditioningConnections GetRefinerOrBasePrimarySamplerConditioning()
+        {
+            return Refiner.PrimarySamplerConditioning
+                ?? Base.PrimarySamplerConditioning
+                ?? throw new NullReferenceException("No Refiner or Base PrimarySampler Conditioning");
+        }
+
         public VAENodeConnection GetDefaultVAE()
         {
             return PrimaryVAE ?? Refiner.VAE ?? Base.VAE ?? throw new NullReferenceException("No VAE");

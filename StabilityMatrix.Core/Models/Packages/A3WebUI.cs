@@ -97,6 +97,13 @@ public class A3WebUI(
                 DefaultValue = "7860",
                 Options = ["--port"]
             },
+            new LaunchOptionDefinition
+            {
+                Name = "Share",
+                Type = LaunchOptionType.Bool,
+                Description = "Set whether to share on Gradio",
+                Options = { "--share" }
+            },
             new()
             {
                 Name = "VRAM",

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Versioning;
@@ -43,6 +45,18 @@ public class UnixPrerequisiteHelper(
     private string NpmPath => Path.Combine(NodeDir, "bin", "npm");
     private bool IsNodeInstalled => File.Exists(NpmPath);
 
+    private DirectoryPath DotnetDir => AssetsDir.JoinDir("dotnet");
+    private string DotnetPath => Path.Combine(DotnetDir, "dotnet");
+    private bool IsDotnetInstalled => File.Exists(DotnetPath);
+    private string Dotnet7DownloadUrlMacOs =>
+        "https://download.visualstudio.microsoft.com/download/pr/5bb0e0e4-2a8d-4aba-88ad-232e1f65c281/ee6d35f762d81965b4cf336edde1b318/dotnet-sdk-7.0.405-osx-arm64.tar.gz";
+    private string Dotnet8DownloadUrlMacOs =>
+        "https://download.visualstudio.microsoft.com/download/pr/ef083c06-7aee-4a4f-b18b-50c9a8990753/e206864e7910e81bbd9cb7e674ff1b4c/dotnet-sdk-8.0.101-osx-arm64.tar.gz";
+    private string Dotnet7DownloadUrlLinux =>
+        "https://download.visualstudio.microsoft.com/download/pr/5202b091-2406-445c-b40a-68a5b97c882b/b509f2a7a0eb61aea145b990b40b6d5b/dotnet-sdk-7.0.405-linux-x64.tar.gz";
+    private string Dotnet8DownloadUrlLinux =>
+        "https://download.visualstudio.microsoft.com/download/pr/9454f7dc-b98e-4a64-a96d-4eb08c7b6e66/da76f9c6bc4276332b587b771243ae34/dotnet-sdk-8.0.101-linux-x64.tar.gz";
+
     // Cached store of whether or not git is installed
     private bool? isGitInstalled;
 
@@ -77,6 +91,28 @@ public class UnixPrerequisiteHelper(
         if (prerequisites.Contains(PackagePrerequisite.Node))
         {
             await InstallNodeIfNecessary(progress);
+        }
+
+        if (prerequisites.Contains(PackagePrerequisite.Dotnet))
+        {
+            await InstallDotnetIfNecessary(progress);
+        }
+    }
+
+    public async Task InstallDotnetIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (IsDotnetInstalled)
+            return;
+
+        if (Compat.IsMacOS)
+        {
+            await DownloadAndExtractPrerequisite(progress, Dotnet7DownloadUrlMacOs, DotnetDir);
+            await DownloadAndExtractPrerequisite(progress, Dotnet8DownloadUrlMacOs, DotnetDir);
+        }
+        else
+        {
+            await DownloadAndExtractPrerequisite(progress, Dotnet7DownloadUrlLinux, DotnetDir);
+            await DownloadAndExtractPrerequisite(progress, Dotnet8DownloadUrlLinux, DotnetDir);
         }
     }
 
@@ -276,6 +312,7 @@ public class UnixPrerequisiteHelper(
         return ProcessRunner.RunBashCommand(args.Prepend("git").ToArray(), workingDirectory ?? "");
     }
 
+    [Localizable(false)]
     [SupportedOSPlatform("Linux")]
     [SupportedOSPlatform("macOS")]
     public async Task RunNpm(
@@ -285,27 +322,73 @@ public class UnixPrerequisiteHelper(
         IReadOnlyDictionary<string, string>? envVars = null
     )
     {
-        var command = args.Prepend([NpmPath]);
+        var process = ProcessRunner.StartAnsiProcess(
+            NpmPath,
+            args,
+            workingDirectory,
+            onProcessOutput,
+            envVars
+        );
 
-        var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "", envVars);
-        if (result.ExitCode != 0)
-        {
-            Logger.Error(
-                "npm command [{Command}] failed with exit code " + "{ExitCode}:\n{StdOut}\n{StdErr}",
-                command,
-                result.ExitCode,
-                result.StandardOutput,
-                result.StandardError
-            );
+        await process.WaitForExitAsync();
 
-            throw new ProcessException(
-                $"npm command [{command}] failed with exit code"
-                    + $" {result.ExitCode}:\n{result.StandardOutput}\n{result.StandardError}"
-            );
-        }
+        if (process.ExitCode == 0)
+            return;
 
-        onProcessOutput?.Invoke(ProcessOutput.FromStdOutLine(result.StandardOutput));
-        onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
+        var stdOut = await process.StandardOutput.ReadToEndAsync();
+        var stdErr = await process.StandardError.ReadToEndAsync();
+
+        Logger.Error(
+            "RunNpm with args [{Args}] failed with exit code " + "{ExitCode}:\n{StdOut}\n{StdErr}",
+            args,
+            process.ExitCode,
+            stdOut,
+            stdErr
+        );
+
+        throw new ProcessException(
+            $"RunNpm with args [{args}] failed with exit code" + $" {process.ExitCode}:\n{stdOut}\n{stdErr}"
+        );
+    }
+
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
+    public async Task<Process> RunDotnet(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null,
+        bool waitForExit = true
+    )
+    {
+        var process = ProcessRunner.StartAnsiProcess(
+            DotnetPath,
+            args,
+            workingDirectory,
+            onProcessOutput,
+            envVars
+        );
+
+        if (!waitForExit)
+            return process;
+
+        await process.WaitForExitAsync();
+
+        if (process.ExitCode == 0)
+            return process;
+
+        Logger.Error(
+            "dotnet8 with args [{Args}] failed with exit code " + "{ExitCode}:\n{StdOut}\n{StdErr}",
+            args,
+            process.ExitCode,
+            process.StandardOutput,
+            process.StandardError
+        );
+
+        throw new ProcessException(
+            $"dotnet8 with args [{args}] failed with exit code"
+                + $" {process.ExitCode}:\n{process.StandardOutput}\n{process.StandardError}"
+        );
     }
 
     [SupportedOSPlatform("Linux")]
@@ -351,6 +434,40 @@ public class UnixPrerequisiteHelper(
         );
 
         File.Delete(nodeDownloadPath);
+    }
+
+    private async Task DownloadAndExtractPrerequisite(
+        IProgress<ProgressReport>? progress,
+        string downloadUrl,
+        string extractPath
+    )
+    {
+        Logger.Info($"Downloading {downloadUrl}");
+
+        var downloadPath = AssetsDir.JoinFile(Path.GetFileName(downloadUrl));
+
+        await downloadService.DownloadToFileAsync(downloadUrl, downloadPath, progress: progress);
+
+        Logger.Info("Installing prereq");
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing prerequisites..."
+            )
+        );
+
+        Directory.CreateDirectory(extractPath);
+
+        // unzip
+        await ArchiveHelper.Extract7ZAuto(downloadPath, extractPath);
+
+        progress?.Report(
+            new ProgressReport(progress: 1f, message: "Node install complete", type: ProgressType.Generic)
+        );
+
+        File.Delete(downloadPath);
     }
 
     [UnsupportedOSPlatform("Linux")]

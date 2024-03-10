@@ -47,6 +47,16 @@ public class TrackedDownload
 
     public string? ExpectedHashSha256 { get; set; }
 
+    /// <summary>
+    /// Whether to auto-extract the archive after download
+    /// </summary>
+    public bool AutoExtractArchive { get; set; }
+
+    /// <summary>
+    /// Optional relative path to extract the archive to, if AutoExtractArchive is true
+    /// </summary>
+    public string? ExtractRelativePath { get; set; }
+
     [JsonIgnore]
     [MemberNotNullWhen(true, nameof(ExpectedHashSha256))]
     public bool ValidateHash => ExpectedHashSha256 is not null;
@@ -114,13 +124,17 @@ public class TrackedDownload
     {
         var progress = new Progress<ProgressReport>(OnProgressUpdate);
 
-        await downloadService!.ResumeDownloadToFileAsync(
-            SourceUrl.ToString(),
-            DownloadDirectory.JoinFile(TempFileName),
-            resumeFromByte,
-            progress,
-            cancellationToken: cancellationToken
-        );
+        DownloadDirectory.Create();
+
+        await downloadService!
+            .ResumeDownloadToFileAsync(
+                SourceUrl.ToString(),
+                DownloadDirectory.JoinFile(TempFileName),
+                resumeFromByte,
+                progress,
+                cancellationToken: cancellationToken
+            )
+            .ConfigureAwait(false);
 
         // If hash validation is enabled, validate the hash
         if (ValidateHash)
@@ -135,6 +149,26 @@ public class TrackedDownload
                     $"Hash validation for {FileName} failed, expected {ExpectedHashSha256} but got {hash}"
                 );
             }
+        }
+
+        // Rename the temp file to the final file
+        var tempFile = DownloadDirectory.JoinFile(TempFileName);
+        var finalFile = tempFile.Rename(FileName);
+
+        // If auto-extract is enabled, extract the archive
+        if (AutoExtractArchive)
+        {
+            OnProgressUpdate(new ProgressReport(0, isIndeterminate: true, type: ProgressType.Extract));
+
+            var extractDirectory = string.IsNullOrWhiteSpace(ExtractRelativePath)
+                ? DownloadDirectory
+                : DownloadDirectory.JoinDir(ExtractRelativePath);
+
+            extractDirectory.Create();
+
+            await ArchiveHelper
+                .Extract7Z(finalFile, extractDirectory, new Progress<ProgressReport>(OnProgressUpdate))
+                .ConfigureAwait(false);
         }
     }
 
@@ -317,6 +351,8 @@ public class TrackedDownload
                 return;
             }
 
+            Logger.Warn(Exception, "Download {Download} failed", FileName);
+
             OnProgressStateChanging(ProgressState.Failed);
             ProgressState = ProgressState.Failed;
         }
@@ -332,12 +368,6 @@ public class TrackedDownload
         {
             DoCleanup();
         }
-        else if (ProgressState == ProgressState.Success)
-        {
-            // Move the temp file to the final file
-            DownloadDirectory.JoinFile(TempFileName).MoveTo(DownloadDirectory.JoinFile(FileName));
-        }
-
         // For pause, just do nothing
 
         OnProgressStateChanged(ProgressState);

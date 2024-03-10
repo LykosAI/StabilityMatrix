@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 using Polly.Contrib.WaitAndRetry;
 using StabilityMatrix.Core.Attributes;
@@ -184,6 +185,10 @@ public class DownloadService : IDownloadService
                     throw new UnauthorizedAccessException();
                 }
             }
+            else if (noRedirectResponse.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                throw new UnauthorizedAccessException();
+            }
 
             using var redirectRequest = new HttpRequestMessage();
             redirectRequest.Method = HttpMethod.Get;
@@ -326,7 +331,7 @@ public class DownloadService : IDownloadService
         if (url.Host.Equals("civitai.com", StringComparison.OrdinalIgnoreCase))
         {
             // Add auth if we have it
-            if (await secretsManager.LoadAsync().ConfigureAwait(false) is { CivitApi: { } civitApi })
+            if (await secretsManager.SafeLoadAsync().ConfigureAwait(false) is { CivitApi: { } civitApi })
             {
                 logger.LogTrace(
                     "Adding Civit auth header {Signature} for download {Url}",

@@ -6,10 +6,13 @@ using NLog;
 using Polly.Contrib.WaitAndRetry;
 using Refit;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using Websocket.Client;
@@ -26,8 +29,16 @@ public class ComfyClient : InferenceClientBase
     private readonly IComfyApi comfyApi;
     private bool isDisposed;
 
-    private JsonSerializerOptions jsonSerializerOptions =
-        new() { PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower, };
+    private readonly JsonSerializerOptions jsonSerializerOptions =
+        new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicies.SnakeCaseLower,
+            Converters =
+            {
+                new NodeConnectionBaseJsonConverter(),
+                new OneOfJsonConverter<string, StringNodeConnection>()
+            }
+        };
 
     // ReSharper disable once MemberCanBePrivate.Global
     public string ClientId { get; } = Guid.NewGuid().ToString();
@@ -35,14 +46,24 @@ public class ComfyClient : InferenceClientBase
     public Uri BaseAddress { get; }
 
     /// <summary>
-    /// Optional local path to output images.
+    /// If available, the local path to the server root directory.
     /// </summary>
-    public DirectoryPath? OutputImagesDir { get; set; }
+    public DirectoryPath? LocalServerPath { get; set; }
 
     /// <summary>
-    /// Optional local path to input images.
+    /// If available, the local server package pair
     /// </summary>
-    public DirectoryPath? InputImagesDir { get; set; }
+    public PackagePair? LocalServerPackage { get; set; }
+
+    /// <summary>
+    /// Path to the "output" folder from LocalServerPath
+    /// </summary>
+    public DirectoryPath? OutputImagesDir => LocalServerPath?.JoinDir("output");
+
+    /// <summary>
+    /// Path to the "input" folder from LocalServerPath
+    /// </summary>
+    public DirectoryPath? InputImagesDir => LocalServerPath?.JoinDir("input");
 
     /// <summary>
     /// Dictionary of ongoing prompt execution tasks
@@ -76,7 +97,13 @@ public class ComfyClient : InferenceClientBase
 
     public ComfyClient(IApiFactory apiFactory, Uri baseAddress)
     {
-        comfyApi = apiFactory.CreateRefitClient<IComfyApi>(baseAddress);
+        comfyApi = apiFactory.CreateRefitClient<IComfyApi>(
+            baseAddress,
+            new RefitSettings
+            {
+                ContentSerializer = new SystemTextJsonContentSerializer(jsonSerializerOptions),
+            }
+        );
         BaseAddress = baseAddress;
 
         // Setup websocket client
@@ -144,9 +171,7 @@ public class ComfyClient : InferenceClientBase
 
         if (json.Type == ComfyWebSocketResponseType.Executing)
         {
-            var executingData = json.GetDataAsType<ComfyWebSocketExecutingData>(
-                jsonSerializerOptions
-            );
+            var executingData = json.GetDataAsType<ComfyWebSocketExecutingData>(jsonSerializerOptions);
             if (executingData?.PromptId is null)
             {
                 Logger.Warn($"Could not parse executing data {json.Data}, skipping");
@@ -165,9 +190,7 @@ public class ComfyClient : InferenceClientBase
                 }
                 else
                 {
-                    Logger.Warn(
-                        $"Could not find task for prompt {executingData.PromptId}, skipping"
-                    );
+                    Logger.Warn($"Could not find task for prompt {executingData.PromptId}, skipping");
                 }
             }
             // Otherwise set the task's active node to the one received
@@ -194,9 +217,7 @@ public class ComfyClient : InferenceClientBase
         }
         else if (json.Type == ComfyWebSocketResponseType.Progress)
         {
-            var progressData = json.GetDataAsType<ComfyWebSocketProgressData>(
-                jsonSerializerOptions
-            );
+            var progressData = json.GetDataAsType<ComfyWebSocketProgressData>(jsonSerializerOptions);
             if (progressData is null)
             {
                 Logger.Warn($"Could not parse progress data {json.Data}, skipping");
@@ -224,11 +245,7 @@ public class ComfyClient : InferenceClientBase
             {
                 task.RunningNode = null;
                 task.SetException(
-                    new ComfyNodeException
-                    {
-                        ErrorData = errorData,
-                        JsonData = json.Data.ToString()
-                    }
+                    new ComfyNodeException { ErrorData = errorData, JsonData = json.Data.ToString() }
                 );
                 currentPromptTask = null;
             }
@@ -306,9 +323,7 @@ public class ComfyClient : InferenceClientBase
 
     public override async Task CloseAsync(CancellationToken cancellationToken = default)
     {
-        await webSocketClient
-            .Stop(WebSocketCloseStatus.NormalClosure, string.Empty)
-            .ConfigureAwait(false);
+        await webSocketClient.Stop(WebSocketCloseStatus.NormalClosure, string.Empty).ConfigureAwait(false);
     }
 
     public async Task<ComfyTask> QueuePromptAsync(
@@ -349,13 +364,39 @@ public class ComfyClient : InferenceClientBase
     )
     {
         var streamPart = new StreamPart(image, fileName);
-        return comfyApi.PostUploadImage(
-            streamPart,
-            "true",
-            "input",
-            "Inference",
-            cancellationToken
-        );
+        return comfyApi.PostUploadImage(streamPart, "true", "input", "Inference", cancellationToken);
+    }
+
+    /// <summary>
+    /// Upload a file to the server at the given relative path from server's root
+    /// </summary>
+    public async Task UploadFileAsync(
+        string sourcePath,
+        string destinationRelativePath,
+        CancellationToken cancellationToken = default
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Currently there is no api, so we do a local file copy
+        if (LocalServerPath is null)
+        {
+            throw new InvalidOperationException("LocalServerPath is not set");
+        }
+
+        var sourceFile = new FilePath(sourcePath);
+        var destFile = LocalServerPath.JoinFile(destinationRelativePath);
+
+        Logger.Info("Copying file from {Source} to {Dest}", sourcePath, destFile);
+
+        if (!sourceFile.Exists)
+        {
+            throw new FileNotFoundException("Source file does not exist", sourcePath);
+        }
+
+        destFile.Directory?.Create();
+
+        await sourceFile.CopyToAsync(destFile, true).ConfigureAwait(false);
     }
 
     public async Task<Dictionary<string, List<ComfyImage>?>> GetImagesForExecutedPromptAsync(
@@ -413,9 +454,7 @@ public class ComfyClient : InferenceClientBase
         CancellationToken cancellationToken = default
     )
     {
-        var response = await comfyApi
-            .GetObjectInfo(nodeName, cancellationToken)
-            .ConfigureAwait(false);
+        var response = await comfyApi.GetObjectInfo(nodeName, cancellationToken).ConfigureAwait(false);
 
         var info = response[nodeName];
         return info.Input.GetRequiredValueAsNestedList(optionName);

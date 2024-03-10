@@ -43,18 +43,12 @@
                     <Grid RowDefinitions="Auto,*">
                         <TextBox
                             x:Name="SearchBox"
+                            Classes="search"
                             Margin="6,4,6,8"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Top"
                             Text="{Binding SearchQuery}"
-                            Watermark="{x:Static lang:Resources.Label_SearchEllipsis}">
-                            <TextBox.InnerRightContent>
-                                <ui:SymbolIcon
-                                    Margin="0,0,6,0"
-                                    FontSize="16"
-                                    Symbol="Find" />
-                            </TextBox.InnerRightContent>
-                        </TextBox>
+                            Watermark="{x:Static lang:Resources.Label_SearchEllipsis}"/>
 
                         <scroll:BetterScrollViewer
                             Grid.Row="1"

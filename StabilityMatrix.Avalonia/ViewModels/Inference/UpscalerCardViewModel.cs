@@ -27,8 +27,6 @@ public partial class UpscalerCardViewModel : LoadableViewModelBase
     public const string ModuleKey = "Upscaler";
 
     private readonly INotificationService notificationService;
-    private readonly ITrackedDownloadService trackedDownloadService;
-    private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
@@ -42,14 +40,10 @@ public partial class UpscalerCardViewModel : LoadableViewModelBase
     public UpscalerCardViewModel(
         IInferenceClientManager clientManager,
         INotificationService notificationService,
-        ITrackedDownloadService trackedDownloadService,
-        ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> vmFactory
     )
     {
         this.notificationService = notificationService;
-        this.trackedDownloadService = trackedDownloadService;
-        this.settingsManager = settingsManager;
         this.vmFactory = vmFactory;
 
         ClientManager = clientManager;
@@ -61,31 +55,14 @@ public partial class UpscalerCardViewModel : LoadableViewModelBase
         if (upscaler?.DownloadableResource is not { } resource)
             return;
 
-        var sharedFolderType =
-            resource.ContextType as SharedFolderType?
-            ?? throw new InvalidOperationException("ContextType is not SharedFolderType");
-
         var confirmDialog = vmFactory.Get<DownloadResourceViewModel>();
         confirmDialog.Resource = resource;
         confirmDialog.FileName = upscaler.Value.Name;
 
-        if (await confirmDialog.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+        if (await confirmDialog.GetDialog().ShowAsync() == ContentDialogResult.Primary)
         {
-            return;
+            confirmDialog.StartDownload();
         }
-
-        var modelsDir = new DirectoryPath(settingsManager.ModelsDirectory).JoinDir(
-            sharedFolderType.GetStringValue()
-        );
-
-        var download = trackedDownloadService.NewDownload(
-            resource.Url,
-            modelsDir.JoinFile(upscaler.Value.Name)
-        );
-        download.ContextAction = new ModelPostDownloadContextAction();
-        download.Start();
-
-        EventManager.Instance.OnToggleProgressFlyout();
     }
 
     /// <inheritdoc />
@@ -100,8 +77,6 @@ public partial class UpscalerCardViewModel : LoadableViewModelBase
     /// <inheritdoc />
     public override JsonObject SaveStateToJsonObject()
     {
-        return SerializeModel(
-            new UpscalerCardModel { Scale = Scale, SelectedUpscaler = SelectedUpscaler }
-        );
+        return SerializeModel(new UpscalerCardModel { Scale = Scale, SelectedUpscaler = SelectedUpscaler });
     }
 }

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Management;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -15,19 +15,21 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using ExifLibrary;
-using MetadataExtractor.Formats.Exif;
+using FluentAvalonia.UI.Controls;
+using Microsoft.Extensions.DependencyInjection;
+using Nito.Disposables.Internals;
 using NLog;
 using Refit;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
-using StabilityMatrix.Core.Animation;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -37,6 +39,8 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 using Notification = DesktopNotifications.Notification;
@@ -200,6 +204,26 @@ public abstract partial class InferenceGenerationViewModelBase
     protected virtual void BuildPrompt(BuildPromptEventArgs args) { }
 
     /// <summary>
+    /// Uploads files required for the prompt
+    /// </summary>
+    protected virtual async Task UploadPromptFiles(
+        IEnumerable<(string SourcePath, string DestinationRelativePath)> files,
+        ComfyClient client
+    )
+    {
+        foreach (var (sourcePath, destinationRelativePath) in files)
+        {
+            Logger.Debug(
+                "Uploading prompt file {SourcePath} to relative path {DestinationPath}",
+                sourcePath,
+                destinationRelativePath
+            );
+
+            await client.UploadFileAsync(sourcePath, destinationRelativePath);
+        }
+    }
+
+    /// <summary>
     /// Gets ImageSources that need to be uploaded as inputs
     /// </summary>
     protected virtual IEnumerable<ImageSource> GetInputImages()
@@ -254,8 +278,20 @@ public abstract partial class InferenceGenerationViewModelBase
         if (client.OutputImagesDir is null)
             throw new InvalidOperationException("OutputImagesDir is null");
 
+        // Only check extensions for first batch index
+        if (args.BatchIndex == 0)
+        {
+            if (!await CheckPromptExtensionsInstalled(args.Nodes))
+            {
+                throw new ValidationException("Prompt extensions not installed");
+            }
+        }
+
         // Upload input images
         await UploadInputImages(client);
+
+        // Upload required files
+        await UploadPromptFiles(args.FilesToTransfer, client);
 
         // Connect preview image handler
         client.PreviewImageReceived += OnPreviewImageReceived;
@@ -297,14 +333,18 @@ public abstract partial class InferenceGenerationViewModelBase
             Task.Run(
                     async () =>
                     {
-                        var delayTime = 250 - (int)timer.ElapsedMilliseconds;
-                        if (delayTime > 0)
+                        try
                         {
-                            await Task.Delay(delayTime, cancellationToken);
-                        }
+                            var delayTime = 250 - (int)timer.ElapsedMilliseconds;
+                            if (delayTime > 0)
+                            {
+                                await Task.Delay(delayTime, cancellationToken);
+                            }
 
-                        // ReSharper disable once AccessToDisposedClosure
-                        AttachRunningNodeChangedHandler(promptTask);
+                            // ReSharper disable once AccessToDisposedClosure
+                            AttachRunningNodeChangedHandler(promptTask);
+                        }
+                        catch (TaskCanceledException) { }
                     },
                     cancellationToken
                 )
@@ -328,10 +368,7 @@ public abstract partial class InferenceGenerationViewModelBase
             // Get output images
             var imageOutputs = await client.GetImagesForExecutedPromptAsync(promptTask.Id, cancellationToken);
 
-            if (
-                !imageOutputs.TryGetValue(args.OutputNodeNames[0], out var images)
-                || images is not { Count: > 0 }
-            )
+            if (imageOutputs.Values.All(images => images is null or { Count: 0 }))
             {
                 // No images match
                 notificationService.Show(
@@ -350,7 +387,7 @@ public abstract partial class InferenceGenerationViewModelBase
                 ImageGalleryCardViewModel.ImageSources.Clear();
             }
 
-            var outputImages = await ProcessOutputImages(images, args);
+            var outputImages = await ProcessAllOutputImages(imageOutputs, args);
 
             var notificationImage = outputImages.FirstOrDefault()?.LocalFile;
 
@@ -380,12 +417,34 @@ public abstract partial class InferenceGenerationViewModelBase
         }
     }
 
+    private async Task<IEnumerable<ImageSource>> ProcessAllOutputImages(
+        IReadOnlyDictionary<string, List<ComfyImage>?> images,
+        ImageGenerationEventArgs args
+    )
+    {
+        var results = new List<ImageSource>();
+
+        foreach (var (nodeName, imageList) in images)
+        {
+            if (imageList is null)
+            {
+                Logger.Warn("No images for node {NodeName}", nodeName);
+                continue;
+            }
+
+            results.AddRange(await ProcessOutputImages(imageList, args, nodeName.Replace('_', ' ')));
+        }
+
+        return results;
+    }
+
     /// <summary>
     /// Handles image output metadata for generation runs
     /// </summary>
     private async Task<List<ImageSource>> ProcessOutputImages(
         IReadOnlyCollection<ComfyImage> images,
-        ImageGenerationEventArgs args
+        ImageGenerationEventArgs args,
+        string? imageLabel = null
     )
     {
         var client = args.Client;
@@ -441,7 +500,7 @@ public abstract partial class InferenceGenerationViewModelBase
                     images.Count
                 );
 
-                outputImages.Add(new ImageSource(filePath));
+                outputImages.Add(new ImageSource(filePath) { Label = imageLabel });
                 EventManager.Instance.OnImageFileAdded(filePath);
             }
             else if (comfyImage.FileName.EndsWith(".webp"))
@@ -470,7 +529,7 @@ public abstract partial class InferenceGenerationViewModelBase
                     fileExtension: Path.GetExtension(comfyImage.FileName).Replace(".", "")
                 );
 
-                outputImages.Add(new ImageSource(filePath));
+                outputImages.Add(new ImageSource(filePath) { Label = imageLabel });
                 EventManager.Instance.OnImageFileAdded(filePath);
             }
             else
@@ -484,7 +543,7 @@ public abstract partial class InferenceGenerationViewModelBase
                     fileExtension: Path.GetExtension(comfyImage.FileName).Replace(".", "")
                 );
 
-                outputImages.Add(new ImageSource(filePath));
+                outputImages.Add(new ImageSource(filePath) { Label = imageLabel });
                 EventManager.Instance.OnImageFileAdded(filePath);
             }
         }
@@ -554,7 +613,12 @@ public abstract partial class InferenceGenerationViewModelBase
         }
         catch (OperationCanceledException)
         {
-            Logger.Debug($"Image Generation Canceled");
+            Logger.Debug("Image Generation Canceled");
+        }
+        catch (ValidationException e)
+        {
+            Logger.Debug("Image Generation Validation Error: {Message}", e.Message);
+            notificationService.Show("Validation Error", e.Message, NotificationType.Error);
         }
     }
 
@@ -570,6 +634,121 @@ public abstract partial class InferenceGenerationViewModelBase
         await vm.CreateDialog().ShowAsync();
 
         return ClientManager.IsConnected;
+    }
+
+    /// <summary>
+    /// Shows a dialog and return false if prompt required extensions not installed
+    /// </summary>
+    private async Task<bool> CheckPromptExtensionsInstalled(NodeDictionary nodeDictionary)
+    {
+        // Get prompt required extensions
+        // Just static for now but could do manifest lookup when we support custom workflows
+        var requiredExtensions = nodeDictionary
+            .ClassTypeRequiredExtensions.Values.SelectMany(x => x)
+            .ToHashSet();
+
+        // Skip if no extensions required
+        if (requiredExtensions.Count == 0)
+        {
+            return true;
+        }
+
+        // Get installed extensions
+        var localPackagePair = ClientManager.Client?.LocalServerPackage.Unwrap()!;
+        var manager = localPackagePair.BasePackage.ExtensionManager.Unwrap();
+
+        var localExtensions = (
+            await ((GitPackageExtensionManager)manager).GetInstalledExtensionsLiteAsync(
+                localPackagePair.InstalledPackage
+            )
+        ).ToImmutableArray();
+
+        var missingExtensions = requiredExtensions
+            .Except(localExtensions.Select(ext => ext.GitRepositoryUrl).WhereNotNull())
+            .ToImmutableArray();
+
+        if (missingExtensions.Length == 0)
+        {
+            return true;
+        }
+
+        var dialog = DialogHelper.CreateMarkdownDialog(
+            $"#### The following extensions are required for this workflow:\n"
+                + $"{string.Join("\n- ", missingExtensions)}",
+            "Install Required Extensions?"
+        );
+
+        dialog.IsPrimaryButtonEnabled = true;
+        dialog.DefaultButton = ContentDialogButton.Primary;
+        dialog.PrimaryButtonText =
+            $"{Resources.Action_Install} ({localPackagePair.InstalledPackage.DisplayName.ToRepr()} will restart)";
+        dialog.CloseButtonText = Resources.Action_Cancel;
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var manifestExtensionsMap = await manager.GetManifestExtensionsMapAsync(
+                manager.GetManifests(localPackagePair.InstalledPackage)
+            );
+
+            var steps = new List<IPackageStep>();
+
+            foreach (var missingExtensionUrl in missingExtensions)
+            {
+                if (!manifestExtensionsMap.TryGetValue(missingExtensionUrl, out var extension))
+                {
+                    Logger.Warn(
+                        "Extension {MissingExtensionUrl} not found in manifests",
+                        missingExtensionUrl
+                    );
+                    continue;
+                }
+
+                steps.Add(new InstallExtensionStep(manager, localPackagePair.InstalledPackage, extension));
+            }
+
+            var runner = new PackageModificationRunner
+            {
+                ShowDialogOnStart = true,
+                ModificationCompleteTitle = "Extensions Installed",
+                ModificationCompleteMessage = "Finished installing required extensions"
+            };
+            EventManager.Instance.OnPackageInstallProgressAdded(runner);
+
+            runner
+                .ExecuteSteps(steps)
+                .ContinueWith(async _ =>
+                {
+                    if (runner.Failed)
+                        return;
+
+                    // Restart Package
+                    // TODO: This should be handled by some DI package manager service
+                    var launchPage = App.Services.GetRequiredService<LaunchPageViewModel>();
+
+                    try
+                    {
+                        await Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            await launchPage.Stop();
+                            await launchPage.LaunchAsync();
+                        });
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e, "Error while restarting package");
+
+                        notificationService.ShowPersistent(
+                            new AppException(
+                                "Could not restart package",
+                                "Please manually restart the package for extension changes to take effect"
+                            )
+                        );
+                    }
+                })
+                .SafeFireAndForget();
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -634,9 +813,11 @@ public abstract partial class InferenceGenerationViewModelBase
         public required ComfyClient Client { get; init; }
         public required NodeDictionary Nodes { get; init; }
         public required IReadOnlyList<string> OutputNodeNames { get; init; }
+        public int BatchIndex { get; init; }
         public GenerationParameters? Parameters { get; init; }
         public InferenceProjectDocument? Project { get; init; }
         public bool ClearOutputImages { get; init; } = true;
+        public List<(string SourcePath, string DestinationRelativePath)> FilesToTransfer { get; init; } = [];
     }
 
     public class BuildPromptEventArgs : EventArgs
@@ -644,17 +825,28 @@ public abstract partial class InferenceGenerationViewModelBase
         public ComfyNodeBuilder Builder { get; } = new();
         public GenerateOverrides Overrides { get; init; } = new();
         public long? SeedOverride { get; init; }
+        public List<(string SourcePath, string DestinationRelativePath)> FilesToTransfer { get; init; } = [];
 
-        public static implicit operator ModuleApplyStepEventArgs(BuildPromptEventArgs args)
+        public ModuleApplyStepEventArgs ToModuleApplyStepEventArgs()
         {
             var overrides = new Dictionary<Type, bool>();
 
-            if (args.Overrides.IsHiresFixEnabled.HasValue)
+            if (Overrides.IsHiresFixEnabled.HasValue)
             {
-                overrides[typeof(HiresFixModule)] = args.Overrides.IsHiresFixEnabled.Value;
+                overrides[typeof(HiresFixModule)] = Overrides.IsHiresFixEnabled.Value;
             }
 
-            return new ModuleApplyStepEventArgs { Builder = args.Builder, IsEnabledOverrides = overrides };
+            return new ModuleApplyStepEventArgs
+            {
+                Builder = Builder,
+                IsEnabledOverrides = overrides,
+                FilesToTransfer = FilesToTransfer
+            };
+        }
+
+        public static implicit operator ModuleApplyStepEventArgs(BuildPromptEventArgs args)
+        {
+            return args.ToModuleApplyStepEventArgs();
         }
     }
 }

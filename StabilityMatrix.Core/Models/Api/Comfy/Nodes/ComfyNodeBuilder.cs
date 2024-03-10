@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
+using OneOf;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
@@ -14,6 +14,7 @@ namespace StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 /// Builder functions for comfy nodes
 /// </summary>
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+[Localizable(false)]
 public class ComfyNodeBuilder
 {
     public NodeDictionary Nodes { get; } = new();
@@ -226,6 +227,13 @@ public class ComfyNodeBuilder
         };
     }
 
+    public record CheckpointLoader
+        : ComfyTypedNodeBase<ModelNodeConnection, ClipNodeConnection, VAENodeConnection>
+    {
+        public required string ConfigName { get; init; }
+        public required string CkptName { get; init; }
+    }
+
     public record CheckpointLoaderSimple
         : ComfyTypedNodeBase<ModelNodeConnection, ClipNodeConnection, VAENodeConnection>
     {
@@ -251,20 +259,7 @@ public class ComfyNodeBuilder
     public record CLIPTextEncode : ComfyTypedNodeBase<ConditioningNodeConnection>
     {
         public required ClipNodeConnection Clip { get; init; }
-        public required string Text { get; init; }
-    }
-
-    public static NamedComfyNode<ConditioningNodeConnection> ClipTextEncode(
-        string name,
-        ClipNodeConnection clip,
-        string text
-    )
-    {
-        return new NamedComfyNode<ConditioningNodeConnection>(name)
-        {
-            ClassType = "CLIPTextEncode",
-            Inputs = new Dictionary<string, object?> { ["clip"] = clip.Data, ["text"] = text }
-        };
+        public required OneOf<string, StringNodeConnection> Text { get; init; }
     }
 
     public record LoadImage : ComfyTypedNodeBase<ImageNodeConnection, ImageMaskConnection>
@@ -333,6 +328,18 @@ public class ComfyNodeBuilder
         public required bool Lossless { get; init; }
         public required int Quality { get; init; }
         public required string Method { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "Inference_Core_PromptExpansion",
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes"]
+    )]
+    public record PromptExpansion : ComfyTypedNodeBase<StringNodeConnection>
+    {
+        public required string ModelName { get; init; }
+        public required OneOf<string, StringNodeConnection> Text { get; init; }
+        public required ulong Seed { get; init; }
+        public bool LogPrompt { get; init; }
     }
 
     public ImageNodeConnection Lambda_LatentToImage(LatentNodeConnection latent, VAENodeConnection vae)
@@ -793,6 +800,9 @@ public class ComfyNodeBuilder
 
         public int BatchSize { get; set; } = 1;
         public int? BatchIndex { get; set; }
+
+        public OneOf<string, StringNodeConnection> PositivePrompt { get; set; }
+        public OneOf<string, StringNodeConnection> NegativePrompt { get; set; }
 
         public ClipNodeConnection? BaseClip { get; set; }
         public ClipVisionNodeConnection? BaseClipVision { get; set; }

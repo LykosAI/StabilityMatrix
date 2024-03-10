@@ -9,6 +9,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -79,6 +80,7 @@ public class VladAutomatic(
         };
 
     public override string OutputFolderName => "outputs";
+    public override IPackageExtensionManager ExtensionManager => new VladExtensionManager(this);
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
     public override List<LaunchOptionDefinition> LaunchOptions =>
@@ -231,33 +233,28 @@ public class VladAutomatic(
         var installDir = new DirectoryPath(installLocation);
         installDir.Create();
 
-        if (!string.IsNullOrWhiteSpace(downloadOptions.CommitHash))
+        if (string.IsNullOrWhiteSpace(downloadOptions.BranchName))
         {
-            await PrerequisiteHelper
-                .RunGit(
-                    new[] { "clone", "https://github.com/vladmandic/automatic", installDir.Name },
-                    installDir.Parent?.FullPath ?? ""
-                )
-                .ConfigureAwait(false);
+            throw new ArgumentNullException(nameof(downloadOptions));
+        }
 
+        await PrerequisiteHelper
+            .RunGit(
+                new[]
+                {
+                    "clone",
+                    "-b",
+                    downloadOptions.BranchName,
+                    "https://github.com/vladmandic/automatic",
+                    installDir.Name
+                },
+                installDir.Parent?.FullPath ?? ""
+            )
+            .ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(downloadOptions.CommitHash) && !downloadOptions.IsLatest)
+        {
             await PrerequisiteHelper
                 .RunGit(new[] { "checkout", downloadOptions.CommitHash }, installLocation)
-                .ConfigureAwait(false);
-        }
-        else if (!string.IsNullOrWhiteSpace(downloadOptions.BranchName))
-        {
-            await PrerequisiteHelper
-                .RunGit(
-                    new[]
-                    {
-                        "clone",
-                        "-b",
-                        downloadOptions.BranchName,
-                        "https://github.com/vladmandic/automatic",
-                        installDir.Name
-                    },
-                    installDir.Parent?.FullPath ?? ""
-                )
                 .ConfigureAwait(false);
         }
     }
@@ -495,5 +492,52 @@ public class VladAutomatic(
         File.WriteAllText(configJsonPath, configJsonStr);
 
         return Task.CompletedTask;
+    }
+
+    private class VladExtensionManager(VladAutomatic package)
+        : GitPackageExtensionManager(package.PrerequisiteHelper)
+    {
+        public override string RelativeInstallDirectory => "extensions";
+
+        public override IEnumerable<ExtensionManifest> DefaultManifests =>
+            [new ExtensionManifest(new Uri("https://vladmandic.github.io/sd-data/pages/extensions.json"))];
+
+        public override async Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(
+            ExtensionManifest manifest,
+            CancellationToken cancellationToken = default
+        )
+        {
+            try
+            {
+                // Get json
+                var content = await package
+                    .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
+                    .ConfigureAwait(false);
+
+                // Parse json
+                var jsonManifest = JsonSerializer.Deserialize<IEnumerable<VladExtensionItem>>(
+                    content,
+                    new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
+                );
+
+                return jsonManifest?.Select(
+                        entry =>
+                            new PackageExtension
+                            {
+                                Title = entry.Name,
+                                Author = entry.Long?.Split('/').FirstOrDefault() ?? "Unknown",
+                                Reference = entry.Url,
+                                Files = [entry.Url],
+                                Description = entry.Description,
+                                InstallType = "git-clone"
+                            }
+                    ) ?? Enumerable.Empty<PackageExtension>();
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to get extensions from manifest");
+                return Enumerable.Empty<PackageExtension>();
+            }
+        }
     }
 }

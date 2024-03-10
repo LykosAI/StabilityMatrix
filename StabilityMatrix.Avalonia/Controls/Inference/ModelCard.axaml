@@ -1,14 +1,16 @@
 ﻿<Styles
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
-    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     x:DataType="inference:ModelCardViewModel">
     <Design.PreviewWith>
         <Panel Width="400" Height="200">
@@ -19,44 +21,73 @@
         </Panel>
     </Design.PreviewWith>
 
+    <Styles.Resources>
+        <fluent:SymbolIconSource
+            x:Key="IconCube"
+            IsFilled="False"
+            Symbol="Cube" />
+        <fluent:SymbolIconSource
+            x:Key="IconQuestionCircle"
+            IsFilled="True"
+            Symbol="QuestionCircle" />
+        <fluent:SymbolIconSource
+            x:Key="IconTableCellEdit"
+            IsFilled="True"
+            Symbol="TableCellEdit" />
+    </Styles.Resources>
+
     <Style Selector="controls|ModelCard">
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="Template">
             <ControlTemplate>
                 <controls:Card Padding="12">
                     <sg:SpacedGrid
+                        ColumnDefinitions="Auto,*,Auto"
                         ColumnSpacing="8"
-                        RowSpacing="0"
-                        ColumnDefinitions="Auto,*,Auto" 
-                        RowDefinitions="*,*,*,*">
+                        RowDefinitions="*,*,*,*"
+                        RowSpacing="0">
                         <!--  Model  -->
                         <TextBlock
                             Grid.Column="0"
                             VerticalAlignment="Center"
                             Text="{x:Static lang:Resources.Label_Model}"
                             TextAlignment="Left" />
-                        
+
                         <controls:BetterComboBox
                             Grid.Row="0"
                             Grid.Column="1"
                             Padding="8,6,4,6"
-                            Theme="{StaticResource  BetterComboBoxHybridModelTheme}"
                             HorizontalAlignment="Stretch"
                             ItemsSource="{Binding ClientManager.Models}"
-                            SelectedItem="{Binding SelectedModel}"/>
+                            SelectedItem="{Binding SelectedModel}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
 
                         <Button
                             Grid.Row="0"
                             Grid.Column="2"
-                            VerticalAlignment="Stretch"
+                            Margin="0,0,0,0"
                             HorizontalAlignment="Stretch"
-                            Margin="0,0,0,0">
+                            VerticalAlignment="Stretch">
                             <ui:SymbolIcon FontSize="16" Symbol="Setting" />
                             <Button.Flyout>
                                 <ui:FAMenuFlyout Placement="BottomEdgeAlignedLeft">
-                                    <ui:ToggleMenuFlyoutItem IsChecked="{Binding IsRefinerSelectionEnabled}" Text="{x:Static lang:Resources.Label_Refiner}" />
-                                    <ui:ToggleMenuFlyoutItem IsChecked="{Binding IsVaeSelectionEnabled}" Text="{x:Static lang:Resources.Label_VAE}" />
-                                    <ui:ToggleMenuFlyoutItem IsChecked="{Binding IsClipSkipEnabled}" Text="{x:Static lang:Resources.Label_CLIPSkip}" />
+                                    <ui:ToggleMenuFlyoutItem
+                                        IconSource="{StaticResource IconCube}"
+                                        IsChecked="{Binding IsRefinerSelectionEnabled}"
+                                        Text="{x:Static lang:Resources.Label_Refiner}" />
+                                    <ui:ToggleMenuFlyoutItem
+                                        IconSource="{StaticResource IconCube}"
+                                        IsChecked="{Binding IsVaeSelectionEnabled}"
+                                        Text="{x:Static lang:Resources.Label_VAE}" />
+                                    <ui:ToggleMenuFlyoutItem
+                                        IconSource="{StaticResource IconTableCellEdit}"
+                                        IsChecked="{Binding IsClipSkipEnabled}"
+                                        Text="{x:Static lang:Resources.Label_CLIPSkip}" />
+                                    <ui:MenuFlyoutSeparator />
+                                    <ui:MenuFlyoutItem
+                                        Command="{Binding ConfigClickCommand}"
+                                        IconSource="{StaticResource IconQuestionCircle}"
+                                        Text="{x:Static lang:Resources.Label_Config}" />
                                 </ui:FAMenuFlyout>
                             </Button.Flyout>
                         </Button>
@@ -77,12 +108,12 @@
                             Grid.ColumnSpan="2"
                             Margin="0,8,0,0"
                             Padding="8,6,4,6"
-                            IsVisible="{Binding IsRefinerSelectionEnabled}"
-                            Theme="{StaticResource  BetterComboBoxHybridModelTheme}"
                             HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsRefinerSelectionEnabled}"
                             ItemsSource="{Binding ClientManager.Models}"
-                            SelectedItem="{Binding SelectedRefiner}"/>
-                        
+                            SelectedItem="{Binding SelectedRefiner}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+
                         <!--  VAE  -->
                         <TextBlock
                             Grid.Row="2"
@@ -104,7 +135,7 @@
                             IsVisible="{Binding IsVaeSelectionEnabled}"
                             ItemsSource="{Binding ClientManager.VaeModels}"
                             SelectedItem="{Binding SelectedVae}" />
-                        
+
                         <!--  CLIP Skip  -->
                         <TextBlock
                             Grid.Row="3"
@@ -119,16 +150,16 @@
                             Grid.Row="3"
                             Grid.Column="1"
                             Grid.ColumnSpan="2"
-                            IsVisible="{Binding IsClipSkipEnabled}"
-                            Watermark="1"
-                            HorizontalAlignment="Stretch"
                             Margin="0,8,0,0"
-                            Minimum="1"
-                            Maximum="24"
+                            HorizontalAlignment="Stretch"
+                            ClipValueToMinMax="True"
                             Increment="1"
+                            IsVisible="{Binding IsClipSkipEnabled}"
+                            Maximum="24"
+                            Minimum="1"
                             ParsingNumberStyle="Integer"
-                            Value="{Binding ClipSkip, Converter={x:Static converters:NullableDefaultNumericConverters.IntToDecimal}}"
-                            ClipValueToMinMax="True"/>
+                            Watermark="1"
+                            Value="{Binding ClipSkip, Converter={x:Static converters:NullableDefaultNumericConverters.IntToDecimal}}" />
 
                     </sg:SpacedGrid>
                 </controls:Card>

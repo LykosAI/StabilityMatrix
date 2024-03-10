@@ -178,5 +178,7 @@ public class SDWebForge(
     }
 
     public override string? ExtraLaunchArguments { get; set; } =
-        $"--gradio-allowed-path \"{settingsManager.ImagesDirectory}\"";
+        settingsManager.IsLibraryDirSet
+            ? $"--gradio-allowed-path \"{settingsManager.ImagesDirectory}\""
+            : string.Empty;
 }

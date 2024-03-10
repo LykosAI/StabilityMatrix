@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.10.0-dev.2
 ### Changed
+- Inference Primary Sampler Addons (i.e. ControlNet, FreeU) are now inherited by Hires Fix Samplers, this can be overriden from the Hires Fix module's settings menu by disabling the "Inherit Primary Sampler Addons" option.
 - Revisited the way images are loaded on the outputs page, with improvements to loading speed & not freezing the UI while loading
 ### Fixed
 - Fixed Outputs page not remembering where the user last was in the TreeView in certain circumstances

@@ -120,6 +120,7 @@ public partial class CheckpointFile : ViewModelBase
         if (File.Exists(FilePath))
         {
             IsLoading = true;
+            Progress = new ProgressReport(0f, "Deleting...");
             try
             {
                 await using var delay = new MinimumDelay(200, 500);

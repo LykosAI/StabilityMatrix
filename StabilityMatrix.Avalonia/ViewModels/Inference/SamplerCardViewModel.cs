@@ -12,6 +12,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;

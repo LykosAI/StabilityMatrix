@@ -1,0 +1,93 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+             xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+             xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+             xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+             xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:DataType="viewModels:RunningPackageViewModel"
+             x:Class="StabilityMatrix.Avalonia.Views.ConsoleOutputPage">
+    <Grid RowDefinitions="Auto, *, Auto">
+        <ui:CommandBar Grid.Row="0"
+                              Margin="12,0,0,4"
+                              VerticalAlignment="Center"
+                              VerticalContentAlignment="Center"
+                              HorizontalAlignment="Left"
+                              HorizontalContentAlignment="Left"
+                              DefaultLabelPosition="Right">
+            <ui:CommandBar.PrimaryCommands>
+                <ui:CommandBarButton
+                    IconSource="Stop"
+                    IsVisible="{Binding IsRunning}"
+                    Classes="danger"
+                    Command="{Binding StopCommand}"
+                    VerticalAlignment="Center"
+                    Label="{x:Static lang:Resources.Action_Stop}" />
+                <ui:CommandBarButton
+                    IconSource="Play"
+                    IsVisible="{Binding !IsRunning}"
+                    Classes="success"
+                    Command="{Binding LaunchPackageCommand}"
+                    VerticalAlignment="Center"
+                    Label="{x:Static lang:Resources.Action_Launch}" />
+                
+                <ui:CommandBarSeparator Margin="6,0,4,0"/>
+                
+                <ui:CommandBarToggleButton
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding AutoScrollToEnd}"
+                    Label="{x:Static lang:Resources.Label_ToggleAutoScrolling}"
+                    ToolTip.Tip="{x:Static lang:Resources.Label_AutoScrollToEnd}">
+                    <ui:CommandBarToggleButton.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-arrow-down-wide-short" />
+                    </ui:CommandBarToggleButton.IconSource>
+                </ui:CommandBarToggleButton>
+                
+                <ui:CommandBarButton
+                    Command="{Binding LaunchWebUiCommand}"
+                    IsVisible="{Binding ShowWebUiButton}"
+                    VerticalAlignment="Center"
+                    x:Name="OpenWebUiButton"
+                    Label="{x:Static lang:Resources.Action_OpenWebUI}">
+                    <ui:CommandBarButton.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-up-right-from-square"/>
+                    </ui:CommandBarButton.IconSource>
+                </ui:CommandBarButton>
+            </ui:CommandBar.PrimaryCommands>
+        </ui:CommandBar>
+        
+        <avaloniaEdit:TextEditor
+            Grid.Row="1"
+            x:Name="Console"
+            Margin="8,8,16,10"
+            DataContext="{Binding Console}"
+            Document="{Binding Document}"
+            FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+            IsReadOnly="True"
+            LineNumbersForeground="DarkSlateGray"
+            ShowLineNumbers="True"
+            VerticalScrollBarVisibility="Auto"
+            WordWrap="True" />
+        
+        <Grid Grid.Row="2" ColumnDefinitions="*, Auto"
+              Margin="16,4,16,16">
+            <TextBox Grid.Column="0" Text="{Binding ConsoleInput, Mode=TwoWay}"
+                     Margin="0,0,8,0"/>
+            <Button Grid.Column="1"
+                    Classes="accent"
+                    IsDefault="True"
+                    Content="{x:Static lang:Resources.Action_Send}"
+                    Command="{Binding SendToConsoleCommand}"/>
+        </Grid>
+        
+        <ui:TeachingTip Grid.Row="0" Grid.Column="0" Name="TeachingTip1"
+                        Target="{Binding #OpenWebUiButton}"
+                        Title="{x:Static lang:Resources.TeachingTip_WebUiButtonMoved}"
+                        PreferredPlacement="Bottom"
+                        IsOpen="True"/>
+    </Grid>
+</controls:UserControlBase>

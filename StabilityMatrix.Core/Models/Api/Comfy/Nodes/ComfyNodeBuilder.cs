@@ -333,7 +333,7 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "Inference_Core_PromptExpansion",
-        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes"]
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.2.0"]
     )]
     public record PromptExpansion : ComfyTypedNodeBase<StringNodeConnection>
     {
@@ -341,6 +341,20 @@ public class ComfyNodeBuilder
         public required OneOf<string, StringNodeConnection> Text { get; init; }
         public required ulong Seed { get; init; }
         public bool LogPrompt { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "Inference_Core_AIO_Preprocessor",
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.2.0"]
+    )]
+    public record AIOPreprocessor : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required ImageNodeConnection Image { get; init; }
+
+        public required string Preprocessor { get; init; }
+
+        [Range(64, 2048)]
+        public int Resolution { get; init; } = 512;
     }
 
     [TypedNodeOptions(

@@ -2,15 +2,12 @@
     x:Class="StabilityMatrix.Avalonia.Views.OutputsPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-    xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentAvalonia="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:models1="clr-namespace:StabilityMatrix.Avalonia.Models"
     xmlns:outputsPage="clr-namespace:StabilityMatrix.Avalonia.ViewModels.OutputsPage"
     xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
     xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
@@ -23,13 +20,33 @@
     x:DataType="vm:OutputsPageViewModel"
     Focusable="True"
     mc:Ignorable="d">
-    <Grid Margin="16" RowDefinitions="Auto,*">
-        <Grid
-            Grid.Row="0"
-            Margin="0,0,0,16"
-            ColumnDefinitions="Auto,Auto,*,Auto"
-            RowDefinitions="Auto,*">
-            
+    <Grid Margin="16" RowDefinitions="Auto,*"
+          ColumnDefinitions="Auto, *">
+
+        <TreeView Grid.Row="1"
+                  Grid.Column="0"
+                  IsVisible="{Binding ShowFolders}"
+                  Margin="0,0,12,0"
+                  ItemsSource="{Binding Categories}"
+                  SelectedItem="{Binding SelectedCategory}">
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate ItemsSource="{Binding SubDirectories}">
+                    <TextBlock Text="{Binding Name}"
+                               MaxWidth="250"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip.Tip="{Binding Name}"/>
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+
+        <Grid Grid.Column="0"
+              Grid.ColumnSpan="2"
+              Grid.Row="0"
+              Margin="0,0,0,16"
+              ColumnDefinitions="Auto,Auto,*,Auto"
+              RowDefinitions="Auto,*">
+
             <Grid.Styles>
                 <Style Selector="TextBox">
                     <Setter Property="MinHeight" Value="40" />
@@ -39,56 +56,6 @@
                 </Style>
             </Grid.Styles>
             
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="0"
-                Margin="4"
-                Text="{x:Static lang:Resources.Label_OutputFolder}" />
-            <ComboBox
-                Grid.Row="1"
-                Grid.Column="0"
-                MinWidth="150"
-                Margin="4,0"
-                VerticalAlignment="Center"
-                ItemsSource="{Binding Categories}"
-                SelectedItem="{Binding SelectedCategory}">
-                <ComboBox.Styles>
-                    <Style Selector="ComboBox /template/ ContentControl#ContentPresenter &gt; StackPanel &gt; TextBlock:nth-child(2)">
-                        <Setter Property="IsVisible" Value="False" />
-                    </Style>
-                </ComboBox.Styles>
-                <ComboBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type models1:PackageOutputCategory}">
-                        <StackPanel>
-                            <TextBlock Margin="0,4,0,4" Text="{Binding Name, Mode=OneWay}" />
-                            <TextBlock Text="{Binding Path, Mode=OneWay}" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
-
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="1"
-                Margin="4"
-                IsVisible="{Binding CanShowOutputTypes}"
-                Text="{x:Static lang:Resources.Label_OutputType}" />
-            <ComboBox
-                Grid.Row="1"
-                Grid.Column="1"
-                MinWidth="150"
-                Margin="4,0"
-                VerticalAlignment="Center"
-                VerticalContentAlignment="Center"
-                IsVisible="{Binding CanShowOutputTypes}"
-                ItemsSource="{Binding OutputTypes}"
-                SelectedItem="{Binding SelectedOutputType}" />
-
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="2"
-                Margin="4"
-                Text="{x:Static lang:Resources.Action_Search}" />
             <TextBox
                 Grid.Row="1"
                 Grid.Column="2"
@@ -104,8 +71,8 @@
                         <Button Classes="transparent-full"
                                 IsVisible="{Binding SearchQuery.Length}"
                                 Command="{Binding ClearSearchQuery}">
-                                <ui:SymbolIcon Symbol="Cancel" />
-                            </Button>
+                            <ui:SymbolIcon Symbol="Cancel" />
+                        </Button>
                         <ui:SymbolIcon
                             IsVisible="{Binding !SearchQuery.Length}"
                             Margin="0,0,10,0"
@@ -115,13 +82,6 @@
                 </TextBox.InnerRightContent>
             </TextBox>
 
-            <TextBlock
-                Grid.Row="0"
-                Grid.Column="3"
-                Margin="4"
-                IsVisible="{Binding !!NumItemsSelected}"
-                Text="{Binding NumImagesSelected}" />
-
             <ui:CommandBar
                 Grid.Row="1"
                 Grid.Column="3"
@@ -129,27 +89,56 @@
                 VerticalAlignment="Center"
                 VerticalContentAlignment="Center"
                 DefaultLabelPosition="Right">
-                
+
                 <ui:CommandBar.PrimaryCommands>
-                    <ui:CommandBarButton 
-                        IsEnabled="{Binding !!NumItemsSelected}"
+                    <ui:CommandBarElementContainer>
+                        <TextBlock Text="{Binding NumImagesSelected}"
+                                   IsVisible="{Binding NumItemsSelected}"
+                                   VerticalAlignment="Center"/>
+                    </ui:CommandBarElementContainer>
+                    <ui:CommandBarButton
+                        IsEnabled="{Binding NumItemsSelected}"
                         Command="{Binding DeleteAllSelected}"
                         IconSource="Delete" />
                     <ui:CommandBarSeparator />
-                    <ui:CommandBarButton 
+                    <ui:CommandBarButton
                         Command="{Binding SelectAll}"
-                        IconSource="SelectAll" 
+                        IsEnabled="{Binding !IsLoading}"
+                        IconSource="SelectAll"
                         Label="{x:Static lang:Resources.Action_SelectAll}" />
-                    <ui:CommandBarButton 
+                    <ui:CommandBarButton
                         Command="{Binding ClearSelection}"
-                        IconSource="ClearSelection" 
-                        IsEnabled="{Binding !!NumItemsSelected}"
+                        IconSource="ClearSelection"
+                        IsEnabled="{Binding NumItemsSelected}"
                         Label="{x:Static lang:Resources.Action_ClearSelection}" />
                     <ui:CommandBarSeparator />
-                    <ui:CommandBarButton 
-                        IconSource="Refresh" 
+                    <ui:CommandBarButton
+                        IconSource="Refresh"
+                        Classes.loading="{Binding IsLoading}"
                         Command="{Binding Refresh}"
-                        Label="{x:Static lang:Resources.Action_Refresh}" />
+                        IsEnabled="{Binding !IsLoading}"
+                        Label="{x:Static lang:Resources.Action_Refresh}">
+                        <ui:CommandBarButton.Styles>
+                            <Style Selector="ui|CommandBarButton:disabled.loading">
+                                <Style Selector="^ ui|SymbolIcon">
+                                    <Style.Animations>
+                                        <Animation Duration="0:0:2" IterationCount="INFINITE">
+                                            <KeyFrame Cue="0%">
+                                                <Setter Property="RotateTransform.Angle" Value="0"/>
+                                            </KeyFrame>
+                                            <KeyFrame Cue="100%">
+                                                <Setter Property="RotateTransform.Angle" Value="360"/>
+                                            </KeyFrame>
+                                        </Animation>
+                                    </Style.Animations>
+                                </Style>
+                            </Style>
+                        </ui:CommandBarButton.Styles>
+                    </ui:CommandBarButton>
+                    <ui:CommandBarToggleButton
+                        IconSource="List"
+                        IsChecked="{Binding ShowFolders}"
+                        Label="Show Folders"/>
                 </ui:CommandBar.PrimaryCommands>
 
                 <ui:CommandBar.SecondaryCommands>
@@ -160,11 +149,22 @@
                 </ui:CommandBar.SecondaryCommands>
             </ui:CommandBar>
         </Grid>
+        
+        <controls:ProgressRing Grid.Row="1"
+                               Grid.Column="1"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Width="200"
+                               Height="200"
+                               IsIndeterminate="True"
+                               IsVisible="{Binding IsChangingCategory}"/>
 
-        <scroll:BetterScrollViewer Grid.Row="1" PointerWheelChanged="ScrollViewer_MouseWheelChanged">
+        <scroll:BetterScrollViewer Grid.Column="1"
+                                   Grid.Row="1" PointerWheelChanged="ScrollViewer_MouseWheelChanged">
             <ItemsRepeater
                 x:Name="ImageRepeater"
                 VerticalAlignment="Top"
+                HorizontalAlignment="Center"
                 ItemsSource="{Binding Outputs}">
                 <ItemsRepeater.Layout>
                     <UniformGridLayout MinColumnSpacing="8" MinRowSpacing="8" />
@@ -206,7 +206,8 @@
                                         IconSource="Delete"
                                         Text="{x:Static lang:Resources.Action_Delete}" />
 
-                                    <ui:MenuFlyoutSeparator IsVisible="{Binding ImageFile.GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                    <ui:MenuFlyoutSeparator
+                                        IsVisible="{Binding ImageFile.GenerationParameters, Converter={x:Static ObjectConverters.IsNotNull}}" />
 
                                     <ui:MenuFlyoutSubItem
                                         IconSource="Share"

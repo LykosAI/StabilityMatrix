@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -42,7 +40,7 @@ public class ControlNetModule : ModuleBase
     {
         var card = GetCard<ControlNetCardViewModel>();
 
-        var imageLoad = e.Nodes.AddTypedNode(
+        var image = e.Nodes.AddTypedNode(
             new ComfyNodeBuilder.LoadImage
             {
                 Name = e.Nodes.GetUniqueName("ControlNet_LoadImage"),
@@ -50,7 +48,23 @@ public class ControlNetModule : ModuleBase
                     card.SelectImageCardViewModel.ImageSource?.GetHashGuidFileNameCached("Inference")
                     ?? throw new ValidationException("No ImageSource")
             }
-        );
+        ).Output1;
+
+        if (card.SelectedPreprocessor is { } preprocessor && preprocessor != ComfyAuxPreprocessor.None)
+        {
+            var aioPreprocessor = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.AIOPreprocessor
+                {
+                    Name = e.Nodes.GetUniqueName("ControlNet_Preprocessor"),
+                    Image = image,
+                    Preprocessor = preprocessor.ToString(),
+                    // Use width if valid, else default of 512
+                    Resolution = card.Width is <= 2048 and > 0 ? card.Width : 512
+                }
+            );
+
+            image = aioPreprocessor.Output;
+        }
 
         // If ReferenceOnly is selected, use special node
         if (card.SelectedModel == RemoteModels.ControlNetReferenceOnlyModel)
@@ -115,7 +129,7 @@ public class ControlNetModule : ModuleBase
             new ComfyNodeBuilder.ControlNetApplyAdvanced
             {
                 Name = e.Nodes.GetUniqueName("ControlNetApply"),
-                Image = imageLoad.Output1,
+                Image = image,
                 ControlNet = controlNetLoader.Output,
                 Positive = e.Temp.Base.Conditioning!.Unwrap().Positive,
                 Negative = e.Temp.Base.Conditioning.Negative,
@@ -134,7 +148,7 @@ public class ControlNetModule : ModuleBase
                 new ComfyNodeBuilder.ControlNetApplyAdvanced
                 {
                     Name = e.Nodes.GetUniqueName("Refiner_ControlNetApply"),
-                    Image = imageLoad.Output1,
+                    Image = image,
                     ControlNet = controlNetLoader.Output,
                     Positive = e.Temp.Refiner.Conditioning!.Unwrap().Positive,
                     Negative = e.Temp.Refiner.Conditioning.Negative,

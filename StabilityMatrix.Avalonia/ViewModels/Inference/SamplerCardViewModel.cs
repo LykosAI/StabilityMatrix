@@ -12,7 +12,6 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
@@ -87,6 +86,11 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     [Required]
     private ComfyScheduler? selectedScheduler = ComfyScheduler.Normal;
 
+    [ObservableProperty]
+    [property: Category("Settings")]
+    [property: DisplayName("Inherit Primary Sampler Addons")]
+    private bool inheritPrimarySamplerAddons = true;
+
     [JsonPropertyName("Modules")]
     public StackEditableCardViewModel ModulesCardViewModel { get; }
 
@@ -147,7 +151,10 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         }
         else
         {
-            ApplyStepsAdditionalSampler(e);
+            // Hires does its own sampling so just throw I guess
+            throw new InvalidOperationException(
+                "Sampler ApplyStep was called when Sampler node already exists"
+            );
         }
     }
 
@@ -289,8 +296,6 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             e.Builder.Connections.Primary = refinerSampler.Output;
         }
     }
-
-    private void ApplyStepsAdditionalSampler(ModuleApplyStepEventArgs e) { }
 
     /// <summary>
     /// Applies each step of our addons

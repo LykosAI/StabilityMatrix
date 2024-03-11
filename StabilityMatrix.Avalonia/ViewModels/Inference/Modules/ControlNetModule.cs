@@ -80,7 +80,7 @@ public class ControlNetModule : ModuleBase
                     e.Temp.GetDefaultVAE(),
                     ComfyUpscaler.NearestExact,
                     primarySize.Width,
-                    primarySize.Width
+                    primarySize.Height
                 );
                 e.Temp.Primary = scaled;
             }

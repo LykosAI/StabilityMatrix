@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
 
 namespace StabilityMatrix.Core.Models;
@@ -65,6 +66,11 @@ public record HybridModelFile
             if (IsDefault)
             {
                 return "Default";
+            }
+
+            if (ReferenceEquals(this, RemoteModels.ControlNetReferenceOnlyModel))
+            {
+                return "Reference Only";
             }
 
             var fileName = Path.GetFileNameWithoutExtension(RelativePath);

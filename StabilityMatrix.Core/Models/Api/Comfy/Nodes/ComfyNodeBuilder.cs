@@ -7,6 +7,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
@@ -340,6 +341,34 @@ public class ComfyNodeBuilder
         public required OneOf<string, StringNodeConnection> Text { get; init; }
         public required ulong Seed { get; init; }
         public bool LogPrompt { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "Inference_Core_AIO_Preprocessor",
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.2.0"]
+    )]
+    public record AIOPreprocessor : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required ImageNodeConnection Image { get; init; }
+
+        public required string Preprocessor { get; init; }
+
+        [Range(64, 2048)]
+        public int Resolution { get; init; } = 512;
+    }
+
+    [TypedNodeOptions(
+        Name = "Inference_Core_ReferenceOnlySimple",
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.3.0"]
+    )]
+    public record ReferenceOnlySimple : ComfyTypedNodeBase<ModelNodeConnection, LatentNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        public required LatentNodeConnection Reference { get; init; }
+
+        [Range(1, 64)]
+        public int BatchSize { get; init; } = 1;
     }
 
     public ImageNodeConnection Lambda_LatentToImage(LatentNodeConnection latent, VAENodeConnection vae)
@@ -817,6 +846,14 @@ public class ComfyNodeBuilder
 
         public ModelConnections Base => Models["Base"];
         public ModelConnections Refiner => Models["Refiner"];
+
+        public Dictionary<string, ModuleApplyStepTemporaryArgs?> SamplerTemporaryArgs { get; } = new();
+
+        public ModuleApplyStepTemporaryArgs? BaseSamplerTemporaryArgs
+        {
+            get => SamplerTemporaryArgs.GetValueOrDefault("Base");
+            set => SamplerTemporaryArgs["Base"] = value;
+        }
 
         public PrimaryNodeConnection? Primary { get; set; }
         public VAENodeConnection? PrimaryVAE { get; set; }

@@ -130,8 +130,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         }
 
         // Provide temp values
-        e.Temp.Conditioning = e.Builder.Connections.Base.Conditioning;
-        e.Temp.RefinerConditioning = e.Builder.Connections.Refiner.Conditioning;
+        e.Temp = e.CreateTempFromBuilder();
 
         // Apply steps from our addons
         ApplyAddonSteps(e);
@@ -142,6 +141,9 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         if (!e.Nodes.ContainsKey("Sampler"))
         {
             ApplyStepsInitialSampler(e);
+
+            // Save temp
+            e.Builder.Connections.BaseSamplerTemporaryArgs = e.Temp;
         }
         else
         {
@@ -152,7 +154,10 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     private void ApplyStepsInitialSampler(ModuleApplyStepEventArgs e)
     {
         // Get primary as latent using vae
-        var primaryLatent = e.Builder.GetPrimaryAsLatent();
+        var primaryLatent = e.Builder.GetPrimaryAsLatent(
+            e.Temp.Primary!.Unwrap(),
+            e.Builder.Connections.GetDefaultVAE()
+        );
 
         // Set primary sampler and scheduler
         var primarySampler = SelectedSampler ?? throw new ValidationException("Sampler not selected");
@@ -162,8 +167,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         e.Builder.Connections.PrimaryScheduler = primaryScheduler;
 
         // Use Temp Conditioning that may be modified by addons
-        var conditioning = e.Temp.Conditioning.Unwrap();
-        var refinerConditioning = e.Temp.RefinerConditioning;
+        var conditioning = e.Temp.Base.Conditioning.Unwrap();
+        var refinerConditioning = e.Temp.Refiner.Conditioning;
 
         // Use custom sampler if SDTurbo scheduler is selected
         if (e.Builder.Connections.PrimaryScheduler == ComfyScheduler.SDTurbo)
@@ -216,8 +221,6 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         // Use KSampler if no refiner, otherwise need KSamplerAdvanced
         if (e.Builder.Connections.Refiner.Model is null)
         {
-            var baseConditioning = e.Builder.Connections.Base.Conditioning.Unwrap();
-
             // No refiner
             var sampler = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.KSampler

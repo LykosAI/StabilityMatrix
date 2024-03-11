@@ -132,23 +132,15 @@ public class ComfyNodeBuilder
         public int StopAtClipLayer { get; init; } = -1;
     }
 
-    public static NamedComfyNode<LatentNodeConnection> LatentFromBatch(
-        string name,
-        LatentNodeConnection samples,
-        int batchIndex,
-        int length
-    )
+    public record LatentFromBatch : ComfyTypedNodeBase<LatentNodeConnection>
     {
-        return new NamedComfyNode<LatentNodeConnection>(name)
-        {
-            ClassType = "LatentFromBatch",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["samples"] = samples.Data,
-                ["batch_index"] = batchIndex,
-                ["length"] = length,
-            }
-        };
+        public required LatentNodeConnection Samples { get; init; }
+
+        [Range(0, 63)]
+        public int BatchIndex { get; init; } = 0;
+
+        [Range(1, 64)]
+        public int Length { get; init; } = 1;
     }
 
     public static NamedComfyNode<ImageNodeConnection> ImageUpscaleWithModel(

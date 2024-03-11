@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.9.1
 ### Added
-- Fixed [#498](https://github.com/LykosAI/StabilityMatrix/issues/498) - Added "Pony" category to CivitAI Model Browser
+- Fixed [#498](https://github.com/LykosAI/StabilityMatrix/issues/498) Added "Pony" category to CivitAI Model Browser
 ### Fixed
 - Fixed [#502](https://github.com/LykosAI/StabilityMatrix/issues/502) - missing launch options for Forge
 - Fixed [#500](https://github.com/LykosAI/StabilityMatrix/issues/500) - missing output images in Forge when using output sharing
 - Fixed [#490](https://github.com/LykosAI/StabilityMatrix/issues/490) - `mpmath has no attribute 'rational'` error on macOS
 - Fixed incorrect progress text when deleting a checkpoint from the Checkpoints page
+- Fixed incorrect icon colors on macOS
 
 ## v2.9.0
 ### Added

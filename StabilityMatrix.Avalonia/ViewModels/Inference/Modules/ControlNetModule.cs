@@ -114,6 +114,13 @@ public class ControlNetModule : ModuleBase
             }
             e.Temp.Primary = controlNetReferenceOnly.Output2;
 
+            // Indicate that the Primary latent has been temp batched
+            // https://github.com/comfyanonymous/ComfyUI_experiments/issues/11
+
+            e.Temp.IsPrimaryTempBatched = true;
+            // Index 0 is the original image, index 1 is the reference only latent
+            e.Temp.PrimaryTempBatchPickIndex = 1;
+
             return;
         }
 

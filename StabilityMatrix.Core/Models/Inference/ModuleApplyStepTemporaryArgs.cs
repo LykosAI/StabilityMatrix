@@ -11,6 +11,16 @@ public class ModuleApplyStepTemporaryArgs
 
     public VAENodeConnection? PrimaryVAE { get; set; }
 
+    /// <summary>
+    /// Used by Reference-Only ControlNet to indicate that <see cref="Primary"/> has been batched.
+    /// </summary>
+    public bool IsPrimaryTempBatched { get; set; }
+
+    /// <summary>
+    /// When <see cref="IsPrimaryTempBatched"/> is true, this is the index of the temp batch to pick after sampling.
+    /// </summary>
+    public int PrimaryTempBatchPickIndex { get; set; }
+
     public Dictionary<string, ModelConnections> Models { get; set; } =
         new() { ["Base"] = new ModelConnections("Base"), ["Refiner"] = new ModelConnections("Refiner") };
 

@@ -222,12 +222,9 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             );
 
             e.Builder.Connections.Primary = sampler.Output1;
-
-            return;
         }
-
         // Use KSampler if no refiner, otherwise need KSamplerAdvanced
-        if (e.Builder.Connections.Refiner.Model is null)
+        else if (e.Builder.Connections.Refiner.Model is null)
         {
             // No refiner
             var sampler = e.Nodes.AddTypedNode(
@@ -272,8 +269,30 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 }
             );
 
+            e.Builder.Connections.Primary = sampler.Output;
+        }
+
+        // If temp batched, add a LatentFromBatch to pick the temp batch right after first sampler
+        if (e.Temp.IsPrimaryTempBatched)
+        {
+            e.Builder.Connections.Primary = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.LatentFromBatch
+                {
+                    Name = e.Nodes.GetUniqueName("ControlNet_LatentFromBatch"),
+                    Samples = e.Builder.GetPrimaryAsLatent(),
+                    BatchIndex = e.Temp.PrimaryTempBatchPickIndex,
+                    // Use max length here as recommended
+                    // https://github.com/comfyanonymous/ComfyUI_experiments/issues/11
+                    Length = 64
+                }
+            ).Output;
+        }
+
+        // Refiner
+        if (e.Builder.Connections.Refiner.Model is not null)
+        {
             // Add refiner sampler
-            var refinerSampler = e.Nodes.AddTypedNode(
+            e.Builder.Connections.Primary = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.KSamplerAdvanced
                 {
                     Name = "Sampler_Refiner",
@@ -287,14 +306,12 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     Positive = refinerConditioning!.Positive,
                     Negative = refinerConditioning.Negative,
                     // Connect to previous sampler
-                    LatentImage = sampler.Output,
+                    LatentImage = e.Builder.GetPrimaryAsLatent(),
                     StartAtStep = Steps,
                     EndAtStep = TotalSteps,
                     ReturnWithLeftoverNoise = false
                 }
-            );
-
-            e.Builder.Connections.Primary = refinerSampler.Output;
+            ).Output;
         }
     }
 

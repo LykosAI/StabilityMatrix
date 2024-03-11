@@ -281,7 +281,7 @@ public partial class PackageInstallDetailViewModel(
         SelectedVersion = !IsReleaseMode
             ? AvailableVersions?.FirstOrDefault(x => x.TagName == SelectedPackage.MainBranch)
                 ?? AvailableVersions?.FirstOrDefault()
-            : AvailableVersions?.FirstOrDefault();
+            : AvailableVersions?.FirstOrDefault(v => !v.IsPrerelease);
 
         CanInstall = !ShowDuplicateWarning;
     }

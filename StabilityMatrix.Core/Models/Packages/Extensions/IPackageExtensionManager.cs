@@ -90,6 +90,13 @@ public interface IPackageExtensionManager
     );
 
     /// <summary>
+    /// Get updated info (version) for an installed extension.
+    /// </summary>
+    Task<InstalledPackageExtension> GetInstalledExtensionInfoAsync(
+        InstalledPackageExtension installedExtension
+    );
+
+    /// <summary>
     /// Install an extension to the provided package.
     /// </summary>
     Task InstallExtensionAsync(

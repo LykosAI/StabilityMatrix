@@ -12,4 +12,6 @@ public record ModelConnections(string Name)
     public ClipNodeConnection? Clip { get; set; }
 
     public ConditioningConnections? Conditioning { get; set; }
+
+    public ConditioningConnections? PrimarySamplerConditioning { get; set; }
 }

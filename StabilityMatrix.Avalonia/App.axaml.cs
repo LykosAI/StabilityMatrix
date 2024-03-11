@@ -328,9 +328,8 @@ public sealed class App : Application
                 {
                     Pages =
                     {
-                        provider.GetRequiredService<LaunchPageViewModel>(),
-                        provider.GetRequiredService<InferenceViewModel>(),
                         provider.GetRequiredService<NewPackageManagerViewModel>(),
+                        provider.GetRequiredService<InferenceViewModel>(),
                         provider.GetRequiredService<CheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
                         provider.GetRequiredService<OutputsPageViewModel>()

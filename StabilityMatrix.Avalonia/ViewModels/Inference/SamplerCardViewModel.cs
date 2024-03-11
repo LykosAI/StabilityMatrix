@@ -87,6 +87,11 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     [Required]
     private ComfyScheduler? selectedScheduler = ComfyScheduler.Normal;
 
+    [ObservableProperty]
+    [property: Category("Settings")]
+    [property: DisplayName("Inherit Primary Sampler Addons")]
+    private bool inheritPrimarySamplerAddons = true;
+
     [JsonPropertyName("Modules")]
     public StackEditableCardViewModel ModulesCardViewModel { get; }
 
@@ -142,10 +147,17 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         if (!e.Nodes.ContainsKey("Sampler"))
         {
             ApplyStepsInitialSampler(e);
+
+            // Save temp conditioning for primary
+            e.Builder.Connections.Base.PrimarySamplerConditioning = e.Temp.Conditioning;
+            e.Builder.Connections.Refiner.PrimarySamplerConditioning = e.Temp.RefinerConditioning;
         }
         else
         {
-            ApplyStepsAdditionalSampler(e);
+            // Hires does its own sampling so just throw I guess
+            throw new InvalidOperationException(
+                "Sampler ApplyStep was called when Sampler node already exists"
+            );
         }
     }
 
@@ -286,8 +298,6 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             e.Builder.Connections.Primary = refinerSampler.Output;
         }
     }
-
-    private void ApplyStepsAdditionalSampler(ModuleApplyStepEventArgs e) { }
 
     /// <summary>
     /// Applies each step of our addons

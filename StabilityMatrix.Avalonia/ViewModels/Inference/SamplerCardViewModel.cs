@@ -234,7 +234,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 new ComfyNodeBuilder.KSampler
                 {
                     Name = "Sampler",
-                    Model = e.Builder.Connections.Base.Model.Unwrap(),
+                    Model = e.Temp.Base.Model!.Unwrap(),
                     Seed = e.Builder.Connections.Seed,
                     SamplerName = primarySampler.Name,
                     Scheduler = primaryScheduler.Name,
@@ -256,7 +256,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 new ComfyNodeBuilder.KSamplerAdvanced
                 {
                     Name = "Sampler",
-                    Model = e.Builder.Connections.Base.Model.Unwrap(),
+                    Model = e.Temp.Base.Model!.Unwrap(),
                     AddNoise = true,
                     NoiseSeed = e.Builder.Connections.Seed,
                     Steps = TotalSteps,

@@ -143,6 +143,16 @@ public class ComfyNodeBuilder
         public int Length { get; init; } = 1;
     }
 
+    public record LatentBlend : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required LatentNodeConnection Samples1 { get; init; }
+
+        public required LatentNodeConnection Samples2 { get; init; }
+
+        [Range(0d, 1d)]
+        public double BlendFactor { get; init; } = 0.5;
+    }
+
     public static NamedComfyNode<ImageNodeConnection> ImageUpscaleWithModel(
         string name,
         UpscaleModelNodeConnection upscaleModel,

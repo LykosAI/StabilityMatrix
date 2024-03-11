@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -71,16 +72,18 @@ public class ControlNetModule : ModuleBase
         if (card.SelectedModel == RemoteModels.ControlNetReferenceOnlyModel)
         {
             // We need to rescale image to be the current primary size if it's not already
-            var primarySize = e.Builder.Connections.PrimarySize;
-            if (card.SelectImageCardViewModel.CurrentBitmapSize != primarySize)
+            var originalPrimary = e.Temp.Primary!.Unwrap();
+            var originalPrimarySize = e.Builder.Connections.PrimarySize;
+
+            if (card.SelectImageCardViewModel.CurrentBitmapSize != originalPrimarySize)
             {
                 var scaled = e.Builder.Group_Upscale(
                     e.Nodes.GetUniqueName("ControlNet_Rescale"),
                     image,
                     e.Temp.GetDefaultVAE(),
                     ComfyUpscaler.NearestExact,
-                    primarySize.Width,
-                    primarySize.Height
+                    originalPrimarySize.Width,
+                    originalPrimarySize.Height
                 );
                 e.Temp.Primary = scaled;
             }
@@ -113,6 +116,29 @@ public class ControlNetModule : ModuleBase
                 e.Temp.Base.Model = controlNetReferenceOnly.Output1;
             }
             e.Temp.Primary = controlNetReferenceOnly.Output2;
+
+            // If ControlNet strength is not 1, add a LatentBlend
+            if (Math.Abs(card.Strength - 1) > 0.01)
+            {
+                var latentBlend = e.Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.LatentBlend
+                    {
+                        Name = e.Nodes.GetUniqueName("ControlNet_ReferenceOnly_LatentBlend"),
+                        Samples1 = e.Builder.GetPrimaryAsLatent(
+                            e.Temp.Primary,
+                            e.Builder.Connections.GetDefaultVAE()
+                        ),
+                        Samples2 = e.Builder.GetPrimaryAsLatent(
+                            originalPrimary,
+                            e.Builder.Connections.GetDefaultVAE()
+                        ),
+                        // Where 0 is full reference only, 1 is full original
+                        BlendFactor = 1 - card.Strength
+                    }
+                );
+
+                e.Temp.Primary = latentBlend.Output;
+            }
 
             // Indicate that the Primary latent has been temp batched
             // https://github.com/comfyanonymous/ComfyUI_experiments/issues/11

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Revisited the way images are loaded on the outputs page, with improvements to loading speed & not freezing the UI while loading
 ### Fixed
 - Fixed Outputs page not remembering where the user last was in the TreeView in certain circumstances
+- Fixed "The Open Web UI button has moved" teaching tip spam
 
 ## v2.10.0-dev.1
 ### Added

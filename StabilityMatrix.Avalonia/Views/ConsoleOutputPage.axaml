@@ -88,6 +88,6 @@
                         Target="{Binding #OpenWebUiButton}"
                         Title="{x:Static lang:Resources.TeachingTip_WebUiButtonMoved}"
                         PreferredPlacement="Bottom"
-                        IsOpen="True"/>
+                        IsOpen="{Binding ShowWebUiTeachingTip}"/>
     </Grid>
 </controls:UserControlBase>

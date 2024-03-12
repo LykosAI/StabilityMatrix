@@ -153,6 +153,16 @@ public class ComfyNodeBuilder
         public double BlendFactor { get; init; } = 0.5;
     }
 
+    public record ModelMergeSimple : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model1 { get; init; }
+
+        public required ModelNodeConnection Model2 { get; init; }
+
+        [Range(0d, 1d)]
+        public double Ratio { get; init; } = 1;
+    }
+
     public static NamedComfyNode<ImageNodeConnection> ImageUpscaleWithModel(
         string name,
         UpscaleModelNodeConnection upscaleModel,

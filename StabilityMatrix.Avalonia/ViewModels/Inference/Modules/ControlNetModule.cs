@@ -106,39 +106,35 @@ public class ControlNetModule : ModuleBase
                 }
             );
 
-            // Set output as new primary and model source
-            if (model == e.Temp.Refiner.Model)
-            {
-                e.Temp.Refiner.Model = controlNetReferenceOnly.Output1;
-            }
-            else
-            {
-                e.Temp.Base.Model = controlNetReferenceOnly.Output1;
-            }
-            e.Temp.Primary = controlNetReferenceOnly.Output2;
+            var referenceOnlyModel = controlNetReferenceOnly.Output1;
 
-            // If ControlNet strength is not 1, add a LatentBlend
+            // If ControlNet strength is not 1, add Model Merge
             if (Math.Abs(card.Strength - 1) > 0.01)
             {
-                var latentBlend = e.Nodes.AddTypedNode(
-                    new ComfyNodeBuilder.LatentBlend
+                var modelBlend = e.Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.ModelMergeSimple
                     {
-                        Name = e.Nodes.GetUniqueName("ControlNet_ReferenceOnly_LatentBlend"),
-                        Samples1 = e.Builder.GetPrimaryAsLatent(
-                            e.Temp.Primary,
-                            e.Builder.Connections.GetDefaultVAE()
-                        ),
-                        Samples2 = e.Builder.GetPrimaryAsLatent(
-                            originalPrimary,
-                            e.Builder.Connections.GetDefaultVAE()
-                        ),
+                        Name = e.Nodes.GetUniqueName("ControlNet_ReferenceOnly_ModelMerge"),
+                        Model1 = referenceOnlyModel,
+                        Model2 = e.Temp.GetRefinerOrBaseModel(),
                         // Where 0 is full reference only, 1 is full original
-                        BlendFactor = 1 - card.Strength
+                        Ratio = 1 - card.Strength
                     }
                 );
 
-                e.Temp.Primary = latentBlend.Output;
+                referenceOnlyModel = modelBlend.Output;
             }
+
+            // Set output as new primary and model source
+            if (model == e.Temp.Refiner.Model)
+            {
+                e.Temp.Refiner.Model = referenceOnlyModel;
+            }
+            else
+            {
+                e.Temp.Base.Model = referenceOnlyModel;
+            }
+            e.Temp.Primary = controlNetReferenceOnly.Output2;
 
             // Indicate that the Primary latent has been temp batched
             // https://github.com/comfyanonymous/ComfyUI_experiments/issues/11

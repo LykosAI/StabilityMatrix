@@ -8,6 +8,9 @@ public enum CivitBaseModelType
 {
     All,
 
+    [StringValue("Pony")]
+    Pony,
+
     [StringValue("SD 1.5")]
     Sd15,
 
@@ -32,13 +35,14 @@ public enum CivitBaseModelType
     [StringValue("SDXL Lightning")]
     SdxlLightning,
 
+    [StringValue("SDXL Turbo")]
+    SdxlTurbo,
+
     [StringValue("SVD")]
     SVD,
 
     [StringValue("Stable Cascade")]
     StableCascade,
 
-    [StringValue("SDXL Turbo")]
-    SdxlTurbo,
     Other,
 }

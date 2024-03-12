@@ -135,8 +135,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         }
 
         // Provide temp values
-        e.Temp.Conditioning = e.Builder.Connections.Base.Conditioning;
-        e.Temp.RefinerConditioning = e.Builder.Connections.Refiner.Conditioning;
+        e.Temp = e.CreateTempFromBuilder();
 
         // Apply steps from our addons
         ApplyAddonSteps(e);
@@ -148,9 +147,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         {
             ApplyStepsInitialSampler(e);
 
-            // Save temp conditioning for primary
-            e.Builder.Connections.Base.PrimarySamplerConditioning = e.Temp.Conditioning;
-            e.Builder.Connections.Refiner.PrimarySamplerConditioning = e.Temp.RefinerConditioning;
+            // Save temp
+            e.Builder.Connections.BaseSamplerTemporaryArgs = e.Temp;
         }
         else
         {
@@ -164,7 +162,10 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     private void ApplyStepsInitialSampler(ModuleApplyStepEventArgs e)
     {
         // Get primary as latent using vae
-        var primaryLatent = e.Builder.GetPrimaryAsLatent();
+        var primaryLatent = e.Builder.GetPrimaryAsLatent(
+            e.Temp.Primary!.Unwrap(),
+            e.Builder.Connections.GetDefaultVAE()
+        );
 
         // Set primary sampler and scheduler
         var primarySampler = SelectedSampler ?? throw new ValidationException("Sampler not selected");
@@ -174,8 +175,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         e.Builder.Connections.PrimaryScheduler = primaryScheduler;
 
         // Use Temp Conditioning that may be modified by addons
-        var conditioning = e.Temp.Conditioning.Unwrap();
-        var refinerConditioning = e.Temp.RefinerConditioning;
+        var conditioning = e.Temp.Base.Conditioning.Unwrap();
+        var refinerConditioning = e.Temp.Refiner.Conditioning;
 
         // Use custom sampler if SDTurbo scheduler is selected
         if (e.Builder.Connections.PrimaryScheduler == ComfyScheduler.SDTurbo)
@@ -221,21 +222,16 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             );
 
             e.Builder.Connections.Primary = sampler.Output1;
-
-            return;
         }
-
         // Use KSampler if no refiner, otherwise need KSamplerAdvanced
-        if (e.Builder.Connections.Refiner.Model is null)
+        else if (e.Builder.Connections.Refiner.Model is null)
         {
-            var baseConditioning = e.Builder.Connections.Base.Conditioning.Unwrap();
-
             // No refiner
             var sampler = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.KSampler
                 {
                     Name = "Sampler",
-                    Model = e.Builder.Connections.Base.Model.Unwrap(),
+                    Model = e.Temp.Base.Model!.Unwrap(),
                     Seed = e.Builder.Connections.Seed,
                     SamplerName = primarySampler.Name,
                     Scheduler = primaryScheduler.Name,
@@ -257,7 +253,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 new ComfyNodeBuilder.KSamplerAdvanced
                 {
                     Name = "Sampler",
-                    Model = e.Builder.Connections.Base.Model.Unwrap(),
+                    Model = e.Temp.Base.Model!.Unwrap(),
                     AddNoise = true,
                     NoiseSeed = e.Builder.Connections.Seed,
                     Steps = TotalSteps,
@@ -273,8 +269,30 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 }
             );
 
+            e.Builder.Connections.Primary = sampler.Output;
+        }
+
+        // If temp batched, add a LatentFromBatch to pick the temp batch right after first sampler
+        if (e.Temp.IsPrimaryTempBatched)
+        {
+            e.Builder.Connections.Primary = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.LatentFromBatch
+                {
+                    Name = e.Nodes.GetUniqueName("ControlNet_LatentFromBatch"),
+                    Samples = e.Builder.GetPrimaryAsLatent(),
+                    BatchIndex = e.Temp.PrimaryTempBatchPickIndex,
+                    // Use max length here as recommended
+                    // https://github.com/comfyanonymous/ComfyUI_experiments/issues/11
+                    Length = 64
+                }
+            ).Output;
+        }
+
+        // Refiner
+        if (e.Builder.Connections.Refiner.Model is not null)
+        {
             // Add refiner sampler
-            var refinerSampler = e.Nodes.AddTypedNode(
+            e.Builder.Connections.Primary = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.KSamplerAdvanced
                 {
                     Name = "Sampler_Refiner",
@@ -288,14 +306,12 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     Positive = refinerConditioning!.Positive,
                     Negative = refinerConditioning.Negative,
                     // Connect to previous sampler
-                    LatentImage = sampler.Output,
+                    LatentImage = e.Builder.GetPrimaryAsLatent(),
                     StartAtStep = Steps,
                     EndAtStep = TotalSteps,
                     ReturnWithLeftoverNoise = false
                 }
-            );
-
-            e.Builder.Connections.Primary = refinerSampler.Output;
+            ).Output;
         }
     }
 

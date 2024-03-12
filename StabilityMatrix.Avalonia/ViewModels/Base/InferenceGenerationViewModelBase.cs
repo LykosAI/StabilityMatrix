@@ -16,7 +16,6 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using ExifLibrary;
 using FluentAvalonia.UI.Controls;
-using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using Refit;
 using Semver;
@@ -760,6 +759,7 @@ public abstract partial class InferenceGenerationViewModelBase
 
             var steps = new List<IPackageStep>();
 
+            // Add install for missing extensions
             foreach (var missingExtension in missingExtensions)
             {
                 if (!manifestExtensionsMap.TryGetValue(missingExtension.Name, out var extension))
@@ -772,6 +772,18 @@ public abstract partial class InferenceGenerationViewModelBase
                 }
 
                 steps.Add(new InstallExtensionStep(manager, localPackagePair.InstalledPackage, extension));
+            }
+
+            // Add update for out of date extensions
+            foreach (var (specifier, installed) in outOfDateExtensions)
+            {
+                if (!manifestExtensionsMap.TryGetValue(specifier.Name, out var extension))
+                {
+                    Logger.Warn("Extension {MissingExtensionUrl} not found in manifests", specifier.Name);
+                    continue;
+                }
+
+                steps.Add(new UpdateExtensionStep(manager, localPackagePair.InstalledPackage, installed));
             }
 
             var runner = new PackageModificationRunner

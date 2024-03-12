@@ -321,13 +321,17 @@ public partial class PackageCardViewModel(
             return;
         }
 
-        var dialog = new ContentDialog
+        var dialogViewModel = vmFactory.Get<ConfirmPackageDeleteDialogViewModel>(vm =>
         {
-            Title = Resources.Label_ConfirmDelete,
-            Content = Resources.Text_PackageUninstall_Details,
-            PrimaryButtonText = Resources.Action_OK,
-            CloseButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Primary
+            vm.ExpectedPackageName = Package?.DisplayName;
+        });
+
+        var dialog = new BetterContentDialog
+        {
+            Content = dialogViewModel,
+            IsPrimaryButtonEnabled = false,
+            IsSecondaryButtonEnabled = false,
+            IsFooterVisible = false,
         };
         var result = await dialog.ShowAsync();
 

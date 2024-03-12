@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed Outputs page not remembering where the user last was in the TreeView in certain circumstances
 - Fixed Inference extension upgrades not being added to missing extensions list for prompted install
+- Fixed "The Open Web UI button has moved" teaching tip spam
 
 ## v2.10.0-dev.1
 ### Added

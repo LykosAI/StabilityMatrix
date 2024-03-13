@@ -22,7 +22,7 @@
                         </Style>
                     </Grid.Styles>
                     <StackPanel Margin="8" Orientation="Horizontal">
-                        <ui:ColorPickerButton Color="{Binding PaintBrushColor, RelativeSource={RelativeSource TemplatedParent}}}" />
+                        <ui:ColorPickerButton Color="{Binding PaintBrushColor, RelativeSource={RelativeSource TemplatedParent}}" />
                         <Label 
                             Margin="8,0,0,0"
                             Content="Pressure:" VerticalAlignment="Center" />

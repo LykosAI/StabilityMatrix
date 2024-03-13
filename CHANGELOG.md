@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.10.0-dev.3
 ### Fixed
-- Fix model download location options for VAEs in the CivitAI Model Browser
+- Fixed model download location options for VAEs in the CivitAI Model Browser
+- Fixed crash on startup when library directory is not set
+- Fixed One-Click install progress dialog not disappearing after completion
+- Fixed ComfyUI with Inference pop-up during one-click install appearing below the visible scroll area
 
 ## v2.10.0-dev.2
 ### Added

@@ -206,13 +206,13 @@ public class KohyaSs(
                 "lora_gui.py",
                 "dreambooth_gui.py",
                 "textual_inversion_gui.py",
-                Path.Combine("library", "wd14_caption_gui.py"),
+                "wd14_caption_gui.py",
                 "finetune_gui.py"
             };
 
             foreach (var file in filesToUpdate)
             {
-                var path = Path.Combine(installedPackagePath, file);
+                var path = Path.Combine(installedPackagePath, "kohya_gui", file);
                 var text = File.ReadAllText(path);
                 if (text.Contains(replacementAcceleratePath.Replace(@"\", @"\\")))
                     continue;

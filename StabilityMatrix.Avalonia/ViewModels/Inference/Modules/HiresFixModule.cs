@@ -78,10 +78,16 @@ public partial class HiresFixModule : ModuleBase
             );
         }
 
-        // Choose conditioning based on whether to inherit primary sampler addons
-        var conditioning = samplerCard.InheritPrimarySamplerAddons
-            ? builder.Connections.GetRefinerOrBasePrimarySamplerConditioning()
-            : builder.Connections.GetRefinerOrBaseConditioning();
+        // If we need to inherit primary sampler addons, use their temp args
+        if (samplerCard.InheritPrimarySamplerAddons)
+        {
+            e.Temp = e.Builder.Connections.BaseSamplerTemporaryArgs ?? e.CreateTempFromBuilder();
+        }
+        else
+        {
+            // otherwise just use new ones
+            e.Temp = e.CreateTempFromBuilder();
+        }
 
         var hiresSampler = builder.Nodes.AddTypedNode(
             new ComfyNodeBuilder.KSampler
@@ -99,8 +105,8 @@ public partial class HiresFixModule : ModuleBase
                     samplerCard.SelectedScheduler?.Name
                     ?? e.Builder.Connections.PrimaryScheduler?.Name
                     ?? throw new ArgumentException("No PrimaryScheduler"),
-                Positive = conditioning.Positive,
-                Negative = conditioning.Negative,
+                Positive = e.Temp.GetRefinerOrBaseConditioning().Positive,
+                Negative = e.Temp.GetRefinerOrBaseConditioning().Negative,
                 LatentImage = builder.GetPrimaryAsLatent(),
                 Denoise = samplerCard.DenoiseStrength
             }

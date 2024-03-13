@@ -32,7 +32,7 @@ public interface IPackageModificationRunner
 
     string? ModificationCompleteTitle { get; init; }
 
-    string? ModificationCompleteMessage { get; init; }
+    string ModificationCompleteMessage { get; init; }
 
     string? ModificationFailedTitle { get; init; }
 

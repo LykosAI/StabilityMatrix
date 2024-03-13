@@ -5,12 +5,25 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.10.0-dev.3
+### Fixed
+- Fixed Inference HiresFix module "Inherit Primary Sampler Addons" setting not effectively disabling when unchecked
+- Fixed model download location options for VAEs in the CivitAI Model Browser
+- Fixed crash on startup when library directory is not set
+- Fixed One-Click install progress dialog not disappearing after completion
+- Fixed ComfyUI with Inference pop-up during one-click install appearing below the visible scroll area
+- Fixed no packages being available for one-click install on PCs without a GPU
+
 ## v2.10.0-dev.2
+### Added
+- Added Reference-Only mode for Inference ControlNet, used for guiding the sampler with an image without a pretrained model. Part of the latent and attention layers will be connected to the reference image, similar to Image to Image or Inpainting.
 ### Changed
 - Inference Primary Sampler Addons (i.e. ControlNet, FreeU) are now inherited by Hires Fix Samplers, this can be overriden from the Hires Fix module's settings menu by disabling the "Inherit Primary Sampler Addons" option.
 - Revisited the way images are loaded on the outputs page, with improvements to loading speed & not freezing the UI while loading
 ### Fixed
 - Fixed Outputs page not remembering where the user last was in the TreeView in certain circumstances
+- Fixed Inference extension upgrades not being added to missing extensions list for prompted install
+- Fixed "The Open Web UI button has moved" teaching tip spam
 
 ## v2.10.0-dev.1
 ### Added
@@ -24,12 +37,16 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.9.1
 ### Added
-- Fixed [#498](https://github.com/LykosAI/StabilityMatrix/issues/498) - Added "Pony" category to CivitAI Model Browser
+- Fixed [#498](https://github.com/LykosAI/StabilityMatrix/issues/498) Added "Pony" category to CivitAI Model Browser
+### Changed
+- Changed package deletion warning dialog to require additional confirmation
 ### Fixed
 - Fixed [#502](https://github.com/LykosAI/StabilityMatrix/issues/502) - missing launch options for Forge
 - Fixed [#500](https://github.com/LykosAI/StabilityMatrix/issues/500) - missing output images in Forge when using output sharing
 - Fixed [#490](https://github.com/LykosAI/StabilityMatrix/issues/490) - `mpmath has no attribute 'rational'` error on macOS
+- Fixed [#510](https://github.com/ionite34/StabilityMatrix/pull/564/files) - kohya_ss packages with v23.0.x failing to install due to missing 'packaging' dependency
 - Fixed incorrect progress text when deleting a checkpoint from the Checkpoints page
+- Fixed incorrect icon colors on macOS
 
 ## v2.9.0
 ### Added

@@ -241,6 +241,9 @@ public class KohyaSs(
             foreach (var file in filesToUpdate)
             {
                 var path = Path.Combine(guiDirExists ? kohyaGuiDir : installedPackagePath, file);
+                if (!File.Exists(path))
+                    continue;
+
                 var text = File.ReadAllText(path);
                 if (text.Contains(replacementAcceleratePath.Replace(@"\", @"\\")))
                     continue;

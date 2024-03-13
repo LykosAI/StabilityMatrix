@@ -417,7 +417,8 @@ public static class DesignData
                 new PackageInstallProgressItemViewModel(
                     new PackageModificationRunner
                     {
-                        CurrentProgress = new ProgressReport(0.5f, "Installing package...")
+                        CurrentProgress = new ProgressReport(0.5f, "Installing package..."),
+                        ModificationCompleteMessage = "Package installed successfully"
                     }
                 )
             }

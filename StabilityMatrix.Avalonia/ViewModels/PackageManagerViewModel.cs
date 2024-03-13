@@ -120,7 +120,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
 
     public override async Task OnLoadedAsync()
     {
-        if (Design.IsDesignMode)
+        if (Design.IsDesignMode || !settingsManager.IsLibraryDirSet)
             return;
 
         installedPackages.EditDiff(settingsManager.Settings.InstalledPackages, InstalledPackage.Comparer);

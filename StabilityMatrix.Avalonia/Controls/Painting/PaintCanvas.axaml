@@ -1,0 +1,57 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+    <Design.PreviewWith>
+        <controls:PaintCanvas />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|PaintCanvas">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid RowDefinitions="Auto,Auto">
+                    <Grid.Styles>
+                        <!-- Change cursor to crosshair when mouse is over the canvas -->
+                        <Style Selector="controls|SkiaCustomCanvas:pointerover">
+                            <Setter Property="Cursor" Value="Cross"/>
+                        </Style>
+                        <Style Selector="controls|SkiaCustomCanvas:pointerleave">
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Style>
+                    </Grid.Styles>
+                    <StackPanel Margin="8" Orientation="Horizontal">
+                        <ui:ColorPickerButton Color="{Binding PaintBrushColor, RelativeSource={RelativeSource TemplatedParent}}}" />
+                        <Label 
+                            Margin="8,0,0,0"
+                            Content="Pressure:" VerticalAlignment="Center" />
+                        <Label 
+                            Content="{TemplateBinding CurrentPenPressure}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ZoomBorder
+                        Grid.Row="1"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        Background="SlateBlue"
+                        ClipToBounds="True"
+                        Focusable="True"
+                        Stretch="None"
+                        ZoomSpeed="1.2">
+                        <controls:SkiaCustomCanvas
+                            x:Name="PART_MainCanvas"
+                            Width="600"
+                            Height="600"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Background="Transparent"
+                            Cursor="Cross" />
+                    </ZoomBorder>
+
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+
+
+    </Style>
+</Styles>

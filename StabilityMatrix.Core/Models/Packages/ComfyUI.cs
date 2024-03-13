@@ -43,7 +43,7 @@ public class ComfyUI(
     public override bool ShouldIgnoreReleases => true;
     public override bool IsInferenceCompatible => true;
     public override string OutputFolderName => "output";
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.InferenceCompatible;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
 

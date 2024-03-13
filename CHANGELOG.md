@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.10.0-dev.3
 ### Fixed
 - Fixed Inference HiresFix module "Inherit Primary Sampler Addons" setting not effectively disabling when unchecked
+- Fix model download location options for VAEs in the CivitAI Model Browser
 
 ## v2.10.0-dev.2
 ### Added

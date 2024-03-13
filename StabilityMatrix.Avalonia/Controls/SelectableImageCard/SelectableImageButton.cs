@@ -11,8 +11,10 @@ public class SelectableImageButton : Button
     public static readonly StyledProperty<bool?> IsSelectedProperty =
         ToggleButton.IsCheckedProperty.AddOwner<SelectableImageButton>();
 
-    public static readonly StyledProperty<string?> SourceProperty =
-        AdvancedImage.SourceProperty.AddOwner<SelectableImageButton>();
+    public static readonly StyledProperty<Uri?> SourceProperty = AvaloniaProperty.Register<
+        SelectableImageButton,
+        Uri?
+    >("Source");
 
     public static readonly StyledProperty<double> ImageWidthProperty = AvaloniaProperty.Register<
         SelectableImageButton,
@@ -48,7 +50,7 @@ public class SelectableImageButton : Button
         set => SetValue(IsSelectedProperty, value);
     }
 
-    public string? Source
+    public Uri? Source
     {
         get => GetValue(SourceProperty);
         set => SetValue(SourceProperty, value);

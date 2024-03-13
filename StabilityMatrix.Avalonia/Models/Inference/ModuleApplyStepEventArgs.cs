@@ -4,7 +4,7 @@ using System.IO;
 using System.IO.Hashing;
 using System.Text;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
-using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
+using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
 
@@ -17,7 +17,7 @@ public class ModuleApplyStepEventArgs : EventArgs
 
     public NodeDictionary Nodes => Builder.Nodes;
 
-    public ModuleApplyStepTemporaryArgs Temp { get; } = new();
+    public ModuleApplyStepTemporaryArgs Temp { get; set; } = new();
 
     /// <summary>
     /// Generation overrides (like hires fix generate, current seed generate, etc.)
@@ -25,6 +25,20 @@ public class ModuleApplyStepEventArgs : EventArgs
     public IReadOnlyDictionary<Type, bool> IsEnabledOverrides { get; init; } = new Dictionary<Type, bool>();
 
     public List<(string SourcePath, string DestinationRelativePath)> FilesToTransfer { get; init; } = [];
+
+    /// <summary>
+    /// Creates a new <see cref="ModuleApplyStepEventArgs"/> with the given <see cref="ComfyNodeBuilder"/>.
+    /// </summary>
+    /// <returns></returns>
+    public ModuleApplyStepTemporaryArgs CreateTempFromBuilder()
+    {
+        return new ModuleApplyStepTemporaryArgs
+        {
+            Primary = Builder.Connections.Primary,
+            PrimaryVAE = Builder.Connections.PrimaryVAE,
+            Models = Builder.Connections.Models
+        };
+    }
 
     public void AddFileTransfer(string sourcePath, string destinationRelativePath)
     {
@@ -53,23 +67,5 @@ public class ModuleApplyStepEventArgs : EventArgs
         FilesToTransfer.Add((sourcePath, destPath));
 
         return destPath;
-    }
-
-    public class ModuleApplyStepTemporaryArgs
-    {
-        /// <summary>
-        /// Temporary conditioning apply step, used by samplers to apply control net.
-        /// </summary>
-        public ConditioningConnections? Conditioning { get; set; }
-
-        /// <summary>
-        /// Temporary refiner conditioning apply step, used by samplers to apply control net.
-        /// </summary>
-        public ConditioningConnections? RefinerConditioning { get; set; }
-
-        /// <summary>
-        /// Temporary model apply step, used by samplers to apply control net.
-        /// </summary>
-        public ModelNodeConnection? Model { get; set; }
     }
 }

@@ -122,6 +122,9 @@ public class KohyaSs(
         venvRunner.WorkingDirectory = installLocation;
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
+        // Extra dep needed before running setup since v23.0.x
+        await venvRunner.PipInstall("packaging").ConfigureAwait(false);
+
         if (Compat.IsWindows)
         {
             var setupSmPath = Path.Combine(installLocation, "setup", "setup_sm.py");

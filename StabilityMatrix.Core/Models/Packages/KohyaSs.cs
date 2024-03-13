@@ -116,11 +116,23 @@ public class KohyaSs(
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
+        progress?.Report(new ProgressReport(-1f, "Updating submodules", isIndeterminate: true));
+        await PrerequisiteHelper
+            .RunGit(
+                ["submodule", "update", "--init", "--recursive", "--quiet"],
+                onConsoleOutput,
+                installLocation
+            )
+            .ConfigureAwait(false);
+
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
+
+        // Extra dep needed before running setup since v23.0.x
+        await venvRunner.PipInstall("packaging").ConfigureAwait(false);
 
         if (Compat.IsWindows)
         {
@@ -136,18 +148,17 @@ public class KohyaSs(
             await File.WriteAllTextAsync(setupSmPath, setupText).ConfigureAwait(false);
 
             // Install
-            venvRunner.RunDetached("setup/setup_sm.py", onConsoleOutput);
-            await venvRunner.Process.WaitForExitAsync().ConfigureAwait(false);
-
+            await venvRunner.CustomInstall("setup/setup_sm.py", onConsoleOutput).ConfigureAwait(false);
             await venvRunner.PipInstall("bitsandbytes-windows").ConfigureAwait(false);
         }
         else if (Compat.IsLinux)
         {
-            venvRunner.RunDetached(
-                "setup/setup_linux.py --platform-requirements-file=requirements_linux.txt --no_run_accelerate",
-                onConsoleOutput
-            );
-            await venvRunner.Process.WaitForExitAsync().ConfigureAwait(false);
+            await venvRunner
+                .CustomInstall(
+                    "setup/setup_linux.py --platform-requirements-file=requirements_linux.txt --no_run_accelerate",
+                    onConsoleOutput
+                )
+                .ConfigureAwait(false);
         }
     }
 
@@ -198,18 +209,40 @@ public class KohyaSs(
                 1.ToPython()
             );
 
-            var filesToUpdate = new[]
+            var kohyaGuiDir = Path.Combine(installedPackagePath, "kohya_gui");
+            var guiDirExists = Directory.Exists(kohyaGuiDir);
+            var filesToUpdate = new List<string>();
+            if (guiDirExists)
             {
-                "lora_gui.py",
-                "dreambooth_gui.py",
-                "textual_inversion_gui.py",
-                Path.Combine("library", "wd14_caption_gui.py"),
-                "finetune_gui.py"
-            };
+                filesToUpdate.AddRange(
+                    [
+                        "lora_gui.py",
+                        "dreambooth_gui.py",
+                        "textual_inversion_gui.py",
+                        "wd14_caption_gui.py",
+                        "finetune_gui.py"
+                    ]
+                );
+            }
+            else
+            {
+                filesToUpdate.AddRange(
+                    [
+                        "lora_gui.py",
+                        "dreambooth_gui.py",
+                        "textual_inversion_gui.py",
+                        Path.Combine("library", "wd14_caption_gui.py"),
+                        "finetune_gui.py"
+                    ]
+                );
+            }
 
             foreach (var file in filesToUpdate)
             {
-                var path = Path.Combine(installedPackagePath, file);
+                var path = Path.Combine(guiDirExists ? kohyaGuiDir : installedPackagePath, file);
+                if (!File.Exists(path))
+                    continue;
+
                 var text = File.ReadAllText(path);
                 if (text.Contains(replacementAcceleratePath.Replace(@"\", @"\\")))
                     continue;

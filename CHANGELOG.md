@@ -5,6 +5,27 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.10.0-dev.2
+### Added
+- Added Reference-Only mode for Inference ControlNet, used for guiding the sampler with an image without a pretrained model. Part of the latent and attention layers will be connected to the reference image, similar to Image to Image or Inpainting.
+### Changed
+- Inference Primary Sampler Addons (i.e. ControlNet, FreeU) are now inherited by Hires Fix Samplers, this can be overriden from the Hires Fix module's settings menu by disabling the "Inherit Primary Sampler Addons" option.
+- Revisited the way images are loaded on the outputs page, with improvements to loading speed & not freezing the UI while loading
+### Fixed
+- Fixed Outputs page not remembering where the user last was in the TreeView in certain circumstances
+- Fixed Inference extension upgrades not being added to missing extensions list for prompted install
+- Fixed "The Open Web UI button has moved" teaching tip spam
+
+## v2.10.0-dev.1
+### Added
+- Inference ControlNet module now supports over 42 preprocessors, a new button next to the preprocessors dropdown allows previewing the output of the selected preprocessor on the image.
+- Added resolution selection for Inference ControlNet module, this controls preprocessor resolution too.
+### Changed
+- Revamped the Packages page to enable running multiple packages at the same time
+- Changed the Outputs Page to use a TreeView for the directory selection instead of a dropdown selector
+### Removed
+- Removed the main Launch page, as it is no longer needed with the new Packages page
+
 ## v2.9.1
 ### Added
 - Fixed [#498](https://github.com/LykosAI/StabilityMatrix/issues/498) Added "Pony" category to CivitAI Model Browser

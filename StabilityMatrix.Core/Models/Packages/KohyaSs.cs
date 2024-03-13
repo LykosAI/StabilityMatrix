@@ -212,6 +212,7 @@ public class KohyaSs(
             var kohyaGuiDir = Path.Combine(installedPackagePath, "kohya_gui");
             var guiDirExists = Directory.Exists(kohyaGuiDir);
             var filesToUpdate = new List<string>();
+
             if (guiDirExists)
             {
                 filesToUpdate.AddRange(

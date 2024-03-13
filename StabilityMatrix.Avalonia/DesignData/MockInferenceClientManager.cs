@@ -41,6 +41,9 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
     public IObservableCollection<ComfyScheduler> Schedulers { get; } =
         new ObservableCollectionExtended<ComfyScheduler>(ComfyScheduler.Defaults);
 
+    public IObservableCollection<ComfyAuxPreprocessor> Preprocessors { get; } =
+        new ObservableCollectionExtended<ComfyAuxPreprocessor>(ComfyAuxPreprocessor.Defaults);
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanUserConnect))]
     private bool isConnected;

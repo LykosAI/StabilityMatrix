@@ -7,6 +7,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
@@ -131,23 +132,35 @@ public class ComfyNodeBuilder
         public int StopAtClipLayer { get; init; } = -1;
     }
 
-    public static NamedComfyNode<LatentNodeConnection> LatentFromBatch(
-        string name,
-        LatentNodeConnection samples,
-        int batchIndex,
-        int length
-    )
+    public record LatentFromBatch : ComfyTypedNodeBase<LatentNodeConnection>
     {
-        return new NamedComfyNode<LatentNodeConnection>(name)
-        {
-            ClassType = "LatentFromBatch",
-            Inputs = new Dictionary<string, object?>
-            {
-                ["samples"] = samples.Data,
-                ["batch_index"] = batchIndex,
-                ["length"] = length,
-            }
-        };
+        public required LatentNodeConnection Samples { get; init; }
+
+        [Range(0, 63)]
+        public int BatchIndex { get; init; } = 0;
+
+        [Range(1, 64)]
+        public int Length { get; init; } = 1;
+    }
+
+    public record LatentBlend : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required LatentNodeConnection Samples1 { get; init; }
+
+        public required LatentNodeConnection Samples2 { get; init; }
+
+        [Range(0d, 1d)]
+        public double BlendFactor { get; init; } = 0.5;
+    }
+
+    public record ModelMergeSimple : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model1 { get; init; }
+
+        public required ModelNodeConnection Model2 { get; init; }
+
+        [Range(0d, 1d)]
+        public double Ratio { get; init; } = 1;
     }
 
     public static NamedComfyNode<ImageNodeConnection> ImageUpscaleWithModel(
@@ -332,7 +345,7 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "Inference_Core_PromptExpansion",
-        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes"]
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.2.0"]
     )]
     public record PromptExpansion : ComfyTypedNodeBase<StringNodeConnection>
     {
@@ -340,6 +353,34 @@ public class ComfyNodeBuilder
         public required OneOf<string, StringNodeConnection> Text { get; init; }
         public required ulong Seed { get; init; }
         public bool LogPrompt { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "Inference_Core_AIO_Preprocessor",
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.2.0"]
+    )]
+    public record AIOPreprocessor : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required ImageNodeConnection Image { get; init; }
+
+        public required string Preprocessor { get; init; }
+
+        [Range(64, 2048)]
+        public int Resolution { get; init; } = 512;
+    }
+
+    [TypedNodeOptions(
+        Name = "Inference_Core_ReferenceOnlySimple",
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.3.0"]
+    )]
+    public record ReferenceOnlySimple : ComfyTypedNodeBase<ModelNodeConnection, LatentNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        public required LatentNodeConnection Reference { get; init; }
+
+        [Range(1, 64)]
+        public int BatchSize { get; init; } = 1;
     }
 
     public ImageNodeConnection Lambda_LatentToImage(LatentNodeConnection latent, VAENodeConnection vae)
@@ -817,6 +858,14 @@ public class ComfyNodeBuilder
 
         public ModelConnections Base => Models["Base"];
         public ModelConnections Refiner => Models["Refiner"];
+
+        public Dictionary<string, ModuleApplyStepTemporaryArgs?> SamplerTemporaryArgs { get; } = new();
+
+        public ModuleApplyStepTemporaryArgs? BaseSamplerTemporaryArgs
+        {
+            get => SamplerTemporaryArgs.GetValueOrDefault("Base");
+            set => SamplerTemporaryArgs["Base"] = value;
+        }
 
         public PrimaryNodeConnection? Primary { get; set; }
         public VAENodeConnection? PrimaryVAE { get; set; }

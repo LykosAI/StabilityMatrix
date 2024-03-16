@@ -119,11 +119,10 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             var dialog = new BetterContentDialog
             {
-                Title = "Stability Matrix is already running",
-                Content =
-                    "Another instance of Stability Matrix is already running. Please close it before starting a new one.",
+                Title = Resources.Label_StabilityMatrixAlreadyRunning,
+                Content = Resources.Label_AnotherInstanceAlreadyRunning,
                 IsPrimaryButtonEnabled = true,
-                PrimaryButtonText = "Close",
+                PrimaryButtonText = Resources.Action_Close,
                 DefaultButton = ContentDialogButton.Primary
             };
             await dialog.ShowAsync();

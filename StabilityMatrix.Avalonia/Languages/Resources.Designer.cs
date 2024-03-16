@@ -735,6 +735,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Another instance of Stability Matrix is already running. Please close it before starting a new one..
+        /// </summary>
+        public static string Label_AnotherInstanceAlreadyRunning {
+            get {
+                return ResourceManager.GetString("Label_AnotherInstanceAlreadyRunning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to API Key.
         /// </summary>
         public static string Label_ApiKey {
@@ -2270,6 +2279,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_StabilityMatrix {
             get {
                 return ResourceManager.GetString("Label_StabilityMatrix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stability Matrix is already running.
+        /// </summary>
+        public static string Label_StabilityMatrixAlreadyRunning {
+            get {
+                return ResourceManager.GetString("Label_StabilityMatrixAlreadyRunning", resourceCulture);
             }
         }
         

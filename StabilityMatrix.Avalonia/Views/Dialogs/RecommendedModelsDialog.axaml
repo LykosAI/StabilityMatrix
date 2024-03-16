@@ -110,11 +110,11 @@
                                         Background="#66000000"
                                         FontSize="16"
                                         Foreground="{DynamicResource ThemeEldenRingOrangeColor}"
-                                        Value="{Binding CivitModel.Stats.Rating}" />
+                                        Value="{Binding ModelVersion.Stats.Rating}" />
                                     <TextBlock
                                         Margin="4,0,0,0"
                                         VerticalAlignment="Center"
-                                        Text="{Binding CivitModel.Stats.RatingCount}"
+                                        Text="{Binding ModelVersion.Stats.RatingCount}"
                                         TextAlignment="Center" />
                                 </StackPanel>
                             </StackPanel>

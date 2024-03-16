@@ -16,6 +16,7 @@
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:controls1="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     d:DataContext="{x:Static designData:DesignData.CivitAiBrowserViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
@@ -71,6 +72,7 @@
     </UserControl.Styles>
 
     <UserControl.Resources>
+        <system:Boolean x:Key="False">False</system:Boolean>
         <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter"/>
         <DataTemplate x:Key="CivitModelTemplate" DataType="{x:Type checkpointBrowser:CheckpointBrowserCardViewModel}">
             <Border
@@ -336,7 +338,7 @@
                                     <TextBlock
                                         Margin="4,0"
                                         VerticalAlignment="Center"
-                                        Text="{Binding CivitModel.ModelVersionStats.FavoriteCount, Converter={StaticResource KiloFormatterConverter}}" />
+                                        Text="{Binding CivitModel.Stats.ThumbsUpCount, Converter={StaticResource KiloFormatterConverter}}" />
 
                                     <avalonia:Icon Margin="4,0" Value="fa-solid fa-download" />
                                     <TextBlock
@@ -402,6 +404,7 @@
                     VerticalAlignment="Stretch"
                     Classes="accent"
                     Command="{Binding SearchModelsCommand}"
+                    CommandParameter="{StaticResource False}"
                     IsDefault="True">
                     <Grid>
                         <controls:ProgressRing
@@ -472,57 +475,18 @@
                 </ItemsRepeater.Layout>
             </ItemsRepeater>
         </ScrollViewer>
-
-        <TextBlock
-            Grid.Row="2"
-            Margin="8,8"
-            VerticalAlignment="Center"
-            Text="{x:Static lang:Resources.Label_DataProvidedByCivitAi}" />
-
-        <StackPanel Grid.Row="2"
-                    HorizontalAlignment="Center"
-                    IsVisible="{Binding HasSearched}"
-                    Margin="0,8,0,8"
-                    Orientation="Horizontal">
-            <Button
-                Margin="0,0,8,0"
-                Command="{Binding FirstPage}"
-                IsEnabled="{Binding CanGoToFirstPage}"
-                ToolTip.Tip="{x:Static lang:Resources.Label_FirstPage}">
-                <avalonia:Icon Value="fa-solid fa-backward-fast" />
-            </Button>
-            <Button
-                Margin="0,0,16,0"
-                Command="{Binding PreviousPage}"
-                IsEnabled="{Binding CanGoToPreviousPage}"
-                ToolTip.Tip="{x:Static lang:Resources.Label_PreviousPage}">
-                <avalonia:Icon Value="fa-solid fa-caret-left" />
-            </Button>
-            <TextBlock Margin="8,0,4,0" TextAlignment="Center"
-                       Text="{x:Static lang:Resources.Label_Page}"
-                       VerticalAlignment="Center"/>
-            <ui:NumberBox Value="{Binding CurrentPageNumber, FallbackValue=1}"
-                          VerticalAlignment="Center"
-                          SpinButtonPlacementMode="Hidden"
-                          TextAlignment="Center"/>
-            <TextBlock Margin="4,0,8,0" VerticalAlignment="Center">
-                <Run Text="/"/>
-                <Run Text="{Binding TotalPages, FallbackValue=5}"/>
-            </TextBlock>
-            <Button
-                Margin="16,0,8,0"
-                Command="{Binding NextPage}"
-                IsEnabled="{Binding CanGoToNextPage}"
-                ToolTip.Tip="{x:Static lang:Resources.Label_NextPage}">
-                <avalonia:Icon Value="fa-solid fa-caret-right" />
-            </Button>
-            <Button
-                Command="{Binding LastPage}"
-                IsEnabled="{Binding CanGoToLastPage}"
-                ToolTip.Tip="{x:Static lang:Resources.Label_LastPage}">
-                <avalonia:Icon Value="fa-solid fa-forward-fast" />
-            </Button>
-        </StackPanel>
+        
+        <TextBlock Grid.Row="2" Text="End of results"
+                   TextAlignment="Center"
+                   Margin="0,0,0,8">
+            <TextBlock.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="HasSearched"/>
+                    <Binding Path="NextPageCursor"
+                             Converter="{x:Static StringConverters.IsNullOrEmpty}"/>
+                </MultiBinding>
+            </TextBlock.IsVisible>
+        </TextBlock>
 
         <TextBlock
             Grid.Row="0"

@@ -325,7 +325,7 @@ public static class DesignData
             );
         }*/
 
-        CivitAiBrowserViewModel.ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
+        CivitAiBrowserViewModel.ModelCards = new ObservableCollectionExtended<CheckpointBrowserCardViewModel>
         {
             dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
             {

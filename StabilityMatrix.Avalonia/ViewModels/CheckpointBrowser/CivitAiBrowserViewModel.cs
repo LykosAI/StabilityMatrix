@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Collections;
@@ -15,12 +11,15 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
+using DynamicData.Alias;
+using DynamicData.Binding;
 using LiteDB;
 using LiteDB.Async;
 using NLog;
-using OneOf.Types;
 using Refit;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
@@ -41,24 +40,26 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [View(typeof(CivitAiBrowserPage))]
 [Singleton]
-public partial class CivitAiBrowserViewModel : TabViewModelBase
+public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScroll
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ICivitApi civitApi;
-    private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly ILiteDbContext liteDbContext;
     private readonly INotificationService notificationService;
     private const int MaxModelsPerPage = 20;
+
     private LRUCache<
         int /* model id */
         ,
         CheckpointBrowserCardViewModel
     > cache = new(50);
 
-    [ObservableProperty]
-    private ObservableCollection<CheckpointBrowserCardViewModel>? modelCards;
+    public SourceCache<CivitModel, int> ModelCache { get; } = new(m => m.Id);
+
+    public IObservableCollection<CheckpointBrowserCardViewModel> ModelCards { get; set; } =
+        new ObservableCollectionExtended<CheckpointBrowserCardViewModel>();
 
     [ObservableProperty]
     private DataGridCollectionView? modelCardsView;
@@ -82,25 +83,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
     private CivitModelType selectedModelType = CivitModelType.Checkpoint;
 
     [ObservableProperty]
-    private int currentPageNumber;
-
-    [ObservableProperty]
-    private int totalPages;
-
-    [ObservableProperty]
     private bool hasSearched;
-
-    [ObservableProperty]
-    private bool canGoToNextPage;
-
-    [ObservableProperty]
-    private bool canGoToPreviousPage;
-
-    [ObservableProperty]
-    private bool canGoToFirstPage;
-
-    [ObservableProperty]
-    private bool canGoToLastPage;
 
     [ObservableProperty]
     private bool isIndeterminate;
@@ -117,7 +100,8 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
     [ObservableProperty]
     private bool showSantaHats = true;
 
-    private List<CheckpointBrowserCardViewModel> allModelCards = new();
+    [ObservableProperty]
+    private string? nextPageCursor;
 
     public IEnumerable<CivitPeriod> AllCivitPeriods =>
         Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
@@ -143,24 +127,45 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
     )
     {
         this.civitApi = civitApi;
-        this.downloadService = downloadService;
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.liteDbContext = liteDbContext;
         this.notificationService = notificationService;
 
-        CurrentPageNumber = 1;
-        CanGoToNextPage = true;
-        CanGoToLastPage = true;
+        ModelCache
+            .Connect()
+            .DeferUntilLoaded()
+            .Select(model =>
+            {
+                var cachedViewModel = cache.Get(model.Id);
+                if (cachedViewModel != null)
+                {
+                    if (!cachedViewModel.IsImporting)
+                    {
+                        cache.Remove(model.Id);
+                    }
 
-        Observable
-            .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
-            .Where(x => x.EventArgs.PropertyName == nameof(CurrentPageNumber))
-            .Throttle(TimeSpan.FromMilliseconds(250))
-            .Select<EventPattern<PropertyChangedEventArgs>, int>(_ => CurrentPageNumber)
-            .Where(page => page <= TotalPages && page > 0)
-            .ObserveOn(SynchronizationContext.Current)
-            .Subscribe(_ => TrySearchAgain(false).SafeFireAndForget(), err => Logger.Error(err));
+                    return cachedViewModel;
+                }
+
+                var newCard = dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
+                {
+                    vm.CivitModel = model;
+                    vm.OnDownloadStart = viewModel =>
+                    {
+                        if (cache.Get(viewModel.CivitModel.Id) != null)
+                            return;
+                        cache.Add(viewModel.CivitModel.Id, viewModel);
+                    };
+
+                    return vm;
+                });
+
+                return newCard;
+            })
+            .Filter(FilterModelCardsPredicate)
+            .Bind(ModelCards)
+            .Subscribe();
 
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
     }
@@ -171,7 +176,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             return;
 
         SearchQuery = $"$#{e}";
-        SearchModelsCommand.ExecuteAsync(null).SafeFireAndForget();
+        SearchModelsCommand.ExecuteAsync(false).SafeFireAndForget();
     }
 
     public override void OnLoaded()
@@ -223,7 +228,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
     /// <summary>
     /// Background update task
     /// </summary>
-    private async Task CivitModelQuery(CivitModelsRequest request)
+    private async Task CivitModelQuery(CivitModelsRequest request, bool isInfiniteScroll = false)
     {
         var timer = Stopwatch.StartNew();
         var queryText = request.Query;
@@ -279,12 +284,14 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             if (cacheNew)
             {
                 Logger.Debug("New cache entry, updating model cards");
-                UpdateModelCards(models, modelsResponse.Metadata);
+                UpdateModelCards(models, isInfiniteScroll);
             }
             else
             {
                 Logger.Debug("Cache entry already exists, not updating model cards");
             }
+
+            NextPageCursor = modelsResponse.Metadata?.NextCursor;
         }
         catch (OperationCanceledException)
         {
@@ -327,60 +334,22 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
     /// <summary>
     /// Updates model cards using api response object.
     /// </summary>
-    private void UpdateModelCards(IEnumerable<CivitModel>? models, CivitMetadata? metadata)
+    private void UpdateModelCards(List<CivitModel>? models, bool addCards = false)
     {
         if (models is null)
         {
-            ModelCards?.Clear();
+            ModelCache?.Clear();
         }
         else
         {
-            var updateCards = models
-                .Select(model =>
-                {
-                    var cachedViewModel = cache.Get(model.Id);
-                    if (cachedViewModel != null)
-                    {
-                        if (!cachedViewModel.IsImporting)
-                        {
-                            cache.Remove(model.Id);
-                        }
-
-                        return cachedViewModel;
-                    }
-
-                    var newCard = dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
-                    {
-                        vm.CivitModel = model;
-                        vm.OnDownloadStart = viewModel =>
-                        {
-                            if (cache.Get(viewModel.CivitModel.Id) != null)
-                                return;
-                            cache.Add(viewModel.CivitModel.Id, viewModel);
-                        };
-
-                        return vm;
-                    });
-
-                    return newCard;
-                })
-                .ToList();
-
-            allModelCards = updateCards;
-
-            var filteredCards = updateCards.Where(FilterModelCardsPredicate);
-            if (SortMode == CivitSortMode.Installed)
+            if (!addCards)
             {
-                filteredCards = filteredCards.OrderByDescending(x => x.UpdateCardText == "Update Available");
+                ModelCache.Clear();
             }
 
-            ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(filteredCards);
+            ModelCache.AddOrUpdate(models);
         }
-        TotalPages = metadata?.TotalPages ?? 1;
-        CanGoToFirstPage = CurrentPageNumber != 1;
-        CanGoToPreviousPage = CurrentPageNumber > 1;
-        CanGoToNextPage = CurrentPageNumber < TotalPages;
-        CanGoToLastPage = CurrentPageNumber != TotalPages;
+
         // Status update
         ShowMainLoadingSpinner = false;
         IsIndeterminate = false;
@@ -390,15 +359,15 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
     private string previousSearchQuery = string.Empty;
 
     [RelayCommand]
-    private async Task SearchModels()
+    private async Task SearchModels(bool isInfiniteScroll = false)
     {
         var timer = Stopwatch.StartNew();
 
-        if (SearchQuery != previousSearchQuery)
+        if (SearchQuery != previousSearchQuery || !isInfiniteScroll)
         {
             // Reset page number
-            CurrentPageNumber = 1;
             previousSearchQuery = SearchQuery;
+            NextPageCursor = null;
         }
 
         // Build request
@@ -407,9 +376,13 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             Limit = MaxModelsPerPage,
             Nsfw = "true", // Handled by local view filter
             Sort = SortMode,
-            Period = SelectedPeriod,
-            Page = CurrentPageNumber
+            Period = SelectedPeriod
         };
+
+        if (NextPageCursor != null)
+        {
+            modelRequest.Cursor = NextPageCursor;
+        }
 
         if (SelectedModelType != CivitModelType.All)
         {
@@ -516,14 +489,15 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
                 modelRequest.GetHashCode(),
                 elapsed.TotalSeconds
             );
-            UpdateModelCards(cachedQuery.Items, cachedQuery.Metadata);
+            NextPageCursor = cachedQuery.Metadata?.NextCursor;
+            UpdateModelCards(cachedQuery.Items, isInfiniteScroll);
 
             // Start remote query (background mode)
             // Skip when last query was less than 2 min ago
             var timeSinceCache = DateTimeOffset.UtcNow - cachedQuery.InsertedAt;
             if (timeSinceCache?.TotalMinutes >= 2)
             {
-                CivitModelQuery(modelRequest).SafeFireAndForget();
+                CivitModelQuery(modelRequest, isInfiniteScroll).SafeFireAndForget();
                 Logger.Debug(
                     "Cached query was more than 2 minutes ago ({Seconds:F0} s), updating cache with remote query",
                     timeSinceCache.Value.TotalSeconds
@@ -534,36 +508,10 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
         {
             // Not cached, wait for remote query
             ShowMainLoadingSpinner = true;
-            await CivitModelQuery(modelRequest);
+            await CivitModelQuery(modelRequest, isInfiniteScroll);
         }
 
         UpdateResultsText();
-    }
-
-    public void FirstPage()
-    {
-        CurrentPageNumber = 1;
-    }
-
-    public void PreviousPage()
-    {
-        if (CurrentPageNumber == 1)
-            return;
-
-        CurrentPageNumber--;
-    }
-
-    public void NextPage()
-    {
-        if (CurrentPageNumber == TotalPages)
-            return;
-
-        CurrentPageNumber++;
-    }
-
-    public void LastPage()
-    {
-        CurrentPageNumber = TotalPages;
     }
 
     public void ClearSearchQuery()
@@ -571,17 +519,12 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
         SearchQuery = string.Empty;
     }
 
-    partial void OnShowNsfwChanged(bool value)
+    public async Task LoadNextPageAsync()
     {
-        settingsManager.Transaction(s => s.ModelBrowserNsfwEnabled, value);
-        // ModelCardsView?.Refresh();
-        var updateCards = allModelCards.Where(FilterModelCardsPredicate);
-        ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(updateCards);
-
-        if (!HasSearched)
-            return;
-
-        UpdateResultsText();
+        if (NextPageCursor != null)
+        {
+            await SearchModelsCommand.ExecuteAsync(true);
+        }
     }
 
     partial void OnSelectedPeriodChanged(CivitPeriod value)
@@ -596,6 +539,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
                     SelectedBaseModelType
                 )
         );
+        NextPageCursor = null;
     }
 
     partial void OnSortModeChanged(CivitSortMode value)
@@ -610,6 +554,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
                     SelectedBaseModelType
                 )
         );
+        NextPageCursor = null;
     }
 
     partial void OnSelectedModelTypeChanged(CivitModelType value)
@@ -624,6 +569,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
                     SelectedBaseModelType
                 )
         );
+        NextPageCursor = null;
     }
 
     partial void OnSelectedBaseModelTypeChanged(string value)
@@ -638,6 +584,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
                     value
                 )
         );
+        NextPageCursor = null;
     }
 
     private async Task TrySearchAgain(bool shouldUpdatePageNumber = true)
@@ -648,18 +595,17 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
 
         if (shouldUpdatePageNumber)
         {
-            CurrentPageNumber = 1;
+            NextPageCursor = null;
         }
 
         // execute command instead of calling method directly so that the IsRunning property gets updated
-        await SearchModelsCommand.ExecuteAsync(null);
+        await SearchModelsCommand.ExecuteAsync(false);
     }
 
     private void UpdateResultsText()
     {
         NoResultsFound = ModelCards?.Count <= 0;
-        NoResultsText =
-            allModelCards.Count > 0 ? $"{allModelCards.Count} results hidden by filters" : "No results found";
+        NoResultsText = "No results found";
     }
 
     public override string Header => Resources.Label_CivitAi;

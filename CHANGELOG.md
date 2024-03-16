@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.10.0-dev.3
 ### Added
 - Added support for deep links from the new Stability Matrix Chrome extension
+### Changed
+- Due to changes on the CivitAI API, you can no longer select a specific page in the CivitAI Model Browser
+- Due to the above API changes, new pages are now loaded via "infinite scrolling"
 ### Fixed
 - Fixed Inference HiresFix module "Inherit Primary Sampler Addons" setting not effectively disabling when unchecked
 - Fixed model download location options for VAEs in the CivitAI Model Browser
@@ -16,6 +19,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed ComfyUI with Inference pop-up during one-click install appearing below the visible scroll area
 - Fixed no packages being available for one-click install on PCs without a GPU
 - Fixed models not being removed from the installed models cache when deleting them from the Checkpoints page
+- Fixed missing ratings on some models in the CivitAI Model Browser
+- Fixed missing favorite count in the CivitAI Model Browser
+- Fixed recommended models not showing all SDXL models
 
 ## v2.10.0-dev.2
 ### Added

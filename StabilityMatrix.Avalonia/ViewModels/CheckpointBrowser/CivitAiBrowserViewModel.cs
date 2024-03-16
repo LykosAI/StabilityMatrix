@@ -139,8 +139,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
         ILiteDbContext liteDbContext,
-        INotificationService notificationService,
-        IModelDownloadLinkHandler modelDownloadLinkHandler
+        INotificationService notificationService
     )
     {
         this.civitApi = civitApi;
@@ -164,8 +163,6 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase
             .Subscribe(_ => TrySearchAgain(false).SafeFireAndForget(), err => Logger.Error(err));
 
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
-
-        modelDownloadLinkHandler.StartListening().SafeFireAndForget();
     }
 
     private void OnNavigateAndFindCivitModelRequested(object? sender, int e)

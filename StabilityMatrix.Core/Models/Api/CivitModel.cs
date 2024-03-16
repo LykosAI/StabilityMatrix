@@ -48,9 +48,7 @@ public class CivitModel
             var latestVersion = ModelVersions?.FirstOrDefault();
             if (latestVersion?.Files != null && latestVersion.Files.Any())
             {
-                var latestModelFile = latestVersion.Files.FirstOrDefault(
-                    x => x.Type == CivitFileType.Model
-                );
+                var latestModelFile = latestVersion.Files.FirstOrDefault(x => x.Type == CivitFileType.Model);
                 kbs = latestModelFile?.SizeKb ?? 0;
             }
             fullFilesSize = new FileSizeType(kbs);
@@ -65,4 +63,7 @@ public class CivitModel
         ModelVersions != null && ModelVersions.Any()
             ? ModelVersions[0].BaseModel?.Replace("SD", "").Trim()
             : string.Empty;
+
+    public CivitModelStats ModelVersionStats =>
+        ModelVersions != null && ModelVersions.Any() ? ModelVersions[0].Stats : new CivitModelStats();
 }

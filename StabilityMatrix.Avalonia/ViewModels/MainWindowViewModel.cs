@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -36,6 +37,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IDiscordRichPresenceService discordRichPresenceService;
     private readonly IModelIndexService modelIndexService;
+    private readonly Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler;
     public string Greeting => "Welcome to Avalonia!";
 
     [ObservableProperty]
@@ -71,7 +73,8 @@ public partial class MainWindowViewModel : ViewModelBase
         IDiscordRichPresenceService discordRichPresenceService,
         ServiceManager<ViewModelBase> dialogFactory,
         ITrackedDownloadService trackedDownloadService,
-        IModelIndexService modelIndexService
+        IModelIndexService modelIndexService,
+        Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler
     )
     {
         this.settingsManager = settingsManager;
@@ -79,6 +82,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.discordRichPresenceService = discordRichPresenceService;
         this.trackedDownloadService = trackedDownloadService;
         this.modelIndexService = modelIndexService;
+        this.modelDownloadLinkHandler = modelDownloadLinkHandler;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
     }
@@ -103,6 +107,25 @@ public partial class MainWindowViewModel : ViewModelBase
         if (!await EnsureDataDirectory())
         {
             // False if user exited dialog, shutdown app
+            App.Shutdown();
+            return;
+        }
+
+        try
+        {
+            await modelDownloadLinkHandler.Value.StartListening();
+        }
+        catch (IOException)
+        {
+            var dialog = new BetterContentDialog
+            {
+                Title = Resources.Label_StabilityMatrixAlreadyRunning,
+                Content = Resources.Label_AnotherInstanceAlreadyRunning,
+                IsPrimaryButtonEnabled = true,
+                PrimaryButtonText = Resources.Action_Close,
+                DefaultButton = ContentDialogButton.Primary
+            };
+            await dialog.ShowAsync();
             App.Shutdown();
             return;
         }

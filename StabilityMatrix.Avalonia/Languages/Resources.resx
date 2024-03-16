@@ -1020,4 +1020,10 @@
   <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
     <value>The 'Open Web UI' button has moved to the command bar</value>
   </data>
+  <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
+    <value>Another instance of Stability Matrix is already running. Please close it before starting a new one.</value>
+  </data>
+  <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrix is already running</value>
+  </data>
 </root>

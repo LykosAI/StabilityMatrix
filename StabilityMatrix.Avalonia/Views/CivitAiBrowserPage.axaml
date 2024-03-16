@@ -319,11 +319,11 @@
                                         Background="#66000000"
                                         FontSize="16"
                                         Foreground="{DynamicResource ThemeEldenRingOrangeColor}"
-                                        Value="{Binding CivitModel.Stats.Rating}" />
+                                        Value="{Binding CivitModel.ModelVersionStats.Rating}" />
                                     <TextBlock
                                         Margin="4,0,0,0"
                                         VerticalAlignment="Center"
-                                        Text="{Binding CivitModel.Stats.RatingCount}"
+                                        Text="{Binding CivitModel.ModelVersionStats.RatingCount}"
                                         TextAlignment="Center" />
                                 </StackPanel>
 
@@ -336,7 +336,7 @@
                                     <TextBlock
                                         Margin="4,0"
                                         VerticalAlignment="Center"
-                                        Text="{Binding CivitModel.Stats.FavoriteCount, Converter={StaticResource KiloFormatterConverter}}" />
+                                        Text="{Binding CivitModel.ModelVersionStats.FavoriteCount, Converter={StaticResource KiloFormatterConverter}}" />
 
                                     <avalonia:Icon Margin="4,0" Value="fa-solid fa-download" />
                                     <TextBlock

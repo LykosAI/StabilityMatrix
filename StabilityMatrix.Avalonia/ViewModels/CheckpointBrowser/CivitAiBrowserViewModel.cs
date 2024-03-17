@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Collections;
@@ -54,12 +55,10 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
         int /* model id */
         ,
         CheckpointBrowserCardViewModel
-    > cache = new(50);
+    > cache = new(150);
 
-    public SourceCache<CivitModel, int> ModelCache { get; } = new(m => m.Id);
-
-    public IObservableCollection<CheckpointBrowserCardViewModel> ModelCards { get; set; } =
-        new ObservableCollectionExtended<CheckpointBrowserCardViewModel>();
+    [ObservableProperty]
+    private ObservableCollection<CheckpointBrowserCardViewModel> modelCards = new();
 
     [ObservableProperty]
     private DataGridCollectionView? modelCardsView;
@@ -131,41 +130,6 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
         this.dialogFactory = dialogFactory;
         this.liteDbContext = liteDbContext;
         this.notificationService = notificationService;
-
-        ModelCache
-            .Connect()
-            .DeferUntilLoaded()
-            .Select(model =>
-            {
-                var cachedViewModel = cache.Get(model.Id);
-                if (cachedViewModel != null)
-                {
-                    if (!cachedViewModel.IsImporting)
-                    {
-                        cache.Remove(model.Id);
-                    }
-
-                    return cachedViewModel;
-                }
-
-                var newCard = dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
-                {
-                    vm.CivitModel = model;
-                    vm.OnDownloadStart = viewModel =>
-                    {
-                        if (cache.Get(viewModel.CivitModel.Id) != null)
-                            return;
-                        cache.Add(viewModel.CivitModel.Id, viewModel);
-                    };
-
-                    return vm;
-                });
-
-                return newCard;
-            })
-            .Filter(FilterModelCardsPredicate)
-            .Bind(ModelCards)
-            .Subscribe();
 
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
     }
@@ -281,15 +245,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
                 }
             );
 
-            if (cacheNew)
-            {
-                Logger.Debug("New cache entry, updating model cards");
-                UpdateModelCards(models, isInfiniteScroll);
-            }
-            else
-            {
-                Logger.Debug("Cache entry already exists, not updating model cards");
-            }
+            UpdateModelCards(models, isInfiniteScroll);
 
             NextPageCursor = modelsResponse.Metadata?.NextCursor;
         }
@@ -338,16 +294,65 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
     {
         if (models is null)
         {
-            ModelCache?.Clear();
+            ModelCards?.Clear();
         }
         else
         {
-            if (!addCards)
+            var modelsToAdd = models
+                .Select(model =>
+                {
+                    var cachedViewModel = cache.Get(model.Id);
+                    if (cachedViewModel != null)
+                    {
+                        if (!cachedViewModel.IsImporting)
+                        {
+                            cache.Remove(model.Id);
+                        }
+
+                        return cachedViewModel;
+                    }
+
+                    var newCard = dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
+                    {
+                        vm.CivitModel = model;
+                        vm.OnDownloadStart = viewModel =>
+                        {
+                            if (cache.Get(viewModel.CivitModel.Id) != null)
+                                return;
+                            cache.Add(viewModel.CivitModel.Id, viewModel);
+                        };
+
+                        return vm;
+                    });
+
+                    return newCard;
+                })
+                .Where(FilterModelCardsPredicate);
+
+            if (SortMode == CivitSortMode.Installed)
             {
-                ModelCache.Clear();
+                modelsToAdd = modelsToAdd.OrderByDescending(x => x.UpdateCardText == "Update Available");
             }
 
-            ModelCache.AddOrUpdate(models);
+            if (!addCards)
+            {
+                ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(modelsToAdd);
+            }
+            else
+            {
+                foreach (var model in modelsToAdd)
+                {
+                    if (
+                        ModelCards.Contains(
+                            model,
+                            new PropertyComparer<CheckpointBrowserCardViewModel>(x => x.CivitModel.Id)
+                        )
+                    )
+                        continue;
+
+                    ModelCards.Add(model);
+                }
+            }
         }
 
         // Status update
@@ -373,7 +378,6 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
         // Build request
         var modelRequest = new CivitModelsRequest
         {
-            Limit = MaxModelsPerPage,
             Nsfw = "true", // Handled by local view filter
             Sort = SortMode,
             Period = SelectedPeriod

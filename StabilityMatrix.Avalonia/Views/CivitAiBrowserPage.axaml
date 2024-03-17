@@ -109,7 +109,7 @@
                                                       HorizontalAlignment="Center"
                                                       Height="75"
                                                       ZIndex="10"
-                                                      IsVisible="{Binding ShowSantaHats}"
+                                                      IsVisible="{Binding ShowSantaHats, FallbackValue=False}"
                                                       Margin="0,8,0,0"
                                                       Source="avares://StabilityMatrix.Avalonia/Assets/santahat.png">
                             <!-- <controls:BetterAdvancedImage.RenderTransform> -->

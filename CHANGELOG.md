@@ -7,8 +7,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.9.2
 ### Changed
-- Due to changes on the CivitAI API, you can no longer select a specific page in the CivitAI Model Browser
-- Due to the above API changes, new pages are now loaded via "infinite scrolling
+- Due to changes with the CivitAI API, you can no longer select a specific page in the CivitAI Model Browser
+- Due to the above API changes, new pages are now loaded via "infinite scrolling"
 ### Fixed
 - Fixed models not being removed from the installed models cache when deleting them from the Checkpoints page
 - Fixed model download location options for VAEs in the CivitAI Model Browser

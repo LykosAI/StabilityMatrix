@@ -91,7 +91,6 @@ public partial class SelectModelVersionViewModel(
     {
         SelectedVersionViewModel = Versions[0];
         CanGoToNextImage = true;
-        LoadInstallLocations();
     }
 
     partial void OnSelectedVersionViewModelChanged(ModelVersionViewModel? value)
@@ -130,6 +129,8 @@ public partial class SelectModelVersionViewModel(
         var canImport = true;
         if (settingsManager.IsLibraryDirSet)
         {
+            LoadInstallLocations();
+
             var fileSizeBytes = value?.CivitFile.SizeKb * 1024;
             var freeSizeBytes =
                 SystemInfo.GetDiskFreeSpaceBytes(settingsManager.ModelsDirectory) ?? long.MaxValue;
@@ -151,9 +152,9 @@ public partial class SelectModelVersionViewModel(
         IsImportEnabled = value?.CivitFile != null && canImport && !ShowEmptyPathWarning;
     }
 
-    partial void OnSelectedInstallLocationChanged(string value)
+    partial void OnSelectedInstallLocationChanged(string? value)
     {
-        if (value.Equals("Custom...", StringComparison.OrdinalIgnoreCase))
+        if (value?.Equals("Custom...", StringComparison.OrdinalIgnoreCase) is true)
         {
             Dispatcher.UIThread.InvokeAsync(SelectCustomFolder);
         }
@@ -304,14 +305,16 @@ public partial class SelectModelVersionViewModel(
 
     private void LoadInstallLocations()
     {
+        var installLocations = new ObservableCollection<string>();
+
         var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
         var downloadDirectory = rootModelsDirectory.JoinDir(
-            CivitModel.Type.ConvertTo<SharedFolderType>().GetStringValue()
+            SelectedFile?.CivitFile.Type == CivitFileType.VAE
+                ? SharedFolderType.VAE.GetStringValue()
+                : CivitModel.Type.ConvertTo<SharedFolderType>().GetStringValue()
         );
-        var installLocations = new ObservableCollection<string>
-        {
-            downloadDirectory.ToString().Replace(rootModelsDirectory, "Models")
-        };
+
+        installLocations.Add(downloadDirectory.ToString().Replace(rootModelsDirectory, "Models"));
 
         foreach (var directory in downloadDirectory.EnumerateDirectories())
         {

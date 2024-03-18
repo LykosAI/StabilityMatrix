@@ -76,20 +76,15 @@ jobs:
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
-      - name: Set up .NET 6 (for PupNet)
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '6.0.x'
-          
-      - name: Install PupNet
-        run: |
-          sudo apt-get -y install libfuse2
-          dotnet tool install --framework net6.0 -g KuiperZone.PupNet
-
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
+
+      - name: Install PupNet
+        run: |
+          sudo apt-get -y install libfuse2
+          dotnet tool install -g KuiperZone.PupNet
       
       - name: PupNet Build
         env:

@@ -85,6 +85,10 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
             .Subscribe();
 
         AllPackagesCache.AddOrUpdate(packageFactory.GetAllAvailablePackages());
+        if (ShownPackages.Count > 0)
+            return;
+
+        ShowIncompatiblePackages = true;
     }
 
     [RelayCommand]
@@ -182,6 +186,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                     {
                         ShowDialogOnStart = false,
                         HideCloseButton = false,
+                        ModificationCompleteMessage = $"{selectedPackage.DisplayName} installed successfully"
                     };
 
                     runner

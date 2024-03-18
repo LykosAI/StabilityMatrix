@@ -62,6 +62,27 @@
                                        VerticalAlignment="Top">
 
                                         <controls:Card.Styles>
+                                            <Style Selector="controls|Card[Tag=ReallyRecommended]">
+                                                <Setter Property="Background"
+                                                        Value="{DynamicResource ThemeGreenColorTransparent}" />
+                                                <Setter Property="BorderBrush"
+                                                        Value="{DynamicResource ThemeGreenColorTransparent}" />
+                                                <Style
+                                                    Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                    <Setter Property="Foreground"
+                                                            Value="{DynamicResource ButtonForeground}" />
+                                                </Style>
+                                                <Setter Property="Content">
+                                                    <Template>
+                                                        <TextBlock
+                                                            FontWeight="Medium"
+                                                            HorizontalAlignment="Center"
+                                                            Text="Recommended"
+                                                            TextAlignment="Center"
+                                                            VerticalAlignment="Center" />
+                                                    </Template>
+                                                </Setter>
+                                            </Style>
                                             <Style Selector="controls|Card[Tag=Recommended]">
                                                 <Setter Property="Background"
                                                         Value="{DynamicResource ThemeGreenColorTransparent}" />
@@ -112,6 +133,24 @@
                                                             FontWeight="Medium"
                                                             HorizontalAlignment="Center"
                                                             Text="Advanced"
+                                                            TextAlignment="Center"
+                                                            VerticalAlignment="Center" />
+                                                    </Template>
+                                                </Setter>
+                                            </Style>
+                                            <Style Selector="controls|Card[Tag=InferenceCompatible]">
+                                                <Setter Property="Background"
+                                                        Value="{DynamicResource ThemePurpleColor}" />
+                                                <Setter Property="BorderBrush"
+                                                        Value="{DynamicResource ThemePurpleColor}" />
+                                                <Setter Property="Foreground"
+                                                        Value="White" />
+                                                <Setter Property="Content">
+                                                    <Template>
+                                                        <TextBlock
+                                                            FontWeight="Medium"
+                                                            HorizontalAlignment="Center"
+                                                            Text="Inference Compatible"
                                                             TextAlignment="Center"
                                                             VerticalAlignment="Center" />
                                                     </Template>

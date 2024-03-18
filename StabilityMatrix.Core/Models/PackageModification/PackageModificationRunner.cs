@@ -80,7 +80,7 @@ public class PackageModificationRunner : IPackageModificationRunner
 
     public string? ModificationCompleteTitle { get; init; } = "Install Complete";
 
-    public string? ModificationCompleteMessage { get; init; }
+    public required string ModificationCompleteMessage { get; init; }
 
     public string? ModificationFailedTitle { get; init; } = "Install Failed";
 

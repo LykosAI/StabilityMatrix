@@ -10,6 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.PanAndZoom;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Skia;
 using Avalonia.Threading;
@@ -23,16 +24,19 @@ namespace StabilityMatrix.Avalonia.Controls;
 
 public class PaintCanvas : TemplatedControl
 {
-    private readonly ConcurrentDictionary<long, PenPath> temporaryPaths = new();
-    private ImmutableList<PenPath> paths = [];
+    private ConcurrentDictionary<long, PenPath> TemporaryPaths => ViewModel!.TemporaryPaths;
+
+    private ImmutableList<PenPath> Paths
+    {
+        get => ViewModel!.Paths;
+        set => ViewModel!.Paths = value;
+    }
 
     private IDisposable? viewModelSubscription;
 
     private bool isPenDown;
 
     private PaintCanvasViewModel? ViewModel { get; set; }
-
-    public SKBitmap? BackgroundBitmap { get; set; }
 
     private SkiaCustomCanvas? MainCanvas { get; set; }
 
@@ -53,10 +57,10 @@ public class PaintCanvas : TemplatedControl
         if (MainCanvas is not null)
         {
             // If we already have a BackgroundBitmap, scale MainCanvas to match
-            if (BackgroundBitmap is not null)
+            if (DataContext is PaintCanvasViewModel { BackgroundImage: { } backgroundBitmap })
             {
-                MainCanvas.Width = BackgroundBitmap.Width;
-                MainCanvas.Height = BackgroundBitmap.Height;
+                MainCanvas.Width = backgroundBitmap.Width;
+                MainCanvas.Height = backgroundBitmap.Height;
             }
 
             MainCanvas.RenderSkia += OnRenderSkia;
@@ -114,11 +118,19 @@ public class PaintCanvas : TemplatedControl
         base.OnPropertyChanged(change);
     }
 
+    /// <inheritdoc />
+    protected override void OnLoaded(RoutedEventArgs e)
+    {
+        base.OnLoaded(e);
+
+        UpdateMainCanvasBounds();
+    }
+
     private void HandlePointerEvent(PointerEventArgs e)
     {
         if (e.RoutedEvent == PointerReleasedEvent && e.Pointer.Type == PointerType.Touch)
         {
-            temporaryPaths.TryRemove(e.Pointer.Id, out _);
+            TemporaryPaths.TryRemove(e.Pointer.Id, out _);
             return;
         }
 
@@ -154,7 +166,7 @@ public class PaintCanvas : TemplatedControl
             var path = new SKPath();
             path.MoveTo(cursorPosition.ToSKPoint());
 
-            temporaryPaths[e.Pointer.Id] = new PenPath(path)
+            TemporaryPaths[e.Pointer.Id] = new PenPath(path)
             {
                 FillColor = viewModel.PaintBrushSKColor.WithAlpha((byte)(viewModel.PaintBrushAlpha * 255))
             };
@@ -166,12 +178,12 @@ public class PaintCanvas : TemplatedControl
                 isPenDown = false;
             }
 
-            if (temporaryPaths.TryGetValue(e.Pointer.Id, out var path))
+            if (TemporaryPaths.TryGetValue(e.Pointer.Id, out var path))
             {
-                paths = paths.Add(path);
+                Paths = Paths.Add(path);
             }
 
-            temporaryPaths.TryRemove(e.Pointer.Id, out _);
+            TemporaryPaths.TryRemove(e.Pointer.Id, out _);
         }
         else
         {
@@ -187,7 +199,7 @@ public class PaintCanvas : TemplatedControl
             viewModel.CurrentPenPressure = points.FirstOrDefault().Properties.Pressure;
 
             // Get existing temp path
-            if (temporaryPaths.TryGetValue(e.Pointer.Id, out var penPath))
+            if (TemporaryPaths.TryGetValue(e.Pointer.Id, out var penPath))
             {
                 var cursorPosition = e.GetPosition(MainCanvas);
 
@@ -245,6 +257,31 @@ public class PaintCanvas : TemplatedControl
         if (e.Key == Key.Escape)
         {
             e.Handled = true;
+        }
+    }
+
+    /// <summary>
+    /// Update the bounds of the main canvas to match the background image
+    /// </summary>
+    private void UpdateMainCanvasBounds()
+    {
+        if (
+            MainCanvas is null
+            || DataContext is not PaintCanvasViewModel { BackgroundImage: { } backgroundBitmap }
+        )
+        {
+            return;
+        }
+
+        // Set size if mismatch
+        if (
+            Math.Abs(MainCanvas.Width - backgroundBitmap.Width) > 0.1
+            || Math.Abs(MainCanvas.Height - backgroundBitmap.Height) > 0.1
+        )
+        {
+            MainCanvas.Width = backgroundBitmap.Width;
+            MainCanvas.Height = backgroundBitmap.Height;
+            MainCanvas.InvalidateVisual();
         }
     }
 
@@ -342,21 +379,39 @@ public class PaintCanvas : TemplatedControl
 
     public async Task ClearCanvasAsync()
     {
-        paths = ImmutableList<PenPath>.Empty;
-        temporaryPaths.Clear();
+        Paths = ImmutableList<PenPath>.Empty;
+        TemporaryPaths.Clear();
 
         await Dispatcher.UIThread.InvokeAsync(() => MainCanvas?.InvalidateVisual());
     }
 
     private static void RenderPenPath(SKCanvas canvas, PenPath penPath, SKPaint paint)
     {
+        if (penPath.Points.Count == 0)
+        {
+            return;
+        }
+
         // Apply Color
         paint.Color = penPath.FillColor;
         // Defaults
         paint.IsDither = true;
         paint.IsAntialias = true;
-        paint.Style = SKPaintStyle.Stroke;
-        paint.StrokeCap = SKStrokeCap.Round;
+
+        // Draw path if not pen
+        if (!penPath.Points.Any(p => p.IsPen))
+        {
+            var point = penPath.Points[0];
+            var thickness = point.Radius * 1.5;
+
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeWidth = (float)thickness;
+            paint.StrokeCap = SKStrokeCap.Round;
+
+            canvas.DrawPath(penPath.Path, paint);
+
+            return;
+        }
 
         // Can't use foreach since this list may be modified during iteration
         // ReSharper disable once ForCanBeConvertedToForeach
@@ -366,22 +421,20 @@ public class PaintCanvas : TemplatedControl
 
             var radius = penPoint.Radius;
             var pressure = penPoint.Pressure ?? 1;
-            var thickness = pressure * radius * 2;
+            var thickness = pressure * radius * 1.5;
             // var radius = pressure * penPoint.Radius * 1.5;
 
             // Draw path
             if (i < penPath.Points.Count - 1)
             {
+                paint.Style = SKPaintStyle.Fill;
                 paint.StrokeWidth = (float)thickness;
                 canvas.DrawLine(penPoint.Point, penPath.Points[i + 1].Point, paint);
             }
 
-            // Only draw circle if pressure is high enough
-            if (penPoint.Pressure > 0.1)
-            {
-                paint.StrokeWidth = (float)(thickness * 0.5);
-                canvas.DrawCircle(penPoint.Point, (float)radius, paint);
-            }
+            // Draw circles for pens
+            paint.Style = SKPaintStyle.Fill;
+            canvas.DrawCircle(penPoint.Point, (float)thickness, paint);
         }
     }
 
@@ -399,12 +452,12 @@ public class PaintCanvas : TemplatedControl
         using var paint = new SKPaint();
 
         // Draw the paths
-        foreach (var penPath in temporaryPaths.Values)
+        foreach (var penPath in TemporaryPaths.Values)
         {
             RenderPenPath(canvas, penPath, paint);
         }
 
-        foreach (var penPath in paths)
+        foreach (var penPath in Paths)
         {
             RenderPenPath(canvas, penPath, paint);
         }

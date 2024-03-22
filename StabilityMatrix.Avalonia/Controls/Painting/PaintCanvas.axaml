@@ -22,6 +22,12 @@
                             Command="{Binding ClearCanvasCommand, RelativeSource={RelativeSource TemplatedParent}}"
                             IconSource="Clear"
                             Label="Clear" />
+                        <input:StandardUICommand
+                            x:Key="UndoCommand"
+                            HotKey="Ctrl+Z"
+                            Command="{Binding UndoCommand}"
+                            IconSource="Undo"
+                            Label="Undo" />
                     </Grid.Resources>
                     <Grid.Styles>
                         <!-- Change cursor to crosshair when mouse is over the canvas -->
@@ -32,7 +38,7 @@
                             <Setter Property="Cursor" Value="Arrow"/>
                         </Style>-->
                     </Grid.Styles>
-                    <StackPanel Margin="8" Orientation="Horizontal" Spacing="6">
+                    <StackPanel Margin="8,2" Orientation="Horizontal" Spacing="6">
 
                         <ui:ColorPickerButton
                             VerticalAlignment="Center"
@@ -44,7 +50,7 @@
                             Margin="-4,0,0,0"
                             Content="{Binding CurrentPenPressure}" VerticalAlignment="Center" />
                         
-                        <ui:CommandBar HorizontalAlignment="Right">
+                        <ui:CommandBar HorizontalAlignment="Right" Margin="0,4">
                             <ui:CommandBar.PrimaryCommands>
                                 <!-- Brush Size -->
                                 <ui:CommandBarButton>
@@ -93,8 +99,15 @@
                                     </ui:CommandBarButton.Flyout>
                                 </ui:CommandBarButton>
                                 
+                                <ui:CommandBarButton Command="{StaticResource UndoCommand}" />
                                 <ui:CommandBarButton Command="{StaticResource ClearCanvasCommand}" />
+                                
                             </ui:CommandBar.PrimaryCommands>
+                            
+                            <!--<ui:CommandBar.SecondaryCommands>
+                                <ui:CommandBarButton Command="{StaticResource UndoCommand}" />
+                                <ui:CommandBarButton Command="{StaticResource ClearCanvasCommand}" />
+                            </ui:CommandBar.SecondaryCommands>-->
                         </ui:CommandBar>
                     </StackPanel>
                     <ZoomBorder
@@ -109,8 +122,8 @@
                         ZoomSpeed="1.2">
                         <controls:SkiaCustomCanvas
                             x:Name="PART_MainCanvas"
-                            Width="600"
-                            Height="600"
+                            Width="1000"
+                            Height="1000"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch"
                             Background="Transparent"/>

@@ -961,21 +961,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         var bitmap = await Task.Run(() => SKBitmap.Decode(files[0].TryGetLocalPath()!));
 
-        var dialog = new BetterContentDialog
-        {
-            Title = "Image Mask Editor",
-            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            MaxDialogHeight = 1000,
-            MaxDialogWidth = 1000,
-            ContentMargin = new Thickness(16),
-            FullSizeDesired = true,
-            Content = new PaintCanvas { DataContext = new PaintCanvasViewModel { BackgroundImage = bitmap } },
-            PrimaryButtonText = "Save",
-            CloseButtonText = "Cancel",
-            DefaultButton = ContentDialogButton.Primary
-        };
+        var vm = dialogFactory.Get<MaskEditorViewModel>();
 
-        await dialog.ShowAsync();
+        vm.PaintCanvasViewModel.BackgroundImage = bitmap;
+
+        await vm.GetDialog().ShowAsync();
     }
 
     #endregion

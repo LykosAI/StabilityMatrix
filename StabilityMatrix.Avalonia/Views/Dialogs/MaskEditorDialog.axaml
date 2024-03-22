@@ -1,0 +1,36 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:ui="using:FluentAvalonia.UI.Controls"
+                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                          xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+                          xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+                          d:DataContext="{x:Static mocks:DesignData.MaskEditorViewModel}"
+                          x:DataType="vmDialogs:MaskEditorViewModel"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.MaskEditorDialog">
+    <sg:SpacedGrid RowDefinitions="Auto,*" Margin="0,8">
+        <controls:Card>
+            <Grid ColumnDefinitions="*,Auto" Margin="8,0">
+                <ToggleSwitch
+                    IsChecked="{Binding IsMaskEnabled}"
+                    OnContent="Enabled" OffContent="Disabled" Grid.Column="0" HorizontalAlignment="Left"/>
+                <StackPanel 
+                    Grid.Column="1"
+                    Orientation="Horizontal" Spacing="16">
+                    <Button Content="Load Mask Image" />
+                    <ToggleButton Content="Use Image Alpha Channel as Mask" IsChecked="{Binding UseImageAlphaAsMask}"/>
+                </StackPanel>
+            </Grid>
+        </controls:Card>
+
+        <controls:Card Grid.Row="1">
+            <controls:PaintCanvas DataContext="{Binding PaintCanvasViewModel, Mode=OneWay}" />
+        </controls:Card>
+
+    </sg:SpacedGrid>
+</controls:UserControlBase>

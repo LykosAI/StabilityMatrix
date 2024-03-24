@@ -2,27 +2,21 @@
 using System.Linq;
 using System.Text.Json.Serialization;
 using Avalonia.Platform.Storage;
-using StabilityMatrix.Avalonia;
+using StabilityMatrix.Core.Models.Api.OpenArt;
 
-namespace StabilityMatrix.Core.Models.Api.OpenArt;
+namespace StabilityMatrix.Avalonia.Models;
 
 public class OpenArtMetadata
 {
-    [JsonPropertyName("workflow_id")]
-    public string? Id { get; set; }
-
-    [JsonPropertyName("workflow_name")]
-    public string? Name { get; set; }
-
-    [JsonPropertyName("creator")]
-    public string? Creator { get; set; }
-
-    [JsonPropertyName("thumbnails")]
-    public IEnumerable<string>? ThumbnailUrls { get; set; }
+    [JsonPropertyName("sm_workflow_data")]
+    public OpenArtSearchResult? Workflow { get; set; }
 
     [JsonIgnore]
-    public string? FirstThumbnail => ThumbnailUrls?.FirstOrDefault();
+    public string? FirstThumbnail => Workflow?.Thumbnails?.Select(x => x.Url).FirstOrDefault()?.ToString();
 
     [JsonIgnore]
     public List<IStorageFile>? FilePath { get; set; }
+
+    [JsonIgnore]
+    public bool HasMetadata => Workflow?.Creator != null;
 }

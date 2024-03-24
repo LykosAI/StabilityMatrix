@@ -19,19 +19,13 @@ public class DownloadOpenArtWorkflowStep(
             .DownloadWorkflowAsync(new OpenArtDownloadRequest { WorkflowId = workflow.Id })
             .ConfigureAwait(false);
 
+        var workflowJson = JsonSerializer.SerializeToNode(workflow);
+
         Directory.CreateDirectory(settingsManager.WorkflowDirectory);
         var filePath = Path.Combine(settingsManager.WorkflowDirectory, $"{workflowData.Filename}.json");
 
         var jsonObject = JsonNode.Parse(workflowData.Payload) as JsonObject;
-        jsonObject?.Add("workflow_id", workflow.Id);
-        jsonObject?.Add("workflow_name", workflow.Name);
-        jsonObject?.Add("creator", workflow.Creator.Username);
-        var thumbs = new JsonArray();
-        foreach (var thumb in workflow.Thumbnails)
-        {
-            thumbs.Add(thumb.Url);
-        }
-        jsonObject?.Add("thumbnails", thumbs);
+        jsonObject?.Add("sm_workflow_data", workflowJson);
 
         await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(jsonObject)).ConfigureAwait(false);
 

@@ -12,6 +12,7 @@ using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -182,10 +183,7 @@ public partial class OpenArtBrowserViewModel(
 
         if (existingComfy == null || comfyPair == null)
         {
-            notificationService.Show(
-                Resources.Label_ComfyRequiredTitle,
-                "ComfyUI is required to import workflows from OpenArt"
-            );
+            notificationService.Show(Resources.Label_ComfyRequiredTitle, Resources.Label_ComfyRequiredDetail);
             return;
         }
 
@@ -210,18 +208,29 @@ public partial class OpenArtBrowserViewModel(
         var runner = new PackageModificationRunner
         {
             ShowDialogOnStart = true,
-            ModificationCompleteTitle = "Workflow Imported",
-            ModificationCompleteMessage = "Finished importing workflow and custom nodes"
+            ModificationCompleteTitle = Resources.Label_WorkflowImported,
+            ModificationCompleteMessage = Resources.Label_FinishedImportingWorkflow
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
         await runner.ExecuteSteps(steps);
 
         notificationService.Show(
-            "Workflow Imported",
-            "The workflow and custom nodes have been imported.",
+            Resources.Label_WorkflowImported,
+            Resources.Label_WorkflowImportComplete,
             NotificationType.Success
         );
+
+        EventManager.Instance.OnWorkflowInstalled();
+    }
+
+    [RelayCommand]
+    private void OpenOnOpenArt(OpenArtSearchResult? workflow)
+    {
+        if (workflow?.Id == null)
+            return;
+
+        ProcessRunner.OpenUrl($"https://openart.ai/workflows/{workflow.Id}");
     }
 
     private async Task DoSearch(int page = 0)
@@ -262,7 +271,7 @@ public partial class OpenArtBrowserViewModel(
         }
         catch (ApiException e)
         {
-            notificationService.Show("Error retrieving workflows", e.Message);
+            notificationService.Show(Resources.Label_ErrorRetrievingWorkflows, e.Message);
         }
         finally
         {

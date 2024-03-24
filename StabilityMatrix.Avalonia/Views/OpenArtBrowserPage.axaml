@@ -12,6 +12,7 @@
                           xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
                           xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
                           xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
                           x:DataType="viewModels:OpenArtBrowserViewModel"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           x:Class="StabilityMatrix.Avalonia.Views.OpenArtBrowserPage">
@@ -23,7 +24,7 @@
                 </Transitions>
             </Setter>
 
-            <Style Selector="^ asyncImageLoader|AdvancedImage">
+            <Style Selector="^ labs|AsyncImage">
                 <Setter Property="Transitions">
                     <Transitions>
                         <TransformOperationsTransition Property="RenderTransform"
@@ -68,6 +69,10 @@
             Command="{Binding OpenModelCommand}" />
         
         <input:StandardUICommand
+            x:Key="OpenOnOpenArtCommand"
+            Command="{Binding OpenOnOpenArtCommand}" />
+        
+        <input:StandardUICommand
             x:Key="OpenWorkflowCommand"
             Command="{Binding OpenWorkflowCommand}" />
         
@@ -82,7 +87,9 @@
                 CornerRadius="8">
                 <Border.ContextFlyout>
                     <MenuFlyout>
-                        <MenuItem Header="{x:Static lang:Resources.Action_OpenOnOpenArt}">
+                        <MenuItem Header="{x:Static lang:Resources.Action_OpenOnOpenArt}"
+                                  Command="{StaticResource OpenOnOpenArtCommand}"
+                                  CommandParameter="{Binding }">
                             <MenuItem.Icon>
                                 <ui:SymbolIcon Symbol="Open" />
                             </MenuItem.Icon>
@@ -99,15 +106,14 @@
                     Command="{StaticResource OpenWorkflowCommand}"
                     CommandParameter="{Binding }">
                     <Grid RowDefinitions="*, Auto">
-                        <controls:BetterAdvancedImage
+                        <labs:AsyncImage
                             Grid.Row="0"
                             Grid.RowSpan="2"
                             CornerRadius="8"
                             Width="330"
                             Height="400"
                             Source="{Binding Thumbnails[0].Url}"
-                            Stretch="UniformToFill"
-                            StretchDirection="Both" />
+                            Stretch="UniformToFill" />
 
                         <!-- Username pill card -->
                         <Border
@@ -146,6 +152,7 @@
                                         Source="{Binding Creator.Avatar}" />
                                     <TextBlock
                                         VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextControlForeground}"
                                         Effect="{StaticResource TextDropShadowEffect}"
                                         Text="{Binding Creator.Name}" />
                                 </StackPanel>

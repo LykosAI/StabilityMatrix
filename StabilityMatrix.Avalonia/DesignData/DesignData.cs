@@ -932,12 +932,20 @@ The gallery images are often inpainted, but you will get something very similar 
             {
                 new()
                 {
-                    Name = "Test Workflow",
-                    Creator = "Test Creator",
-                    ThumbnailUrls =
-                    [
-                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512"
-                    ]
+                    Workflow = new()
+                    {
+                        Name = "Test Workflow",
+                        Creator = new OpenArtCreator { Name = "Test Creator" },
+                        Thumbnails =
+                        [
+                            new OpenArtThumbnail
+                            {
+                                Url = new Uri(
+                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512"
+                                )
+                            }
+                        ]
+                    }
                 }
             };
 

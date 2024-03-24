@@ -10,6 +10,11 @@
                           xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
                           xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
                           xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+                          xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+                          xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+                          xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+                          xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+                          xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           d:DataContext="{x:Static designData:DesignData.InstalledWorkflowsViewModel}"
                           x:DataType="viewModels:InstalledWorkflowsViewModel"
@@ -22,7 +27,7 @@
                 </Transitions>
             </Setter>
 
-            <Style Selector="^ asyncImageLoader|AdvancedImage">
+            <Style Selector="^ labs|AsyncImage">
                 <Setter Property="Transitions">
                     <Transitions>
                         <TransformOperationsTransition Property="RenderTransform"
@@ -60,6 +65,18 @@
             </Style>
         </Style>
     </UserControl.Styles>
+    
+    <UserControl.Resources>
+        <input:StandardUICommand
+            x:Key="OpenInExplorerCommand"
+            Command="{Binding OpenInExplorerCommand}" />
+        <input:StandardUICommand
+            x:Key="OpenOnOpenArtCommand"
+            Command="{Binding OpenOnOpenArtCommand}" />
+        <input:StandardUICommand
+            x:Key="DeleteCommand"
+            Command="{Binding DeleteCommand}" />
+    </UserControl.Resources>
 
     <Grid RowDefinitions="Auto, *">
         <controls1:CommandBar Grid.Row="0" Grid.Column="0"
@@ -73,16 +90,16 @@
                     VerticalAlignment="Center"
                     Label="{x:Static lang:Resources.Action_Refresh}"
                     Command="{Binding LoadInstalledWorkflowsCommand}" />
-                
+
                 <controls1:CommandBarSeparator />
-                
+
                 <controls1:CommandBarElementContainer>
                     <StackPanel Orientation="Horizontal">
                         <avalonia:Icon FontSize="18"
                                        Value="fa-solid fa-info"
-                                       Margin="8,0"/>
+                                       Margin="8,0" />
                         <TextBlock Text="Drag &amp; drop one of the cards below into ComfyUI to load the workflow"
-                                   VerticalAlignment="Center"/>
+                                   VerticalAlignment="Center" />
                     </StackPanel>
                 </controls1:CommandBarElementContainer>
             </controls1:CommandBar.PrimaryCommands>
@@ -96,7 +113,7 @@
                     <UniformGridLayout MinColumnSpacing="4" MinRowSpacing="4" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
-                    <DataTemplate x:DataType="{x:Type openArt:OpenArtMetadata}">
+                    <DataTemplate x:DataType="{x:Type models:OpenArtMetadata}">
                         <Border
                             Name="HoverBorder"
                             Padding="0"
@@ -113,6 +130,32 @@
                                         VerticalDragThreshold="6" />
                                 </BehaviorCollection>
                             </Interaction.Behaviors>
+                            <Border.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuItem Header="{x:Static lang:Resources.Action_OpenOnOpenArt}"
+                                              IsVisible="{Binding HasMetadata}"
+                                              Command="{StaticResource OpenOnOpenArtCommand}"
+                                              CommandParameter="{Binding }">
+                                        <MenuItem.Icon>
+                                            <fluent:SymbolIcon Symbol="Open" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Header="{x:Static lang:Resources.Action_OpenInExplorer}"
+                                              Command="{StaticResource OpenInExplorerCommand}"
+                                              CommandParameter="{Binding }">
+                                        <MenuItem.Icon>
+                                            <fluent:SymbolIcon Symbol="Folder" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem Header="{x:Static lang:Resources.Action_Delete}"
+                                              Command="{StaticResource DeleteCommand}"
+                                              CommandParameter="{Binding }">
+                                        <MenuItem.Icon>
+                                            <fluent:SymbolIcon Symbol="Delete" />
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                </MenuFlyout>
+                            </Border.ContextFlyout>
                             <Button
                                 Name="ModelCard"
                                 Classes="transparent-full"
@@ -121,7 +164,7 @@
                                 VerticalContentAlignment="Top"
                                 CornerRadius="8">
                                 <Grid RowDefinitions="*, Auto">
-                                    <controls:BetterAdvancedImage
+                                    <labs:AsyncImage
                                         Grid.Row="0"
                                         Grid.RowSpan="2"
                                         CornerRadius="8"
@@ -129,17 +172,16 @@
                                         Height="400"
                                         Source="{Binding FirstThumbnail}"
                                         IsVisible="{Binding FirstThumbnail, Converter={x:Static ObjectConverters.IsNotNull}, FallbackValue=False}"
-                                        Stretch="UniformToFill"
-                                        StretchDirection="Both" />
-                                    
+                                        Stretch="UniformToFill" />
+
                                     <avalonia:Icon Grid.Row="0"
-                                        Grid.RowSpan="2"
-                                        CornerRadius="8"
-                                        Width="330"
-                                        Height="400"
-                                        FontSize="100"
-                                        IsVisible="{Binding FirstThumbnail, Converter={x:Static ObjectConverters.IsNull}, FallbackValue=False}"
-                                        Value="fa-regular fa-file-code"/>
+                                                   Grid.RowSpan="2"
+                                                   CornerRadius="8"
+                                                   Width="330"
+                                                   Height="400"
+                                                   FontSize="100"
+                                                   IsVisible="{Binding FirstThumbnail, Converter={x:Static ObjectConverters.IsNull}, FallbackValue=False}"
+                                                   Value="fa-regular fa-file-code" />
 
                                     <!-- Username pill card -->
                                     <Border
@@ -155,11 +197,34 @@
                                                 BlurRadius="12"
                                                 Color="#FF000000"
                                                 Opacity="0.9" />
+                                            <DropShadowEffect
+                                                x:Key="ImageDropShadowEffect"
+                                                BlurRadius="12"
+                                                Color="#FF000000"
+                                                Opacity="0.2" />
                                         </Border.Resources>
-                                        <TextBlock
-                                            VerticalAlignment="Center"
-                                            Effect="{StaticResource TextDropShadowEffect}"
-                                            Text="{Binding Creator}" />
+                                        <Button
+                                            Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                                            CommandParameter="{Binding Workflow.Creator.DevProfileUrl}"
+                                            CornerRadius="16"
+                                            Classes="transparent"
+                                            Padding="10,4">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <controls:BetterAdvancedImage
+                                                    Width="22"
+                                                    Height="22"
+                                                    Effect="{StaticResource ImageDropShadowEffect}"
+                                                    CornerRadius="11"
+                                                    RenderOptions.BitmapInterpolationMode="HighQuality"
+                                                    IsVisible="{Binding Workflow.Creator.Avatar, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                    Source="{Binding Workflow.Creator.Avatar}" />
+                                                <TextBlock
+                                                    VerticalAlignment="Center"
+                                                    Foreground="{DynamicResource TextControlForeground}"
+                                                    Effect="{StaticResource TextDropShadowEffect}"
+                                                    Text="{Binding Workflow.Creator.Name}" />
+                                            </StackPanel>
+                                        </Button>
                                     </Border>
 
                                     <Border
@@ -174,8 +239,8 @@
                                             Foreground="{DynamicResource TextControlForeground}"
                                             LetterSpacing="0.33"
                                             TextWrapping="Wrap"
-                                            Text="{Binding Name}"
-                                            ToolTip.Tip="{Binding Name}" />
+                                            Text="{Binding Workflow.Name}"
+                                            ToolTip.Tip="{Binding Workflow.Name}" />
                                     </Border>
                                 </Grid>
                             </Button>

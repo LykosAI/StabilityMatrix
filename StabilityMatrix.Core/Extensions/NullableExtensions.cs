@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 
 namespace StabilityMatrix.Core.Extensions;
 
@@ -16,7 +16,12 @@ public static class NullableExtensions
     [DebuggerStepThrough]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T Unwrap<T>([NotNull] this T? obj, [CallerArgumentExpression("obj")] string? paramName = null)
+    [ContractAnnotation("obj:null => halt; obj:notnull => notnull")]
+    [return: System.Diagnostics.CodeAnalysis.NotNull]
+    public static T Unwrap<T>(
+        [System.Diagnostics.CodeAnalysis.NotNull] this T? obj,
+        [CallerArgumentExpression("obj")] string? paramName = null
+    )
         where T : class
     {
         if (obj is null)
@@ -35,7 +40,11 @@ public static class NullableExtensions
     [DebuggerStepThrough]
     [EditorBrowsable(EditorBrowsableState.Never)]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T Unwrap<T>([NotNull] this T? obj, [CallerArgumentExpression("obj")] string? paramName = null)
+    [ContractAnnotation("obj:null => halt")]
+    public static T Unwrap<T>(
+        [System.Diagnostics.CodeAnalysis.NotNull] this T? obj,
+        [CallerArgumentExpression("obj")] string? paramName = null
+    )
         where T : struct
     {
         if (obj is null)

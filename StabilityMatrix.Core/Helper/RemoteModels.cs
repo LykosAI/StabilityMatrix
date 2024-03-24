@@ -167,8 +167,14 @@ public static class RemoteModels
             )
         };
 
+    public static HybridModelFile ControlNetReferenceOnlyModel { get; } =
+        HybridModelFile.FromRemote("@ReferenceOnly");
+
     public static IReadOnlyList<HybridModelFile> ControlNetModels { get; } =
-        ControlNets.Select(HybridModelFile.FromDownloadable).ToImmutableArray();
+        ControlNets
+            .Select(HybridModelFile.FromDownloadable)
+            .Concat([ControlNetReferenceOnlyModel])
+            .ToImmutableArray();
 
     private static IEnumerable<RemoteResource> PromptExpansions =>
         [

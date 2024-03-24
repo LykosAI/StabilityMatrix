@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
+using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
@@ -193,11 +194,50 @@ public partial class MainWindow : AppWindowBase
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         // Show confirmation if package running
-        var launchPageViewModel = App.Services.GetRequiredService<LaunchPageViewModel>();
+        var runningPackageService = App.Services.GetRequiredService<RunningPackageService>();
+        if (
+            runningPackageService.RunningPackages.Count > 0
+            && e.CloseReason is WindowCloseReason.WindowClosing
+        )
+        {
+            e.Cancel = true;
 
-        launchPageViewModel.OnMainWindowClosing(e);
+            var dialog = CreateExitConfirmDialog();
+            Dispatcher
+                .UIThread.InvokeAsync(async () =>
+                {
+                    if (
+                        (TaskDialogStandardResult)await dialog.ShowAsync(true) == TaskDialogStandardResult.Yes
+                    )
+                    {
+                        App.Services.GetRequiredService<MainWindow>().Hide();
+                        App.Shutdown();
+                    }
+                })
+                .SafeFireAndForget();
+        }
 
         base.OnClosing(e);
+    }
+
+    private static TaskDialog CreateExitConfirmDialog()
+    {
+        var dialog = DialogHelper.CreateTaskDialog(
+            Languages.Resources.Label_ConfirmExit,
+            Languages.Resources.Label_ConfirmExitDetail
+        );
+
+        dialog.ShowProgressBar = false;
+        dialog.FooterVisibility = TaskDialogFooterVisibility.Never;
+
+        dialog.Buttons = new List<TaskDialogButton>
+        {
+            new("Exit", TaskDialogStandardResult.Yes),
+            TaskDialogButton.CancelButton
+        };
+        dialog.Buttons[0].IsDefault = true;
+
+        return dialog;
     }
 
     /// <inheritdoc />

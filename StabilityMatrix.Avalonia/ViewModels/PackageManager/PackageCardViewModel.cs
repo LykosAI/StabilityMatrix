@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Collections.Specialized;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -26,7 +31,6 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
-using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
@@ -34,14 +38,17 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [ManagedService]
 [Transient]
-public partial class PackageCardViewModel : ProgressViewModel
+public partial class PackageCardViewModel(
+    ILogger<PackageCardViewModel> logger,
+    IPackageFactory packageFactory,
+    INotificationService notificationService,
+    ISettingsManager settingsManager,
+    INavigationService<NewPackageManagerViewModel> navigationService,
+    ServiceManager<ViewModelBase> vmFactory,
+    RunningPackageService runningPackageService
+) : ProgressViewModel
 {
-    private readonly ILogger<PackageCardViewModel> logger;
-    private readonly IPackageFactory packageFactory;
-    private readonly INotificationService notificationService;
-    private readonly ISettingsManager settingsManager;
-    private readonly INavigationService<MainWindowViewModel> navigationService;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private string webUiUrl = string.Empty;
 
     [ObservableProperty]
     private InstalledPackage? package;
@@ -82,21 +89,31 @@ public partial class PackageCardViewModel : ProgressViewModel
     [ObservableProperty]
     private bool canUseExtensions;
 
-    public PackageCardViewModel(
-        ILogger<PackageCardViewModel> logger,
-        IPackageFactory packageFactory,
-        INotificationService notificationService,
-        ISettingsManager settingsManager,
-        INavigationService<MainWindowViewModel> navigationService,
-        ServiceManager<ViewModelBase> vmFactory
-    )
+    [ObservableProperty]
+    private bool isRunning;
+
+    [ObservableProperty]
+    private bool showWebUiButton;
+
+    private void RunningPackagesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        this.logger = logger;
-        this.packageFactory = packageFactory;
-        this.notificationService = notificationService;
-        this.settingsManager = settingsManager;
-        this.navigationService = navigationService;
-        this.vmFactory = vmFactory;
+        if (runningPackageService.RunningPackages.Select(x => x.Value) is not { } runningPackages)
+            return;
+
+        var runningViewModel = runningPackages.FirstOrDefault(
+            x => x.RunningPackage.InstalledPackage.Id == Package?.Id
+        );
+        if (runningViewModel is not null)
+        {
+            IsRunning = true;
+            runningViewModel.RunningPackage.BasePackage.Exited += BasePackageOnExited;
+            runningViewModel.RunningPackage.BasePackage.StartupComplete += RunningPackageOnStartupComplete;
+        }
+        else if (runningViewModel is null && IsRunning)
+        {
+            IsRunning = false;
+            ShowWebUiButton = false;
+        }
     }
 
     partial void OnPackageChanged(InstalledPackage? value)
@@ -127,11 +144,30 @@ public partial class PackageCardViewModel : ProgressViewModel
             UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
             CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
             CanUseExtensions = basePackage?.SupportsExtensions ?? false;
+
+            runningPackageService.RunningPackages.CollectionChanged += RunningPackagesOnCollectionChanged;
+            EventManager.Instance.PackageRelaunchRequested += InstanceOnPackageRelaunchRequested;
         }
+    }
+
+    private void InstanceOnPackageRelaunchRequested(object? sender, InstalledPackage e)
+    {
+        if (e.Id != Package?.Id)
+            return;
+
+        navigationService.GoBack();
+        Launch().SafeFireAndForget();
     }
 
     public override async Task OnLoadedAsync()
     {
+        if (Design.IsDesignMode && Package?.DisplayName == "Running Comfy")
+        {
+            IsRunning = true;
+            IsUpdateAvailable = true;
+            ShowWebUiButton = true;
+        }
+
         if (Design.IsDesignMode || !settingsManager.IsLibraryDirSet || Package is not { } currentPackage)
             return;
 
@@ -160,18 +196,122 @@ public partial class PackageCardViewModel : ProgressViewModel
             }
 
             IsUpdateAvailable = await HasUpdate();
+
+            if (
+                Package != null
+                && !IsRunning
+                && runningPackageService.RunningPackages.TryGetValue(Package.Id, out var runningPackageVm)
+            )
+            {
+                IsRunning = true;
+                runningPackageVm.RunningPackage.BasePackage.Exited += BasePackageOnExited;
+                runningPackageVm.RunningPackage.BasePackage.StartupComplete +=
+                    RunningPackageOnStartupComplete;
+                webUiUrl = runningPackageVm.WebUiUrl;
+                ShowWebUiButton = !string.IsNullOrWhiteSpace(webUiUrl);
+            }
         }
     }
 
-    public void Launch()
+    public override void OnUnloaded()
+    {
+        EventManager.Instance.PackageRelaunchRequested -= InstanceOnPackageRelaunchRequested;
+        runningPackageService.RunningPackages.CollectionChanged -= RunningPackagesOnCollectionChanged;
+    }
+
+    public async Task Launch()
     {
         if (Package == null)
             return;
 
-        settingsManager.Transaction(s => s.ActiveInstalledPackageId = Package.Id);
+        var packagePair = await runningPackageService.StartPackage(Package);
 
-        navigationService.NavigateTo<LaunchPageViewModel>(new BetterDrillInNavigationTransition());
-        EventManager.Instance.OnPackageLaunchRequested(Package.Id);
+        if (packagePair != null)
+        {
+            IsRunning = true;
+
+            packagePair.BasePackage.Exited += BasePackageOnExited;
+            packagePair.BasePackage.StartupComplete += RunningPackageOnStartupComplete;
+
+            var vm = runningPackageService.GetRunningPackageViewModel(packagePair.InstalledPackage.Id);
+            if (vm != null)
+            {
+                navigationService.NavigateTo(vm, new BetterEntranceNavigationTransition());
+            }
+        }
+
+        // settingsManager.Transaction(s => s.ActiveInstalledPackageId = Package.Id);
+        //
+        // navigationService.NavigateTo<LaunchPageViewModel>(new BetterDrillInNavigationTransition());
+        // EventManager.Instance.OnPackageLaunchRequested(Package.Id);
+    }
+
+    public void NavToConsole()
+    {
+        if (Package == null)
+            return;
+
+        var vm = runningPackageService.GetRunningPackageViewModel(Package.Id);
+        if (vm != null)
+        {
+            navigationService.NavigateTo(vm, new BetterEntranceNavigationTransition());
+        }
+    }
+
+    public void LaunchWebUi()
+    {
+        if (string.IsNullOrEmpty(webUiUrl))
+            return;
+
+        notificationService.TryAsync(
+            Task.Run(() => ProcessRunner.OpenUrl(webUiUrl)),
+            "Failed to open URL",
+            $"{webUiUrl}"
+        );
+    }
+
+    private void BasePackageOnExited(object? sender, int exitCode)
+    {
+        Dispatcher
+            .UIThread.InvokeAsync(async () =>
+            {
+                logger.LogTrace("Process exited ({Code}) at {Time:g}", exitCode, DateTimeOffset.Now);
+
+                // Need to wait for streams to finish before detaching handlers
+                if (sender is BaseGitPackage { VenvRunner: not null } package)
+                {
+                    var process = package.VenvRunner.Process;
+                    if (process is not null)
+                    {
+                        // Max 5 seconds
+                        var ct = new CancellationTokenSource(5000).Token;
+                        try
+                        {
+                            await process.WaitUntilOutputEOF(ct);
+                        }
+                        catch (OperationCanceledException e)
+                        {
+                            logger.LogWarning("Waiting for process EOF timed out: {Message}", e.Message);
+                        }
+                    }
+                }
+
+                // Detach handlers
+                if (sender is BasePackage basePackage)
+                {
+                    basePackage.Exited -= BasePackageOnExited;
+                    basePackage.StartupComplete -= RunningPackageOnStartupComplete;
+                }
+
+                if (Package?.Id != null)
+                {
+                    runningPackageService.RunningPackages.Remove(Package.Id);
+                }
+
+                IsRunning = false;
+                ShowWebUiButton = false;
+            })
+            .SafeFireAndForget();
     }
 
     public async Task Uninstall()
@@ -181,13 +321,17 @@ public partial class PackageCardViewModel : ProgressViewModel
             return;
         }
 
-        var dialog = new ContentDialog
+        var dialogViewModel = vmFactory.Get<ConfirmPackageDeleteDialogViewModel>(vm =>
         {
-            Title = Resources.Label_ConfirmDelete,
-            Content = Resources.Text_PackageUninstall_Details,
-            PrimaryButtonText = Resources.Action_OK,
-            CloseButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Primary
+            vm.ExpectedPackageName = Package?.DisplayName;
+        });
+
+        var dialog = new BetterContentDialog
+        {
+            Content = dialogViewModel,
+            IsPrimaryButtonEnabled = false,
+            IsSecondaryButtonEnabled = false,
+            IsFooterVisible = false,
         };
         var result = await dialog.ShowAsync();
 
@@ -281,6 +425,21 @@ public partial class PackageCardViewModel : ProgressViewModel
                 versionOptions.BranchName = Package.Version.InstalledBranch;
                 versionOptions.CommitHash = latest.Sha;
             }
+
+            var confirmationDialog = new BetterContentDialog
+            {
+                Title = Resources.Label_AreYouSure,
+                Content =
+                    $"{Package.DisplayName} will be updated to the latest version ({versionOptions.GetReadableVersionString()})",
+                PrimaryButtonText = Resources.Action_Continue,
+                SecondaryButtonText = Resources.Action_Cancel,
+                DefaultButton = ContentDialogButton.Primary,
+                IsSecondaryButtonEnabled = true,
+            };
+
+            var dialogResult = await confirmationDialog.ShowAsync();
+            if (dialogResult != ContentDialogResult.Primary)
+                return;
 
             var updatePackageStep = new UpdatePackageStep(
                 settingsManager,
@@ -435,6 +594,64 @@ public partial class PackageCardViewModel : ProgressViewModel
         ProcessRunner.OpenUrl(basePackage.GithubUrl);
     }
 
+    [RelayCommand]
+    private async Task Stop()
+    {
+        if (Package is null)
+            return;
+
+        await runningPackageService.StopPackage(Package.Id);
+        IsRunning = false;
+        ShowWebUiButton = false;
+    }
+
+    [RelayCommand]
+    private async Task Restart()
+    {
+        await Stop();
+        await Launch();
+    }
+
+    [RelayCommand]
+    private async Task ShowLaunchOptions()
+    {
+        var basePackage = packageFactory.FindPackageByName(Package?.PackageName);
+        if (basePackage == null)
+        {
+            logger.LogWarning("Package {Name} not found", Package?.PackageName);
+            return;
+        }
+
+        var viewModel = vmFactory.Get<LaunchOptionsViewModel>();
+        viewModel.Cards = LaunchOptionCard
+            .FromDefinitions(basePackage.LaunchOptions, Package?.LaunchArgs ?? [])
+            .ToImmutableArray();
+
+        logger.LogDebug("Launching config dialog with cards: {CardsCount}", viewModel.Cards.Count);
+
+        var dialog = new BetterContentDialog
+        {
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            IsPrimaryButtonEnabled = true,
+            PrimaryButtonText = Resources.Action_Save,
+            CloseButtonText = Resources.Action_Cancel,
+            FullSizeDesired = true,
+            DefaultButton = ContentDialogButton.Primary,
+            ContentMargin = new Thickness(32, 16),
+            Padding = new Thickness(0, 16),
+            Content = new LaunchOptionsDialog { DataContext = viewModel, }
+        };
+
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary && Package != null)
+        {
+            // Save config
+            var args = viewModel.AsLaunchArgs();
+            settingsManager.SaveLaunchArgs(Package.Id, args);
+        }
+    }
+
     private async Task<bool> HasUpdate()
     {
         if (Package == null || IsUnknownPackage || Design.IsDesignMode)
@@ -564,5 +781,11 @@ public partial class PackageCardViewModel : ProgressViewModel
             IsSharedModelSymlink = false;
             IsSharedModelConfig = false;
         }
+    }
+
+    private void RunningPackageOnStartupComplete(object? sender, string e)
+    {
+        webUiUrl = e.Replace("0.0.0.0", "127.0.0.1");
+        ShowWebUiButton = !string.IsNullOrWhiteSpace(webUiUrl);
     }
 }

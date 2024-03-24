@@ -319,7 +319,7 @@
     <value>Recherche</value>
   </data>
   <data name="Label_Sort" xml:space="preserve">
-    <value>Trier</value>
+    <value>Tri</value>
   </data>
   <data name="Label_TimePeriod" xml:space="preserve">
     <value>Période</value>
@@ -810,6 +810,9 @@
   <data name="TextTemplate_LastChecked" xml:space="preserve">
     <value>Dernière vérification: {0}</value>
   </data>
+  <data name="TeachingTip_MoreCheckpointCategories" xml:space="preserve">
+    <value>Les dossiers additionnels comme IPAdapters ou TextualInversions (embeddings) peuvent être activés ici</value>
+  </data>
   <data name="Action_OpenOnHuggingFace" xml:space="preserve">
     <value>Ouvrir sur Hugging Face</value>
   </data>
@@ -833,6 +836,9 @@
   </data>
   <data name="Label_AutoCompletion" xml:space="preserve">
     <value>Auto-complétion</value>
+  </data>
+  <data name="Label_CompletionReplaceUnderscoresWithSpaces" xml:space="preserve">
+    <value>Remplacer les underscores par des espaces lors de l&apos;auto-complétion.</value>
   </data>
   <data name="Label_SystemInformation" xml:space="preserve">
     <value>Informations système</value>
@@ -888,10 +894,40 @@
   <data name="Label_MotionBucketId" xml:space="preserve">
     <value>Motion Bucket ID</value>
   </data>
+  <data name="Label_AugmentationLevel" xml:space="preserve">
+    <value>Niveau d&apos;augmentation</value>
+  </data>
   <data name="Label_VideoOutputMethod" xml:space="preserve">
     <value>Méthode</value>
   </data>
   <data name="Label_VideoQuality" xml:space="preserve">
     <value>Qualité</value>
+  </data>
+  <data name="Label_FindInModelBrowser" xml:space="preserve">
+    <value>Trouver dans l&apos;explorateur de modèle</value>
+  </data>
+  <data name="Label_Installed" xml:space="preserve">
+    <value>Installé</value>
+  </data>
+  <data name="Label_NoExtensionsFound" xml:space="preserve">
+    <value>Pas d&apos;extensions trouvés.</value>
+  </data>
+  <data name="Action_Hide" xml:space="preserve">
+    <value>Masquer</value>
+  </data>
+  <data name="Action_CopyDetails" xml:space="preserve">
+    <value>Copier les détails</value>
+  </data>
+  <data name="Action_Download" xml:space="preserve">
+    <value>Télécharger</value>
+  </data>
+  <data name="TeachingTip_DownloadsExplanation" xml:space="preserve">
+    <value>Vérifiez la progression de l&apos;installation de votre paquet ainsi que le téléchargement de votre modèle ici.</value>
+  </data>
+  <data name="Label_RecommendedModels" xml:space="preserve">
+    <value>Modèles recommandés</value>
+  </data>
+  <data name="Label_RecommendedModelsSubText" xml:space="preserve">
+    <value>Pendant que votre paquet s&apos;installe, voici quelques modèles que nous recommandons pour vous aidez à démarrer.</value>
   </data>
 </root>

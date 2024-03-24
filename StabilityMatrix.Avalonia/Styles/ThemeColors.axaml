@@ -21,6 +21,7 @@
     <Color x:Key="ThemeCyanColor">#00BCD4</Color>
     <Color x:Key="ThemeTealColor">#009688</Color>
     <Color x:Key="ThemeDarkDarkGreenColor">#2C582C</Color>
+    <SolidColorBrush x:Key="ThemeDarkDarkGreenColorBrush">#2C582C</SolidColorBrush>
     <Color x:Key="ThemeDarkGreenColor">#3A783C</Color>
     <Color x:Key="ThemeGreenColor">#4BA04F</Color>
     <Color x:Key="ThemeGreenColorTransparent">#AA4BA04F</Color>

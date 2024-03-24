@@ -8,6 +8,7 @@ using Avalonia.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -120,6 +121,7 @@ public partial class CheckpointFile : ViewModelBase
         if (File.Exists(FilePath))
         {
             IsLoading = true;
+            Progress = new ProgressReport(0f, "Deleting...");
             try
             {
                 await using var delay = new MinimumDelay(200, 500);
@@ -135,6 +137,12 @@ public partial class CheckpointFile : ViewModelBase
                     {
                         await Task.Run(() => File.Delete(cmInfoPath));
                     }
+
+                    var settingsManager = App.Services.GetRequiredService<ISettingsManager>();
+                    settingsManager.Transaction(s =>
+                    {
+                        s.InstalledModelHashes?.Remove(ConnectedModel.Hashes.BLAKE3);
+                    });
                 }
             }
             catch (IOException ex)

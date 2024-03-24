@@ -59,6 +59,17 @@
     "LicensePath": "LICENSE"
   },
   {
+    "ModelCategory": "BaseModel",
+    "ModelName": "Stable Cascade",
+    "RepositoryPath": "stabilityai/stable-cascade",
+    "Files": [
+      "comfyui_checkpoints/stable_cascade_stage_b.safetensors",
+      "comfyui_checkpoints/stable_cascade_stage_c.safetensors"
+    ],
+    "LicenseType": "stable-cascade-nc-community",
+    "LicensePath": "LICENSE"
+  },
+  {
     "ModelCategory": "ControlNet",
     "ModelName": "Canny",
     "RepositoryPath": "lllyasviel/ControlNet-v1-1",

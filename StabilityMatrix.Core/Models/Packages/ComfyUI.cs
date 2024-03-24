@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Attributes;
@@ -44,7 +43,7 @@ public class ComfyUI(
     public override bool ShouldIgnoreReleases => true;
     public override bool IsInferenceCompatible => true;
     public override string OutputFolderName => "output";
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.InferenceCompatible;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
 
@@ -221,7 +220,7 @@ public class ComfyUI(
                         {
                             TorchVersion.Cpu => "cpu",
                             TorchVersion.Cuda => "cu121",
-                            TorchVersion.Rocm => "rocm5.6",
+                            TorchVersion.Rocm => "rocm5.7",
                             _
                                 => throw new ArgumentOutOfRangeException(
                                     nameof(torchVersion),
@@ -232,9 +231,14 @@ public class ComfyUI(
                     )
         };
 
-        if (torchVersion == TorchVersion.Cuda)
+        switch (torchVersion)
         {
-            pipArgs = pipArgs.WithXFormers("==0.0.22.post4");
+            case TorchVersion.Cuda:
+                pipArgs = pipArgs.WithXFormers("==0.0.22.post4");
+                break;
+            case TorchVersion.Mps:
+                pipArgs = pipArgs.AddArg("mpmath==1.3.0");
+                break;
         }
 
         var requirements = new FilePath(installLocation, "requirements.txt");

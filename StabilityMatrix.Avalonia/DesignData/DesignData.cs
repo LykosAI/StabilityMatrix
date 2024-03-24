@@ -100,6 +100,19 @@ public static class DesignData
                                 },
                                 LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                                 LastUpdateCheck = DateTimeOffset.Now
+                            },
+                            new()
+                            {
+                                Id = Guid.NewGuid(),
+                                DisplayName = "Running Comfy",
+                                PackageName = "ComfyUI",
+                                Version = new InstalledPackageVersion
+                                {
+                                    InstalledBranch = "master",
+                                    InstalledCommitSha = "abc12uwu345568972abaedf7g7e679a98879e879f87ga8"
+                                },
+                                LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
+                                LastUpdateCheck = DateTimeOffset.Now
                             }
                         },
                         ActiveInstalledPackageId = activePackageId
@@ -314,7 +327,7 @@ public static class DesignData
             );
         }*/
 
-        CivitAiBrowserViewModel.ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>
+        CivitAiBrowserViewModel.ModelCards = new ObservableCollectionExtended<CheckpointBrowserCardViewModel>
         {
             dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
             {
@@ -406,7 +419,8 @@ public static class DesignData
                 new PackageInstallProgressItemViewModel(
                     new PackageModificationRunner
                     {
-                        CurrentProgress = new ProgressReport(0.5f, "Installing package...")
+                        CurrentProgress = new ProgressReport(0.5f, "Installing package..."),
+                        ModificationCompleteMessage = "Package installed successfully"
                     }
                 )
             }
@@ -508,6 +522,16 @@ public static class DesignData
                         ImageType = LocalImageFileType.TextToImage
                     }
                 )
+            };
+            vm.Categories = new ObservableCollectionExtended<PackageOutputCategory>
+            {
+                new()
+                {
+                    Name = "Category 1",
+                    Path = "path1",
+                    SubDirectories = [new PackageOutputCategory { Name = "SubCategory 1", Path = "path3" }]
+                },
+                new() { Name = "Category 2", Path = "path2" }
             };
             return vm;
         }

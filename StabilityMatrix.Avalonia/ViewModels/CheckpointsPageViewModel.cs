@@ -25,6 +25,7 @@ using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
+using Resources = StabilityMatrix.Avalonia.Languages.Resources;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
@@ -43,7 +44,7 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     private readonly INotificationService notificationService;
     private readonly IMetadataImportService metadataImportService;
 
-    public override string Title => "Checkpoints";
+    public override string Title => Resources.Label_Checkpoints;
 
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };

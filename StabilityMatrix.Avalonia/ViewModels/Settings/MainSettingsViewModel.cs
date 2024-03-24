@@ -14,6 +14,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
@@ -784,7 +785,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
         [
             new CommandItem(DebugFindLocalModelFromIndexCommand),
             new CommandItem(DebugExtractDmgCommand),
-            new CommandItem(DebugShowNativeNotificationCommand)
+            new CommandItem(DebugShowNativeNotificationCommand),
+            new CommandItem(DebugClearImageCacheCommand),
+            new CommandItem(DebugGCCollectCommand),
+            new CommandItem(DebugExtractImagePromptsToTxtCommand)
         ];
 
     [RelayCommand]
@@ -896,6 +900,60 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 Body = "Here is some message",
                 Buttons = { ("Action", "__Debug_Action"), ("Close", "__Debug_Close"), }
             }
+        );
+    }
+
+    [RelayCommand]
+    private void DebugClearImageCache()
+    {
+        if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
+        {
+            loader.ClearCache();
+        }
+    }
+
+    [RelayCommand]
+    private void DebugGCCollect()
+    {
+        GC.Collect();
+    }
+
+    [RelayCommand]
+    private async Task DebugExtractImagePromptsToTxt()
+    {
+        // Choose images
+        var provider = App.StorageProvider;
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions { AllowMultiple = true });
+
+        if (files.Count == 0)
+            return;
+
+        var images = await Task.Run(
+            () => files.Select(f => LocalImageFile.FromPath(f.TryGetLocalPath()!)).ToList()
+        );
+
+        var successfulFiles = new List<LocalImageFile>();
+
+        foreach (var localImage in images)
+        {
+            var imageFile = new FilePath(localImage.AbsolutePath);
+
+            // Write a txt with the same name as the image
+            var txtFile = imageFile.WithName(imageFile.NameWithoutExtension + ".txt");
+
+            // Read metadata
+            if (localImage.GenerationParameters?.PositivePrompt is { } positivePrompt)
+            {
+                await File.WriteAllTextAsync(txtFile, positivePrompt);
+
+                successfulFiles.Add(localImage);
+            }
+        }
+
+        notificationService.Show(
+            "Extracted prompts",
+            $"Extracted prompts from {successfulFiles.Count}/{images.Count} images.",
+            NotificationType.Success
         );
     }
 

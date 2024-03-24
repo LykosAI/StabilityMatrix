@@ -5,17 +5,99 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-## v2.10.0-dev.1
+
+## v2.10.0-preview.1
 ### Added
 - Added OpenArt.AI workflow browser for ComfyUI workflows
+
+## v2.10.0-dev.3
+### Added
+- Added support for deep links from the new Stability Matrix Chrome extension
+### Changed
+- Due to changes on the CivitAI API, you can no longer select a specific page in the CivitAI Model Browser
+- Due to the above API changes, new pages are now loaded via "infinite scrolling"
+### Fixed
+- Fixed Inference HiresFix module "Inherit Primary Sampler Addons" setting not effectively disabling when unchecked
+- Fixed model download location options for VAEs in the CivitAI Model Browser
+- Fixed crash on startup when library directory is not set
+- Fixed One-Click install progress dialog not disappearing after completion
+- Fixed ComfyUI with Inference pop-up during one-click install appearing below the visible scroll area
+- Fixed no packages being available for one-click install on PCs without a GPU
+- Fixed models not being removed from the installed models cache when deleting them from the Checkpoints page
+- Fixed missing ratings on some models in the CivitAI Model Browser
+- Fixed missing favorite count in the CivitAI Model Browser
+- Fixed recommended models not showing all SDXL models
+
+## v2.10.0-dev.2
+### Added
+- Added Reference-Only mode for Inference ControlNet, used for guiding the sampler with an image without a pretrained model. Part of the latent and attention layers will be connected to the reference image, similar to Image to Image or Inpainting.
+### Changed
+- Inference Primary Sampler Addons (i.e. ControlNet, FreeU) are now inherited by Hires Fix Samplers, this can be overriden from the Hires Fix module's settings menu by disabling the "Inherit Primary Sampler Addons" option.
+- Revisited the way images are loaded on the outputs page, with improvements to loading speed & not freezing the UI while loading
+### Fixed
+- Fixed Outputs page not remembering where the user last was in the TreeView in certain circumstances
+- Fixed Inference extension upgrades not being added to missing extensions list for prompted install
+- Fixed "The Open Web UI button has moved" teaching tip spam
+
+## v2.10.0-dev.1
+### Added
+- Inference ControlNet module now supports over 42 preprocessors, a new button next to the preprocessors dropdown allows previewing the output of the selected preprocessor on the image.
+- Added resolution selection for Inference ControlNet module, this controls preprocessor resolution too.
+### Changed
+- Revamped the Packages page to enable running multiple packages at the same time
+- Changed the Outputs Page to use a TreeView for the directory selection instead of a dropdown selector
+### Removed
+- Removed the main Launch page, as it is no longer needed with the new Packages page
+
+## v2.9.1
+### Added
+- Fixed [#498](https://github.com/LykosAI/StabilityMatrix/issues/498) Added "Pony" category to CivitAI Model Browser
+### Changed
+- Changed package deletion warning dialog to require additional confirmation
+### Fixed
+- Fixed [#502](https://github.com/LykosAI/StabilityMatrix/issues/502) - missing launch options for Forge
+- Fixed [#500](https://github.com/LykosAI/StabilityMatrix/issues/500) - missing output images in Forge when using output sharing
+- Fixed [#490](https://github.com/LykosAI/StabilityMatrix/issues/490) - `mpmath has no attribute 'rational'` error on macOS
+- Fixed [#510](https://github.com/ionite34/StabilityMatrix/pull/564/files) - kohya_ss packages with v23.0.x failing to install due to missing 'packaging' dependency
+- Fixed incorrect progress text when deleting a checkpoint from the Checkpoints page
+- Fixed incorrect icon colors on macOS
+
+## v2.9.0
+### Added
+- Added new package: [StableSwarmUI](https://github.com/Stability-AI/StableSwarmUI) by Stability AI
+- Added new package: [Stable Diffusion WebUI Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge) by lllyasviel
+- Added extension management for SD.Next and Stable Diffusion WebUI-UX
+- Added the ability to choose where CivitAI model downloads are saved
+- Added `--launch-package` argument to launch a specific package on startup, using display name or package ID (i.e. `--launch-package "Stable Diffusion WebUI Forge"` or `--launch-package c0b3ecc5-9664-4be9-952d-a10b3dcaee14`)
+- Added more Base Model search options to the CivitAI Model Browser
+- Added Stable Cascade to the HuggingFace Model Browser
+#### Inference
+- Added Inference Prompt Styles, with Prompt Expansion model support (i.e. Fooocus V2)
+- Added option to load a .yaml config file next to the model with the same name. Can be used with VPred and other models that require a config file.
+- Added copy image support on linux and macOS for Inference outputs viewer menu
+### Changed
+- Updated translations for German, Spanish, French, Japanese, Portuguese, and Turkish
+- (Internal) Updated to Avalonia 11.0.9
+### Fixed
+- Fixed StableSwarmUI not installing properly on macOS
+- Fixed [#464](https://github.com/LykosAI/StabilityMatrix/issues/464) - error when installing InvokeAI on macOS
+- Fixed [#335](https://github.com/LykosAI/StabilityMatrix/issues/335) Update hanging indefinitely after git step for Auto1111 and SDWebUI Forge
+- Fixed Inference output viewer menu "Copy" not copying image
+- Fixed image viewer dialog arrow key navigation not working
+- Fixed CivitAI login prompt not showing when downloading models that require CivitAI logins
+- Fixed unknown model types not showing on checkpoints page (thanks Jerry!)
+- Improved error handling for Inference Select Image hash calculation in case file is being written to while being read
 
 ## v2.9.0-pre.2
 ### Added
 - Added `--launch-package` argument to launch a specific package on startup, using display name or package ID (i.e. `--launch-package "Stable Diffusion WebUI Forge"` or `--launch-package c0b3ecc5-9664-4be9-952d-a10b3dcaee14`)
+- Added more Base Model search options to the CivitAI Model Browser
+- Added Stable Cascade to the HuggingFace Model Browser
 ### Changed
 - (Internal) Updated to Avalonia 11.0.9
 ### Fixed
 - Fixed image viewer dialog arrow key navigation not working
+- Fixed CivitAI login prompt not showing when downloading models that require CivitAI logins
 
 ## v2.9.0-pre.1
 ### Added

@@ -59,9 +59,10 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> vmFactory
+        ServiceManager<ViewModelBase> vmFactory,
+        RunningPackageService runningPackageService
     )
-        : base(vmFactory, inferenceClientManager, notificationService, settingsManager)
+        : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
     {
         this.notificationService = notificationService;
 
@@ -142,7 +143,10 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
     }
 
     /// <inheritdoc />
-    protected override async Task GenerateImageImpl(GenerateOverrides overrides, CancellationToken cancellationToken)
+    protected override async Task GenerateImageImpl(
+        GenerateOverrides overrides,
+        CancellationToken cancellationToken
+    )
     {
         if (!ClientManager.IsConnected)
         {
@@ -169,7 +173,10 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
             Client = ClientManager.Client,
             Nodes = buildPromptArgs.Builder.ToNodeDictionary(),
             OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
-            Parameters = new GenerationParameters { ModelName = UpscalerCardViewModel.SelectedUpscaler?.Name, },
+            Parameters = new GenerationParameters
+            {
+                ModelName = UpscalerCardViewModel.SelectedUpscaler?.Name,
+            },
             Project = InferenceProjectDocument.FromLoadable(this)
         };
 

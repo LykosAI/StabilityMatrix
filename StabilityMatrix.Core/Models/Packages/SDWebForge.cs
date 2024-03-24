@@ -39,6 +39,8 @@ public class SDWebForge(
     public override bool ShouldIgnoreReleases => true;
     public override IPackageExtensionManager ExtensionManager => null;
     public override string OutputFolderName => "output";
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
+
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new()
         {
@@ -52,6 +54,27 @@ public class SDWebForge(
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
+            new LaunchOptionDefinition
+            {
+                Name = "Host",
+                Type = LaunchOptionType.String,
+                DefaultValue = "localhost",
+                Options = ["--server-name"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Port",
+                Type = LaunchOptionType.String,
+                DefaultValue = "7860",
+                Options = ["--port"]
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Share",
+                Type = LaunchOptionType.Bool,
+                Description = "Set whether to share on Gradio",
+                Options = { "--share" }
+            },
             new LaunchOptionDefinition
             {
                 Name = "Always Offload from VRAM",
@@ -155,4 +178,9 @@ public class SDWebForge(
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }
+
+    public override string? ExtraLaunchArguments { get; set; } =
+        settingsManager.IsLibraryDirSet
+            ? $"--gradio-allowed-path \"{settingsManager.ImagesDirectory}\""
+            : string.Empty;
 }

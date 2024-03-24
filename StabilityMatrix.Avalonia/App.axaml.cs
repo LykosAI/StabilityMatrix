@@ -40,7 +40,6 @@ using Polly.Extensions.Http;
 using Polly.Timeout;
 using Refit;
 using Sentry;
-using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -54,14 +53,12 @@ using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 using Application = Avalonia.Application;
-using DrawingColor = System.Drawing.Color;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 #if DEBUG
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer;
@@ -323,14 +320,14 @@ public sealed class App : Application
                     provider.GetRequiredService<IDiscordRichPresenceService>(),
                     provider.GetRequiredService<ServiceManager<ViewModelBase>>(),
                     provider.GetRequiredService<ITrackedDownloadService>(),
-                    provider.GetRequiredService<IModelIndexService>()
+                    provider.GetRequiredService<IModelIndexService>(),
+                    provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>()
                 )
                 {
                     Pages =
                     {
-                        provider.GetRequiredService<LaunchPageViewModel>(),
-                        provider.GetRequiredService<InferenceViewModel>(),
                         provider.GetRequiredService<NewPackageManagerViewModel>(),
+                        provider.GetRequiredService<InferenceViewModel>(),
                         provider.GetRequiredService<CheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
                         provider.GetRequiredService<OutputsPageViewModel>(),

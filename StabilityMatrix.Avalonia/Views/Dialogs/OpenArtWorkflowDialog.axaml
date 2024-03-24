@@ -116,7 +116,8 @@
             <StackPanel Spacing="4">
                 <ui:SettingsExpanderItem Content="Install Required Nodes">
                     <ui:SettingsExpanderItem.Footer>
-                        <CheckBox IsChecked="{Binding InstallRequiredNodes}" />
+                        <CheckBox IsChecked="{Binding InstallRequiredNodes}"
+                                  IsEnabled="{Binding AvailablePackages.Count}"/>
                     </ui:SettingsExpanderItem.Footer>
                 </ui:SettingsExpanderItem>
                 <ui:SettingsExpanderItem Content="Target Package">

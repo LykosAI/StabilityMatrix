@@ -239,6 +239,7 @@
                                             Foreground="{DynamicResource TextControlForeground}"
                                             LetterSpacing="0.33"
                                             TextWrapping="Wrap"
+                                            MaxWidth="315"
                                             Text="{Binding Workflow.Name}"
                                             ToolTip.Tip="{Binding Workflow.Name}" />
                                     </Border>

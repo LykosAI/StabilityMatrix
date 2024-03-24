@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -43,13 +44,18 @@ public partial class OpenArtWorkflowViewModel(
     public PackagePair? SelectedPackagePair =>
         SelectedPackage is { } package ? packageFactory.GetPackagePair(package) : null;
 
-    public IEnumerable<InstalledPackage> AvailablePackages =>
-        settingsManager.Settings.InstalledPackages.Where(package => package.PackageName == "ComfyUI");
+    public List<InstalledPackage> AvailablePackages =>
+        settingsManager
+            .Settings.InstalledPackages.Where(package => package.PackageName == "ComfyUI")
+            .ToList();
 
     public List<PackageExtension> MissingNodes { get; } = [];
 
     public override async Task OnLoadedAsync()
     {
+        if (Design.IsDesignMode)
+            return;
+
         if (settingsManager.Settings.PreferredWorkflowPackage is { } preferredPackage)
         {
             SelectedPackage = preferredPackage;
@@ -57,6 +63,11 @@ public partial class OpenArtWorkflowViewModel(
         else
         {
             SelectedPackage = AvailablePackages.FirstOrDefault();
+        }
+
+        if (SelectedPackage == null)
+        {
+            InstallRequiredNodes = false;
         }
 
         CustomNodes = new ObservableCollection<OpenArtCustomNode>(

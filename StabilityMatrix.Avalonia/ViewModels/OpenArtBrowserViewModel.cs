@@ -154,12 +154,6 @@ public partial class OpenArtBrowserViewModel(
     [RelayCommand]
     private async Task OpenWorkflow(OpenArtSearchResult workflow)
     {
-        var existingComfy = settingsManager.Settings.InstalledPackages.FirstOrDefault(
-            x => x.PackageName is "ComfyUI"
-        );
-
-        var comfyPair = packageFactory.GetPackagePair(existingComfy);
-
         var vm = new OpenArtWorkflowViewModel(settingsManager, packageFactory) { Workflow = workflow };
 
         var dialog = new BetterContentDialog
@@ -181,26 +175,32 @@ public partial class OpenArtBrowserViewModel(
         if (result != ContentDialogResult.Primary)
             return;
 
-        if (existingComfy == null || comfyPair == null)
-        {
-            notificationService.Show(Resources.Label_ComfyRequiredTitle, Resources.Label_ComfyRequiredDetail);
-            return;
-        }
-
         List<IPackageStep> steps =
         [
             new DownloadOpenArtWorkflowStep(openArtApi, vm.Workflow, settingsManager)
         ];
 
         // Add install steps if missing nodes and preferred
-        if (vm is { InstallRequiredNodes: true, MissingNodes: { Count: > 0 } missingNodes })
+        if (
+            vm is
+            {
+                InstallRequiredNodes: true,
+                MissingNodes: { Count: > 0 } missingNodes,
+                SelectedPackage: not null,
+                SelectedPackagePair: not null
+            }
+        )
         {
-            var extensionManager = comfyPair.BasePackage.ExtensionManager!;
+            var extensionManager = vm.SelectedPackagePair.BasePackage.ExtensionManager!;
 
             steps.AddRange(
                 missingNodes.Select(
                     extension =>
-                        new InstallExtensionStep(extensionManager, comfyPair.InstalledPackage, extension)
+                        new InstallExtensionStep(
+                            extensionManager,
+                            vm.SelectedPackagePair.InstalledPackage,
+                            extension
+                        )
                 )
             );
         }

@@ -95,6 +95,7 @@ public interface IPackageExtensionManager
     Task<IEnumerable<InstalledPackageExtension>> GetInstalledExtensionsLiteAsync(
         InstalledPackage installedPackage,
         CancellationToken cancellationToken = default
+    );
 
     /// <summary>
     /// Get updated info (version) for an installed extension.

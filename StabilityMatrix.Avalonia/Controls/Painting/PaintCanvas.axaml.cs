@@ -398,26 +398,22 @@ public class PaintCanvas : TemplatedControl
         paint.IsDither = true;
         paint.IsAntialias = true;
 
-        // Draw path if not pen
-        if (!penPath.Points.Any(p => p.IsPen))
-        {
-            var point = penPath.Points[0];
-            var thickness = point.Radius * 1.5;
-
-            paint.Style = SKPaintStyle.Stroke;
-            paint.StrokeWidth = (float)thickness;
-            paint.StrokeCap = SKStrokeCap.Round;
-
-            canvas.DrawPath(penPath.Path, paint);
-
-            return;
-        }
+        // Track if we have any pen points
+        var hasPenPoints = false;
 
         // Can't use foreach since this list may be modified during iteration
         // ReSharper disable once ForCanBeConvertedToForeach
         for (var i = 0; i < penPath.Points.Count; i++)
         {
             var penPoint = penPath.Points[i];
+
+            // Skip non-pen points
+            if (!penPoint.IsPen)
+            {
+                continue;
+            }
+
+            hasPenPoints = true;
 
             var radius = penPoint.Radius;
             var pressure = penPoint.Pressure ?? 1;
@@ -435,6 +431,19 @@ public class PaintCanvas : TemplatedControl
             // Draw circles for pens
             paint.Style = SKPaintStyle.Fill;
             canvas.DrawCircle(penPoint.Point, (float)thickness, paint);
+        }
+
+        // Draw paths directly if we didn't have any pen points
+        if (!hasPenPoints)
+        {
+            var point = penPath.Points[0];
+            var thickness = point.Radius * 1.5;
+
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeWidth = (float)thickness;
+            paint.StrokeCap = SKStrokeCap.Round;
+
+            canvas.DrawPath(penPath.Path, paint);
         }
     }
 

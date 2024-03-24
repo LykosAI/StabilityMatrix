@@ -22,7 +22,8 @@
                 <StackPanel 
                     Grid.Column="1"
                     Orientation="Horizontal" Spacing="16">
-                    <Button Content="Load Mask Image" />
+                    <Button Content="Load Mask" Command="{Binding LoadMaskFromFileCommand}" />
+                    <Button Content="Save Mask" Command="{Binding SaveMaskToFileCommand}" />
                     <ToggleButton Content="Use Image Alpha Channel as Mask" IsChecked="{Binding UseImageAlphaAsMask}"/>
                 </StackPanel>
             </Grid>

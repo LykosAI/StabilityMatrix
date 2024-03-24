@@ -45,6 +45,25 @@ public class PaintCanvas : TemplatedControl
         AffectsRender<PaintCanvas>(BoundsProperty);
     }
 
+    public void SaveCanvasToRasterWebp(Stream stream)
+    {
+        using var surface = SKSurface.Create(new SKImageInfo((int)Bounds.Width, (int)Bounds.Height));
+        using var canvas = surface.Canvas;
+
+        RenderCanvasCore(canvas);
+
+        using var image = surface.Snapshot();
+        using var data = image.Encode(SKEncodedImageFormat.Webp, 100);
+        data.SaveTo(stream);
+    }
+
+    public void LoadCanvasFromRasterWebp(Stream stream)
+    {
+        ViewModel?.LayerImages.Add(SKBitmap.Decode(stream));
+
+        Dispatcher.UIThread.Post(() => MainCanvas?.InvalidateVisual(), DispatcherPriority.Render);
+    }
+
     /// <inheritdoc />
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
@@ -92,8 +111,9 @@ public class PaintCanvas : TemplatedControl
 
         if (DataContext is PaintCanvasViewModel viewModel)
         {
-            // Set the save action
-            viewModel.SaveCanvasAsImage = SaveCanvasToBitmap;
+            // Set the save and load actions
+            viewModel.SaveCanvasToImage = SaveCanvasToRasterWebp;
+            viewModel.LoadCanvasFromImage = LoadCanvasFromRasterWebp;
 
             viewModelSubscription?.Dispose();
             viewModelSubscription = viewModel
@@ -363,18 +383,6 @@ public class PaintCanvas : TemplatedControl
         return pt * visualRoot.TransformToVisual(relativeTo) ?? default;
     }
 
-    public void SaveCanvasToBitmap(Stream stream)
-    {
-        using var surface = SKSurface.Create(new SKImageInfo((int)Bounds.Width, (int)Bounds.Height));
-        using var canvas = surface.Canvas;
-
-        OnRenderSkia(canvas);
-
-        using var image = surface.Snapshot();
-        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-        data.SaveTo(stream);
-    }
-
     public AsyncRelayCommand ClearCanvasCommand => new(ClearCanvasAsync);
 
     public async Task ClearCanvasAsync()
@@ -449,13 +457,28 @@ public class PaintCanvas : TemplatedControl
 
     private void OnRenderSkia(SKCanvas canvas)
     {
+        RenderCanvasCore(canvas, renderBackgroundFill: true, renderBackgroundImage: true);
+    }
+
+    private void RenderCanvasCore(
+        SKCanvas canvas,
+        bool renderBackgroundFill = false,
+        bool renderBackgroundImage = false
+    )
+    {
         // Draw background color
         canvas.Clear(SKColors.Transparent);
 
         // Draw background image if set
-        if (ViewModel?.BackgroundImage is { } backgroundImage)
+        if (renderBackgroundImage && ViewModel?.BackgroundImage is { } backgroundImage)
         {
             canvas.DrawBitmap(backgroundImage, new SKPoint(0, 0));
+        }
+
+        // Draw any additional images
+        foreach (var layerImage in ViewModel?.LayerImages ?? Enumerable.Empty<SKBitmap>())
+        {
+            canvas.DrawBitmap(layerImage, new SKPoint(0, 0));
         }
 
         using var paint = new SKPaint();

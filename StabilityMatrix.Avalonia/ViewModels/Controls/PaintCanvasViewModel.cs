@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Threading.Tasks;
@@ -46,9 +47,11 @@ public partial class PaintCanvasViewModel : ObservableObject
     [ObservableProperty]
     private SKBitmap? backgroundImage;
 
-    public Action<Stream>? SaveCanvasAsImage { get; set; }
+    public List<SKBitmap> LayerImages { get; } = [];
 
     public Action<Stream>? LoadCanvasFromImage { get; set; }
+
+    public Action<Stream>? SaveCanvasToImage { get; set; }
 
     [RelayCommand(CanExecute = nameof(CanUndo))]
     public async Task UndoAsync()

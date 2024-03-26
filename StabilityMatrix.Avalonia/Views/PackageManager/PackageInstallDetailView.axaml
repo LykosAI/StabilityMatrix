@@ -19,7 +19,7 @@
     
     <Grid ColumnDefinitions="Auto, *"
           RowDefinitions="Auto, *">
-        <labs:AsyncImage
+        <controls:BetterAdvancedImage
             Height="300"
             Width="300"
             VerticalAlignment="Top"
@@ -27,7 +27,7 @@
             Margin="16, 16, 8, 8"
             CornerRadius="8"
             Source="{Binding SelectedPackage.PreviewImageUri}">
-        </labs:AsyncImage>
+        </controls:BetterAdvancedImage>
         
         <StackPanel Grid.Row="0" Grid.Column="1"
                     Margin="8"

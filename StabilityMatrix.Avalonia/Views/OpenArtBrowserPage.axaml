@@ -1,0 +1,357 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                          xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+                          xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+                          xmlns:openArt="clr-namespace:StabilityMatrix.Core.Models.Api.OpenArt;assembly=StabilityMatrix.Core"
+                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+                          xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+                          xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+                          xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+                          xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+                          x:DataType="viewModels:OpenArtBrowserViewModel"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          x:Class="StabilityMatrix.Avalonia.Views.OpenArtBrowserPage">
+    <UserControl.Styles>
+        <Style Selector="Border#HoverBorder">
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.237" />
+                </Transitions>
+            </Setter>
+
+            <Style Selector="^ labs|AsyncImage">
+                <Setter Property="Transitions">
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform"
+                                                       Duration="0:0:0.237">
+                            <TransformOperationsTransition.Easing>
+                                <QuadraticEaseInOut />
+                            </TransformOperationsTransition.Easing>
+                        </TransformOperationsTransition>
+                    </Transitions>
+                </Setter>
+            </Style>
+
+            <Style Selector="^:pointerover">
+                <Setter Property="BoxShadow" Value="0 0 40 0 #60000000" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Style Selector="^ asyncImageLoader|AdvancedImage">
+                    <Setter Property="CornerRadius" Value="12" />
+                    <Setter Property="RenderTransform" Value="scale(1.03, 1.03)" />
+                </Style>
+                <Style Selector="^ Border#ModelCardBottom">
+                    <Setter Property="Background" Value="#CC000000" />
+                </Style>
+            </Style>
+
+            <Style Selector="^:not(:pointerover)">
+                <Setter Property="BoxShadow" Value="0 0 20 0 #60000000" />
+                <Setter Property="Cursor" Value="Arrow" />
+                <Style Selector="^ asyncImageLoader|AdvancedImage">
+                    <Setter Property="CornerRadius" Value="8" />
+                    <Setter Property="RenderTransform" Value="scale(1, 1)" />
+                </Style>
+                <Style Selector="^ Border#ModelCardBottom">
+                    <Setter Property="Background" Value="#99000000" />
+                </Style>
+            </Style>
+        </Style>
+    </UserControl.Styles>
+
+    <UserControl.Resources>
+        <input:StandardUICommand
+            x:Key="OpenModelCommand"
+            Command="{Binding OpenModelCommand}" />
+        
+        <input:StandardUICommand
+            x:Key="OpenOnOpenArtCommand"
+            Command="{Binding OpenOnOpenArtCommand}" />
+        
+        <input:StandardUICommand
+            x:Key="OpenWorkflowCommand"
+            Command="{Binding OpenWorkflowCommand}" />
+        
+        <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter" />
+        <DataTemplate x:Key="OpenArtWorkflowTemplate" DataType="{x:Type openArt:OpenArtSearchResult}">
+            <Border
+                Name="HoverBorder"
+                Padding="0"
+                BorderThickness="0"
+                Margin="8"
+                ClipToBounds="True"
+                CornerRadius="8">
+                <Border.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuItem Header="{x:Static lang:Resources.Action_OpenOnOpenArt}"
+                                  Command="{StaticResource OpenOnOpenArtCommand}"
+                                  CommandParameter="{Binding }">
+                            <MenuItem.Icon>
+                                <ui:SymbolIcon Symbol="Open" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </MenuFlyout>
+                </Border.ContextFlyout>
+                <Button
+                    Name="ModelCard"
+                    Classes="transparent-full"
+                    Padding="0"
+                    BorderThickness="0"
+                    VerticalContentAlignment="Top"
+                    CornerRadius="8"
+                    Command="{StaticResource OpenWorkflowCommand}"
+                    CommandParameter="{Binding }">
+                    <Grid RowDefinitions="*, Auto">
+                        <labs:AsyncImage
+                            Grid.Row="0"
+                            Grid.RowSpan="2"
+                            CornerRadius="8"
+                            Width="330"
+                            Height="400"
+                            Source="{Binding Thumbnails[0].Url}"
+                            Stretch="UniformToFill" />
+
+                        <!-- Username pill card -->
+                        <Border
+                            BoxShadow="inset 1.2 0 80 1.8 #66000000"
+                            CornerRadius="16"
+                            Margin="4"
+                            Grid.Row="0"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom">
+                            <Border.Resources>
+                                <DropShadowEffect
+                                    x:Key="TextDropShadowEffect"
+                                    BlurRadius="12"
+                                    Color="#FF000000"
+                                    Opacity="0.9" />
+                                <DropShadowEffect
+                                    x:Key="ImageDropShadowEffect"
+                                    BlurRadius="12"
+                                    Color="#FF000000"
+                                    Opacity="0.2" />
+                            </Border.Resources>
+                            <Button
+                                Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                                CommandParameter="{Binding Creator.DevProfileUrl}"
+                                CornerRadius="16"
+                                Classes="transparent"
+                                Padding="10,4">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <controls:BetterAdvancedImage
+                                        Width="22"
+                                        Height="22"
+                                        Effect="{StaticResource ImageDropShadowEffect}"
+                                        CornerRadius="11"
+                                        RenderOptions.BitmapInterpolationMode="HighQuality"
+                                        IsVisible="{Binding Creator.Avatar, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                        Source="{Binding Creator.Avatar}" />
+                                    <TextBlock
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextControlForeground}"
+                                        Effect="{StaticResource TextDropShadowEffect}"
+                                        Text="{Binding Creator.Name}" />
+                                </StackPanel>
+                            </Button>
+                        </Border>
+
+                        <Border
+                            Name="ModelCardBottom"
+                            Grid.Row="1">
+                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto, Auto">
+
+                                <!--
+                                    TextTrimming causing issues with unicode chars until
+                                    https://github.com/AvaloniaUI/Avalonia/pull/13385 is released
+                                -->
+                                <TextBlock
+                                    Grid.ColumnSpan="2"
+                                    MaxWidth="250"
+                                    Margin="8,0,8,0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    FontWeight="SemiBold"
+                                    Foreground="{DynamicResource TextControlForeground}"
+                                    LetterSpacing="0.33"
+                                    Text="{Binding Name}"
+                                    TextWrapping="NoWrap"
+                                    ToolTip.Tip="{Binding Name}" />
+
+                                <StackPanel
+                                    Grid.Row="2"
+                                    Grid.Column="0"
+                                    Orientation="Horizontal">
+
+                                    <controls:StarsRating
+                                        Margin="8,8,0,8"
+                                        Background="#66000000"
+                                        FontSize="16"
+                                        Foreground="{DynamicResource ThemeEldenRingOrangeColor}"
+                                        Value="{Binding Stats.Rating}" />
+                                    <TextBlock
+                                        Margin="4,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{Binding Stats.NumReviews}"
+                                        TextAlignment="Center" />
+                                </StackPanel>
+
+                                <StackPanel
+                                    Grid.Row="2"
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Right"
+                                    Orientation="Horizontal">
+                                    <avalonia:Icon Value="fa-solid fa-heart" />
+                                    <TextBlock
+                                        Margin="4,0"
+                                        VerticalAlignment="Center"
+                                        Text="{Binding Stats.NumLikes, Converter={StaticResource KiloFormatterConverter}}" />
+
+                                    <avalonia:Icon Margin="4,0" Value="fa-solid fa-download" />
+                                    <TextBlock
+                                        Margin="0,0,4,0"
+                                        VerticalAlignment="Center"
+                                        Text="{Binding Stats.NumDownloads, Converter={StaticResource KiloFormatterConverter}}" />
+                                </StackPanel>
+                                <Button
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Width="32"
+                                    Margin="0,4,4,0"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    HorizontalContentAlignment="Right"
+                                    VerticalContentAlignment="Top"
+                                    BorderThickness="0"
+                                    Classes="transparent">
+                                    <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
+                                    <Button.Flyout>
+                                        <MenuFlyout>
+                                            <MenuItem Command="{StaticResource OpenModelCommand}"
+                                                      CommandParameter="{Binding }"
+                                                      Header="{x:Static lang:Resources.Action_OpenOnOpenArt}">
+                                                <MenuItem.Icon>
+                                                    <ui:SymbolIcon Symbol="Open" />
+                                                </MenuItem.Icon>
+                                            </MenuItem>
+                                        </MenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Button>
+            </Border>
+
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto, Auto, *, Auto">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto"
+              Margin="8">
+            <TextBox
+                HorizontalAlignment="Stretch"
+                Text="{Binding SearchQuery, Mode=TwoWay}"
+                Watermark="{x:Static lang:Resources.Action_Search}"
+                Classes="search"/>
+
+            <Button
+                Grid.Column="1"
+                Width="80"
+                Margin="8,0,8,0"
+                VerticalAlignment="Stretch"
+                Classes="accent"
+                Command="{Binding SearchButtonCommand}"
+                IsDefault="True">
+                <Grid>
+                    <controls:ProgressRing
+                        MinWidth="16"
+                        MinHeight="16"
+                        VerticalAlignment="Center"
+                        BorderThickness="4"
+                        IsIndeterminate="True"
+                        IsVisible="{Binding SearchButtonCommand.IsRunning}" />
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding !SearchButtonCommand.IsRunning}"
+                        Text="{x:Static lang:Resources.Action_Search}" />
+                </Grid>
+            </Button>
+        </Grid>
+        
+        <StackPanel Grid.Row="1"
+                    Margin="8,0,0,8" 
+                    Orientation="Vertical"
+                    IsVisible="{Binding SearchQuery, Converter={x:Static StringConverters.IsNullOrEmpty}}">
+            <Label Content="{x:Static lang:Resources.Label_Sort}" />
+            <ComboBox
+                MinWidth="100"
+                ItemsSource="{Binding AllSortModes}"
+                SelectedItem="{Binding SelectedSortMode}"/>
+        </StackPanel>
+        
+        <controls:ProgressRing Grid.Row="2"
+                               IsVisible="{Binding  IsLoading}"
+                               IsIndeterminate="True"
+                               Width="128"
+                               Height="128"/>
+
+        <ScrollViewer Grid.Row="2"
+                      ScrollChanged="ScrollViewer_OnScrollChanged"
+                      IsVisible="{Binding !IsLoading}">
+            <ItemsRepeater ItemsSource="{Binding SearchResults}"
+                           ItemTemplate="{StaticResource OpenArtWorkflowTemplate}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout MinColumnSpacing="4" MinRowSpacing="4"/>
+                </ItemsRepeater.Layout>
+            </ItemsRepeater>
+        </ScrollViewer>
+        
+        <StackPanel Grid.Row="3"
+                    HorizontalAlignment="Center"
+                    Margin="0,8,0,8"
+                    Orientation="Horizontal">
+            <Button
+                Margin="0,0,8,0"
+                Command="{Binding FirstPageCommand}"
+                IsEnabled="{Binding CanGoBack}"
+                ToolTip.Tip="{x:Static lang:Resources.Label_FirstPage}">
+                <avalonia:Icon Value="fa-solid fa-backward-fast" />
+            </Button>
+            <Button
+                Margin="0,0,16,0"
+                Command="{Binding PreviousPageCommand}"
+                IsEnabled="{Binding CanGoBack}"
+                ToolTip.Tip="{x:Static lang:Resources.Label_PreviousPage}">
+                <avalonia:Icon Value="fa-solid fa-caret-left" />
+            </Button>
+            <TextBlock Margin="8,0,4,0" TextAlignment="Center"
+                       Text="{x:Static lang:Resources.Label_Page}"
+                       VerticalAlignment="Center"/>
+            <ui:NumberBox Value="{Binding DisplayedPageNumber, FallbackValue=1}"
+                          VerticalAlignment="Center"
+                          SpinButtonPlacementMode="Hidden"
+                          TextAlignment="Center"/>
+            <TextBlock Margin="4,0,8,0" VerticalAlignment="Center">
+                <Run Text="/"/>
+                <Run Text="{Binding PageCount, FallbackValue=5}"/>
+            </TextBlock>
+            <Button
+                Margin="16,0,8,0"
+                Command="{Binding NextPageCommand}"
+                IsEnabled="{Binding CanGoForward}"
+                ToolTip.Tip="{x:Static lang:Resources.Label_NextPage}">
+                <avalonia:Icon Value="fa-solid fa-caret-right" />
+            </Button>
+            <Button
+                Command="{Binding LastPageCommand}"
+                IsEnabled="{Binding CanGoToEnd}"
+                ToolTip.Tip="{x:Static lang:Resources.Label_LastPage}">
+                <avalonia:Icon Value="fa-solid fa-forward-fast" />
+            </Button>
+        </StackPanel>
+    </Grid>
+</controls:UserControlBase>

@@ -40,6 +40,7 @@
         <PackageReference Include="AutoComplete.Net" Version="1.2211.2014.42"/>
         <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.0.6" />
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.9" />
+        <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.0.9" />
         <PackageReference Include="Avalonia.Controls.PanAndZoom" Version="11.0.0.2" />
         <PackageReference Include="Avalonia" Version="11.0.9" />
         <PackageReference Include="Avalonia.Desktop" Version="11.0.9" />
@@ -196,6 +197,9 @@
       <Compile Update="Views\PackageManager\PackageInstallBrowserView.axaml.cs">
         <DependentUpon>NewInstallerDialog.axaml</DependentUpon>
         <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Models\OpenArtMetadata.cs">
+        <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
       </Compile>
     </ItemGroup>
 

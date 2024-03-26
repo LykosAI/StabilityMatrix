@@ -1,8 +1,9 @@
 ﻿using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace StabilityMatrix.Core.Helper;
 
-public static class Utilities
+public static partial class Utilities
 {
     public static string GetAppVersion()
     {
@@ -63,4 +64,24 @@ public static class Utilities
 
         return stream;
     }
+
+    public static string RemoveHtml(string? stringWithHtml)
+    {
+        var pruned =
+            stringWithHtml
+                ?.Replace("<br/>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("<br />", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</p>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h1>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h2>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h3>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h4>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h5>", $"{Environment.NewLine}{Environment.NewLine}")
+                .Replace("</h6>", $"{Environment.NewLine}{Environment.NewLine}") ?? string.Empty;
+        pruned = HtmlRegex().Replace(pruned, string.Empty);
+        return pruned;
+    }
+
+    [GeneratedRegex("<[^>]+>")]
+    private static partial Regex HtmlRegex();
 }

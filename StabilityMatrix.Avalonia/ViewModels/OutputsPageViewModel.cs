@@ -145,7 +145,6 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .Subscribe(_ =>
             {
                 NumItemsSelected = Outputs.Count(o => o.IsSelected);
-                Console.WriteLine($"Subscribe called");
             });
 
         categoriesCache.Connect().DeferUntilLoaded().Bind(Categories).Subscribe();

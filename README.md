@@ -48,7 +48,7 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
 - Embedded Git and Python dependencies, with no need for either to be globally installed
 - Fully portable - move Stability Matrix's Data Directory to a new drive or computer at any time
 
-### ✨ Inference - A Reimagined Stable Diffusion Interface, Built-In to Stability Matrix
+### ✨ Inference - A Reimagined Interface for Stable Diffusion, Built-In to Stability Matrix
 - Powerful auto-completion and syntax highlighting using a formal language grammar
 - Workspaces open in tabs that save and load from `.smproj` project files
 

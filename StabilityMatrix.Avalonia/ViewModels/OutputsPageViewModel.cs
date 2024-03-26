@@ -145,6 +145,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .Subscribe(_ =>
             {
                 NumItemsSelected = Outputs.Count(o => o.IsSelected);
+                Console.WriteLine($"Subscribe called");
             });
 
         categoriesCache.Connect().DeferUntilLoaded().Bind(Categories).Subscribe();
@@ -395,12 +396,13 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         var selected = Outputs.Where(o => o.IsSelected).ToList();
         Debug.Assert(selected.Count == NumItemsSelected);
+
+        var imagesToRemove = new List<LocalImageFile>();
         foreach (var output in selected)
         {
             // Delete the file
             var imageFile = new FilePath(output.ImageFile.AbsolutePath);
             var result = await notificationService.TryAsync(imageFile.DeleteAsync());
-
             if (!result.IsSuccessful)
             {
                 continue;
@@ -413,15 +415,10 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 await notificationService.TryAsync(sideCar.DeleteAsync());
             }
 
-            OutputsCache.Remove(output.ImageFile);
-
-            // Invalidate cache
-            if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
-            {
-                loader.RemoveAllNamesFromCache(imageFile.Name);
-            }
+            imagesToRemove.Add(output.ImageFile);
         }
 
+        OutputsCache.Remove(imagesToRemove);
         NumItemsSelected = 0;
         ClearSelection();
     }

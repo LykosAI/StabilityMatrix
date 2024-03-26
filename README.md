@@ -2,6 +2,7 @@
 
 [![Build](https://github.com/LykosAI/StabilityMatrix/actions/workflows/build.yml/badge.svg)](https://github.com/LykosAI/StabilityMatrix/actions/workflows/build.yml)
 [![Discord Server](https://img.shields.io/discord/1115555685476868168?logo=discord&logoColor=white&label=Discord%20Server)](https://discord.com/invite/TUrgfECxHz)
+[![Release](https://img.shields.io/github/v/release/LykosAI/StabilityMatrix?label=Latest%20Release&link=https%3A%2F%2Fgithub.com%2FLykosAI%2FStabilityMatrix%2Freleases%2Flatest)][release]
 
 [release]: https://github.com/LykosAI/StabilityMatrix/releases/latest
 [download-win-x64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-win-x64.zip
@@ -9,7 +10,7 @@
 [download-macos-arm64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-macos-arm64.dmg
 
 [auto1111]: https://github.com/AUTOMATIC1111/stable-diffusion-webui
-[auto1111-directml]: https://github.com/lshqqytiger/stable-diffusion-webui-directml
+[sdwebui-directml]: https://github.com/lshqqytiger/stable-diffusion-webui-directml
 [webui-ux]: https://github.com/anapnoe/stable-diffusion-webui-ux
 [comfy]: https://github.com/comfyanonymous/ComfyUI
 [sdnext]: https://github.com/vladmandic/automatic
@@ -25,44 +26,29 @@
 [civitai]: https://civitai.com/
 [huggingface]: https://huggingface.co/
 
-Multi-Platform Package Manager and Inference UI for Stable Diffusion
-
-### ✨ New in 2.5 - [Inference](#inference-A-reimagined-built-in-Stable-Diffusion-experience), a built-in interface for Stable Diffusion powered by ComfyUI
-
-### 🖱️ One click install and update for Stable Diffusion Web UI Packages
-- Supports:
-  - [Automatic 1111][auto1111], [Automatic 1111 DirectML][auto1111-directml], [SD Web UI-UX][webui-ux], [SD.Next][sdnext]
-  - [Fooocus][fooocus], [Fooocus MRE][fooocus-mre], [Fooocus ControlNet SDXL][fooocus-controlnet], [Ruined Fooocus][ruined-fooocus]
-  - [ComfyUI][comfy]
-  - [VoltaML][voltaml]
-  - [InvokeAI][invokeai]
-  - [Kohya's GUI][kohya-ss]
-  - [OneTrainer][onetrainer]
-- Manage plugins / extensions for supported packages ([Automatic 1111][auto1111], [Comfy UI][comfy])
-- Easily install or update Python dependencies for each package
-- Embedded Git and Python dependencies, with no need for either to be globally installed
-- Fully portable - move Stability Matrix's Data Directory to a new drive or computer at any time
-
-### 🚀 Launcher with syntax highlighted terminal emulator, routed GUI input prompts
-- Launch arguments editor with predefined or custom options for each Package install
-- Configurable Environment Variables
-
-### 🗃️ Checkpoint Manager, configured to be shared by all Package installs
-- Option to find CivitAI metadata and preview thumbnails for new local imports
-
-### ☁️ Model Browser to import from [CivitAI][civitai] and [HuggingFace][huggingface]
-- Automatically imports to the associated model folder depending on the model type
-- Downloads relevant metadata files and preview image
-
-![header](https://cdn.lykos.ai/static/sm-banner-rounded.webp)
-
-[![Release](https://img.shields.io/github/v/release/LykosAI/StabilityMatrix?label=Latest%20Release&link=https%3A%2F%2Fgithub.com%2FLykosAI%2FStabilityMatrix%2Freleases%2Flatest)][release]
+![Header image for Stability Matrix, Multi-Platform Package Manager and Inference UI for Stable Diffusion](https://cdn.lykos.ai/static/sm-banner-rounded.webp)
 
 [![Windows](https://img.shields.io/badge/Windows%2010,%2011-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)][download-win-x64]
 [![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)][download-linux-x64]
 [![macOS](https://img.shields.io/badge/mac%20os%20%28apple%20silicon%29-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)][download-macos-arm64]
 
-### Inference - A reimagined built-in Stable Diffusion experience
+Multi-Platform Package Manager and Inference UI for Stable Diffusion
+
+### 🖱️ One click install and update for Stable Diffusion Web UI Packages
+- Supports:
+  - [Automatic1111][auto1111], [Stable Diffusion WebUI DirectML][sdwebui-directml], [SD Web UI-UX][webui-ux], [SD.Next][sdnext]
+  - [Fooocus][fooocus], [Fooocus ControlNet SDXL][fooocus-controlnet], [Ruined Fooocus][ruined-fooocus]
+  - [ComfyUI][comfy]
+  - [VoltaML][voltaml]
+  - [InvokeAI][invokeai]
+  - [Kohya's GUI][kohya-ss]
+  - [OneTrainer][onetrainer]
+- Manage plugins / extensions for supported packages ([Automatic1111][auto1111], [Comfy UI][comfy], [SD Web UI-UX][webui-ux], and [SD.Next][sdnext])
+- Easily install or update Python dependencies for each package
+- Embedded Git and Python dependencies, with no need for either to be globally installed
+- Fully portable - move Stability Matrix's Data Directory to a new drive or computer at any time
+
+### ✨ Inference - A Reimagined Stable Diffusion Interface, Built-In to Stability Matrix
 - Powerful auto-completion and syntax highlighting using a formal language grammar
 - Workspaces open in tabs that save and load from `.smproj` project files
 
@@ -76,13 +62,20 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
   <img style="width: 80%; height: 80%" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/4341cc34-a584-4e9c-bb3b-276009bdae80" alt=""/>
 </p>
 
-### Searchable launch options
+### 🚀 Launcher with syntax highlighted terminal emulator, routed GUI input prompts
+- Launch arguments editor with predefined or custom options for each Package install
+- Configurable Environment Variables
+
 <p align="center">
   <img style="width: 80%; height: 80%" src="https://github.com/LykosAI/StabilityMatrix/assets/13956642/75456866-9d95-47c6-8c0a-fdc19443ee02" alt=""/>
 </p>
 
-### Model browser powered by [Civit AI][civitai]
-- Downloads new models, automatically uses the appropriate shared model directory
+### 🗃️ Checkpoint Manager, configured to be shared by all Package installs
+- Option to find CivitAI metadata and preview thumbnails for new local imports
+
+### ☁️ Model Browser to import from [CivitAI][civitai] and [HuggingFace][huggingface]
+- Automatically imports to the associated model folder depending on the model type
+- Downloads relevant metadata files and preview image
 - Pause and resume downloads, even after closing the app
 
 <p align="center">

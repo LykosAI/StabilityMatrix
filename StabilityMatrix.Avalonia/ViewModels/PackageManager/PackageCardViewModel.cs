@@ -54,7 +54,7 @@ public partial class PackageCardViewModel(
     private InstalledPackage? package;
 
     [ObservableProperty]
-    private string? cardImageSource;
+    private Uri? cardImageSource;
 
     [ObservableProperty]
     private bool isUpdateAvailable;
@@ -127,7 +127,7 @@ public partial class PackageCardViewModel(
         )
         {
             IsUnknownPackage = true;
-            CardImageSource = "";
+            CardImageSource = null;
             InstalledVersion = "Unknown";
         }
         else
@@ -135,7 +135,7 @@ public partial class PackageCardViewModel(
             IsUnknownPackage = false;
 
             var basePackage = packageFactory[value.PackageName];
-            CardImageSource = basePackage?.PreviewImageUri.ToString() ?? Assets.NoImage.ToString();
+            CardImageSource = basePackage?.PreviewImageUri ?? Assets.NoImage;
             InstalledVersion = value.Version?.DisplayVersion ?? "Unknown";
             CanUseConfigMethod =
                 basePackage?.AvailableSharedFolderMethods.Contains(SharedFolderMethod.Configuration) ?? false;

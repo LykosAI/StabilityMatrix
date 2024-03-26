@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.10.0-preview.1
 ### Added
 - Added OpenArt.AI workflow browser for ComfyUI workflows
+### Changed
+- Updated to Avalonia 11.0.10
+- Changed to a new image control for pages with many images
 
 ## v2.10.0-dev.3
 ### Added

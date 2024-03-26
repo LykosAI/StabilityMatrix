@@ -1,4 +1,6 @@
-﻿using Avalonia.Input;
+﻿using System.Diagnostics;
+using Avalonia.Input;
+using Avalonia.Labs.Controls;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Core.Attributes;
@@ -19,5 +21,10 @@ public partial class PackageInstallBrowserView : UserControlBase
         {
             vm.ClearSearchQuery();
         }
+    }
+
+    private void AsyncImage_OnFailed(object? sender, AsyncImage.AsyncImageFailedEventArgs e)
+    {
+        Debug.WriteLine($"Failed to load image: {e.ErrorException?.Message}");
     }
 }

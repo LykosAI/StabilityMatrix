@@ -13,6 +13,7 @@
                           xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
                           xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
                           xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
+                          xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
                           mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="450"
                           x:DataType="viewModels:PackageManagerViewModel"
                           x:CompileBindings="True"
@@ -44,15 +45,13 @@
                                 </MultiBinding>
                             </controls:Card.Background>
                             <Grid ColumnDefinitions="Auto, *">
-                                <controls:BetterAdvancedImage
+                                <labs:AsyncImage
                                     Grid.Column="0"
                                     Height="150"
                                     Width="150"
                                     Margin="4, 8"
                                     CornerRadius="8"
                                     HorizontalAlignment="Center"
-                                    VerticalContentAlignment="Top"
-                                    HorizontalContentAlignment="Center"
                                     Source="{Binding CardImageSource}"
                                     IsVisible="{Binding !IsUnknownPackage}"
                                     Stretch="UniformToFill" />

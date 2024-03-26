@@ -210,7 +210,7 @@
                                             Classes="transparent"
                                             Padding="10,4">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <controls:BetterAdvancedImage
+                                                <labs:AsyncImage
                                                     Width="22"
                                                     Height="22"
                                                     Effect="{StaticResource ImageDropShadowEffect}"

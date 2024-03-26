@@ -58,6 +58,9 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
         Bitmap = bitmap;
     }
 
+    [JsonIgnore]
+    public Uri? Uri => LocalFile?.FullPath != null ? new Uri(LocalFile.FullPath) : RemoteUrl;
+
     /// <inheritdoc />
     public ImageSourceTemplateType TemplateKey { get; private set; }
 

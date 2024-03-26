@@ -40,7 +40,7 @@
             <Style Selector="^:pointerover">
                 <Setter Property="BoxShadow" Value="0 0 40 0 #60000000" />
                 <Setter Property="Cursor" Value="Hand" />
-                <Style Selector="^ asyncImageLoader|AdvancedImage">
+                <Style Selector="^ labs|AsyncImage">
                     <Setter Property="CornerRadius" Value="12" />
                     <Setter Property="RenderTransform" Value="scale(1.03, 1.03)" />
                 </Style>
@@ -52,7 +52,7 @@
             <Style Selector="^:not(:pointerover)">
                 <Setter Property="BoxShadow" Value="0 0 20 0 #60000000" />
                 <Setter Property="Cursor" Value="Arrow" />
-                <Style Selector="^ asyncImageLoader|AdvancedImage">
+                <Style Selector="^ labs|AsyncImage">
                     <Setter Property="CornerRadius" Value="8" />
                     <Setter Property="RenderTransform" Value="scale(1, 1)" />
                 </Style>
@@ -121,6 +121,7 @@
                             CornerRadius="16"
                             Margin="4"
                             Grid.Row="0"
+                            ClipToBounds="True"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Bottom">
                             <Border.Resources>
@@ -142,14 +143,16 @@
                                 Classes="transparent"
                                 Padding="10,4">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <controls:BetterAdvancedImage
+                                    <labs:AsyncImage
                                         Width="22"
                                         Height="22"
+                                        ClipToBounds="True"
                                         Effect="{StaticResource ImageDropShadowEffect}"
                                         CornerRadius="11"
                                         RenderOptions.BitmapInterpolationMode="HighQuality"
                                         IsVisible="{Binding Creator.Avatar, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                        Source="{Binding Creator.Avatar}" />
+                                        Source="{Binding Creator.Avatar}">
+                                    </labs:AsyncImage>
                                     <TextBlock
                                         VerticalAlignment="Center"
                                         Foreground="{DynamicResource TextControlForeground}"

@@ -35,8 +35,6 @@ public class SDWebForge(
             "https://github.com/lllyasviel/stable-diffusion-webui-forge/assets/19834515/ca5e05ed-bd86-4ced-8662-f41034648e8c"
         );
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
-
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
     public override IPackageExtensionManager ExtensionManager => null;

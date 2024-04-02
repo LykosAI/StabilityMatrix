@@ -2,7 +2,6 @@
                           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                           xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                           xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                           xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                           xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
@@ -10,24 +9,26 @@
                           xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
                           xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
                           xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
-                          xmlns:extensions="clr-namespace:StabilityMatrix.Core.Models.Packages.Extensions;assembly=StabilityMatrix.Core"
                           xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
+                          xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           x:DataType="packageManager:PackageInstallDetailViewModel"
                           x:CompileBindings="True"
                           d:DataContext="{x:Static designData:DesignData.PackageInstallDetailViewModel}"
                           x:Class="StabilityMatrix.Avalonia.Views.PackageManager.PackageInstallDetailView">
-
+    
     <Grid ColumnDefinitions="Auto, *"
           RowDefinitions="Auto, *">
         <controls:BetterAdvancedImage
-            MaxHeight="300"
-            MaxWidth="300"
-            Margin="16,16,8,8"
-            CornerRadius="8"
+            Height="300"
+            Width="300"
             VerticalAlignment="Top"
             Stretch="UniformToFill"
-            Source="{Binding SelectedPackage.PreviewImageUri}" />
+            Margin="16, 16, 8, 8"
+            CornerRadius="8"
+            Source="{Binding SelectedPackage.PreviewImageUri}">
+        </controls:BetterAdvancedImage>
+        
         <StackPanel Grid.Row="0" Grid.Column="1"
                     Margin="8"
                     Orientation="Vertical">

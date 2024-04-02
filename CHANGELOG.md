@@ -5,6 +5,34 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+
+## v2.10.0-preview.1
+### Added
+- Added OpenArt.AI workflow browser for ComfyUI workflows
+### Changed
+- Changed to a new image control for pages with many images
+- (Internal) Updated to Avalonia 11.0.10
+### Fixed
+- Improved performance when deleting many images from the Outputs page
+
+## v2.10.0-dev.3
+### Added
+- Added support for deep links from the new Stability Matrix Chrome extension
+### Changed
+- Due to changes on the CivitAI API, you can no longer select a specific page in the CivitAI Model Browser
+- Due to the above API changes, new pages are now loaded via "infinite scrolling"
+### Fixed
+- Fixed Inference HiresFix module "Inherit Primary Sampler Addons" setting not effectively disabling when unchecked
+- Fixed model download location options for VAEs in the CivitAI Model Browser
+- Fixed crash on startup when library directory is not set
+- Fixed One-Click install progress dialog not disappearing after completion
+- Fixed ComfyUI with Inference pop-up during one-click install appearing below the visible scroll area
+- Fixed no packages being available for one-click install on PCs without a GPU
+- Fixed models not being removed from the installed models cache when deleting them from the Checkpoints page
+- Fixed missing ratings on some models in the CivitAI Model Browser
+- Fixed missing favorite count in the CivitAI Model Browser
+- Fixed recommended models not showing all SDXL models
+
 ## v2.10.0-dev.2
 ### Added
 - Added Reference-Only mode for Inference ControlNet, used for guiding the sampler with an image without a pretrained model. Part of the latent and attention layers will be connected to the reference image, similar to Image to Image or Inpainting.
@@ -82,6 +110,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added copy image support on linux and macOS for Inference outputs viewer menu
 ### Fixed
 - Fixed StableSwarmUI not installing properly on macOS
+- Fixed output sharing for Stable Diffusion WebUI Forge
 - Hopefully actually fixed [#464](https://github.com/LykosAI/StabilityMatrix/issues/464) - error when installing InvokeAI on macOS
 - Fixed default command line args for SDWebUI Forge on macOS
 - Fixed output paths and output sharing for SDWebUI Forge

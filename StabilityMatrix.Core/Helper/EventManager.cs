@@ -46,6 +46,7 @@ public class EventManager
     public event EventHandler<int>? NavigateAndFindCivitModelRequested;
     public event EventHandler? DownloadsTeachingTipRequested;
     public event EventHandler? RecommendedModelsDialogClosed;
+    public event EventHandler? WorkflowInstalled;
 
     public void OnGlobalProgressChanged(int progress) => GlobalProgressChanged?.Invoke(this, progress);
 
@@ -108,4 +109,6 @@ public class EventManager
 
     public void OnPackageRelaunchRequested(InstalledPackage package) =>
         PackageRelaunchRequested?.Invoke(this, package);
+
+    public void OnWorkflowInstalled() => WorkflowInstalled?.Invoke(this, EventArgs.Empty);
 }

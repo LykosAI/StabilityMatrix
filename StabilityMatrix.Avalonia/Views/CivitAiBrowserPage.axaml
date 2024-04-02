@@ -15,7 +15,8 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
-    xmlns:controls1="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     d:DataContext="{x:Static designData:DesignData.CivitAiBrowserViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
@@ -31,7 +32,7 @@
                 </Transitions>
             </Setter>
             
-            <Style Selector="^ asyncImageLoader|AdvancedImage">
+            <Style Selector="^ labs|AsyncImage">
                 <Setter Property="Transitions">
                     <Transitions>
                         <TransformOperationsTransition Property="RenderTransform"
@@ -47,7 +48,7 @@
             <Style Selector="^:pointerover">
                 <Setter Property="BoxShadow" Value="0 0 40 0 #60000000"/>
                 <Setter Property="Cursor" Value="Hand" />
-                <Style Selector="^ asyncImageLoader|AdvancedImage">
+                <Style Selector="^ labs|AsyncImage">
                     <Setter Property="CornerRadius" Value="12"/>
                     <Setter Property="RenderTransform" Value="scale(1.03, 1.03)"/>
                 </Style>
@@ -59,7 +60,7 @@
             <Style Selector="^:not(:pointerover)">
                 <Setter Property="BoxShadow" Value="0 0 20 0 #60000000"/>
                 <Setter Property="Cursor" Value="Arrow" />
-                <Style Selector="^ asyncImageLoader|AdvancedImage">
+                <Style Selector="^ labs|AsyncImage">
                     <Setter Property="CornerRadius" Value="8"/>
                     <Setter Property="RenderTransform" Value="scale(1, 1)"/>
                 </Style>
@@ -71,6 +72,7 @@
     </UserControl.Styles>
 
     <UserControl.Resources>
+        <system:Boolean x:Key="False">False</system:Boolean>
         <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter"/>
         <DataTemplate x:Key="CivitModelTemplate" DataType="{x:Type checkpointBrowser:CheckpointBrowserCardViewModel}">
             <Border
@@ -101,20 +103,20 @@
                     CommandParameter="{Binding CivitModel}"
                     IsEnabled="{Binding !IsImporting}">
                     <Grid RowDefinitions="*, Auto">
-                        <controls1:AsyncImage Grid.Row="0"
+                        <labs:AsyncImage Grid.Row="0"
                                                       CornerRadius="8"
                                                       VerticalAlignment="Top"
                                                       HorizontalAlignment="Center"
                                                       Height="75"
                                                       ZIndex="10"
-                                                      IsVisible="{Binding ShowSantaHats}"
+                                                      IsVisible="{Binding ShowSantaHats, FallbackValue=False}"
                                                       Margin="0,8,0,0"
                                                       Source="avares://StabilityMatrix.Avalonia/Assets/santahat.png">
                             <!-- <controls:BetterAdvancedImage.RenderTransform> -->
                             <!--     <RotateTransform Angle="315"></RotateTransform> -->
                             <!-- </controls:BetterAdvancedImage.RenderTransform> -->
-                        </controls1:AsyncImage>
-                        <controls1:AsyncImage
+                        </labs:AsyncImage>
+                        <labs:AsyncImage
                             Grid.Row="0"
                             Grid.RowSpan="2"
                             CornerRadius="8"
@@ -180,14 +182,15 @@
                                 Classes="transparent"
                                 Padding="10,4">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <controls1:AsyncImage
+                                    <labs:AsyncImage
                                         Width="22"
                                         Height="22"
                                         Effect="{StaticResource ImageDropShadowEffect}"
                                         CornerRadius="11"
                                         RenderOptions.BitmapInterpolationMode="HighQuality"
                                         IsVisible="{Binding CivitModel.Creator.Image, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                        Source="{Binding CivitModel.Creator.Image}"/>
+                                        Source="{Binding CivitModel.Creator.Image}">
+                                    </labs:AsyncImage>
                                     <TextBlock 
                                         VerticalAlignment="Center"
                                         Effect="{StaticResource TextDropShadowEffect}"
@@ -319,11 +322,11 @@
                                         Background="#66000000"
                                         FontSize="16"
                                         Foreground="{DynamicResource ThemeEldenRingOrangeColor}"
-                                        Value="{Binding CivitModel.Stats.Rating}" />
+                                        Value="{Binding CivitModel.ModelVersionStats.Rating}" />
                                     <TextBlock
                                         Margin="4,0,0,0"
                                         VerticalAlignment="Center"
-                                        Text="{Binding CivitModel.Stats.RatingCount}"
+                                        Text="{Binding CivitModel.ModelVersionStats.RatingCount}"
                                         TextAlignment="Center" />
                                 </StackPanel>
 
@@ -336,7 +339,7 @@
                                     <TextBlock
                                         Margin="4,0"
                                         VerticalAlignment="Center"
-                                        Text="{Binding CivitModel.Stats.FavoriteCount, Converter={StaticResource KiloFormatterConverter}}" />
+                                        Text="{Binding CivitModel.Stats.ThumbsUpCount, Converter={StaticResource KiloFormatterConverter}}" />
 
                                     <avalonia:Icon Margin="4,0" Value="fa-solid fa-download" />
                                     <TextBlock
@@ -402,6 +405,7 @@
                     VerticalAlignment="Stretch"
                     Classes="accent"
                     Command="{Binding SearchModelsCommand}"
+                    CommandParameter="{StaticResource False}"
                     IsDefault="True">
                     <Grid>
                         <controls:ProgressRing
@@ -472,57 +476,18 @@
                 </ItemsRepeater.Layout>
             </ItemsRepeater>
         </ScrollViewer>
-
-        <TextBlock
-            Grid.Row="2"
-            Margin="8,8"
-            VerticalAlignment="Center"
-            Text="{x:Static lang:Resources.Label_DataProvidedByCivitAi}" />
-
-        <StackPanel Grid.Row="2"
-                    HorizontalAlignment="Center"
-                    IsVisible="{Binding HasSearched}"
-                    Margin="0,8,0,8"
-                    Orientation="Horizontal">
-            <Button
-                Margin="0,0,8,0"
-                Command="{Binding FirstPage}"
-                IsEnabled="{Binding CanGoToFirstPage}"
-                ToolTip.Tip="{x:Static lang:Resources.Label_FirstPage}">
-                <avalonia:Icon Value="fa-solid fa-backward-fast" />
-            </Button>
-            <Button
-                Margin="0,0,16,0"
-                Command="{Binding PreviousPage}"
-                IsEnabled="{Binding CanGoToPreviousPage}"
-                ToolTip.Tip="{x:Static lang:Resources.Label_PreviousPage}">
-                <avalonia:Icon Value="fa-solid fa-caret-left" />
-            </Button>
-            <TextBlock Margin="8,0,4,0" TextAlignment="Center"
-                       Text="{x:Static lang:Resources.Label_Page}"
-                       VerticalAlignment="Center"/>
-            <ui:NumberBox Value="{Binding CurrentPageNumber, FallbackValue=1}"
-                          VerticalAlignment="Center"
-                          SpinButtonPlacementMode="Hidden"
-                          TextAlignment="Center"/>
-            <TextBlock Margin="4,0,8,0" VerticalAlignment="Center">
-                <Run Text="/"/>
-                <Run Text="{Binding TotalPages, FallbackValue=5}"/>
-            </TextBlock>
-            <Button
-                Margin="16,0,8,0"
-                Command="{Binding NextPage}"
-                IsEnabled="{Binding CanGoToNextPage}"
-                ToolTip.Tip="{x:Static lang:Resources.Label_NextPage}">
-                <avalonia:Icon Value="fa-solid fa-caret-right" />
-            </Button>
-            <Button
-                Command="{Binding LastPage}"
-                IsEnabled="{Binding CanGoToLastPage}"
-                ToolTip.Tip="{x:Static lang:Resources.Label_LastPage}">
-                <avalonia:Icon Value="fa-solid fa-forward-fast" />
-            </Button>
-        </StackPanel>
+        
+        <TextBlock Grid.Row="2" Text="End of results"
+                   TextAlignment="Center"
+                   Margin="0,0,0,8">
+            <TextBlock.IsVisible>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                    <Binding Path="HasSearched"/>
+                    <Binding Path="NextPageCursor"
+                             Converter="{x:Static StringConverters.IsNullOrEmpty}"/>
+                </MultiBinding>
+            </TextBlock.IsVisible>
+        </TextBlock>
 
         <TextBlock
             Grid.Row="0"

@@ -5,6 +5,7 @@
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     x:DataType="vmInference:ImageGalleryCardViewModel">
 
     <Design.PreviewWith>
@@ -115,12 +116,11 @@
                             </ListBox.Styles>
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:ImageSource}">
-                                    <controls:BetterAdvancedImage
+                                    <labs:AsyncImage
                                         MaxHeight="65"
                                         CornerRadius="4"
-                                        Source="{Binding}"
-                                        Stretch="Uniform"
-                                        StretchDirection="Both" />
+                                        Source="{Binding Uri}"
+                                        Stretch="Uniform" />
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>

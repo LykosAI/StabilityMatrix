@@ -45,77 +45,6 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="8,16" Spacing="8">
-            <!--  Theme  -->
-            <Grid RowDefinitions="Auto,*,*,*">
-                <TextBlock
-                    Margin="0,0,0,8"
-                    FontWeight="Medium"
-                    Text="{x:Static lang:Resources.Label_Appearance}" />
-                <ui:SettingsExpander
-                    Grid.Row="1"
-                    Margin="8,0,8,4"
-                    Header="{x:Static lang:Resources.Label_Theme}"
-                    IconSource="WeatherMoon">
-                    <ui:SettingsExpander.Footer>
-                        <ComboBox
-                            MinWidth="100"
-                            ItemsSource="{Binding AvailableThemes}"
-                            SelectedItem="{Binding SelectedTheme}" />
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
-                <ui:SettingsExpander
-                    Grid.Row="2"
-                    Margin="8,0,8,4"
-                    Header="{x:Static lang:Resources.Label_Language}"
-                    IconSource="Character">
-                    <ui:SettingsExpander.Footer>
-                        <ComboBox
-                            MinWidth="100"
-                            DisplayMemberBinding="{Binding Converter={StaticResource CultureInfoDisplayConverter}}"
-                            ItemsSource="{Binding AvailableLanguages}"
-                            SelectedItem="{Binding SelectedLanguage}" />
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
-                <ui:SettingsExpander
-                    Grid.Row="3"
-                    Margin="8,0,8,4"
-                    ActionIconSource="ChevronRight"
-                    Command="{Binding NavigateToSubPageCommand}"
-                    CommandParameter="{x:Type vmSettings:InferenceSettingsViewModel}"
-                    Header="Inference (Test)"
-                    IconSource="Code"
-                    IsClickEnabled="True"
-                    IsVisible="{Binding SharedState.IsDebugMode}" />
-            </Grid>
-
-            <!--  Checkpoints Manager Options  -->
-            <Grid RowDefinitions="auto,*,Auto">
-                <TextBlock
-                    Margin="0,0,0,8"
-                    FontWeight="Medium"
-                    Text="{x:Static lang:Resources.Label_CheckpointManager}" />
-                <ui:SettingsExpander
-                    Grid.Row="1"
-                    Margin="8,0"
-                    Description="{x:Static lang:Resources.Label_RemoveSymlinksOnShutdown_Details}"
-                    Header="{x:Static lang:Resources.Label_RemoveSymlinksOnShutdown}"
-                    IconSource="Folder">
-                    <ui:SettingsExpander.Footer>
-                        <CheckBox IsChecked="{Binding RemoveSymlinksOnShutdown}" />
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
-                <ui:SettingsExpander
-                    Grid.Row="2"
-                    Margin="8,4"
-                    Description="{x:Static lang:Resources.Label_ResetCheckpointsCache_Details}"
-                    Header="{x:Static lang:Resources.Label_ResetCheckpointsCache}"
-                    IconSource="Refresh">
-                    <ui:SettingsExpander.Footer>
-                        <Button Command="{Binding ResetCheckpointCache}" Content="{x:Static lang:Resources.Label_ResetCheckpointsCache}" />
-                    </ui:SettingsExpander.Footer>
-                </ui:SettingsExpander>
-            </Grid>
-
             <!--  General  -->
             <sg:SpacedGrid RowDefinitions="Auto,*,*,*" RowSpacing="4">
                 <TextBlock
@@ -167,6 +96,68 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
+            
+            <!--  Integrations  -->
+            <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">
+                <TextBlock
+                    Margin="0,0,0,4"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_Integrations}" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0"
+                    ActionIconSource="ChevronRight"
+                    Command="{Binding NavigateToSubPageCommand}"
+                    CommandParameter="{x:Type vmSettings:AccountSettingsViewModel}"
+                    Header="{x:Static lang:Resources.Label_Accounts}"
+                    IsClickEnabled="True">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            IsFilled="True"
+                            Symbol="Person" />
+                    </ui:SettingsExpander.IconSource>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,0,8,4"
+                    Header="{x:Static lang:Resources.Label_DiscordRichPresence}">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-brands fa-discord" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding IsDiscordRichPresenceEnabled}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+            </sg:SpacedGrid>
+            
+            <!--  Checkpoints Manager Options  -->
+            <Grid RowDefinitions="auto,*,Auto">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_CheckpointManager}" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0"
+                    Description="{x:Static lang:Resources.Label_RemoveSymlinksOnShutdown_Details}"
+                    Header="{x:Static lang:Resources.Label_RemoveSymlinksOnShutdown}"
+                    IconSource="Folder">
+                    <ui:SettingsExpander.Footer>
+                        <CheckBox IsChecked="{Binding RemoveSymlinksOnShutdown}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,4"
+                    Description="{x:Static lang:Resources.Label_ResetCheckpointsCache_Details}"
+                    Header="{x:Static lang:Resources.Label_ResetCheckpointsCache}"
+                    IconSource="Refresh">
+                    <ui:SettingsExpander.Footer>
+                        <Button Command="{Binding ResetCheckpointCache}" Content="{x:Static lang:Resources.Label_ResetCheckpointsCache}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+            </Grid>
 
             <!--  Environment Options  -->
             <Grid RowDefinitions="Auto, Auto, Auto">
@@ -204,40 +195,67 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </Grid>
-
-            <!--  Integrations  -->
-            <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">
+            
+            <sg:SpacedGrid RowDefinitions="Auto, Auto">
                 <TextBlock
-                    Margin="0,0,0,4"
+                    Margin="0,0,0,8"
                     FontWeight="Medium"
-                    Text="{x:Static lang:Resources.Label_Integrations}" />
+                    Text="{x:Static lang:Resources.Label_WorkflowBrowser}" />
                 <ui:SettingsExpander
                     Grid.Row="1"
-                    Margin="8,0"
-                    ActionIconSource="ChevronRight"
-                    Command="{Binding NavigateToSubPageCommand}"
-                    CommandParameter="{x:Type vmSettings:AccountSettingsViewModel}"
-                    Header="{x:Static lang:Resources.Label_Accounts}"
-                    IsClickEnabled="True">
+                    Margin="8,0,8,4"
+                    Header="{x:Static lang:Resources.Label_InfiniteScrolling}">
                     <ui:SettingsExpander.IconSource>
-                        <fluentIcons:SymbolIconSource
-                            FontSize="10"
-                            IsFilled="True"
-                            Symbol="Person" />
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-list" />
                     </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding InfinitelyScrollWorkflowBrowser}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+            </sg:SpacedGrid>
+            
+            <!--  Theme  -->
+            <Grid RowDefinitions="Auto,*,*,*">
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_Appearance}" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0,8,4"
+                    Header="{x:Static lang:Resources.Label_Theme}"
+                    IconSource="WeatherMoon">
+                    <ui:SettingsExpander.Footer>
+                        <ComboBox
+                            MinWidth="100"
+                            ItemsSource="{Binding AvailableThemes}"
+                            SelectedItem="{Binding SelectedTheme}" />
+                    </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
                 <ui:SettingsExpander
                     Grid.Row="2"
                     Margin="8,0,8,4"
-                    Header="{x:Static lang:Resources.Label_DiscordRichPresence}">
-                    <ui:SettingsExpander.IconSource>
-                        <controls:FASymbolIconSource Symbol="fa-brands fa-discord" />
-                    </ui:SettingsExpander.IconSource>
+                    Header="{x:Static lang:Resources.Label_Language}"
+                    IconSource="Character">
                     <ui:SettingsExpander.Footer>
-                        <ToggleSwitch IsChecked="{Binding IsDiscordRichPresenceEnabled}" />
+                        <ComboBox
+                            MinWidth="100"
+                            DisplayMemberBinding="{Binding Converter={StaticResource CultureInfoDisplayConverter}}"
+                            ItemsSource="{Binding AvailableLanguages}"
+                            SelectedItem="{Binding SelectedLanguage}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
-            </sg:SpacedGrid>
+                <ui:SettingsExpander
+                    Grid.Row="3"
+                    Margin="8,0,8,4"
+                    ActionIconSource="ChevronRight"
+                    Command="{Binding NavigateToSubPageCommand}"
+                    CommandParameter="{x:Type vmSettings:InferenceSettingsViewModel}"
+                    Header="Inference (Test)"
+                    IconSource="Code"
+                    IsClickEnabled="True"
+                    IsVisible="{Binding SharedState.IsDebugMode}" />
+            </Grid>
 
             <!--  System Options  -->
             <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="4">

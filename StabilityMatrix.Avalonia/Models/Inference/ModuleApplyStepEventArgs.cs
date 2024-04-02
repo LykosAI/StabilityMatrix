@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Hashing;
+using System.Linq;
 using System.Text;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
@@ -36,7 +38,12 @@ public class ModuleApplyStepEventArgs : EventArgs
         {
             Primary = Builder.Connections.Primary,
             PrimaryVAE = Builder.Connections.PrimaryVAE,
-            Models = Builder.Connections.Models
+            Models = new Dictionary<string, ModelConnections>(
+                Builder.Connections.Models.ToDictionary(
+                    pair => pair.Key,
+                    pair => new ModelConnections(pair.Value)
+                )
+            )
         };
     }
 

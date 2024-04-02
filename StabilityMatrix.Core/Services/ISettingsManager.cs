@@ -22,6 +22,7 @@ public interface ISettingsManager
     Settings Settings { get; }
 
     List<string> PackageInstallsInProgress { get; set; }
+    DirectoryPath WorkflowDirectory { get; }
 
     /// <summary>
     /// Event fired when the library directory is changed

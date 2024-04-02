@@ -15,7 +15,7 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:asyncImageLoader="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
-    xmlns:controls1="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     d:DataContext="{x:Static designData:DesignData.CivitAiBrowserViewModel}"
     d:DesignHeight="700"
@@ -32,7 +32,7 @@
                 </Transitions>
             </Setter>
             
-            <Style Selector="^ asyncImageLoader|AdvancedImage">
+            <Style Selector="^ labs|AsyncImage">
                 <Setter Property="Transitions">
                     <Transitions>
                         <TransformOperationsTransition Property="RenderTransform"
@@ -48,7 +48,7 @@
             <Style Selector="^:pointerover">
                 <Setter Property="BoxShadow" Value="0 0 40 0 #60000000"/>
                 <Setter Property="Cursor" Value="Hand" />
-                <Style Selector="^ asyncImageLoader|AdvancedImage">
+                <Style Selector="^ labs|AsyncImage">
                     <Setter Property="CornerRadius" Value="12"/>
                     <Setter Property="RenderTransform" Value="scale(1.03, 1.03)"/>
                 </Style>
@@ -60,7 +60,7 @@
             <Style Selector="^:not(:pointerover)">
                 <Setter Property="BoxShadow" Value="0 0 20 0 #60000000"/>
                 <Setter Property="Cursor" Value="Arrow" />
-                <Style Selector="^ asyncImageLoader|AdvancedImage">
+                <Style Selector="^ labs|AsyncImage">
                     <Setter Property="CornerRadius" Value="8"/>
                     <Setter Property="RenderTransform" Value="scale(1, 1)"/>
                 </Style>
@@ -103,7 +103,7 @@
                     CommandParameter="{Binding CivitModel}"
                     IsEnabled="{Binding !IsImporting}">
                     <Grid RowDefinitions="*, Auto">
-                        <controls1:AsyncImage Grid.Row="0"
+                        <labs:AsyncImage Grid.Row="0"
                                                       CornerRadius="8"
                                                       VerticalAlignment="Top"
                                                       HorizontalAlignment="Center"
@@ -115,8 +115,8 @@
                             <!-- <controls:BetterAdvancedImage.RenderTransform> -->
                             <!--     <RotateTransform Angle="315"></RotateTransform> -->
                             <!-- </controls:BetterAdvancedImage.RenderTransform> -->
-                        </controls1:AsyncImage>
-                        <controls1:AsyncImage
+                        </labs:AsyncImage>
+                        <labs:AsyncImage
                             Grid.Row="0"
                             Grid.RowSpan="2"
                             CornerRadius="8"
@@ -182,14 +182,15 @@
                                 Classes="transparent"
                                 Padding="10,4">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <controls1:AsyncImage
+                                    <labs:AsyncImage
                                         Width="22"
                                         Height="22"
                                         Effect="{StaticResource ImageDropShadowEffect}"
                                         CornerRadius="11"
                                         RenderOptions.BitmapInterpolationMode="HighQuality"
                                         IsVisible="{Binding CivitModel.Creator.Image, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                        Source="{Binding CivitModel.Creator.Image}"/>
+                                        Source="{Binding CivitModel.Creator.Image}">
+                                    </labs:AsyncImage>
                                     <TextBlock 
                                         VerticalAlignment="Center"
                                         Effect="{StaticResource TextDropShadowEffect}"

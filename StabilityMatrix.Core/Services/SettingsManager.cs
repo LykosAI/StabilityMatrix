@@ -64,6 +64,7 @@ public class SettingsManager : ISettingsManager
     private FilePath SettingsFile => LibraryDir.JoinFile("settings.json");
     public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
     public string DownloadsDirectory => Path.Combine(LibraryDir, ".downloads");
+    public DirectoryPath WorkflowDirectory => LibraryDir.JoinDir("Workflows");
     public DirectoryPath TagsDirectory => LibraryDir.JoinDir("Tags");
     public DirectoryPath ImagesDirectory => LibraryDir.JoinDir("Images");
     public DirectoryPath ImagesInferenceDirectory => ImagesDirectory.JoinDir("Inference");

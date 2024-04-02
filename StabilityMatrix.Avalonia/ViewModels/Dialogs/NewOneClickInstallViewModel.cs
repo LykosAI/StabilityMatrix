@@ -75,7 +75,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
             .Connect()
             .DeferUntilLoaded()
             .Filter(incompatiblePredicate)
-            .Filter(p => p.OfferInOneClickInstaller || ShowIncompatiblePackages)
+            .Filter(p => p.OfferInOneClickInstaller)
             .Sort(
                 SortExpressionComparer<BasePackage>
                     .Ascending(p => p.InstallerSortOrder)

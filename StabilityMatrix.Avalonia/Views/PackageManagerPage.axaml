@@ -10,15 +10,24 @@
                           xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
                           xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
                           xmlns:system="clr-namespace:System;assembly=System.Runtime"
-                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+                          xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+                          xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
+                          xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+                          mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="450"
                           x:DataType="viewModels:PackageManagerViewModel"
                           x:CompileBindings="True"
                           d:DataContext="{x:Static designData:DesignData.PackageManagerViewModel}"
                           x:Class="StabilityMatrix.Avalonia.Views.PackageManagerPage">
 
+    <controls:UserControlBase.Resources>
+        <converters:BooleanChoiceMultiConverter x:Key="BoolChoiceMultiConverter" />
+    </controls:UserControlBase.Resources>
+
     <Grid Margin="16" RowDefinitions="Auto,*,Auto">
         <ScrollViewer Grid.Row="1">
             <ItemsRepeater
+                x:Name="PackageCardsRepeater"
                 ItemsSource="{Binding PackageCards}">
                 <ItemsRepeater.Layout>
                     <UniformGridLayout MinColumnSpacing="12" MinRowSpacing="12" />
@@ -26,185 +35,32 @@
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type packageManager:PackageCardViewModel}">
                         <controls:Card Padding="8"
+                                       MinWidth="400"
                                        CornerRadius="8">
-                            <Grid RowDefinitions="Auto, Auto, Auto, Auto"
-                                  ColumnDefinitions="*,Auto">
-
-                                <TextBlock Grid.Row="0"
-                                           Grid.Column="0"
-                                           ToolTip.Tip="{Binding Package.DisplayName, FallbackValue=''}"
-                                           Text="{Binding Package.DisplayName, FallbackValue=''}"
-                                           TextTrimming="WordEllipsis"
-                                           TextAlignment="Left" />
-                                <Button
-                                    Grid.Row="0"
-                                    Grid.Column="1"
-                                    HorizontalContentAlignment="Right"
-                                    HorizontalAlignment="Right"
-                                    VerticalContentAlignment="Top"
-                                    VerticalAlignment="Top"
-                                    Padding="4,1"
-                                    Margin="4,0,0,0"
-                                    Classes="transparent"
-                                    Width="24"
-                                    BorderThickness="0">
-                                    <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
-                                    <Button.Flyout>
-                                        <MenuFlyout Placement="BottomEdgeAlignedLeft">
-                                            <MenuItem Header="{x:Static lang:Resources.Action_CheckForUpdates}"
-                                                      IsVisible="{Binding !IsUnknownPackage}"
-                                                      Command="{Binding OnLoadedAsync}">
-                                                <MenuItem.Icon>
-                                                    <ui:SymbolIcon Symbol="Refresh" />
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                            <MenuItem
-                                                Header="{OnPlatform Default={x:Static lang:Resources.Action_OpenInExplorer}, macOS={x:Static lang:Resources.Action_OpenInFinder}}"
-                                                Command="{Binding OpenFolder}">
-                                                <MenuItem.Icon>
-                                                    <ui:SymbolIcon Symbol="OpenFolder" />
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                            <MenuItem
-                                                Header="{x:Static lang:Resources.Action_OpenGithub}"
-                                                IsVisible="{Binding !IsUnknownPackage}"
-                                                Command="{Binding OpenOnGitHubCommand}">
-                                                <MenuItem.Icon>
-                                                    <icons:Icon
-                                                        Value="fa-brands fa-github" />
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                            
-                                            <Separator/>
-                                            
-                                            <MenuItem
-                                                Header="{x:Static lang:Resources.Label_PythonPackages}"
-                                                IsVisible="{Binding !IsUnknownPackage}"
-                                                Command="{Binding OpenPythonPackagesDialogCommand}">
-                                                <MenuItem.Icon>
-                                                    <icons:Icon
-                                                        Value="fa-brands fa-python" />
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                            <MenuItem
-                                                Header="Extensions"
-                                                IsVisible="{Binding CanUseExtensions}"
-                                                Command="{Binding OpenExtensionsDialogCommand}">
-                                                <MenuItem.Icon>
-                                                    <icons:Icon
-                                                        Value="fa-solid fa-puzzle-piece" />
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                            
-                                            <Separator IsVisible="{Binding CanUseSharedOutput}" />
-                                            
-                                            <MenuItem Header="{x:Static lang:Resources.Label_SharedModelStrategyShort}"
-                                                      IsVisible="{Binding !IsUnknownPackage}">
-                                                <MenuItem.Icon>
-                                                    <ui:SymbolIcon Symbol="FolderLink" />
-                                                </MenuItem.Icon>
-                                                <!-- ReSharper disable Xaml.RedundantResource -->
-                                                <MenuItem Header="Symlink"
-                                                          Command="{Binding ToggleSharedModelSymlink}"
-                                                          IsVisible="{Binding CanUseSymlinkMethod}">
-                                                    <MenuItem.Icon>
-                                                        <CheckBox IsChecked="{Binding IsSharedModelSymlink}"
-                                                                  Margin="8,0,0,0"
-                                                                  Padding="0"
-                                                                  Width="28" Height="28">
-                                                            <CheckBox.RenderTransform>
-                                                                <ScaleTransform ScaleX="1.5" ScaleY="1.5"/>
-                                                            </CheckBox.RenderTransform>
-                                                        </CheckBox>
-                                                    </MenuItem.Icon>
-                                                </MenuItem>
-                                                <MenuItem Header="Config"
-                                                          Command="{Binding ToggleSharedModelConfig}"
-                                                          IsVisible="{Binding CanUseConfigMethod}">
-                                                    <MenuItem.Icon>
-                                                        <CheckBox Margin="8,0,0,0"
-                                                                  Padding="0"
-                                                                  Width="28" Height="28"
-                                                                  IsChecked="{Binding IsSharedModelConfig}">
-                                                            <CheckBox.RenderTransform>
-                                                                <ScaleTransform ScaleX="1.5" ScaleY="1.5"/>
-                                                            </CheckBox.RenderTransform>
-                                                        </CheckBox>
-                                                    </MenuItem.Icon>
-                                                </MenuItem>
-                                                <MenuItem Header="None"
-                                                          Command="{Binding ToggleSharedModelNone}">
-                                                    <MenuItem.Icon>
-                                                        <CheckBox IsChecked="{Binding IsSharedModelDisabled}"
-                                                                  Margin="8,0,0,0"
-                                                                  Padding="0"
-                                                                  Width="28" Height="28">
-                                                            <CheckBox.RenderTransform>
-                                                                <ScaleTransform ScaleX="1.5" ScaleY="1.5"/>
-                                                            </CheckBox.RenderTransform>
-                                                        </CheckBox>
-                                                    </MenuItem.Icon>
-                                                </MenuItem>
-                                                <!-- ReSharper enable Xaml.RedundantResource -->
-                                            </MenuItem>
-                                            <MenuItem
-                                                Header="{x:Static lang:Resources.Label_UseSharedOutputFolder}"
-                                                Command="{Binding ToggleSharedOutput}"
-                                                IsVisible="{Binding CanUseSharedOutput}">
-                                                <MenuItem.Icon>
-                                                    <CheckBox Margin="8,0,0,0"
-                                                              Padding="0"
-                                                              Width="28" Height="28"
-                                                              IsChecked="{Binding UseSharedOutput}">
-                                                        <CheckBox.RenderTransform>
-                                                            <ScaleTransform ScaleX="1.5" ScaleY="1.5"/>
-                                                        </CheckBox.RenderTransform>
-                                                    </CheckBox>
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                            <Separator />
-                                            <MenuItem Header="{x:Static lang:Resources.Action_Uninstall}"
-                                                      Command="{Binding Uninstall}">
-                                                <MenuItem.Icon>
-                                                    <ui:SymbolIcon Symbol="Delete" />
-                                                </MenuItem.Icon>
-                                            </MenuItem>
-                                        </MenuFlyout>
-                                    </Button.Flyout>
-                                </Button>
-
-                                <TextBlock Grid.Row="1"
-                                           Grid.Column="0"
-                                           Grid.ColumnSpan="2"
-                                           Margin="2,0,0,0"
-                                           VerticalAlignment="Center"
-                                           Text="{Binding InstalledVersion}" />
-
-                                <!-- Normal packages shows image -->
-                                <controls:BetterAdvancedImage
-                                    Grid.Row="2"
+                            <controls:Card.Background>
+                                <MultiBinding Converter="{StaticResource BoolChoiceMultiConverter}">
+                                    <Binding Path="IsRunning" />
+                                    <DynamicResource ResourceKey="ThemeDarkDarkGreenColorBrush" />
+                                    <DynamicResource ResourceKey="ButtonBackground" />
+                                </MultiBinding>
+                            </controls:Card.Background>
+                            <Grid ColumnDefinitions="Auto, *">
+                                <labs:AsyncImage
                                     Grid.Column="0"
-                                    Grid.ColumnSpan="2"
-                                    Margin="0,8,0,8"
-                                    Height="180"
-                                    Width="225"
-                                    CornerRadius="4"
+                                    Height="150"
+                                    Width="150"
+                                    Margin="4, 8"
+                                    CornerRadius="8"
                                     HorizontalAlignment="Center"
-                                    VerticalContentAlignment="Top"
-                                    HorizontalContentAlignment="Center"
                                     Source="{Binding CardImageSource}"
                                     IsVisible="{Binding !IsUnknownPackage}"
                                     Stretch="UniformToFill" />
-
-                                <!-- Unknown packages panel -->
                                 <Border
-                                    Grid.Row="2"
                                     Grid.Column="0"
-                                    Grid.ColumnSpan="2"
-                                    Margin="0,8,0,8"
-                                    Height="180"
-                                    Width="225"
-                                    CornerRadius="4"
+                                    Height="150"
+                                    Width="150"
+                                    Margin="4, 8"
+                                    CornerRadius="8"
                                     HorizontalAlignment="Center"
                                     IsVisible="{Binding IsUnknownPackage}"
                                     Background="#202020">
@@ -215,99 +71,341 @@
                                         TextWrapping="Wrap"
                                         Text="{x:Static lang:Resources.Label_UnknownPackage}" />
                                 </Border>
+                                <Grid Grid.Column="1" RowDefinitions="Auto, Auto, Auto, *"
+                                      ColumnDefinitions="Auto, *">
+                                    <TextBlock Grid.Column="0"
+                                               Grid.Row="0"
+                                               Text="{Binding Package.DisplayName}"
+                                               Margin="8,0,8,0"
+                                               FontWeight="SemiBold"
+                                               MaxWidth="200"
+                                               TextWrapping="NoWrap"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip.Tip="{Binding Package.DisplayName}"
+                                               FontSize="16" />
+                                    <TextBlock Grid.Column="0"
+                                               Grid.Row="1"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                               Margin="8,0,8,0"
+                                               VerticalAlignment="Center"
+                                               Text="{Binding InstalledVersion}" />
+                                    
+                                    <Button
+                                        Grid.Row="0"
+                                        Grid.Column="1"
+                                        HorizontalContentAlignment="Right"
+                                        HorizontalAlignment="Right"
+                                        VerticalContentAlignment="Top"
+                                        VerticalAlignment="Top"
+                                        Padding="4"
+                                        Margin="4,0,0,0"
+                                        Classes="transparent"
+                                        Width="24"
+                                        BorderThickness="0">
+                                        <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
+                                        <Button.Flyout>
+                                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                                <MenuItem Header="{x:Static lang:Resources.Action_CheckForUpdates}"
+                                                          IsVisible="{Binding !IsUnknownPackage}"
+                                                          Command="{Binding OnLoadedAsync}">
+                                                    <MenuItem.Icon>
+                                                        <ui:SymbolIcon Symbol="Refresh" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem
+                                                    Header="{OnPlatform Default={x:Static lang:Resources.Action_OpenInExplorer}, macOS={x:Static lang:Resources.Action_OpenInFinder}}"
+                                                    Command="{Binding OpenFolder}">
+                                                    <MenuItem.Icon>
+                                                        <ui:SymbolIcon Symbol="OpenFolder" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem
+                                                    Header="{x:Static lang:Resources.Action_OpenGithub}"
+                                                    IsVisible="{Binding !IsUnknownPackage}"
+                                                    Command="{Binding OpenOnGitHubCommand}">
+                                                    <MenuItem.Icon>
+                                                        <icons:Icon
+                                                            Value="fa-brands fa-github" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
 
+                                                <Separator />
 
-                                <Grid
-                                    Grid.Row="3"
-                                    Grid.Column="0"
-                                    Grid.ColumnSpan="2"
-                                    IsVisible="{Binding IsUpdateAvailable}"
-                                    ColumnDefinitions="*, *">
-                                    <!-- Launch and update buttons -->
-                                    <Button Grid.Column="0" Classes="accent"
-                                            VerticalAlignment="Bottom"
-                                            HorizontalAlignment="Stretch"
-                                            Command="{Binding Launch}">
-                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                                            <icons:Icon Value="fa-solid fa-rocket"
-                                                         Margin="0,0,8,0"
-                                                         FontSize="14" />
-                                            <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
-                                        </StackPanel>
+                                                <MenuItem
+                                                    Header="{x:Static lang:Resources.Label_PythonPackages}"
+                                                    IsVisible="{Binding !IsUnknownPackage}"
+                                                    Command="{Binding OpenPythonPackagesDialogCommand}">
+                                                    <MenuItem.Icon>
+                                                        <icons:Icon
+                                                            Value="fa-brands fa-python" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem
+                                                    Header="Extensions"
+                                                    IsVisible="{Binding CanUseExtensions}"
+                                                    Command="{Binding OpenExtensionsDialogCommand}">
+                                                    <MenuItem.Icon>
+                                                        <icons:Icon
+                                                            Value="fa-solid fa-puzzle-piece" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+
+                                                <Separator IsVisible="{Binding CanUseSharedOutput}" />
+
+                                                <MenuItem
+                                                    Header="{x:Static lang:Resources.Label_SharedModelStrategyShort}"
+                                                    IsVisible="{Binding !IsUnknownPackage}">
+                                                    <MenuItem.Icon>
+                                                        <ui:SymbolIcon Symbol="FolderLink" />
+                                                    </MenuItem.Icon>
+                                                    <!-- ReSharper disable Xaml.RedundantResource -->
+                                                    <MenuItem Header="Symlink"
+                                                              Command="{Binding ToggleSharedModelSymlink}"
+                                                              IsVisible="{Binding CanUseSymlinkMethod}">
+                                                        <MenuItem.Icon>
+                                                            <CheckBox IsChecked="{Binding IsSharedModelSymlink}"
+                                                                      Margin="8,0,0,0"
+                                                                      Padding="0"
+                                                                      Width="28" Height="28">
+                                                                <CheckBox.RenderTransform>
+                                                                    <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                                                                </CheckBox.RenderTransform>
+                                                            </CheckBox>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Header="Config"
+                                                              Command="{Binding ToggleSharedModelConfig}"
+                                                              IsVisible="{Binding CanUseConfigMethod}">
+                                                        <MenuItem.Icon>
+                                                            <CheckBox Margin="8,0,0,0"
+                                                                      Padding="0"
+                                                                      Width="28" Height="28"
+                                                                      IsChecked="{Binding IsSharedModelConfig}">
+                                                                <CheckBox.RenderTransform>
+                                                                    <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                                                                </CheckBox.RenderTransform>
+                                                            </CheckBox>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem Header="None"
+                                                              Command="{Binding ToggleSharedModelNone}">
+                                                        <MenuItem.Icon>
+                                                            <CheckBox IsChecked="{Binding IsSharedModelDisabled}"
+                                                                      Margin="8,0,0,0"
+                                                                      Padding="0"
+                                                                      Width="28" Height="28">
+                                                                <CheckBox.RenderTransform>
+                                                                    <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                                                                </CheckBox.RenderTransform>
+                                                            </CheckBox>
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <!-- ReSharper enable Xaml.RedundantResource -->
+                                                </MenuItem>
+                                                <MenuItem
+                                                    Header="{x:Static lang:Resources.Label_UseSharedOutputFolder}"
+                                                    Command="{Binding ToggleSharedOutput}"
+                                                    IsVisible="{Binding CanUseSharedOutput}">
+                                                    <MenuItem.Icon>
+                                                        <CheckBox Margin="8,0,0,0"
+                                                                  Padding="0"
+                                                                  Width="28" Height="28"
+                                                                  IsChecked="{Binding UseSharedOutput}">
+                                                            <CheckBox.RenderTransform>
+                                                                <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                                                            </CheckBox.RenderTransform>
+                                                        </CheckBox>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <Separator />
+                                                <MenuItem Header="{x:Static lang:Resources.Action_Uninstall}"
+                                                          IsEnabled="{Binding !IsRunning}"
+                                                          Command="{Binding Uninstall}">
+                                                    <MenuItem.Icon>
+                                                        <ui:SymbolIcon Symbol="Delete"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                            </MenuFlyout>
+                                        </Button.Flyout>
                                     </Button>
-                                    <Button Grid.Column="1" Classes="accent"
-                                            VerticalAlignment="Bottom"
-                                            HorizontalAlignment="Stretch"
-                                            Command="{Binding Update}">
-                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                                            <icons:Icon Value="fa-solid fa-download"
-                                                         Margin="0,0,8,0"
-                                                         FontSize="14" />
-                                            <TextBlock Text="{x:Static lang:Resources.Action_Update}" />
-                                        </StackPanel>
-                                    </Button>
+                                    
+                                    <StackPanel Grid.Row="2"
+                                                Grid.Column="0"
+                                                Margin="0,4,0,0"
+                                                Orientation="Horizontal">
+                                        <Button Classes="transparent-full"
+                                                Margin="4,4,0,0"
+                                                Padding="4"
+                                                ToolTip.Tip="{x:Static lang:Resources.Action_CheckForUpdates}"
+                                                Command="{Binding OnLoadedAsync}"
+                                                >
+                                            <Button.IsVisible>
+                                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                    <Binding Path="!IsUnknownPackage" />
+                                                    <Binding Path="!IsUpdateAvailable" />
+                                                </MultiBinding>
+                                            </Button.IsVisible>
+                                            <ui:SymbolIcon Symbol="Refresh"
+                                                           FontSize="20"/>
+                                        </Button>
+                                        
+                                        <Button Classes="transparent-full"
+                                                Margin="4,4,0,0"
+                                                Padding="4"
+                                                IsEnabled="{Binding !IsRunning}"
+                                                ToolTip.Tip="{x:Static lang:Resources.Label_UpdateAvailable}"
+                                                markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
+                                                Command="{Binding Update}">
+                                            <Button.IsVisible>
+                                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                    <Binding Path="!IsUnknownPackage" />
+                                                    <Binding Path="IsUpdateAvailable" />
+                                                </MultiBinding>
+                                            </Button.IsVisible>
+                                            <ui:SymbolIcon Symbol="CloudDownload"
+                                                           IsEnabled="{Binding !IsRunning}"
+                                                           FontSize="24">
+                                                <ui:SymbolIcon.Styles>
+                                                    <Style Selector="ui|SymbolIcon">
+                                                        <Setter Property="Foreground" Value="Lime" />
+                                                    </Style>
+                                                    <Style Selector="ui|SymbolIcon:disabled">
+                                                        <Setter Property="Foreground" Value="Gray" />
+                                                    </Style>
+                                                </ui:SymbolIcon.Styles>
+                                            </ui:SymbolIcon>
+                                        </Button>
+                                        <Button Classes="transparent-full"
+                                                Margin="4,4,0,0"
+                                                Padding="4"
+                                                ToolTip.Tip="Launch Options"
+                                                IsVisible="{Binding !IsUnknownPackage}"
+                                                Command="{Binding ShowLaunchOptionsCommand}">
+                                            <ui:SymbolIcon Symbol="SettingsFilled"
+                                                           FontSize="20"/>
+                                        </Button>
+                                        <Button Classes="transparent-full"
+                                                Margin="6,2,0,0"
+                                                Padding="4"
+                                                ToolTip.Tip="Extensions"
+                                                IsVisible="{Binding CanUseExtensions}"
+                                                Command="{Binding OpenExtensionsDialogCommand}">
+                                            <icons:Icon FontSize="18"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Value="fa-solid fa-puzzle-piece" />
+                                        </Button>
+                                    </StackPanel>
+                                    <UniformGrid Grid.Column="0"
+                                                 Grid.ColumnSpan="2"
+                                                 Grid.Row="3"
+                                                 VerticalAlignment="Bottom"
+                                                 Margin="8,8,8,0">
+                                        <Button Classes="accent"
+                                                Name="LaunchButton"
+                                                VerticalAlignment="Bottom"
+                                                HorizontalAlignment="Stretch"
+                                                Command="{Binding Launch}">
+                                            <Button.IsVisible>
+                                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                    <Binding Path="!IsRunning" />
+                                                    <Binding Path="!IsUnknownPackage" />
+                                                </MultiBinding>
+                                            </Button.IsVisible>
+                                            <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+                                                <icons:Icon Value="fa-solid fa-rocket"
+                                                            Margin="0,0,8,0"
+                                                            FontSize="14" />
+                                                <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="borderless-danger"
+                                                VerticalAlignment="Bottom"
+                                                HorizontalAlignment="Stretch"
+                                                IsVisible="{Binding IsRunning}"
+                                                Command="{Binding StopCommand}">
+                                            <StackPanel Orientation="Horizontal"
+                                                        Margin="0,2">
+                                                <icons:Icon Value="fa-solid fa-stop"
+                                                            Margin="0,0,8,0"
+                                                            FontSize="14" />
+                                                <TextBlock Text="{x:Static lang:Resources.Action_Stop}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="borderless-info"
+                                                BorderBrush="Transparent"
+                                                VerticalAlignment="Bottom"
+                                                HorizontalAlignment="Stretch"
+                                                IsVisible="{Binding IsRunning}"
+                                                Command="{Binding RestartCommand}">
+                                            <StackPanel Orientation="Horizontal"
+                                                        Margin="0,2">
+                                                <icons:Icon Value="fa-solid fa-arrow-rotate-left"
+                                                            Margin="0,0,8,0"
+                                                            FontSize="14" />
+                                                <TextBlock Text="{x:Static lang:Resources.Action_Restart}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="accent"
+                                                VerticalAlignment="Bottom"
+                                                HorizontalAlignment="Stretch"
+                                                IsVisible="{Binding IsRunning}"
+                                                Command="{Binding NavToConsole}">
+                                            <StackPanel Orientation="Horizontal"
+                                                        Margin="0,2,0,2">
+                                                <icons:Icon Value="fa-solid fa-terminal"
+                                                            Margin="0,0,8,0"
+                                                            FontSize="14" />
+                                                <TextBlock Text="{x:Static lang:Resources.Label_Console}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="accent"
+                                                VerticalAlignment="Bottom"
+                                                HorizontalAlignment="Stretch"
+                                                IsVisible="{Binding ShowWebUiButton}"
+                                                Command="{Binding LaunchWebUi}">
+                                            <StackPanel Orientation="Horizontal" Margin="8,2,8,2">
+                                                <icons:Icon Value="fa-solid fa-up-right-from-square"
+                                                            Margin="0,0,8,0"
+                                                            FontSize="14" />
+                                                <TextBlock Text="{x:Static lang:Resources.Label_WebUi}" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Classes="transparent-info"
+                                                VerticalAlignment="Bottom"
+                                                HorizontalAlignment="Stretch"
+                                                Command="{Binding Import}"
+                                                IsVisible="{Binding IsUnknownPackage}">
+                                            <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+                                                <icons:Icon Value="fa-solid fa-circle-question"
+                                                            Margin="0,0,8,0"
+                                                            FontSize="14" />
+                                                <TextBlock Text="{x:Static lang:Resources.Action_Import}" />
+                                            </StackPanel>
+                                        </Button>
+                                    </UniformGrid>
                                 </Grid>
-
-                                <!-- Big launch button -->
-                                <Button
-                                    Grid.Row="3"
-                                    Grid.Column="0"
-                                    Grid.ColumnSpan="2"
-                                    Classes="accent"
-                                    VerticalAlignment="Bottom"
-                                    Command="{Binding Launch}"
-                                    HorizontalAlignment="Stretch">
-                                    <Button.IsVisible>
-                                        <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                            <Binding Path="!IsUpdateAvailable" />
-                                            <Binding Path="!IsUnknownPackage" />
-                                        </MultiBinding>
-                                    </Button.IsVisible>
-                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                                        <icons:Icon Value="fa-solid fa-rocket"
-                                                     Margin="0,0,8,0"
-                                                     FontSize="14" />
-                                        <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
-                                    </StackPanel>
-                                </Button>
-
-                                <!-- Import button (for unknown) -->
-                                <Button Grid.Row="3" Grid.Column="0" Classes="transparent-info"
-                                        Grid.ColumnSpan="2"
-                                        VerticalAlignment="Bottom"
-                                        HorizontalAlignment="Stretch"
-                                        Command="{Binding Import}"
-                                        IsVisible="{Binding IsUnknownPackage}">
-                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                                        <icons:Icon Value="fa-solid fa-circle-question"
-                                                     Margin="0,0,8,0"
-                                                     FontSize="14" />
-                                        <TextBlock Text="{x:Static lang:Resources.Action_Import}" />
-                                    </StackPanel>
-                                </Button>
-
                                 <!-- Update overlay -->
                                 <Border
-                                    Grid.Row="0" Grid.RowSpan="4"
                                     Grid.Column="0"
                                     Grid.ColumnSpan="2"
                                     Background="#DD000000"
-                                    CornerRadius="4"
+                                    CornerRadius="8"
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Stretch"
-                                    IsVisible="{Binding IsProgressVisible}" />
-                                <Grid Grid.Row="0" Grid.RowSpan="4"
-                                      Grid.Column="0"
+                                    IsVisible="{Binding IsProgressVisible}"/>
+                                <Grid Grid.Column="0"
                                       Grid.ColumnSpan="2"
                                       HorizontalAlignment="Center"
                                       VerticalAlignment="Center"
-                                      RowDefinitions="Auto, *"
-                                      IsVisible="{Binding IsProgressVisible}">
+                                      IsVisible="{Binding IsProgressVisible}"
+                                      RowDefinitions="Auto, *">
                                     <controls:ProgressRing
                                         HorizontalAlignment="Center"
                                         IsIndeterminate="{Binding IsIndeterminate}"
-                                        Width="150"
-                                        Height="150"
+                                        Width="120"
+                                        Height="120"
                                         StartAngle="90"
                                         EndAngle="450"
                                         Value="{Binding Value}"
@@ -334,6 +432,15 @@
                         Title="{x:Static lang:Resources.TeachingTip_AddPackageToGetStarted}"
                         PreferredPlacement="Top"
                         IsOpen="{Binding !Packages.Count}" />
+        
+        <ui:TeachingTip Grid.Row="0"
+            Name="LaunchTeachingTip"
+            MinWidth="100"
+            Title="{x:Static lang:Resources.TeachingTip_ClickLaunchToGetStarted}"
+            PreferredPlacement="Bottom"
+            Margin="8,0,0,0"
+            PlacementMargin="0,0,0,0"
+            TailVisibility="Auto"/>
 
         <!-- Add Packages Button -->
         <Button Grid.Row="2"

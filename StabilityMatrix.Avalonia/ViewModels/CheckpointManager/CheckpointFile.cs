@@ -137,6 +137,7 @@ public partial class CheckpointFile : ViewModelBase
                     {
                         await Task.Run(() => File.Delete(cmInfoPath));
                     }
+
                     var settingsManager = App.Services.GetRequiredService<ISettingsManager>();
                     settingsManager.Transaction(s =>
                     {

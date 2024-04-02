@@ -75,7 +75,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
         CivitModels
             .Connect()
             .DeferUntilLoaded()
-            .Filter(f => f.ModelVersion.BaseModel == "SDXL 1.0")
+            .Filter(f => f.ModelVersion.BaseModel == "SDXL 1.0" || f.ModelVersion.BaseModel == "Pony")
             .Bind(SdxlModels)
             .Subscribe();
     }

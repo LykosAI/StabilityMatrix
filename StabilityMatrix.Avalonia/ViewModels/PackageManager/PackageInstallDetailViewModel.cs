@@ -86,6 +86,9 @@ public partial class PackageInstallDetailViewModel(
     private GitCommit? selectedCommit;
 
     [ObservableProperty]
+    private bool isOutputSharingEnabled = true;
+
+    [ObservableProperty]
     private bool canInstall;
 
     private PackageVersionOptions? allOptions;
@@ -96,6 +99,8 @@ public partial class PackageInstallDetailViewModel(
             return;
 
         OnInstallNameChanged(InstallName);
+
+        CanInstall = false;
 
         SelectedTorchVersion = SelectedPackage.GetRecommendedTorchVersion();
         SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
@@ -224,6 +229,8 @@ public partial class PackageInstallDetailViewModel(
             installLocation
         );
 
+        var setupOutputSharingStep = new SetupOutputSharingStep(SelectedPackage, installLocation);
+
         var package = new InstalledPackage
         {
             DisplayName = InstallName,
@@ -234,7 +241,8 @@ public partial class PackageInstallDetailViewModel(
             LaunchCommand = SelectedPackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now,
             PreferredTorchVersion = SelectedTorchVersion,
-            PreferredSharedFolderMethod = SelectedSharedFolderMethod
+            PreferredSharedFolderMethod = SelectedSharedFolderMethod,
+            UseSharedOutputFolder = IsOutputSharingEnabled
         };
 
         var addInstalledPackageStep = new AddInstalledPackageStep(settingsManager, package);
@@ -248,6 +256,11 @@ public partial class PackageInstallDetailViewModel(
             setupModelFoldersStep,
             addInstalledPackageStep
         };
+
+        if (IsOutputSharingEnabled)
+        {
+            steps.Insert(steps.IndexOf(addInstalledPackageStep), setupOutputSharingStep);
+        }
 
         var packageName = SelectedPackage.Name;
 

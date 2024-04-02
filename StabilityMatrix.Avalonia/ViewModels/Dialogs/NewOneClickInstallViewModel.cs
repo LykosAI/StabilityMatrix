@@ -186,7 +186,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                     {
                         ShowDialogOnStart = false,
                         HideCloseButton = false,
-                        ModificationCompleteMessage = $"{installedPackage.DisplayName} Install Complete",
+                        ModificationCompleteMessage = $"{selectedPackage.DisplayName} installed successfully"
                     };
 
                     runner

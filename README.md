@@ -22,6 +22,8 @@
 [fooocus-controlnet]: https://github.com/fenneishi/Fooocus-ControlNet-SDXL
 [kohya-ss]: https://github.com/bmaltais/kohya_ss
 [onetrainer]: https://github.com/Nerogar/OneTrainer
+[forge]: https://github.com/lllyasviel/stable-diffusion-webui-forge
+[stable-swarm]: https://github.com/Stability-AI/StableSwarmUI
 
 [civitai]: https://civitai.com/
 [huggingface]: https://huggingface.co/
@@ -36,9 +38,10 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
 
 ### 🖱️ One click install and update for Stable Diffusion Web UI Packages
 - Supports:
-  - [Automatic1111][auto1111], [Stable Diffusion WebUI DirectML][sdwebui-directml], [SD Web UI-UX][webui-ux], [SD.Next][sdnext]
-  - [Fooocus][fooocus], [Fooocus ControlNet SDXL][fooocus-controlnet], [Ruined Fooocus][ruined-fooocus]
+  - [Stable Diffusion WebUI Forge][forge], [Automatic 1111][auto1111], [Automatic 1111 DirectML][auto1111-directml], [SD Web UI-UX][webui-ux], [SD.Next][sdnext]
+  - [Fooocus][fooocus], [Fooocus MRE][fooocus-mre], [Fooocus ControlNet SDXL][fooocus-controlnet], [Ruined Fooocus][ruined-fooocus]
   - [ComfyUI][comfy]
+  - [StableSwarmUI][stable-swarm]
   - [VoltaML][voltaml]
   - [InvokeAI][invokeai]
   - [Kohya's GUI][kohya-ss]

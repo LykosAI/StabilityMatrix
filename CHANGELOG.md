@@ -9,11 +9,17 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.10.0-preview.1
 ### Added
 - Added OpenArt.AI workflow browser for ComfyUI workflows
+- Added Output Sharing toggle in Advanced Options during install flow
 ### Changed
 - Changed to a new image control for pages with many images
+- Removed Symlink option for InvokeAI due to changes with InvokeAI v4.0+
+- Output sharing is now enabled by default for new installations
 - (Internal) Updated to Avalonia 11.0.10
 ### Fixed
 - Improved performance when deleting many images from the Outputs page
+- Fixed ComfyUI torch downgrading to 2.1.2 when updating
+- Fixed [#529](https://github.com/LykosAI/StabilityMatrix/issues/529) - OneTrainer requesting input during update
+- Fixed "Could not find entry point for InvokeAI" error on InvokeAI v4.0+
 
 ## v2.10.0-dev.3
 ### Added

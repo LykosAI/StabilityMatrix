@@ -220,9 +220,10 @@
                                                 </MenuItem>
                                                 <Separator />
                                                 <MenuItem Header="{x:Static lang:Resources.Action_Uninstall}"
+                                                          IsEnabled="{Binding !IsRunning}"
                                                           Command="{Binding Uninstall}">
                                                     <MenuItem.Icon>
-                                                        <ui:SymbolIcon Symbol="Delete" />
+                                                        <ui:SymbolIcon Symbol="Delete"/>
                                                     </MenuItem.Icon>
                                                 </MenuItem>
                                             </MenuFlyout>

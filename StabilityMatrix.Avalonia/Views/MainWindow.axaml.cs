@@ -446,4 +446,9 @@ public partial class MainWindow : AppWindowBase
         e.Handled = true;
         navigationService.GoBack();
     }
+
+    private void NavigationView_OnBackRequested(object? sender, NavigationViewBackRequestedEventArgs e)
+    {
+        navigationService.GoBack();
+    }
 }

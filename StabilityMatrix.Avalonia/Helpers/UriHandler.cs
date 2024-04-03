@@ -83,7 +83,7 @@ public class UriHandler
     [SupportedOSPlatform("windows")]
     private void RegisterUriSchemeWin()
     {
-        using var key = Registry.CurrentUser.CreateSubKey(@$"SOFTWARE\Classes\{Scheme}");
+        using var key = Registry.CurrentUser.CreateSubKey(@$"SOFTWARE\Classes\{Scheme}", true);
 
         key.SetValue("", "URL:" + Description);
         key.SetValue(null, Description);

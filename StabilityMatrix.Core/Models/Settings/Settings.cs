@@ -34,6 +34,19 @@ public class Settings
         set => ActiveInstalledPackageId = value?.Id;
     }
 
+    [JsonPropertyName("PreferredWorkflowPackage")]
+    public Guid? PreferredWorkflowPackageId { get; set; }
+
+    [JsonIgnore]
+    public InstalledPackage? PreferredWorkflowPackage
+    {
+        get =>
+            PreferredWorkflowPackageId == null
+                ? null
+                : InstalledPackages.FirstOrDefault(x => x.Id == PreferredWorkflowPackageId);
+        set => PreferredWorkflowPackageId = value?.Id;
+    }
+
     public bool HasSeenWelcomeNotification { get; set; }
     public List<string>? PathExtensions { get; set; }
     public string? WebApiHost { get; set; }
@@ -120,6 +133,7 @@ public class Settings
     public Size InferenceImageSize { get; set; } = new(150, 190);
     public Size OutputsImageSize { get; set; } = new(300, 300);
     public HolidayMode HolidayModeSetting { get; set; } = HolidayMode.Automatic;
+    public bool IsWorkflowInfiniteScrollEnabled { get; set; } = true;
     public bool IsOutputsTreeViewEnabled { get; set; } = true;
 
     [JsonIgnore]

@@ -34,8 +34,8 @@
                     <Grid ColumnDefinitions="Auto, *, Auto">
                         <controls:BetterAdvancedImage
                             Grid.Column="0"
-                            MaxHeight="128"
-                            MaxWidth="128"
+                            Height="128"
+                            Width="128"
                             Stretch="UniformToFill"
                             CornerRadius="4"
                             Source="{Binding PreviewImageUri}" />

@@ -37,4 +37,6 @@ public interface INavigationService<[SuppressMessage("ReSharper", "UnusedTypePar
     void NavigateTo(ViewModelBase viewModel, NavigationTransitionInfo? transitionInfo = null);
 
     bool GoBack();
+
+    bool CanGoBack { get; }
 }

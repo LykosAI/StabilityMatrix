@@ -59,6 +59,11 @@ public partial class InstalledWorkflowsViewModel(
     {
         workflowsCache.Clear();
 
+        if (!Directory.Exists(settingsManager.WorkflowDirectory))
+        {
+            Directory.CreateDirectory(settingsManager.WorkflowDirectory);
+        }
+
         foreach (
             var workflowPath in Directory.EnumerateFiles(
                 settingsManager.WorkflowDirectory,

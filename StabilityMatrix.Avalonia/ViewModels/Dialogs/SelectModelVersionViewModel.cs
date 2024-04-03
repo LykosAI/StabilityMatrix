@@ -99,7 +99,7 @@ public partial class SelectModelVersionViewModel(
         var allImages = value
             ?.ModelVersion
             ?.Images
-            ?.Where(img => nsfwEnabled || img.Nsfw == "None")
+            ?.Where(img => nsfwEnabled || img.NsfwLevel <= 2)
             ?.Select(x => new ImageSource(x.Url))
             .ToList();
 
@@ -316,7 +316,9 @@ public partial class SelectModelVersionViewModel(
 
         installLocations.Add(downloadDirectory.ToString().Replace(rootModelsDirectory, "Models"));
 
-        foreach (var directory in downloadDirectory.EnumerateDirectories())
+        foreach (
+            var directory in downloadDirectory.EnumerateDirectories(searchOption: SearchOption.AllDirectories)
+        )
         {
             installLocations.Add(directory.ToString().Replace(rootModelsDirectory, "Models"));
         }

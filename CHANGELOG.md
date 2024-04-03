@@ -5,7 +5,18 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-## v2.10.0-preview.1
+## v2.10.0-pre.2
+### Added
+- Added more metadata to the image dialog info flyout
+- Added Restart button to console page
+### Changed
+- Model download location selector now searches all subfolders
+### Fixed
+- Fixed Civitai model browser not showing images when "Show NSFW" is disabled
+- Fixed crash when Installed Workflows page is opened with no Workflows folder
+- Fixed progress bars not displaying properly during package installs & updates
+
+## v2.10.0-pre.1
 ### Added
 - Added OpenArt.AI workflow browser for ComfyUI workflows
 - Added Output Sharing toggle in Advanced Options during install flow

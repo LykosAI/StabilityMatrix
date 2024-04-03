@@ -105,6 +105,14 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     }
 
     [RelayCommand]
+    private async Task Restart()
+    {
+        await Stop();
+        await Task.Delay(100);
+        LaunchPackage();
+    }
+
+    [RelayCommand]
     private void LaunchPackage()
     {
         EventManager.Instance.OnPackageRelaunchRequested(RunningPackage.InstalledPackage);
@@ -113,10 +121,10 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     [RelayCommand]
     private async Task Stop()
     {
+        IsRunning = false;
         await runningPackageService.StopPackage(RunningPackage.InstalledPackage.Id);
         Console.PostLine($"{Environment.NewLine}Stopped process at {DateTimeOffset.Now}");
         await Console.StopUpdatesAsync();
-        IsRunning = false;
     }
 
     [RelayCommand]

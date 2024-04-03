@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -159,7 +160,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         // Try to find a valid image
         var image = images
             ?.Where(img => LocalModelFile.SupportedImageExtensions.Any(img.Url.Contains))
-            .FirstOrDefault(image => nsfwEnabled || image.Nsfw == "None");
+            .FirstOrDefault(image => nsfwEnabled || image.NsfwLevel <= 1);
         if (image != null)
         {
             CardImage = new Uri(image.Url);
@@ -256,7 +257,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         {
             var subFolder =
                 viewModel?.SelectedInstallLocation
-                ?? Path.Combine("Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
+                ?? Path.Combine(@"Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
             downloadPath = Path.Combine(settingsManager.LibraryDir, subFolder);
         }
 

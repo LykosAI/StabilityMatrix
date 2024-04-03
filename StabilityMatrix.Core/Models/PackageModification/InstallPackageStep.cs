@@ -31,7 +31,7 @@ public class InstallPackageStep : IPackageStep
     {
         void OnConsoleOutput(ProcessOutput output)
         {
-            progress?.Report(new ProgressReport { IsIndeterminate = true, Message = output.Text });
+            progress?.Report(new ProgressReport { IsIndeterminate = true, ProcessOutput = output });
         }
 
         await package

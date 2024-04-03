@@ -360,7 +360,7 @@ public static class DesignData
                             {
                                 new()
                                 {
-                                    Nsfw = "None",
+                                    NsfwLevel = 1,
                                     Url =
                                         "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
                                         + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"

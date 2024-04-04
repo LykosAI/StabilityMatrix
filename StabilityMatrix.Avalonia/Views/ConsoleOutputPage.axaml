@@ -34,8 +34,16 @@
                     Command="{Binding LaunchPackageCommand}"
                     VerticalAlignment="Center"
                     Label="{x:Static lang:Resources.Action_Launch}" />
+                <ui:CommandBarButton
+                    IconSource="Refresh"
+                    Margin="4,0,0,0"
+                    Classes="info"
+                    IsVisible="{Binding IsRunning}"
+                    Command="{Binding RestartCommand}"
+                    VerticalAlignment="Center"
+                    Label="{x:Static lang:Resources.Action_Restart}" />
                 
-                <ui:CommandBarSeparator Margin="6,0,4,0"/>
+                <ui:CommandBarSeparator Margin="16,0,16,0"/>
                 
                 <ui:CommandBarToggleButton
                     VerticalAlignment="Center"

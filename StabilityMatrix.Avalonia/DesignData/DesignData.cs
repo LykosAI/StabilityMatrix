@@ -36,6 +36,7 @@ using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Comfy;
+using StabilityMatrix.Core.Models.Api.OpenArt;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -51,6 +52,7 @@ using HuggingFacePageViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointB
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
+[Localizable(false)]
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public static class DesignData
 {
@@ -358,7 +360,7 @@ public static class DesignData
                             {
                                 new()
                                 {
-                                    Nsfw = "None",
+                                    NsfwLevel = 1,
                                     Url =
                                         "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
                                         + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
@@ -923,6 +925,36 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static LayerDiffuseCardViewModel LayerDiffuseCardViewModel =>
         DialogFactory.Get<LayerDiffuseCardViewModel>();
+  
+    public static InstalledWorkflowsViewModel InstalledWorkflowsViewModel
+    {
+        get
+        {
+            var vm = Services.GetRequiredService<InstalledWorkflowsViewModel>();
+            vm.DisplayedWorkflows = new ObservableCollectionExtended<OpenArtMetadata>
+            {
+                new()
+                {
+                    Workflow = new()
+                    {
+                        Name = "Test Workflow",
+                        Creator = new OpenArtCreator { Name = "Test Creator" },
+                        Thumbnails =
+                        [
+                            new OpenArtThumbnail
+                            {
+                                Url = new Uri(
+                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512"
+                                )
+                            }
+                        ]
+                    }
+                }
+            };
+
+            return vm;
+        }
+    }
 
     public static IList<ICompletionData> SampleCompletionData =>
         new List<ICompletionData>
@@ -1034,6 +1066,60 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static ControlNetCardViewModel ControlNetCardViewModel =>
         DialogFactory.Get<ControlNetCardViewModel>();
+
+    public static OpenArtWorkflowViewModel OpenArtWorkflowViewModel =>
+        new(Services.GetRequiredService<ISettingsManager>(), Services.GetRequiredService<IPackageFactory>())
+        {
+            Workflow = new OpenArtSearchResult
+            {
+                Name = "Test Workflow",
+                Creator = new OpenArtCreator
+                {
+                    Name = "Test Creator Name",
+                    Username = "Test Creator Username"
+                },
+                Thumbnails =
+                [
+                    new OpenArtThumbnail
+                    {
+                        Url = new Uri(
+                            "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
+                        )
+                    }
+                ],
+                NodesIndex =
+                [
+                    "Anything Everywhere",
+                    "Reroute",
+                    "Note",
+                    ".",
+                    "ComfyUI's ControlNet Auxiliary Preprocessors",
+                    "DWPreprocessor",
+                    "PixelPerfectResolution",
+                    "AIO_Preprocessor",
+                    ",",
+                    "ComfyUI",
+                    "PreviewImage",
+                    "CLIPTextEncode",
+                    "EmptyLatentImage",
+                    "SplitImageWithAlpha",
+                    "ControlNetApplyAdvanced",
+                    "JoinImageWithAlpha",
+                    "LatentUpscaleBy",
+                    "VAEEncode",
+                    "LoadImage",
+                    "ControlNetLoader",
+                    "CLIPVisionLoader",
+                    "SaveImage",
+                    ",",
+                    "ComfyUI Impact Pack",
+                    "SAMLoader",
+                    "UltralyticsDetectorProvider",
+                    "FaceDetailer",
+                    ","
+                ]
+            }
+        };
 
     public static string CurrentDirectory => Directory.GetCurrentDirectory();
 

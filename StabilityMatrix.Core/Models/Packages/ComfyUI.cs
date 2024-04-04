@@ -213,7 +213,7 @@ public class ComfyUI(
             _
                 => pipArgs
                     .AddArg("--upgrade")
-                    .WithTorch("~=2.1.0")
+                    .WithTorch()
                     .WithTorchVision()
                     .WithTorchExtraIndex(
                         torchVersion switch
@@ -233,9 +233,6 @@ public class ComfyUI(
 
         switch (torchVersion)
         {
-            case TorchVersion.Cuda:
-                pipArgs = pipArgs.WithXFormers("==0.0.22.post4");
-                break;
             case TorchVersion.Mps:
                 pipArgs = pipArgs.AddArg("mpmath==1.3.0");
                 break;

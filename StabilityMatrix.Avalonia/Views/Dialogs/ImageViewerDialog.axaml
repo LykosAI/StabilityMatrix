@@ -128,7 +128,7 @@
             PlacementMargin="16,0,16,0"
             TailVisibility="Collapsed"
             Target="{Binding #InfoButton}">
-            <StackPanel Spacing="4" Margin="4,0" DataContext="{Binding LocalImageFile.GenerationParameters}">
+            <StackPanel Spacing="8" Margin="4,0" DataContext="{Binding LocalImageFile.GenerationParameters}">
                 <Grid RowDefinitions="Auto,*">
                     <TextBlock Text="Prompt" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
@@ -148,6 +148,27 @@
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding ModelName}" />
+                </Grid>
+                
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Text="Sampler" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <SelectableTextBlock
+                        Grid.Row="1"
+                        Text="{Binding Sampler}" />
+                </Grid>
+                
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Text="Steps" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <SelectableTextBlock
+                        Grid.Row="1"
+                        Text="{Binding Steps}" />
+                </Grid>
+                
+                <Grid RowDefinitions="Auto,*">
+                    <TextBlock Text="{x:Static lang:Resources.Label_CFGScale}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <SelectableTextBlock
+                        Grid.Row="1"
+                        Text="{Binding CfgScale}" />
                 </Grid>
                 
                 <Grid RowDefinitions="Auto,*">

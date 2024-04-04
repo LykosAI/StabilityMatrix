@@ -5,6 +5,32 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.10.0-pre.2
+### Added
+- Added more metadata to the image dialog info flyout
+- Added Restart button to console page
+### Changed
+- Model download location selector now searches all subfolders
+### Fixed
+- Fixed Civitai model browser not showing images when "Show NSFW" is disabled
+- Fixed crash when Installed Workflows page is opened with no Workflows folder
+- Fixed progress bars not displaying properly during package installs & updates
+
+## v2.10.0-pre.1
+### Added
+- Added OpenArt.AI workflow browser for ComfyUI workflows
+- Added Output Sharing toggle in Advanced Options during install flow
+### Changed
+- Changed to a new image control for pages with many images
+- Removed Symlink option for InvokeAI due to changes with InvokeAI v4.0+
+- Output sharing is now enabled by default for new installations
+- (Internal) Updated to Avalonia 11.0.10
+### Fixed
+- Improved performance when deleting many images from the Outputs page
+- Fixed ComfyUI torch downgrading to 2.1.2 when updating
+- Fixed [#529](https://github.com/LykosAI/StabilityMatrix/issues/529) - OneTrainer requesting input during update
+- Fixed "Could not find entry point for InvokeAI" error on InvokeAI v4.0+
+
 ## v2.10.0-dev.3
 ### Added
 - Added support for deep links from the new Stability Matrix Chrome extension
@@ -43,6 +69,17 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Changed the Outputs Page to use a TreeView for the directory selection instead of a dropdown selector
 ### Removed
 - Removed the main Launch page, as it is no longer needed with the new Packages page
+
+## v2.9.2
+### Changed
+- Due to changes with the CivitAI API, you can no longer select a specific page in the CivitAI Model Browser
+- Due to the above API changes, new pages are now loaded via "infinite scrolling"
+### Fixed
+- Fixed models not being removed from the installed models cache when deleting them from the Checkpoints page
+- Fixed model download location options for VAEs in the CivitAI Model Browser
+- Fixed One-Click install progress dialog not disappearing after completion
+- Fixed ComfyUI with Inference pop-up during one-click install appearing below the visible scroll area
+- Fixed no packages being available for one-click install on PCs without a GPU
 
 ## v2.9.1
 ### Added
@@ -100,6 +137,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added copy image support on linux and macOS for Inference outputs viewer menu
 ### Fixed
 - Fixed StableSwarmUI not installing properly on macOS
+- Fixed output sharing for Stable Diffusion WebUI Forge
 - Hopefully actually fixed [#464](https://github.com/LykosAI/StabilityMatrix/issues/464) - error when installing InvokeAI on macOS
 - Fixed default command line args for SDWebUI Forge on macOS
 - Fixed output paths and output sharing for SDWebUI Forge

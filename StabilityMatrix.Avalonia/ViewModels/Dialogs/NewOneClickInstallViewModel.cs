@@ -12,6 +12,7 @@ using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Models.PackageSteps;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -107,18 +108,19 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
     {
         Task.Run(async () =>
             {
-                var steps = new List<IPackageStep>
-                {
-                    new SetPackageInstallingStep(settingsManager, selectedPackage.Name),
-                    new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, selectedPackage)
-                };
-
-                // get latest version & download & install
                 var installLocation = Path.Combine(
                     settingsManager.LibraryDir,
                     "Packages",
                     selectedPackage.Name
                 );
+
+                var steps = new List<IPackageStep>
+                {
+                    new SetPackageInstallingStep(settingsManager, selectedPackage.Name),
+                    new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, selectedPackage),
+                };
+
+                // get latest version & download & install
                 if (Directory.Exists(installLocation))
                 {
                     var installPath = new DirectoryPath(installLocation);
@@ -147,6 +149,11 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                     downloadVersion
                 );
                 steps.Add(downloadStep);
+
+                var unpackSiteCustomizeStep = new UnpackSiteCustomizeStep(
+                    Path.Combine(installLocation, "venv")
+                );
+                steps.Add(unpackSiteCustomizeStep);
 
                 var installStep = new InstallPackageStep(
                     selectedPackage,
@@ -186,7 +193,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                     {
                         ShowDialogOnStart = false,
                         HideCloseButton = false,
-                        ModificationCompleteMessage = $"{installedPackage.DisplayName} Install Complete",
+                        ModificationCompleteMessage = $"{selectedPackage.DisplayName} installed successfully"
                     };
 
                     runner

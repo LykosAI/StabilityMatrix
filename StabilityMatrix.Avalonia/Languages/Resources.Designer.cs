@@ -375,6 +375,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open on OpenArt.
+        /// </summary>
+        public static string Action_OpenOnOpenArt {
+            get {
+                return ResourceManager.GetString("Action_OpenOnOpenArt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open Project....
         /// </summary>
         public static string Action_OpenProjectEllipsis {
@@ -1311,6 +1320,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error retrieving workflows.
+        /// </summary>
+        public static string Label_ErrorRetrievingWorkflows {
+            get {
+                return ResourceManager.GetString("Label_ErrorRetrievingWorkflows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Everything looks good!.
         /// </summary>
         public static string Label_EverythingLooksGood {
@@ -1343,6 +1361,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_FindInModelBrowser {
             get {
                 return ResourceManager.GetString("Label_FindInModelBrowser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finished importing workflow and custom nodes.
+        /// </summary>
+        public static string Label_FinishedImportingWorkflow {
+            get {
+                return ResourceManager.GetString("Label_FinishedImportingWorkflow", resourceCulture);
             }
         }
         
@@ -1487,6 +1514,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Inference {
             get {
                 return ResourceManager.GetString("Label_Inference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Infinite Scrolling.
+        /// </summary>
+        public static string Label_InfiniteScrolling {
+            get {
+                return ResourceManager.GetString("Label_InfiniteScrolling", resourceCulture);
             }
         }
         
@@ -1779,6 +1815,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Node Details.
+        /// </summary>
+        public static string Label_NodeDetails {
+            get {
+                return ResourceManager.GetString("Label_NodeDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No extensions found..
         /// </summary>
         public static string Label_NoExtensionsFound {
@@ -1838,6 +1883,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_OnlyAvailableOnWindows {
             get {
                 return ResourceManager.GetString("Label_OnlyAvailableOnWindows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to OpenArt Browser.
+        /// </summary>
+        public static string Label_OpenArtBrowser {
+            get {
+                return ResourceManager.GetString("Label_OpenArtBrowser", resourceCulture);
             }
         }
         
@@ -2562,6 +2616,69 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Workflow Browser.
+        /// </summary>
+        public static string Label_WorkflowBrowser {
+            get {
+                return ResourceManager.GetString("Label_WorkflowBrowser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workflow Deleted.
+        /// </summary>
+        public static string Label_WorkflowDeleted {
+            get {
+                return ResourceManager.GetString("Label_WorkflowDeleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} deleted successfully.
+        /// </summary>
+        public static string Label_WorkflowDeletedSuccessfully {
+            get {
+                return ResourceManager.GetString("Label_WorkflowDeletedSuccessfully", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workflow Description.
+        /// </summary>
+        public static string Label_WorkflowDescription {
+            get {
+                return ResourceManager.GetString("Label_WorkflowDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The workflow and custom nodes have been imported..
+        /// </summary>
+        public static string Label_WorkflowImportComplete {
+            get {
+                return ResourceManager.GetString("Label_WorkflowImportComplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workflow Imported.
+        /// </summary>
+        public static string Label_WorkflowImported {
+            get {
+                return ResourceManager.GetString("Label_WorkflowImported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workflows.
+        /// </summary>
+        public static string Label_Workflows {
+            get {
+                return ResourceManager.GetString("Label_Workflows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You&apos;re up to date.
         /// </summary>
         public static string Label_YouAreUpToDate {
@@ -2639,6 +2756,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Progress_UpdateFailed {
             get {
                 return ResourceManager.GetString("Progress_UpdateFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installed Workflows.
+        /// </summary>
+        public static string TabLabel_InstalledWorkflows {
+            get {
+                return ResourceManager.GetString("TabLabel_InstalledWorkflows", resourceCulture);
             }
         }
         

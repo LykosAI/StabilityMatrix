@@ -132,32 +132,19 @@ public class KohyaSs(
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         // Extra dep needed before running setup since v23.0.x
-        await venvRunner.PipInstall("packaging").ConfigureAwait(false);
+        await venvRunner.PipInstall(["rich", "packaging"]).ConfigureAwait(false);
 
         if (Compat.IsWindows)
         {
-            var setupSmPath = Path.Combine(installLocation, "setup", "setup_sm.py");
-            var setupText = """
-                            import setup_windows
-                            import setup_common
-
-                            setup_common.install_requirements('requirements_windows_torch2.txt', check_no_verify_flag=False)
-                            setup_windows.sync_bits_and_bytes_files()
-                            setup_common.configure_accelerate(run_accelerate=False)
-                            """;
-            await File.WriteAllTextAsync(setupSmPath, setupText).ConfigureAwait(false);
-
             // Install
-            await venvRunner.CustomInstall("setup/setup_sm.py", onConsoleOutput).ConfigureAwait(false);
-            await venvRunner.PipInstall("bitsandbytes-windows").ConfigureAwait(false);
+            await venvRunner
+                .CustomInstall("setup/setup_windows.py --headless", onConsoleOutput)
+                .ConfigureAwait(false);
         }
         else if (Compat.IsLinux)
         {
             await venvRunner
-                .CustomInstall(
-                    "setup/setup_linux.py --platform-requirements-file=requirements_linux.txt --no_run_accelerate",
-                    onConsoleOutput
-                )
+                .CustomInstall("setup/setup_linux.py --headless", onConsoleOutput)
                 .ConfigureAwait(false);
         }
     }

@@ -68,6 +68,20 @@ def _patch_rich_console():
         pass
     except Exception as e:
         print("[sitecustomize error]:", e)
+        
+    try:
+        from pip._vendor.rich import console
+
+        class _Console(console.Console):
+            @property
+            def is_terminal(self) -> bool:
+                return True
+
+        console.Console = _Console
+    except ImportError:
+        pass
+    except Exception as e:
+        print("[sitecustomize error]:", e)    
 
 _patch_rich_console()
 

@@ -921,6 +921,9 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.IsBatchIndexEnabled = true;
         });
 
+    public static LayerDiffuseCardViewModel LayerDiffuseCardViewModel =>
+        DialogFactory.Get<LayerDiffuseCardViewModel>();
+
     public static IList<ICompletionData> SampleCompletionData =>
         new List<ICompletionData>
         {

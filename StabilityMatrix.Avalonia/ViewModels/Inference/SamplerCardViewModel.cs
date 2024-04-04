@@ -109,7 +109,12 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
         {
             modulesCard.Title = Resources.Label_Addons;
-            modulesCard.AvailableModules = [typeof(FreeUModule), typeof(ControlNetModule)];
+            modulesCard.AvailableModules =
+            [
+                typeof(FreeUModule),
+                typeof(ControlNetModule),
+                typeof(LayerDiffuseModule)
+            ];
         });
     }
 

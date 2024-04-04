@@ -32,23 +32,14 @@ public class InvokeAI : BaseGitPackage
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Nightmare;
 
     public override IReadOnlyList<string> ExtraLaunchCommands =>
-        new[]
-        {
-            "invokeai-configure",
-            "invokeai-merge",
-            "invokeai-metadata",
-            "invokeai-model-install",
-            "invokeai-node-cli",
-            "invokeai-ti",
-            "invokeai-update",
-        };
+        new[] { "invokeai-db-maintenance", "invokeai-import-images", };
 
     public override Uri PreviewImageUri =>
         new("https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png");
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
-    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
+        new[] { SharedFolderMethod.None };
+    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
 
     public override string MainBranch => "main";
 
@@ -128,21 +119,9 @@ public class InvokeAI : BaseGitPackage
             },
             new LaunchOptionDefinition
             {
-                Name = "Always use CPU",
-                Type = LaunchOptionType.Bool,
-                Options = ["--always_use_cpu"]
-            },
-            new LaunchOptionDefinition
-            {
                 Name = "Precision",
                 Type = LaunchOptionType.Bool,
                 Options = ["--precision auto", "--precision float16", "--precision float32"]
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Aggressively free up GPU memory after each operation",
-                Type = LaunchOptionType.Bool,
-                Options = ["--free_gpu_mem"]
             },
             LaunchOptionDefinition.Extras
         ];
@@ -223,9 +202,9 @@ public class InvokeAI : BaseGitPackage
                 await venvRunner
                     .PipInstall(
                         new PipInstallArgs(args.Any() ? args.ToArray() : Array.Empty<Argument>())
-                            .WithTorch("==2.1.2")
-                            .WithTorchVision("==0.16.2")
-                            .WithXFormers("==0.0.23post1")
+                            .WithTorch("==2.2.1")
+                            .WithTorchVision("==0.17.1")
+                            .WithXFormers("==0.0.25")
                             .WithTorchExtraIndex("cu121"),
                         onConsoleOutput
                     )
@@ -262,24 +241,6 @@ public class InvokeAI : BaseGitPackage
             .ConfigureAwait(false);
 
         await venvRunner.PipInstall("rich packaging python-dotenv", onConsoleOutput).ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(-1f, "Configuring InvokeAI", isIndeterminate: true));
-
-        // need to setup model links before running invokeai-configure so it can do its conversion
-        await SetupModelFolders(installLocation, selectedSharedFolderMethod).ConfigureAwait(false);
-
-        await RunInvokeCommand(
-                installLocation,
-                "invokeai-configure",
-                "--yes --skip-sd-weights",
-                true,
-                onConsoleOutput,
-                spam3: true
-            )
-            .ConfigureAwait(false);
-
-        await VenvRunner.Process.WaitForExitAsync();
-
         progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
     }
 
@@ -361,12 +322,6 @@ public class InvokeAI : BaseGitPackage
         }
 
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
-
-        arguments = command switch
-        {
-            "invokeai-configure" => "--yes --skip-sd-weights",
-            _ => arguments
-        };
 
         VenvRunner.EnvironmentVariables = GetEnvVars(installedPackagePath);
 

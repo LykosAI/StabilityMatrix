@@ -5,6 +5,13 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.9.3
+### Changed
+- Removed Symlink option for InvokeAI to prevent InvokeAI from moving models into its own directories (will be replaced with a Config option in a future update)
+### Fixed
+- Fixed images not appearing in Civitai Model Browser when "Show NSFW" was disabled
+- Fixed [#556](https://github.com/LykosAI/StabilityMatrix/issues/556) - "Could not find entry point for InvokeAI" error
+
 ## v2.9.2
 ### Changed
 - Due to changes with the CivitAI API, you can no longer select a specific page in the CivitAI Model Browser

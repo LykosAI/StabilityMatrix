@@ -391,6 +391,12 @@ public class ComfyNodeBuilder
     {
         public required ModelNodeConnection Model { get; init; }
 
+        /// <summary>
+        /// Available configs:
+        /// <para>SD15, Attention Injection, attn_sharing</para>
+        /// <para>SDXL, Conv Injection</para>
+        /// <para>SDXL, Attention Injection</para>
+        /// </summary>
         public required string Config { get; init; }
 
         [Range(-1d, 3d)]

@@ -37,6 +37,24 @@ public partial class LayerDiffuseCardViewModel : LoadableViewModelBase, IComfySt
         if (SelectedMode == LayerDiffuseMode.None)
             return;
 
+        var sdType = SelectedMode switch
+        {
+            LayerDiffuseMode.GenerateForegroundWithTransparencySD15 => "SD15",
+            LayerDiffuseMode.GenerateForegroundWithTransparencySDXL => "SDXL",
+            LayerDiffuseMode.None => throw new ArgumentOutOfRangeException(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        // Choose config based on mode
+        var config = SelectedMode switch
+        {
+            LayerDiffuseMode.GenerateForegroundWithTransparencySD15
+                => "SD15, Attention Injection, attn_sharing",
+            LayerDiffuseMode.GenerateForegroundWithTransparencySDXL => "SDXL, Conv Injection",
+            LayerDiffuseMode.None => throw new ArgumentOutOfRangeException(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
         foreach (var modelConnections in e.Temp.Models.Values)
         {
             var layerDiffuseApply = e.Nodes.AddTypedNode(
@@ -44,7 +62,7 @@ public partial class LayerDiffuseCardViewModel : LoadableViewModelBase, IComfySt
                 {
                     Name = e.Nodes.GetUniqueName($"LayerDiffuseApply_{modelConnections.Name}"),
                     Model = modelConnections.Model,
-                    Config = "SD15, Attention Injection, attn_sharing",
+                    Config = config,
                     Weight = Weight,
                 }
             );
@@ -71,7 +89,7 @@ public partial class LayerDiffuseCardViewModel : LoadableViewModelBase, IComfySt
                     Name = applyArgs.Nodes.GetUniqueName("LayerDiffuseDecode"),
                     Samples = latent,
                     Images = primaryImage,
-                    SdVersion = "SD15",
+                    SdVersion = sdType
                 }
             );
 

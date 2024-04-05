@@ -11,8 +11,14 @@ public enum LayerDiffuseMode
     None,
 
     /// <summary>
-    /// Generate foreground only with transparency.
+    /// Generate foreground only with transparency. SD1.5
     /// </summary>
-    [Display(Name = "Generate Foreground with Transparency")]
-    GenerateForegroundWithTransparency,
+    [Display(Name = "(SD 1.5) Generate Foreground with Transparency")]
+    GenerateForegroundWithTransparencySD15,
+
+    /// <summary>
+    /// Generate foreground only with transparency. SDXL
+    /// </summary>
+    [Display(Name = "(SDXL) Generate Foreground with Transparency")]
+    GenerateForegroundWithTransparencySDXL,
 }

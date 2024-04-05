@@ -28,6 +28,16 @@ public class ModuleApplyStepEventArgs : EventArgs
 
     public List<(string SourcePath, string DestinationRelativePath)> FilesToTransfer { get; init; } = [];
 
+    public List<Action<ModuleApplyStepEventArgs>> PreOutputActions { get; init; } = [];
+
+    public void InvokeAllPreOutputActions()
+    {
+        foreach (var action in PreOutputActions)
+        {
+            action(this);
+        }
+    }
+
     /// <summary>
     /// Creates a new <see cref="ModuleApplyStepEventArgs"/> with the given <see cref="ComfyNodeBuilder"/>.
     /// </summary>

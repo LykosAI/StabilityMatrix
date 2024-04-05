@@ -131,10 +131,12 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             _ => Convert.ToUInt64(SeedCardViewModel.Seed)
         };
 
-        BatchSizeCardViewModel.ApplyStep(args);
+        var applyArgs = args.ToModuleApplyStepEventArgs();
+
+        BatchSizeCardViewModel.ApplyStep(applyArgs);
 
         // Load models
-        ModelCardViewModel.ApplyStep(args);
+        ModelCardViewModel.ApplyStep(applyArgs);
 
         // Setup empty latent
         builder.SetupEmptyLatentSource(
@@ -145,16 +147,18 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         );
 
         // Prompts and loras
-        PromptCardViewModel.ApplyStep(args);
+        PromptCardViewModel.ApplyStep(applyArgs);
 
         // Setup Sampler and Refiner if enabled
-        SamplerCardViewModel.ApplyStep(args);
+        SamplerCardViewModel.ApplyStep(applyArgs);
 
         // Hires fix if enabled
         foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
         {
-            module.ApplyStep(args);
+            module.ApplyStep(applyArgs);
         }
+
+        applyArgs.InvokeAllPreOutputActions();
 
         builder.SetupOutputImage();
     }

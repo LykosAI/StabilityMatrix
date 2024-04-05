@@ -512,6 +512,32 @@ public class ComfyUI(
         }
 
         /// <inheritdoc />
+        public override async Task UpdateExtensionAsync(
+            InstalledPackageExtension installedExtension,
+            InstalledPackage installedPackage,
+            PackageExtensionVersion? version = null,
+            IProgress<ProgressReport>? progress = null,
+            CancellationToken cancellationToken = default
+        )
+        {
+            await base.UpdateExtensionAsync(
+                installedExtension,
+                installedPackage,
+                version,
+                progress,
+                cancellationToken
+            )
+                .ConfigureAwait(false);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var installedDirs = installedExtension.Paths.OfType<DirectoryPath>().Where(dir => dir.Exists);
+
+            await PostInstallAsync(installedPackage, installedDirs, progress, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
         public override async Task InstallExtensionAsync(
             PackageExtension extension,
             InstalledPackage installedPackage,
@@ -539,6 +565,20 @@ public class ComfyUI(
                 .Select(path => cloneRoot.JoinDir(path!))
                 .Where(dir => dir.Exists);
 
+            await PostInstallAsync(installedPackage, installedDirs, progress, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Runs post install / update tasks (i.e. install.py, requirements.txt)
+        /// </summary>
+        private async Task PostInstallAsync(
+            InstalledPackage installedPackage,
+            IEnumerable<DirectoryPath> installedDirs,
+            IProgress<ProgressReport>? progress = null,
+            CancellationToken cancellationToken = default
+        )
+        {
             foreach (var installedDir in installedDirs)
             {
                 cancellationToken.ThrowIfCancellationRequested();

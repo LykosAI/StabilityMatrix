@@ -257,13 +257,11 @@ jobs:
           
       - uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: '20.11.x'
       
       - name: Install dependencies for dmg creation
-        run: >
-          npm install --global create-dmg
-          brew install graphicsmagick imagemagick
-          
+        run: brew install graphicsmagick imagemagick && npm install --global create-dmg
+      
       - name: Create dmg
         working-directory: signing
         run: >

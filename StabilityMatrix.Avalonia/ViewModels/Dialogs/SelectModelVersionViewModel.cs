@@ -99,7 +99,7 @@ public partial class SelectModelVersionViewModel(
         var allImages = value
             ?.ModelVersion
             ?.Images
-            ?.Where(img => nsfwEnabled || img.NsfwLevel <= 1)
+            ?.Where(img => img.Type == "image" && (nsfwEnabled || img.NsfwLevel <= 1))
             ?.Select(x => new ImageSource(x.Url))
             .ToList();
 

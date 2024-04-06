@@ -229,7 +229,10 @@ public class ModelDownloadLinkHandler(
             return null;
         }
 
-        var image = modelVersion.Images[0];
+        var image = modelVersion.Images.FirstOrDefault(x => x.Type == "image");
+        if (image is null)
+            return null;
+
         var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
         if (imageExtension is "jpg" or "jpeg" or "png")
         {

@@ -500,7 +500,7 @@ public partial class CheckpointFolder : ViewModelBase
                         await modelInfo.SaveJsonToDirectory(DirectoryPath, modelFileName);
 
                         // If available, save thumbnail
-                        var image = version.Images?.FirstOrDefault();
+                        var image = version.Images?.FirstOrDefault(x => x.Type == "image");
                         if (image != null)
                         {
                             var imageExt = Path.GetExtension(image.Url).TrimStart('.');

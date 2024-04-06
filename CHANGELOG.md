@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.10.0
+### Fixed
+- Fixed [#559](https://github.com/LykosAI/StabilityMatrix/issues/559) - "Unable to load bitmap from provided data" error in Checkpoints page
+
 ## v2.10.0-pre.2
 ### Added
 - Added more metadata to the image dialog info flyout

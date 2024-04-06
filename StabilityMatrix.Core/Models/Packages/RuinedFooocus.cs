@@ -124,10 +124,10 @@ public class RuinedFooocus(
             await venvRunner
                 .PipInstall(
                     new PipInstallArgs()
-                        .WithTorch("==2.0.1")
-                        .WithTorchVision("==0.15.2")
-                        .WithXFormers("==0.0.20")
-                        .WithTorchExtraIndex("cu118")
+                        .WithTorch("==2.1.2")
+                        .WithTorchVision("==0.16.2")
+                        .WithXFormers("==0.0.23.post1")
+                        .WithTorchExtraIndex("cu121")
                         .WithParsedFromRequirementsTxt(
                             await requirements.ReadAllTextAsync().ConfigureAwait(false),
                             excludePattern: "torch"

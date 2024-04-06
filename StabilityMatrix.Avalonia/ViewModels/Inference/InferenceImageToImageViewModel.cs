@@ -56,25 +56,29 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
             _ => Convert.ToUInt64(SeedCardViewModel.Seed)
         };
 
-        BatchSizeCardViewModel.ApplyStep(args);
+        var applyArgs = args.ToModuleApplyStepEventArgs();
+
+        BatchSizeCardViewModel.ApplyStep(applyArgs);
 
         // Load models
-        ModelCardViewModel.ApplyStep(args);
+        ModelCardViewModel.ApplyStep(applyArgs);
 
         // Setup image latent source
-        SelectImageCardViewModel.ApplyStep(args);
+        SelectImageCardViewModel.ApplyStep(applyArgs);
 
         // Prompts and loras
-        PromptCardViewModel.ApplyStep(args);
+        PromptCardViewModel.ApplyStep(applyArgs);
 
         // Setup Sampler and Refiner if enabled
-        SamplerCardViewModel.ApplyStep(args);
+        SamplerCardViewModel.ApplyStep(applyArgs);
 
         // Apply module steps
         foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
         {
-            module.ApplyStep(args);
+            module.ApplyStep(applyArgs);
         }
+
+        applyArgs.InvokeAllPreOutputActions();
 
         builder.SetupOutputImage();
     }

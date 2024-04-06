@@ -383,6 +383,45 @@ public class ComfyNodeBuilder
         public int BatchSize { get; init; } = 1;
     }
 
+    [TypedNodeOptions(
+        Name = "Inference_Core_LayeredDiffusionApply",
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.4.0"]
+    )]
+    public record LayeredDiffusionApply : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        /// <summary>
+        /// Available configs:
+        /// <para>SD15, Attention Injection, attn_sharing</para>
+        /// <para>SDXL, Conv Injection</para>
+        /// <para>SDXL, Attention Injection</para>
+        /// </summary>
+        public required string Config { get; init; }
+
+        [Range(-1d, 3d)]
+        public double Weight { get; init; } = 1.0;
+    }
+
+    [TypedNodeOptions(
+        Name = "Inference_Core_LayeredDiffusionDecodeRGBA",
+        RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.4.0"]
+    )]
+    public record LayeredDiffusionDecodeRgba : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required LatentNodeConnection Samples { get; init; }
+
+        public required ImageNodeConnection Images { get; init; }
+
+        /// <summary>
+        /// Either "SD15" or "SDXL"
+        /// </summary>
+        public required string SdVersion { get; init; }
+
+        [Range(1, 4096)]
+        public int SubBatchSize { get; init; } = 16;
+    }
+
     public ImageNodeConnection Lambda_LatentToImage(LatentNodeConnection latent, VAENodeConnection vae)
     {
         var name = GetUniqueName("VAEDecode");
@@ -867,7 +906,26 @@ public class ComfyNodeBuilder
             set => SamplerTemporaryArgs["Base"] = value;
         }
 
-        public PrimaryNodeConnection? Primary { get; set; }
+        /// <summary>
+        /// The last primary set latent value, updated when <see cref="Primary"/> is set to a latent value.
+        /// </summary>
+        public LatentNodeConnection? LastPrimaryLatent { get; private set; }
+
+        private PrimaryNodeConnection? primary;
+
+        public PrimaryNodeConnection? Primary
+        {
+            get => primary;
+            set
+            {
+                if (value?.IsT0 == true)
+                {
+                    LastPrimaryLatent = value.AsT0;
+                }
+                primary = value;
+            }
+        }
+
         public VAENodeConnection? PrimaryVAE { get; set; }
         public Size PrimarySize { get; set; }
 

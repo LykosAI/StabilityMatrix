@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models.PackageSteps;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -86,6 +87,9 @@ public partial class PackageInstallDetailViewModel(
     private GitCommit? selectedCommit;
 
     [ObservableProperty]
+    private bool isOutputSharingEnabled = true;
+
+    [ObservableProperty]
     private bool canInstall;
 
     private PackageVersionOptions? allOptions;
@@ -96,6 +100,8 @@ public partial class PackageInstallDetailViewModel(
             return;
 
         OnInstallNameChanged(InstallName);
+
+        CanInstall = false;
 
         SelectedTorchVersion = SelectedPackage.GetRecommendedTorchVersion();
         SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
@@ -183,6 +189,7 @@ public partial class PackageInstallDetailViewModel(
         }
 
         var prereqStep = new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, SelectedPackage);
+        var unpackSiteCustomizeStep = new UnpackSiteCustomizeStep(Path.Combine(installLocation, "venv"));
 
         var downloadOptions = new DownloadPackageVersionOptions();
         var installedVersion = new InstalledPackageVersion();
@@ -224,6 +231,8 @@ public partial class PackageInstallDetailViewModel(
             installLocation
         );
 
+        var setupOutputSharingStep = new SetupOutputSharingStep(SelectedPackage, installLocation);
+
         var package = new InstalledPackage
         {
             DisplayName = InstallName,
@@ -234,7 +243,8 @@ public partial class PackageInstallDetailViewModel(
             LaunchCommand = SelectedPackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now,
             PreferredTorchVersion = SelectedTorchVersion,
-            PreferredSharedFolderMethod = SelectedSharedFolderMethod
+            PreferredSharedFolderMethod = SelectedSharedFolderMethod,
+            UseSharedOutputFolder = IsOutputSharingEnabled
         };
 
         var addInstalledPackageStep = new AddInstalledPackageStep(settingsManager, package);
@@ -244,10 +254,16 @@ public partial class PackageInstallDetailViewModel(
             setPackageInstallingStep,
             prereqStep,
             downloadStep,
+            unpackSiteCustomizeStep,
             installStep,
             setupModelFoldersStep,
             addInstalledPackageStep
         };
+
+        if (IsOutputSharingEnabled)
+        {
+            steps.Insert(steps.IndexOf(addInstalledPackageStep), setupOutputSharingStep);
+        }
 
         var packageName = SelectedPackage.Name;
 

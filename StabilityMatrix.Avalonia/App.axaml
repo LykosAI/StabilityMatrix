@@ -4,7 +4,7 @@
              xmlns:local="using:StabilityMatrix.Avalonia"
              xmlns:idcr="using:Dock.Avalonia.Controls.Recycling"
              xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
-             xmlns:controls="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+             xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
              Name="Stability Matrix"
              RequestedThemeVariant="Dark">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
@@ -81,11 +81,15 @@
         <StyleInclude Source="Controls/Inference/FreeUCard.axaml"/>
         <StyleInclude Source="Controls/Inference/ControlNetCard.axaml"/>
         <StyleInclude Source="Controls/Inference/PromptExpansionCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/LayerDiffuseCard.axaml"/>
         <StyleInclude Source="Controls/Painting/PaintCanvas.axaml"/>
-        <controls:ControlThemes/>
+        <labs:ControlThemes/>
         
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
+        </Style>
+        <Style Selector="labs|AsyncImage Border">
+            <Setter Property="ClipToBounds" Value="True"/>
         </Style>
     </Application.Styles>
 </Application>

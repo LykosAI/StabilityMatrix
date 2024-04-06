@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -19,6 +20,7 @@ using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
@@ -158,7 +160,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         // Try to find a valid image
         var image = images
             ?.Where(img => LocalModelFile.SupportedImageExtensions.Any(img.Url.Contains))
-            .FirstOrDefault(image => nsfwEnabled || image.Nsfw == "None");
+            .FirstOrDefault(image => nsfwEnabled || image.NsfwLevel <= 1);
         if (image != null)
         {
             CardImage = new Uri(image.Url);
@@ -216,7 +218,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             MaxDialogHeight = 950,
         };
 
-        var prunedDescription = PruneDescription(model);
+        var prunedDescription = Utilities.RemoveHtml(model.Description);
 
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
         viewModel.Dialog = dialog;
@@ -255,29 +257,12 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         {
             var subFolder =
                 viewModel?.SelectedInstallLocation
-                ?? Path.Combine("Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
+                ?? Path.Combine(@"Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
             downloadPath = Path.Combine(settingsManager.LibraryDir, subFolder);
         }
 
         await Task.Delay(100);
         await DoImport(model, downloadPath, selectedVersion, selectedFile);
-    }
-
-    private static string PruneDescription(CivitModel model)
-    {
-        var prunedDescription =
-            model
-                .Description?.Replace("<br/>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("<br />", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</p>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</h1>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</h2>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</h3>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</h4>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</h5>", $"{Environment.NewLine}{Environment.NewLine}")
-                .Replace("</h6>", $"{Environment.NewLine}{Environment.NewLine}") ?? string.Empty;
-        prunedDescription = HtmlRegex().Replace(prunedDescription, string.Empty);
-        return prunedDescription;
     }
 
     private static async Task<FilePath> SaveCmInfo(

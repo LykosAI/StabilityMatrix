@@ -13,6 +13,7 @@
                           xmlns:api="clr-namespace:StabilityMatrix.Core.Models.Api;assembly=StabilityMatrix.Core"
                           xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
                           xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+                          xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
                           d:DataContext="{x:Static mocks:DesignData.CheckpointsPageViewModel}"
                           x:CompileBindings="True"
                           x:DataType="vm:CheckpointsPageViewModel"
@@ -138,7 +139,7 @@
                                         TextWrapping="WrapWithOverflow"
                                         IsVisible="{Binding IsConnectedModel}" />
                                     <!--  Image  -->
-                                    <controls:BetterAdvancedImage
+                                    <labs:AsyncImage
                                         Margin="0,0,0,4"
                                         CornerRadius="4"
                                         Source="{Binding PreviewImagePath}"
@@ -175,18 +176,19 @@
                                 IsVisible="{Binding IsConnectedModel}" />
                         </StackPanel>
 
-                        <controls:BetterAdvancedImage Grid.Row="1"
-                                                      Grid.Column="0"
-                                                      Grid.ColumnSpan="2"
-                                                      Margin="0, 4,0,4"
-                                                      CornerRadius="8"
-                                                      Source="{Binding PreviewImagePath}"
-                                                      Stretch="UniformToFill"
-                                                      Height="300"
-                                                      Width="300"
-                                                      IsVisible="{Binding $parent[ItemsControl].((vm:CheckpointsPageViewModel)DataContext).ShowConnectedModelImages}" />
+                        <labs:AsyncImage Grid.Row="1"
+                                         Grid.Column="0"
+                                         Grid.ColumnSpan="2"
+                                         Margin="0, 4,0,4"
+                                         CornerRadius="8"
+                                         Source="{Binding PreviewImagePath}"
+                                         ClipToBounds="True"
+                                         Stretch="UniformToFill"
+                                         Height="300"
+                                         Width="300"
+                                         IsVisible="{Binding $parent[ItemsControl].((vm:CheckpointsPageViewModel)DataContext).ShowConnectedModelImages}"/>
                         <StackPanel Orientation="Horizontal"
-                                    Grid.Column="1" 
+                                    Grid.Column="1"
                                     Grid.Row="0"
                                     HorizontalAlignment="Right">
                             <controls:Card

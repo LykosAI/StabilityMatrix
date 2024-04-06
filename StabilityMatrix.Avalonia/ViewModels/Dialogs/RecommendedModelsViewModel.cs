@@ -75,7 +75,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
         CivitModels
             .Connect()
             .DeferUntilLoaded()
-            .Filter(f => f.ModelVersion.BaseModel == "SDXL 1.0")
+            .Filter(f => f.ModelVersion.BaseModel == "SDXL 1.0" || f.ModelVersion.BaseModel == "Pony")
             .Bind(SdxlModels)
             .Subscribe();
     }
@@ -97,9 +97,11 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
                         new RecommendedModelItemViewModel
                         {
                             ModelVersion = model.ModelVersions.First(
-                                x => !x.BaseModel.Contains("Turbo", StringComparison.OrdinalIgnoreCase)
+                                x =>
+                                    !x.BaseModel.Contains("Turbo", StringComparison.OrdinalIgnoreCase)
+                                    && !x.BaseModel.Contains("Lightning", StringComparison.OrdinalIgnoreCase)
                             ),
-                            Author = $"by {model.Creator.Username}",
+                            Author = $"by {model.Creator?.Username}",
                             CivitModel = model
                         }
                 )

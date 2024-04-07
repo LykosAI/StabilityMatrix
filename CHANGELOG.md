@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated translations for French, Spanish, and Turkish
 ### Fixed
 - Fixed [#559](https://github.com/LykosAI/StabilityMatrix/issues/559) - "Unable to load bitmap from provided data" error in Checkpoints page
+- Fixed [#522](https://github.com/LykosAI/StabilityMatrix/issues/522) - Incorrect output directory path for latest Auto1111
 
 ## v2.10.0-pre.2
 ### Added

@@ -100,6 +100,11 @@ public partial class RunningPackageService(
             installedPackage.PreferredSharedFolderMethod ?? basePackage.RecommendedSharedFolderMethod
         );
 
+        if (installedPackage.UseSharedOutputFolder)
+        {
+            await basePackage.SetupOutputFolderLinks(installedPackage.FullPath!);
+        }
+
         // Load user launch args from settings and convert to string
         var userArgs = installedPackage.LaunchArgs ?? [];
         var userArgsString = string.Join(" ", userArgs.Select(opt => opt.ToArgString()));

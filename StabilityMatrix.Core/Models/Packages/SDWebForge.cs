@@ -178,9 +178,4 @@ public class SDWebForge(
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }
-
-    public override string? ExtraLaunchArguments { get; set; } =
-        settingsManager.IsLibraryDirSet
-            ? $"--gradio-allowed-path \"{settingsManager.ImagesDirectory}\""
-            : string.Empty;
 }

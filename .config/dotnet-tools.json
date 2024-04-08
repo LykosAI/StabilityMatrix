@@ -15,7 +15,7 @@
       ]
     },
     "csharpier": {
-      "version": "0.26.7",
+      "version": "0.28.0",
       "commands": [
         "dotnet-csharpier"
       ]

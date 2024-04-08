@@ -110,7 +110,18 @@ public class Settings
 
     public bool IsDiscordRichPresenceEnabled { get; set; }
 
-    public Dictionary<string, string>? EnvironmentVariables { get; set; }
+    [JsonIgnore]
+    public Dictionary<string, string> DefaultEnvironmentVariables { get; } =
+        new() { ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib" };
+
+    [JsonPropertyName("EnvironmentVariables")]
+    public Dictionary<string, string>? UserEnvironmentVariables { get; set; }
+
+    [JsonIgnore]
+    public IReadOnlyDictionary<string, string> EnvironmentVariables =>
+        DefaultEnvironmentVariables
+            .Concat(UserEnvironmentVariables ?? [])
+            .ToDictionary(x => x.Key, x => x.Value);
 
     public HashSet<string>? InstalledModelHashes { get; set; } = new();
 

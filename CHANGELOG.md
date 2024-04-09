@@ -6,13 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.10.0
+### Added
+- Added Reference-Only mode for Inference ControlNet, used for guiding the sampler with an image without a pretrained model. Part of the latent and attention layers will be connected to the reference image, similar to Image to Image or Inpainting.
+- Inference ControlNet module now supports over 42 preprocessors, a new button next to the preprocessors dropdown allows previewing the output of the selected preprocessor on the image.
+- Added resolution selection for Inference ControlNet module, this controls preprocessor resolution too.
+- Added support for deep links from the new Stability Matrix Chrome extension
+- Added OpenArt.AI workflow browser for ComfyUI workflows
+- Added more metadata to the image dialog info flyout
+- Added Output Sharing toggle in Advanced Options during install flow
 ### Changed
+- Revamped the Packages page to enable running multiple packages at the same time
+- Changed the Outputs Page to use a TreeView for the directory selection instead of a dropdown selector
+- Model download location selector now searches all subfolders
+- Inference Primary Sampler Addons (i.e. ControlNet, FreeU) are now inherited by Hires Fix Samplers, this can be overriden from the Hires Fix module's settings menu by disabling the "Inherit Primary Sampler Addons" option.
+- Revisited the way images are loaded on the outputs page, with improvements to loading speed & not freezing the UI while loading
 - Updated translations for French, Spanish, and Turkish
+- Changed to a new image control for pages with many images
+- (Internal) Updated to Avalonia 11.0.10
 ### Fixed
 - Fixed [#559](https://github.com/LykosAI/StabilityMatrix/issues/559) - "Unable to load bitmap from provided data" error in Checkpoints page
 - Fixed [#522](https://github.com/LykosAI/StabilityMatrix/issues/522) - Incorrect output directory path for latest Auto1111
 - Fixed Civitai model browser error when sorting by Installed with more than 100 installed models
 - Fixed CLIP Install errors due to setuptools distutils conflict, added default environment variable setting `SETUPTOOLS_USE_DISTUTILS=stdlib`
+- Fixed progress bars not displaying properly during package installs & updates
+- Fixed ComfyUI extension updates not running install.py / updating requirements.txt
+- Improved performance when deleting many images from the Outputs page
+- Fixed ComfyUI torch downgrading to 2.1.2 when updating
+- Fixed [#529](https://github.com/LykosAI/StabilityMatrix/issues/529) - OneTrainer requesting input during update
+### Removed
+- Removed the main Launch page, as it is no longer needed with the new Packages page
 
 ## v2.10.0-pre.2
 ### Added
@@ -40,6 +62,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed ComfyUI torch downgrading to 2.1.2 when updating
 - Fixed [#529](https://github.com/LykosAI/StabilityMatrix/issues/529) - OneTrainer requesting input during update
 - Fixed "Could not find entry point for InvokeAI" error on InvokeAI v4.0+
+- Fixed Inference HiresFix module "Inherit Primary Sampler Addons" setting not effectively disabling when unchecked
+- Fixed model download location options for VAEs in the CivitAI Model Browser
+
 
 ## v2.10.0-dev.3
 ### Added

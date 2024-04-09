@@ -365,7 +365,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         var viewModel = dialogFactory.Get<EnvVarsViewModel>();
 
         // Load current settings
-        var current = settingsManager.Settings.EnvironmentVariables ?? new Dictionary<string, string>();
+        var current = settingsManager.Settings.UserEnvironmentVariables ?? new Dictionary<string, string>();
         viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair>(
             current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value))
         );
@@ -385,7 +385,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 .EnvVars.Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key))
                 .GroupBy(kvp => kvp.Key, StringComparer.Ordinal)
                 .ToDictionary(g => g.Key, g => g.First().Value, StringComparer.Ordinal);
-            settingsManager.Transaction(s => s.EnvironmentVariables = newEnvVars);
+            settingsManager.Transaction(s => s.UserEnvironmentVariables = newEnvVars);
         }
     }
 

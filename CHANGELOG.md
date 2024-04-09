@@ -26,13 +26,15 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed [#559](https://github.com/LykosAI/StabilityMatrix/issues/559) - "Unable to load bitmap from provided data" error in Checkpoints page
 - Fixed [#522](https://github.com/LykosAI/StabilityMatrix/issues/522) - Incorrect output directory path for latest Auto1111
+- Fixed [#529](https://github.com/LykosAI/StabilityMatrix/issues/529) - OneTrainer requesting input during update
 - Fixed Civitai model browser error when sorting by Installed with more than 100 installed models
 - Fixed CLIP Install errors due to setuptools distutils conflict, added default environment variable setting `SETUPTOOLS_USE_DISTUTILS=stdlib`
 - Fixed progress bars not displaying properly during package installs & updates
 - Fixed ComfyUI extension updates not running install.py / updating requirements.txt
 - Improved performance when deleting many images from the Outputs page
 - Fixed ComfyUI torch downgrading to 2.1.2 when updating
-- Fixed [#529](https://github.com/LykosAI/StabilityMatrix/issues/529) - OneTrainer requesting input during update
+- Fixed Inference HiresFix module "Inherit Primary Sampler Addons" setting not effectively disabling when unchecked
+- Fixed model download location options for VAEs in the CivitAI Model Browser
 ### Removed
 - Removed the main Launch page, as it is no longer needed with the new Packages page
 
@@ -62,9 +64,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed ComfyUI torch downgrading to 2.1.2 when updating
 - Fixed [#529](https://github.com/LykosAI/StabilityMatrix/issues/529) - OneTrainer requesting input during update
 - Fixed "Could not find entry point for InvokeAI" error on InvokeAI v4.0+
-- Fixed Inference HiresFix module "Inherit Primary Sampler Addons" setting not effectively disabling when unchecked
-- Fixed model download location options for VAEs in the CivitAI Model Browser
-
 
 ## v2.10.0-dev.3
 ### Added

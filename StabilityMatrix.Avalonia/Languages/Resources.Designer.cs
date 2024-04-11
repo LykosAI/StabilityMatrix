@@ -2796,6 +2796,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Click here to review prompt syntax and how to include Lora / Embeddings..
+        /// </summary>
+        public static string TeachingTip_InferencePromptHelpButton {
+            get {
+                return ResourceManager.GetString("TeachingTip_InferencePromptHelpButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Additional folders such as IPAdapters and TextualInversions (embeddings) can be enabled here.
         /// </summary>
         public static string TeachingTip_MoreCheckpointCategories {

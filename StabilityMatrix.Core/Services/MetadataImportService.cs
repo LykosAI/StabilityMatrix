@@ -107,7 +107,9 @@ public class MetadataImportService(
                     .ConfigureAwait(false);
 
                 var image = modelVersion.Images?.FirstOrDefault(
-                    img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+                    img =>
+                        LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+                        && img.Type == "image"
                 );
                 if (image == null)
                 {
@@ -201,7 +203,9 @@ public class MetadataImportService(
                     .ConfigureAwait(false);
 
                 var image = modelVersion.Images?.FirstOrDefault(
-                    img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+                    img =>
+                        LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+                        && img.Type == "image"
                 );
                 if (image == null)
                     continue;
@@ -264,7 +268,9 @@ public class MetadataImportService(
             .ConfigureAwait(false);
 
         var image = modelVersion.Images?.FirstOrDefault(
-            img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+            img =>
+                LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+                && img.Type == "image"
         );
 
         if (image == null)

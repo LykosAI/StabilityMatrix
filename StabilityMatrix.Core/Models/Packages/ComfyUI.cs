@@ -213,7 +213,7 @@ public class ComfyUI(
             _
                 => pipArgs
                     .AddArg("--upgrade")
-                    .WithTorch("~=2.1.0")
+                    .WithTorch()
                     .WithTorchVision()
                     .WithTorchExtraIndex(
                         torchVersion switch
@@ -233,9 +233,6 @@ public class ComfyUI(
 
         switch (torchVersion)
         {
-            case TorchVersion.Cuda:
-                pipArgs = pipArgs.WithXFormers("==0.0.22.post4");
-                break;
             case TorchVersion.Mps:
                 pipArgs = pipArgs.AddArg("mpmath==1.3.0");
                 break;
@@ -515,6 +512,32 @@ public class ComfyUI(
         }
 
         /// <inheritdoc />
+        public override async Task UpdateExtensionAsync(
+            InstalledPackageExtension installedExtension,
+            InstalledPackage installedPackage,
+            PackageExtensionVersion? version = null,
+            IProgress<ProgressReport>? progress = null,
+            CancellationToken cancellationToken = default
+        )
+        {
+            await base.UpdateExtensionAsync(
+                installedExtension,
+                installedPackage,
+                version,
+                progress,
+                cancellationToken
+            )
+                .ConfigureAwait(false);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var installedDirs = installedExtension.Paths.OfType<DirectoryPath>().Where(dir => dir.Exists);
+
+            await PostInstallAsync(installedPackage, installedDirs, progress, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <inheritdoc />
         public override async Task InstallExtensionAsync(
             PackageExtension extension,
             InstalledPackage installedPackage,
@@ -542,6 +565,20 @@ public class ComfyUI(
                 .Select(path => cloneRoot.JoinDir(path!))
                 .Where(dir => dir.Exists);
 
+            await PostInstallAsync(installedPackage, installedDirs, progress, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Runs post install / update tasks (i.e. install.py, requirements.txt)
+        /// </summary>
+        private async Task PostInstallAsync(
+            InstalledPackage installedPackage,
+            IEnumerable<DirectoryPath> installedDirs,
+            IProgress<ProgressReport>? progress = null,
+            CancellationToken cancellationToken = default
+        )
+        {
             foreach (var installedDir in installedDirs)
             {
                 cancellationToken.ThrowIfCancellationRequested();

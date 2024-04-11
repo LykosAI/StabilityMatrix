@@ -9,6 +9,8 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
+    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
     x:DataType="vmInference:ImageFolderCardViewModel">
 
     <Design.PreviewWith>
@@ -195,12 +197,11 @@
 
                                             <Border ClipToBounds="True" CornerRadius="8">
                                                 <Grid RowDefinitions="*,Auto">
-                                                    <controls:BetterAdvancedImage
+                                                    <vendorLabs:BetterAsyncImage
                                                         Width="{Binding $parent[ItemsRepeater].((vmInference:ImageFolderCardViewModel)DataContext).ImageSize.Width}"
                                                         Height="{Binding $parent[ItemsRepeater].((vmInference:ImageFolderCardViewModel)DataContext).ImageSize.Height}"
                                                         Source="{Binding AbsolutePath}"
-                                                        Stretch="UniformToFill"
-                                                        StretchDirection="Both" />
+                                                        Stretch="UniformToFill" />
 
                                                     <Border
                                                         Grid.Row="1"

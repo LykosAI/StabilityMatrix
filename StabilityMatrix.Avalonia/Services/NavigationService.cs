@@ -188,4 +188,6 @@ public class NavigationService<T> : INavigationService<T>
         _frame.GoBack();
         return true;
     }
+
+    public bool CanGoBack => _frame?.CanGoBack ?? false;
 }

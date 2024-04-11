@@ -5,6 +5,106 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.10.0
+### Added
+- Added Reference-Only mode for Inference ControlNet, used for guiding the sampler with an image without a pretrained model. Part of the latent and attention layers will be connected to the reference image, similar to Image to Image or Inpainting.
+- Inference ControlNet module now supports over 42 preprocessors, a new button next to the preprocessors dropdown allows previewing the output of the selected preprocessor on the image.
+- Added resolution selection for Inference ControlNet module, this controls preprocessor resolution too.
+- Added Layer Diffuse sampler addon to Inference, allows generating foreground with transparency with SD1.5 and SDXL.
+- Added support for deep links from the new Stability Matrix Chrome extension
+- Added OpenArt.AI workflow browser for ComfyUI workflows
+- Added more metadata to the image dialog info flyout
+- Added Output Sharing toggle in Advanced Options during install flow
+### Changed
+- Revamped the Packages page to enable running multiple packages at the same time
+- Changed the Outputs Page to use a TreeView for the directory selection instead of a dropdown selector
+- Model download location selector now searches all subfolders
+- Inference Primary Sampler Addons (i.e. ControlNet, FreeU) are now inherited by Hires Fix Samplers, this can be overriden from the Hires Fix module's settings menu by disabling the "Inherit Primary Sampler Addons" option.
+- Revisited the way images are loaded on the outputs page, with improvements to loading speed & not freezing the UI while loading
+- Updated translations for French, Spanish, and Turkish
+- Changed to a new image control for pages with many images
+- (Internal) Updated to Avalonia 11.0.10
+### Fixed
+- Fixed [#559](https://github.com/LykosAI/StabilityMatrix/issues/559) - "Unable to load bitmap from provided data" error in Checkpoints page
+- Fixed [#522](https://github.com/LykosAI/StabilityMatrix/issues/522) - Incorrect output directory path for latest Auto1111
+- Fixed [#529](https://github.com/LykosAI/StabilityMatrix/issues/529) - OneTrainer requesting input during update
+- Fixed Civitai model browser error when sorting by Installed with more than 100 installed models
+- Fixed CLIP Install errors due to setuptools distutils conflict, added default environment variable setting `SETUPTOOLS_USE_DISTUTILS=stdlib`
+- Fixed progress bars not displaying properly during package installs & updates
+- Fixed ComfyUI extension updates not running install.py / updating requirements.txt
+- Improved performance when deleting many images from the Outputs page
+- Fixed ComfyUI torch downgrading to 2.1.2 when updating
+- Fixed Inference HiresFix module "Inherit Primary Sampler Addons" setting not effectively disabling when unchecked
+- Fixed model download location options for VAEs in the CivitAI Model Browser
+### Removed
+- Removed the main Launch page, as it is no longer needed with the new Packages page
+
+## v2.10.0-pre.2
+### Added
+- Added more metadata to the image dialog info flyout
+- Added Restart button to console page
+### Changed
+- Model download location selector now searches all subfolders
+### Fixed
+- Fixed Civitai model browser not showing images when "Show NSFW" is disabled
+- Fixed crash when Installed Workflows page is opened with no Workflows folder
+- Fixed progress bars not displaying properly during package installs & updates
+- Fixed ComfyUI extension updates not running install.py / updating requirements.txt
+
+## v2.10.0-pre.1
+### Added
+- Added OpenArt.AI workflow browser for ComfyUI workflows
+- Added Output Sharing toggle in Advanced Options during install flow
+### Changed
+- Changed to a new image control for pages with many images
+- Removed Symlink option for InvokeAI due to changes with InvokeAI v4.0+
+- Output sharing is now enabled by default for new installations
+- (Internal) Updated to Avalonia 11.0.10
+### Fixed
+- Improved performance when deleting many images from the Outputs page
+- Fixed ComfyUI torch downgrading to 2.1.2 when updating
+- Fixed [#529](https://github.com/LykosAI/StabilityMatrix/issues/529) - OneTrainer requesting input during update
+- Fixed "Could not find entry point for InvokeAI" error on InvokeAI v4.0+
+
+## v2.10.0-dev.3
+### Added
+- Added support for deep links from the new Stability Matrix Chrome extension
+### Changed
+- Due to changes on the CivitAI API, you can no longer select a specific page in the CivitAI Model Browser
+- Due to the above API changes, new pages are now loaded via "infinite scrolling"
+### Fixed
+- Fixed Inference HiresFix module "Inherit Primary Sampler Addons" setting not effectively disabling when unchecked
+- Fixed model download location options for VAEs in the CivitAI Model Browser
+- Fixed crash on startup when library directory is not set
+- Fixed One-Click install progress dialog not disappearing after completion
+- Fixed ComfyUI with Inference pop-up during one-click install appearing below the visible scroll area
+- Fixed no packages being available for one-click install on PCs without a GPU
+- Fixed models not being removed from the installed models cache when deleting them from the Checkpoints page
+- Fixed missing ratings on some models in the CivitAI Model Browser
+- Fixed missing favorite count in the CivitAI Model Browser
+- Fixed recommended models not showing all SDXL models
+
+## v2.10.0-dev.2
+### Added
+- Added Reference-Only mode for Inference ControlNet, used for guiding the sampler with an image without a pretrained model. Part of the latent and attention layers will be connected to the reference image, similar to Image to Image or Inpainting.
+### Changed
+- Inference Primary Sampler Addons (i.e. ControlNet, FreeU) are now inherited by Hires Fix Samplers, this can be overriden from the Hires Fix module's settings menu by disabling the "Inherit Primary Sampler Addons" option.
+- Revisited the way images are loaded on the outputs page, with improvements to loading speed & not freezing the UI while loading
+### Fixed
+- Fixed Outputs page not remembering where the user last was in the TreeView in certain circumstances
+- Fixed Inference extension upgrades not being added to missing extensions list for prompted install
+- Fixed "The Open Web UI button has moved" teaching tip spam
+
+## v2.10.0-dev.1
+### Added
+- Inference ControlNet module now supports over 42 preprocessors, a new button next to the preprocessors dropdown allows previewing the output of the selected preprocessor on the image.
+- Added resolution selection for Inference ControlNet module, this controls preprocessor resolution too.
+### Changed
+- Revamped the Packages page to enable running multiple packages at the same time
+- Changed the Outputs Page to use a TreeView for the directory selection instead of a dropdown selector
+### Removed
+- Removed the main Launch page, as it is no longer needed with the new Packages page
+
 ## v2.9.3
 ### Changed
 - Removed Symlink option for InvokeAI to prevent InvokeAI from moving models into its own directories (will be replaced with a Config option in a future update)
@@ -22,9 +122,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed One-Click install progress dialog not disappearing after completion
 - Fixed ComfyUI with Inference pop-up during one-click install appearing below the visible scroll area
 - Fixed no packages being available for one-click install on PCs without a GPU
-- Fixed missing ratings on some models in the CivitAI Model Browser
-- Fixed missing favorite count in the CivitAI Model Browser
-- Fixed recommended models not showing all SDXL models
 
 ## v2.9.1
 ### Added
@@ -82,6 +179,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added copy image support on linux and macOS for Inference outputs viewer menu
 ### Fixed
 - Fixed StableSwarmUI not installing properly on macOS
+- Fixed output sharing for Stable Diffusion WebUI Forge
 - Hopefully actually fixed [#464](https://github.com/LykosAI/StabilityMatrix/issues/464) - error when installing InvokeAI on macOS
 - Fixed default command line args for SDWebUI Forge on macOS
 - Fixed output paths and output sharing for SDWebUI Forge

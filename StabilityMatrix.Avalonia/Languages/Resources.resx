@@ -1068,4 +1068,7 @@
   <data name="Label_WorkflowImportComplete" xml:space="preserve">
     <value>The workflow and custom nodes have been imported.</value>
   </data>
+  <data name="TeachingTip_InferencePromptHelpButton" xml:space="preserve">
+    <value>Click here to review prompt syntax and how to include Lora / Embeddings.</value>
+  </data>
 </root>

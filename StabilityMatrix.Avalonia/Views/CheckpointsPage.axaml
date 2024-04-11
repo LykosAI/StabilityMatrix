@@ -14,6 +14,7 @@
                           xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
                           xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
                           xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+                          xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
                           d:DataContext="{x:Static mocks:DesignData.CheckpointsPageViewModel}"
                           x:CompileBindings="True"
                           x:DataType="vm:CheckpointsPageViewModel"
@@ -139,7 +140,7 @@
                                         TextWrapping="WrapWithOverflow"
                                         IsVisible="{Binding IsConnectedModel}" />
                                     <!--  Image  -->
-                                    <labs:AsyncImage
+                                    <vendorLabs:BetterAsyncImage
                                         Margin="0,0,0,4"
                                         CornerRadius="4"
                                         Source="{Binding PreviewImagePath}"
@@ -176,7 +177,7 @@
                                 IsVisible="{Binding IsConnectedModel}" />
                         </StackPanel>
 
-                        <labs:AsyncImage Grid.Row="1"
+                        <vendorLabs:BetterAsyncImage Grid.Row="1"
                                          Grid.Column="0"
                                          Grid.ColumnSpan="2"
                                          Margin="0, 4,0,4"

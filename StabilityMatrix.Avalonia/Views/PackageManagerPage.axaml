@@ -14,6 +14,7 @@
                           xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
                           xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
                           xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+                          xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
                           mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="450"
                           x:DataType="viewModels:PackageManagerViewModel"
                           x:CompileBindings="True"
@@ -45,7 +46,7 @@
                                 </MultiBinding>
                             </controls:Card.Background>
                             <Grid ColumnDefinitions="Auto, *">
-                                <labs:AsyncImage
+                                <vendorLabs:BetterAsyncImage
                                     Grid.Column="0"
                                     Height="150"
                                     Width="150"

@@ -2,7 +2,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
         xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-        xmlns:controls1="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls">
+        xmlns:controls1="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+        xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs">
     <Design.PreviewWith>
         <Border Padding="20">
             <!-- Add Controls for Previewer Here -->
@@ -39,7 +40,7 @@
                         CornerRadius="12"
                         Command="{TemplateBinding Command}"
                         CommandParameter="{TemplateBinding CommandParameter}">
-                        <controls1:AsyncImage
+                        <vendorLabs:BetterAsyncImage
                             Stretch="UniformToFill"
                             CornerRadius="8"
                             ContextFlyout="{TemplateBinding ContextFlyout}"

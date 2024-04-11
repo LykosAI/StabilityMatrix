@@ -29,6 +29,7 @@
                  <ResourceInclude Source="Styles/ListBoxStyles.axaml"/>
                  <ResourceInclude Source="Styles/FAComboBoxStyles.axaml"/>
                  <ResourceInclude Source="Controls/Inference/ImageFolderCard.axaml"/>
+                 <ResourceInclude Source="Controls/VendorLabs/Themes/BetterAsyncImage.axaml"/>
              </ResourceDictionary.MergedDictionaries>
              
              <idcr:ControlRecycling x:Key="ControlRecyclingKey" />

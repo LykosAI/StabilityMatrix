@@ -23,6 +23,7 @@ public class EventManager
     public event EventHandler<bool>? DevModeSettingChanged;
     public event EventHandler<UpdateInfo>? UpdateAvailable;
     public event EventHandler<Guid>? PackageLaunchRequested;
+    public event EventHandler<InstalledPackage>? PackageRelaunchRequested;
     public event EventHandler? ScrollToBottomRequested;
     public event EventHandler<ProgressItem>? ProgressChanged;
     public event EventHandler<RunningPackageStatusChangedEventArgs>? RunningPackageStatusChanged;
@@ -41,9 +42,11 @@ public class EventManager
     public event EventHandler<LocalImageFile>? InferenceUpscaleRequested;
     public event EventHandler<LocalImageFile>? InferenceImageToImageRequested;
     public event EventHandler<LocalImageFile>? InferenceImageToVideoRequested;
+    public event EventHandler<InferenceQueueCustomPromptEventArgs>? InferenceQueueCustomPrompt;
     public event EventHandler<int>? NavigateAndFindCivitModelRequested;
     public event EventHandler? DownloadsTeachingTipRequested;
     public event EventHandler? RecommendedModelsDialogClosed;
+    public event EventHandler? WorkflowInstalled;
 
     public void OnGlobalProgressChanged(int progress) => GlobalProgressChanged?.Invoke(this, progress);
 
@@ -92,6 +95,9 @@ public class EventManager
     public void OnInferenceImageToVideoRequested(LocalImageFile imageFile) =>
         InferenceImageToVideoRequested?.Invoke(this, imageFile);
 
+    public void OnInferenceQueueCustomPrompt(InferenceQueueCustomPromptEventArgs e) =>
+        InferenceQueueCustomPrompt?.Invoke(this, e);
+
     public void OnNavigateAndFindCivitModelRequested(int modelId) =>
         NavigateAndFindCivitModelRequested?.Invoke(this, modelId);
 
@@ -100,4 +106,9 @@ public class EventManager
 
     public void OnRecommendedModelsDialogClosed() =>
         RecommendedModelsDialogClosed?.Invoke(this, EventArgs.Empty);
+
+    public void OnPackageRelaunchRequested(InstalledPackage package) =>
+        PackageRelaunchRequested?.Invoke(this, package);
+
+    public void OnWorkflowInstalled() => WorkflowInstalled?.Invoke(this, EventArgs.Empty);
 }

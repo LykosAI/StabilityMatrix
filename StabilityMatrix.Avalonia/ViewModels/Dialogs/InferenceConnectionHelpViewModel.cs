@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -30,6 +31,7 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
     private readonly ISettingsManager settingsManager;
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly IPackageFactory packageFactory;
+    private readonly RunningPackageService runningPackageService;
 
     [ObservableProperty]
     private string title = "Hello";
@@ -58,12 +60,14 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
     public InferenceConnectionHelpViewModel(
         ISettingsManager settingsManager,
         INavigationService<MainWindowViewModel> navigationService,
-        IPackageFactory packageFactory
+        IPackageFactory packageFactory,
+        RunningPackageService runningPackageService
     )
     {
         this.settingsManager = settingsManager;
         this.navigationService = navigationService;
         this.packageFactory = packageFactory;
+        this.runningPackageService = runningPackageService;
 
         // Get comfy type installed packages
         var comfyPackages = this.settingsManager.Settings.InstalledPackages.Where(
@@ -122,14 +126,11 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
     /// Request launch of the selected package
     /// </summary>
     [RelayCommand]
-    private void LaunchSelectedPackage()
+    private async Task LaunchSelectedPackage()
     {
-        if (SelectedPackage?.Id is { } id)
+        if (SelectedPackage is not null)
         {
-            Dispatcher.UIThread.Post(() =>
-            {
-                EventManager.Instance.OnPackageLaunchRequested(id);
-            });
+            await runningPackageService.StartPackage(SelectedPackage);
         }
     }
 

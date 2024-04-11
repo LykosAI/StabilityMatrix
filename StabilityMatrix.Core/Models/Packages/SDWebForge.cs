@@ -35,12 +35,12 @@ public class SDWebForge(
             "https://github.com/lllyasviel/stable-diffusion-webui-forge/assets/19834515/ca5e05ed-bd86-4ced-8662-f41034648e8c"
         );
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
-
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
     public override IPackageExtensionManager ExtensionManager => null;
     public override string OutputFolderName => "output";
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
+
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new()
         {
@@ -178,9 +178,4 @@ public class SDWebForge(
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }
-
-    public override string? ExtraLaunchArguments { get; set; } =
-        settingsManager.IsLibraryDirSet
-            ? $"--gradio-allowed-path \"{settingsManager.ImagesDirectory}\""
-            : string.Empty;
 }

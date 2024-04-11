@@ -20,6 +20,7 @@ using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -30,6 +31,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
     private readonly IModelIndexService modelIndexService;
+    private readonly ISettingsManager settingsManager;
 
     /// <summary>
     /// Cache of prompt text to tokenized Prompt
@@ -48,6 +50,9 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
     [ObservableProperty]
     private bool isAutoCompletionEnabled;
 
+    [ObservableProperty]
+    private bool isHelpButtonTeachingTipOpen;
+
     /// <inheritdoc />
     public PromptCardViewModel(
         ICompletionProvider completionProvider,
@@ -59,6 +64,7 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
     )
     {
         this.modelIndexService = modelIndexService;
+        this.settingsManager = settingsManager;
         CompletionProvider = completionProvider;
         TokenizerProvider = tokenizerProvider;
         SharedState = sharedState;
@@ -75,6 +81,30 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
             settings => settings.IsPromptCompletionEnabled,
             true
         );
+    }
+
+    partial void OnIsHelpButtonTeachingTipOpenChanging(bool oldValue, bool newValue)
+    {
+        // If the teaching tip is being closed, save the setting
+        if (oldValue && !newValue)
+        {
+            settingsManager.Transaction(settings =>
+            {
+                settings.SeenTeachingTips.Add(TeachingTip.InferencePromptHelpButtonTip);
+            });
+        }
+    }
+
+    /// <inheritdoc />
+    public override void OnLoaded()
+    {
+        base.OnLoaded();
+
+        // Show teaching tip for help button if not seen
+        if (!settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.InferencePromptHelpButtonTip))
+        {
+            IsHelpButtonTeachingTipOpen = true;
+        }
     }
 
     /// <summary>

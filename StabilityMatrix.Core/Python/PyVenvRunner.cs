@@ -214,7 +214,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         });
 
         SetPyvenvCfg(PyRunner.PythonDir);
-        RunDetached(args.Prepend("-m pip install"), outputAction);
+        RunDetached(args.Prepend("-m pip install").Concat("--exists-action s"), outputAction);
         await Process.WaitForExitAsync().ConfigureAwait(false);
 
         // Check return code

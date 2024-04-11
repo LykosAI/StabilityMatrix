@@ -19,5 +19,8 @@ public class CivitImage
     [JsonPropertyName("hash")]
     public string Hash { get; set; }
 
+    [JsonPropertyName("type")]
+    public string Type { get; set; }
+
     // TODO: "meta" ( object? )
 }

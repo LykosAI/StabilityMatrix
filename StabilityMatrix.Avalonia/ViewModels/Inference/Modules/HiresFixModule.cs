@@ -78,30 +78,39 @@ public partial class HiresFixModule : ModuleBase
             );
         }
 
-        var hiresSampler = builder
-            .Nodes
-            .AddTypedNode(
-                new ComfyNodeBuilder.KSampler
-                {
-                    Name = builder.Nodes.GetUniqueName("HiresFix_Sampler"),
-                    Model = builder.Connections.GetRefinerOrBaseModel(),
-                    Seed = builder.Connections.Seed,
-                    Steps = samplerCard.Steps,
-                    Cfg = samplerCard.CfgScale,
-                    SamplerName =
-                        samplerCard.SelectedSampler?.Name
-                        ?? e.Builder.Connections.PrimarySampler?.Name
-                        ?? throw new ArgumentException("No PrimarySampler"),
-                    Scheduler =
-                        samplerCard.SelectedScheduler?.Name
-                        ?? e.Builder.Connections.PrimaryScheduler?.Name
-                        ?? throw new ArgumentException("No PrimaryScheduler"),
-                    Positive = builder.Connections.GetRefinerOrBaseConditioning().Positive,
-                    Negative = builder.Connections.GetRefinerOrBaseConditioning().Negative,
-                    LatentImage = builder.GetPrimaryAsLatent(),
-                    Denoise = samplerCard.DenoiseStrength
-                }
-            );
+        // If we need to inherit primary sampler addons, use their temp args
+        if (samplerCard.InheritPrimarySamplerAddons)
+        {
+            e.Temp = e.Builder.Connections.BaseSamplerTemporaryArgs ?? e.CreateTempFromBuilder();
+        }
+        else
+        {
+            // otherwise just use new ones
+            e.Temp = e.CreateTempFromBuilder();
+        }
+
+        var hiresSampler = builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.KSampler
+            {
+                Name = builder.Nodes.GetUniqueName("HiresFix_Sampler"),
+                Model = builder.Connections.GetRefinerOrBaseModel(),
+                Seed = builder.Connections.Seed,
+                Steps = samplerCard.Steps,
+                Cfg = samplerCard.CfgScale,
+                SamplerName =
+                    samplerCard.SelectedSampler?.Name
+                    ?? e.Builder.Connections.PrimarySampler?.Name
+                    ?? throw new ArgumentException("No PrimarySampler"),
+                Scheduler =
+                    samplerCard.SelectedScheduler?.Name
+                    ?? e.Builder.Connections.PrimaryScheduler?.Name
+                    ?? throw new ArgumentException("No PrimaryScheduler"),
+                Positive = e.Temp.GetRefinerOrBaseConditioning().Positive,
+                Negative = e.Temp.GetRefinerOrBaseConditioning().Negative,
+                LatentImage = builder.GetPrimaryAsLatent(),
+                Denoise = samplerCard.DenoiseStrength
+            }
+        );
 
         // Set as primary
         builder.Connections.Primary = hiresSampler.Output;

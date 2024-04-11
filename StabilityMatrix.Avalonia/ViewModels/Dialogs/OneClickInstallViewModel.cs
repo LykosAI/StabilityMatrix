@@ -196,7 +196,7 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         {
             ShowDialogOnStart = true,
             HideCloseButton = true,
-            ModificationCompleteMessage = $"{SelectedPackage.DisplayName} installed successfully",
+            ModificationCompleteMessage = $"{SelectedPackage.DisplayName} installed successfully"
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps(steps);

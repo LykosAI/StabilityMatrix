@@ -75,7 +75,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
         CivitModels
             .Connect()
             .DeferUntilLoaded()
-            .Filter(f => f.ModelVersion.BaseModel == "SDXL 1.0")
+            .Filter(f => f.ModelVersion.BaseModel == "SDXL 1.0" || f.ModelVersion.BaseModel == "Pony")
             .Bind(SdxlModels)
             .Subscribe();
     }
@@ -206,7 +206,10 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
             return null;
         }
 
-        var image = modelVersion.Images[0];
+        var image = modelVersion.Images.FirstOrDefault(x => x.Type == "image");
+        if (image is null)
+            return null;
+
         var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
         if (imageExtension is "jpg" or "jpeg" or "png")
         {

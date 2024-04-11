@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using KGySoft.CoreLibraries;
 using OneOf;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
+using StabilityMatrix.Core.Models.Packages.Extensions;
 
 namespace StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
@@ -19,7 +21,10 @@ public class NodeDictionary : Dictionary<string, ComfyNode>
     /// When inserting TypedNodes, this holds a mapping of ClassType to required extensions
     /// </summary>
     [JsonIgnore]
-    public Dictionary<string, string[]> ClassTypeRequiredExtensions { get; } = new();
+    public Dictionary<string, ExtensionSpecifier[]> ClassTypeRequiredExtensions { get; } = new();
+
+    public IEnumerable<ExtensionSpecifier> RequiredExtensions =>
+        ClassTypeRequiredExtensions.Values.SelectMany(x => x);
 
     /// <summary>
     /// Finds a unique node name given a base name, by appending _2, _3, etc.
@@ -63,7 +68,11 @@ public class NodeDictionary : Dictionary<string, ComfyNode>
         {
             if (options.RequiredExtensions != null)
             {
-                ClassTypeRequiredExtensions[namedNode.ClassType] = options.RequiredExtensions;
+                ClassTypeRequiredExtensions.AddOrUpdate(
+                    namedNode.ClassType,
+                    _ => options.GetRequiredExtensionSpecifiers().ToArray(),
+                    (_, specifiers) => options.GetRequiredExtensionSpecifiers().Concat(specifiers).ToArray()
+                );
             }
         }
 

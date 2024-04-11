@@ -88,8 +88,5 @@
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
         </Style>
-        <Style Selector="labs|AsyncImage Border">
-            <Setter Property="ClipToBounds" Value="True"/>
-        </Style>
     </Application.Styles>
 </Application>

@@ -113,15 +113,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.9.2
 ### Changed
-- Model download location selector now searches all subfolders
-### Fixed
-- Fixed Civitai model browser not showing images when "Show NSFW" is disabled
-- Fixed crash when Installed Workflows page is opened with no Workflows folder
-- Fixed progress bars not displaying properly during package installs & updates
-- Fixed ComfyUI extension updates not running install.py / updating requirements.txt
-
-## v2.9.2
-### Changed
 - Due to changes with the CivitAI API, you can no longer select a specific page in the CivitAI Model Browser
 - Due to the above API changes, new pages are now loaded via "infinite scrolling"
 ### Fixed

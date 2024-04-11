@@ -27,9 +27,17 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,
-        IModelIndexService modelIndexService
+        IModelIndexService modelIndexService,
+        RunningPackageService runningPackageService
     )
-        : base(notificationService, inferenceClientManager, settingsManager, vmFactory, modelIndexService)
+        : base(
+            notificationService,
+            inferenceClientManager,
+            settingsManager,
+            vmFactory,
+            modelIndexService,
+            runningPackageService
+        )
     {
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>();
 
@@ -48,25 +56,29 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
             _ => Convert.ToUInt64(SeedCardViewModel.Seed)
         };
 
-        BatchSizeCardViewModel.ApplyStep(args);
+        var applyArgs = args.ToModuleApplyStepEventArgs();
+
+        BatchSizeCardViewModel.ApplyStep(applyArgs);
 
         // Load models
-        ModelCardViewModel.ApplyStep(args);
+        ModelCardViewModel.ApplyStep(applyArgs);
 
         // Setup image latent source
-        SelectImageCardViewModel.ApplyStep(args);
+        SelectImageCardViewModel.ApplyStep(applyArgs);
 
         // Prompts and loras
-        PromptCardViewModel.ApplyStep(args);
+        PromptCardViewModel.ApplyStep(applyArgs);
 
         // Setup Sampler and Refiner if enabled
-        SamplerCardViewModel.ApplyStep(args);
+        SamplerCardViewModel.ApplyStep(applyArgs);
 
         // Apply module steps
         foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
         {
-            module.ApplyStep(args);
+            module.ApplyStep(applyArgs);
         }
+
+        applyArgs.InvokeAllPreOutputActions();
 
         builder.SetupOutputImage();
     }
@@ -77,12 +89,12 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         var mainImages = SelectImageCardViewModel.GetInputImages();
 
         var samplerImages = SamplerCardViewModel
-            .ModulesCardViewModel
-            .Cards
-            .OfType<IInputImageProvider>()
+            .ModulesCardViewModel.Cards.OfType<IInputImageProvider>()
             .SelectMany(m => m.GetInputImages());
 
-        var moduleImages = ModulesCardViewModel.Cards.OfType<IInputImageProvider>().SelectMany(m => m.GetInputImages());
+        var moduleImages = ModulesCardViewModel
+            .Cards.OfType<IInputImageProvider>()
+            .SelectMany(m => m.GetInputImages());
 
         return mainImages.Concat(samplerImages).Concat(moduleImages);
     }

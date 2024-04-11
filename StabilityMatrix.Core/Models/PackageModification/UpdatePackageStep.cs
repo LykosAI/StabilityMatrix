@@ -31,7 +31,14 @@ public class UpdatePackageStep : IPackageStep
 
         void OnConsoleOutput(ProcessOutput output)
         {
-            progress?.Report(new ProgressReport { IsIndeterminate = true, Message = output.Text });
+            progress?.Report(
+                new ProgressReport
+                {
+                    IsIndeterminate = true,
+                    Message = output.Text,
+                    ProcessOutput = output
+                }
+            );
         }
 
         var updateResult = await basePackage

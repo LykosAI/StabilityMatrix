@@ -22,9 +22,9 @@ public partial class RecommendedModelItemViewModel : ViewModelBase
     private CivitModel civitModel;
 
     public Uri ThumbnailUrl =>
-        ModelVersion.Images?.FirstOrDefault()?.Url == null
+        ModelVersion.Images?.FirstOrDefault(x => x.Type == "image")?.Url == null
             ? Assets.NoImage
-            : new Uri(ModelVersion.Images.First().Url);
+            : new Uri(ModelVersion.Images.First(x => x.Type == "image").Url);
 
     [RelayCommand]
     public void ToggleSelection() => IsSelected = !IsSelected;

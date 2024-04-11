@@ -2,7 +2,6 @@
                           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                           xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                           xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                           xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                           xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
@@ -10,8 +9,8 @@
                           xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
                           xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
                           xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
-                          xmlns:extensions="clr-namespace:StabilityMatrix.Core.Models.Packages.Extensions;assembly=StabilityMatrix.Core"
                           xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
+                          xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           x:DataType="packageManager:PackageInstallDetailViewModel"
                           x:CompileBindings="True"
@@ -21,19 +20,21 @@
     <Grid ColumnDefinitions="Auto, *"
           RowDefinitions="Auto, *">
         <controls:BetterAdvancedImage
-            MaxHeight="300"
-            MaxWidth="300"
-            Margin="16,16,8,8"
-            CornerRadius="8"
+            Height="300"
+            Width="300"
             VerticalAlignment="Top"
             Stretch="UniformToFill"
-            Source="{Binding SelectedPackage.PreviewImageUri}" />
+            Margin="16, 16, 8, 8"
+            CornerRadius="8"
+            Source="{Binding SelectedPackage.PreviewImageUri}">
+        </controls:BetterAdvancedImage>
+
         <StackPanel Grid.Row="0" Grid.Column="1"
                     Margin="8"
                     Orientation="Vertical">
-            
+
             <controls:HyperlinkIconButton NavigateUri="{Binding SelectedPackage.LicenseUrl}"
-                                          Content="{Binding SelectedPackage.LicenseType}"/>
+                                          Content="{Binding SelectedPackage.LicenseType}" />
 
             <ToggleSwitch OnContent="{x:Static lang:Resources.Label_Releases}"
                           OffContent="{x:Static lang:Resources.Label_Branches}"
@@ -97,71 +98,73 @@
                     <Run Text="{x:Static lang:Resources.Label_PleaseChooseDifferentName}" />
                 </TextBlock>
             </StackPanel>
-            
+
             <Expander Header="{x:Static lang:Resources.Label_AdvancedOptions}"
                       FontSize="16"
                       HorizontalAlignment="Stretch"
                       Margin="8">
-                <Grid ColumnDefinitions="*, *, *"
-                      RowDefinitions="Auto, Auto"
-                      Margin="8,0">
-
-                    <Label Grid.Row="0" Grid.Column="0"
-                           Content="{x:Static lang:Resources.Label_SharedModelFolderStrategy}"
-                           Margin="0,0,0,4" />
-                    <controls1:FAComboBox Grid.Row="1" Grid.Column="0"
-                                          ItemsSource="{Binding SelectedPackage.AvailableSharedFolderMethods}"
-                                          MinWidth="150"
-                                          MinHeight="38"
-                                          SelectedItem="{Binding SelectedSharedFolderMethod}">
-                        <controls1:FAComboBox.ItemTemplate>
-                            <DataTemplate DataType="{x:Type models:SharedFolderMethod}">
-                                <TextBlock
-                                    Margin="8,4,0,4"
-                                    Text="{Binding }" />
-                            </DataTemplate>
-                        </controls1:FAComboBox.ItemTemplate>
-                    </controls1:FAComboBox>
-
-                    <Label Grid.Row="0" Grid.Column="1"
-                           Content="{x:Static lang:Resources.Label_PyTorchVersion}"
-                           IsVisible="{Binding ShowTorchVersionOptions}"
-                           Margin="0,0,0,4" />
-                    <controls1:FAComboBox Grid.Row="1" Grid.Column="1"
-                                          ItemsSource="{Binding SelectedPackage.AvailableTorchVersions}"
-                                          MinWidth="150"
-                                          MinHeight="38"
-                                          IsVisible="{Binding ShowTorchVersionOptions}"
-                                          SelectedItem="{Binding SelectedTorchVersion}">
-                        <controls1:FAComboBox.ItemTemplate>
-                            <DataTemplate DataType="{x:Type models:TorchVersion}">
-                                <TextBlock
-                                    Margin="8,4,0,4"
-                                    Text="{Binding }" />
-                            </DataTemplate>
-                        </controls1:FAComboBox.ItemTemplate>
-                    </controls1:FAComboBox>
+                <WrapPanel Margin="8,0">
+                    <StackPanel Orientation="Vertical" Margin="0,4,24,0">
+                        <Label Content="{x:Static lang:Resources.Label_SharedModelStrategyShort}" />
+                        <controls1:FAComboBox ItemsSource="{Binding SelectedPackage.AvailableSharedFolderMethods}"
+                                              MinWidth="150"
+                                              MinHeight="38"
+                                              SelectedItem="{Binding SelectedSharedFolderMethod}">
+                            <controls1:FAComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:SharedFolderMethod}">
+                                    <TextBlock
+                                        Margin="8,4,0,4"
+                                        Text="{Binding }" />
+                                </DataTemplate>
+                            </controls1:FAComboBox.ItemTemplate>
+                        </controls1:FAComboBox>
+                    </StackPanel>
                     
-                    <Label Grid.Row="0" Grid.Column="2"
-                           Content="{x:Static lang:Resources.Label_Commit}"
-                           Margin="0,0,0,4"
-                           IsVisible="{Binding !IsReleaseMode}" />
-                    <controls1:FAComboBox Grid.Row="1" Grid.Column="2"
-                                          IsVisible="{Binding !IsReleaseMode}"
-                                          ItemsSource="{Binding AvailableCommits}"
-                                          MinWidth="150"
-                                          MinHeight="38"
-                                          SelectedItem="{Binding SelectedCommit}">
-                        <controls1:FAComboBox.ItemTemplate>
-                            <DataTemplate DataType="{x:Type database:GitCommit}">
-                                <TextBlock
-                                    Margin="8,4,0,4"
-                                    Name="NameTextBlock"
-                                    Text="{Binding ShortSha}" />
-                            </DataTemplate>
-                        </controls1:FAComboBox.ItemTemplate>
-                    </controls1:FAComboBox>
-                </Grid>
+                    <StackPanel Orientation="Vertical" Margin="0,4,24,0">
+                        <Label Content="{x:Static lang:Resources.Label_PyTorchVersion}"
+                               IsVisible="{Binding ShowTorchVersionOptions}"/>
+                        <controls1:FAComboBox ItemsSource="{Binding SelectedPackage.AvailableTorchVersions}"
+                                              MinWidth="150"
+                                              MinHeight="38"
+                                              IsVisible="{Binding ShowTorchVersionOptions}"
+                                              SelectedItem="{Binding SelectedTorchVersion}">
+                            <controls1:FAComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:TorchVersion}">
+                                    <TextBlock
+                                        Margin="8,4,0,4"
+                                        Text="{Binding }" />
+                                </DataTemplate>
+                            </controls1:FAComboBox.ItemTemplate>
+                        </controls1:FAComboBox>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Vertical" Margin="0,4,24,0">
+                        <Label Content="{x:Static lang:Resources.Label_Commit}"
+                               IsVisible="{Binding !IsReleaseMode}" />
+                        <controls1:FAComboBox IsVisible="{Binding !IsReleaseMode}"
+                                              ItemsSource="{Binding AvailableCommits}"
+                                              MinWidth="150"
+                                              MinHeight="38"
+                                              SelectedItem="{Binding SelectedCommit}">
+                            <controls1:FAComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type database:GitCommit}">
+                                    <TextBlock
+                                        Margin="8,4,0,4"
+                                        Name="NameTextBlock"
+                                        Text="{Binding ShortSha}" />
+                                </DataTemplate>
+                            </controls1:FAComboBox.ItemTemplate>
+                        </controls1:FAComboBox>
+                    </StackPanel>
+                    
+                    <StackPanel Orientation="Vertical" Margin="0,4,24,0"
+                                IsVisible="{Binding !!SelectedPackage.SharedOutputFolders}">
+                        <Label Content="{x:Static lang:Resources.Label_UseSharedOutputFolder}"/>
+                        <ToggleSwitch VerticalAlignment="Center"
+                                      VerticalContentAlignment="Center"
+                                      IsChecked="{Binding IsOutputSharingEnabled}"/>
+                    </StackPanel>
+                </WrapPanel>
             </Expander>
 
             <Button Classes="success"

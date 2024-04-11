@@ -11,6 +11,7 @@ using NLog;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
+using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
@@ -20,12 +21,14 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(UpscalerCardViewModel), UpscalerCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(ControlNetCardViewModel), ControlNetCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(PromptExpansionCardViewModel), PromptExpansionCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(LayerDiffuseCardViewModel), LayerDiffuseCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(FreeUModule))]
 [JsonDerivedType(typeof(HiresFixModule))]
 [JsonDerivedType(typeof(UpscalerModule))]
 [JsonDerivedType(typeof(ControlNetModule))]
 [JsonDerivedType(typeof(SaveImageModule))]
 [JsonDerivedType(typeof(PromptExpansionModule))]
+[JsonDerivedType(typeof(LayerDiffuseModule))]
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

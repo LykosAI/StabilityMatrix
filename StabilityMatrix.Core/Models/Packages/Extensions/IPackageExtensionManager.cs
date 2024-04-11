@@ -90,6 +90,21 @@ public interface IPackageExtensionManager
     );
 
     /// <summary>
+    /// Like <see cref="GetInstalledExtensionsAsync"/>, but does not check version.
+    /// </summary>
+    Task<IEnumerable<InstalledPackageExtension>> GetInstalledExtensionsLiteAsync(
+        InstalledPackage installedPackage,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Get updated info (version) for an installed extension.
+    /// </summary>
+    Task<InstalledPackageExtension> GetInstalledExtensionInfoAsync(
+        InstalledPackageExtension installedExtension
+    );
+
+    /// <summary>
     /// Install an extension to the provided package.
     /// </summary>
     Task InstallExtensionAsync(

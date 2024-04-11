@@ -49,10 +49,21 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
         Name = packageModificationRunner.CurrentStep?.ProgressTitle;
         Failed = packageModificationRunner.Failed;
 
-        if (string.IsNullOrWhiteSpace(e.Message) || e.Message.Contains("Downloading..."))
+        if (e.ProcessOutput == null && string.IsNullOrWhiteSpace(e.Message))
             return;
 
-        Progress.Console.PostLine(e.Message);
+        if (!string.IsNullOrWhiteSpace(e.Message) && e.Message.Contains("Downloading..."))
+            return;
+
+        if (e.ProcessOutput != null)
+        {
+            Progress.Console.Post(e.ProcessOutput.Value);
+        }
+        else
+        {
+            Progress.Console.PostLine(e.Message);
+        }
+
         EventManager.Instance.OnScrollToBottomRequested();
 
         if (

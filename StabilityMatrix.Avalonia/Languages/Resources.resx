@@ -972,8 +972,29 @@
   <data name="Label_SelectDownloadLocation" xml:space="preserve">
     <value>Select Download Location:</value>
   </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>Workflows</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>Infinite Scrolling</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>Workflow Browser</value>
+  </data>
   <data name="Label_Config" xml:space="preserve">
     <value>Config</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>Open on OpenArt</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>Node Details</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>Workflow Description</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>OpenArt Browser</value>
   </data>
   <data name="Action_PreviewPreprocessor" xml:space="preserve">
     <value>Preview Preprocessor</value>
@@ -1019,5 +1040,35 @@
   </data>
   <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
     <value>The 'Open Web UI' button has moved to the command bar</value>
+  </data>
+  <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
+    <value>Another instance of Stability Matrix is already running. Please close it before starting a new one.</value>
+  </data>
+  <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrix is already running</value>
+  </data>
+  <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
+    <value>{0} deleted successfully</value>
+  </data>
+  <data name="Label_WorkflowDeleted" xml:space="preserve">
+    <value>Workflow Deleted</value>
+  </data>
+  <data name="Label_ErrorRetrievingWorkflows" xml:space="preserve">
+    <value>Error retrieving workflows</value>
+  </data>
+  <data name="TabLabel_InstalledWorkflows" xml:space="preserve">
+    <value>Installed Workflows</value>
+  </data>
+  <data name="Label_WorkflowImported" xml:space="preserve">
+    <value>Workflow Imported</value>
+  </data>
+  <data name="Label_FinishedImportingWorkflow" xml:space="preserve">
+    <value>Finished importing workflow and custom nodes</value>
+  </data>
+  <data name="Label_WorkflowImportComplete" xml:space="preserve">
+    <value>The workflow and custom nodes have been imported.</value>
+  </data>
+  <data name="TeachingTip_InferencePromptHelpButton" xml:space="preserve">
+    <value>Click here to review prompt syntax and how to include Lora / Embeddings.</value>
   </data>
 </root>

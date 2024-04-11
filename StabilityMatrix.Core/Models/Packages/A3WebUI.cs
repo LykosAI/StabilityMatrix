@@ -72,12 +72,12 @@ public class A3WebUI(
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new()
         {
-            [SharedOutputType.Extras] = new[] { "outputs/extras-images" },
+            [SharedOutputType.Extras] = new[] { "output/extras-images" },
             [SharedOutputType.Saved] = new[] { "log/images" },
-            [SharedOutputType.Img2Img] = new[] { "outputs/img2img-images" },
-            [SharedOutputType.Text2Img] = new[] { "outputs/txt2img-images" },
-            [SharedOutputType.Img2ImgGrids] = new[] { "outputs/img2img-grids" },
-            [SharedOutputType.Text2ImgGrids] = new[] { "outputs/txt2img-grids" }
+            [SharedOutputType.Img2Img] = new[] { "output/img2img-images" },
+            [SharedOutputType.Text2Img] = new[] { "output/txt2img-images" },
+            [SharedOutputType.Img2ImgGrids] = new[] { "output/img2img-grids" },
+            [SharedOutputType.Text2ImgGrids] = new[] { "output/txt2img-grids" }
         };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
@@ -184,7 +184,7 @@ public class A3WebUI(
 
     public override string MainBranch => "master";
 
-    public override string OutputFolderName => "outputs";
+    public override string OutputFolderName => "output";
 
     public override IPackageExtensionManager ExtensionManager => new A3WebUiExtensionManager(this);
 
@@ -293,6 +293,11 @@ public class A3WebUI(
 
         VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
     }
+
+    public override string? ExtraLaunchArguments { get; set; } =
+        settingsManager.IsLibraryDirSet
+            ? $"--gradio-allowed-path \"{settingsManager.ImagesDirectory}\""
+            : string.Empty;
 
     private class A3WebUiExtensionManager(A3WebUI package)
         : GitPackageExtensionManager(package.PrerequisiteHelper)

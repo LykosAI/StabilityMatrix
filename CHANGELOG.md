@@ -104,6 +104,22 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Removed
 - Removed the main Launch page, as it is no longer needed with the new Packages page
 
+## v2.9.3
+### Changed
+- Removed Symlink option for InvokeAI to prevent InvokeAI from moving models into its own directories (will be replaced with a Config option in a future update)
+### Fixed
+- Fixed images not appearing in Civitai Model Browser when "Show NSFW" was disabled
+- Fixed [#556](https://github.com/LykosAI/StabilityMatrix/issues/556) - "Could not find entry point for InvokeAI" error
+
+## v2.9.2
+### Changed
+- Model download location selector now searches all subfolders
+### Fixed
+- Fixed Civitai model browser not showing images when "Show NSFW" is disabled
+- Fixed crash when Installed Workflows page is opened with no Workflows folder
+- Fixed progress bars not displaying properly during package installs & updates
+- Fixed ComfyUI extension updates not running install.py / updating requirements.txt
+
 ## v2.9.2
 ### Changed
 - Due to changes with the CivitAI API, you can no longer select a specific page in the CivitAI Model Browser

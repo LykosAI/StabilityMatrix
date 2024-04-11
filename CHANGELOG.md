@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added Reference-Only mode for Inference ControlNet, used for guiding the sampler with an image without a pretrained model. Part of the latent and attention layers will be connected to the reference image, similar to Image to Image or Inpainting.
 - Inference ControlNet module now supports over 42 preprocessors, a new button next to the preprocessors dropdown allows previewing the output of the selected preprocessor on the image.
 - Added resolution selection for Inference ControlNet module, this controls preprocessor resolution too.
+- Added Layer Diffuse sampler addon to Inference, allows generating foreground with transparency with SD1.5 and SDXL.
 - Added support for deep links from the new Stability Matrix Chrome extension
 - Added OpenArt.AI workflow browser for ComfyUI workflows
 - Added more metadata to the image dialog info flyout

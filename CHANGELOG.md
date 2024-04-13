@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed package launch not working when environment variable `SETUPTOOLS_USE_DISTUTILS` is set due to conflict with a default environment variable. User environment variables will now correctly override any default environment variables.
 - Fixed "No refresh token found" error when failing to login with Lykos account in some cases.
+- Fixed [#574](https://github.com/LykosAI/StabilityMatrix/issues/574) - local images not showing on macOS or Linux
 
 ## v2.10.0
 ### Added

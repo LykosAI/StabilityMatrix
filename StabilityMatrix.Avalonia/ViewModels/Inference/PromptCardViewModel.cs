@@ -104,6 +104,10 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
         if (!settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.InferencePromptHelpButtonTip))
         {
             IsHelpButtonTeachingTipOpen = true;
+            settingsManager.Transaction(settings =>
+            {
+                settings.SeenTeachingTips.Add(TeachingTip.InferencePromptHelpButtonTip);
+            });
         }
     }
 

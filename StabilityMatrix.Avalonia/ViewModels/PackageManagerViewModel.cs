@@ -42,6 +42,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
     private readonly INotificationService notificationService;
     private readonly INavigationService<NewPackageManagerViewModel> packageNavigationService;
     private readonly ILogger<PackageManagerViewModel> logger;
+    private readonly RunningPackageService runningPackageService;
 
     public override string Title => Resources.Label_Packages;
     public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Box, IsFilled = true };
@@ -69,7 +70,8 @@ public partial class PackageManagerViewModel : PageViewModelBase
         ServiceManager<ViewModelBase> dialogFactory,
         INotificationService notificationService,
         INavigationService<NewPackageManagerViewModel> packageNavigationService,
-        ILogger<PackageManagerViewModel> logger
+        ILogger<PackageManagerViewModel> logger,
+        RunningPackageService runningPackageService
     )
     {
         this.settingsManager = settingsManager;
@@ -77,6 +79,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
         this.notificationService = notificationService;
         this.packageNavigationService = packageNavigationService;
         this.logger = logger;
+        this.runningPackageService = runningPackageService;
 
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
         EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
@@ -118,15 +121,39 @@ public partial class PackageManagerViewModel : PageViewModelBase
         unknownInstalledPackages.Edit(s => s.Load(packages));
     }
 
+    protected override async Task OnInitialLoadedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Program.Args.LaunchPackageName))
+        {
+            await base.OnInitialLoadedAsync();
+            return;
+        }
+
+        await LoadPackages();
+
+        var package = Packages.FirstOrDefault(x => x.DisplayName == Program.Args.LaunchPackageName);
+        if (package is not null)
+        {
+            await runningPackageService.StartPackage(package);
+            return;
+        }
+
+        package = Packages.FirstOrDefault(x => x.Id.ToString() == Program.Args.LaunchPackageName);
+        if (package is null)
+        {
+            await base.OnInitialLoadedAsync();
+            return;
+        }
+
+        await runningPackageService.StartPackage(package);
+    }
+
     public override async Task OnLoadedAsync()
     {
         if (Design.IsDesignMode || !settingsManager.IsLibraryDirSet)
             return;
 
-        installedPackages.EditDiff(settingsManager.Settings.InstalledPackages, InstalledPackage.Comparer);
-
-        var currentUnknown = await Task.Run(IndexUnknownPackages);
-        unknownInstalledPackages.Edit(s => s.Load(currentUnknown));
+        await LoadPackages();
 
         timer.Start();
     }
@@ -140,6 +167,14 @@ public partial class PackageManagerViewModel : PageViewModelBase
     public void ShowInstallDialog(BasePackage? selectedPackage = null)
     {
         NavigateToSubPage(typeof(PackageInstallBrowserViewModel));
+    }
+
+    private async Task LoadPackages()
+    {
+        installedPackages.EditDiff(settingsManager.Settings.InstalledPackages, InstalledPackage.Comparer);
+
+        var currentUnknown = await Task.Run(IndexUnknownPackages);
+        unknownInstalledPackages.Edit(s => s.Load(currentUnknown));
     }
 
     private async Task CheckPackagesForUpdates()

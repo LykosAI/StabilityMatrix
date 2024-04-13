@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed package launch not working when environment variable `SETUPTOOLS_USE_DISTUTILS` is set due to conflict with a default environment variable. User environment variables will now correctly override any default environment variables.
 - Fixed "No refresh token found" error when failing to login with Lykos account in some cases.
+- Fixed [#584](https://github.com/LykosAI/StabilityMatrix/issues/584) - `--launch-package` argument not working
+- Fixed [#581](https://github.com/LykosAI/StabilityMatrix/issues/581) - Inference teaching tip showing more often than it should
 - Fixed [#574](https://github.com/LykosAI/StabilityMatrix/issues/574) - local images not showing on macOS or Linux
 - Fixed [#578](https://github.com/LykosAI/StabilityMatrix/issues/578) - "python setup.py egg_info did not run successfully" failure when installing Auto1111 or SDWebUI Forge
 
@@ -113,6 +115,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Changed the Outputs Page to use a TreeView for the directory selection instead of a dropdown selector
 ### Removed
 - Removed the main Launch page, as it is no longer needed with the new Packages page
+
+## v2.9.3
+### Changed
+- Removed Symlink option for InvokeAI to prevent InvokeAI from moving models into its own directories (will be replaced with a Config option in a future update)
+### Fixed
+- Fixed images not appearing in Civitai Model Browser when "Show NSFW" was disabled
+- Fixed [#556](https://github.com/LykosAI/StabilityMatrix/issues/556) - "Could not find entry point for InvokeAI" error
 
 ## v2.9.2
 ### Changed

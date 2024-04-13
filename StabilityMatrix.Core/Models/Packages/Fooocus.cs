@@ -193,6 +193,7 @@ public class Fooocus(
     )
     {
         var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
+        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 

@@ -126,9 +126,12 @@ public class KohyaSs(
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
+
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
+        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
+
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         // Extra dep needed before running setup since v23.0.x

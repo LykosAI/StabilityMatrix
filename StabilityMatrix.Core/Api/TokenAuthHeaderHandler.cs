@@ -22,7 +22,8 @@ public class TokenAuthHeaderHandler : DelegatingHandler
             .HandleResult<HttpResponseMessage>(
                 r =>
                     r.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden
-                    && r.RequestMessage?.Headers.Authorization is { Scheme: "Bearer", Parameter: not null }
+                    && r.RequestMessage?.Headers.Authorization is { Scheme: "Bearer", Parameter: { } param }
+                    && !string.IsNullOrWhiteSpace(param)
             )
             .RetryAsync(
                 async (result, _) =>

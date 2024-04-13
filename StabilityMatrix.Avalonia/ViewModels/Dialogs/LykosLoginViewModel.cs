@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -90,7 +91,15 @@ public partial class LykosLoginViewModel : TaskDialogViewModelBase
         }
         catch (ApiException e)
         {
-            LoginError = new AppException("Failed to login", $"{e.StatusCode} - {e.Message}");
+            LoginError = e.StatusCode switch
+            {
+                HttpStatusCode.Unauthorized
+                    => new AppException(
+                        "Incorrect email or password",
+                        "Please try again or reset your password"
+                    ),
+                _ => new AppException("Failed to login", $"{e.StatusCode} - {e.Message}")
+            };
         }
     }
 

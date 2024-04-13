@@ -22,8 +22,8 @@ public class TokenAuthHeaderHandler : DelegatingHandler
             .HandleResult<HttpResponseMessage>(
                 r =>
                     r.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden
-                    && r.RequestMessage?.Headers.Authorization
-                        is { Scheme: "Bearer", Parameter: not null }
+                    && r.RequestMessage?.Headers.Authorization is { Scheme: "Bearer", Parameter: { } param }
+                    && !string.IsNullOrWhiteSpace(param)
             )
             .RetryAsync(
                 async (result, _) =>
@@ -35,9 +35,7 @@ public class TokenAuthHeaderHandler : DelegatingHandler
                         "Refreshing access token for status ({StatusCode})",
                         result.Result.StatusCode
                     );
-                    var (newToken, _) = await tokenProvider
-                        .RefreshTokensAsync()
-                        .ConfigureAwait(false);
+                    var (newToken, _) = await tokenProvider.RefreshTokensAsync().ConfigureAwait(false);
 
                     Logger.Info(
                         "Access token refreshed: {OldToken} -> {NewToken}",
@@ -46,10 +44,6 @@ public class TokenAuthHeaderHandler : DelegatingHandler
                     );
                 }
             );
-
-        // InnerHandler must be left as null when using DI, but must be assigned a value when
-        // using RestService.For<IMyApi>
-        // InnerHandler = new HttpClientHandler();
     }
 
     protected override Task<HttpResponseMessage> SendAsync(
@@ -59,9 +53,17 @@ public class TokenAuthHeaderHandler : DelegatingHandler
     {
         return policy.ExecuteAsync(async () =>
         {
-            var accessToken = await tokenProvider.GetAccessTokenAsync().ConfigureAwait(false);
+            // Only add if Authorization is already set to Bearer and access token is not empty
+            // this allows some routes to not use the access token
+            if (request.Headers.Authorization is { Scheme: "Bearer" })
+            {
+                var accessToken = await tokenProvider.GetAccessTokenAsync().ConfigureAwait(false);
 
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                if (!string.IsNullOrWhiteSpace(accessToken))
+                {
+                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                }
+            }
 
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
         });

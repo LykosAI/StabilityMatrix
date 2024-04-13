@@ -57,6 +57,8 @@ public class OneTrainer(
 
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
+        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
+
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));

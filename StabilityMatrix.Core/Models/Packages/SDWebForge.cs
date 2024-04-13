@@ -142,6 +142,8 @@ public class SDWebForge(
 
         await using var venvRunner = new PyVenvRunner(venvPath);
         venvRunner.WorkingDirectory = installLocation;
+        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
+
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 

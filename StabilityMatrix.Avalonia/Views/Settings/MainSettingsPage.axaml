@@ -160,7 +160,7 @@
             </Grid>
 
             <!--  Environment Options  -->
-            <Grid RowDefinitions="Auto, Auto, Auto">
+            <Grid RowDefinitions="Auto, Auto, Auto, Auto">
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
@@ -192,6 +192,15 @@
                                 IsVisible="{Binding CheckPythonVersionCommand.IsRunning}" />
                             <Button Command="{Binding CheckPythonVersionCommand}" Content="{x:Static lang:Resources.Action_CheckVersion}" />
                         </StackPanel>
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="3"
+                    Margin="8,0"
+                    Header="Pip Cache"
+                    IconSource="ZipFolder">
+                    <ui:SettingsExpander.Footer>
+                        <Button Command="{Binding ClearPipCacheCommand}" Content="{x:Static lang:Resources.Action_Delete}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </Grid>

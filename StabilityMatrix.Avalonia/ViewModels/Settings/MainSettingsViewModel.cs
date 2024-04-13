@@ -345,6 +345,33 @@ public partial class MainSettingsViewModel : PageViewModelBase
     }
 
     [RelayCommand]
+    private void ClearPipCache()
+    {
+        var pipCacheLocation = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "pip",
+            "cache"
+        );
+        if (Directory.Exists(pipCacheLocation))
+        {
+            Directory.Delete(pipCacheLocation, true);
+            notificationService.Show(
+                "Pip cache cleared",
+                "The pip cache has been cleared.",
+                NotificationType.Success
+            );
+        }
+        else
+        {
+            notificationService.Show(
+                "Pip cache not found",
+                "The pip cache was not found.",
+                NotificationType.Warning
+            );
+        }
+    }
+
+    [RelayCommand]
     private void NavigateToSubPage(Type viewModelType)
     {
         Dispatcher.UIThread.Post(

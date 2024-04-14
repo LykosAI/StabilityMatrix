@@ -10,4 +10,6 @@ public class DownloadPackageVersionOptions
 
     public string GetReadableVersionString() =>
         !string.IsNullOrWhiteSpace(VersionTag) ? VersionTag : $"{BranchName}@{CommitHash?[..7]}";
+
+    public string ReadableVersionString => GetReadableVersionString();
 }

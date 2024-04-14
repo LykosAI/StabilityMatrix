@@ -95,6 +95,9 @@ public partial class PackageCardViewModel(
     [ObservableProperty]
     private bool showWebUiButton;
 
+    [ObservableProperty]
+    private DownloadPackageVersionOptions? updateVersion;
+
     private void RunningPackagesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (runningPackageService.RunningPackages.Select(x => x.Value) is not { } runningPackages)
@@ -196,6 +199,10 @@ public partial class PackageCardViewModel(
             }
 
             IsUpdateAvailable = await HasUpdate();
+            if (IsUpdateAvailable)
+            {
+                UpdateVersion = await basePackage.GetUpdate(currentPackage);
+            }
 
             if (
                 Package != null
@@ -672,6 +679,7 @@ public partial class PackageCardViewModel(
         try
         {
             var hasUpdate = await basePackage.CheckForUpdates(Package);
+            UpdateVersion = await basePackage.GetUpdate(Package);
 
             await using (settingsManager.BeginTransaction())
             {

@@ -15,8 +15,7 @@ public class UnknownPackage : BasePackage
 
     public override string GithubUrl => "";
     public override string LicenseType => "AGPL-3.0";
-    public override string LicenseUrl =>
-        "https://github.com/LykosAI/StabilityMatrix/blob/main/LICENSE";
+    public override string LicenseUrl => "https://github.com/LykosAI/StabilityMatrix/blob/main/LICENSE";
     public override string Blurb => "A dank interface for diffusion";
     public override string LaunchCommand => "test";
 
@@ -140,19 +139,19 @@ public class UnknownPackage : BasePackage
     public override List<LaunchOptionDefinition> LaunchOptions => new();
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
-    public override Dictionary<
-        SharedOutputType,
-        IReadOnlyList<string>
-    >? SharedOutputFolders { get; }
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
 
-    public override Task<DownloadPackageVersionOptions> GetLatestVersion(
-        bool includePrerelease = false
-    )
+    public override Task<DownloadPackageVersionOptions> GetLatestVersion(bool includePrerelease = false)
     {
         throw new NotImplementedException();
     }
 
     public override string MainBranch { get; }
+
+    public override Task<DownloadPackageVersionOptions?> GetUpdate(InstalledPackage installedPackage)
+    {
+        return Task.FromResult(new DownloadPackageVersionOptions { IsLatest = true, VersionTag = "1.8.0" });
+    }
 
     public override Task<PackageVersionOptions> GetAllVersionOptions() =>
         Task.FromResult(new PackageVersionOptions());

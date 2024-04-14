@@ -66,7 +66,8 @@ public class A3WebUI(
             [SharedFolderType.T2IAdapter] = new[] { "models/controlnet/T2IAdapter" },
             [SharedFolderType.IpAdapter] = new[] { "models/controlnet/IpAdapter" },
             [SharedFolderType.InvokeIpAdapters15] = new[] { "models/controlnet/DiffusersIpAdapters" },
-            [SharedFolderType.InvokeIpAdaptersXl] = new[] { "models/controlnet/DiffusersIpAdaptersXL" }
+            [SharedFolderType.InvokeIpAdaptersXl] = new[] { "models/controlnet/DiffusersIpAdaptersXL" },
+            [SharedFolderType.SVD] = new[] { "models/svd" }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -77,7 +78,8 @@ public class A3WebUI(
             [SharedOutputType.Img2Img] = new[] { "output/img2img-images" },
             [SharedOutputType.Text2Img] = new[] { "output/txt2img-images" },
             [SharedOutputType.Img2ImgGrids] = new[] { "output/img2img-grids" },
-            [SharedOutputType.Text2ImgGrids] = new[] { "output/txt2img-grids" }
+            [SharedOutputType.Text2ImgGrids] = new[] { "output/txt2img-grids" },
+            [SharedOutputType.SVD] = new[] { "output/svd" }
         };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
@@ -204,6 +206,8 @@ public class A3WebUI(
 
         await using var venvRunner = new PyVenvRunner(venvPath);
         venvRunner.WorkingDirectory = installLocation;
+        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
+
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 

@@ -11,6 +11,7 @@
     xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
     xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     x:DataType="vmInference:ImageFolderCardViewModel">
 
     <Design.PreviewWith>
@@ -20,6 +21,8 @@
             </Grid>
         </Panel>
     </Design.PreviewWith>
+    
+    <converters:FileUriConverter x:Key="FileUriConverter" />
 
     <ControlTheme x:Key="{x:Type controls:ImageFolderCard}" TargetType="controls:ImageFolderCard">
         <Setter Property="Background" Value="Transparent" />
@@ -200,7 +203,7 @@
                                                     <vendorLabs:BetterAsyncImage
                                                         Width="{Binding $parent[ItemsRepeater].((vmInference:ImageFolderCardViewModel)DataContext).ImageSize.Width}"
                                                         Height="{Binding $parent[ItemsRepeater].((vmInference:ImageFolderCardViewModel)DataContext).ImageSize.Height}"
-                                                        Source="{Binding AbsolutePath}"
+                                                        Source="{Binding AbsolutePath, Converter={StaticResource FileUriConverter}}"
                                                         Stretch="UniformToFill" />
 
                                                     <Border

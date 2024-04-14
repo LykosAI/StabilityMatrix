@@ -21,12 +21,15 @@ public class VoltaML(
     public override string DisplayName { get; set; } = "VoltaML";
     public override string Author => "VoltaML";
     public override string LicenseType => "GPL-3.0";
-    public override string LicenseUrl => "https://github.com/VoltaML/voltaML-fast-stable-diffusion/blob/main/License";
+    public override string LicenseUrl =>
+        "https://github.com/VoltaML/voltaML-fast-stable-diffusion/blob/main/License";
     public override string Blurb => "Fast Stable Diffusion with support for AITemplate";
     public override string LaunchCommand => "main.py";
 
     public override Uri PreviewImageUri =>
-        new("https://github.com/LykosAI/StabilityMatrix/assets/13956642/d9a908ed-5665-41a5-a380-98458f4679a8");
+        new(
+            "https://github.com/LykosAI/StabilityMatrix/assets/13956642/d9a908ed-5665-41a5-a380-98458f4679a8"
+        );
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
 
@@ -155,6 +158,7 @@ public class VoltaML(
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
+        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
 
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 

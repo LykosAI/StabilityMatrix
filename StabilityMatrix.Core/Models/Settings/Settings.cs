@@ -118,10 +118,22 @@ public class Settings
     public Dictionary<string, string>? UserEnvironmentVariables { get; set; }
 
     [JsonIgnore]
-    public IReadOnlyDictionary<string, string> EnvironmentVariables =>
-        DefaultEnvironmentVariables
-            .Concat(UserEnvironmentVariables ?? [])
-            .ToDictionary(x => x.Key, x => x.Value);
+    public IReadOnlyDictionary<string, string> EnvironmentVariables
+    {
+        get
+        {
+            if (UserEnvironmentVariables is null || UserEnvironmentVariables.Count == 0)
+            {
+                return DefaultEnvironmentVariables;
+            }
+
+            return DefaultEnvironmentVariables
+                .Concat(UserEnvironmentVariables)
+                .GroupBy(pair => pair.Key)
+                // User variables override default variables with the same key
+                .ToDictionary(grouping => grouping.Key, grouping => grouping.Last().Value);
+        }
+    }
 
     public HashSet<string>? InstalledModelHashes { get; set; } = new();
 

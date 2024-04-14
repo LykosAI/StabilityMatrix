@@ -17,6 +17,7 @@ public class FileUriConverter : IValueConverter
 
         return value switch
         {
+            string str when str.StartsWith("avares://") => new Uri(str),
             string str => new Uri("file://" + str),
             IFormattable formattable => new Uri("file://" + formattable.ToString(null, culture)),
             _ => null

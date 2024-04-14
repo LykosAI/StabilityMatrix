@@ -76,6 +76,8 @@ public class StableDiffusionDirectMl(
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
+        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
+
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         switch (torchVersion)

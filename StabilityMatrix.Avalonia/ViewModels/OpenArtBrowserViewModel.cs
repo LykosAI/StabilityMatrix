@@ -12,7 +12,6 @@ using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -36,8 +35,7 @@ public partial class OpenArtBrowserViewModel(
     IOpenArtApi openArtApi,
     INotificationService notificationService,
     ISettingsManager settingsManager,
-    IPackageFactory packageFactory,
-    ServiceManager<ViewModelBase> vmFactory
+    IPackageFactory packageFactory
 ) : TabViewModelBase, IInfinitelyScroll
 {
     private const int PageSize = 20;
@@ -90,6 +88,7 @@ public partial class OpenArtBrowserViewModel(
     {
         searchResultsCache.Connect().DeferUntilLoaded().Bind(SearchResults).Subscribe();
         SelectedSortMode = AllSortModes.First();
+        DoSearch().SafeFireAndForget();
     }
 
     [RelayCommand]

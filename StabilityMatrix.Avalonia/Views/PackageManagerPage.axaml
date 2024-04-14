@@ -255,9 +255,14 @@
                                                 Margin="4,4,0,0"
                                                 Padding="4"
                                                 IsEnabled="{Binding !IsRunning}"
-                                                ToolTip.Tip="{x:Static lang:Resources.Label_UpdateAvailable}"
                                                 markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
                                                 Command="{Binding Update}">
+                                            <ToolTip.Tip>
+                                                <TextBlock>
+                                                    <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}"/>
+                                                    <Run Text="(" /><Run Text="{Binding UpdateVersion.ReadableVersionString, FallbackValue=Unknown}"/><Run Text=")"/>
+                                                </TextBlock>
+                                            </ToolTip.Tip>
                                             <Button.IsVisible>
                                                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                                                     <Binding Path="!IsUnknownPackage" />

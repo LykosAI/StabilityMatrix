@@ -31,6 +31,7 @@
             x:Key="TextDropShadowEffect" />
 
         <converters:EnumStringConverter x:Key="EnumStringConverter" />
+        <converters:FileUriConverter x:Key="FileUriConverter"/>
 
         <!--  Template for a single badge  -->
         <DataTemplate DataType="{x:Type system:String}" x:Key="BadgeTemplate">
@@ -143,7 +144,7 @@
                                     <vendorLabs:BetterAsyncImage
                                         Margin="0,0,0,4"
                                         CornerRadius="4"
-                                        Source="{Binding PreviewImagePath}"
+                                        Source="{Binding PreviewImagePath, Converter={StaticResource FileUriConverter}}"
                                         Stretch="Uniform"
                                         IsVisible="{Binding IsConnectedModel}" />
                                     <TextBlock
@@ -182,7 +183,7 @@
                                          Grid.ColumnSpan="2"
                                          Margin="0, 4,0,4"
                                          CornerRadius="8"
-                                         Source="{Binding PreviewImagePath}"
+                                         Source="{Binding PreviewImagePath, Converter={StaticResource FileUriConverter}}"
                                          ClipToBounds="True"
                                          Stretch="UniformToFill"
                                          Height="300"

@@ -14,6 +14,7 @@
     xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
     xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
     Focusable="True"
+    MaxWidth="400"
     d:DataContext="{x:Static mocks:DesignData.LykosLoginViewModel}"
     d:DesignHeight="350"
     d:DesignWidth="400"

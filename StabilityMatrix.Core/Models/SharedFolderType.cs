@@ -39,6 +39,7 @@ public enum SharedFolderType
     InvokeIpAdapters15 = 1 << 24,
     InvokeIpAdaptersXl = 1 << 25,
     InvokeClipVision = 1 << 26,
+    SVD = 1 << 27,
 
     PromptExpansion = 1 << 30
 }

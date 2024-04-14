@@ -95,6 +95,9 @@ public partial class PackageCardViewModel(
     [ObservableProperty]
     private bool showWebUiButton;
 
+    [ObservableProperty]
+    private DownloadPackageVersionOptions? updateVersion;
+
     private void RunningPackagesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (runningPackageService.RunningPackages.Select(x => x.Value) is not { } runningPackages)
@@ -196,6 +199,10 @@ public partial class PackageCardViewModel(
             }
 
             IsUpdateAvailable = await HasUpdate();
+            if (IsUpdateAvailable)
+            {
+                UpdateVersion = await basePackage.GetUpdate(currentPackage);
+            }
 
             if (
                 Package != null
@@ -425,21 +432,6 @@ public partial class PackageCardViewModel(
                 versionOptions.BranchName = Package.Version.InstalledBranch;
                 versionOptions.CommitHash = latest.Sha;
             }
-
-            var confirmationDialog = new BetterContentDialog
-            {
-                Title = Resources.Label_AreYouSure,
-                Content =
-                    $"{Package.DisplayName} will be updated to the latest version ({versionOptions.GetReadableVersionString()})",
-                PrimaryButtonText = Resources.Action_Continue,
-                SecondaryButtonText = Resources.Action_Cancel,
-                DefaultButton = ContentDialogButton.Primary,
-                IsSecondaryButtonEnabled = true,
-            };
-
-            var dialogResult = await confirmationDialog.ShowAsync();
-            if (dialogResult != ContentDialogResult.Primary)
-                return;
 
             var updatePackageStep = new UpdatePackageStep(
                 settingsManager,
@@ -672,6 +664,7 @@ public partial class PackageCardViewModel(
         try
         {
             var hasUpdate = await basePackage.CheckForUpdates(Package);
+            UpdateVersion = await basePackage.GetUpdate(Package);
 
             await using (settingsManager.BeginTransaction())
             {

@@ -345,6 +345,54 @@ public abstract class BaseGitPackage : BasePackage
         }
     }
 
+    public override async Task<DownloadPackageVersionOptions?> GetUpdate(InstalledPackage installedPackage)
+    {
+        var currentVersion = installedPackage.Version;
+        if (currentVersion is null or { InstalledReleaseVersion: null, InstalledBranch: null })
+        {
+            Logger.Warn(
+                "Could not check updates for package {Name}, version is invalid: {@currentVersion}",
+                Name,
+                currentVersion
+            );
+            return null;
+        }
+
+        var versionOptions = new DownloadPackageVersionOptions { IsLatest = true };
+
+        try
+        {
+            if (currentVersion.IsReleaseMode)
+            {
+                var latestVersion = await GetLatestVersion(currentVersion.IsPrerelease).ConfigureAwait(false);
+                versionOptions.IsPrerelease = latestVersion.IsPrerelease;
+                versionOptions.VersionTag = latestVersion.VersionTag;
+                return versionOptions;
+            }
+
+            var allCommits = (
+                await GetAllCommits(currentVersion.InstalledBranch!).ConfigureAwait(false)
+            )?.ToList();
+
+            if (allCommits == null || !allCommits.Any())
+            {
+                Logger.Warn("No commits found for {Package}", installedPackage.PackageName);
+                return null;
+            }
+            var latestCommitHash = allCommits.First().Sha;
+
+            versionOptions.CommitHash = latestCommitHash;
+            versionOptions.BranchName = currentVersion.InstalledBranch;
+
+            return versionOptions;
+        }
+        catch (ApiException e)
+        {
+            Logger.Warn(e, "Failed to check for package updates");
+            return null;
+        }
+    }
+
     public override async Task<InstalledPackageVersion> Update(
         InstalledPackage installedPackage,
         TorchVersion torchVersion,

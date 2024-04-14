@@ -92,7 +92,8 @@ public partial class CheckpointFolder : ViewModelBase
 
     public string TitleWithFilesCount =>
         CheckpointFiles.Any() || SubFolders.Any(f => f.CheckpointFiles.Any())
-            ? $"{FolderType.GetDescription() ?? FolderType.GetStringValue()} ({CheckpointFiles.Count + SubFolders.Sum(folder => folder.CheckpointFiles.Count)})"
+            ? $"{FolderType.GetDescription() ?? (string.IsNullOrWhiteSpace(FolderType.GetStringValue()) ? Path.GetFileName(DirectoryPath) : FolderType.GetStringValue())} "
+                + $"({CheckpointFiles.Count + SubFolders.Sum(folder => folder.CheckpointFiles.Count)})"
             : FolderType.GetDescription() ?? FolderType.GetStringValue();
 
     public ProgressViewModel Progress { get; } = new();
@@ -446,6 +447,22 @@ public partial class CheckpointFolder : ViewModelBase
         {
             Progress.Value = 0;
             var copyPaths = files.ToDictionary(k => k, v => Path.Combine(DirectoryPath, Path.GetFileName(v)));
+
+            // remove files that are already in the folder
+            foreach (var (source, destination) in copyPaths)
+            {
+                if (source == destination)
+                {
+                    copyPaths.Remove(source);
+                }
+            }
+
+            if (copyPaths.Count == 0)
+            {
+                Progress.Text = "Import complete";
+                Progress.Value = 100;
+                return;
+            }
 
             var progress = new Progress<ProgressReport>(report =>
             {

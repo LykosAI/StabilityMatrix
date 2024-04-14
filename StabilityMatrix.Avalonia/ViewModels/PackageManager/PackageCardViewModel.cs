@@ -433,21 +433,6 @@ public partial class PackageCardViewModel(
                 versionOptions.CommitHash = latest.Sha;
             }
 
-            var confirmationDialog = new BetterContentDialog
-            {
-                Title = Resources.Label_AreYouSure,
-                Content =
-                    $"{Package.DisplayName} will be updated to the latest version ({versionOptions.GetReadableVersionString()})",
-                PrimaryButtonText = Resources.Action_Continue,
-                SecondaryButtonText = Resources.Action_Cancel,
-                DefaultButton = ContentDialogButton.Primary,
-                IsSecondaryButtonEnabled = true,
-            };
-
-            var dialogResult = await confirmationDialog.ShowAsync();
-            if (dialogResult != ContentDialogResult.Primary)
-                return;
-
             var updatePackageStep = new UpdatePackageStep(
                 settingsManager,
                 Package,

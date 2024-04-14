@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Changed
 - Improved error message when logging in with a Lykos account fails due to incorrect email or password
 - Model Browser & Workflow Browser now auto-load when first navigating to those pages
+- Removed update confirmation dialog, instead showing the new version in the update button tooltip
 ### Fixed
 - Fixed package launch not working when environment variable `SETUPTOOLS_USE_DISTUTILS` is set due to conflict with a default environment variable. User environment variables will now correctly override any default environment variables.
 - Fixed "No refresh token found" error when failing to login with Lykos account in some cases

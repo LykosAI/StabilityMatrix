@@ -260,7 +260,7 @@
                                             <ToolTip.Tip>
                                                 <TextBlock>
                                                     <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}"/>
-                                                    <Run Text="(" /><Run Text="{Binding UpdateVersion.ReadableVersionString, FallbackValue=none}"/><Run Text=")"/>
+                                                    <Run Text="(" /><Run Text="{Binding UpdateVersion.ReadableVersionString, FallbackValue=Unknown}"/><Run Text=")"/>
                                                 </TextBlock>
                                             </ToolTip.Tip>
                                             <Button.IsVisible>

@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.10.1
 ### Added
-- Added SVD Shared Model Folder for Forge (fixes [#580](https://github.com/LykosAI/StabilityMatrix/issues/580))
+- Added SVD Shared Model & Output Folders for Forge (fixes [#580](https://github.com/LykosAI/StabilityMatrix/issues/580))
 ### Changed
-- Improved error message when logging in with a Lykos account fails due to incorrect email or password.
+- Improved error message when logging in with a Lykos account fails due to incorrect email or password
+- Model Browser & Workflow Browser now auto-load when first navigating to those pages
 ### Fixed
 - Fixed package launch not working when environment variable `SETUPTOOLS_USE_DISTUTILS` is set due to conflict with a default environment variable. User environment variables will now correctly override any default environment variables.
-- Fixed "No refresh token found" error when failing to login with Lykos account in some cases.
+- Fixed "No refresh token found" error when failing to login with Lykos account in some cases
 - Fixed blank entries appearing in the Categories dropdown on the Checkpoints page
 - Fixed crash when loading invalid connected model info files
 - Fixed [#585](https://github.com/LykosAI/StabilityMatrix/issues/585) - Crash when drag & drop source and destination are the same

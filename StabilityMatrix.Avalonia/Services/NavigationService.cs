@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Avalonia.Controls;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Navigation;
@@ -190,4 +191,6 @@ public class NavigationService<T> : INavigationService<T>
     }
 
     public bool CanGoBack => _frame?.CanGoBack ?? false;
+
+    public object? CurrentPageDataContext => (_frame?.Content as Control)?.DataContext;
 }

@@ -177,6 +177,8 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             model => model.ShowNsfw,
             settings => settings.ModelBrowserNsfwEnabled
         );
+
+        SearchModelsCommand.ExecuteAsync(false);
     }
 
     /// <summary>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,7 +11,6 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
-using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
@@ -333,8 +333,15 @@ public partial class CheckpointFile : ViewModelBase
             if (File.Exists(jsonPath))
             {
                 var json = File.ReadAllText(jsonPath);
-                var connectedModelInfo = ConnectedModelInfo.FromJson(json);
-                checkpointFile.ConnectedModel = connectedModelInfo;
+                try
+                {
+                    var connectedModelInfo = ConnectedModelInfo.FromJson(json);
+                    checkpointFile.ConnectedModel = connectedModelInfo;
+                }
+                catch (JsonException)
+                {
+                    checkpointFile.ConnectedModel = null;
+                }
             }
 
             checkpointFile.PreviewImagePath = SupportedImageExtensions

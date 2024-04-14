@@ -13,6 +13,7 @@
     xmlns:selectableImageCard="clr-namespace:StabilityMatrix.Avalonia.Controls.SelectableImageCard"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     d:DataContext="{x:Static mocks:DesignData.OutputsPageViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="800"
@@ -20,6 +21,11 @@
     x:DataType="vm:OutputsPageViewModel"
     Focusable="True"
     mc:Ignorable="d">
+    
+    <controls:UserControlBase.Resources>
+        <converters:FileUriConverter x:Key="FileUriConverter" />
+    </controls:UserControlBase.Resources>
+    
     <Grid Margin="16" RowDefinitions="Auto,*"
           ColumnDefinitions="Auto, *">
 
@@ -177,7 +183,7 @@
                             ImageHeight="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).ImageSize.Height}"
                             ImageWidth="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).ImageSize.Width}"
                             IsSelected="{Binding IsSelected}"
-                            Source="{Binding ImageFile.AbsolutePath}">
+                            Source="{Binding ImageFile.AbsolutePath, Converter={StaticResource FileUriConverter}}">
                             <selectableImageCard:SelectableImageButton.ContextFlyout>
                                 <ui:FAMenuFlyout>
                                     <ui:MenuFlyoutItem

@@ -72,7 +72,7 @@
                                     <ui:TeachingTip 
                                         Target="{Binding #PART_HelpButton}"
                                         Title="{x:Static lang:Resources.TeachingTip_InferencePromptHelpButton}"
-                                        IsOpen="{Binding IsHelpButtonTeachingTipOpen}"/>
+                                        IsOpen="{Binding IsHelpButtonTeachingTipOpen, Mode=TwoWay}"/>
                                 </Panel>
                                 
                                 <Button

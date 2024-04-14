@@ -39,4 +39,5 @@ public interface INavigationService<[SuppressMessage("ReSharper", "UnusedTypePar
     bool GoBack();
 
     bool CanGoBack { get; }
+    object? CurrentPageDataContext { get; }
 }

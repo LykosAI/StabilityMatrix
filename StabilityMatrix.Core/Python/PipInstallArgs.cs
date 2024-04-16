@@ -30,7 +30,7 @@ public record PipInstallArgs : ProcessArgsBuilder
     {
         var requirementsEntries = requirements
             .SplitLines(StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .AsEnumerable();
+            .Where(s => !s.StartsWith('#'));
 
         if (excludePattern is not null)
         {

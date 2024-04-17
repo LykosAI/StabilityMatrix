@@ -1021,4 +1021,58 @@
   <data name="Label_ModelBrowser" xml:space="preserve">
     <value>Model Tarayıcı</value>
   </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>İş akışları</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>Sonsuz Kaydırma</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>İş Akışı Tarayıcısı</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>OpenArt&apos;ta aç</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>Düğüm Ayrıntıları</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>İş Akışı Açıklaması</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>OpenArt Tarayıcı</value>
+  </data>
+  <data name="Action_PreviewPreprocessor" xml:space="preserve">
+    <value>Ön İşlemciyi Önizle</value>
+  </data>
+  <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
+    <value>&apos;Web Kullanıcı Arayüzünü Aç&apos; düğmesi komut çubuğuna taşındı</value>
+  </data>
+  <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrixin başka bir örneği zaten çalışıyor. Yenisini başlatmadan önce lütfen kapatın.</value>
+  </data>
+  <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrix zaten çalışıyor</value>
+  </data>
+  <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
+    <value>{0} başarıyla silindi</value>
+  </data>
+  <data name="Label_WorkflowDeleted" xml:space="preserve">
+    <value>İş Akışı Silindi</value>
+  </data>
+  <data name="Label_ErrorRetrievingWorkflows" xml:space="preserve">
+    <value>İş akışları alınırken hata oluştu</value>
+  </data>
+  <data name="TabLabel_InstalledWorkflows" xml:space="preserve">
+    <value>Yüklü İş Akışları</value>
+  </data>
+  <data name="Label_WorkflowImported" xml:space="preserve">
+    <value>İş Akışı İçeri Aktarıldı</value>
+  </data>
+  <data name="Label_FinishedImportingWorkflow" xml:space="preserve">
+    <value>İş akışının ve özel düğümlerin içe aktarılması tamamlandı</value>
+  </data>
+  <data name="Label_WorkflowImportComplete" xml:space="preserve">
+    <value>İş akışı ve özel düğümler içe aktarıldı.</value>
+  </data>
 </root>

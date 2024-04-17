@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed more crashes when loading invalid connected model info files
 - Fixed pip installs not parsing comments properly
+- Fixed crash when sending input to a process that isn't running
+- Fixed [#576](https://github.com/LykosAI/StabilityMatrix/issues/576) - drag & drop crashes on macOS & Linux
+- Fixed [#594](https://github.com/LykosAI/StabilityMatrix/issues/594) - missing thumbnails in Inference model selector
+- Downgraded Avalonia back to 11.0.9 to fix [#589](https://github.com/LykosAI/StabilityMatrix/issues/589) and possibly other rendering issues
 
 ## v2.10.1
 ### Added

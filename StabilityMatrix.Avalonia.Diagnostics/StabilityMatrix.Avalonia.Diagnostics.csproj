@@ -19,8 +19,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Avalonia" Version="11.0.9" />
-      <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.9" />
+      <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+      <PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
       <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />

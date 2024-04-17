@@ -10,7 +10,7 @@
 		<EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.0.10" />
+    <PackageReference Include="Avalonia" Version="11.0.9" />
     <PackageReference Include="SkiaSharp" Version="2.88.7" />
 	<PackageReference Include="DotNet.Bundle" Version="0.9.13" />
   </ItemGroup>

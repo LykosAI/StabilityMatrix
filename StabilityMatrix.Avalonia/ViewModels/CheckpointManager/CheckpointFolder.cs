@@ -15,6 +15,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -279,7 +280,7 @@ public partial class CheckpointFolder : ViewModelBase
                 var paths = files.Select(f => f.Path.LocalPath).ToArray();
                 await ImportFilesAsync(paths, settingsManager.Settings.IsImportAsConnected);
             }
-            else if (e.Data.Get("Context") is CheckpointFile file)
+            else if (e.Data.GetContext<CheckpointFile>() is { } file)
             {
                 await MoveBetweenFolders(file);
             }

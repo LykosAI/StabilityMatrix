@@ -12,6 +12,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -22,10 +23,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(ModelCard))]
 [ManagedService]
 [Transient]
-public partial class ModelCardViewModel(IInferenceClientManager clientManager)
-    : LoadableViewModelBase,
-        IParametersLoadableState,
-        IComfyStep
+public partial class ModelCardViewModel(
+    IInferenceClientManager clientManager,
+    ServiceManager<ViewModelBase> vmFactory
+) : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
     [ObservableProperty]
     private HybridModelFile? selectedModel;
@@ -52,6 +53,12 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
     [ObservableProperty]
     [Range(1, 24)]
     private int clipSkip = 1;
+
+    [ObservableProperty]
+    private bool isExtraNetworksEnabled;
+
+    public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
+        new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
 

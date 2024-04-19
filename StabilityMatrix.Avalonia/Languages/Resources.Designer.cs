@@ -1338,6 +1338,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Extra Networks (Lora / LyCORIS).
+        /// </summary>
+        public static string Label_ExtraNetworks {
+            get {
+                return ResourceManager.GetString("Label_ExtraNetworks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You may encounter errors when using a FAT32 or exFAT drive. Select a different drive for a smoother experience..
         /// </summary>
         public static string Label_FatWarning {

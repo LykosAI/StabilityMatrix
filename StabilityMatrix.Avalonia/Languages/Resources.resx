@@ -1071,4 +1071,7 @@
   <data name="TeachingTip_InferencePromptHelpButton" xml:space="preserve">
     <value>Click here to review prompt syntax and how to include Lora / Embeddings.</value>
   </data>
+  <data name="Label_ExtraNetworks" xml:space="preserve">
+    <value>Extra Networks (Lora / LyCORIS)</value>
+  </data>
 </root>

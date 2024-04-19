@@ -978,4 +978,7 @@
   <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
     <value>Nous recommandons un GPU avec prise en charge CUDA pour une meilleure expérience. Vous pouvez continuer sans en avoir un, mais certains packages peuvent ne pas fonctionner et l&apos;inférence peut être plus lente.</value>
   </data>
+  <data name="Label_ClipStrength" xml:space="preserve">
+    <value>CLIP Force</value>
+  </data>
 </root>

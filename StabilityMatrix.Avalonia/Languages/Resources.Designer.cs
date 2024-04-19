@@ -951,6 +951,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CLIP Strength.
+        /// </summary>
+        public static string Label_ClipStrength {
+            get {
+                return ResourceManager.GetString("Label_ClipStrength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close dialog when finished.
         /// </summary>
         public static string Label_CloseDialogWhenFinished {

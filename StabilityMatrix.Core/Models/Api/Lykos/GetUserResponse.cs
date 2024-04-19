@@ -7,9 +7,8 @@ public record GetUserResponse
     public required HashSet<LykosRole> UserRoles { get; init; }
     public string? PatreonId { get; init; }
     public bool IsEmailVerified { get; init; }
+    public bool CanHasDevBuild { get; init; }
+    public bool CanHasPreviewBuild { get; init; }
 
-    public bool IsActiveSupporter =>
-        UserRoles.Contains(LykosRole.PatreonSupporter)
-        || UserRoles.Contains(LykosRole.Insider)
-        || (UserRoles.Contains(LykosRole.Developer) && PatreonId is not null);
+    public bool IsActiveSupporter => CanHasDevBuild || CanHasPreviewBuild;
 }

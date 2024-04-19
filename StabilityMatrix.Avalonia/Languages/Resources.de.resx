@@ -934,7 +934,7 @@
   <data name="Label_VideoQuality" xml:space="preserve">
     <value>Qualität</value>
   </data>
-  <data name="Label_ClipStrength" xml:space="preserve">
+  <data name="Label_CLIPStrength" xml:space="preserve">
     <value>CLIP Stärke</value>
   </data>
 </root>

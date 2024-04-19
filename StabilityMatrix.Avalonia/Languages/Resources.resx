@@ -1074,7 +1074,7 @@
   <data name="Label_ExtraNetworks" xml:space="preserve">
     <value>Extra Networks (Lora / LyCORIS)</value>
   </data>
-  <data name="Label_ClipStrength" xml:space="preserve">
+  <data name="Label_CLIPStrength" xml:space="preserve">
     <value>CLIP Strength</value>
   </data>
 </root>

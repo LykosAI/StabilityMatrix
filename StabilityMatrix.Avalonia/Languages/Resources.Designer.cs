@@ -953,9 +953,9 @@ namespace StabilityMatrix.Avalonia.Languages {
         /// <summary>
         ///   Looks up a localized string similar to CLIP Strength.
         /// </summary>
-        public static string Label_ClipStrength {
+        public static string Label_CLIPStrength {
             get {
-                return ResourceManager.GetString("Label_ClipStrength", resourceCulture);
+                return ResourceManager.GetString("Label_CLIPStrength", resourceCulture);
             }
         }
         

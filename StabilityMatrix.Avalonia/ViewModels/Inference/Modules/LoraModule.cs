@@ -14,7 +14,15 @@ public class LoraModule : ModuleBase
         : base(vmFactory)
     {
         Title = "Lora";
-        AddCards(vmFactory.Get<ExtraNetworkCardViewModel>());
+        AddCards(
+            vmFactory.Get<ExtraNetworkCardViewModel>(card =>
+            {
+                card.IsModelWeightEnabled = true;
+                // Disable clip weight by default, but allow user to enable it
+                card.IsClipWeightToggleEnabled = true;
+                card.IsClipWeightEnabled = false;
+            })
+        );
     }
 
     protected override void OnApplyStep(ModuleApplyStepEventArgs e)

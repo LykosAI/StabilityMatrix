@@ -1,15 +1,17 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
         xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
         xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
         xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-        xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
         xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        d:DataContext="{x:Static mocks:DesignData.InferenceTextToImageViewModel}"
         x:DataType="vmInference:ExtraNetworkCardViewModel">
     <Design.PreviewWith>
         <StackPanel Width="400" Height="400">
-            <controls:ExtraNetworkCard />
+            <controls:ExtraNetworkCard DataContext="{x:Static mocks:DesignData.ExtraNetworkCardViewModel}" />
         </StackPanel>
     </Design.PreviewWith>
 
@@ -18,10 +20,11 @@
             <ControlTemplate>
                 <controls:Card Padding="12">
                     <sg:SpacedGrid
+                        Margin="0,0,0,-8"
                         ColumnDefinitions="Auto,*"
                         ColumnSpacing="8"
-                        RowDefinitions="*,*,*,*"
-                        RowSpacing="0">
+                        RowDefinitions="*,*,*,*,*"
+                        RowSpacing="8">
                         <!--  Model  -->
                         <TextBlock
                             Grid.Column="0"
@@ -37,6 +40,59 @@
                             ItemsSource="{Binding ClientManager.LoraModels}"
                             SelectedItem="{Binding SelectedModel}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                        
+                        <!-- Model Weight -->
+                        <StackPanel
+                            IsVisible="{Binding IsModelWeightEnabled}"
+                            Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Text="{x:Static lang:Resources.Label_Strength}"/>
+                                <ui:NumberBox
+                                    Grid.Column="1"
+                                    Margin="4,0,0,0"
+                                    ValidationMode="InvalidInputOverwritten"
+                                    SmallChange="0.01"
+                                    SimpleNumberFormat="F2"
+                                    Value="{Binding ModelWeight}"
+                                    HorizontalAlignment="Stretch"
+                                    SpinButtonPlacementMode="Compact"/>
+                            </Grid>
+                            <Slider
+                                Minimum="0"
+                                Maximum="1"
+                                Value="{Binding ModelWeight}"
+                                TickFrequency="0.25"
+                                TickPlacement="BottomRight"/>
+                        </StackPanel>
+
+                        <!-- CLIP Strength -->
+                        <StackPanel 
+                            Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                            IsVisible="{Binding IsClipWeightEnabled}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Text="{x:Static lang:Resources.Label_CLIPStrength}"/>
+                                <ui:NumberBox
+                                    Grid.Column="1"
+                                    Margin="4,0,0,0"
+                                    ValidationMode="InvalidInputOverwritten"
+                                    SmallChange="0.01"
+                                    SimpleNumberFormat="F2"
+                                    Value="{Binding ClipWeight}"
+                                    HorizontalAlignment="Stretch"
+                                    SpinButtonPlacementMode="Compact"/>
+                            </Grid>
+                            <Slider
+                                Minimum="0"
+                                Maximum="1"
+                                Value="{Binding ClipWeight}"
+                                TickFrequency="0.25"
+                                TickPlacement="BottomRight"/>
+                        </StackPanel>
+                        
                         
                     </sg:SpacedGrid>
                 </controls:Card>

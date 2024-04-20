@@ -27,7 +27,7 @@
       <PackageReference Include="DeviceId.Windows" Version="6.6.0" />
       <PackageReference Include="DeviceId.Windows.Wmi" Version="6.6.0" />
       <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
-      <PackageReference Include="DynamicData" Version="8.4.1" />
+      <PackageReference Include="DynamicData" Version="8.3.27" />
       <PackageReference Include="ExifLibNet" Version="2.1.4" />
       <PackageReference Include="FreneticLLC.FreneticUtilities" Version="1.0.24" />
       <PackageReference Include="Hardware.Info" Version="100.1.0" />
@@ -45,7 +45,7 @@
       <PackageReference Include="Octokit" Version="10.0.0" />
       <PackageReference Include="OneOf" Version="3.0.263" />
       <PackageReference Include="OneOf.SourceGenerator" Version="3.0.263" />
-      <PackageReference Include="Polly" Version="8.3.1" />
+      <PackageReference Include="Polly" Version="8.3.0" />
       <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
       <PackageReference Include="pythonnet" Version="3.0.3" />
       <PackageReference Include="Refit" Version="7.0.0" />
@@ -53,7 +53,7 @@
       <PackageReference Include="RockLib.Reflection.Optimized" Version="3.0.0" />
       <PackageReference Include="Salaros.ConfigParser" Version="0.3.8" />
       <PackageReference Include="Semver" Version="3.0.0-beta.1" />
-      <PackageReference Include="Sentry.NLog" Version="4.2.1" />
+      <PackageReference Include="Sentry.NLog" Version="4.1.2" />
       <PackageReference Include="SharpCompress" Version="0.36.0" />
       <PackageReference Include="SkiaSharp" Version="2.88.7" />
       <PackageReference Include="Websocket.Client" Version="5.1.1" />

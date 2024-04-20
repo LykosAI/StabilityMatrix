@@ -57,10 +57,17 @@ public class ConnectedModelInfo
 
     public static ConnectedModelInfo? FromJson(string json)
     {
-        return JsonSerializer.Deserialize<ConnectedModelInfo>(
-            json,
-            new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }
-        );
+        try
+        {
+            return JsonSerializer.Deserialize<ConnectedModelInfo>(
+                json,
+                new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }
+            );
+        }
+        catch (JsonException)
+        {
+            return default;
+        }
     }
 
     /// <summary>

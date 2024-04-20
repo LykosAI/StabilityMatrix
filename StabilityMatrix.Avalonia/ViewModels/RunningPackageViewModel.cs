@@ -26,7 +26,7 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
 
     public PackagePair RunningPackage { get; }
     public ConsoleViewModel Console { get; }
-    public override string Title => RunningPackage.InstalledPackage.PackageName ?? "Running Package";
+    public override string Title => RunningPackage.InstalledPackage.DisplayName ?? "Running Package";
     public override IconSource IconSource => new SymbolIconSource();
 
     [ObservableProperty]

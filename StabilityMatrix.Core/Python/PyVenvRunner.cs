@@ -545,7 +545,8 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         if (Compat.IsWindows)
         {
             var portableGitBin = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
-            env["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin);
+            var venvBin = RootPath.JoinDir(RelativeBinPath);
+            env["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, venvBin);
             env["GIT"] = portableGitBin.JoinFile("git.exe");
         }
 

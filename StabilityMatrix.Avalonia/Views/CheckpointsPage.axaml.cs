@@ -6,6 +6,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.VisualTree;
 using DynamicData.Binding;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Core.Attributes;
@@ -68,7 +69,7 @@ public partial class CheckpointsPage : UserControlBase
         {
             case CheckpointFolder folder:
             {
-                if (e.Data.Get("Context") is not CheckpointFile file)
+                if (e.Data.GetContext<CheckpointFile>() is not { } file)
                 {
                     await folder.OnDrop(e);
                     break;
@@ -83,7 +84,7 @@ public partial class CheckpointsPage : UserControlBase
             }
             case CheckpointFile file:
             {
-                if (e.Data.Get("Context") is not CheckpointFile dragFile)
+                if (e.Data.GetContext<CheckpointFile>() is not { } dragFile)
                 {
                     await file.ParentFolder.OnDrop(e);
                     break;
@@ -132,7 +133,7 @@ public partial class CheckpointsPage : UserControlBase
             case CheckpointFolder folder:
             {
                 folder.IsExpanded = true;
-                if (e.Data.Get("Context") is not CheckpointFile file)
+                if (e.Data.GetContext<CheckpointFile>() is not { } file)
                 {
                     folder.IsCurrentDragTarget = true;
                     break;
@@ -144,7 +145,7 @@ public partial class CheckpointsPage : UserControlBase
             }
             case CheckpointFile file:
             {
-                if (e.Data.Get("Context") is not CheckpointFile dragFile)
+                if (e.Data.GetContext<CheckpointFile>() is not { } dragFile)
                 {
                     file.ParentFolder.IsCurrentDragTarget = true;
                     break;

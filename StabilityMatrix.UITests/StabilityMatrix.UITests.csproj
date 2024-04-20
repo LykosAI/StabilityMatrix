@@ -15,7 +15,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia.Headless.XUnit" Version="11.0.10" />
+        <PackageReference Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
         <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
         <PackageReference Include="NSubstitute" Version="5.1.0" />

@@ -1,10 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
+#pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -34,6 +36,8 @@ public partial class ExtraNetworkCardViewModel(IInferenceClientManager clientMan
     private bool isModelWeightEnabled;
 
     [ObservableProperty]
+    [property: Category("Settings")]
+    [property: DisplayName("Enable CLIP Weight Adjustment")]
     private bool isClipWeightEnabled;
 
     [ObservableProperty]

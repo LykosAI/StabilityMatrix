@@ -300,7 +300,6 @@ public partial class ModelCardViewModel(
         public bool IsVaeSelectionEnabled { get; init; }
         public bool IsRefinerSelectionEnabled { get; init; }
         public bool IsClipSkipEnabled { get; init; }
-
         public bool IsExtraNetworksEnabled { get; init; }
 
         public JsonObject? ExtraNetworks { get; init; }

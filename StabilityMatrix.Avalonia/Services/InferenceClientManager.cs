@@ -244,7 +244,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         }
 
         // Get Lora model names
-        if (await Client.GetNodeOptionNamesAsync("LoraLoader", "model_name") is { } loraModelNames)
+        if (await Client.GetNodeOptionNamesAsync("LoraLoader", "lora_name") is { } loraModelNames)
         {
             loraModelsSource.EditDiff(
                 loraModelNames.Select(HybridModelFile.FromRemote),

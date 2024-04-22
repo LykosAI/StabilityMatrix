@@ -1028,4 +1028,58 @@
   <data name="Label_CLIPStrength" xml:space="preserve">
     <value>CLIP Fortaleza</value>
   </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>Workflows</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>Scroll Infinito</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>Navegador de Workflows</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>Abrir en OpenArt</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>Detalles del Nodo</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>Descripción del Workflow</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>Navegador OpenArt</value>
+  </data>
+  <data name="Action_PreviewPreprocessor" xml:space="preserve">
+    <value>Vista previa del Preprocesador</value>
+  </data>
+  <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
+    <value>El botón &apos;Abrir interfaz de usuario web&apos; se ha movido a la barra de comandos</value>
+  </data>
+  <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
+    <value>Ya se está ejecutando otra instancia de Stability Matrix. Ciérrelo antes de comenzar uno nuevo.</value>
+  </data>
+  <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrix ya se está ejecutando</value>
+  </data>
+  <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
+    <value>{0} eliminados correctamente</value>
+  </data>
+  <data name="Label_WorkflowDeleted" xml:space="preserve">
+    <value>Workflow Eliminado</value>
+  </data>
+  <data name="Label_ErrorRetrievingWorkflows" xml:space="preserve">
+    <value>Error al recuperar workflows</value>
+  </data>
+  <data name="TabLabel_InstalledWorkflows" xml:space="preserve">
+    <value>Workflows Instalados</value>
+  </data>
+  <data name="Label_WorkflowImported" xml:space="preserve">
+    <value>Workflow Importado</value>
+  </data>
+  <data name="Label_FinishedImportingWorkflow" xml:space="preserve">
+    <value>Terminada la importación del workflow y los nodos personalizados</value>
+  </data>
+  <data name="Label_WorkflowImportComplete" xml:space="preserve">
+    <value>Se han importado el workflow y los nodos personalizados.</value>
+  </data>
 </root>

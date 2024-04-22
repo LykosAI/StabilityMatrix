@@ -18,6 +18,7 @@ using FluentAvalonia.UI.Media.Animation;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using StabilityMatrix.Avalonia.Animations;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -249,7 +250,7 @@ public abstract partial class InferenceTabViewModelBase
         // 1. Context drop for LocalImageFile
         if (e.Data.GetDataFormats().Contains("Context"))
         {
-            if (e.Data.Get("Context") is LocalImageFile imageFile)
+            if (e.Data.GetContext<LocalImageFile>() is { } imageFile)
             {
                 e.Handled = true;
                 return;
@@ -274,7 +275,7 @@ public abstract partial class InferenceTabViewModelBase
         // 1. Context drop for LocalImageFile
         if (e.Data.GetDataFormats().Contains("Context"))
         {
-            if (e.Data.Get("Context") is LocalImageFile imageFile)
+            if (e.Data.GetContext<LocalImageFile>() is { } imageFile)
             {
                 e.Handled = true;
 

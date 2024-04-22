@@ -89,6 +89,7 @@
                     Classes="accent"
                     IsDefault="True"
                     Content="{x:Static lang:Resources.Action_Send}"
+                    IsEnabled="{Binding IsRunning}"
                     Command="{Binding SendToConsoleCommand}"/>
         </Grid>
         

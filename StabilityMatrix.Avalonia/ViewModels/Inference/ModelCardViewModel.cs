@@ -211,7 +211,9 @@ public partial class ModelCardViewModel(
                 ClipSkip = ClipSkip,
                 IsVaeSelectionEnabled = IsVaeSelectionEnabled,
                 IsRefinerSelectionEnabled = IsRefinerSelectionEnabled,
-                IsClipSkipEnabled = IsClipSkipEnabled
+                IsClipSkipEnabled = IsClipSkipEnabled,
+                IsExtraNetworksEnabled = IsExtraNetworksEnabled,
+                ExtraNetworks = ExtraNetworksStackCardViewModel.SaveStateToJsonObject()
             }
         );
     }
@@ -238,6 +240,12 @@ public partial class ModelCardViewModel(
         IsVaeSelectionEnabled = model.IsVaeSelectionEnabled;
         IsRefinerSelectionEnabled = model.IsRefinerSelectionEnabled;
         IsClipSkipEnabled = model.IsClipSkipEnabled;
+        IsExtraNetworksEnabled = model.IsExtraNetworksEnabled;
+
+        if (model.ExtraNetworks is not null)
+        {
+            ExtraNetworksStackCardViewModel.LoadStateFromJsonObject(model.ExtraNetworks);
+        }
     }
 
     /// <inheritdoc />
@@ -292,5 +300,9 @@ public partial class ModelCardViewModel(
         public bool IsVaeSelectionEnabled { get; init; }
         public bool IsRefinerSelectionEnabled { get; init; }
         public bool IsClipSkipEnabled { get; init; }
+
+        public bool IsExtraNetworksEnabled { get; init; }
+
+        public JsonObject? ExtraNetworks { get; init; }
     }
 }

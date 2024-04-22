@@ -72,7 +72,7 @@ public partial class ExtraNetworkCardViewModel(IInferenceClientManager clientMan
 
         SelectedModel = model.SelectedModelName is null
             ? null
-            : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedModelName);
+            : ClientManager.LoraModels.FirstOrDefault(x => x.RelativePath == model.SelectedModelName);
 
         IsModelWeightEnabled = model.IsModelWeightEnabled;
         IsClipWeightEnabled = model.IsClipWeightEnabled;

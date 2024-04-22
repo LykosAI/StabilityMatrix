@@ -191,6 +191,12 @@ public partial class ModelCardViewModel(
                 model.Clip = clipSetLastLayer.Output;
             }
         }
+
+        // Load extra networks if enabled
+        if (IsExtraNetworksEnabled)
+        {
+            ExtraNetworksStackCardViewModel.ApplyStep(e);
+        }
     }
 
     /// <inheritdoc />

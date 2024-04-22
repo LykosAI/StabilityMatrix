@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel;
+using System.Linq;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
@@ -37,7 +39,7 @@ public partial class ExtraNetworkCardViewModel(IInferenceClientManager clientMan
 
     [ObservableProperty]
     [property: Category("Settings")]
-    [property: DisplayName("Enable CLIP Weight Adjustment")]
+    [property: DisplayName("CLIP Strength Adjustment")]
     private bool isClipWeightEnabled;
 
     [ObservableProperty]
@@ -47,4 +49,43 @@ public partial class ExtraNetworkCardViewModel(IInferenceClientManager clientMan
     private double clipWeight = 1.0;
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
+
+    /// <inheritdoc />
+    public override JsonObject SaveStateToJsonObject()
+    {
+        return SerializeModel(
+            new ExtraNetworkCardModel
+            {
+                SelectedModelName = SelectedModel?.RelativePath,
+                IsModelWeightEnabled = IsModelWeightEnabled,
+                IsClipWeightEnabled = IsClipWeightEnabled,
+                ModelWeight = ModelWeight,
+                ClipWeight = ClipWeight
+            }
+        );
+    }
+
+    /// <inheritdoc />
+    public override void LoadStateFromJsonObject(JsonObject state)
+    {
+        var model = DeserializeModel<ExtraNetworkCardModel>(state);
+
+        SelectedModel = model.SelectedModelName is null
+            ? null
+            : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedModelName);
+
+        IsModelWeightEnabled = model.IsModelWeightEnabled;
+        IsClipWeightEnabled = model.IsClipWeightEnabled;
+        ModelWeight = model.ModelWeight;
+        ClipWeight = model.ClipWeight;
+    }
+
+    internal class ExtraNetworkCardModel
+    {
+        public string? SelectedModelName { get; init; }
+        public bool IsModelWeightEnabled { get; init; }
+        public bool IsClipWeightEnabled { get; init; }
+        public double ModelWeight { get; init; }
+        public double ClipWeight { get; init; }
+    }
 }

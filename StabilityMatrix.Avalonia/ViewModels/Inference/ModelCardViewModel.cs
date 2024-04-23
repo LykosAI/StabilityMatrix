@@ -12,6 +12,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -22,10 +23,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(ModelCard))]
 [ManagedService]
 [Transient]
-public partial class ModelCardViewModel(IInferenceClientManager clientManager)
-    : LoadableViewModelBase,
-        IParametersLoadableState,
-        IComfyStep
+public partial class ModelCardViewModel(
+    IInferenceClientManager clientManager,
+    ServiceManager<ViewModelBase> vmFactory
+) : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
     [ObservableProperty]
     private HybridModelFile? selectedModel;
@@ -52,6 +53,12 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
     [ObservableProperty]
     [Range(1, 24)]
     private int clipSkip = 1;
+
+    [ObservableProperty]
+    private bool isExtraNetworksEnabled;
+
+    public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
+        new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
 
@@ -184,6 +191,12 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
                 model.Clip = clipSetLastLayer.Output;
             }
         }
+
+        // Load extra networks if enabled
+        if (IsExtraNetworksEnabled)
+        {
+            ExtraNetworksStackCardViewModel.ApplyStep(e);
+        }
     }
 
     /// <inheritdoc />
@@ -198,7 +211,9 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
                 ClipSkip = ClipSkip,
                 IsVaeSelectionEnabled = IsVaeSelectionEnabled,
                 IsRefinerSelectionEnabled = IsRefinerSelectionEnabled,
-                IsClipSkipEnabled = IsClipSkipEnabled
+                IsClipSkipEnabled = IsClipSkipEnabled,
+                IsExtraNetworksEnabled = IsExtraNetworksEnabled,
+                ExtraNetworks = ExtraNetworksStackCardViewModel.SaveStateToJsonObject()
             }
         );
     }
@@ -225,6 +240,12 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
         IsVaeSelectionEnabled = model.IsVaeSelectionEnabled;
         IsRefinerSelectionEnabled = model.IsRefinerSelectionEnabled;
         IsClipSkipEnabled = model.IsClipSkipEnabled;
+        IsExtraNetworksEnabled = model.IsExtraNetworksEnabled;
+
+        if (model.ExtraNetworks is not null)
+        {
+            ExtraNetworksStackCardViewModel.LoadStateFromJsonObject(model.ExtraNetworks);
+        }
     }
 
     /// <inheritdoc />
@@ -279,5 +300,8 @@ public partial class ModelCardViewModel(IInferenceClientManager clientManager)
         public bool IsVaeSelectionEnabled { get; init; }
         public bool IsRefinerSelectionEnabled { get; init; }
         public bool IsClipSkipEnabled { get; init; }
+        public bool IsExtraNetworksEnabled { get; init; }
+
+        public JsonObject? ExtraNetworks { get; init; }
     }
 }

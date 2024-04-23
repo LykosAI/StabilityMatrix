@@ -40,6 +40,7 @@ public interface IInferenceClientManager : IDisposable, INotifyPropertyChanged, 
     IObservableCollection<HybridModelFile> Models { get; }
     IObservableCollection<HybridModelFile> VaeModels { get; }
     IObservableCollection<HybridModelFile> ControlNetModels { get; }
+    IObservableCollection<HybridModelFile> LoraModels { get; }
     IObservableCollection<HybridModelFile> PromptExpansionModels { get; }
     IObservableCollection<ComfySampler> Samplers { get; }
     IObservableCollection<ComfyUpscaler> Upscalers { get; }

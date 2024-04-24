@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Semver;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Python;
@@ -113,6 +114,10 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
                     SelectedVersion = Package.Version;
                 }
             }
+        }
+        catch (ProcessException)
+        {
+            // Ignore
         }
         finally
         {

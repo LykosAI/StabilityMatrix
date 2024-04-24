@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Core.Extensions;
+﻿using System.Diagnostics;
+using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Core.Python;
 
@@ -31,6 +32,20 @@ public record PipShowResult
             .SplitLines(StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
             // Filter warning lines
             .Where(line => !line.StartsWith("WARNING", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        var indexOfLicense = GetIndexBySubstring(lines, "License:");
+        var indexOfLocation = GetIndexBySubstring(lines, "Location:");
+
+        var licenseText =
+            indexOfLicense == -1 ? null : string.Join('\n', lines[indexOfLicense..indexOfLocation]);
+
+        if (indexOfLicense != -1)
+        {
+            lines.RemoveRange(indexOfLicense, indexOfLocation - indexOfLicense);
+        }
+
+        var linesDict = lines
             .Select(line => line.Split(':', 2))
             .Where(split => split.Length == 2)
             .Select(split => new KeyValuePair<string, string>(split[0].Trim(), split[1].Trim()))
@@ -38,22 +53,37 @@ public record PipShowResult
 
         return new PipShowResult
         {
-            Name = lines["Name"],
-            Version = lines["Version"],
-            Summary = lines.GetValueOrDefault("Summary"),
-            HomePage = lines.GetValueOrDefault("Home-page"),
-            Author = lines.GetValueOrDefault("Author"),
-            AuthorEmail = lines.GetValueOrDefault("Author-email"),
-            License = lines.GetValueOrDefault("License"),
-            Location = lines.GetValueOrDefault("Location"),
-            Requires = lines
+            Name = linesDict["Name"],
+            Version = linesDict["Version"],
+            Summary = linesDict.GetValueOrDefault("Summary"),
+            HomePage = linesDict.GetValueOrDefault("Home-page"),
+            Author = linesDict.GetValueOrDefault("Author"),
+            AuthorEmail = linesDict.GetValueOrDefault("Author-email"),
+            License = licenseText,
+            Location = linesDict.GetValueOrDefault("Location"),
+            Requires = linesDict
                 .GetValueOrDefault("Requires")
                 ?.Split(',', StringSplitOptions.TrimEntries)
                 .ToList(),
-            RequiredBy = lines
+            RequiredBy = linesDict
                 .GetValueOrDefault("Required-by")
                 ?.Split(',', StringSplitOptions.TrimEntries)
                 .ToList()
         };
+    }
+
+    private static int GetIndexBySubstring(List<string> lines, string searchString)
+    {
+        var index = -1;
+        for (var i = 0; i < lines.Count; i++)
+        {
+            if (!lines[i].StartsWith(searchString, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            index = i;
+            break;
+        }
+
+        return index;
     }
 }

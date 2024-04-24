@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.11.0-dev.1
 ### Added
+- Added search bar to the Python Packages dialog
 #### Inference
 - Alternate Lora / LyCORIS drop-down model selection, can be toggled via the model settings button. The existing prompt-based Lora / LyCORIS method is still available.
+### Fixed
+- Fixed crash when failing to parse Python package details
 
 ## v2.10.2
 ### Changed

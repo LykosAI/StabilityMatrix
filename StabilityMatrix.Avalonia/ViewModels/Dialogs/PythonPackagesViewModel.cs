@@ -46,11 +46,27 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private PythonPackagesItemViewModel? selectedPackage;
 
+    [ObservableProperty]
+    private string searchQuery = string.Empty;
+
     public PythonPackagesViewModel()
     {
+        var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
+            .Throttle(TimeSpan.FromMilliseconds(100))
+            .DistinctUntilChanged()
+            .Select(
+                value =>
+                    (Func<PipPackageInfo, bool>)(
+                        p =>
+                            string.IsNullOrWhiteSpace(value.Value)
+                            || p.Name.Contains(value.Value, StringComparison.OrdinalIgnoreCase)
+                    )
+            );
+
         packageSource
             .Connect()
             .DeferUntilLoaded()
+            .Filter(searchPredicate)
             .Transform(p => new PythonPackagesItemViewModel { Package = p })
             .SortBy(vm => vm.Package.Name)
             .Bind(Packages)

@@ -6,7 +6,8 @@
 
 [release]: https://github.com/LykosAI/StabilityMatrix/releases/latest
 [download-win-x64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-win-x64.zip
-[download-linux-x64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-linux-x64.zip
+[download-linux-appimage-x64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-linux-x64.zip
+[download-linux-aur-x64]: https://aur.archlinux.org/packages/stabilitymatrix
 [download-macos-arm64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-macos-arm64.dmg
 
 [auto1111]: https://github.com/AUTOMATIC1111/stable-diffusion-webui
@@ -31,7 +32,8 @@
 ![Header image for Stability Matrix, Multi-Platform Package Manager and Inference UI for Stable Diffusion](https://cdn.lykos.ai/static/sm-banner-rounded.webp)
 
 [![Windows](https://img.shields.io/badge/Windows%2010,%2011-%230079d5.svg?style=for-the-badge&logo=Windows%2011&logoColor=white)][download-win-x64]
-[![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)][download-linux-x64]
+[![Linux (AppImage)](https://img.shields.io/badge/Linux%20(AppImage)-FCC624?style=for-the-badge&logo=linux&logoColor=black)][download-linux-appimage-x64]
+[![Arch Linux (AUR)](https://img.shields.io/badge/Arch%20Linux%20(AUR)-1793D1?style=for-the-badge&logo=archlinux&logoColor=white)][download-linux-aur-x64]
 [![macOS](https://img.shields.io/badge/mac%20os%20%28apple%20silicon%29-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)][download-macos-arm64]
 
 Multi-Platform Package Manager and Inference UI for Stable Diffusion

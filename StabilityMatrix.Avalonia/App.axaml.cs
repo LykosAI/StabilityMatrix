@@ -301,7 +301,10 @@ public sealed class App : Application
 
         if (settingsManager.TryFindLibrary())
         {
-            Cultures.SetSupportedCultureOrDefault(settingsManager.Settings.Language);
+            Cultures.SetSupportedCultureOrDefault(
+                settingsManager.Settings.Language,
+                settingsManager.Settings.NumberFormatMode
+            );
         }
         else
         {

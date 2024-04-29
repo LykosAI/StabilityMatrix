@@ -53,18 +53,15 @@
                                     Grid.Column="1"
                                     Margin="4,0,0,0"
                                     ValidationMode="InvalidInputOverwritten"
-                                    SmallChange="0.01"
+                                    SmallChange="0.05"
+                                    LargeChange="0.1"
+                                    Maximum="100"
+                                    Minimum="-100"
                                     SimpleNumberFormat="F2"
                                     Value="{Binding ModelWeight}"
                                     HorizontalAlignment="Stretch"
-                                    SpinButtonPlacementMode="Compact"/>
+                                    SpinButtonPlacementMode="Inline"/>
                             </Grid>
-                            <Slider
-                                Minimum="0"
-                                Maximum="1"
-                                Value="{Binding ModelWeight}"
-                                TickFrequency="0.25"
-                                TickPlacement="BottomRight"/>
                         </StackPanel>
 
                         <!-- CLIP Strength -->
@@ -79,18 +76,15 @@
                                     Grid.Column="1"
                                     Margin="4,0,0,0"
                                     ValidationMode="InvalidInputOverwritten"
-                                    SmallChange="0.01"
+                                    SmallChange="0.05"
+                                    LargeChange="0.1"
+                                    Maximum="100"
+                                    Minimum="-100"
                                     SimpleNumberFormat="F2"
                                     Value="{Binding ClipWeight}"
                                     HorizontalAlignment="Stretch"
-                                    SpinButtonPlacementMode="Compact"/>
+                                    SpinButtonPlacementMode="Inline"/>
                             </Grid>
-                            <Slider
-                                Minimum="0"
-                                Maximum="1"
-                                Value="{Binding ClipWeight}"
-                                TickFrequency="0.25"
-                                TickPlacement="BottomRight"/>
                         </StackPanel>
                         
                         

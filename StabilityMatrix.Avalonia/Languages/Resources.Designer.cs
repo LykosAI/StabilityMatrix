@@ -1869,6 +1869,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number Format.
+        /// </summary>
+        public static string Label_NumberFormat {
+            get {
+                return ResourceManager.GetString("Label_NumberFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} images selected.
         /// </summary>
         public static string Label_NumImagesSelected {

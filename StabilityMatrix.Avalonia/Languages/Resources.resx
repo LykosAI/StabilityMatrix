@@ -1077,4 +1077,7 @@
   <data name="Label_CLIPStrength" xml:space="preserve">
     <value>CLIP Strength</value>
   </data>
+  <data name="Label_NumberFormat" xml:space="preserve">
+    <value>Number Format</value>
+  </data>
 </root>

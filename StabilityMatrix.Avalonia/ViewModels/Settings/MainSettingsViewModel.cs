@@ -101,6 +101,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public IReadOnlyList<CultureInfo> AvailableLanguages => Cultures.SupportedCultures;
 
+    [ObservableProperty]
+    private NumberFormatMode selectedNumberFormatMode;
+
+    public IReadOnlyList<NumberFormatMode> NumberFormatModes { get; } =
+        Enum.GetValues<NumberFormatMode>().Where(mode => mode != default).ToList();
+
     public IReadOnlyList<float> AnimationScaleOptions { get; } =
         new[] { 0f, 0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f, };
 
@@ -225,6 +231,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.InfinitelyScrollWorkflowBrowser,
             settings => settings.IsWorkflowInfiniteScrollEnabled,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedNumberFormatMode,
+            settings => settings.NumberFormatMode,
             true
         );
 

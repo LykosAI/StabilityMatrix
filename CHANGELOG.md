@@ -6,11 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.11.0-dev.2
+### Added
+- Added Brazilian Portuguese language option, thanks to jbostroski for the translation!
+- Added setting for locale specific or invariant number formatting
 ### Fixed
 - Fixed "Auto Scroll to End" not working in some scenarios
 - Fixed "Auto Scroll to End" toggle button not scrolling to the end when toggled on
 - Fixed/reverted output folder name changes for Automatic1111
 - Fixed xformers being uninstalled with every ComfyUI update
+- Fixed Inference Lora menu strength resetting to default if out of slider range (0 to 1)
 
 ## v2.11.0-dev.1
 ### Added

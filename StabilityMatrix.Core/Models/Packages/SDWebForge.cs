@@ -38,7 +38,7 @@ public class SDWebForge(
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
     public override IPackageExtensionManager ExtensionManager => null;
-    public override string OutputFolderName => "outputs";
+    public override string OutputFolderName => "output";
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new()

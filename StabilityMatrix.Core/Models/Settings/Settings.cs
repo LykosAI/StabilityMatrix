@@ -15,6 +15,8 @@ public class Settings
     public string? Theme { get; set; } = "Dark";
     public string? Language { get; set; } = GetDefaultCulture().Name;
 
+    public NumberFormatMode NumberFormatMode { get; set; } = NumberFormatMode.CurrentCulture;
+
     public List<InstalledPackage> InstalledPackages { get; set; } = new();
 
     [JsonPropertyName("ActiveInstalledPackage")]

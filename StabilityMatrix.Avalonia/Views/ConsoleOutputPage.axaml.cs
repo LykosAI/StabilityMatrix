@@ -36,8 +36,8 @@ public partial class ConsoleOutputPage : UserControlBase
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
-        base.OnLoaded(e);
         EventManager.Instance.ScrollToBottomRequested += OnScrollToBottomRequested;
+        base.OnLoaded(e);
     }
 
     private void OnScrollToBottomRequested(object? sender, EventArgs e)

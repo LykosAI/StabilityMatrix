@@ -5,6 +5,13 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.11.0-dev.2
+### Fixed
+- Fixed "Auto Scroll to End" not working in some scenarios
+- Fixed "Auto Scroll to End" toggle button not scrolling to the end when toggled on
+- Fixed/reverted output folder name changes for Automatic1111
+- Fixed xformers being uninstalled with every ComfyUI update
+
 ## v2.11.0-dev.1
 ### Added
 - Added search bar to the Python Packages dialog

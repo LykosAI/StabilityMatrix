@@ -13,23 +13,22 @@ public static class Cultures
 
     public static CultureInfo? Current => Resources.Culture;
 
-    public static readonly Dictionary<string, CultureInfo> SupportedCulturesByCode = new Dictionary<
-        string,
-        CultureInfo
-    >
-    {
-        ["en-US"] = Default,
-        ["ja-JP"] = new("ja-JP"),
-        ["zh-Hans"] = new("zh-Hans"),
-        ["zh-Hant"] = new("zh-Hant"),
-        ["it-IT"] = new("it-IT"),
-        ["fr-FR"] = new("fr-FR"),
-        ["es"] = new("es"),
-        ["ru-RU"] = new("ru-RU"),
-        ["tr-TR"] = new("tr-TR"),
-        ["de"] = new("de"),
-        ["pt-PT"] = new("pt-PT")
-    };
+    public static readonly Dictionary<string, CultureInfo> SupportedCulturesByCode =
+        new()
+        {
+            ["en-US"] = Default,
+            ["ja-JP"] = new CultureInfo("ja-JP"),
+            ["zh-Hans"] = new CultureInfo("zh-Hans"),
+            ["zh-Hant"] = new CultureInfo("zh-Hant"),
+            ["it-IT"] = new CultureInfo("it-IT"),
+            ["fr-FR"] = new CultureInfo("fr-FR"),
+            ["es"] = new CultureInfo("es"),
+            ["ru-RU"] = new CultureInfo("ru-RU"),
+            ["tr-TR"] = new CultureInfo("tr-TR"),
+            ["de"] = new CultureInfo("de"),
+            ["pt-PT"] = new CultureInfo("pt-PT"),
+            ["pt-BR"] = new CultureInfo("pt-BR")
+        };
 
     public static IReadOnlyList<CultureInfo> SupportedCultures =>
         SupportedCulturesByCode.Values.ToImmutableList();

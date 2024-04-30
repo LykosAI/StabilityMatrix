@@ -5,11 +5,13 @@
     xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:ct="clr-namespace:CommunityToolkit.Mvvm.Input;assembly=CommunityToolkit.Mvvm"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:hardwareInfo="clr-namespace:StabilityMatrix.Core.Helper.HardwareInfo;assembly=StabilityMatrix.Core"
     xmlns:helper="clr-namespace:StabilityMatrix.Core.Helper;assembly=StabilityMatrix.Core"
     xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    xmlns:input="clr-namespace:System.Windows.Input;assembly=System.ObjectModel"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
@@ -20,8 +22,6 @@
     xmlns:update="clr-namespace:StabilityMatrix.Core.Models.Update;assembly=StabilityMatrix.Core"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
-    xmlns:input="clr-namespace:System.Windows.Input;assembly=System.ObjectModel"
-    xmlns:ct="clr-namespace:CommunityToolkit.Mvvm.Input;assembly=CommunityToolkit.Mvvm"
     d:DataContext="{x:Static mocks:DesignData.MainSettingsViewModel}"
     d:DesignHeight="700"
     d:DesignWidth="800"
@@ -35,6 +35,7 @@
         <converters:IndexPlusOneConverter x:Key="IndexPlusOneConverter" />
         <converters:EnumStringConverter x:Key="EnumStringConverter" />
         <converters:EnumToBooleanConverter x:Key="EnumBoolConverter" />
+        <converters:NumberFormatModeSampleConverter x:Key="NumberFormatModeSampleConverter" />
     </controls:UserControlBase.Resources>
 
     <controls:UserControlBase.Styles>
@@ -77,13 +78,11 @@
                     Header="{x:Static lang:Resources.Label_Notifications}"
                     IsClickEnabled="True">
                     <ui:SettingsExpander.IconSource>
-                        <fluentIcons:SymbolIconSource
-                            FontSize="10"
-                            Symbol="Alert" />
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="Alert" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
-            
+
             <!--  Integrations  -->
             <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">
                 <TextBlock
@@ -117,7 +116,7 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
-            
+
             <!--  Checkpoints Manager Options  -->
             <Grid RowDefinitions="auto,*,Auto">
                 <TextBlock
@@ -182,7 +181,7 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </Grid>
-            
+
             <sg:SpacedGrid RowDefinitions="Auto, Auto">
                 <TextBlock
                     Margin="0,0,0,8"
@@ -200,9 +199,9 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
-            
+
             <!--  Theme  -->
-            <Grid RowDefinitions="Auto,*,*,*,*">
+            <Grid RowDefinitions="Auto,*,*,*,*,*">
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
@@ -232,10 +231,39 @@
                             SelectedItem="{Binding SelectedLanguage}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
-                
-                <ui:SettingsExpander Grid.Row="3"
-                                     Margin="8,0,8,4"
-                                     Header="{x:Static lang:Resources.Label_HolidayMode}">
+
+                <ui:SettingsExpander
+                    Grid.Row="3"
+                    Margin="8,0,8,4"
+                    Header="{x:Static lang:Resources.Label_NumberFormat}">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            IsFilled="True"
+                            Symbol="DecimalArrowLeft" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ComboBox
+                            MinWidth="100"
+                            ItemsSource="{Binding NumberFormatModes}"
+                            SelectedItem="{Binding SelectedNumberFormatMode}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock>
+                                        <Run Text="{Binding Converter={x:Static converters:EnumAttributeConverters.DisplayName}}" />
+                                        <Run Text="-" />
+                                        <Run Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding Converter={StaticResource NumberFormatModeSampleConverter}}" />
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+
+                <ui:SettingsExpander
+                    Grid.Row="4"
+                    Margin="8,0,8,4"
+                    Header="{x:Static lang:Resources.Label_HolidayMode}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
@@ -243,13 +271,12 @@
                             Symbol="WeatherSnowflake" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
-                        <ui:FAComboBox SelectedItem="{Binding HolidayModeSetting}"
-                                       ItemsSource="{Binding HolidayModes}"/>
+                        <ui:FAComboBox ItemsSource="{Binding HolidayModes}" SelectedItem="{Binding HolidayModeSetting}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
-                
+
                 <ui:SettingsExpander
-                    Grid.Row="4"
+                    Grid.Row="5"
                     Margin="8,0,8,4"
                     ActionIconSource="ChevronRight"
                     Command="{Binding NavigateToSubPageCommand}"
@@ -370,9 +397,9 @@
                         </ui:SettingsExpanderItem.IconSource>
 
                         <sg:SpacedGrid
-                            DataContext="{Binding CpuInfoAsync^}"
                             ColumnDefinitions="Auto,Auto"
                             ColumnSpacing="16"
+                            DataContext="{Binding CpuInfoAsync^}"
                             RowDefinitions="Auto,Auto">
                             <TextBlock Grid.Column="0" Text="CPU" />
                             <SelectableTextBlock
@@ -395,9 +422,9 @@
                         </ui:SettingsExpanderItem.IconSource>
 
                         <sg:SpacedGrid
-                            DataContext="{Binding MemoryInfo}"
                             ColumnDefinitions="Auto,Auto"
                             ColumnSpacing="16"
+                            DataContext="{Binding MemoryInfo}"
                             RowDefinitions="Auto,Auto">
                             <TextBlock Grid.Column="0" Text="Total Memory" />
                             <SelectableTextBlock
@@ -407,8 +434,8 @@
                                 TextWrapping="WrapWithOverflow">
                                 <SelectableTextBlock.Text>
                                     <MultiBinding StringFormat="{}{0} ({1} usable)">
-                                        <Binding Path="TotalInstalledBytes" Converter="{x:Static converters:StringFormatConverters.MemoryBytes}"/>
-                                        <Binding Path="TotalPhysicalBytes" Converter="{x:Static converters:StringFormatConverters.MemoryBytes}"/>
+                                        <Binding Converter="{x:Static converters:StringFormatConverters.MemoryBytes}" Path="TotalInstalledBytes" />
+                                        <Binding Converter="{x:Static converters:StringFormatConverters.MemoryBytes}" Path="TotalPhysicalBytes" />
                                     </MultiBinding>
                                 </SelectableTextBlock.Text>
                             </SelectableTextBlock>
@@ -421,8 +448,8 @@
                             <SelectableTextBlock
                                 Grid.Row="1"
                                 Grid.Column="1"
-                                IsVisible="{x:Static hardwareInfo:HardwareHelper.IsLiveMemoryUsageInfoAvailable}"
                                 Foreground="{DynamicResource TextControlPlaceholderForeground}"
+                                IsVisible="{x:Static hardwareInfo:HardwareHelper.IsLiveMemoryUsageInfoAvailable}"
                                 Text="{Binding AvailablePhysicalBytes, Converter={x:Static converters:StringFormatConverters.MemoryBytes}}"
                                 TextWrapping="WrapWithOverflow" />
                         </sg:SpacedGrid>
@@ -606,9 +633,7 @@
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
 
-                    <ItemsRepeater
-                        Margin="4,0,4,4"
-                        ItemsSource="{Binding DebugCommands}">
+                    <ItemsRepeater Margin="4,0,4,4" ItemsSource="{Binding DebugCommands}">
                         <ItemsRepeater.Layout>
                             <UniformGridLayout />
                         </ItemsRepeater.Layout>
@@ -621,7 +646,7 @@
                             </DataTemplate>
                         </ItemsRepeater.ItemTemplate>
                     </ItemsRepeater>
-                    
+
                 </ui:SettingsExpander>
             </Grid>
 

@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using DynamicData.Tests;
 using MetadataExtractor.Formats.Exif;
+using SkiaSharp;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using JsonSerializer = System.Text.Json.JsonSerializer;
@@ -116,27 +117,44 @@ public record LocalImageFile
             };
         }
 
-        // Get metadata
-        using var stream = filePath.Info.OpenRead();
-        using var reader = new BinaryReader(stream);
-
-        var imageSize = ImageMetadata.GetImageSize(reader);
-
-        var metadata = ImageMetadata.ReadTextChunk(reader, "parameters-json");
-
-        GenerationParameters? genParams;
-
-        if (!string.IsNullOrWhiteSpace(metadata))
+        if (filePath.Extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
         {
-            genParams = JsonSerializer.Deserialize<GenerationParameters>(metadata);
-        }
-        else
-        {
-            metadata = ImageMetadata.ReadTextChunk(reader, "parameters");
-            GenerationParameters.TryParse(metadata, out genParams);
+            // Get metadata
+            using var stream = filePath.Info.OpenRead();
+            using var reader = new BinaryReader(stream);
+
+            var imageSize = ImageMetadata.GetImageSize(reader);
+
+            var metadata = ImageMetadata.ReadTextChunk(reader, "parameters-json");
+
+            GenerationParameters? genParams;
+
+            if (!string.IsNullOrWhiteSpace(metadata))
+            {
+                genParams = JsonSerializer.Deserialize<GenerationParameters>(metadata);
+            }
+            else
+            {
+                metadata = ImageMetadata.ReadTextChunk(reader, "parameters");
+                GenerationParameters.TryParse(metadata, out genParams);
+            }
+
+            filePath.Info.Refresh();
+
+            return new LocalImageFile
+            {
+                AbsolutePath = filePath,
+                ImageType = imageType,
+                CreatedAt = filePath.Info.CreationTimeUtc,
+                LastModifiedAt = filePath.Info.LastWriteTimeUtc,
+                GenerationParameters = genParams,
+                ImageSize = imageSize
+            };
         }
 
-        filePath.Info.Refresh();
+        using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        using var ms = new SKManagedStream(fs);
+        var codec = SKCodec.Create(ms);
 
         return new LocalImageFile
         {
@@ -144,8 +162,7 @@ public record LocalImageFile
             ImageType = imageType,
             CreatedAt = filePath.Info.CreationTimeUtc,
             LastModifiedAt = filePath.Info.LastWriteTimeUtc,
-            GenerationParameters = genParams,
-            ImageSize = imageSize
+            ImageSize = new Size { Height = codec.Info.Height, Width = codec.Info.Width }
         };
     }
 

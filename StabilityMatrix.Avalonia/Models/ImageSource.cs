@@ -117,6 +117,12 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
             return false;
         }
 
+        if (extension.Equals(".gif", StringComparison.OrdinalIgnoreCase))
+        {
+            TemplateKey = ImageSourceTemplateType.WebpAnimation;
+            return true;
+        }
+
         TemplateKey = ImageSourceTemplateType.Image;
 
         return true;

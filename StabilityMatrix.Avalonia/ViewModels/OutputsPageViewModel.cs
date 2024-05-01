@@ -103,7 +103,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             ? Resources.Label_OneImageSelected
             : string.Format(Resources.Label_NumImagesSelected, NumItemsSelected);
 
-    private string[] allowedExtensions = [".png", ".webp"];
+    private string[] allowedExtensions = [".png", ".webp", ".jpg", ".jpeg", ".gif"];
 
     private PackageOutputCategory? lastOutputCategory;
 

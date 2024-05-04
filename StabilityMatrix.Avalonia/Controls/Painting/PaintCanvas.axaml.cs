@@ -64,6 +64,11 @@ public class PaintCanvas : TemplatedControl
         Dispatcher.UIThread.Post(() => MainCanvas?.InvalidateVisual(), DispatcherPriority.Render);
     }
 
+    public void RefreshCanvas()
+    {
+        Dispatcher.UIThread.Post(() => MainCanvas?.InvalidateVisual(), DispatcherPriority.Render);
+    }
+
     /// <inheritdoc />
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
@@ -111,9 +116,10 @@ public class PaintCanvas : TemplatedControl
 
         if (DataContext is PaintCanvasViewModel viewModel)
         {
-            // Set the save and load actions
+            // Set the remote actions
             viewModel.SaveCanvasToImage = SaveCanvasToRasterWebp;
             viewModel.LoadCanvasFromImage = LoadCanvasFromRasterWebp;
+            viewModel.RefreshCanvas = RefreshCanvas;
 
             viewModelSubscription?.Dispose();
             viewModelSubscription = viewModel
@@ -136,6 +142,23 @@ public class PaintCanvas : TemplatedControl
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
+
+        if (change.Property == IsEnabledProperty)
+        {
+            var newIsEnabled = change.GetNewValue<bool>();
+
+            if (!newIsEnabled)
+            {
+                isPenDown = false;
+            }
+
+            // On any enabled change, flush temporary paths
+            if (!TemporaryPaths.IsEmpty)
+            {
+                Paths = Paths.AddRange(TemporaryPaths.Values);
+                TemporaryPaths.Clear();
+            }
+        }
     }
 
     /// <inheritdoc />
@@ -148,6 +171,12 @@ public class PaintCanvas : TemplatedControl
 
     private void HandlePointerEvent(PointerEventArgs e)
     {
+        // Ignore if disabled
+        if (!IsEnabled)
+        {
+            return;
+        }
+
         if (e.RoutedEvent == PointerReleasedEvent && e.Pointer.Type == PointerType.Touch)
         {
             TemporaryPaths.TryRemove(e.Pointer.Id, out _);

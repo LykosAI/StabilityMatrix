@@ -951,6 +951,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to CLIP Strength.
+        /// </summary>
+        public static string Label_CLIPStrength {
+            get {
+                return ResourceManager.GetString("Label_CLIPStrength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close dialog when finished.
         /// </summary>
         public static string Label_CloseDialogWhenFinished {
@@ -1334,6 +1343,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_EverythingLooksGood {
             get {
                 return ResourceManager.GetString("Label_EverythingLooksGood", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extra Networks (Lora / LyCORIS).
+        /// </summary>
+        public static string Label_ExtraNetworks {
+            get {
+                return ResourceManager.GetString("Label_ExtraNetworks", resourceCulture);
             }
         }
         
@@ -1847,6 +1865,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Notifications {
             get {
                 return ResourceManager.GetString("Label_Notifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number Format.
+        /// </summary>
+        public static string Label_NumberFormat {
+            get {
+                return ResourceManager.GetString("Label_NumberFormat", resourceCulture);
             }
         }
         
@@ -2792,6 +2819,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string TeachingTip_DownloadsExplanation {
             get {
                 return ResourceManager.GetString("TeachingTip_DownloadsExplanation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click here to review prompt syntax and how to include Lora / Embeddings..
+        /// </summary>
+        public static string TeachingTip_InferencePromptHelpButton {
+            get {
+                return ResourceManager.GetString("TeachingTip_InferencePromptHelpButton", resourceCulture);
             }
         }
         

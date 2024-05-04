@@ -27,7 +27,7 @@
         MinHeight="300"
         Margin="8"
         ColumnDefinitions="Auto,Auto,*"
-        RowDefinitions="Auto,Auto,*">
+        RowDefinitions="Auto,Auto,Auto,*">
         <!--  Title  -->
         <!--<TextBlock
             Margin="16,16,16,0"
@@ -74,9 +74,15 @@
                     Label="{x:Static lang:Resources.Action_Refresh}"/>
             </ui:CommandBar.PrimaryCommands>
         </ui:CommandBar>
+        
+        <TextBox Grid.Row="2" Grid.Column="0"
+                 Margin="0,0,0,8"
+                 Classes="search"
+                 Watermark="{x:Static lang:Resources.Action_Search}"
+                 Text="{Binding SearchQuery, Mode=TwoWay}"/>
             
         <controls:Card
-            Grid.Row="2"
+            Grid.Row="3"
             Grid.Column="0"
             Padding="0"
             MinWidth="270"
@@ -111,7 +117,7 @@
         
         <ProgressBar
             Margin="32,16"
-            Grid.Row="2"
+            Grid.Row="3"
             Grid.Column="0"
             Grid.ColumnSpan="3"
             IsIndeterminate="True"
@@ -120,7 +126,7 @@
         
         <GridSplitter
             Grid.Row="0"
-            Grid.RowSpan="3"
+            Grid.RowSpan="4"
             Grid.Column="1"
             IsEnabled="False"
             Width="8" />
@@ -128,7 +134,7 @@
         <TransitioningContentControl
             Margin="8,0"
             Grid.Row="1"
-            Grid.RowSpan="2"
+            Grid.RowSpan="3"
             Grid.Column="2"
             HorizontalAlignment="Stretch"
             HorizontalContentAlignment="Stretch"

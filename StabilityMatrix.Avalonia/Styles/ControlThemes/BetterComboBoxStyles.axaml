@@ -7,7 +7,9 @@
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls">
+    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters">
 
     <Design.PreviewWith>
         <Panel Width="450" Height="600">
@@ -28,7 +30,9 @@
             </StackPanel>
         </Panel>
     </Design.PreviewWith>
-
+    
+    <converters:FileUriConverter x:Key="FileUriConverter" />
+    
     <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
     <ControlTheme
         x:Key="BetterComboBoxItemHybridModelTheme"
@@ -43,13 +47,13 @@
                     ColumnSpacing="6"
                     RowSpacing="0">
                     <!--  Image  -->
-                    <labs:AsyncImage
+                    <vendorLabs:BetterAsyncImage
                         Width="64"
                         Height="96"
                         CornerRadius="6"
                         IsVisible="{Binding Local.PreviewImageFullPathGlobal, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=''}"
                         RenderOptions.BitmapInterpolationMode="HighQuality"
-                        Source="{Binding Local.PreviewImageFullPathGlobal, FallbackValue=''}"
+                        Source="{Binding Local.PreviewImageFullPathGlobal, FallbackValue='', Converter={StaticResource FileUriConverter}}"
                         Stretch="UniformToFill"/>
                     <StackPanel
                         Grid.Column="1"
@@ -125,13 +129,13 @@
                         ColumnSpacing="8"
                         TextBlock.TextTrimming="CharacterEllipsis"
                         TextBlock.TextWrapping="NoWrap">
-                        <labs:AsyncImage
+                        <vendorLabs:BetterAsyncImage
                             Grid.RowSpan="2"
                             Width="42"
                             Height="42"
                             RenderOptions.BitmapInterpolationMode="HighQuality"
                             CornerRadius="40"
-                            Source="{Binding Local.PreviewImageFullPathGlobal}"
+                            Source="{Binding Local.PreviewImageFullPathGlobal, Converter={StaticResource FileUriConverter}}"
                             Stretch="UniformToFill"/>
 
                         <!--  Text  -->
@@ -213,15 +217,15 @@
                         ColumnSpacing="8"
                         TextBlock.TextTrimming="CharacterEllipsis"
                         TextBlock.TextWrapping="NoWrap">
-                        <labs:AsyncImage
+                        <vendorLabs:BetterAsyncImage
                             Grid.RowSpan="2"
                             Width="36"
                             Height="36"
                             CornerRadius="60"
                             RenderOptions.BitmapInterpolationMode="HighQuality"
-                            Source="{Binding Local.PreviewImageFullPathGlobal}"
+                            Source="{Binding Local.PreviewImageFullPathGlobal, Converter={StaticResource FileUriConverter}}"
                             Stretch="UniformToFill">
-                        </labs:AsyncImage>
+                        </vendorLabs:BetterAsyncImage>
 
                         <!--  Text  -->
                         <sg:SpacedGrid

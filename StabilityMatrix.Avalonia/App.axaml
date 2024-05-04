@@ -29,6 +29,7 @@
                  <ResourceInclude Source="Styles/ListBoxStyles.axaml"/>
                  <ResourceInclude Source="Styles/FAComboBoxStyles.axaml"/>
                  <ResourceInclude Source="Controls/Inference/ImageFolderCard.axaml"/>
+                 <ResourceInclude Source="Controls/VendorLabs/Themes/BetterAsyncImage.axaml"/>
              </ResourceDictionary.MergedDictionaries>
              
              <idcr:ControlRecycling x:Key="ControlRecyclingKey" />
@@ -81,15 +82,13 @@
         <StyleInclude Source="Controls/Inference/FreeUCard.axaml"/>
         <StyleInclude Source="Controls/Inference/ControlNetCard.axaml"/>
         <StyleInclude Source="Controls/Inference/PromptExpansionCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/ExtraNetworkCard.axaml"/>
         <StyleInclude Source="Controls/Inference/LayerDiffuseCard.axaml"/>
         <StyleInclude Source="Controls/Painting/PaintCanvas.axaml"/>
         <labs:ControlThemes/>
         
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
-        </Style>
-        <Style Selector="labs|AsyncImage Border">
-            <Setter Property="ClipToBounds" Value="True"/>
         </Style>
     </Application.Styles>
 </Application>

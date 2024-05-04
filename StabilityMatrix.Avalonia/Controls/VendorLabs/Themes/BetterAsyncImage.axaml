@@ -1,0 +1,48 @@
+﻿<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs">
+  <Design.PreviewWith>
+    <Border Width="200"
+            Height="200">
+        
+    </Border>
+  </Design.PreviewWith>
+
+  <ControlTheme x:Key="{x:Type vendorLabs:BetterAsyncImage}"
+                TargetType="vendorLabs:BetterAsyncImage">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="IsTabStop" Value="False" />
+    <Setter Property="Template">
+        <ControlTemplate>
+            <Border Margin="0"
+                    Padding="0"
+                    ClipToBounds="True"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{TemplateBinding CornerRadius}">
+                <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Image Name="PART_PlaceholderImage"
+                           HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                           VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                           Source="{TemplateBinding PlaceholderSource}"
+                           Stretch="{TemplateBinding PlaceholderStretch}"/>
+                    <Image Name="PART_Image"
+                           HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                           VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                           Stretch="{TemplateBinding Stretch}"/>
+                </Grid>                
+            </Border>
+        </ControlTemplate>
+    </Setter>
+      <Style Selector="^[State=Failed] /template/ Image#PART_Image">
+          <Setter Property="Opacity"
+                  Value="0.0" />
+      </Style>
+      <Style Selector="^[State=Failed] /template/ Image#PART_PlaceholderImage">
+          <Setter Property="Opacity"
+                  Value="1.0" />
+      </Style>
+  </ControlTheme>
+</ResourceDictionary>

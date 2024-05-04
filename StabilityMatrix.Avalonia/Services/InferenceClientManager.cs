@@ -75,6 +75,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    private readonly SourceCache<HybridModelFile, string> loraModelsSource = new(p => p.GetId());
+
+    public IObservableCollection<HybridModelFile> LoraModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     private readonly SourceCache<HybridModelFile, string> promptExpansionModelsSource = new(p => p.GetId());
 
     private readonly SourceCache<HybridModelFile, string> downloadablePromptExpansionModelsSource =
@@ -142,6 +147,17 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(ControlNetModels)
+            .Subscribe();
+
+        loraModelsSource
+            .Connect()
+            .Sort(
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
+            )
+            .DeferUntilLoaded()
+            .Bind(LoraModels)
             .Subscribe();
 
         promptExpansionModelsSource
@@ -223,6 +239,15 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         {
             controlNetModelsSource.EditDiff(
                 controlNetModelNames.Select(HybridModelFile.FromRemote),
+                HybridModelFile.Comparer
+            );
+        }
+
+        // Get Lora model names
+        if (await Client.GetNodeOptionNamesAsync("LoraLoader", "lora_name") is { } loraModelNames)
+        {
+            loraModelsSource.EditDiff(
+                loraModelNames.Select(HybridModelFile.FromRemote),
                 HybridModelFile.Comparer
             );
         }
@@ -315,6 +340,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             u => !controlNetModelsSource.Lookup(u.GetId()).HasValue
         );
         downloadableControlNetModelsSource.EditDiff(downloadableControlNets, HybridModelFile.Comparer);
+
+        // Load local Lora / LyCORIS models
+        loraModelsSource.EditDiff(
+            modelIndexService
+                .GetFromModelIndex(SharedFolderType.Lora | SharedFolderType.LyCORIS)
+                .Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
 
         // Load local prompt expansion models
         promptExpansionModelsSource.EditDiff(

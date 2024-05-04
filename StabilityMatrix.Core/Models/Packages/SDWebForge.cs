@@ -40,7 +40,6 @@ public class SDWebForge(
     public override IPackageExtensionManager ExtensionManager => null;
     public override string OutputFolderName => "output";
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
-
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new()
         {
@@ -49,7 +48,8 @@ public class SDWebForge(
             [SharedOutputType.Img2Img] = new[] { "output/img2img-images" },
             [SharedOutputType.Text2Img] = new[] { "output/txt2img-images" },
             [SharedOutputType.Img2ImgGrids] = new[] { "output/img2img-grids" },
-            [SharedOutputType.Text2ImgGrids] = new[] { "output/txt2img-grids" }
+            [SharedOutputType.Text2ImgGrids] = new[] { "output/txt2img-grids" },
+            [SharedOutputType.SVD] = new[] { "output/svd" }
         };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
@@ -142,12 +142,21 @@ public class SDWebForge(
 
         await using var venvRunner = new PyVenvRunner(venvPath);
         venvRunner.WorkingDirectory = installLocation;
+        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
+
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
+        var requirementsContent = await requirements.ReadAllTextAsync().ConfigureAwait(false);
+        if (!requirementsContent.Contains("pydantic"))
+        {
+            requirementsContent += "pydantic==1.10.15";
+            await requirements.WriteAllTextAsync(requirementsContent).ConfigureAwait(false);
+        }
+
         var pipArgs = new PipInstallArgs();
         if (torchVersion is TorchVersion.DirectMl)
         {
@@ -170,17 +179,9 @@ public class SDWebForge(
                 );
         }
 
-        pipArgs = pipArgs.WithParsedFromRequirementsTxt(
-            await requirements.ReadAllTextAsync().ConfigureAwait(false),
-            excludePattern: "torch"
-        );
+        pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
 
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }
-
-    public override string? ExtraLaunchArguments { get; set; } =
-        settingsManager.IsLibraryDirSet
-            ? $"--gradio-allowed-path \"{settingsManager.ImagesDirectory}\""
-            : string.Empty;
 }

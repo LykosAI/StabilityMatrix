@@ -26,7 +26,7 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
 
     public PackagePair RunningPackage { get; }
     public ConsoleViewModel Console { get; }
-    public override string Title => RunningPackage.InstalledPackage.PackageName ?? "Running Package";
+    public override string Title => RunningPackage.InstalledPackage.DisplayName ?? "Running Package";
     public override IconSource IconSource => new SymbolIconSource();
 
     [ObservableProperty]
@@ -74,6 +74,14 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
         );
     }
 
+    public override void OnLoaded()
+    {
+        if (AutoScrollToEnd)
+        {
+            EventManager.Instance.OnScrollToBottomRequested();
+        }
+    }
+
     private void BasePackageOnExited(object? sender, int e)
     {
         IsRunning = false;
@@ -99,6 +107,14 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     private void DocumentOnLineCountChanged(object? sender, EventArgs e)
     {
         if (AutoScrollToEnd)
+        {
+            EventManager.Instance.OnScrollToBottomRequested();
+        }
+    }
+
+    partial void OnAutoScrollToEndChanged(bool value)
+    {
+        if (value)
         {
             EventManager.Instance.OnScrollToBottomRequested();
         }

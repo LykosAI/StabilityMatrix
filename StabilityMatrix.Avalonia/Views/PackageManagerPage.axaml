@@ -14,6 +14,7 @@
                           xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
                           xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
                           xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+                          xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
                           mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="450"
                           x:DataType="viewModels:PackageManagerViewModel"
                           x:CompileBindings="True"
@@ -45,7 +46,7 @@
                                 </MultiBinding>
                             </controls:Card.Background>
                             <Grid ColumnDefinitions="Auto, *">
-                                <labs:AsyncImage
+                                <vendorLabs:BetterAsyncImage
                                     Grid.Column="0"
                                     Height="150"
                                     Width="150"
@@ -254,9 +255,14 @@
                                                 Margin="4,4,0,0"
                                                 Padding="4"
                                                 IsEnabled="{Binding !IsRunning}"
-                                                ToolTip.Tip="{x:Static lang:Resources.Label_UpdateAvailable}"
                                                 markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
                                                 Command="{Binding Update}">
+                                            <ToolTip.Tip>
+                                                <TextBlock>
+                                                    <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}"/>
+                                                    <Run Text="(" /><Run Text="{Binding UpdateVersion.ReadableVersionString, FallbackValue=Unknown}"/><Run Text=")"/>
+                                                </TextBlock>
+                                            </ToolTip.Tip>
                                             <Button.IsVisible>
                                                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                                                     <Binding Path="!IsUnknownPackage" />

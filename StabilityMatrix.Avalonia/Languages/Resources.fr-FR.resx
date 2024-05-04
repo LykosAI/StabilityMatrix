@@ -598,7 +598,7 @@
     <value>Informations sur la version de Python</value>
   </data>
   <data name="Action_Restart" xml:space="preserve">
-    <value>Redémarrage</value>
+    <value>Redémarrer</value>
   </data>
   <data name="Label_ConfirmDelete" xml:space="preserve">
     <value>Confirmer la suppression</value>
@@ -737,7 +737,7 @@
     <value>Cela déplacera toutes les images générées des packages sélectionnés vers le répertoire consolidé du dossier de sorties partagées. Cette action ne peut pas être annulée.</value>
   </data>
   <data name="Action_Refresh" xml:space="preserve">
-    <value>Rafraichir</value>
+    <value>Actualiser</value>
   </data>
   <data name="Action_Upgrade" xml:space="preserve">
     <value>Passer à la version supérieure</value>
@@ -929,5 +929,104 @@
   </data>
   <data name="Label_RecommendedModelsSubText" xml:space="preserve">
     <value>Pendant que votre paquet s&apos;installe, voici quelques modèles que nous recommandons pour vous aidez à démarrer.</value>
+  </data>
+  <data name="Label_Notifications" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Label_NotificationOption_None" xml:space="preserve">
+    <value>Aucun</value>
+  </data>
+  <data name="Label_ComfyRequiredTitle" xml:space="preserve">
+    <value>ComfyUI est requis</value>
+  </data>
+  <data name="Label_ComfyRequiredDetail" xml:space="preserve">
+    <value>ComfyUI est requis pour installer ce paquet. Voulez vous l&apos;installer maintenant ?</value>
+  </data>
+  <data name="Error_PleaseSelectDownloadLocation" xml:space="preserve">
+    <value>Merci de sélectionner un dossier de téléchargement.</value>
+  </data>
+  <data name="Label_SelectDownloadLocation" xml:space="preserve">
+    <value>Sélectionner un dossier de téléchargement:</value>
+  </data>
+  <data name="Label_ToggleAutoScrolling" xml:space="preserve">
+    <value>Défiler automatiquement à la fin</value>
+  </data>
+  <data name="Label_ConfirmExit" xml:space="preserve">
+    <value>Confirmer la sortie</value>
+  </data>
+  <data name="Label_ConfirmExitDetail" xml:space="preserve">
+    <value>Êtes vous certain de vouloir quitter ? Cela va fermer toutes les instances actuellement lancées.</value>
+  </data>
+  <data name="Label_Console" xml:space="preserve">
+    <value>Console</value>
+  </data>
+  <data name="Label_Packages" xml:space="preserve">
+    <value>Paquets</value>
+  </data>
+  <data name="Label_ActionCannotBeUndone" xml:space="preserve">
+    <value>Cette action ne peut être annulée.</value>
+  </data>
+  <data name="Label_AreYouSureDeleteImages" xml:space="preserve">
+    <value>Êtes vous certain de vouloir supprimer les {0} images?</value>
+  </data>
+  <data name="Label_CheckingHardware" xml:space="preserve">
+    <value>Nous vérifions quelques spécifications matérielles pour vérifier la compatibilité.</value>
+  </data>
+  <data name="Label_EverythingLooksGood" xml:space="preserve">
+    <value>Tout à l&apos;air bon!</value>
+  </data>
+  <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
+    <value>Nous recommandons un GPU avec prise en charge CUDA pour une meilleure expérience. Vous pouvez continuer sans en avoir un, mais certains packages peuvent ne pas fonctionner et l&apos;inférence peut être plus lente.</value>
+  </data>
+  <data name="Label_ModelBrowser" xml:space="preserve">
+    <value>Explorateur de modèle</value>
+  </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>Workflows</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>Scroll infini</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>Explorateur de workflow</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>Ouvrir sur OpenArt</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>Plus de détails</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>Description du workflow</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>Explorateur OpenArt</value>
+  </data>
+  <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
+    <value>Une autre instance de Stability Matrix est déjà lancée. Merci de la quitter avant d&apos;en démarrer une nouvelle.</value>
+  </data>
+  <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrix est déjà lancé</value>
+  </data>
+  <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
+    <value>{0} suppressions réalisées</value>
+  </data>
+  <data name="Label_WorkflowDeleted" xml:space="preserve">
+    <value>Workflow supprimé</value>
+  </data>
+  <data name="Label_ErrorRetrievingWorkflows" xml:space="preserve">
+    <value>Erreur lors de l&apos;obtention des workflows</value>
+  </data>
+  <data name="TabLabel_InstalledWorkflows" xml:space="preserve">
+    <value>Workflows installés</value>
+  </data>
+  <data name="Label_WorkflowImported" xml:space="preserve">
+    <value>Workflows importé</value>
+  </data>
+  <data name="Label_FinishedImportingWorkflow" xml:space="preserve">
+    <value>L&apos;import du workflow et des custom nodes est terminé</value>
+  </data>
+  <data name="Label_WorkflowImportComplete" xml:space="preserve">
+    <value>Le workflow et les custom nodes ont été importés.</value>
   </data>
 </root>

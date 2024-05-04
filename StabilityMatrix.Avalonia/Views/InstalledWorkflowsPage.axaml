@@ -15,6 +15,7 @@
                           xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
                           xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
                           xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+                          xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           d:DataContext="{x:Static designData:DesignData.InstalledWorkflowsViewModel}"
                           x:DataType="viewModels:InstalledWorkflowsViewModel"
@@ -164,7 +165,7 @@
                                 VerticalContentAlignment="Top"
                                 CornerRadius="8">
                                 <Grid RowDefinitions="*, Auto">
-                                    <labs:AsyncImage
+                                    <vendorLabs:BetterAsyncImage
                                         Grid.Row="0"
                                         Grid.RowSpan="2"
                                         CornerRadius="8"
@@ -210,7 +211,7 @@
                                             Classes="transparent"
                                             Padding="10,4">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <labs:AsyncImage
+                                                <vendorLabs:BetterAsyncImage
                                                     Width="22"
                                                     Height="22"
                                                     Effect="{StaticResource ImageDropShadowEffect}"

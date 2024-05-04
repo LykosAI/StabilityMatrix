@@ -12,7 +12,7 @@ using StabilityMatrix.Core.Attributes;
 namespace StabilityMatrix.Avalonia.Controls;
 
 [Transient]
-public class PromptCard : TemplatedControl
+public class PromptCard : TemplatedControlBase
 {
     /// <inheritdoc />
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)

@@ -963,4 +963,123 @@
   <data name="Label_RecommendedModelsSubText" xml:space="preserve">
     <value>Mientras se instala tu paquete, aquí hay algunos modelos que recomendamos para ayudarte a comenzar.</value>
   </data>
+  <data name="Label_Notifications" xml:space="preserve">
+    <value>Notificaciones</value>
+  </data>
+  <data name="Label_NotificationOption_None" xml:space="preserve">
+    <value>Ninguno</value>
+  </data>
+  <data name="Label_ComfyRequiredTitle" xml:space="preserve">
+    <value>Se Requiere ComfyUI</value>
+  </data>
+  <data name="Label_ComfyRequiredDetail" xml:space="preserve">
+    <value>Se requiere ComfyUI para instalar este paquete. ¿Quieres instalarlo ahora?</value>
+  </data>
+  <data name="Error_PleaseSelectDownloadLocation" xml:space="preserve">
+    <value>Por favor, seleccione una ubicación de descarga.</value>
+  </data>
+  <data name="Label_SelectDownloadLocation" xml:space="preserve">
+    <value>Seleccione la Ubicación de Descarga:</value>
+  </data>
+  <data name="Label_Config" xml:space="preserve">
+    <value>Configuración</value>
+    <comment>This is used in inference when models have a yaml config file</comment>
+  </data>
+  <data name="Label_ToggleAutoScrolling" xml:space="preserve">
+    <value>Desplazamiento Automático hasta el Final</value>
+  </data>
+  <data name="Label_ConfirmExit" xml:space="preserve">
+    <value>Confirmar Salida</value>
+  </data>
+  <data name="Label_ConfirmExitDetail" xml:space="preserve">
+    <value>¿Seguro que quieres salir? Esto también cerrará cualquier paquete que se esté ejecutando actualmente.</value>
+  </data>
+  <data name="Label_Console" xml:space="preserve">
+    <value>Consola</value>
+  </data>
+  <data name="Label_WebUi" xml:space="preserve">
+    <value>Interfaz Web</value>
+    <comment>This will be used on a button to launch the web ui</comment>
+  </data>
+  <data name="Label_Packages" xml:space="preserve">
+    <value>Paquetes</value>
+  </data>
+  <data name="Label_ActionCannotBeUndone" xml:space="preserve">
+    <value>Esta acción no se puede deshacer.</value>
+  </data>
+  <data name="Label_AreYouSureDeleteImages" xml:space="preserve">
+    <value>¿Estás seguro de que deseas eliminar {0} imágenes?</value>
+  </data>
+  <data name="Label_CheckingHardware" xml:space="preserve">
+    <value>Estamos verificando algunas especificaciones de hardware para determinar la compatibilidad.</value>
+  </data>
+  <data name="Label_EverythingLooksGood" xml:space="preserve">
+    <value>¡Todo parece estar bien!</value>
+  </data>
+  <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
+    <value>Recomendamos una GPU con soporte CUDA para obtener la mejor experiencia. Puedes continuar sin una, pero es posible que algunos paquetes no funcionen y la inferencia pueda ser más lenta.</value>
+  </data>
+  <data name="Label_Checkpoints" xml:space="preserve">
+    <value>Checkpoints</value>
+  </data>
+  <data name="Label_ModelBrowser" xml:space="preserve">
+    <value>Navegador de Modelos</value>
+  </data>
+  <data name="Label_CLIPStrength" xml:space="preserve">
+    <value>CLIP Fortaleza</value>
+  </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>Workflows</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>Scroll Infinito</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>Navegador de Workflows</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>Abrir en OpenArt</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>Detalles del Nodo</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>Descripción del Workflow</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>Navegador OpenArt</value>
+  </data>
+  <data name="Action_PreviewPreprocessor" xml:space="preserve">
+    <value>Vista previa del Preprocesador</value>
+  </data>
+  <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
+    <value>El botón &apos;Abrir interfaz de usuario web&apos; se ha movido a la barra de comandos</value>
+  </data>
+  <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
+    <value>Ya se está ejecutando otra instancia de Stability Matrix. Ciérrelo antes de comenzar uno nuevo.</value>
+  </data>
+  <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrix ya se está ejecutando</value>
+  </data>
+  <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
+    <value>{0} eliminados correctamente</value>
+  </data>
+  <data name="Label_WorkflowDeleted" xml:space="preserve">
+    <value>Workflow Eliminado</value>
+  </data>
+  <data name="Label_ErrorRetrievingWorkflows" xml:space="preserve">
+    <value>Error al recuperar workflows</value>
+  </data>
+  <data name="TabLabel_InstalledWorkflows" xml:space="preserve">
+    <value>Workflows Instalados</value>
+  </data>
+  <data name="Label_WorkflowImported" xml:space="preserve">
+    <value>Workflow Importado</value>
+  </data>
+  <data name="Label_FinishedImportingWorkflow" xml:space="preserve">
+    <value>Terminada la importación del workflow y los nodos personalizados</value>
+  </data>
+  <data name="Label_WorkflowImportComplete" xml:space="preserve">
+    <value>Se han importado el workflow y los nodos personalizados.</value>
+  </data>
 </root>

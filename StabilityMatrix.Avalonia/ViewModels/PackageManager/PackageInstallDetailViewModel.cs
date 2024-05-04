@@ -283,6 +283,13 @@ public partial class PackageInstallDetailViewModel(
 
         if (!runner.Failed)
         {
+            if (ReferenceEquals(this, packageNavigationService.CurrentPageDataContext))
+            {
+                packageNavigationService.GoBack();
+                packageNavigationService.GoBack();
+                await Task.Delay(100);
+            }
+
             EventManager.Instance.OnInstalledPackagesChanged();
         }
     }

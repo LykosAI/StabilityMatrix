@@ -8,6 +8,8 @@
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     x:DataType="vmInference:PromptCardViewModel">
     <Design.PreviewWith>
         <Grid Width="460" Height="600">
@@ -56,21 +58,29 @@
                                 HorizontalAlignment="Right"
                                 Orientation="Horizontal">
 
-                                <Button
-                                    Margin="0,-2,0,0"
-                                    Padding="10,4"
-                                    VerticalAlignment="Top"
-                                    VerticalContentAlignment="Top"
-                                    icons:Attached.Icon="fa-solid fa-question"
-                                    Classes="transparent-full"
-                                    Command="{Binding ShowHelpDialogCommand}" />
-
+                                <Panel>
+                                    <Button
+                                        x:Name="PART_HelpButton"
+                                        Margin="0,-2,0,0"
+                                        Padding="10,4"
+                                        VerticalAlignment="Top"
+                                        VerticalContentAlignment="Top"
+                                        icons:Attached.Icon="fa-solid fa-question"
+                                        Classes="transparent-full"
+                                        Command="{Binding ShowHelpDialogCommand}" />
+                                    
+                                    <ui:TeachingTip 
+                                        Target="{Binding #PART_HelpButton}"
+                                        Title="{x:Static lang:Resources.TeachingTip_InferencePromptHelpButton}"
+                                        IsOpen="{Binding IsHelpButtonTeachingTipOpen, Mode=TwoWay}"/>
+                                </Panel>
+                                
                                 <Button
                                     Padding="8,4"
                                     Command="{Binding DebugShowTokensCommand}"
                                     Content="Show Tokens"
                                     IsVisible="{Binding SharedState.IsDebugMode}" />
-
+                                
                             </StackPanel>
 
                             <Border

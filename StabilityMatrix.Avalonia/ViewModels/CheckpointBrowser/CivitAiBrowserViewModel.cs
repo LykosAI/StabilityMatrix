@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Collections;
@@ -12,9 +11,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DynamicData;
-using DynamicData.Alias;
-using DynamicData.Binding;
 using LiteDB;
 using LiteDB.Async;
 using NLog;
@@ -177,6 +173,8 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             model => model.ShowNsfw,
             settings => settings.ModelBrowserNsfwEnabled
         );
+
+        SearchModelsCommand.ExecuteAsync(false);
     }
 
     /// <summary>
@@ -196,10 +194,40 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
     {
         var timer = Stopwatch.StartNew();
         var queryText = request.Query;
+        var models = new List<CivitModel>();
+        CivitModelsResponse? modelsResponse = null;
         try
         {
-            var modelsResponse = await civitApi.GetModels(request);
-            var models = modelsResponse.Items;
+            if (!string.IsNullOrWhiteSpace(request.CommaSeparatedModelIds))
+            {
+                // count IDs
+                var ids = request.CommaSeparatedModelIds.Split(',');
+                if (ids.Length > 100)
+                {
+                    var idChunks = ids.Chunk(100);
+                    foreach (var chunk in idChunks)
+                    {
+                        request.CommaSeparatedModelIds = string.Join(",", chunk);
+                        var chunkModelsResponse = await civitApi.GetModels(request);
+
+                        if (chunkModelsResponse.Items != null)
+                        {
+                            models.AddRange(chunkModelsResponse.Items);
+                        }
+                    }
+                }
+                else
+                {
+                    modelsResponse = await civitApi.GetModels(request);
+                    models = modelsResponse.Items;
+                }
+            }
+            else
+            {
+                modelsResponse = await civitApi.GetModels(request);
+                models = modelsResponse.Items;
+            }
+
             if (models is null)
             {
                 Logger.Debug(
@@ -241,13 +269,13 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
                     InsertedAt = DateTimeOffset.UtcNow,
                     Request = request,
                     Items = models,
-                    Metadata = modelsResponse.Metadata
+                    Metadata = modelsResponse?.Metadata
                 }
             );
 
             UpdateModelCards(models, isInfiniteScroll);
 
-            NextPageCursor = modelsResponse.Metadata?.NextCursor;
+            NextPageCursor = modelsResponse?.Metadata?.NextCursor;
         }
         catch (OperationCanceledException)
         {
@@ -428,12 +456,14 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
         {
             var connectedModels = CheckpointFile
                 .GetAllCheckpointFiles(settingsManager.ModelsDirectory)
-                .Where(c => c.IsConnectedModel);
+                .Where(c => c.IsConnectedModel)
+                .ToList();
 
             modelRequest.CommaSeparatedModelIds = string.Join(
                 ",",
                 connectedModels.Select(c => c.ConnectedModel!.ModelId).GroupBy(m => m).Select(g => g.First())
             );
+
             modelRequest.Sort = null;
             modelRequest.Period = null;
         }

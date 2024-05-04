@@ -13,6 +13,7 @@
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
     d:DataContext="{x:Static designData:DesignData.OpenArtWorkflowViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="600"
@@ -36,7 +37,7 @@
             <Run Text="{Binding Workflow.Creator.Name}" />
         </TextBlock>
 
-        <labs:AsyncImage
+        <vendorLabs:BetterAsyncImage
             Grid.Row="2"
             Grid.Column="0"
             Height="300"

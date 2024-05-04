@@ -195,8 +195,9 @@ public class ComfyUI(
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
-        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
+        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
 
+        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(

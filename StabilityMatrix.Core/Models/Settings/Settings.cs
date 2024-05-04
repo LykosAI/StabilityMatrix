@@ -15,6 +15,8 @@ public class Settings
     public string? Theme { get; set; } = "Dark";
     public string? Language { get; set; } = GetDefaultCulture().Name;
 
+    public NumberFormatMode NumberFormatMode { get; set; } = NumberFormatMode.CurrentCulture;
+
     public List<InstalledPackage> InstalledPackages { get; set; } = new();
 
     [JsonPropertyName("ActiveInstalledPackage")]
@@ -110,7 +112,30 @@ public class Settings
 
     public bool IsDiscordRichPresenceEnabled { get; set; }
 
-    public Dictionary<string, string>? EnvironmentVariables { get; set; }
+    [JsonIgnore]
+    public Dictionary<string, string> DefaultEnvironmentVariables { get; } =
+        new() { ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib" };
+
+    [JsonPropertyName("EnvironmentVariables")]
+    public Dictionary<string, string>? UserEnvironmentVariables { get; set; }
+
+    [JsonIgnore]
+    public IReadOnlyDictionary<string, string> EnvironmentVariables
+    {
+        get
+        {
+            if (UserEnvironmentVariables is null || UserEnvironmentVariables.Count == 0)
+            {
+                return DefaultEnvironmentVariables;
+            }
+
+            return DefaultEnvironmentVariables
+                .Concat(UserEnvironmentVariables)
+                .GroupBy(pair => pair.Key)
+                // User variables override default variables with the same key
+                .ToDictionary(grouping => grouping.Key, grouping => grouping.Last().Value);
+        }
+    }
 
     public HashSet<string>? InstalledModelHashes { get; set; } = new();
 

@@ -126,9 +126,12 @@ public class KohyaSs(
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
+
         // Setup venv
         await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
         venvRunner.WorkingDirectory = installLocation;
+        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
+
         await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
 
         // Extra dep needed before running setup since v23.0.x
@@ -156,90 +159,7 @@ public class KohyaSs(
         Action<ProcessOutput>? onConsoleOutput
     )
     {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
-
-        // update gui files to point to venv accelerate
-        await runner.RunInThreadWithLock(() =>
-        {
-            var scope = Py.CreateScope();
-            scope.Exec(
-                """
-                import ast
-
-                class StringReplacer(ast.NodeTransformer):
-                    def __init__(self, old: str, new: str, replace_count: int = -1):
-                        self.old = old
-                        self.new = new
-                        self.replace_count = replace_count
-                    
-                    def visit_Constant(self, node: ast.Constant) -> ast.Constant:
-                        if isinstance(node.value, str) and self.old in node.value:
-                            new_value = node.value.replace(self.old, self.new, self.replace_count)
-                            node.value = new_value
-                        return node
-                
-                    def rewrite_module(self, module_text: str) -> str:
-                        tree = ast.parse(module_text)
-                        tree = self.visit(tree)
-                        return ast.unparse(tree)
-                """
-            );
-
-            var replacementAcceleratePath = Compat.IsWindows
-                ? @".\venv\scripts\accelerate"
-                : "./venv/bin/accelerate";
-
-            var replacer = scope.InvokeMethod(
-                "StringReplacer",
-                "accelerate".ToPython(),
-                $"{replacementAcceleratePath}".ToPython(),
-                1.ToPython()
-            );
-
-            var kohyaGuiDir = Path.Combine(installedPackagePath, "kohya_gui");
-            var guiDirExists = Directory.Exists(kohyaGuiDir);
-            var filesToUpdate = new List<string>();
-
-            if (guiDirExists)
-            {
-                filesToUpdate.AddRange(
-                    [
-                        "lora_gui.py",
-                        "dreambooth_gui.py",
-                        "textual_inversion_gui.py",
-                        "wd14_caption_gui.py",
-                        "finetune_gui.py"
-                    ]
-                );
-            }
-            else
-            {
-                filesToUpdate.AddRange(
-                    [
-                        "lora_gui.py",
-                        "dreambooth_gui.py",
-                        "textual_inversion_gui.py",
-                        Path.Combine("library", "wd14_caption_gui.py"),
-                        "finetune_gui.py"
-                    ]
-                );
-            }
-
-            foreach (var file in filesToUpdate)
-            {
-                var path = Path.Combine(guiDirExists ? kohyaGuiDir : installedPackagePath, file);
-                if (!File.Exists(path))
-                    continue;
-
-                var text = File.ReadAllText(path);
-                if (text.Contains(replacementAcceleratePath.Replace(@"\", @"\\")))
-                    continue;
-
-                var result = replacer.InvokeMethod("rewrite_module", text.ToPython());
-                var resultStr = result.ToString();
-                File.WriteAllText(path, resultStr);
-            }
-        });
+        var venvRunner = await SetupVenvPure(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -259,7 +179,7 @@ public class KohyaSs(
 
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+        venvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
     }
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }

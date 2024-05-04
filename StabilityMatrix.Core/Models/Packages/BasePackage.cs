@@ -237,4 +237,6 @@ public abstract class BasePackage
             onConsoleOutput
         );
     }
+
+    public abstract Task<DownloadPackageVersionOptions?> GetUpdate(InstalledPackage installedPackage);
 }

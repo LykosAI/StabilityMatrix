@@ -107,7 +107,9 @@ public class MetadataImportService(
                     .ConfigureAwait(false);
 
                 var image = modelVersion.Images?.FirstOrDefault(
-                    img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+                    img =>
+                        LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+                        && img.Type == "image"
                 );
                 if (image == null)
                 {
@@ -153,9 +155,17 @@ public class MetadataImportService(
         var cmInfoList = new Dictionary<FilePath, ConnectedModelInfo>();
         foreach (var cmInfoPath in directory.EnumerateFiles("*.cm-info.json", SearchOption.AllDirectories))
         {
-            var cmInfo = JsonSerializer.Deserialize<ConnectedModelInfo>(
-                await cmInfoPath.ReadAllTextAsync().ConfigureAwait(false)
-            );
+            ConnectedModelInfo? cmInfo;
+            try
+            {
+                cmInfo = JsonSerializer.Deserialize<ConnectedModelInfo>(
+                    await cmInfoPath.ReadAllTextAsync().ConfigureAwait(false)
+                );
+            }
+            catch (JsonException)
+            {
+                cmInfo = null;
+            }
             if (cmInfo == null)
                 continue;
 
@@ -201,7 +211,9 @@ public class MetadataImportService(
                     .ConfigureAwait(false);
 
                 var image = modelVersion.Images?.FirstOrDefault(
-                    img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+                    img =>
+                        LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+                        && img.Type == "image"
                 );
                 if (image == null)
                     continue;
@@ -264,7 +276,9 @@ public class MetadataImportService(
             .ConfigureAwait(false);
 
         var image = modelVersion.Images?.FirstOrDefault(
-            img => LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+            img =>
+                LocalModelFile.SupportedImageExtensions.Contains(Path.GetExtension(img.Url))
+                && img.Type == "image"
         );
 
         if (image == null)

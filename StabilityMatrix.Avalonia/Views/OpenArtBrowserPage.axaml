@@ -13,6 +13,7 @@
                           xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
                           xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
                           xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+                          xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
                           x:DataType="viewModels:OpenArtBrowserViewModel"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
                           x:Class="StabilityMatrix.Avalonia.Views.OpenArtBrowserPage">
@@ -106,7 +107,7 @@
                     Command="{StaticResource OpenWorkflowCommand}"
                     CommandParameter="{Binding }">
                     <Grid RowDefinitions="*, Auto">
-                        <labs:AsyncImage
+                        <vendorLabs:BetterAsyncImage
                             Grid.Row="0"
                             Grid.RowSpan="2"
                             CornerRadius="8"
@@ -143,7 +144,7 @@
                                 Classes="transparent"
                                 Padding="10,4">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <labs:AsyncImage
+                                    <vendorLabs:BetterAsyncImage
                                         Width="22"
                                         Height="22"
                                         ClipToBounds="True"
@@ -152,7 +153,7 @@
                                         RenderOptions.BitmapInterpolationMode="HighQuality"
                                         IsVisible="{Binding Creator.Avatar, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                         Source="{Binding Creator.Avatar}">
-                                    </labs:AsyncImage>
+                                    </vendorLabs:BetterAsyncImage>
                                     <TextBlock
                                         VerticalAlignment="Center"
                                         Foreground="{DynamicResource TextControlForeground}"
@@ -304,6 +305,7 @@
 
         <ScrollViewer Grid.Row="2"
                       ScrollChanged="ScrollViewer_OnScrollChanged"
+                      HorizontalContentAlignment="Center"
                       IsVisible="{Binding !IsLoading}">
             <ItemsRepeater ItemsSource="{Binding SearchResults}"
                            ItemTemplate="{StaticResource OpenArtWorkflowTemplate}">

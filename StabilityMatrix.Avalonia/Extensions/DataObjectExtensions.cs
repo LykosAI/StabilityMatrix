@@ -1,4 +1,5 @@
-﻿using Avalonia.Input;
+﻿using System.Runtime.InteropServices;
+using Avalonia.Input;
 
 namespace StabilityMatrix.Avalonia.Extensions;
 
@@ -9,9 +10,16 @@ public static class DataObjectExtensions
     /// </summary>
     public static T? GetContext<T>(this IDataObject dataObject)
     {
-        if (dataObject.Get("Context") is T context)
+        try
         {
-            return context;
+            if (dataObject.Get("Context") is T context)
+            {
+                return context;
+            }
+        }
+        catch (COMException)
+        {
+            return default;
         }
 
         return default;

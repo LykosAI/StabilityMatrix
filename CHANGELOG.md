@@ -5,6 +5,94 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.11.0-dev.2
+### Added
+- Added Brazilian Portuguese language option, thanks to jbostroski for the translation!
+- Added setting for locale specific or invariant number formatting
+- Added support for jpg/jpeg & gif images in the Output Browser
+### Changed
+- Centered OpenArt browser cards
+### Fixed
+- Fixed "Auto Scroll to End" not working in some scenarios
+- Fixed "Auto Scroll to End" toggle button not scrolling to the end when toggled on
+- Fixed/reverted output folder name changes for Automatic1111
+- Fixed xformers being uninstalled with every ComfyUI update
+- Fixed Inference Lora menu strength resetting to default if out of slider range (0 to 1)
+- Fixed missing progress text during package installs
+
+## v2.11.0-dev.1
+### Added
+- Added search bar to the Python Packages dialog
+#### Inference
+- Alternate Lora / LyCORIS drop-down model selection, can be toggled via the model settings button. The existing prompt-based Lora / LyCORIS method is still available.
+### Fixed
+- Fixed crash when failing to parse Python package details
+
+## v2.10.2
+### Changed
+- Updated translations for Spanish and Turkish
+### Fixed
+- Fixed more crashes when loading invalid connected model info files
+- Fixed pip installs not parsing comments properly
+- Fixed crash when sending input to a process that isn't running
+- Fixed breadcrumb on console page showing incorrect running package name
+- Fixed [#576](https://github.com/LykosAI/StabilityMatrix/issues/576) - drag & drop crashes on macOS & Linux
+- Fixed [#594](https://github.com/LykosAI/StabilityMatrix/issues/594) - missing thumbnails in Inference model selector
+- Fixed [#600](https://github.com/LykosAI/StabilityMatrix/issues/600) - kohya_ss v24+ not launching
+- Downgraded Avalonia back to 11.0.9 to fix [#589](https://github.com/LykosAI/StabilityMatrix/issues/589) and possibly other rendering issues
+
+## v2.10.1
+### Added
+- Added SVD Shared Model & Output Folders for Forge (fixes [#580](https://github.com/LykosAI/StabilityMatrix/issues/580))
+### Changed
+- Improved error message when logging in with a Lykos account fails due to incorrect email or password
+- Model Browser & Workflow Browser now auto-load when first navigating to those pages
+- Removed update confirmation dialog, instead showing the new version in the update button tooltip
+### Fixed
+- Fixed package launch not working when environment variable `SETUPTOOLS_USE_DISTUTILS` is set due to conflict with a default environment variable. User environment variables will now correctly override any default environment variables.
+- Fixed "No refresh token found" error when failing to login with Lykos account in some cases
+- Fixed blank entries appearing in the Categories dropdown on the Checkpoints page
+- Fixed crash when loading invalid connected model info files
+- Fixed [#585](https://github.com/LykosAI/StabilityMatrix/issues/585) - Crash when drag & drop source and destination are the same
+- Fixed [#584](https://github.com/LykosAI/StabilityMatrix/issues/584) - `--launch-package` argument not working
+- Fixed [#581](https://github.com/LykosAI/StabilityMatrix/issues/581) - Inference teaching tip showing more often than it should
+- Fixed [#578](https://github.com/LykosAI/StabilityMatrix/issues/578) - "python setup.py egg_info did not run successfully" failure when installing Auto1111 or SDWebUI Forge
+- Fixed [#574](https://github.com/LykosAI/StabilityMatrix/issues/574) - local images not showing on macOS or Linux
+
+## v2.10.0
+### Added
+- Added Reference-Only mode for Inference ControlNet, used for guiding the sampler with an image without a pretrained model. Part of the latent and attention layers will be connected to the reference image, similar to Image to Image or Inpainting.
+- Inference ControlNet module now supports over 42 preprocessors, a new button next to the preprocessors dropdown allows previewing the output of the selected preprocessor on the image.
+- Added resolution selection for Inference ControlNet module, this controls preprocessor resolution too.
+- Added Layer Diffuse sampler addon to Inference, allows generating foreground with transparency with SD1.5 and SDXL.
+- Added support for deep links from the new Stability Matrix Chrome extension
+- Added OpenArt.AI workflow browser for ComfyUI workflows
+- Added more metadata to the image dialog info flyout
+- Added Output Sharing toggle in Advanced Options during install flow
+### Changed
+- Revamped the Packages page to enable running multiple packages at the same time
+- Changed the Outputs Page to use a TreeView for the directory selection instead of a dropdown selector
+- Model download location selector now searches all subfolders
+- Inference Primary Sampler Addons (i.e. ControlNet, FreeU) are now inherited by Hires Fix Samplers, this can be overriden from the Hires Fix module's settings menu by disabling the "Inherit Primary Sampler Addons" option.
+- Revisited the way images are loaded on the outputs page, with improvements to loading speed & not freezing the UI while loading
+- Updated translations for French, Spanish, and Turkish
+- Changed to a new image control for pages with many images
+- (Internal) Updated to Avalonia 11.0.10
+### Fixed
+- Fixed [#559](https://github.com/LykosAI/StabilityMatrix/issues/559) - "Unable to load bitmap from provided data" error in Checkpoints page
+- Fixed [#522](https://github.com/LykosAI/StabilityMatrix/issues/522) - Incorrect output directory path for latest Auto1111
+- Fixed [#529](https://github.com/LykosAI/StabilityMatrix/issues/529) - OneTrainer requesting input during update
+- Fixed Civitai model browser error when sorting by Installed with more than 100 installed models
+- Fixed CLIP Install errors due to setuptools distutils conflict, added default environment variable setting `SETUPTOOLS_USE_DISTUTILS=stdlib`
+- Fixed progress bars not displaying properly during package installs & updates
+- Fixed ComfyUI extension updates not running install.py / updating requirements.txt
+- Improved performance when deleting many images from the Outputs page
+- Fixed ComfyUI torch downgrading to 2.1.2 when updating
+- Fixed Inference HiresFix module "Inherit Primary Sampler Addons" setting not effectively disabling when unchecked
+- Fixed model download location options for VAEs in the CivitAI Model Browser
+### Removed
+- Removed the main Launch page, as it is no longer needed with the new Packages page
+
 ## v2.10.0-pre.2
 ### Added
 - Added more metadata to the image dialog info flyout
@@ -70,6 +158,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Changed the Outputs Page to use a TreeView for the directory selection instead of a dropdown selector
 ### Removed
 - Removed the main Launch page, as it is no longer needed with the new Packages page
+
+## v2.9.3
+### Changed
+- Removed Symlink option for InvokeAI to prevent InvokeAI from moving models into its own directories (will be replaced with a Config option in a future update)
+### Fixed
+- Fixed images not appearing in Civitai Model Browser when "Show NSFW" was disabled
+- Fixed [#556](https://github.com/LykosAI/StabilityMatrix/issues/556) - "Could not find entry point for InvokeAI" error
 
 ## v2.9.2
 ### Changed

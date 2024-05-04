@@ -961,4 +961,118 @@
   <data name="Label_RecommendedModelsSubText" xml:space="preserve">
     <value>Paketiniz yüklenirken başlamanıza yardımcı olması için önerdiğimiz bazı modeller aşağıda verilmiştir.</value>
   </data>
+  <data name="Label_Notifications" xml:space="preserve">
+    <value>Bildirimler</value>
+  </data>
+  <data name="Label_NotificationOption_None" xml:space="preserve">
+    <value>Hiçbiri</value>
+  </data>
+  <data name="Label_ComfyRequiredTitle" xml:space="preserve">
+    <value>ComfyUI Gerekli</value>
+  </data>
+  <data name="Label_ComfyRequiredDetail" xml:space="preserve">
+    <value>Bu paketi kurmak için ComfyUI gereklidir. Şimdi yüklemek ister misiniz?</value>
+  </data>
+  <data name="Error_PleaseSelectDownloadLocation" xml:space="preserve">
+    <value>Lütfen bir indirme konumu seçin.</value>
+  </data>
+  <data name="Label_SelectDownloadLocation" xml:space="preserve">
+    <value>İndirme Konumunu Seçin:</value>
+  </data>
+  <data name="Label_Config" xml:space="preserve">
+    <value>Yapılandırma</value>
+  </data>
+  <data name="Label_ToggleAutoScrolling" xml:space="preserve">
+    <value>Otomatik Sona Kaydır</value>
+  </data>
+  <data name="Label_ConfirmExit" xml:space="preserve">
+    <value>Çıkışı Onayla</value>
+  </data>
+  <data name="Label_ConfirmExitDetail" xml:space="preserve">
+    <value>Çıkmak istediğine emin misin? Bu aynı zamanda şu anda çalışan tüm paketleri de kapatacaktır.</value>
+  </data>
+  <data name="Label_Console" xml:space="preserve">
+    <value>Konsol</value>
+  </data>
+  <data name="Label_WebUi" xml:space="preserve">
+    <value>Web arayüzü</value>
+  </data>
+  <data name="Label_Packages" xml:space="preserve">
+    <value>Paketler</value>
+  </data>
+  <data name="Label_ActionCannotBeUndone" xml:space="preserve">
+    <value>Bu eylem geri alınamaz.</value>
+  </data>
+  <data name="Label_AreYouSureDeleteImages" xml:space="preserve">
+    <value>{0} görseli silmek istediğinizden emin misiniz?</value>
+  </data>
+  <data name="Label_CheckingHardware" xml:space="preserve">
+    <value>Uyumluluğu belirlemek için bazı donanım özelliklerini kontrol ediyoruz.</value>
+  </data>
+  <data name="Label_EverythingLooksGood" xml:space="preserve">
+    <value>Her şey iyi gözüküyor!</value>
+  </data>
+  <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
+    <value>En iyi deneyim için CUDA destekli bir GPU öneriyoruz. Olmadan da devam edebilirsiniz ancak bazı paketler çalışmayabilir ve çıkarımlar daha yavaş olabilir.</value>
+  </data>
+  <data name="Label_Checkpoints" xml:space="preserve">
+    <value>Kontrol noktaları</value>
+  </data>
+  <data name="Label_ModelBrowser" xml:space="preserve">
+    <value>Model Tarayıcı</value>
+  </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>İş akışları</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>Sonsuz Kaydırma</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>İş Akışı Tarayıcısı</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>OpenArt&apos;ta aç</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>Düğüm Ayrıntıları</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>İş Akışı Açıklaması</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>OpenArt Tarayıcı</value>
+  </data>
+  <data name="Action_PreviewPreprocessor" xml:space="preserve">
+    <value>Ön İşlemciyi Önizle</value>
+  </data>
+  <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
+    <value>&apos;Web Kullanıcı Arayüzünü Aç&apos; düğmesi komut çubuğuna taşındı</value>
+  </data>
+  <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrixin başka bir örneği zaten çalışıyor. Yenisini başlatmadan önce lütfen kapatın.</value>
+  </data>
+  <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrix zaten çalışıyor</value>
+  </data>
+  <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
+    <value>{0} başarıyla silindi</value>
+  </data>
+  <data name="Label_WorkflowDeleted" xml:space="preserve">
+    <value>İş Akışı Silindi</value>
+  </data>
+  <data name="Label_ErrorRetrievingWorkflows" xml:space="preserve">
+    <value>İş akışları alınırken hata oluştu</value>
+  </data>
+  <data name="TabLabel_InstalledWorkflows" xml:space="preserve">
+    <value>Yüklü İş Akışları</value>
+  </data>
+  <data name="Label_WorkflowImported" xml:space="preserve">
+    <value>İş Akışı İçeri Aktarıldı</value>
+  </data>
+  <data name="Label_FinishedImportingWorkflow" xml:space="preserve">
+    <value>İş akışının ve özel düğümlerin içe aktarılması tamamlandı</value>
+  </data>
+  <data name="Label_WorkflowImportComplete" xml:space="preserve">
+    <value>İş akışı ve özel düğümler içe aktarıldı.</value>
+  </data>
 </root>

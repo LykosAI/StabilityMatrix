@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia.Media;
 using Avalonia.Skia;
@@ -45,6 +47,12 @@ public partial class PaintCanvasViewModel : ObservableObject
     private bool isPenDown;
 
     [ObservableProperty]
+    private bool isPaintBrushSelected;
+
+    [ObservableProperty]
+    private bool isEraserSelected;
+
+    [ObservableProperty]
     private SKBitmap? backgroundImage;
 
     public List<SKBitmap> LayerImages { get; } = [];
@@ -53,15 +61,66 @@ public partial class PaintCanvasViewModel : ObservableObject
 
     public Action<Stream>? SaveCanvasToImage { get; set; }
 
-    [RelayCommand(CanExecute = nameof(CanUndo))]
-    public async Task UndoAsync()
+    public Action? RefreshCanvas { get; set; }
+
+    public async Task SaveCanvasToJson(Stream stream)
     {
-        // Remove last path
-        if (Paths.Count > 0)
+        var model = new PaintCanvasModel
         {
-            Paths = Paths.RemoveAt(Paths.Count - 1);
+            TemporaryPaths = TemporaryPaths.ToDictionary(x => x.Key, x => x.Value),
+            Paths = Paths,
+            PaintBrushColor = PaintBrushColor,
+            PaintBrushSize = PaintBrushSize,
+            PaintBrushAlpha = PaintBrushAlpha
+        };
+
+        await JsonSerializer.SerializeAsync(stream, model);
+    }
+
+    public async Task LoadCanvasFromJson(Stream stream)
+    {
+        var model = await JsonSerializer.DeserializeAsync<PaintCanvasModel>(stream);
+
+        TemporaryPaths.Clear();
+        foreach (var (key, value) in model!.TemporaryPaths)
+        {
+            TemporaryPaths.TryAdd(key, value);
         }
 
-        // await Dispatcher.UIThread.InvokeAsync(() => MainCanvas?.InvalidateVisual());
+        Paths = model.Paths;
+        PaintBrushColor = model.PaintBrushColor;
+        PaintBrushSize = model.PaintBrushSize;
+        PaintBrushAlpha = model.PaintBrushAlpha;
+
+        RefreshCanvas?.Invoke();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanUndo))]
+    public void Undo()
+    {
+        // Remove last path
+        var currentPaths = Paths;
+
+        if (currentPaths.IsEmpty)
+        {
+            return;
+        }
+
+        Paths = currentPaths.RemoveAt(currentPaths.Count - 1);
+
+        RefreshCanvas?.Invoke();
+    }
+
+    public class PaintCanvasModel
+    {
+        public Dictionary<long, PenPath> TemporaryPaths { get; set; } = new();
+
+        public ImmutableList<PenPath> Paths { get; set; } = ImmutableList<PenPath>.Empty;
+
+        public Color? PaintBrushColor { get; set; }
+
+        public double PaintBrushSize { get; set; }
+
+        public double PaintBrushAlpha { get; set; }
     }
 }

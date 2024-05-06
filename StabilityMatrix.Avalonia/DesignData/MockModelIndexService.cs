@@ -26,6 +26,12 @@ public class MockModelIndexService : IModelIndexService
     }
 
     /// <inheritdoc />
+    public Task<Dictionary<SharedFolderType, LocalModelFolder>> GetAllAsFolders()
+    {
+        return Task.FromResult(new Dictionary<SharedFolderType, LocalModelFolder>());
+    }
+
+    /// <inheritdoc />
     public Task<IEnumerable<LocalModelFile>> FindAsync(SharedFolderType type)
     {
         return Task.FromResult(Enumerable.Empty<LocalModelFile>());

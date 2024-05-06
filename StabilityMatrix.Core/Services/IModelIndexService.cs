@@ -23,6 +23,11 @@ public interface IModelIndexService
     IEnumerable<LocalModelFile> GetFromModelIndex(SharedFolderType types);
 
     /// <summary>
+    /// Gets all models in a hierarchical structure.
+    /// </summary>
+    Task<Dictionary<SharedFolderType, LocalModelFolder>> GetAllAsFolders();
+
+    /// <summary>
     /// Find all models of the specified SharedFolderType.
     /// </summary>
     Task<IEnumerable<LocalModelFile>> FindAsync(SharedFolderType type);

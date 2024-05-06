@@ -2,6 +2,7 @@
 using System.Text;
 using AsyncAwaitBestPractices;
 using AutoCtor;
+using KGySoft.CoreLibraries;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
@@ -35,6 +36,39 @@ public partial class ModelIndexService : IModelIndexService
     public IEnumerable<LocalModelFile> GetFromModelIndex(SharedFolderType types)
     {
         return ModelIndex.Where(kvp => (kvp.Key & types) != 0).SelectMany(kvp => kvp.Value);
+    }
+
+    /// <inheritdoc />
+    public async Task<Dictionary<SharedFolderType, LocalModelFolder>> GetAllAsFolders()
+    {
+        var modelFiles = await liteDbContext.LocalModelFiles.FindAllAsync().ConfigureAwait(false);
+
+        var rootFolders = new Dictionary<SharedFolderType, LocalModelFolder>();
+
+        foreach (var modelFile in modelFiles)
+        {
+            var pathParts = modelFile.RelativePath.Split(Path.DirectorySeparatorChar);
+            var currentFolder = rootFolders.GetOrAdd(
+                modelFile.SharedFolderType,
+                _ => new LocalModelFolder { RelativePath = pathParts[0] }
+            );
+            for (var i = 1; i < pathParts.Length - 1; i++)
+            {
+                var folderName = pathParts[i];
+                var folder = currentFolder.Folders.GetValueOrDefault(folderName);
+                if (folder == null)
+                {
+                    folder = new LocalModelFolder { RelativePath = folderName };
+                    currentFolder.Folders[folderName] = folder;
+                }
+
+                currentFolder = folder;
+            }
+
+            currentFolder.Files[modelFile.RelativePath] = modelFile;
+        }
+
+        return rootFolders;
     }
 
     /// <inheritdoc />

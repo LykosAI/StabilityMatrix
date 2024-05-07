@@ -837,7 +837,6 @@ public partial class MainSettingsViewModel : PageViewModelBase
             {
                 var folderTypes = Enum.Parse<SharedFolderType>(type, true);
                 timer.Restart();
-                // results = modelIndexService.FindByModelType(folderTypes).ToList();
                 results = (await modelIndexService.FindByModelTypeAsync(folderTypes)).ToList();
                 timer.Stop();
             }

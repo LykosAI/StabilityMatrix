@@ -322,16 +322,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Load local models
         modelsSource.EditDiff(
             modelIndexService
-                .GetFromModelIndex(SharedFolderType.StableDiffusion)
+                .FindByModelType(SharedFolderType.StableDiffusion)
                 .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
         // Load local control net models
         controlNetModelsSource.EditDiff(
-            modelIndexService
-                .GetFromModelIndex(SharedFolderType.ControlNet)
-                .Select(HybridModelFile.FromLocal),
+            modelIndexService.FindByModelType(SharedFolderType.ControlNet).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
@@ -344,7 +342,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Load local Lora / LyCORIS models
         loraModelsSource.EditDiff(
             modelIndexService
-                .GetFromModelIndex(SharedFolderType.Lora | SharedFolderType.LyCORIS)
+                .FindByModelType(SharedFolderType.Lora | SharedFolderType.LyCORIS)
                 .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
@@ -352,7 +350,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Load local prompt expansion models
         promptExpansionModelsSource.EditDiff(
             modelIndexService
-                .GetFromModelIndex(SharedFolderType.PromptExpansion)
+                .FindByModelType(SharedFolderType.PromptExpansion)
                 .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
@@ -367,7 +365,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         // Load local VAE models
         vaeModelsSource.EditDiff(
-            modelIndexService.GetFromModelIndex(SharedFolderType.VAE).Select(HybridModelFile.FromLocal),
+            modelIndexService.FindByModelType(SharedFolderType.VAE).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
@@ -380,7 +378,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Load Upscalers
         modelUpscalersSource.EditDiff(
             modelIndexService
-                .GetFromModelIndex(
+                .FindByModelType(
                     SharedFolderType.ESRGAN | SharedFolderType.RealESRGAN | SharedFolderType.SwinIR
                 )
                 .Select(m => new ComfyUpscaler(m.FileName, ComfyUpscalerType.ESRGAN)),

@@ -316,7 +316,7 @@ public partial class CompletionProvider : ICompletionProvider
             // Convert back to bit flags
             .Aggregate((a, b) => a | b);
 
-        var models = modelIndexService.GetFromModelIndex(folderTypes);
+        var models = modelIndexService.FindByModelType(folderTypes);
 
         var matches = models
             .Where(model => model.FileName.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase))

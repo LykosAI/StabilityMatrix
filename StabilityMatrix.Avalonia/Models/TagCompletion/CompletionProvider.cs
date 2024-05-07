@@ -110,10 +110,7 @@ public partial class CompletionProvider : ICompletionProvider
         var text = data.Text;
 
         // For tags and if enabled, replace underscores with spaces
-        if (
-            data is TagCompletionData
-            && settingsManager.Settings.IsCompletionRemoveUnderscoresEnabled
-        )
+        if (data is TagCompletionData && settingsManager.Settings.IsCompletionRemoveUnderscoresEnabled)
         {
             // Remove underscores
             text = text.Replace("_", " ");
@@ -315,25 +312,18 @@ public partial class CompletionProvider : ICompletionProvider
         var folderTypes = Enum.GetValues(typeof(PromptExtraNetworkType))
             .Cast<PromptExtraNetworkType>()
             .Where(f => networkType.HasFlag(f))
-            .Select(network => network.ConvertTo<SharedFolderType>());
+            .Select(network => network.ConvertTo<SharedFolderType>())
+            // Convert back to bit flags
+            .Aggregate((a, b) => a | b);
 
-        var completions = new List<ICompletionData>();
+        var models = modelIndexService.FindByModelType(folderTypes);
 
-        foreach (var folderType in folderTypes)
-        {
-            // Get from index service
-            if (modelIndexService.ModelIndex.TryGetValue(folderType, out var localModels))
-            {
-                var results =
-                    from model in localModels
-                    where model.FileName.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)
-                    select ModelCompletionData.FromLocalModel(model, networkType);
+        var matches = models
+            .Where(model => model.FileName.StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase))
+            .Select(model => ModelCompletionData.FromLocalModel(model, networkType))
+            .Take(itemsCount);
 
-                completions.AddRange(results.Take(itemsCount));
-            }
-        }
-
-        return completions;
+        return matches;
     }
 
     private IEnumerable<ICompletionData> GetCompletionNetworkTypes(string searchTerm)
@@ -347,19 +337,12 @@ public partial class CompletionProvider : ICompletionProvider
 
         return availableTypes
             .Where(
-                type =>
-                    type.Item1
-                        .GetStringValue()
-                        .StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)
+                type => type.Item1.GetStringValue().StartsWith(searchTerm, StringComparison.OrdinalIgnoreCase)
             )
             .Select(type => new ModelTypeCompletionData(type.Item2, type.Item1));
     }
 
-    private IEnumerable<ICompletionData> GetCompletionTags(
-        string searchTerm,
-        int itemsCount,
-        bool suggest
-    )
+    private IEnumerable<ICompletionData> GetCompletionTags(string searchTerm, int itemsCount, bool suggest)
     {
         if (searcher is null)
         {
@@ -405,11 +388,7 @@ public partial class CompletionProvider : ICompletionProvider
         }
 
         timer.Stop();
-        Logger.Trace(
-            "Completions for {Term} took {Time:F2}ms",
-            searchTerm,
-            timer.Elapsed.TotalMilliseconds
-        );
+        Logger.Trace("Completions for {Term} took {Time:F2}ms", searchTerm, timer.Elapsed.TotalMilliseconds);
 
         return completions;
     }

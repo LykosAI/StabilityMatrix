@@ -242,7 +242,7 @@ public sealed class App : Application
     /// </summary>
     private void Setup()
     {
-        using var _ = new CodeTimer();
+        using var _ = CodeTimer.StartNew();
 
         // Setup uri handler for `stabilitymatrix://` protocol
         Program.UriHandler.RegisterUriScheme();

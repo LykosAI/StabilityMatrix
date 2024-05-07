@@ -240,32 +240,27 @@ public partial class ModelIndexService : IModelIndexService
 
             if (paths.Contains(jsonPath))
             {
-                cmInfoTasks.Add(
-                    Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await using var stream = jsonPath.Info.OpenRead();
+                try
+                {
+                    await using var stream = jsonPath.Info.OpenRead();
 
-                            var connectedModelInfo = await JsonSerializer
-                                .DeserializeAsync(
-                                    stream,
-                                    ConnectedModelInfoSerializerContext.Default.ConnectedModelInfo
-                                )
-                                .ConfigureAwait(false);
+                    var connectedModelInfo = await JsonSerializer
+                        .DeserializeAsync(
+                            stream,
+                            ConnectedModelInfoSerializerContext.Default.ConnectedModelInfo
+                        )
+                        .ConfigureAwait(false);
 
-                            localModel.ConnectedModelInfo = connectedModelInfo;
-                        }
-                        catch (Exception e)
-                        {
-                            logger.LogWarning(
-                                e,
-                                "Failed to deserialize connected model info for {Path}, skipping",
-                                jsonPath
-                            );
-                        }
-                    })
-                );
+                    localModel.ConnectedModelInfo = connectedModelInfo;
+                }
+                catch (Exception e)
+                {
+                    logger.LogWarning(
+                        e,
+                        "Failed to deserialize connected model info for {Path}, skipping",
+                        jsonPath
+                    );
+                }
             }
 
             // Try to find a preview image

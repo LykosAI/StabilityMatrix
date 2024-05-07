@@ -96,6 +96,9 @@ public record LocalModelFile
     [BsonIgnore]
     public string DisplayConfigFileName => Path.GetFileName(ConfigFullPath) ?? string.Empty;
 
+    [BsonIgnore]
+    public bool HasConnectedModel => ConnectedModelInfo != null;
+
     public string GetFullPath(string rootModelDirectory)
     {
         return Path.Combine(rootModelDirectory, RelativePath);

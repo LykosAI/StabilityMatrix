@@ -211,7 +211,7 @@ public class StableDiffusionUx(
                         new PipInstallArgs()
                             .WithTorch("==2.1.2")
                             .WithTorchVision()
-                            .WithTorchExtraIndex("nightly/cpu"),
+                            .WithTorchExtraIndex("cpu"),
                         onConsoleOutput
                     )
                     .ConfigureAwait(false);

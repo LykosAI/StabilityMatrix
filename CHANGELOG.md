@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed crash when failing to parse Python package details
 
+## v2.10.3
+### Fixed
+- Fixed MPS install on macOS for ComfyUI, A1111, SDWebUI Forge, and SDWebUI UX causing torch to be upgraded to dev nightly versions and causing incompatibilities with dependencies.
+
 ## v2.10.2
 ### Changed
 - Updated translations for Spanish and Turkish

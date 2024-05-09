@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -19,6 +21,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Services;
+using CheckpointSortMode = StabilityMatrix.Core.Models.CheckpointSortMode;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
@@ -61,6 +64,18 @@ public partial class NewCheckpointsPageViewModel(
     [NotifyPropertyChangedFor(nameof(NumImagesSelected))]
     private int numItemsSelected;
 
+    [ObservableProperty]
+    private bool sortConnectedModelsFirst = true;
+
+    [ObservableProperty]
+    private CheckpointSortMode selectedSortOption = CheckpointSortMode.Title;
+    public List<CheckpointSortMode> SortOptions => Enum.GetValues<CheckpointSortMode>().ToList();
+
+    [ObservableProperty]
+    private ListSortDirection selectedSortDirection = ListSortDirection.Ascending;
+
+    public List<ListSortDirection> SortDirections => Enum.GetValues<ListSortDirection>().ToList();
+
     public string NumImagesSelected =>
         NumItemsSelected == 1
             ? Resources.Label_OneImageSelected.Replace("images ", "")
@@ -68,6 +83,9 @@ public partial class NewCheckpointsPageViewModel(
 
     protected override void OnInitialLoaded()
     {
+        if (Design.IsDesignMode)
+            return;
+
         base.OnInitialLoaded();
 
         // Observable predicate from SearchQuery changes
@@ -106,14 +124,64 @@ public partial class NewCheckpointsPageViewModel(
             )
             .AsObservable();
 
-        var sortComparer = SortExpressionComparer<CheckpointFileViewModel>
-            .Ascending(vm => vm.CheckpointFile.SharedFolderType)
-            .ThenByDescending(vm => vm.CheckpointFile.ConnectedModelInfo != null)
-            .ThenByAscending(
-                vm =>
-                    vm.CheckpointFile.ConnectedModelInfo?.ModelName
-                    ?? vm.CheckpointFile.FileNameWithoutExtension
-            );
+        var comparerObservable = Observable
+            .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
+            .Where(
+                x =>
+                    x.EventArgs.PropertyName
+                        is nameof(SelectedSortOption)
+                            or nameof(SelectedSortDirection)
+                            or nameof(SortConnectedModelsFirst)
+            )
+            .Select(_ =>
+            {
+                var comparer = new SortExpressionComparer<CheckpointFileViewModel>();
+                if (SortConnectedModelsFirst)
+                {
+                    comparer = comparer.ThenByDescending(vm => vm.CheckpointFile.HasConnectedModel);
+                }
+
+                switch (SelectedSortOption)
+                {
+                    case CheckpointSortMode.FileName:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.CheckpointFile.FileName)
+                                : comparer.ThenByDescending(vm => vm.CheckpointFile.FileName);
+                        break;
+                    case CheckpointSortMode.Title:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName)
+                                : comparer.ThenByDescending(vm => vm.CheckpointFile.DisplayModelName);
+                        break;
+                    case CheckpointSortMode.BaseModel:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(
+                                    vm => vm.CheckpointFile.ConnectedModelInfo?.BaseModel
+                                )
+                                : comparer.ThenByDescending(
+                                    vm => vm.CheckpointFile.ConnectedModelInfo?.BaseModel
+                                );
+
+                        comparer = comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName);
+                        break;
+                    case CheckpointSortMode.SharedFolderType:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.CheckpointFile.SharedFolderType)
+                                : comparer.ThenByDescending(vm => vm.CheckpointFile.SharedFolderType);
+
+                        comparer = comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                return comparer;
+            })
+            .AsObservable();
 
         ModelsCache
             .Connect()
@@ -121,7 +189,7 @@ public partial class NewCheckpointsPageViewModel(
             .Filter(filterPredicate)
             .Filter(searchPredicate)
             .Transform(x => new CheckpointFileViewModel(x))
-            .Sort(sortComparer)
+            .Sort(comparerObservable)
             .Bind(Models)
             .WhenPropertyChanged(p => p.IsSelected)
             .Throttle(TimeSpan.FromMilliseconds(50))
@@ -144,6 +212,30 @@ public partial class NewCheckpointsPageViewModel(
         {
             Refresh();
         };
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SortConnectedModelsFirst,
+            settings => settings.SortConnectedModelsFirst,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedSortOption,
+            settings => settings.CheckpointSortMode,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedSortDirection,
+            settings => settings.CheckpointSortDirection,
+            true
+        );
+
+        // make sure a sort happens
+        OnPropertyChanged(nameof(SortConnectedModelsFirst));
     }
 
     public void ClearSearchQuery()

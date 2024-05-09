@@ -13,6 +13,9 @@
                           xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
                           xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
                           xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+                          xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=System.ComponentModel.TypeConverter"
+                          xmlns:checkpointsPage="clr-namespace:StabilityMatrix.Core.Models"
+                          xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
                           mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="650"
                           x:Class="StabilityMatrix.Avalonia.Views.NewCheckpointsPage"
                           d:DataContext="{x:Static mocks:DesignData.NewCheckpointsPageViewModel}"
@@ -21,9 +24,17 @@
                           x:DataType="viewModels:NewCheckpointsPageViewModel">
     <controls:UserControlBase.Resources>
         <converters:FileUriConverter x:Key="FileUriConverter" />
+        <converters:EnumStringConverter x:Key="EnumStringConverter"/>
     </controls:UserControlBase.Resources>
 
     <controls:UserControlBase.Styles>
+        <!-- hide the chevron in the button -->
+        <Style Selector="ui|CommandBarButton:flyout">
+            <Style Selector="^ ui|FontIcon">
+                <Setter Property="Foreground" Value="Transparent" />
+            </Style>
+        </Style>
+        
         <Style Selector="TreeViewItem.dragover">
             <Setter Property="Background" Value="#22FFFFFF" />
         </Style>
@@ -157,6 +168,50 @@
                         VerticalAlignment="Center"
                         Command="{Binding RefreshCommand}"
                         Label="{x:Static lang:Resources.Action_Refresh}" />
+                    <ui:CommandBarButton
+                        IconSource="Sort"
+                        VerticalAlignment="Center"
+                        Label="{x:Static lang:Resources.Label_Sort}">
+                        <ui:CommandBarButton.Flyout>
+                            <Flyout>
+                                <StackPanel Orientation="Vertical">
+                                    <ListBox ItemsSource="{Binding SortOptions}"
+                                             SelectedItem="{Binding  SelectedSortOption}">
+                                        <ListBox.Template>
+                                            <ControlTemplate>
+                                                <ItemsPresenter />
+                                            </ControlTemplate>
+                                        </ListBox.Template>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type models:CheckpointSortMode}">
+                                                <TextBlock
+                                                    Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                    <Separator Margin="8" />
+                                    <ListBox ItemsSource="{Binding SortDirections}"
+                                             SelectedItem="{Binding  SelectedSortDirection}">
+                                        <ListBox.Template>
+                                            <ControlTemplate>
+                                                <ItemsPresenter />
+                                            </ControlTemplate>
+                                        </ListBox.Template>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type componentModel:ListSortDirection}">
+                                                <TextBlock
+                                                    Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                    <Separator Margin="8" />
+                                    <ToggleSwitch 
+                                        Content="Sort Connected Models First"
+                                        IsChecked="{Binding SortConnectedModelsFirst, Mode=TwoWay}"/>
+                                </StackPanel>
+                            </Flyout>
+                        </ui:CommandBarButton.Flyout>
+                    </ui:CommandBarButton>
                     <!-- <ui:CommandBarToggleButton -->
                     <!--     IconSource="Image" -->
                     <!--     Label="{x:Static lang:Resources.Label_ShowModelImages}" -->

@@ -209,8 +209,7 @@ public class ComfyUI(
         pipArgs = torchVersion switch
         {
             TorchVersion.DirectMl => pipArgs.WithTorchDirectML(),
-            TorchVersion.Mps
-                => pipArgs.AddArg("--pre").WithTorch().WithTorchVision().WithTorchExtraIndex("nightly/cpu"),
+            TorchVersion.Mps => pipArgs.WithTorch().WithTorchVision().WithTorchExtraIndex("cpu"),
             _
                 => pipArgs
                     .AddArg("--upgrade")

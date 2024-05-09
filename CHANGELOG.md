@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.10.3
+### Fixed
+- Fixed MPS install on macOS for ComfyUI, A1111, SDWebUI Forge, and SDWebUI UX causing torch to be upgraded to dev nightly versions and causing incompatibilities with dependencies.
+
 ## v2.10.2
 ### Changed
 - Updated translations for Spanish and Turkish

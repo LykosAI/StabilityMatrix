@@ -391,6 +391,7 @@ public static class DesignData
         NewCheckpointsPageViewModel.Models = new ObservableCollectionExtended<CheckpointFileViewModel>()
         {
             new(
+                settingsManager,
                 new LocalModelFile
                 {
                     SharedFolderType = SharedFolderType.StableDiffusion,
@@ -416,6 +417,7 @@ public static class DesignData
                 }
             ),
             new(
+                settingsManager,
                 new LocalModelFile
                 {
                     RelativePath = "~/Models/Lora/model.safetensors",

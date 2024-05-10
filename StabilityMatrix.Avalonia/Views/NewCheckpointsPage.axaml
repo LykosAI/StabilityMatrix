@@ -16,6 +16,7 @@
                           xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=System.ComponentModel.TypeConverter"
                           xmlns:checkpointsPage="clr-namespace:StabilityMatrix.Core.Models"
                           xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
                           mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="650"
                           x:Class="StabilityMatrix.Avalonia.Views.NewCheckpointsPage"
                           d:DataContext="{x:Static mocks:DesignData.NewCheckpointsPageViewModel}"
@@ -126,11 +127,6 @@
                 HorizontalContentAlignment="Right"
                 DefaultLabelPosition="Right">
                 <ui:CommandBar.PrimaryCommands>
-                    <ui:CommandBarElementContainer>
-                        <TextBlock Text="{Binding NumImagesSelected}"
-                                   IsVisible="{Binding NumItemsSelected}"
-                                   VerticalAlignment="Center"/>
-                    </ui:CommandBarElementContainer>
                     <ui:CommandBarElementContainer>
                         <SplitButton
                             Classes="transparent-full"
@@ -283,6 +279,54 @@
                                     <ContextDragBehavior HorizontalDragThreshold="6" VerticalDragThreshold="6" />
                                 </BehaviorCollection>
                             </Interaction.Behaviors>
+                            <Border.ContextFlyout>
+                                <ui:FAMenuFlyout>
+                            <ui:MenuFlyoutItem Command="{Binding CopyTriggerWordsCommand}"
+                                               IsVisible="{Binding CanShowTriggerWords}"
+                                               Text="{x:Static lang:Resources.Action_CopyTriggerWords}"
+                                               IconSource="Copy" />
+                            <ui:MenuFlyoutItem Command="{Binding FindOnModelBrowserCommand}"
+                                               IsVisible="{Binding CheckpointFile.HasConnectedModel}"
+                                               Text="{x:Static lang:Resources.Label_FindInModelBrowser}"
+                                               IconSource="Find" />
+                            <ui:MenuFlyoutSeparator IsVisible="{Binding CanShowTriggerWords}" />
+                            <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
+                                               Text="{x:Static lang:Resources.Action_OpenOnCivitAi}" IconSource="Link"
+                                               IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
+                            <ui:MenuFlyoutItem
+                                Command="{Binding CopyModelUrlCommand}"
+                                Text="Copy Link to Clipboard"
+                                IconSource="Clipboard"
+                                IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
+                            <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_FindConnectedMetadata}"
+                                               IconSource="Find"
+                                               Command="{Binding FindConnectedMetadataCommand}"
+                                               IsVisible="{Binding !CheckpointFile.HasConnectedModel}">
+                                <ui:MenuFlyoutItem.CommandParameter>
+                                    <system:Boolean>False</system:Boolean>
+                                </ui:MenuFlyoutItem.CommandParameter>
+                            </ui:MenuFlyoutItem>
+                            <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}"
+                                               IconSource="Sync"
+                                               Command="{Binding FindConnectedMetadataCommand}"
+                                               IsVisible="{Binding CheckpointFile.HasConnectedModel}">
+                                <ui:MenuFlyoutItem.CommandParameter>
+                                    <system:Boolean>True</system:Boolean>
+                                </ui:MenuFlyoutItem.CommandParameter>
+                            </ui:MenuFlyoutItem>
+                            <ui:MenuFlyoutSeparator />
+                            <!-- <ui:MenuFlyoutItem Command="{Binding RenameCommand}" -->
+                            <!--                    Text="{x:Static lang:Resources.Action_Rename}" IconSource="Rename" /> -->
+                            <ui:MenuFlyoutItem Command="{Binding DeleteCommand}"
+                                               Text="{x:Static lang:Resources.Action_Delete}"
+                                               IconSource="Delete">
+                                <ui:MenuFlyoutItem.CommandParameter>
+                                    <system:Boolean>True</system:Boolean>
+                                </ui:MenuFlyoutItem.CommandParameter>
+                            </ui:MenuFlyoutItem>
+                        </ui:FAMenuFlyout>
+                            </Border.ContextFlyout>
+                            
                             <Grid RowDefinitions="*, Auto">
                                 <CheckBox VerticalAlignment="Top"
                                           HorizontalAlignment="Right"
@@ -349,5 +393,29 @@
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
         </scroll:BetterScrollViewer>
+        
+        <ui:InfoBar Grid.Row="1" 
+                    Grid.Column="1"
+                    IsOpen="{Binding !!NumItemsSelected}"
+                    HorizontalAlignment="Right"
+                    HorizontalContentAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Margin="0,0,8,8"
+                    IsIconVisible="False"
+                    Background="#AA000000"
+                    CornerRadius="8"
+                    CloseButtonCommand="{Binding ClearSelectionCommand}">
+            <ui:InfoBar.Title>
+                <MultiBinding StringFormat="{}{0} Selected">
+                    <Binding Path="NumItemsSelected" />
+                </MultiBinding>
+            </ui:InfoBar.Title>
+            <ui:InfoBar.ActionButton>
+                <Button
+                    Classes="danger"
+                    Command="{Binding DeleteCommand}"
+                    Content="{x:Static lang:Resources.Action_Delete}" />
+            </ui:InfoBar.ActionButton>
+        </ui:InfoBar>
     </Grid>
 </controls:UserControlBase>

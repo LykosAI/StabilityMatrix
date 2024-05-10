@@ -47,6 +47,7 @@ public class EventManager
     public event EventHandler? DownloadsTeachingTipRequested;
     public event EventHandler? RecommendedModelsDialogClosed;
     public event EventHandler? WorkflowInstalled;
+    public event EventHandler<string>? DeleteModelRequested;
 
     public void OnGlobalProgressChanged(int progress) => GlobalProgressChanged?.Invoke(this, progress);
 
@@ -111,4 +112,7 @@ public class EventManager
         PackageRelaunchRequested?.Invoke(this, package);
 
     public void OnWorkflowInstalled() => WorkflowInstalled?.Invoke(this, EventArgs.Empty);
+
+    public void OnDeleteModelRequested(string relativePath) =>
+        DeleteModelRequested?.Invoke(this, relativePath);
 }

@@ -1,4 +1,5 @@
-﻿using LiteDB;
+﻿using System.Diagnostics.CodeAnalysis;
+using LiteDB;
 using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Core.Models.Database;
@@ -97,6 +98,7 @@ public record LocalModelFile
     public string DisplayConfigFileName => Path.GetFileName(ConfigFullPath) ?? string.Empty;
 
     [BsonIgnore]
+    [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
     public bool HasConnectedModel => ConnectedModelInfo != null;
 
     public string GetFullPath(string rootModelDirectory)

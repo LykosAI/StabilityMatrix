@@ -5,12 +5,15 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -188,7 +191,7 @@ public partial class NewCheckpointsPageViewModel(
             .DeferUntilLoaded()
             .Filter(filterPredicate)
             .Filter(searchPredicate)
-            .Transform(x => new CheckpointFileViewModel(x))
+            .Transform(x => new CheckpointFileViewModel(settingsManager, x))
             .Sort(comparerObservable)
             .Bind(Models)
             .WhenPropertyChanged(p => p.IsSelected)
@@ -210,8 +213,14 @@ public partial class NewCheckpointsPageViewModel(
 
         EventManager.Instance.ModelIndexChanged += (_, _) =>
         {
-            Refresh();
+            RefreshCategories();
+            ModelsCache.EditDiff(
+                modelIndexService.ModelIndex.Values.SelectMany(x => x),
+                (a, b) => a.RelativePath == b.RelativePath
+            );
         };
+
+        EventManager.Instance.DeleteModelRequested += OnDeleteModelRequested;
 
         settingsManager.RelayPropertyFor(
             this,
@@ -238,6 +247,15 @@ public partial class NewCheckpointsPageViewModel(
         OnPropertyChanged(nameof(SortConnectedModelsFirst));
     }
 
+    private void OnDeleteModelRequested(object? sender, string e)
+    {
+        var model = ModelsCache.Lookup(e);
+        if (!model.HasValue)
+            return;
+
+        modelIndexService.RemoveModelAsync(model.Value);
+    }
+
     public void ClearSearchQuery()
     {
         SearchQuery = string.Empty;
@@ -247,10 +265,47 @@ public partial class NewCheckpointsPageViewModel(
     private void Refresh()
     {
         RefreshCategories();
-        ModelsCache.EditDiff(
-            modelIndexService.ModelIndex.Values.SelectMany(x => x),
-            (a, b) => a.RelativePath == b.RelativePath
-        );
+        modelIndexService.RefreshIndex();
+    }
+
+    [RelayCommand]
+    private void ClearSelection()
+    {
+        foreach (var model in Models.Where(x => x.IsSelected))
+        {
+            model.IsSelected = false;
+        }
+
+        NumItemsSelected = 0;
+    }
+
+    [RelayCommand]
+    private async Task DeleteAsync()
+    {
+        if (NumItemsSelected <= 0)
+            return;
+
+        var confirmationDialog = new BetterContentDialog
+        {
+            Title = string.Format(Resources.Label_AreYouSureDeleteModels, NumItemsSelected),
+            Content = Resources.Label_ActionCannotBeUndone,
+            PrimaryButtonText = Resources.Action_Delete,
+            SecondaryButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Primary,
+            IsSecondaryButtonEnabled = true,
+        };
+
+        var dialogResult = await confirmationDialog.ShowAsync();
+        if (dialogResult != ContentDialogResult.Primary)
+            return;
+
+        var selectedModels = Models.Where(o => o.IsSelected).ToList();
+        foreach (var model in selectedModels)
+        {
+            await model.DeleteCommand.ExecuteAsync(false);
+        }
+
+        ClearSelection();
     }
 
     private void RefreshCategories()

@@ -789,6 +789,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete {0} models?.
+        /// </summary>
+        public static string Label_AreYouSureDeleteModels {
+            get {
+                return ResourceManager.GetString("Label_AreYouSureDeleteModels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Augmentation Level.
         /// </summary>
         public static string Label_AugmentationLevel {

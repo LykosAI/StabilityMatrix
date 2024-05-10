@@ -177,7 +177,7 @@ jobs:
       platform-id: osx-arm64
       app-name: "Stability Matrix.app"
       out-name: "StabilityMatrix-macos-arm64.dmg"
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v3
 

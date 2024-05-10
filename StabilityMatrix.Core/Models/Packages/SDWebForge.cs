@@ -173,7 +173,7 @@ public class SDWebForge(
                         TorchVersion.Cpu => "cpu",
                         TorchVersion.Cuda => "cu121",
                         TorchVersion.Rocm => "rocm5.6",
-                        TorchVersion.Mps => "nightly/cpu",
+                        TorchVersion.Mps => "cpu",
                         _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                     }
                 );

@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Changed
 - Centered OpenArt browser cards
 ### Fixed
+- Fixed MPS install on macOS for ComfyUI, A1111, SDWebUI Forge, and SDWebUI UX causing torch to be upgraded to dev nightly versions and causing incompatibilities with dependencies.
 - Fixed "Auto Scroll to End" not working in some scenarios
 - Fixed "Auto Scroll to End" toggle button not scrolling to the end when toggled on
 - Fixed/reverted output folder name changes for Automatic1111
@@ -27,6 +28,18 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Alternate Lora / LyCORIS drop-down model selection, can be toggled via the model settings button. The existing prompt-based Lora / LyCORIS method is still available.
 ### Fixed
 - Fixed crash when failing to parse Python package details
+
+## v2.10.3
+### Changed
+- Centered OpenArt browser cards
+### Fixed
+- Fixed MPS install on macOS for ComfyUI, A1111, SDWebUI Forge, and SDWebUI UX causing torch to be upgraded to dev nightly versions and causing incompatibilities with dependencies.
+- Fixed crash when failing to parse Python package details
+- Fixed "Auto Scroll to End" not working in some scenarios
+- Fixed "Auto Scroll to End" toggle button not scrolling to the end when toggled on
+- Fixed/reverted output folder name changes for Automatic1111
+- Fixed xformers being uninstalled with every ComfyUI update
+- Fixed missing progress text during package installs
 
 ## v2.10.2
 ### Changed

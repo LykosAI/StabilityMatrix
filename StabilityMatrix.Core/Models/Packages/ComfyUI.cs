@@ -209,8 +209,7 @@ public class ComfyUI(
         pipArgs = torchVersion switch
         {
             TorchVersion.DirectMl => pipArgs.WithTorchDirectML(),
-            TorchVersion.Mps
-                => pipArgs.AddArg("--pre").WithTorch().WithTorchVision().WithTorchExtraIndex("nightly/cpu"),
+            TorchVersion.Mps => pipArgs.WithTorch().WithTorchVision().WithTorchExtraIndex("cpu"),
             _
                 => pipArgs
                     .AddArg("--upgrade")
@@ -246,7 +245,6 @@ public class ComfyUI(
             excludePattern: "torch"
         );
 
-        await venvRunner.PipUninstall("xformers", onConsoleOutput).ConfigureAwait(false);
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1, "Installed Package Requirements", isIndeterminate: false));

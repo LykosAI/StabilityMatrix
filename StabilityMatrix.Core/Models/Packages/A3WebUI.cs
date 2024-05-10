@@ -73,13 +73,13 @@ public class A3WebUI(
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new()
         {
-            [SharedOutputType.Extras] = new[] { "output/extras-images" },
+            [SharedOutputType.Extras] = new[] { "outputs/extras-images" },
             [SharedOutputType.Saved] = new[] { "log/images" },
-            [SharedOutputType.Img2Img] = new[] { "output/img2img-images" },
-            [SharedOutputType.Text2Img] = new[] { "output/txt2img-images" },
-            [SharedOutputType.Img2ImgGrids] = new[] { "output/img2img-grids" },
-            [SharedOutputType.Text2ImgGrids] = new[] { "output/txt2img-grids" },
-            [SharedOutputType.SVD] = new[] { "output/svd" }
+            [SharedOutputType.Img2Img] = new[] { "outputs/img2img-images" },
+            [SharedOutputType.Text2Img] = new[] { "outputs/txt2img-images" },
+            [SharedOutputType.Img2ImgGrids] = new[] { "outputs/img2img-grids" },
+            [SharedOutputType.Text2ImgGrids] = new[] { "outputs/txt2img-grids" },
+            [SharedOutputType.SVD] = new[] { "outputs/svd" }
         };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
@@ -186,7 +186,7 @@ public class A3WebUI(
 
     public override string MainBranch => "master";
 
-    public override string OutputFolderName => "output";
+    public override string OutputFolderName => "outputs";
 
     public override IPackageExtensionManager ExtensionManager => new A3WebUiExtensionManager(this);
 
@@ -223,7 +223,7 @@ public class A3WebUI(
                     TorchVersion.Cpu => "cpu",
                     TorchVersion.Cuda => "cu121",
                     TorchVersion.Rocm => "rocm5.6",
-                    TorchVersion.Mps => "nightly/cpu",
+                    TorchVersion.Mps => "cpu",
                     _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                 }
             )

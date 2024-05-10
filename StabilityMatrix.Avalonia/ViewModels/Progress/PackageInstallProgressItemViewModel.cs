@@ -43,7 +43,7 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
     private void PackageModificationRunnerOnProgressChanged(object? sender, ProgressReport e)
     {
         Progress.Value = e.Percentage;
-        Progress.Description = e.Message;
+        Progress.Description = e.ProcessOutput?.Text ?? e.Message;
         Progress.IsIndeterminate = e.IsIndeterminate;
         Progress.Text = packageModificationRunner.CurrentStep?.ProgressTitle;
         Name = packageModificationRunner.CurrentStep?.ProgressTitle;

@@ -21,6 +21,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(UpscalerCardViewModel), UpscalerCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(ControlNetCardViewModel), ControlNetCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(PromptExpansionCardViewModel), PromptExpansionCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(ExtraNetworkCardViewModel), ExtraNetworkCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(LayerDiffuseCardViewModel), LayerDiffuseCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(FreeUModule))]
 [JsonDerivedType(typeof(HiresFixModule))]
@@ -28,6 +29,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(ControlNetModule))]
 [JsonDerivedType(typeof(SaveImageModule))]
 [JsonDerivedType(typeof(PromptExpansionModule))]
+[JsonDerivedType(typeof(LoraModule))]
 [JsonDerivedType(typeof(LayerDiffuseModule))]
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {

@@ -75,6 +75,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    private readonly SourceCache<HybridModelFile, string> loraModelsSource = new(p => p.GetId());
+
+    public IObservableCollection<HybridModelFile> LoraModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     private readonly SourceCache<HybridModelFile, string> promptExpansionModelsSource = new(p => p.GetId());
 
     private readonly SourceCache<HybridModelFile, string> downloadablePromptExpansionModelsSource =
@@ -142,6 +147,17 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(ControlNetModels)
+            .Subscribe();
+
+        loraModelsSource
+            .Connect()
+            .Sort(
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
+            )
+            .DeferUntilLoaded()
+            .Bind(LoraModels)
             .Subscribe();
 
         promptExpansionModelsSource
@@ -227,6 +243,15 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             );
         }
 
+        // Get Lora model names
+        if (await Client.GetNodeOptionNamesAsync("LoraLoader", "lora_name") is { } loraModelNames)
+        {
+            loraModelsSource.EditDiff(
+                loraModelNames.Select(HybridModelFile.FromRemote),
+                HybridModelFile.Comparer
+            );
+        }
+
         // Prompt Expansion indexing is local only
 
         // Fetch sampler names from KSampler node
@@ -297,16 +322,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Load local models
         modelsSource.EditDiff(
             modelIndexService
-                .GetFromModelIndex(SharedFolderType.StableDiffusion)
+                .FindByModelType(SharedFolderType.StableDiffusion)
                 .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
         // Load local control net models
         controlNetModelsSource.EditDiff(
-            modelIndexService
-                .GetFromModelIndex(SharedFolderType.ControlNet)
-                .Select(HybridModelFile.FromLocal),
+            modelIndexService.FindByModelType(SharedFolderType.ControlNet).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
@@ -316,10 +339,18 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         );
         downloadableControlNetModelsSource.EditDiff(downloadableControlNets, HybridModelFile.Comparer);
 
+        // Load local Lora / LyCORIS models
+        loraModelsSource.EditDiff(
+            modelIndexService
+                .FindByModelType(SharedFolderType.Lora | SharedFolderType.LyCORIS)
+                .Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
+
         // Load local prompt expansion models
         promptExpansionModelsSource.EditDiff(
             modelIndexService
-                .GetFromModelIndex(SharedFolderType.PromptExpansion)
+                .FindByModelType(SharedFolderType.PromptExpansion)
                 .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
@@ -334,7 +365,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         // Load local VAE models
         vaeModelsSource.EditDiff(
-            modelIndexService.GetFromModelIndex(SharedFolderType.VAE).Select(HybridModelFile.FromLocal),
+            modelIndexService.FindByModelType(SharedFolderType.VAE).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
@@ -347,7 +378,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Load Upscalers
         modelUpscalersSource.EditDiff(
             modelIndexService
-                .GetFromModelIndex(
+                .FindByModelType(
                     SharedFolderType.ESRGAN | SharedFolderType.RealESRGAN | SharedFolderType.SwinIR
                 )
                 .Select(m => new ComfyUpscaler(m.FileName, ComfyUpscalerType.ESRGAN)),

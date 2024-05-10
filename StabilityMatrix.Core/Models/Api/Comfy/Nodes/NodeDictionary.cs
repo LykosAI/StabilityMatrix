@@ -81,7 +81,7 @@ public class NodeDictionary : Dictionary<string, ComfyNode>
 
     public void NormalizeConnectionTypes()
     {
-        using var _ = new CodeTimer();
+        using var _ = CodeTimer.StartDebug();
 
         // Convert all node inputs containing NodeConnectionBase objects to their Data property
         foreach (var node in Values)

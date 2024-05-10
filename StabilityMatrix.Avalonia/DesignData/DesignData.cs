@@ -925,7 +925,10 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static LayerDiffuseCardViewModel LayerDiffuseCardViewModel =>
         DialogFactory.Get<LayerDiffuseCardViewModel>();
-  
+
+    public static ExtraNetworkCardViewModel ExtraNetworkCardViewModel =>
+        DialogFactory.Get<ExtraNetworkCardViewModel>();
+
     public static InstalledWorkflowsViewModel InstalledWorkflowsViewModel
     {
         get

@@ -305,7 +305,7 @@
 
         <ScrollViewer Grid.Row="2"
                       ScrollChanged="ScrollViewer_OnScrollChanged"
-                      HorizontalAlignment="Center"
+                      HorizontalContentAlignment="Center"
                       IsVisible="{Binding !IsLoading}">
             <ItemsRepeater ItemsSource="{Binding SearchResults}"
                            ItemTemplate="{StaticResource OpenArtWorkflowTemplate}">

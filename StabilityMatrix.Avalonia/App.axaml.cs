@@ -242,7 +242,7 @@ public sealed class App : Application
     /// </summary>
     private void Setup()
     {
-        using var _ = new CodeTimer();
+        using var _ = CodeTimer.StartNew();
 
         // Setup uri handler for `stabilitymatrix://` protocol
         Program.UriHandler.RegisterUriScheme();
@@ -301,7 +301,10 @@ public sealed class App : Application
 
         if (settingsManager.TryFindLibrary())
         {
-            Cultures.SetSupportedCultureOrDefault(settingsManager.Settings.Language);
+            Cultures.SetSupportedCultureOrDefault(
+                settingsManager.Settings.Language,
+                settingsManager.Settings.NumberFormatMode
+            );
         }
         else
         {

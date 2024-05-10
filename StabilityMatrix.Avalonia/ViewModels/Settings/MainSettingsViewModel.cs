@@ -101,6 +101,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public IReadOnlyList<CultureInfo> AvailableLanguages => Cultures.SupportedCultures;
 
+    [ObservableProperty]
+    private NumberFormatMode selectedNumberFormatMode;
+
+    public IReadOnlyList<NumberFormatMode> NumberFormatModes { get; } =
+        Enum.GetValues<NumberFormatMode>().Where(mode => mode != default).ToList();
+
     public IReadOnlyList<float> AnimationScaleOptions { get; } =
         new[] { 0f, 0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f, };
 
@@ -228,6 +234,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             true
         );
 
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedNumberFormatMode,
+            settings => settings.NumberFormatMode,
+            true
+        );
+
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 
         hardwareInfoUpdateTimer.Tick += OnHardwareInfoUpdateTimerTick;
@@ -298,7 +311,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         {
             Logger.Info("Changing language from {Old} to {New}", oldValue, newValue);
 
-            Cultures.TrySetSupportedCulture(newValue);
+            Cultures.TrySetSupportedCulture(newValue, settingsManager.Settings.NumberFormatMode);
             settingsManager.Transaction(s => s.Language = newValue.Name);
 
             var dialog = new BetterContentDialog
@@ -783,6 +796,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public CommandItem[] DebugCommands =>
         [
+            new CommandItem(DebugRefreshModelIndexCommand),
             new CommandItem(DebugFindLocalModelFromIndexCommand),
             new CommandItem(DebugExtractDmgCommand),
             new CommandItem(DebugShowNativeNotificationCommand),
@@ -790,6 +804,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugGCCollectCommand),
             new CommandItem(DebugExtractImagePromptsToTxtCommand)
         ];
+
+    [RelayCommand]
+    private async Task DebugRefreshModelIndex()
+    {
+        await modelIndexService.RefreshIndex();
+    }
 
     [RelayCommand]
     private async Task DebugFindLocalModelFromIndex()
@@ -804,34 +824,34 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
-            Func<Task<IEnumerable<LocalModelFile>>> modelGetter;
+            var timer = new Stopwatch();
+            List<LocalModelFile> results;
 
             if (textFields.ElementAtOrDefault(0)?.Text is { } hash && !string.IsNullOrWhiteSpace(hash))
             {
-                modelGetter = () => modelIndexService.FindByHashAsync(hash);
+                timer.Restart();
+                results = (await modelIndexService.FindByHashAsync(hash)).ToList();
+                timer.Stop();
             }
             else if (textFields.ElementAtOrDefault(1)?.Text is { } type && !string.IsNullOrWhiteSpace(type))
             {
-                modelGetter = () => modelIndexService.FindAsync(Enum.Parse<SharedFolderType>(type));
+                var folderTypes = Enum.Parse<SharedFolderType>(type, true);
+                timer.Restart();
+                results = (await modelIndexService.FindByModelTypeAsync(folderTypes)).ToList();
+                timer.Stop();
             }
             else
             {
                 return;
             }
 
-            var timer = Stopwatch.StartNew();
-
-            var result = (await modelGetter()).ToImmutableArray();
-
-            timer.Stop();
-
-            if (result.Length != 0)
+            if (results.Count != 0)
             {
                 await DialogHelper
                     .CreateMarkdownDialog(
                         string.Join(
                             "\n\n",
-                            result.Select(
+                            results.Select(
                                 (model, i) =>
                                     $"[{i + 1}] {model.RelativePath.ToRepr()} "
                                     + $"({model.DisplayModelName}, {model.DisplayModelVersion})"

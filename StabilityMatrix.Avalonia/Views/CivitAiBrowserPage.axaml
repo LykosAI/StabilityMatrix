@@ -33,7 +33,7 @@
                 </Transitions>
             </Setter>
             
-            <Style Selector="^ labs|AsyncImage">
+            <Style Selector="^ vendorLabs|BetterAsyncImage">
                 <Setter Property="Transitions">
                     <Transitions>
                         <TransformOperationsTransition Property="RenderTransform"
@@ -49,7 +49,7 @@
             <Style Selector="^:pointerover">
                 <Setter Property="BoxShadow" Value="0 0 40 0 #60000000"/>
                 <Setter Property="Cursor" Value="Hand" />
-                <Style Selector="^ labs|AsyncImage">
+                <Style Selector="^ vendorLabs|BetterAsyncImage">
                     <Setter Property="CornerRadius" Value="12"/>
                     <Setter Property="RenderTransform" Value="scale(1.03, 1.03)"/>
                 </Style>
@@ -61,7 +61,7 @@
             <Style Selector="^:not(:pointerover)">
                 <Setter Property="BoxShadow" Value="0 0 20 0 #60000000"/>
                 <Setter Property="Cursor" Value="Arrow" />
-                <Style Selector="^ labs|AsyncImage">
+                <Style Selector="^ vendorLabs|BetterAsyncImage">
                     <Setter Property="CornerRadius" Value="8"/>
                     <Setter Property="RenderTransform" Value="scale(1, 1)"/>
                 </Style>

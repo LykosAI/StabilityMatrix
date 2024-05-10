@@ -245,7 +245,6 @@ public class ComfyUI(
             excludePattern: "torch"
         );
 
-        await venvRunner.PipUninstall("xformers", onConsoleOutput).ConfigureAwait(false);
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1, "Installed Package Requirements", isIndeterminate: false));

@@ -82,6 +82,8 @@ public partial class NewCheckpointsPageViewModel(
 
     public List<ListSortDirection> SortDirections => Enum.GetValues<ListSortDirection>().ToList();
 
+    public string ModelsFolder => settingsManager.ModelsDirectory;
+
     public string NumImagesSelected =>
         NumItemsSelected == 1
             ? Resources.Label_OneImageSelected.Replace("images ", "")
@@ -304,13 +306,10 @@ public partial class NewCheckpointsPageViewModel(
             return;
 
         var selectedModels = Models.Where(o => o.IsSelected).ToList();
-        foreach (var model in selectedModels)
-        {
-            await DeleteModelAsync(model);
-        }
 
+        await Parallel.ForEachAsync(selectedModels, async (model, _) => await DeleteModelAsync(model));
         await modelIndexService.RemoveModelsAsync(selectedModels.Select(vm => vm.CheckpointFile));
-        ClearSelection();
+        NumItemsSelected = 0;
     }
 
     private async Task DeleteModelAsync(CheckpointFileViewModel viewModel)
@@ -375,14 +374,6 @@ public partial class NewCheckpointsPageViewModel(
                     {
                         Path = d,
                         Name = Path.GetFileName(d),
-                        Count = Directory
-                            .EnumerateFileSystemEntries(d, "*", SearchOption.AllDirectories)
-                            .Count(
-                                x =>
-                                    CheckpointFile.SupportedCheckpointExtensions.Contains(
-                                        Path.GetExtension(x)
-                                    )
-                            ),
                         SubDirectories = GetSubfolders(d)
                     }
             )
@@ -395,13 +386,16 @@ public partial class NewCheckpointsPageViewModel(
             Count = modelIndexService.ModelIndex.Values.SelectMany(x => x).Count(),
         };
 
-        categoriesCache.EditDiff(
-            [rootCategory, ..modelCategories],
-            (a, b) => a.Path == b.Path && a.Count == b.Count
-        );
-        Thread.Sleep(100);
-        SelectedCategory =
-            Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path) ?? Categories.First();
+        categoriesCache.EditDiff([rootCategory, ..modelCategories], (a, b) => a.Path == b.Path);
+
+        SelectedCategory = previouslySelectedCategory ?? Categories.First();
+
+        foreach (var packageOutputCategory in Categories)
+        {
+            packageOutputCategory.Count = Directory
+                .EnumerateFileSystemEntries(packageOutputCategory.Path, "*", SearchOption.AllDirectories)
+                .Count(x => CheckpointFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(x)));
+        }
     }
 
     private ObservableCollection<PackageOutputCategory> GetSubfolders(string strPath)

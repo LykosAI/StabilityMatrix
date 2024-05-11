@@ -17,6 +17,7 @@
                           xmlns:checkpointsPage="clr-namespace:StabilityMatrix.Core.Models"
                           xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
                           xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                          xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
                           mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="650"
                           x:Class="StabilityMatrix.Avalonia.Views.NewCheckpointsPage"
                           d:DataContext="{x:Static mocks:DesignData.NewCheckpointsPageViewModel}"
@@ -161,6 +162,8 @@
                     <ui:CommandBarButton
                         IconSource="OpenFolder"
                         VerticalAlignment="Center"
+                        Command="{x:Static helpers:IOCommands.OpenFolderBrowserCommand}"
+                        CommandParameter="{Binding ModelsFolder}"
                         Label="{x:Static lang:Resources.Label_ModelsFolder}" />
                     <ui:CommandBarButton
                         IconSource="Refresh"
@@ -245,7 +248,19 @@
                                TextTrimming="CharacterEllipsis"
                                ToolTip.Tip="{Binding Name}">
                         <Run Text="{Binding Name}" />
-                        <Run Text="(" /><Run Text="{Binding Count}" /><Run Text=")" />
+                        <Run Text=" (" /><Run Text="{Binding Count}" /><Run Text=")" />
+                        
+                        <TextBlock.ContextFlyout>
+                            <ui:FAMenuFlyout>
+                                <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_OpenInExplorer}"
+                                                   Command="{x:Static helpers:IOCommands.OpenFolderBrowserCommand}"
+                                                   CommandParameter="{Binding Path}">
+                                    <ui:MenuFlyoutItem.IconSource>
+                                        <ui:SymbolIconSource Symbol="OpenFolder"/>
+                                    </ui:MenuFlyoutItem.IconSource>
+                                </ui:MenuFlyoutItem>
+                            </ui:FAMenuFlyout>
+                        </TextBlock.ContextFlyout>
                     </TextBlock>
                 </TreeDataTemplate>
             </TreeView.ItemTemplate>
@@ -391,6 +406,37 @@
                                                    ToolTip.Tip="{Binding CheckpointFile.FileName}" />
                                     </StackPanel>
                                 </Border>
+                                
+                                <Border Grid.Row="0"
+                                        Grid.RowSpan="2"
+                                        Margin="-14, -16"
+                                        Background="#BB000000"
+                                        IsVisible="{Binding IsLoading}"
+                                        CornerRadius="12" />
+
+                                <TextBlock Grid.Row="0"
+                                           Grid.RowSpan="2"
+                                           x:CompileBindings="False"
+                                           Margin="0,64,0,0"
+                                           Text="{Binding Progress.Title, FallbackValue=Test}"
+                                           TextAlignment="Center"
+                                           IsVisible="{Binding IsLoading}"
+                                           VerticalAlignment="Center" />
+
+                                <!--  Progress ring  -->
+                                <controls:ProgressRing
+                                    Grid.Row="0"
+                                    Grid.RowSpan="2"
+                                    Height="64"
+                                    Width="64"
+                                    Foreground="{DynamicResource ThemeRedColor}"
+                                    BorderThickness="4"
+                                    HorizontalAlignment="Center"
+                                    IsIndeterminate="True"
+                                    Padding="0"
+                                    VerticalAlignment="Center"
+                                    IsEnabled="{Binding IsLoading}"
+                                    IsVisible="{Binding IsLoading}" />
                             </Grid>
                         </Border>
                     </DataTemplate>

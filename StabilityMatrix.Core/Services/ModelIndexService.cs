@@ -511,6 +511,30 @@ public partial class ModelIndexService : IModelIndexService
         return false;
     }
 
+    public async Task<bool> RemoveModelsAsync(IEnumerable<LocalModelFile> models)
+    {
+        var modelsList = models.ToList();
+        var paths = modelsList.Select(m => m.RelativePath).ToList();
+        var result = true;
+
+        foreach (var path in paths)
+        {
+            result &= await liteDbContext.LocalModelFiles.DeleteAsync(path).ConfigureAwait(false);
+        }
+
+        foreach (var model in modelsList)
+        {
+            if (ModelIndex.TryGetValue(model.SharedFolderType, out var list))
+            {
+                list.Remove(model);
+            }
+        }
+
+        EventManager.Instance.OnModelIndexChanged();
+
+        return result;
+    }
+
     // idk do somethin with this
     public async Task CheckModelsForUpdateAsync()
     {

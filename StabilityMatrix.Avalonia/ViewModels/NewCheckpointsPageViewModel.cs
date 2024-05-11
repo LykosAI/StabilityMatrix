@@ -5,7 +5,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -23,6 +25,7 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
 using CheckpointSortMode = StabilityMatrix.Core.Models.CheckpointSortMode;
 using Symbol = FluentIcons.Common.Symbol;
@@ -111,7 +114,8 @@ public partial class NewCheckpointsPageViewModel(
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(
                 _ =>
-                    SelectedCategory?.Path == settingsManager.ModelsDirectory
+                    SelectedCategory?.Path is null
+                    || SelectedCategory?.Path == settingsManager.ModelsDirectory
                         ? (Func<LocalModelFile, bool>)(_ => true)
                         : (Func<LocalModelFile, bool>)(
                             file =>
@@ -249,11 +253,11 @@ public partial class NewCheckpointsPageViewModel(
 
     private void OnDeleteModelRequested(object? sender, string e)
     {
-        var model = ModelsCache.Lookup(e);
-        if (!model.HasValue)
+        if (sender is not CheckpointFileViewModel vm)
             return;
 
-        modelIndexService.RemoveModelAsync(model.Value);
+        DeleteModelAsync(vm).SafeFireAndForget();
+        modelIndexService.RemoveModelAsync(vm.CheckpointFile).SafeFireAndForget();
     }
 
     public void ClearSearchQuery()
@@ -264,14 +268,14 @@ public partial class NewCheckpointsPageViewModel(
     [RelayCommand]
     private void Refresh()
     {
-        RefreshCategories();
         modelIndexService.RefreshIndex();
     }
 
     [RelayCommand]
     private void ClearSelection()
     {
-        foreach (var model in Models.Where(x => x.IsSelected))
+        var selected = Models.Where(x => x.IsSelected).ToList();
+        foreach (var model in selected)
         {
             model.IsSelected = false;
         }
@@ -302,10 +306,55 @@ public partial class NewCheckpointsPageViewModel(
         var selectedModels = Models.Where(o => o.IsSelected).ToList();
         foreach (var model in selectedModels)
         {
-            await model.DeleteCommand.ExecuteAsync(false);
+            await DeleteModelAsync(model);
         }
 
+        await modelIndexService.RemoveModelsAsync(selectedModels.Select(vm => vm.CheckpointFile));
         ClearSelection();
+    }
+
+    private async Task DeleteModelAsync(CheckpointFileViewModel viewModel)
+    {
+        var filePath = viewModel.CheckpointFile.GetFullPath(settingsManager.ModelsDirectory);
+        if (File.Exists(filePath))
+        {
+            viewModel.IsLoading = true;
+            viewModel.Progress = new ProgressReport(0f, "Deleting...");
+            try
+            {
+                await using var delay = new MinimumDelay(200, 500);
+                await Task.Run(() => File.Delete(filePath));
+                if (File.Exists(viewModel.ThumbnailUri))
+                {
+                    await Task.Run(() => File.Delete(viewModel.ThumbnailUri));
+                }
+
+                if (viewModel.CheckpointFile.HasConnectedModel)
+                {
+                    var cmInfoPath = GetConnectedModelInfoFilePath(filePath);
+                    if (File.Exists(cmInfoPath))
+                    {
+                        await Task.Run(() => File.Delete(cmInfoPath));
+                    }
+
+                    settingsManager.Transaction(s =>
+                    {
+                        s.InstalledModelHashes?.Remove(
+                            viewModel.CheckpointFile.ConnectedModelInfo.Hashes.BLAKE3
+                        );
+                    });
+                }
+            }
+            catch (IOException ex)
+            {
+                // Logger.Warn($"Failed to delete checkpoint file {FilePath}: {ex.Message}");
+                return; // Don't delete from collection
+            }
+            finally
+            {
+                viewModel.IsLoading = false;
+            }
+        }
     }
 
     private void RefreshCategories()
@@ -346,8 +395,13 @@ public partial class NewCheckpointsPageViewModel(
             Count = modelIndexService.ModelIndex.Values.SelectMany(x => x).Count(),
         };
 
-        categoriesCache.EditDiff([rootCategory, ..modelCategories], (a, b) => a.Path == b.Path);
-        SelectedCategory = previouslySelectedCategory ?? Categories.First();
+        categoriesCache.EditDiff(
+            [rootCategory, ..modelCategories],
+            (a, b) => a.Path == b.Path && a.Count == b.Count
+        );
+        Thread.Sleep(100);
+        SelectedCategory =
+            Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path) ?? Categories.First();
     }
 
     private ObservableCollection<PackageOutputCategory> GetSubfolders(string strPath)
@@ -379,5 +433,19 @@ public partial class NewCheckpointsPageViewModel(
         }
 
         return subfolders;
+    }
+
+    private string GetConnectedModelInfoFilePath(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath))
+        {
+            throw new InvalidOperationException(
+                "Cannot get connected model info file path when filePath is empty"
+            );
+        }
+
+        var modelNameNoExt = Path.GetFileNameWithoutExtension((string?)filePath);
+        var modelDir = Path.GetDirectoryName((string?)filePath) ?? "";
+        return Path.Combine(modelDir, $"{modelNameNoExt}.cm-info.json");
     }
 }

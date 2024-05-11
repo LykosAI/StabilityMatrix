@@ -122,59 +122,6 @@ public partial class CheckpointFileViewModel(ISettingsManager settingsManager, L
                 return;
         }
 
-        var filePath = CheckpointFile.GetFullPath(settingsManager.ModelsDirectory);
-        if (File.Exists(filePath))
-        {
-            IsLoading = true;
-            Progress = new ProgressReport(0f, "Deleting...");
-            try
-            {
-                await using var delay = new MinimumDelay(200, 500);
-                await Task.Run(() => File.Delete(filePath));
-                if (ThumbnailUri != null && File.Exists(ThumbnailUri))
-                {
-                    await Task.Run(() => File.Delete(ThumbnailUri));
-                }
-
-                if (CheckpointFile.HasConnectedModel)
-                {
-                    var cmInfoPath = GetConnectedModelInfoFilePath(filePath);
-                    if (File.Exists(cmInfoPath))
-                    {
-                        await Task.Run(() => File.Delete(cmInfoPath));
-                    }
-
-                    settingsManager.Transaction(s =>
-                    {
-                        s.InstalledModelHashes?.Remove(CheckpointFile.ConnectedModelInfo.Hashes.BLAKE3);
-                    });
-                }
-            }
-            catch (IOException ex)
-            {
-                // Logger.Warn($"Failed to delete checkpoint file {FilePath}: {ex.Message}");
-                return; // Don't delete from collection
-            }
-            finally
-            {
-                IsLoading = false;
-            }
-        }
-
-        EventManager.Instance.OnDeleteModelRequested(CheckpointFile.RelativePath);
-    }
-
-    private string GetConnectedModelInfoFilePath(string filePath)
-    {
-        if (string.IsNullOrEmpty(filePath))
-        {
-            throw new InvalidOperationException(
-                "Cannot get connected model info file path when filePath is empty"
-            );
-        }
-
-        var modelNameNoExt = Path.GetFileNameWithoutExtension((string?)filePath);
-        var modelDir = Path.GetDirectoryName((string?)filePath) ?? "";
-        return Path.Combine(modelDir, $"{modelNameNoExt}.cm-info.json");
+        EventManager.Instance.OnDeleteModelRequested(this, CheckpointFile.RelativePath);
     }
 }

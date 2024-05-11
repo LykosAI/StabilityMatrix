@@ -31,14 +31,29 @@ public partial class NewCheckpointsPage : UserControlBase
         if (e.Source is not Control control)
             return;
 
-        var sourceDataContext = control.DataContext;
+        switch (control)
+        {
+            case TreeViewItem treeViewItem:
+                treeViewItem.Classes.Remove("dragover");
+                break;
+            case Border border:
+                border.Classes.Remove("dragover");
+                break;
+            case TextBlock textBlock:
+                textBlock.Parent?.Classes.Remove("dragover");
+                break;
+        }
+
+        var sourceDataContext = control switch
+        {
+            TreeViewItem treeView => treeView.DataContext,
+            Border border => border.Parent?.Parent?.DataContext,
+            TextBlock textBlock => textBlock.Parent?.DataContext,
+            _ => null
+        };
+
         if (sourceDataContext is not PackageOutputCategory category)
             return;
-
-        if (control.Parent is TreeViewItem treeViewItem)
-        {
-            treeViewItem.Classes.Remove("dragover");
-        }
 
         if (!dragTimers.TryGetValue(category, out var timer))
             return;
@@ -52,14 +67,29 @@ public partial class NewCheckpointsPage : UserControlBase
         if (e.Source is not Control control)
             return;
 
-        var sourceDataContext = control.DataContext;
+        switch (control)
+        {
+            case TreeViewItem treeViewItem:
+                treeViewItem.Classes.Add("dragover");
+                break;
+            case Border border:
+                border.Classes.Add("dragover");
+                break;
+            case TextBlock textBlock:
+                textBlock.Parent?.Classes.Add("dragover");
+                break;
+        }
+
+        var sourceDataContext = control switch
+        {
+            TreeViewItem treeView => treeView.DataContext,
+            Border border => border.Parent?.Parent?.DataContext,
+            TextBlock textBlock => textBlock.Parent?.DataContext,
+            _ => null
+        };
+
         if (sourceDataContext is not PackageOutputCategory category)
             return;
-
-        if (control.Parent is TreeViewItem treeViewItem)
-        {
-            treeViewItem.Classes.Add("dragover");
-        }
 
         if (dragTimers.TryGetValue(category, out var timer))
         {
@@ -75,10 +105,19 @@ public partial class NewCheckpointsPage : UserControlBase
             };
             newTimer.Tick += (timerObj, _) =>
             {
-                if (control.Parent is not TreeViewItem treeViewItem || category.SubDirectories.Count <= 0)
-                    return;
+                var treeViewItem = control switch
+                {
+                    TreeViewItem treeView => treeView,
+                    Border border => border.Parent?.Parent as TreeViewItem,
+                    TextBlock textBlock => textBlock.Parent as TreeViewItem,
+                    _ => null
+                };
 
-                treeViewItem.IsExpanded = true;
+                if (treeViewItem != null && category.SubDirectories.Count > 0)
+                {
+                    treeViewItem.IsExpanded = true;
+                }
+
                 (timerObj as DispatcherTimer)?.Stop();
                 dragTimers.Remove(category);
             };

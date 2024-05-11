@@ -113,6 +113,6 @@ public class EventManager
 
     public void OnWorkflowInstalled() => WorkflowInstalled?.Invoke(this, EventArgs.Empty);
 
-    public void OnDeleteModelRequested(string relativePath) =>
-        DeleteModelRequested?.Invoke(this, relativePath);
+    public void OnDeleteModelRequested(object? sender, string relativePath) =>
+        DeleteModelRequested?.Invoke(sender, relativePath);
 }

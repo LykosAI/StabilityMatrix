@@ -39,6 +39,9 @@
         <Style Selector="TreeViewItem.dragover">
             <Setter Property="Background" Value="#22FFFFFF" />
         </Style>
+        <Style Selector="Border.dragover">
+            <Setter Property="Background" Value="#22FFFFFF" />
+        </Style>
         <Style Selector="Border#HoverBorder">
             <Setter Property="Transitions">
                 <Transitions>
@@ -360,6 +363,7 @@
                                 </Button>
                                 <Border
                                     Name="ModelCardBottom"
+                                    IsHitTestVisible="False"
                                     Padding="8"
                                     CornerRadius="0,0,8,8"
                                     Grid.Row="1">

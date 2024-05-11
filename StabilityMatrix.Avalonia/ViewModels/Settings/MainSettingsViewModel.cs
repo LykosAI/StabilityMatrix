@@ -797,6 +797,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public CommandItem[] DebugCommands =>
         [
+            new CommandItem(DebugRefreshModelIndexCommand),
             new CommandItem(DebugFindLocalModelFromIndexCommand),
             new CommandItem(DebugExtractDmgCommand),
             new CommandItem(DebugShowNativeNotificationCommand),
@@ -805,6 +806,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugExtractImagePromptsToTxtCommand),
             new CommandItem(DebugShowImageMaskEditorCommand),
         ];
+
+    [RelayCommand]
+    private async Task DebugRefreshModelIndex()
+    {
+        await modelIndexService.RefreshIndex();
+    }
 
     [RelayCommand]
     private async Task DebugFindLocalModelFromIndex()
@@ -819,34 +826,34 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
-            Func<Task<IEnumerable<LocalModelFile>>> modelGetter;
+            var timer = new Stopwatch();
+            List<LocalModelFile> results;
 
             if (textFields.ElementAtOrDefault(0)?.Text is { } hash && !string.IsNullOrWhiteSpace(hash))
             {
-                modelGetter = () => modelIndexService.FindByHashAsync(hash);
+                timer.Restart();
+                results = (await modelIndexService.FindByHashAsync(hash)).ToList();
+                timer.Stop();
             }
             else if (textFields.ElementAtOrDefault(1)?.Text is { } type && !string.IsNullOrWhiteSpace(type))
             {
-                modelGetter = () => modelIndexService.FindAsync(Enum.Parse<SharedFolderType>(type));
+                var folderTypes = Enum.Parse<SharedFolderType>(type, true);
+                timer.Restart();
+                results = (await modelIndexService.FindByModelTypeAsync(folderTypes)).ToList();
+                timer.Stop();
             }
             else
             {
                 return;
             }
 
-            var timer = Stopwatch.StartNew();
-
-            var result = (await modelGetter()).ToImmutableArray();
-
-            timer.Stop();
-
-            if (result.Length != 0)
+            if (results.Count != 0)
             {
                 await DialogHelper
                     .CreateMarkdownDialog(
                         string.Join(
                             "\n\n",
-                            result.Select(
+                            results.Select(
                                 (model, i) =>
                                     $"[{i + 1}] {model.RelativePath.ToRepr()} "
                                     + $"({model.DisplayModelName}, {model.DisplayModelVersion})"

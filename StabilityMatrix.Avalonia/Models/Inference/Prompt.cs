@@ -82,9 +82,7 @@ public record Prompt
                 throw new ApplicationException($"Model {network.Name} does not exist in index");
             }
 
-            var localModel = modelList.FirstOrDefault(
-                m => m.FileNameWithoutExtension == network.Name
-            );
+            var localModel = modelList.FirstOrDefault(m => m.FileNameWithoutExtension == network.Name);
             if (localModel == null)
             {
                 throw new ApplicationException($"Model {network.Name} does not exist in index");
@@ -144,9 +142,7 @@ public record Prompt
             {
                 // Normal tags - Push to output
                 outputTokens.Push(currentToken);
-                outputText.Push(
-                    RawText[currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)]
-                );
+                outputText.Push(RawText[currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)]);
                 continue;
             }
 
@@ -168,9 +164,7 @@ public record Prompt
                 );
             }
 
-            var networkType = RawText[
-                currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)
-            ];
+            var networkType = RawText[currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)];
 
             // Match network type
             var parsedNetworkType = networkType switch
@@ -222,9 +216,7 @@ public record Prompt
                 );
             }
 
-            var modelName = RawText[
-                currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)
-            ];
+            var modelName = RawText[currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)];
 
             // If index service provided, validate model name
             if (indexService != null)
@@ -287,14 +279,10 @@ public record Prompt
                     );
                 }
 
-                var modelWeight = RawText[
-                    currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)
-                ];
+                var modelWeight = RawText[currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)];
 
                 // Convert to double
-                if (
-                    !double.TryParse(modelWeight, CultureInfo.InvariantCulture, out var weightValue)
-                )
+                if (!double.TryParse(modelWeight, CultureInfo.InvariantCulture, out var weightValue))
                 {
                     throw PromptValidationError.Network_InvalidWeight(
                         currentToken.StartIndex,
@@ -332,9 +320,7 @@ public record Prompt
                 outputTokens.Push(currentToken);
 
                 outputText.Push(
-                    weight is null
-                        ? $"embedding:{modelName}"
-                        : $"(embedding:{modelName}:{weight:F2})"
+                    weight is null ? $"embedding:{modelName}" : $"(embedding:{modelName}:{weight:F2})"
                 );
             }
             // Cleanups for separate extra networks
@@ -379,8 +365,8 @@ public record Prompt
             // Format scope
             var scopeStr = string.Join(
                 ", ",
-                token.Scopes
-                    .Where(s => s != "source.prompt")
+                token
+                    .Scopes.Where(s => s != "source.prompt")
                     .Select(
                         s =>
                             s.EndsWith(".prompt")
@@ -398,7 +384,7 @@ public record Prompt
 
     public static Prompt FromRawText(string text, ITokenizerProvider tokenizer)
     {
-        using var _ = new CodeTimer();
+        using var _ = CodeTimer.StartDebug();
 
         var result = tokenizer.TokenizeLine(text);
 

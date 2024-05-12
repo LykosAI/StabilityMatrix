@@ -45,7 +45,8 @@ public partial class NewCheckpointsPageViewModel(
     IModelIndexService modelIndexService,
     ModelFinder modelFinder,
     IDownloadService downloadService,
-    INotificationService notificationService
+    INotificationService notificationService,
+    IMetadataImportService metadataImportService
 ) : PageViewModelBase
 {
     public override string Title => Resources.Label_CheckpointManager;
@@ -232,7 +233,7 @@ public partial class NewCheckpointsPageViewModel(
             RefreshCategories();
             ModelsCache.EditDiff(
                 modelIndexService.ModelIndex.Values.SelectMany(x => x),
-                (a, b) => a.RelativePath == b.RelativePath
+                LocalModelFile.RelativePathConnectedModelInfoComparer
             );
         };
 
@@ -320,6 +321,65 @@ public partial class NewCheckpointsPageViewModel(
         await Parallel.ForEachAsync(selectedModels, async (model, _) => await DeleteModelAsync(model));
         await modelIndexService.RemoveModelsAsync(selectedModels.Select(vm => vm.CheckpointFile));
         NumItemsSelected = 0;
+    }
+
+    [RelayCommand]
+    private async Task FindConnectedMetadata()
+    {
+        if (SelectedCategory == null)
+        {
+            notificationService.Show(
+                "No Category Selected",
+                "Please select a category to find connected metadata for.",
+                NotificationType.Error
+            );
+            return;
+        }
+
+        var progressHandler = new Progress<ProgressReport>(report =>
+        {
+            Progress.Text = report.ProcessOutput?.Text ?? report.Message;
+            Progress.Value = report.Percentage;
+            Progress.IsIndeterminate = report.IsIndeterminate;
+        });
+
+        await metadataImportService.ScanDirectoryForMissingInfo(SelectedCategory.Path, progressHandler);
+
+        await modelIndexService.RefreshIndex();
+        notificationService.Show(
+            "Scan Complete",
+            "Finished scanning for missing metadata.",
+            NotificationType.Success
+        );
+
+        // DelayedClearProgress(TimeSpan.FromSeconds(1.5));
+    }
+
+    [RelayCommand]
+    private async Task UpdateExistingMetadata()
+    {
+        if (SelectedCategory == null)
+        {
+            notificationService.Show(
+                "No Category Selected",
+                "Please select a category to find connected metadata for.",
+                NotificationType.Error
+            );
+            return;
+        }
+
+        var progressHandler = new Progress<ProgressReport>(report =>
+        {
+            Progress.Text = report.ProcessOutput?.Text ?? report.Message;
+            Progress.Value = report.Percentage;
+            Progress.IsIndeterminate = report.IsIndeterminate;
+        });
+
+        await metadataImportService.UpdateExistingMetadata(SelectedCategory.Path, progressHandler);
+        await modelIndexService.RefreshIndex();
+        notificationService.Show("Scan Complete", "Finished updating metadata.", NotificationType.Success);
+
+        // DelayedClearProgress(TimeSpan.FromSeconds(1.5));
     }
 
     public async Task ImportFilesAsync(CheckpointFileViewModel fileViewModel, DirectoryPath destinationFolder)

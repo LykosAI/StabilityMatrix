@@ -138,6 +138,7 @@
                             FontFamily="{DynamicResource ContentControlThemeFontFamily}"
                             FontWeight="Normal"
                             FontSize="12"
+                            Command="{Binding FindConnectedMetadataCommand}"
                             Padding="8">
                             <SplitButton.Content>
                                 <Grid ColumnDefinitions="Auto, Auto">
@@ -154,7 +155,8 @@
                             <SplitButton.Flyout>
                                 <ui:FAMenuFlyout
                                     Placement="Bottom">
-                                    <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}" />
+                                    <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}" 
+                                                       Command="{Binding UpdateExistingMetadataCommand}"/>
                                 </ui:FAMenuFlyout>
                             </SplitButton.Flyout>
                         </SplitButton>

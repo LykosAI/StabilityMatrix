@@ -47,11 +47,11 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         this.settingsManager = settingsManager;
         this.modelIndexService = modelIndexService;
         CheckpointFile = checkpointFile;
-        ThumbnailUri = Design.IsDesignMode
-            ? string.Empty
-            : CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
+        ThumbnailUri = settingsManager.IsLibraryDirSet
+            ? CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
                 ?? CheckpointFile.ConnectedModelInfo?.ThumbnailImageUrl
-                ?? Assets.NoImage.ToString();
+                ?? Assets.NoImage.ToString()
+            : string.Empty;
     }
 
     [RelayCommand]

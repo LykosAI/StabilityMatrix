@@ -377,13 +377,13 @@ public static class DesignData
             })
         };
 
-        NewCheckpointsPageViewModel.Categories = new ObservableCollectionExtended<PackageOutputCategory>
+        NewCheckpointsPageViewModel.Categories = new ObservableCollectionExtended<CheckpointCategory>
         {
             new()
             {
                 Name = "Category 1",
                 Path = "path1",
-                SubDirectories = [new PackageOutputCategory { Name = "SubCategory 1", Path = "path3" }]
+                SubDirectories = [new CheckpointCategory { Name = "SubCategory 1", Path = "path3" }]
             },
             new() { Name = "Category 2", Path = "path2" }
         };
@@ -392,6 +392,7 @@ public static class DesignData
         {
             new(
                 settingsManager,
+                new MockModelIndexService(),
                 new LocalModelFile
                 {
                     SharedFolderType = SharedFolderType.StableDiffusion,
@@ -418,6 +419,7 @@ public static class DesignData
             ),
             new(
                 settingsManager,
+                new MockModelIndexService(),
                 new LocalModelFile
                 {
                     RelativePath = "~/Models/Lora/model.safetensors",
@@ -546,13 +548,13 @@ public static class DesignData
                     }
                 )
             };
-            vm.Categories = new ObservableCollectionExtended<PackageOutputCategory>
+            vm.Categories = new ObservableCollectionExtended<TreeViewDirectory>
             {
                 new()
                 {
                     Name = "Category 1",
                     Path = "path1",
-                    SubDirectories = [new PackageOutputCategory { Name = "SubCategory 1", Path = "path3" }]
+                    SubDirectories = [new TreeViewDirectory { Name = "SubCategory 1", Path = "path3" }]
                 },
                 new() { Name = "Category 2", Path = "path2" }
             };

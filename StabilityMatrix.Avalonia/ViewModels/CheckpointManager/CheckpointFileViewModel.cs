@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -9,6 +10,7 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -16,19 +18,41 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 
-public partial class CheckpointFileViewModel(ISettingsManager settingsManager, LocalModelFile checkpointFile)
-    : SelectableViewModelBase
+public partial class CheckpointFileViewModel : SelectableViewModelBase
 {
-    public LocalModelFile CheckpointFile { get; } = checkpointFile;
+    [ObservableProperty]
+    private LocalModelFile checkpointFile;
 
-    public string ThumbnailUri => CheckpointFile.PreviewImageFullPathGlobal ?? Assets.NoImage.ToString();
-    public bool CanShowTriggerWords => CheckpointFile.ConnectedModelInfo?.TrainedWords?.Length > 0;
+    [ObservableProperty]
+    private string thumbnailUri;
 
     [ObservableProperty]
     private ProgressReport? progress;
 
     [ObservableProperty]
     private bool isLoading;
+
+    private readonly ISettingsManager settingsManager;
+    private readonly IModelIndexService modelIndexService;
+
+    public bool CanShowTriggerWords => CheckpointFile.ConnectedModelInfo?.TrainedWords?.Length > 0;
+
+    /// <inheritdoc/>
+    public CheckpointFileViewModel(
+        ISettingsManager settingsManager,
+        IModelIndexService modelIndexService,
+        LocalModelFile checkpointFile
+    )
+    {
+        this.settingsManager = settingsManager;
+        this.modelIndexService = modelIndexService;
+        CheckpointFile = checkpointFile;
+        ThumbnailUri = Design.IsDesignMode
+            ? string.Empty
+            : CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
+                ?? CheckpointFile.ConnectedModelInfo?.ThumbnailImageUrl
+                ?? Assets.NoImage.ToString();
+    }
 
     [RelayCommand]
     private Task CopyTriggerWords()
@@ -95,6 +119,12 @@ public partial class CheckpointFileViewModel(ISettingsManager settingsManager, L
             if (cmInfo != null)
             {
                 CheckpointFile.ConnectedModelInfo = cmInfo;
+                ThumbnailUri =
+                    CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
+                    ?? cmInfo.ThumbnailImageUrl
+                    ?? Assets.NoImage.ToString();
+
+                await modelIndexService.RefreshIndex();
             }
         }
         finally

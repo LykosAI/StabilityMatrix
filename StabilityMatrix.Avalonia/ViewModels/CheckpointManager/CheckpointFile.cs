@@ -387,9 +387,16 @@ public partial class CheckpointFile : ViewModelBase
             if (File.Exists(jsonPath))
             {
                 var json = File.ReadAllText(jsonPath);
-                var connectedModelInfo = ConnectedModelInfo.FromJson(json);
-                checkpointFile.ConnectedModel = connectedModelInfo;
-                checkpointFile.ModelType = GetCivitModelType(file);
+                try
+                {
+                    var connectedModelInfo = ConnectedModelInfo.FromJson(json);
+                    checkpointFile.ConnectedModel = connectedModelInfo;
+                    checkpointFile.ModelType = GetCivitModelType(file);
+                }
+                catch (JsonException)
+                {
+                    checkpointFile.ConnectedModel = null;
+                }
             }
 
             checkpointFile.PreviewImagePath = SupportedImageExtensions

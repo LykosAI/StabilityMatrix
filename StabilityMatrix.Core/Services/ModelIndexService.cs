@@ -7,6 +7,7 @@ using AsyncAwaitBestPractices;
 using AutoCtor;
 using KGySoft.CoreLibraries;
 using Microsoft.Extensions.Logging;
+using OneOf.Types;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
@@ -369,7 +370,7 @@ public partial class ModelIndexService : IModelIndexService
                 // Try Convert to enum
                 if (!Enum.TryParse<SharedFolderType>(sharedFolderName, out var sharedFolderType))
                 {
-                    return;
+                    sharedFolderType = SharedFolderType.Unknown;
                 }
 
                 // Since RelativePath is the database key, for LiteDB this is limited to 1021 bytes

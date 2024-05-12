@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -15,7 +18,7 @@ namespace StabilityMatrix.Avalonia.Views;
 [Singleton]
 public partial class NewCheckpointsPage : UserControlBase
 {
-    private Dictionary<PackageOutputCategory, DispatcherTimer> dragTimers = new();
+    private Dictionary<CheckpointCategory, DispatcherTimer> dragTimers = new();
 
     public NewCheckpointsPage()
     {
@@ -52,7 +55,7 @@ public partial class NewCheckpointsPage : UserControlBase
             _ => null
         };
 
-        if (sourceDataContext is not PackageOutputCategory category)
+        if (sourceDataContext is not CheckpointCategory category)
             return;
 
         if (!dragTimers.TryGetValue(category, out var timer))
@@ -88,7 +91,7 @@ public partial class NewCheckpointsPage : UserControlBase
             _ => null
         };
 
-        if (sourceDataContext is not PackageOutputCategory category)
+        if (sourceDataContext is not CheckpointCategory category)
             return;
 
         if (dragTimers.TryGetValue(category, out var timer))
@@ -128,13 +131,37 @@ public partial class NewCheckpointsPage : UserControlBase
     private async void OnDrop(object? sender, DragEventArgs e)
     {
         var sourceDataContext = (e.Source as Control)?.DataContext;
+        if (DataContext as NewCheckpointsPageViewModel is not { SelectedCategory: not null } checkpointsVm)
+        {
+            return;
+        }
+
         switch (sourceDataContext)
         {
-            case PackageOutputCategory category:
-
+            case CheckpointCategory category:
+                if (e.Data.GetContext<CheckpointFileViewModel>() is { } vm)
+                {
+                    await checkpointsVm.MoveBetweenFolders(vm.CheckpointFile, category.Path);
+                }
+                else if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
+                {
+                    var paths = files.Select(f => f.Path.LocalPath).ToArray();
+                    await checkpointsVm.ImportFilesAsync(paths, category.Path);
+                }
                 break;
             case CheckpointFileViewModel fileViewModel:
-
+                if (e.Data.GetContext<CheckpointFileViewModel>() is { } fileVm)
+                {
+                    await checkpointsVm.MoveBetweenFolders(
+                        fileVm.CheckpointFile,
+                        checkpointsVm.SelectedCategory.Path
+                    );
+                }
+                else if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
+                {
+                    var paths = files.Select(f => f.Path.LocalPath).ToArray();
+                    await checkpointsVm.ImportFilesAsync(paths, checkpointsVm.SelectedCategory.Path);
+                }
                 break;
             case CheckpointFolder folder:
             {

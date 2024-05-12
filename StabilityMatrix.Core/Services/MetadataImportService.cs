@@ -284,7 +284,8 @@ public class MetadataImportService(
         if (image == null)
             return updatedCmInfo;
 
-        await DownloadImage(image, filePath, progress).ConfigureAwait(false);
+        var imagePath = await DownloadImage(image, filePath, progress).ConfigureAwait(false);
+        updatedCmInfo.ThumbnailImageUrl = imagePath;
 
         return updatedCmInfo;
     }
@@ -306,13 +307,21 @@ public class MetadataImportService(
         return cmInfo?.Hashes.BLAKE3;
     }
 
-    private Task DownloadImage(CivitImage image, FilePath modelFilePath, IProgress<ProgressReport>? progress)
+    private async Task<string> DownloadImage(
+        CivitImage image,
+        FilePath modelFilePath,
+        IProgress<ProgressReport>? progress
+    )
     {
         var imageExt = Path.GetExtension(image.Url).TrimStart('.');
         var nameWithoutCmInfo = modelFilePath.NameWithoutExtension.Replace(".cm-info", string.Empty);
         var imageDownloadPath = Path.GetFullPath(
             Path.Combine(modelFilePath.Directory, $"{nameWithoutCmInfo}.preview.{imageExt}")
         );
-        return downloadService.DownloadToFileAsync(image.Url, imageDownloadPath, progress);
+        await downloadService
+            .DownloadToFileAsync(image.Url, imageDownloadPath, progress)
+            .ConfigureAwait(false);
+
+        return imageDownloadPath;
     }
 }

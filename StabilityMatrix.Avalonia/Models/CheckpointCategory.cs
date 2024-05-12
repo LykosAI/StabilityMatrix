@@ -1,0 +1,12 @@
+﻿using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+
+namespace StabilityMatrix.Avalonia.Models;
+
+public partial class CheckpointCategory : TreeViewDirectory
+{
+    [ObservableProperty]
+    private int count;
+
+    public new ObservableCollection<CheckpointCategory> SubDirectories { get; set; } = new();
+}

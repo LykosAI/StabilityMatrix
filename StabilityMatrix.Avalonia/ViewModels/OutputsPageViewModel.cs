@@ -59,17 +59,17 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public SourceCache<LocalImageFile, string> OutputsCache { get; } = new(file => file.AbsolutePath);
 
-    private SourceCache<PackageOutputCategory, string> categoriesCache = new(category => category.Path);
+    private SourceCache<TreeViewDirectory, string> categoriesCache = new(category => category.Path);
 
     public IObservableCollection<OutputImageViewModel> Outputs { get; set; } =
         new ObservableCollectionExtended<OutputImageViewModel>();
 
-    public IObservableCollection<PackageOutputCategory> Categories { get; set; } =
-        new ObservableCollectionExtended<PackageOutputCategory>();
+    public IObservableCollection<TreeViewDirectory> Categories { get; set; } =
+        new ObservableCollectionExtended<TreeViewDirectory>();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanShowOutputTypes))]
-    private PackageOutputCategory? selectedCategory;
+    private TreeViewDirectory? selectedCategory;
 
     [ObservableProperty]
     private SharedOutputType? selectedOutputType;
@@ -105,7 +105,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     private string[] allowedExtensions = [".png", ".webp", ".jpg", ".jpeg", ".gif"];
 
-    private PackageOutputCategory? lastOutputCategory;
+    private TreeViewDirectory? lastOutputCategory;
 
     public OutputsPageViewModel(
         ISettingsManager settingsManager,
@@ -191,7 +191,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         GetOutputs(path);
     }
 
-    partial void OnSelectedCategoryChanged(PackageOutputCategory? oldValue, PackageOutputCategory? newValue)
+    partial void OnSelectedCategoryChanged(TreeViewDirectory? oldValue, TreeViewDirectory? newValue)
     {
         if (oldValue == newValue || oldValue == null || newValue == null)
             return;
@@ -617,7 +617,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             )
             .Select(
                 pair =>
-                    new PackageOutputCategory
+                    new TreeViewDirectory
                     {
                         Path = Path.Combine(
                             pair.InstalledPackage.FullPath!,
@@ -633,7 +633,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         packageCategories.Insert(
             0,
-            new PackageOutputCategory
+            new TreeViewDirectory
             {
                 Path = settingsManager.ImagesDirectory,
                 Name = "Shared Output Folder",
@@ -646,9 +646,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
         SelectedCategory = previouslySelectedCategory ?? Categories.First();
     }
 
-    private ObservableCollection<PackageOutputCategory> GetSubfolders(string strPath)
+    private ObservableCollection<TreeViewDirectory> GetSubfolders(string strPath)
     {
-        var subfolders = new ObservableCollection<PackageOutputCategory>();
+        var subfolders = new ObservableCollection<TreeViewDirectory>();
 
         if (!Directory.Exists(strPath))
             return subfolders;
@@ -657,7 +657,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         foreach (var dir in directories)
         {
-            var category = new PackageOutputCategory { Name = Path.GetFileName(dir), Path = dir };
+            var category = new TreeViewDirectory { Name = Path.GetFileName(dir), Path = dir };
 
             if (Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly).Length > 0)
             {

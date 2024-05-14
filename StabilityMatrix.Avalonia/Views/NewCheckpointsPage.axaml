@@ -26,7 +26,9 @@
                           x:DataType="viewModels:NewCheckpointsPageViewModel">
     <controls:UserControlBase.Resources>
         <converters:FileUriConverter x:Key="FileUriConverter" />
-        <converters:EnumStringConverter x:Key="EnumStringConverter"/>
+        <converters:EnumStringConverter x:Key="EnumStringConverter" />
+        <system:Boolean x:Key="False">False</system:Boolean>
+        <system:Boolean x:Key="True">True</system:Boolean>
     </controls:UserControlBase.Resources>
 
     <controls:UserControlBase.Styles>
@@ -36,7 +38,7 @@
                 <Setter Property="Foreground" Value="Transparent" />
             </Style>
         </Style>
-        
+
         <Style Selector="TreeViewItem.dragover">
             <Setter Property="Background" Value="#22FFFFFF" />
         </Style>
@@ -91,12 +93,12 @@
 
     <Grid Margin="16" RowDefinitions="Auto,*"
           ColumnDefinitions="Auto, *">
-        <Grid Grid.Row="0" 
-                    Grid.Column="0"
-                    Grid.ColumnSpan="2"
-                    Margin="0,0,0,8"
-                    ColumnDefinitions="*, Auto">
-        <TextBox
+        <Grid Grid.Row="0"
+              Grid.Column="0"
+              Grid.ColumnSpan="2"
+              Margin="0,0,0,8"
+              ColumnDefinitions="*, Auto">
+            <TextBox
                 MinWidth="250"
                 MinHeight="40"
                 Margin="4,0"
@@ -138,7 +140,8 @@
                             FontFamily="{DynamicResource ContentControlThemeFontFamily}"
                             FontWeight="Normal"
                             FontSize="12"
-                            Command="{Binding FindConnectedMetadataCommand}"
+                            Command="{Binding ScanMetadataCommand}"
+                            CommandParameter="{StaticResource False}"
                             Padding="8">
                             <SplitButton.Content>
                                 <Grid ColumnDefinitions="Auto, Auto">
@@ -155,8 +158,9 @@
                             <SplitButton.Flyout>
                                 <ui:FAMenuFlyout
                                     Placement="Bottom">
-                                    <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}" 
-                                                       Command="{Binding UpdateExistingMetadataCommand}"/>
+                                    <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}"
+                                                       Command="{Binding ScanMetadataCommand}"
+                                                       CommandParameter="{StaticResource True}"/>
                                 </ui:FAMenuFlyout>
                             </SplitButton.Flyout>
                         </SplitButton>
@@ -209,9 +213,9 @@
                                         </ListBox.ItemTemplate>
                                     </ListBox>
                                     <Separator Margin="8" />
-                                    <ToggleSwitch 
+                                    <ToggleSwitch
                                         Content="Sort Connected Models First"
-                                        IsChecked="{Binding SortConnectedModelsFirst, Mode=TwoWay}"/>
+                                        IsChecked="{Binding SortConnectedModelsFirst, Mode=TwoWay}" />
                                 </StackPanel>
                             </Flyout>
                         </ui:CommandBarButton.Flyout>
@@ -232,7 +236,7 @@
                 </ui:CommandBar.SecondaryCommands>
             </ui:CommandBar>
         </Grid>
-        
+
         <TreeView Grid.Row="1"
                   Grid.Column="0"
                   Name="CategoryTree"
@@ -251,14 +255,14 @@
                                ToolTip.Tip="{Binding Name}">
                         <Run Text="{Binding Name}" />
                         <Run Text=" (" /><Run Text="{Binding Count}" /><Run Text=")" />
-                        
+
                         <TextBlock.ContextFlyout>
                             <ui:FAMenuFlyout>
                                 <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_OpenInExplorer}"
                                                    Command="{x:Static helpers:IOCommands.OpenFolderBrowserCommand}"
                                                    CommandParameter="{Binding Path}">
                                     <ui:MenuFlyoutItem.IconSource>
-                                        <ui:SymbolIconSource Symbol="OpenFolder"/>
+                                        <ui:SymbolIconSource Symbol="OpenFolder" />
                                     </ui:MenuFlyoutItem.IconSource>
                                 </ui:MenuFlyoutItem>
                             </ui:FAMenuFlyout>
@@ -268,17 +272,9 @@
             </TreeView.ItemTemplate>
         </TreeView>
 
-        <!-- <controls:ProgressRing Grid.Row="1" -->
-        <!--                        Grid.Column="1" -->
-        <!--                        HorizontalAlignment="Center" -->
-        <!--                        VerticalAlignment="Center" -->
-        <!--                        Width="200" -->
-        <!--                        Height="200" -->
-        <!--                        IsIndeterminate="True" -->
-        <!--                        IsVisible="{Binding IsChangingCategory}"/> -->
-
         <scroll:BetterScrollViewer Grid.Column="1"
                                    Grid.Row="1"
+                                   DragDrop.AllowDrop="True"
                                    Padding="0,0,4,0">
             <ItemsRepeater
                 x:Name="ImageRepeater"
@@ -301,52 +297,46 @@
                             </Interaction.Behaviors>
                             <Border.ContextFlyout>
                                 <ui:FAMenuFlyout>
-                            <ui:MenuFlyoutItem Command="{Binding CopyTriggerWordsCommand}"
-                                               IsVisible="{Binding CanShowTriggerWords}"
-                                               Text="{x:Static lang:Resources.Action_CopyTriggerWords}"
-                                               IconSource="Copy" />
-                            <ui:MenuFlyoutItem Command="{Binding FindOnModelBrowserCommand}"
-                                               IsVisible="{Binding CheckpointFile.HasConnectedModel}"
-                                               Text="{x:Static lang:Resources.Label_FindInModelBrowser}"
-                                               IconSource="Find" />
-                            <ui:MenuFlyoutSeparator IsVisible="{Binding CanShowTriggerWords}" />
-                            <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
-                                               Text="{x:Static lang:Resources.Action_OpenOnCivitAi}" IconSource="Link"
-                                               IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
-                            <ui:MenuFlyoutItem
-                                Command="{Binding CopyModelUrlCommand}"
-                                Text="Copy Link to Clipboard"
-                                IconSource="Clipboard"
-                                IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
-                            <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_FindConnectedMetadata}"
-                                               IconSource="Find"
-                                               Command="{Binding FindConnectedMetadataCommand}"
-                                               IsVisible="{Binding !CheckpointFile.HasConnectedModel}">
-                                <ui:MenuFlyoutItem.CommandParameter>
-                                    <system:Boolean>False</system:Boolean>
-                                </ui:MenuFlyoutItem.CommandParameter>
-                            </ui:MenuFlyoutItem>
-                            <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}"
-                                               IconSource="Sync"
-                                               Command="{Binding FindConnectedMetadataCommand}"
-                                               IsVisible="{Binding CheckpointFile.HasConnectedModel}">
-                                <ui:MenuFlyoutItem.CommandParameter>
-                                    <system:Boolean>True</system:Boolean>
-                                </ui:MenuFlyoutItem.CommandParameter>
-                            </ui:MenuFlyoutItem>
-                            <ui:MenuFlyoutSeparator />
-                            <!-- <ui:MenuFlyoutItem Command="{Binding RenameCommand}" -->
-                            <!--                    Text="{x:Static lang:Resources.Action_Rename}" IconSource="Rename" /> -->
-                            <ui:MenuFlyoutItem Command="{Binding DeleteCommand}"
-                                               Text="{x:Static lang:Resources.Action_Delete}"
-                                               IconSource="Delete">
-                                <ui:MenuFlyoutItem.CommandParameter>
-                                    <system:Boolean>True</system:Boolean>
-                                </ui:MenuFlyoutItem.CommandParameter>
-                            </ui:MenuFlyoutItem>
-                        </ui:FAMenuFlyout>
+                                    <ui:MenuFlyoutItem Command="{Binding CopyTriggerWordsCommand}"
+                                                       IsVisible="{Binding CanShowTriggerWords}"
+                                                       Text="{x:Static lang:Resources.Action_CopyTriggerWords}"
+                                                       IconSource="Copy" />
+                                    <ui:MenuFlyoutItem Command="{Binding FindOnModelBrowserCommand}"
+                                                       IsVisible="{Binding CheckpointFile.HasConnectedModel}"
+                                                       Text="{x:Static lang:Resources.Label_FindInModelBrowser}"
+                                                       IconSource="Find" />
+                                    <ui:MenuFlyoutSeparator IsVisible="{Binding CanShowTriggerWords}" />
+                                    <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
+                                                       Text="{x:Static lang:Resources.Action_OpenOnCivitAi}"
+                                                       IconSource="Link"
+                                                       IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
+                                    <ui:MenuFlyoutItem
+                                        Command="{Binding CopyModelUrlCommand}"
+                                        Text="Copy Link to Clipboard"
+                                        IconSource="Clipboard"
+                                        IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
+                                    <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_FindConnectedMetadata}"
+                                                       IconSource="Find"
+                                                       Command="{Binding FindConnectedMetadataCommand}"
+                                                       CommandParameter="{StaticResource False}"
+                                                       IsVisible="{Binding !CheckpointFile.HasConnectedModel}"/>
+                                    <ui:MenuFlyoutItem
+                                        Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}"
+                                        IconSource="Sync"
+                                        Command="{Binding FindConnectedMetadataCommand}"
+                                        CommandParameter="{StaticResource True}"
+                                        IsVisible="{Binding CheckpointFile.HasConnectedModel}"/>
+                                    
+                                    <ui:MenuFlyoutSeparator />
+                                    <!-- <ui:MenuFlyoutItem Command="{Binding RenameCommand}" -->
+                                    <!--                    Text="{x:Static lang:Resources.Action_Rename}" IconSource="Rename" /> -->
+                                    <ui:MenuFlyoutItem Command="{Binding DeleteCommand}"
+                                                       CommandParameter="{StaticResource True}"
+                                                       Text="{x:Static lang:Resources.Action_Delete}"
+                                                       IconSource="Delete"/>
+                                </ui:FAMenuFlyout>
                             </Border.ContextFlyout>
-                            
+
                             <Grid RowDefinitions="*, Auto">
                                 <CheckBox VerticalAlignment="Top"
                                           HorizontalAlignment="Right"
@@ -408,7 +398,7 @@
                                                    ToolTip.Tip="{Binding CheckpointFile.FileName}" />
                                     </StackPanel>
                                 </Border>
-                                
+
                                 <Border Grid.Row="0"
                                         Grid.RowSpan="2"
                                         Margin="-14, -16"
@@ -446,7 +436,36 @@
             </ItemsRepeater>
         </scroll:BetterScrollViewer>
         
-        <ui:InfoBar Grid.Row="1" 
+        <Border Grid.Row="1" Grid.Column="1" Background="#AA000000"
+                CornerRadius="8"
+                IsVisible="{Binding IsLoading}">
+            <StackPanel Orientation="Vertical"
+                        VerticalAlignment="Center">
+                <TextBlock Text="{Binding Progress.Text, FallbackValue=Loading..., TargetNullValue=Loading...}"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"
+                           FontSize="20"/>
+                <ProgressBar IsIndeterminate="{Binding Progress.IsIndeterminate}"
+                             Value="{Binding Progress.Value}"
+                             Margin="8,36,8,0"/>
+            </StackPanel>
+        </Border>
+        
+        <Border Grid.Row="1" Grid.Column="1" Background="#AA333333"
+                DragDrop.AllowDrop="True"
+                CornerRadius="8"
+                Tag="DragOverlay"
+                IsVisible="{Binding IsDragOver}">
+            <StackPanel Orientation="Vertical"
+                        VerticalAlignment="Center">
+                <TextBlock Text="{x:Static lang:Resources.Label_DragAndDropCheckpointsHereToImport}"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"
+                           FontSize="20"/>
+            </StackPanel>
+        </Border>
+
+        <ui:InfoBar Grid.Row="1"
                     Grid.Column="1"
                     IsOpen="{Binding !!NumItemsSelected}"
                     HorizontalAlignment="Right"

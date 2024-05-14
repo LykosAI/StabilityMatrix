@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -30,6 +31,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
 using CheckpointSortMode = StabilityMatrix.Core.Models.CheckpointSortMode;
@@ -51,7 +53,7 @@ public partial class NewCheckpointsPageViewModel(
 {
     public override string Title => Resources.Label_CheckpointManager;
     public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Cellular5g, IsFilled = true };
+        new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };
 
     private SourceCache<CheckpointCategory, string> categoriesCache = new(category => category.Path);
 
@@ -90,6 +92,12 @@ public partial class NewCheckpointsPageViewModel(
 
     [ObservableProperty]
     private ProgressViewModel progress = new();
+
+    [ObservableProperty]
+    private bool isLoading;
+
+    [ObservableProperty]
+    private bool isDragOver;
 
     public List<ListSortDirection> SortDirections => Enum.GetValues<ListSortDirection>().ToList();
 
@@ -324,211 +332,71 @@ public partial class NewCheckpointsPageViewModel(
     }
 
     [RelayCommand]
-    private async Task FindConnectedMetadata()
+    private async Task ScanMetadata(bool updateExistingMetadata)
     {
         if (SelectedCategory == null)
         {
             notificationService.Show(
                 "No Category Selected",
-                "Please select a category to find connected metadata for.",
+                "Please select a category to scan for metadata.",
                 NotificationType.Error
             );
             return;
         }
 
-        var progressHandler = new Progress<ProgressReport>(report =>
-        {
-            Progress.Text = report.ProcessOutput?.Text ?? report.Message;
-            Progress.Value = report.Percentage;
-            Progress.IsIndeterminate = report.IsIndeterminate;
-        });
-
-        await metadataImportService.ScanDirectoryForMissingInfo(SelectedCategory.Path, progressHandler);
-
-        await modelIndexService.RefreshIndex();
-        notificationService.Show(
-            "Scan Complete",
-            "Finished scanning for missing metadata.",
-            NotificationType.Success
+        var scanMetadataStep = new ScanMetadataStep(
+            SelectedCategory.Path,
+            metadataImportService,
+            updateExistingMetadata
         );
 
-        // DelayedClearProgress(TimeSpan.FromSeconds(1.5));
-    }
-
-    [RelayCommand]
-    private async Task UpdateExistingMetadata()
-    {
-        if (SelectedCategory == null)
+        var runner = new PackageModificationRunner
         {
-            notificationService.Show(
-                "No Category Selected",
-                "Please select a category to find connected metadata for.",
-                NotificationType.Error
-            );
-            return;
-        }
+            ModificationCompleteMessage = "Metadata scan complete",
+            HideCloseButton = false,
+            ShowDialogOnStart = true
+        };
 
-        var progressHandler = new Progress<ProgressReport>(report =>
-        {
-            Progress.Text = report.ProcessOutput?.Text ?? report.Message;
-            Progress.Value = report.Percentage;
-            Progress.IsIndeterminate = report.IsIndeterminate;
-        });
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await Dispatcher.UIThread.InvokeAsync(async () => await runner.ExecuteSteps([scanMetadataStep]));
 
-        await metadataImportService.UpdateExistingMetadata(SelectedCategory.Path, progressHandler);
         await modelIndexService.RefreshIndex();
-        notificationService.Show("Scan Complete", "Finished updating metadata.", NotificationType.Success);
-
-        // DelayedClearProgress(TimeSpan.FromSeconds(1.5));
-    }
-
-    public async Task ImportFilesAsync(CheckpointFileViewModel fileViewModel, DirectoryPath destinationFolder)
-    {
-        await ImportFilesAsync(
-            [fileViewModel.CheckpointFile.GetFullPath(settingsManager.ModelsDirectory)],
-            destinationFolder
-        );
+        var message = updateExistingMetadata
+            ? "Finished updating metadata."
+            : "Finished scanning for missing metadata.";
+        notificationService.Show("Scan Complete", message, NotificationType.Success);
     }
 
     public async Task ImportFilesAsync(IEnumerable<string> files, DirectoryPath destinationFolder)
     {
-        try
+        if (destinationFolder.FullPath == settingsManager.ModelsDirectory)
         {
-            if (destinationFolder.FullPath == settingsManager.ModelsDirectory)
-            {
-                notificationService.Show(
-                    "Invalid Folder",
-                    "Please select a different folder to import the files into.",
-                    NotificationType.Error
-                );
-                return;
-            }
-
-            Progress.Value = 0;
-            var copyPaths = files.ToDictionary(
-                k => k,
-                v => Path.Combine(destinationFolder, Path.GetFileName(v))
+            notificationService.Show(
+                "Invalid Folder",
+                "Please select a different folder to import the files into.",
+                NotificationType.Error
             );
-
-            // remove files that are already in the folder
-            foreach (var (source, destination) in copyPaths)
-            {
-                if (source == destination)
-                {
-                    copyPaths.Remove(source);
-                }
-            }
-
-            if (copyPaths.Count == 0)
-            {
-                Progress.Text = "Import complete";
-                Progress.Value = 100;
-                return;
-            }
-
-            var transferProgress = new Progress<ProgressReport>(report =>
-            {
-                Progress.IsIndeterminate = false;
-                Progress.Value = report.Percentage;
-                // For multiple files, add count
-                Progress.Text =
-                    copyPaths.Count > 1
-                        ? $"Importing {report.Title} ({report.Message})"
-                        : $"Importing {report.Title}";
-            });
-
-            await FileTransfers.CopyFiles(copyPaths, transferProgress);
-
-            // Hash files and convert them to connected model if found
-            if (IsImportAsConnectedEnabled)
-            {
-                var modelFilesCount = copyPaths.Count;
-                var modelFiles = copyPaths.Values.Select(path => new FilePath(path));
-
-                // Holds tasks for model queries after hash
-                var modelQueryTasks = new List<Task<bool>>();
-
-                foreach (var (i, modelFile) in modelFiles.Enumerate())
-                {
-                    var hashProgress = new Progress<ProgressReport>(report =>
-                    {
-                        Progress.IsIndeterminate = report.IsIndeterminate;
-                        Progress.Value = report.Percentage;
-                        Progress.Text =
-                            modelFilesCount > 1
-                                ? $"Computing metadata for {modelFile.Name} ({i}/{modelFilesCount})"
-                                : $"Computing metadata for {modelFile.Name}";
-                    });
-
-                    var hashBlake3 = await FileHash.GetBlake3Async(modelFile, hashProgress);
-
-                    // Start a task to query the model in background
-                    var queryTask = Task.Run(async () =>
-                    {
-                        var result = await modelFinder.LocalFindModel(hashBlake3);
-                        result ??= await modelFinder.RemoteFindModel(hashBlake3);
-
-                        if (result is null)
-                            return false; // Not found
-
-                        var (model, version, file) = result.Value;
-
-                        // Save connected model info json
-                        var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Info.Name);
-                        var modelInfo = new ConnectedModelInfo(model, version, file, DateTimeOffset.UtcNow);
-                        await modelInfo.SaveJsonToDirectory(destinationFolder, modelFileName);
-
-                        // If available, save thumbnail
-                        var image = version.Images?.FirstOrDefault(x => x.Type == "image");
-                        if (image != null)
-                        {
-                            var imageExt = Path.GetExtension(image.Url).TrimStart('.');
-                            if (imageExt is "jpg" or "jpeg" or "png")
-                            {
-                                var imageDownloadPath = Path.GetFullPath(
-                                    Path.Combine(destinationFolder, $"{modelFileName}.preview.{imageExt}")
-                                );
-                                await downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
-                            }
-                        }
-
-                        return true;
-                    });
-                    modelQueryTasks.Add(queryTask);
-                }
-
-                // Set progress to indeterminate
-                Progress.IsIndeterminate = true;
-                Progress.Text = "Checking connected model information";
-
-                // Wait for all model queries to finish
-                var modelQueryResults = await Task.WhenAll(modelQueryTasks);
-
-                var successCount = modelQueryResults.Count(r => r);
-                var totalCount = modelQueryResults.Length;
-                var failCount = totalCount - successCount;
-
-                Progress.Value = 100;
-                Progress.Text = successCount switch
-                {
-                    0 when failCount > 0 => "Import complete. No connected data found.",
-                    > 0 when failCount > 0
-                        => $"Import complete. Found connected data for {successCount} of {totalCount} models.",
-                    1 when failCount == 0 => "Import complete. Found connected data for 1 model.",
-                    _ => $"Import complete. Found connected data for all {totalCount} models."
-                };
-            }
-            else
-            {
-                Progress.Text = "Import complete";
-                Progress.Value = 100;
-            }
+            return;
         }
-        finally
+
+        var importModelsStep = new ImportModelsStep(
+            modelFinder,
+            downloadService,
+            modelIndexService,
+            files,
+            destinationFolder,
+            IsImportAsConnectedEnabled
+        );
+
+        var runner = new PackageModificationRunner
         {
-            // DelayedClearProgress(TimeSpan.FromSeconds(1.5));
-            await modelIndexService.RefreshIndex();
-        }
+            ModificationCompleteMessage = "Import Complete",
+            HideCloseButton = false,
+            ShowDialogOnStart = true
+        };
+
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps([importModelsStep]);
     }
 
     public async Task MoveBetweenFolders(LocalModelFile sourceFile, DirectoryPath destinationFolder)
@@ -536,7 +404,7 @@ public partial class NewCheckpointsPageViewModel(
         var sourceDirectory = Path.GetDirectoryName(sourceFile.GetFullPath(settingsManager.ModelsDirectory));
         if (
             destinationFolder.FullPath == settingsManager.ModelsDirectory
-            || (sourceDirectory != null && sourceDirectory == destinationFolder)
+            || (sourceDirectory != null && sourceDirectory == destinationFolder.FullPath)
         )
         {
             notificationService.Show(
@@ -549,7 +417,6 @@ public partial class NewCheckpointsPageViewModel(
 
         try
         {
-            Progress.Value = 0;
             var sourcePath = new FilePath(sourceFile.GetFullPath(settingsManager.ModelsDirectory));
             var fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourcePath);
             var sourceCmInfoPath = Path.Combine(sourcePath.Directory, $"{fileNameWithoutExt}.cm-info.json");
@@ -564,19 +431,13 @@ public partial class NewCheckpointsPageViewModel(
             // Move files
             if (File.Exists(sourcePath))
             {
-                Progress.Text = $"Moving {sourcePath.Name}...";
                 await FileTransfers.MoveFileAsync(sourcePath, destinationFilePath);
             }
-
-            Progress.Value = 33;
-            Progress.Text = $"Moving {sourcePath.Name} metadata...";
 
             if (File.Exists(sourceCmInfoPath))
             {
                 await FileTransfers.MoveFileAsync(sourceCmInfoPath, destinationCmInfoPath);
             }
-
-            Progress.Value = 66;
 
             if (File.Exists(sourcePreviewPath))
             {
@@ -585,17 +446,27 @@ public partial class NewCheckpointsPageViewModel(
 
             await modelIndexService.RemoveModelAsync(sourceFile);
 
-            Progress.Value = 100;
-            Progress.Text = $"Moved {sourcePath.Name} to {Title}";
+            notificationService.Show(
+                "Model moved successfully",
+                $"Moved '{sourcePath.Name}' to '{Path.GetFileName(destinationFolder)}'"
+            );
         }
         catch (FileTransferExistsException)
         {
-            Progress.Value = 0;
-            Progress.Text = "Failed to move file: destination file exists";
+            notificationService.Show(
+                "Failed to move file",
+                "Destination file exists",
+                NotificationType.Error
+            );
         }
         finally
         {
+            SelectedCategory = Categories
+                .SelectMany(c => c.Flatten())
+                .FirstOrDefault(x => x.Path == destinationFolder.FullPath);
+
             await modelIndexService.RefreshIndex();
+            DelayedClearProgress(TimeSpan.FromSeconds(1.5));
         }
     }
 
@@ -678,14 +549,20 @@ public partial class NewCheckpointsPageViewModel(
             (a, b) => a.Path == b.Path && a.SubDirectories.Count == b.SubDirectories.Count
         );
 
-        SelectedCategory = previouslySelectedCategory ?? Categories.First();
+        SelectedCategory =
+            previouslySelectedCategory
+            ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
+            ?? Categories.First();
 
-        foreach (var checkpointCategory in Categories)
+        var sw = Stopwatch.StartNew();
+        foreach (var checkpointCategory in Categories.SelectMany(c => c.Flatten()))
         {
             checkpointCategory.Count = Directory
                 .EnumerateFileSystemEntries(checkpointCategory.Path, "*", SearchOption.AllDirectories)
                 .Count(x => CheckpointFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(x)));
         }
+        sw.Stop();
+        Console.WriteLine($"counting took {sw.Elapsed.Milliseconds}ms");
     }
 
     private ObservableCollection<CheckpointCategory> GetSubfolders(string strPath)
@@ -731,5 +608,15 @@ public partial class NewCheckpointsPageViewModel(
         var modelNameNoExt = Path.GetFileNameWithoutExtension((string?)filePath);
         var modelDir = Path.GetDirectoryName((string?)filePath) ?? "";
         return Path.Combine(modelDir, $"{modelNameNoExt}.cm-info.json");
+    }
+
+    private void DelayedClearProgress(TimeSpan delay)
+    {
+        Task.Delay(delay)
+            .ContinueWith(_ =>
+            {
+                IsLoading = false;
+                Progress.Value = 0;
+            });
     }
 }

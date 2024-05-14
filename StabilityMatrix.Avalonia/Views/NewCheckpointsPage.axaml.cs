@@ -6,6 +6,7 @@ using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Controls.Scroll;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -34,10 +35,16 @@ public partial class NewCheckpointsPage : UserControlBase
         if (e.Source is not Control control)
             return;
 
+        if (DataContext as NewCheckpointsPageViewModel is not { SelectedCategory: not null } checkpointsVm)
+            return;
+
         switch (control)
         {
             case TreeViewItem treeViewItem:
                 treeViewItem.Classes.Remove("dragover");
+                break;
+            case Border { Tag: "DragOverlay" }:
+                checkpointsVm.IsDragOver = false;
                 break;
             case Border border:
                 border.Classes.Remove("dragover");
@@ -70,6 +77,9 @@ public partial class NewCheckpointsPage : UserControlBase
         if (e.Source is not Control control)
             return;
 
+        if (DataContext as NewCheckpointsPageViewModel is not { SelectedCategory: not null } checkpointsVm)
+            return;
+
         switch (control)
         {
             case TreeViewItem treeViewItem:
@@ -80,6 +90,9 @@ public partial class NewCheckpointsPage : UserControlBase
                 break;
             case TextBlock textBlock:
                 textBlock.Parent?.Classes.Add("dragover");
+                break;
+            case BetterScrollContentPresenter _:
+                checkpointsVm.IsDragOver = true;
                 break;
         }
 
@@ -130,11 +143,27 @@ public partial class NewCheckpointsPage : UserControlBase
 
     private async void OnDrop(object? sender, DragEventArgs e)
     {
-        var sourceDataContext = (e.Source as Control)?.DataContext;
+        var control = e.Source as Control;
+        var sourceDataContext = control?.DataContext;
         if (DataContext as NewCheckpointsPageViewModel is not { SelectedCategory: not null } checkpointsVm)
         {
             return;
         }
+
+        switch (control)
+        {
+            case TreeViewItem treeViewItem:
+                treeViewItem.Classes.Remove("dragover");
+                break;
+            case Border border:
+                border.Classes.Remove("dragover");
+                break;
+            case TextBlock textBlock:
+                textBlock.Parent?.Classes.Remove("dragover");
+                break;
+        }
+
+        checkpointsVm.IsDragOver = false;
 
         switch (sourceDataContext)
         {
@@ -149,7 +178,8 @@ public partial class NewCheckpointsPage : UserControlBase
                     await checkpointsVm.ImportFilesAsync(paths, category.Path);
                 }
                 break;
-            case CheckpointFileViewModel fileViewModel:
+            case NewCheckpointsPageViewModel _:
+            case CheckpointFileViewModel _:
                 if (e.Data.GetContext<CheckpointFileViewModel>() is { } fileVm)
                 {
                     await checkpointsVm.MoveBetweenFolders(
@@ -163,37 +193,6 @@ public partial class NewCheckpointsPage : UserControlBase
                     await checkpointsVm.ImportFilesAsync(paths, checkpointsVm.SelectedCategory.Path);
                 }
                 break;
-            case CheckpointFolder folder:
-            {
-                if (e.Data.GetContext<CheckpointFile>() is not { } file)
-                {
-                    await folder.OnDrop(e);
-                    break;
-                }
-
-                var filePath = new FilePath(file.FilePath);
-                if (filePath.Directory?.FullPath != folder.DirectoryPath)
-                {
-                    await folder.OnDrop(e);
-                }
-                break;
-            }
-            case CheckpointFile file:
-            {
-                if (e.Data.GetContext<CheckpointFile>() is not { } dragFile)
-                {
-                    await file.ParentFolder.OnDrop(e);
-                    break;
-                }
-
-                var parentFolder = file.ParentFolder;
-                var dragFilePath = new FilePath(dragFile.FilePath);
-                if (dragFilePath.Directory?.FullPath != parentFolder.DirectoryPath)
-                {
-                    await parentFolder.OnDrop(e);
-                }
-                break;
-            }
         }
     }
 }

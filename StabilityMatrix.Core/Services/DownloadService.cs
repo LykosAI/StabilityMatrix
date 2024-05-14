@@ -111,7 +111,8 @@ public class DownloadService : IDownloadService
                     new ProgressReport(
                         current: Convert.ToUInt64(totalBytesRead),
                         total: Convert.ToUInt64(contentLength),
-                        message: "Downloading..."
+                        message: "Downloading...",
+                        printToConsole: false
                     )
                 );
             }

@@ -11,6 +11,7 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -36,6 +37,8 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     private readonly IModelIndexService modelIndexService;
 
     public bool CanShowTriggerWords => CheckpointFile.ConnectedModelInfo?.TrainedWords?.Length > 0;
+    public string BaseModelName => CheckpointFile.ConnectedModelInfo?.BaseModel ?? string.Empty;
+    public CivitModelType ModelType => CheckpointFile.ConnectedModelInfo?.ModelType ?? CivitModelType.Unknown;
 
     /// <inheritdoc/>
     public CheckpointFileViewModel(

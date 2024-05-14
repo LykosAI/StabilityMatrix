@@ -160,7 +160,7 @@
                                     Placement="Bottom">
                                     <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}"
                                                        Command="{Binding ScanMetadataCommand}"
-                                                       CommandParameter="{StaticResource True}"/>
+                                                       CommandParameter="{StaticResource True}" />
                                 </ui:FAMenuFlyout>
                             </SplitButton.Flyout>
                         </SplitButton>
@@ -319,21 +319,21 @@
                                                        IconSource="Find"
                                                        Command="{Binding FindConnectedMetadataCommand}"
                                                        CommandParameter="{StaticResource False}"
-                                                       IsVisible="{Binding !CheckpointFile.HasConnectedModel}"/>
+                                                       IsVisible="{Binding !CheckpointFile.HasConnectedModel}" />
                                     <ui:MenuFlyoutItem
                                         Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}"
                                         IconSource="Sync"
                                         Command="{Binding FindConnectedMetadataCommand}"
                                         CommandParameter="{StaticResource True}"
-                                        IsVisible="{Binding CheckpointFile.HasConnectedModel}"/>
-                                    
+                                        IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
+
                                     <ui:MenuFlyoutSeparator />
                                     <!-- <ui:MenuFlyoutItem Command="{Binding RenameCommand}" -->
                                     <!--                    Text="{x:Static lang:Resources.Action_Rename}" IconSource="Rename" /> -->
                                     <ui:MenuFlyoutItem Command="{Binding DeleteCommand}"
                                                        CommandParameter="{StaticResource True}"
                                                        Text="{x:Static lang:Resources.Action_Delete}"
-                                                       IconSource="Delete"/>
+                                                       IconSource="Delete" />
                                 </ui:FAMenuFlyout>
                             </Border.ContextFlyout>
 
@@ -353,6 +353,7 @@
                                         </Style>
                                     </CheckBox.Styles>
                                 </CheckBox>
+
                                 <Button Grid.Row="0"
                                         Grid.RowSpan="2"
                                         Margin="0"
@@ -368,6 +369,58 @@
                                         CornerRadius="8"
                                         Source="{Binding ThumbnailUri, Converter={StaticResource FileUriConverter}}" />
                                 </Button>
+                                
+                                <StackPanel Grid.Row="0" Orientation="Horizontal"
+                                            IsVisible="{Binding CheckpointFile.HasConnectedModel}">
+                                    <controls:Card
+                                        Height="24"
+                                        Margin="8,8,0,0"
+                                        Padding="4"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Classes="info">
+
+                                        <TextBlock
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontSize="11"
+                                            FontWeight="Medium"
+                                            Text="{Binding ModelType}" />
+                                    </controls:Card>
+                                    <controls:Card
+                                        Height="24"
+                                        Margin="4,8,0,0"
+                                        Padding="4"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Classes="info">
+
+                                        <TextBlock
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontSize="11"
+                                            FontWeight="Medium"
+                                            Text="{Binding BaseModelName}"
+                                            IsVisible="{Binding BaseModelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    </controls:Card>
+                                    <!-- <controls:Card -->
+                                    <!--     Height="24" -->
+                                    <!--     Margin="4,8,0,0" -->
+                                    <!--     Padding="4" -->
+                                    <!--     HorizontalAlignment="Left" -->
+                                    <!--     VerticalAlignment="Top" -->
+                                    <!--     Classes="success" -->
+                                    <!--     IsVisible="{Binding ShowUpdateCard}"> -->
+                                    <!-- -->
+                                    <!--     <TextBlock -->
+                                    <!--         HorizontalAlignment="Center" -->
+                                    <!--         VerticalAlignment="Center" -->
+                                    <!--         FontSize="11" -->
+                                    <!--         FontWeight="Medium" -->
+                                    <!--         Text="{Binding UpdateCardText}" /> -->
+                                    <!-- </controls:Card> -->
+                                </StackPanel>
+                                
                                 <Border
                                     Name="ModelCardBottom"
                                     IsHitTestVisible="False"
@@ -392,10 +445,22 @@
                                         <TextBlock Text="{Binding CheckpointFile.FileName}"
                                                    MaxWidth="300"
                                                    TextWrapping="NoWrap"
+                                                   Margin="0,0,0,4"
                                                    FontSize="13"
                                                    Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                    HorizontalAlignment="Left"
                                                    ToolTip.Tip="{Binding CheckpointFile.FileName}" />
+
+                                        <TextBlock MaxWidth="300"
+                                                   TextWrapping="NoWrap"
+                                                   FontSize="13"
+                                                   Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                   HorizontalAlignment="Left"
+                                                   IsVisible="{Binding CanShowTriggerWords}"
+                                                   ToolTip.Tip="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}">
+                                            <Run Text="Trigger words:" />
+                                            <Run Text="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}" />
+                                        </TextBlock>
                                     </StackPanel>
                                 </Border>
 
@@ -435,7 +500,7 @@
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
         </scroll:BetterScrollViewer>
-        
+
         <Border Grid.Row="1" Grid.Column="1" Background="#AA000000"
                 CornerRadius="8"
                 IsVisible="{Binding IsLoading}">
@@ -444,13 +509,13 @@
                 <TextBlock Text="{Binding Progress.Text, FallbackValue=Loading..., TargetNullValue=Loading...}"
                            VerticalAlignment="Center"
                            HorizontalAlignment="Center"
-                           FontSize="20"/>
+                           FontSize="20" />
                 <ProgressBar IsIndeterminate="{Binding Progress.IsIndeterminate}"
                              Value="{Binding Progress.Value}"
-                             Margin="8,36,8,0"/>
+                             Margin="8,36,8,0" />
             </StackPanel>
         </Border>
-        
+
         <Border Grid.Row="1" Grid.Column="1" Background="#AA333333"
                 DragDrop.AllowDrop="True"
                 CornerRadius="8"
@@ -461,7 +526,7 @@
                 <TextBlock Text="{x:Static lang:Resources.Label_DragAndDropCheckpointsHereToImport}"
                            VerticalAlignment="Center"
                            HorizontalAlignment="Center"
-                           FontSize="20"/>
+                           FontSize="20" />
             </StackPanel>
         </Border>
 

@@ -17,7 +17,7 @@ internal partial interface IFileOperation
     void RenameItem(
         IShellItem psiItem,
         [MarshalAs(UnmanagedType.LPWStr)] string pszNewName,
-        IFileOperationProgressSink pfopsItem
+        IFileOperationProgressSink? pfopsItem
     );
     void RenameItems(
         [MarshalAs(UnmanagedType.Interface)] object pUnkItems,
@@ -27,24 +27,24 @@ internal partial interface IFileOperation
         IShellItem psiItem,
         IShellItem psiDestinationFolder,
         [MarshalAs(UnmanagedType.LPWStr)] string pszNewName,
-        IFileOperationProgressSink pfopsItem
+        IFileOperationProgressSink? pfopsItem
     );
     void MoveItems([MarshalAs(UnmanagedType.Interface)] object punkItems, IShellItem psiDestinationFolder);
     void CopyItem(
         IShellItem psiItem,
         IShellItem psiDestinationFolder,
         [MarshalAs(UnmanagedType.LPWStr)] string pszCopyName,
-        IFileOperationProgressSink pfopsItem
+        IFileOperationProgressSink? pfopsItem
     );
     void CopyItems([MarshalAs(UnmanagedType.Interface)] object punkItems, IShellItem psiDestinationFolder);
-    void DeleteItem(IShellItem psiItem, IFileOperationProgressSink pfopsItem);
+    void DeleteItem(IShellItem psiItem, IFileOperationProgressSink? pfopsItem);
     void DeleteItems([MarshalAs(UnmanagedType.Interface)] object punkItems);
     uint NewItem(
         IShellItem psiDestinationFolder,
         FileAttributes dwFileAttributes,
         [MarshalAs(UnmanagedType.LPWStr)] string pszName,
         [MarshalAs(UnmanagedType.LPWStr)] string pszTemplateName,
-        IFileOperationProgressSink pfopsItem
+        IFileOperationProgressSink? pfopsItem
     );
     void PerformOperations();
 

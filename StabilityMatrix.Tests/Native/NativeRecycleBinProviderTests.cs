@@ -16,6 +16,7 @@ public class NativeRecycleBinProviderTests
         {
             Assert.IsFalse(NativeFileOperations.IsRecycleBinAvailable);
             Assert.IsNull(NativeFileOperations.RecycleBin);
+            Assert.Inconclusive("Recycle bin is only available on Windows.");
             return;
         }
 

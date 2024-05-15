@@ -16,6 +16,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\StabilityMatrix.Native\StabilityMatrix.Native.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="AsyncAwaitBestPractices" Version="7.0.0" />
       <PackageReference Include="AutoCtor" Version="2.2.0" />
       <PackageReference Include="Blake3" Version="1.1.0" />

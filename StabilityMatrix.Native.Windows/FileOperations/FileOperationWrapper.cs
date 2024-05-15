@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using StabilityMatrix.Native.Windows.Interop;
 
 namespace StabilityMatrix.Native.Windows.FileOperations;
 
+[SuppressMessage("ReSharper", "InconsistentNaming")]
 internal partial class FileOperationWrapper : IDisposable
 {
     private bool _disposed;
@@ -93,9 +95,6 @@ internal partial class FileOperationWrapper : IDisposable
             }
 
             // Create ShellItemArray from PIDLs
-            // if (SHCreateShellItemArrayFromIDLists((uint)sources.Length, pidlArray, out var shellItemArray) != 0)
-            //   throw new Exception("Failed to create IShellItemArray from PIDLs.");
-
             var shellItemArray = SHCreateShellItemArrayFromIDLists((uint)sources.Length, pidlArray);
 
             // Use the IFileOperation interface to delete items
@@ -107,7 +106,9 @@ internal partial class FileOperationWrapper : IDisposable
             foreach (var pidl in pidlArray)
             {
                 if (pidl != IntPtr.Zero)
+                {
                     Marshal.FreeCoTaskMem(pidl);
+                }
             }
         }
     }
@@ -129,7 +130,9 @@ internal partial class FileOperationWrapper : IDisposable
     private void ThrowIfDisposed()
     {
         if (_disposed)
+        {
             throw new ObjectDisposedException(GetType().Name);
+        }
     }
 
     public void Dispose()
@@ -137,8 +140,12 @@ internal partial class FileOperationWrapper : IDisposable
         if (!_disposed)
         {
             _disposed = true;
+
             if (_callbackSink != null)
+            {
                 _fileOperation.Unadvise(_sinkCookie);
+            }
+
             Marshal.FinalReleaseComObject(_fileOperation);
         }
     }
@@ -150,7 +157,7 @@ internal partial class FileOperationWrapper : IDisposable
         );
     }
 
-    /*private static ComReleaser<IShellItemArray> CreateShellItemArray(params string[] paths)
+    private static ComReleaser<IShellItemArray> CreateShellItemArray(params string[] paths)
     {
         var pidls = new IntPtr[paths.Length];
 
@@ -167,7 +174,7 @@ internal partial class FileOperationWrapper : IDisposable
             }
 
             return new ComReleaser<IShellItemArray>(
-                (IShellItemArray)SHCreateShellItemArrayFromIDLists((uint)pidls.Length, pidls)
+                SHCreateShellItemArrayFromIDLists((uint)pidls.Length, pidls)
             );
         }
         finally
@@ -177,7 +184,7 @@ internal partial class FileOperationWrapper : IDisposable
                 Marshal.FreeCoTaskMem(pidl);
             }
         }
-    }*/
+    }
 
     [LibraryImport("shell32.dll", SetLastError = true)]
     private static partial int SHParseDisplayName(
@@ -187,9 +194,6 @@ internal partial class FileOperationWrapper : IDisposable
         uint sfgaoIn,
         out uint psfgaoOut
     );
-
-    /*[LibraryImport("shell32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
-    private static partial int SHCreateShellItemArrayFromIDLists(uint cidl, IntPtr[] rgpidl, out IShellItemArray ppsiItemArray);*/
 
     [LibraryImport("shell32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
     private static partial IntPtr ILCreateFromPathW(string pszPath);
@@ -209,14 +213,9 @@ internal partial class FileOperationWrapper : IDisposable
         [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStruct)] IntPtr[] rgpidl
     );
 
-    /*[DllImport("shell32.dll", SetLastError = true, CharSet = CharSet.Unicode, PreserveSig = false)]
-    [return: MarshalAs(UnmanagedType.Interface)]
-    private static extern object SHCreateShellItemArrayFromIDLists(
-        uint cidl,
-        [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStruct)] IntPtr[] rgpidl
-    );*/
-
     private static readonly Guid ClsidFileOperation = new("3ad05575-8857-4850-9277-11b85bdb8e09");
-    private static readonly Type FileOperationType = Type.GetTypeFromCLSID(ClsidFileOperation);
+    private static readonly Type FileOperationType =
+        Type.GetTypeFromCLSID(ClsidFileOperation)
+        ?? throw new NullReferenceException("Failed to get FileOperation type from CLSID");
     private static Guid _shellItemGuid = typeof(IShellItem).GUID;
 }

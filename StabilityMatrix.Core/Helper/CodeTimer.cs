@@ -143,7 +143,11 @@ public class CodeTimer(string postFix = "", [CallerMemberName] string callerName
         // If we're a root timer, output all results
         if (printOutput)
         {
+#if DEBUG
             OutputDebug(GetResult());
+#else
+            Console.WriteLine(GetResult());
+#endif
             SubTimers.Clear();
         }
     }

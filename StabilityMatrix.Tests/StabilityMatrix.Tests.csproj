@@ -35,6 +35,7 @@
     <ItemGroup>
       <ProjectReference Include="..\StabilityMatrix.Avalonia\StabilityMatrix.Avalonia.csproj" />
       <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
+      <ProjectReference Include="..\StabilityMatrix.Native\StabilityMatrix.Native.csproj" />
 
     </ItemGroup>
 

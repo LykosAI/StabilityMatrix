@@ -43,4 +43,5 @@ public interface IModelIndexService
     Task<bool> RemoveModelAsync(LocalModelFile model);
 
     Task<bool> RemoveModelsAsync(IEnumerable<LocalModelFile> models);
+    Task CheckModelsForUpdateAsync();
 }

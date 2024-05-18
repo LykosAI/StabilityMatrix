@@ -18,6 +18,7 @@
                           xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
                           xmlns:system="clr-namespace:System;assembly=System.Runtime"
                           xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+                          xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
                           mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="650"
                           x:Class="StabilityMatrix.Avalonia.Views.NewCheckpointsPage"
                           d:DataContext="{x:Static mocks:DesignData.NewCheckpointsPageViewModel}"
@@ -29,6 +30,8 @@
         <converters:EnumStringConverter x:Key="EnumStringConverter" />
         <system:Boolean x:Key="False">False</system:Boolean>
         <system:Boolean x:Key="True">True</system:Boolean>
+        <input:StandardUICommand x:Key="ItemClickCommand"
+                                 Command="{Binding ItemClickCommand}"/>
     </controls:UserControlBase.Resources>
 
     <controls:UserControlBase.Styles>
@@ -360,7 +363,8 @@
                                         Padding="0"
                                         ClipToBounds="True"
                                         CornerRadius="12"
-                                        Command="{Binding ToggleSelectionCommand}">
+                                        Command="{StaticResource ItemClickCommand}"
+                                        CommandParameter="{Binding }">
                                     <vendorLabs:BetterAsyncImage
                                         Width="330"
                                         Height="400"
@@ -403,22 +407,22 @@
                                             Text="{Binding BaseModelName}"
                                             IsVisible="{Binding BaseModelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                     </controls:Card>
-                                    <!-- <controls:Card -->
-                                    <!--     Height="24" -->
-                                    <!--     Margin="4,8,0,0" -->
-                                    <!--     Padding="4" -->
-                                    <!--     HorizontalAlignment="Left" -->
-                                    <!--     VerticalAlignment="Top" -->
-                                    <!--     Classes="success" -->
-                                    <!--     IsVisible="{Binding ShowUpdateCard}"> -->
-                                    <!-- -->
-                                    <!--     <TextBlock -->
-                                    <!--         HorizontalAlignment="Center" -->
-                                    <!--         VerticalAlignment="Center" -->
-                                    <!--         FontSize="11" -->
-                                    <!--         FontWeight="Medium" -->
-                                    <!--         Text="{Binding UpdateCardText}" /> -->
-                                    <!-- </controls:Card> -->
+                                    <controls:Card
+                                        Height="24"
+                                        Margin="4,8,0,0"
+                                        Padding="4"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Top"
+                                        Classes="success"
+                                        IsVisible="{Binding CheckpointFile.HasUpdate}">
+                                    
+                                        <TextBlock
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            FontSize="11"
+                                            FontWeight="Medium"
+                                            Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
+                                    </controls:Card>
                                 </StackPanel>
                                 
                                 <Border
@@ -475,7 +479,8 @@
                                            Grid.RowSpan="2"
                                            x:CompileBindings="False"
                                            Margin="0,64,0,0"
-                                           Text="{Binding Progress.Title, FallbackValue=Test}"
+                                           Text="{Binding Progress.Title}"
+                                           TextWrapping="Wrap"
                                            TextAlignment="Center"
                                            IsVisible="{Binding IsLoading}"
                                            VerticalAlignment="Center" />
@@ -516,7 +521,7 @@
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="1" Grid.Column="1" Background="#AA333333"
+        <Border Grid.Row="1" Grid.Column="1" Background="#AA000000"
                 DragDrop.AllowDrop="True"
                 CornerRadius="8"
                 Tag="DragOverlay"

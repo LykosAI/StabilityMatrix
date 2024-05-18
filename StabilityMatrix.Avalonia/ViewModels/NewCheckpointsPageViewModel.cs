@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -23,12 +24,15 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -48,7 +52,9 @@ public partial class NewCheckpointsPageViewModel(
     ModelFinder modelFinder,
     IDownloadService downloadService,
     INotificationService notificationService,
-    IMetadataImportService metadataImportService
+    IMetadataImportService metadataImportService,
+    IModelImportService modelImportService,
+    ServiceManager<ViewModelBase> dialogFactory
 ) : PageViewModelBase
 {
     public override string Title => Resources.Label_CheckpointManager;
@@ -123,9 +129,20 @@ public partial class NewCheckpointsPageViewModel(
                     (Func<LocalModelFile, bool>)(
                         file =>
                             string.IsNullOrWhiteSpace(SearchQuery)
-                            || file.FileNameWithoutExtension.Contains(
+                            || file.DisplayModelFileName.Contains(
                                 SearchQuery,
                                 StringComparison.OrdinalIgnoreCase
+                            )
+                            || file.DisplayModelName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
+                            || file.DisplayModelVersion.Contains(
+                                SearchQuery,
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                            || (
+                                file.ConnectedModelInfo?.TrainedWordsString.Contains(
+                                    SearchQuery,
+                                    StringComparison.OrdinalIgnoreCase
+                                ) ?? false
                             )
                     )
             )
@@ -203,6 +220,14 @@ public partial class NewCheckpointsPageViewModel(
 
                         comparer = comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName);
                         break;
+                    case CheckpointSortMode.UpdateAvailable:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.CheckpointFile.HasUpdate)
+                                : comparer.ThenByDescending(vm => vm.CheckpointFile.HasUpdate);
+                        comparer = comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName);
+                        comparer = comparer.ThenByDescending(vm => vm.CheckpointFile.DisplayModelVersion);
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -234,7 +259,7 @@ public partial class NewCheckpointsPageViewModel(
             true
         );
 
-        Refresh();
+        Refresh().SafeFireAndForget();
 
         EventManager.Instance.ModelIndexChanged += (_, _) =>
         {
@@ -287,9 +312,10 @@ public partial class NewCheckpointsPageViewModel(
     }
 
     [RelayCommand]
-    private void Refresh()
+    private async Task Refresh()
     {
-        modelIndexService.RefreshIndex();
+        await modelIndexService.RefreshIndex();
+        Task.Run(async () => await modelIndexService.CheckModelsForUpdateAsync()).SafeFireAndForget();
     }
 
     [RelayCommand]
@@ -365,6 +391,116 @@ public partial class NewCheckpointsPageViewModel(
             ? "Finished updating metadata."
             : "Finished scanning for missing metadata.";
         notificationService.Show("Scan Complete", message, NotificationType.Success);
+    }
+
+    [RelayCommand]
+    private Task OnItemClick(CheckpointFileViewModel item)
+    {
+        // Select item if we're in "select mode"
+        if (NumItemsSelected > 0)
+        {
+            item.IsSelected = !item.IsSelected;
+        }
+        else if (item.CheckpointFile.HasConnectedModel)
+        {
+            return ShowVersionDialog(item);
+        }
+        else
+        {
+            item.IsSelected = !item.IsSelected;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private async Task ShowVersionDialog(CheckpointFileViewModel item)
+    {
+        var model = item.CheckpointFile.LatestModelInfo;
+        if (model is null)
+        {
+            notificationService.Show(
+                "Model not found",
+                "Model not found in index, please try again later.",
+                NotificationType.Error
+            );
+            return;
+        }
+
+        var versions = model.ModelVersions;
+        if (versions is null || versions.Count == 0)
+        {
+            notificationService.Show(
+                new Notification(
+                    "Model has no versions available",
+                    "This model has no versions available for download",
+                    NotificationType.Warning
+                )
+            );
+            return;
+        }
+
+        item.IsLoading = true;
+
+        var dialog = new BetterContentDialog
+        {
+            Title = model.Name,
+            IsPrimaryButtonEnabled = false,
+            IsSecondaryButtonEnabled = false,
+            IsFooterVisible = false,
+            MaxDialogWidth = 750,
+            MaxDialogHeight = 950,
+        };
+
+        var prunedDescription = Utilities.RemoveHtml(model.Description);
+
+        var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
+        viewModel.Dialog = dialog;
+        viewModel.Title = model.Name;
+        viewModel.Description = prunedDescription;
+        viewModel.CivitModel = model;
+        viewModel.Versions = versions
+            .Select(
+                version =>
+                    new ModelVersionViewModel(
+                        settingsManager.Settings.InstalledModelHashes ?? new HashSet<string>(),
+                        version
+                    )
+            )
+            .ToImmutableArray();
+        viewModel.SelectedVersionViewModel = viewModel.Versions[0];
+
+        dialog.Content = new SelectModelVersionDialog { DataContext = viewModel };
+
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary)
+        {
+            DelayedClearViewModelProgress(item, TimeSpan.FromMilliseconds(100));
+            return;
+        }
+
+        var selectedVersion = viewModel?.SelectedVersionViewModel?.ModelVersion;
+        var selectedFile = viewModel?.SelectedFile?.CivitFile;
+
+        DirectoryPath downloadPath;
+        if (viewModel?.IsCustomSelected is true)
+        {
+            downloadPath = viewModel.CustomInstallLocation;
+        }
+        else
+        {
+            var subFolder =
+                viewModel?.SelectedInstallLocation
+                ?? Path.Combine(@"Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
+            downloadPath = Path.Combine(settingsManager.LibraryDir, subFolder);
+        }
+
+        await Task.Delay(100);
+        await modelImportService.DoImport(model, downloadPath, selectedVersion, selectedFile);
+
+        item.Progress = new ProgressReport(1f, "Import started. Check the downloads tab for progress.");
+        DelayedClearViewModelProgress(item, TimeSpan.FromMilliseconds(1000));
     }
 
     public async Task ImportFilesAsync(IEnumerable<string> files, DirectoryPath destinationFolder)
@@ -617,6 +753,16 @@ public partial class NewCheckpointsPageViewModel(
             {
                 IsLoading = false;
                 Progress.Value = 0;
+            });
+    }
+
+    private void DelayedClearViewModelProgress(CheckpointFileViewModel viewModel, TimeSpan delay)
+    {
+        Task.Delay(delay)
+            .ContinueWith(_ =>
+            {
+                viewModel.IsLoading = false;
+                viewModel.Progress = new ProgressReport(0f, "");
             });
     }
 }

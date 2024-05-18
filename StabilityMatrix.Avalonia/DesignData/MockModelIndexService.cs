@@ -54,7 +54,7 @@ public class MockModelIndexService : IModelIndexService
         return Task.FromResult(false);
     }
 
-    public Task CheckModelsForUpdates()
+    public Task CheckModelsForUpdateAsync()
     {
         return Task.CompletedTask;
     }

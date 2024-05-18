@@ -4,15 +4,18 @@ namespace StabilityMatrix.Core.Models;
 
 public enum CheckpointSortMode
 {
+    [StringValue("Base Model")]
+    BaseModel,
+
     [StringValue("File Name")]
     FileName,
 
     [StringValue("Title")]
     Title,
 
-    [StringValue("Base Model")]
-    BaseModel,
-
     [StringValue("Type")]
-    SharedFolderType
+    SharedFolderType,
+
+    [StringValue("Update Available")]
+    UpdateAvailable,
 }

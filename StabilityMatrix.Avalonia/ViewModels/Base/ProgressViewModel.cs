@@ -22,6 +22,11 @@ public partial class ProgressViewModel : ViewModelBase
     [ObservableProperty, NotifyPropertyChangedFor(nameof(IsProgressVisible))]
     private bool isIndeterminate;
 
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(FormattedDownloadSpeed))]
+    private double downloadSpeedInMBps;
+
+    public string FormattedDownloadSpeed => $"{DownloadSpeedInMBps:0.00} MB/s";
+
     public virtual bool IsProgressVisible => Value > 0 || IsIndeterminate;
     public virtual bool IsTextVisible => !string.IsNullOrWhiteSpace(Text);
 

@@ -7,7 +7,6 @@ using AsyncAwaitBestPractices;
 using AutoCtor;
 using KGySoft.CoreLibraries;
 using Microsoft.Extensions.Logging;
-using OneOf.Types;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
@@ -27,6 +26,8 @@ public partial class ModelIndexService : IModelIndexService
     private readonly ISettingsManager settingsManager;
     private readonly ILiteDbContext liteDbContext;
     private readonly ModelFinder modelFinder;
+
+    private DateTimeOffset lastUpdateCheck = DateTimeOffset.MinValue;
 
     /// <summary>
     /// Whether the database has been initially loaded.
@@ -88,7 +89,7 @@ public partial class ModelIndexService : IModelIndexService
         logger.LogInformation("Loading models from database...");
 
         var allModels = (
-            await liteDbContext.LocalModelFiles.FindAllAsync().ConfigureAwait(false)
+            await liteDbContext.LocalModelFiles.IncludeAll().FindAllAsync().ConfigureAwait(false)
         ).ToImmutableArray();
 
         ModelIndex = allModels.GroupBy(m => m.SharedFolderType).ToDictionary(g => g.Key, g => g.ToList());
@@ -445,9 +446,17 @@ public partial class ModelIndexService : IModelIndexService
 
         var newIndexComplete = newIndexFlat.ToArray();
 
+        var modelsDict = ModelIndex.Values.SelectMany(x => x).ToDictionary(f => f.RelativePath, file => file);
+
         var newIndex = new Dictionary<SharedFolderType, List<LocalModelFile>>();
         foreach (var model in newIndexComplete)
         {
+            if (modelsDict.TryGetValue(model.RelativePath, out var dbModel))
+            {
+                model.HasUpdate = dbModel.HasUpdate;
+                model.LastUpdateCheck = dbModel.LastUpdateCheck;
+                model.LatestModelInfo = dbModel.LatestModelInfo;
+            }
             var list = newIndex.GetOrAdd(model.SharedFolderType);
             list.Add(model);
         }
@@ -461,7 +470,6 @@ public partial class ModelIndexService : IModelIndexService
         stopwatch.Restart();
 
         using var db = await liteDbContext.Database.BeginTransactionAsync().ConfigureAwait(false);
-
         var localModelFiles = db.GetCollection<LocalModelFile>("LocalModelFiles")!;
 
         await localModelFiles.DeleteAllAsync().ConfigureAwait(false);
@@ -539,17 +547,25 @@ public partial class ModelIndexService : IModelIndexService
     // idk do somethin with this
     public async Task CheckModelsForUpdateAsync()
     {
-        var installedHashes = settingsManager.Settings.InstalledModelHashes;
+        if (DateTimeOffset.UtcNow < lastUpdateCheck.AddMinutes(5))
+        {
+            return;
+        }
+
+        var installedHashes = settingsManager.Settings.InstalledModelHashes ?? [];
         var dbModels = (
             await liteDbContext.LocalModelFiles.FindAllAsync().ConfigureAwait(false)
             ?? Enumerable.Empty<LocalModelFile>()
         ).ToList();
+
         var ids = dbModels
             .Where(x => x.ConnectedModelInfo != null)
             .Where(
                 x => x.LastUpdateCheck == default || x.LastUpdateCheck < DateTimeOffset.UtcNow.AddHours(-8)
             )
-            .Select(x => x.ConnectedModelInfo!.ModelId);
+            .Select(x => x.ConnectedModelInfo!.ModelId)
+            .Distinct();
+
         var remoteModels = (await modelFinder.FindRemoteModelsById(ids).ConfigureAwait(false)).ToList();
 
         foreach (var dbModel in dbModels)
@@ -563,15 +579,24 @@ public partial class ModelIndexService : IModelIndexService
             var latestHashes = latestVersion
                 ?.Files
                 ?.Where(f => f.Type == CivitFileType.Model)
-                .Select(f => f.Hashes.BLAKE3);
+                .Select(f => f.Hashes.BLAKE3)
+                .ToList();
 
             if (latestHashes == null)
                 continue;
 
-            dbModel.HasUpdate = !latestHashes.Any(hash => installedHashes?.Contains(hash) ?? false);
+            ModelIndex[dbModel.SharedFolderType].Remove(dbModel);
+
+            dbModel.HasUpdate = !latestHashes.Any(hash => installedHashes.Contains(hash));
             dbModel.LastUpdateCheck = DateTimeOffset.UtcNow;
+            dbModel.LatestModelInfo = remoteModel;
 
             await liteDbContext.LocalModelFiles.UpsertAsync(dbModel).ConfigureAwait(false);
+            ModelIndex[dbModel.SharedFolderType].Add(dbModel);
         }
+
+        lastUpdateCheck = DateTimeOffset.UtcNow;
+
+        EventManager.Instance.OnModelIndexChanged();
     }
 }

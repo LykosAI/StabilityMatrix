@@ -9,8 +9,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
 {
     private readonly TrackedDownload download;
-    
-    public  DownloadProgressItemViewModel(TrackedDownload download)
+
+    public DownloadProgressItemViewModel(TrackedDownload download)
     {
         this.download = download;
 
@@ -18,20 +18,21 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
         Name = download.FileName;
         State = download.ProgressState;
         OnProgressStateChanged(State);
-        
+
         // If initial progress provided, load it
-        if (download is {TotalBytes: > 0, DownloadedBytes: > 0})
+        if (download is { TotalBytes: > 0, DownloadedBytes: > 0 })
         {
-            var current = download.DownloadedBytes / (double) download.TotalBytes;
-            Progress.Value = (float) Math.Ceiling(Math.Clamp(current, 0, 1) * 100);
+            var current = download.DownloadedBytes / (double)download.TotalBytes;
+            Progress.Value = (float)Math.Ceiling(Math.Clamp(current, 0, 1) * 100);
         }
-        
+
         download.ProgressUpdate += (s, e) =>
         {
             Progress.Value = e.Percentage;
             Progress.IsIndeterminate = e.IsIndeterminate;
+            Progress.DownloadSpeedInMBps = e.SpeedInMBps;
         };
-        
+
         download.ProgressStateChanged += (s, e) =>
         {
             State = e;
@@ -76,7 +77,7 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
         download.Pause();
         return Task.CompletedTask;
     }
-    
+
     /// <inheritdoc />
     public override Task Resume()
     {

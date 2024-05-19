@@ -1080,4 +1080,7 @@
   <data name="Label_NumberFormat" xml:space="preserve">
     <value>Number Format</value>
   </data>
+  <data name="Label_AreYouSureDeleteModels" xml:space="preserve">
+    <value>Are you sure you want to delete {0} models?</value>
+  </data>
 </root>

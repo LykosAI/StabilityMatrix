@@ -55,11 +55,11 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
         if (!string.IsNullOrWhiteSpace(e.Message) && e.Message.Contains("Downloading..."))
             return;
 
-        if (e.ProcessOutput != null)
+        if (e is { ProcessOutput: not null, PrintToConsole: true })
         {
             Progress.Console.Post(e.ProcessOutput.Value);
         }
-        else
+        else if (e.PrintToConsole)
         {
             Progress.Console.PostLine(e.Message);
         }

@@ -24,12 +24,16 @@ public record struct ProgressReport
     public bool IsIndeterminate { get; init; } = false;
     public float Percentage => (float)Math.Ceiling(Math.Clamp(Progress ?? 0, 0, 1) * 100);
     public ProgressType Type { get; init; } = ProgressType.Generic;
+    public bool PrintToConsole { get; init; } = true;
+    public double SpeedInMBps { get; init; } = 0f;
 
     public ProgressReport(
         double progress,
         string? title = null,
         string? message = null,
         bool isIndeterminate = false,
+        bool printToConsole = true,
+        double speedInMBps = 0,
         ProgressType type = ProgressType.Generic
     )
     {
@@ -38,6 +42,8 @@ public record struct ProgressReport
         Message = message;
         IsIndeterminate = isIndeterminate;
         Type = type;
+        PrintToConsole = printToConsole;
+        SpeedInMBps = speedInMBps;
     }
 
     public ProgressReport(
@@ -46,6 +52,8 @@ public record struct ProgressReport
         string? title = null,
         string? message = null,
         bool isIndeterminate = false,
+        bool printToConsole = true,
+        double speedInMBps = 0,
         ProgressType type = ProgressType.Generic
     )
     {
@@ -56,6 +64,8 @@ public record struct ProgressReport
         Message = message;
         IsIndeterminate = isIndeterminate;
         Type = type;
+        PrintToConsole = printToConsole;
+        SpeedInMBps = speedInMBps;
     }
 
     public ProgressReport(
@@ -64,6 +74,8 @@ public record struct ProgressReport
         string? title = null,
         string? message = null,
         bool isIndeterminate = false,
+        bool printToConsole = true,
+        double speedInMBps = 0,
         ProgressType type = ProgressType.Generic
     )
     {
@@ -78,6 +90,8 @@ public record struct ProgressReport
         Message = message;
         IsIndeterminate = isIndeterminate;
         Type = type;
+        PrintToConsole = printToConsole;
+        SpeedInMBps = speedInMBps;
     }
 
     public ProgressReport(

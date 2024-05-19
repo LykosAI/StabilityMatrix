@@ -10,6 +10,10 @@ public enum CivitFileType
     Unknown,
     Model,
     VAE,
+    Config,
+
+    [EnumMember(Value = "Pruned Model")]
+    PrunedModel,
 
     [EnumMember(Value = "Training Data")]
     TrainingData

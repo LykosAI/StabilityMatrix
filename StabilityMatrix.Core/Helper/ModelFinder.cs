@@ -109,17 +109,22 @@ public class ModelFinder
     {
         var results = new List<CivitModel>();
 
-        // split ids into batches of 20
-        var batches = ids.Select((id, index) => (id, index))
-            .GroupBy(tuple => tuple.index / 20)
-            .Select(group => group.Select(tuple => tuple.id));
+        // split ids into batches of 100
+        var batches = ids.Chunk(100);
 
         foreach (var batch in batches)
         {
             try
             {
                 var response = await civitApi
-                    .GetModels(new CivitModelsRequest { CommaSeparatedModelIds = string.Join(",", batch) })
+                    .GetModels(
+                        new CivitModelsRequest
+                        {
+                            CommaSeparatedModelIds = string.Join(",", batch),
+                            Nsfw = "true",
+                            Query = string.Empty
+                        }
+                    )
                     .ConfigureAwait(false);
 
                 if (response.Items == null || response.Items.Count == 0)

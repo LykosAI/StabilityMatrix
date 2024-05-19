@@ -49,7 +49,12 @@ public class MockModelIndexService : IModelIndexService
         return Task.FromResult(false);
     }
 
-    public Task CheckModelsForUpdates()
+    public Task<bool> RemoveModelsAsync(IEnumerable<LocalModelFile> models)
+    {
+        return Task.FromResult(false);
+    }
+
+    public Task CheckModelsForUpdateAsync()
     {
         return Task.CompletedTask;
     }

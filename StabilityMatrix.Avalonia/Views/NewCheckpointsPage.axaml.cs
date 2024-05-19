@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -28,6 +29,20 @@ public partial class NewCheckpointsPage : UserControlBase
         AddHandler(DragDrop.DropEvent, OnDrop);
         AddHandler(DragDrop.DragEnterEvent, OnDragEnter);
         AddHandler(DragDrop.DragLeaveEvent, OnDragExit);
+        AddHandler(DragDrop.DragOverEvent, OnDragOver);
+    }
+
+    private void OnDragOver(object? sender, DragEventArgs e)
+    {
+        if (e.Data.Get(DataFormats.Files) is not IEnumerable<IStorageItem> files)
+            return;
+
+        var paths = files.Select(f => f.Path.LocalPath);
+        if (paths.All(p => CheckpointFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(p))))
+            return;
+
+        e.DragEffects = DragDropEffects.None;
+        e.Handled = true;
     }
 
     private void OnDragExit(object? sender, DragEventArgs e)
@@ -79,6 +94,31 @@ public partial class NewCheckpointsPage : UserControlBase
 
         if (DataContext as NewCheckpointsPageViewModel is not { SelectedCategory: not null } checkpointsVm)
             return;
+
+        // Only allow Copy or Link as Drop Operations.
+        e.DragEffects &= DragDropEffects.Copy | DragDropEffects.Link;
+
+        // Only allow if the dragged data contains text or filenames.
+        if (!e.Data.Contains(DataFormats.Text) && !e.Data.Contains(DataFormats.Files))
+        {
+            e.DragEffects = DragDropEffects.None;
+        }
+
+        if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
+        {
+            var paths = files.Select(f => f.Path.LocalPath);
+            if (
+                paths.Any(
+                    p =>
+                        !CheckpointFile.SupportedCheckpointExtensions.Contains(System.IO.Path.GetExtension(p))
+                )
+            )
+            {
+                e.DragEffects = DragDropEffects.None;
+                e.Handled = true;
+                return;
+            }
+        }
 
         switch (control)
         {

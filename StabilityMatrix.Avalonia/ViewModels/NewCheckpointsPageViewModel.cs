@@ -516,11 +516,26 @@ public partial class NewCheckpointsPageViewModel(
             return;
         }
 
+        var fileList = files.ToList();
+        if (
+            fileList.Any(
+                file => !CheckpointFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(file))
+            )
+        )
+        {
+            notificationService.Show(
+                "Invalid File",
+                "Please select only checkpoint files to import.",
+                NotificationType.Error
+            );
+            return;
+        }
+
         var importModelsStep = new ImportModelsStep(
             modelFinder,
             downloadService,
             modelIndexService,
-            files,
+            fileList,
             destinationFolder,
             IsImportAsConnectedEnabled
         );

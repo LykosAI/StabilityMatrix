@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
 using AutoCtor;
+using JetBrains.Annotations;
 using KGySoft.CoreLibraries;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
@@ -95,6 +96,7 @@ public partial class ModelIndexService : IModelIndexService
         ModelIndex = allModels.GroupBy(m => m.SharedFolderType).ToDictionary(g => g.Key, g => g.ToList());
 
         IsDbLoaded = true;
+        EventManager.Instance.OnModelIndexChanged();
 
         timer.Stop();
         logger.LogInformation(
@@ -446,7 +448,10 @@ public partial class ModelIndexService : IModelIndexService
 
         var newIndexComplete = newIndexFlat.ToArray();
 
-        var modelsDict = ModelIndex.Values.SelectMany(x => x).ToDictionary(f => f.RelativePath, file => file);
+        var modelsDict = ModelIndex
+            .Values.SelectMany(x => x)
+            .DistinctBy(f => f.RelativePath)
+            .ToDictionary(f => f.RelativePath, file => file);
 
         var newIndex = new Dictionary<SharedFolderType, List<LocalModelFile>>();
         foreach (var model in newIndexComplete)
@@ -456,6 +461,16 @@ public partial class ModelIndexService : IModelIndexService
                 model.HasUpdate = dbModel.HasUpdate;
                 model.LastUpdateCheck = dbModel.LastUpdateCheck;
                 model.LatestModelInfo = dbModel.LatestModelInfo;
+            }
+
+            if (model.LatestModelInfo == null && model.HasConnectedModel)
+            {
+                var civitModel = await liteDbContext
+                    .CivitModels.Include(m => m.ModelVersions)
+                    .FindByIdAsync(model.ConnectedModelInfo.ModelId)
+                    .ConfigureAwait(false);
+
+                model.LatestModelInfo = civitModel;
             }
             var list = newIndex.GetOrAdd(model.SharedFolderType);
             list.Add(model);
@@ -544,13 +559,14 @@ public partial class ModelIndexService : IModelIndexService
         return result;
     }
 
-    // idk do somethin with this
     public async Task CheckModelsForUpdateAsync()
     {
         if (DateTimeOffset.UtcNow < lastUpdateCheck.AddMinutes(5))
         {
             return;
         }
+
+        lastUpdateCheck = DateTimeOffset.UtcNow;
 
         var installedHashes = settingsManager.Settings.InstalledModelHashes ?? [];
         var dbModels = (
@@ -560,14 +576,15 @@ public partial class ModelIndexService : IModelIndexService
 
         var ids = dbModels
             .Where(x => x.ConnectedModelInfo != null)
-            .Where(
-                x => x.LastUpdateCheck == default || x.LastUpdateCheck < DateTimeOffset.UtcNow.AddHours(-8)
-            )
             .Select(x => x.ConnectedModelInfo!.ModelId)
             .Distinct();
 
         var remoteModels = (await modelFinder.FindRemoteModelsById(ids).ConfigureAwait(false)).ToList();
 
+        // update the civitmodels cache with this new result
+        await liteDbContext.UpsertCivitModelAsync(remoteModels).ConfigureAwait(false);
+
+        var localModelsToUpdate = new List<LocalModelFile>();
         foreach (var dbModel in dbModels)
         {
             if (dbModel.ConnectedModelInfo == null)
@@ -585,18 +602,19 @@ public partial class ModelIndexService : IModelIndexService
             if (latestHashes == null)
                 continue;
 
-            ModelIndex[dbModel.SharedFolderType].Remove(dbModel);
-
             dbModel.HasUpdate = !latestHashes.Any(hash => installedHashes.Contains(hash));
             dbModel.LastUpdateCheck = DateTimeOffset.UtcNow;
             dbModel.LatestModelInfo = remoteModel;
 
-            await liteDbContext.LocalModelFiles.UpsertAsync(dbModel).ConfigureAwait(false);
-            ModelIndex[dbModel.SharedFolderType].Add(dbModel);
+            localModelsToUpdate.Add(dbModel);
         }
+        await liteDbContext.LocalModelFiles.UpsertAsync(localModelsToUpdate).ConfigureAwait(false);
+        await LoadFromDbAsync().ConfigureAwait(false);
+    }
 
-        lastUpdateCheck = DateTimeOffset.UtcNow;
-
-        EventManager.Instance.OnModelIndexChanged();
+    public async Task UpsertModelAsync(LocalModelFile model)
+    {
+        await liteDbContext.LocalModelFiles.UpsertAsync(model).ConfigureAwait(false);
+        await LoadFromDbAsync().ConfigureAwait(false);
     }
 }

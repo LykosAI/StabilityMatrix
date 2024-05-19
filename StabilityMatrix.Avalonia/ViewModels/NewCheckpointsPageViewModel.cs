@@ -344,6 +344,7 @@ public partial class NewCheckpointsPageViewModel(
             SecondaryButtonText = Resources.Action_Cancel,
             DefaultButton = ContentDialogButton.Primary,
             IsSecondaryButtonEnabled = true,
+            CloseOnClickOutside = true
         };
 
         var dialogResult = await confirmationDialog.ShowAsync();
@@ -533,6 +534,10 @@ public partial class NewCheckpointsPageViewModel(
 
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps([importModelsStep]);
+
+        SelectedCategory = Categories
+            .SelectMany(c => c.Flatten())
+            .FirstOrDefault(x => x.Path == destinationFolder.FullPath);
     }
 
     public async Task MoveBetweenFolders(LocalModelFile sourceFile, DirectoryPath destinationFolder)
@@ -579,8 +584,6 @@ public partial class NewCheckpointsPageViewModel(
             {
                 await FileTransfers.MoveFileAsync(sourcePreviewPath, destinationPreviewPath);
             }
-
-            await modelIndexService.RemoveModelAsync(sourceFile);
 
             notificationService.Show(
                 "Model moved successfully",
@@ -690,15 +693,12 @@ public partial class NewCheckpointsPageViewModel(
             ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
             ?? Categories.First();
 
-        var sw = Stopwatch.StartNew();
         foreach (var checkpointCategory in Categories.SelectMany(c => c.Flatten()))
         {
             checkpointCategory.Count = Directory
                 .EnumerateFileSystemEntries(checkpointCategory.Path, "*", SearchOption.AllDirectories)
                 .Count(x => CheckpointFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(x)));
         }
-        sw.Stop();
-        Console.WriteLine($"counting took {sw.Elapsed.Milliseconds}ms");
     }
 
     private ObservableCollection<CheckpointCategory> GetSubfolders(string strPath)

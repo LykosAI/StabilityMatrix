@@ -99,7 +99,9 @@ public class ImportModelsStep(
                     // Save connected model info json
                     var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Info.Name);
                     var modelInfo = new ConnectedModelInfo(model, version, file, DateTimeOffset.UtcNow);
-                    await modelInfo.SaveJsonToDirectory(destinationFolder, modelFileName);
+                    await modelInfo
+                        .SaveJsonToDirectory(destinationFolder, modelFileName)
+                        .ConfigureAwait(false);
 
                     // If available, save thumbnail
                     var image = version.Images?.FirstOrDefault(x => x.Type == "image");
@@ -111,7 +113,9 @@ public class ImportModelsStep(
                             var imageDownloadPath = Path.GetFullPath(
                                 Path.Combine(destinationFolder, $"{modelFileName}.preview.{imageExt}")
                             );
-                            await downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
+                            await downloadService
+                                .DownloadToFileAsync(image.Url, imageDownloadPath)
+                                .ConfigureAwait(false);
                         }
                     }
 

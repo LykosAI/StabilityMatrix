@@ -6,13 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.11.0-dev.3
-### Supporters
-#### Visionaries
-- Special thanks to our first Visionary on Patreon, **Scopp Mcdee**, for their generous support!
 ### Added
 - Added download speed indicator to model downloads in the Downloads tab
 ### Changed
 - Revamped Checkpoints tab now shows available model updates and has better drag & drop functionality
+### Supporters
+#### Visionaries
+- Special thanks to our first Visionary on Patreon, **Scopp Mcdee**, for their generous support!
 
 ## v2.11.0-dev.2
 ### Added

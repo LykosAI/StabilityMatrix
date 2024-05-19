@@ -95,15 +95,6 @@ public partial class NewCheckpointsPage : UserControlBase
         if (DataContext as NewCheckpointsPageViewModel is not { SelectedCategory: not null } checkpointsVm)
             return;
 
-        // Only allow Copy or Link as Drop Operations.
-        e.DragEffects &= DragDropEffects.Copy | DragDropEffects.Link;
-
-        // Only allow if the dragged data contains text or filenames.
-        if (!e.Data.Contains(DataFormats.Text) && !e.Data.Contains(DataFormats.Files))
-        {
-            e.DragEffects = DragDropEffects.None;
-        }
-
         if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
         {
             var paths = files.Select(f => f.Path.LocalPath);

@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.11.0-dev.3
+### Added
+- Added download speed indicator to model downloads in the Downloads tab
+### Changed
+- Revamped Checkpoints tab now shows available model updates and has better drag & drop functionality
+
 ## v2.11.0-dev.2
 ### Added
 - Added Brazilian Portuguese language option, thanks to jbostroski for the translation!

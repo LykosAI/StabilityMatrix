@@ -10,12 +10,12 @@ public class PackageModificationRunner : IPackageModificationRunner
         IProgress<ProgressReport> progress = new Progress<ProgressReport>(report =>
         {
             CurrentProgress = report;
-            if (!string.IsNullOrWhiteSpace(report.Message))
+            if (!string.IsNullOrWhiteSpace(report.Message) && report.PrintToConsole)
             {
                 ConsoleOutput.Add(report.Message);
             }
 
-            if (!string.IsNullOrWhiteSpace(report.Title))
+            if (!string.IsNullOrWhiteSpace(report.Title) && report.PrintToConsole)
             {
                 ConsoleOutput.Add(report.Title);
             }

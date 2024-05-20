@@ -1092,4 +1092,7 @@
   <data name="Action_MoveToTrash" xml:space="preserve">
     <value>Move to Trash</value>
   </data>
+  <data name="Label_AreYouSureDeleteModels" xml:space="preserve">
+    <value>Are you sure you want to delete {0} models?</value>
+  </data>
 </root>

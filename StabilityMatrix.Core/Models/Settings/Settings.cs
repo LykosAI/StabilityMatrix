@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.ComponentModel;
+using System.Globalization;
 using System.Text.Json.Serialization;
 using Semver;
 using StabilityMatrix.Core.Converters.Json;
@@ -160,6 +161,10 @@ public class Settings
     public HolidayMode HolidayModeSetting { get; set; } = HolidayMode.Automatic;
     public bool IsWorkflowInfiniteScrollEnabled { get; set; } = true;
     public bool IsOutputsTreeViewEnabled { get; set; } = true;
+    public CheckpointSortMode CheckpointSortMode { get; set; } = CheckpointSortMode.SharedFolderType;
+    public ListSortDirection CheckpointSortDirection { get; set; } = ListSortDirection.Descending;
+    public bool SortConnectedModelsFirst { get; set; } = true;
+    public int ConsoleFontSize { get; set; } = 14;
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

@@ -41,4 +41,7 @@ public interface IModelIndexService
     /// Remove a model from the index.
     /// </summary>
     Task<bool> RemoveModelAsync(LocalModelFile model);
+
+    Task<bool> RemoveModelsAsync(IEnumerable<LocalModelFile> models);
+    Task CheckModelsForUpdateAsync();
 }

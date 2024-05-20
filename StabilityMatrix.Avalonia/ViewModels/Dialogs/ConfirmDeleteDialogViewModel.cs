@@ -68,9 +68,9 @@ public partial class ConfirmDeleteDialogViewModel(ILogger<ConfirmDeleteDialogVie
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteConfirmDelete))]
-    private Task OnConfirmDeleteClick()
+    private void OnConfirmDeleteClick()
     {
-        return Task.CompletedTask;
+        OnPrimaryButtonClick();
     }
 
     private bool CanExecuteConfirmDelete()
@@ -82,47 +82,6 @@ public partial class ConfirmDeleteDialogViewModel(ILogger<ConfirmDeleteDialogVie
     {
         return true;
     }
-
-    /*public async Task OpenDeleteTaskDialogAsync()
-    {
-        var dialog = new TaskDialog
-        {
-            Content = new PackageImportDialog { DataContext = viewModel },
-            ShowProgressBar = false,
-            Buttons = new List<TaskDialogButton>
-            {
-                new(Resources.Action_Import, TaskDialogStandardResult.Yes) { IsDefault = true },
-                new(Resources.Action_Cancel, TaskDialogStandardResult.Cancel)
-            }
-        };
-
-        dialog.Closing += async (sender, e) =>
-        {
-            // We only want to use the deferral on the 'Yes' Button
-            if ((TaskDialogStandardResult)e.Result == TaskDialogStandardResult.Yes)
-            {
-                var deferral = e.GetDeferral();
-
-                sender.ShowProgressBar = true;
-                sender.SetProgressBarState(0, TaskDialogProgressState.Indeterminate);
-
-                await using (new MinimumDelay(200, 300))
-                {
-                    var result = await notificationService.TryAsync(viewModel.AddPackageWithCurrentInputs());
-                    if (result.IsSuccessful)
-                    {
-                        EventManager.Instance.OnInstalledPackagesChanged();
-                    }
-                }
-
-                deferral.Complete();
-            }
-        };
-
-        dialog.XamlRoot = App.VisualRoot;
-
-        await dialog.ShowAsync(true);
-    }*/
 
     public async Task ExecuteCurrentDeleteOperationAsync(bool ignoreErrors = false, bool failFast = false)
     {

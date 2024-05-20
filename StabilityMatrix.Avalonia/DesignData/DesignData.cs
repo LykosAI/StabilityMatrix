@@ -1070,6 +1070,16 @@ The gallery images are often inpainted, but you will get something very similar 
     public static ControlNetCardViewModel ControlNetCardViewModel =>
         DialogFactory.Get<ControlNetCardViewModel>();
 
+    public static ConfirmDeleteDialogViewModel ConfirmDeleteDialogViewModel =>
+        DialogFactory.Get<ConfirmDeleteDialogViewModel>(vm =>
+        {
+            vm.IsRecycleBinAvailable = true;
+            vm.PathsToDelete = Enumerable
+                .Range(1, 64)
+                .Select(i => $"C:/Users/ExampleUser/Data/ExampleFile{i}.txt")
+                .ToArray();
+        });
+
     public static OpenArtWorkflowViewModel OpenArtWorkflowViewModel =>
         new(Services.GetRequiredService<ISettingsManager>(), Services.GetRequiredService<IPackageFactory>())
         {

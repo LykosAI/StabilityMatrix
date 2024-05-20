@@ -1080,4 +1080,16 @@
   <data name="Label_NumberFormat" xml:space="preserve">
     <value>Number Format</value>
   </data>
+  <data name="Text_DeleteFollowingItems" xml:space="preserve">
+    <value>You are about to delete the following items:</value>
+  </data>
+  <data name="TextTemplate_DeleteFollowingCountItems" xml:space="preserve">
+    <value>You are about to delete the following {0} items:</value>
+  </data>
+  <data name="Label_DeletePermanently" xml:space="preserve">
+    <value>Delete Permanently</value>
+  </data>
+  <data name="Action_MoveToTrash" xml:space="preserve">
+    <value>Move to Trash</value>
+  </data>
 </root>

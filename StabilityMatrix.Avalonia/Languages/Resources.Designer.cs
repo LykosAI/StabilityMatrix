@@ -294,6 +294,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Move to Trash.
+        /// </summary>
+        public static string Action_MoveToTrash {
+            get {
+                return ResourceManager.GetString("Action_MoveToTrash", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New.
         /// </summary>
         public static string Action_New {
@@ -1181,6 +1190,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Deemphasis {
             get {
                 return ResourceManager.GetString("Label_Deemphasis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete Permanently.
+        /// </summary>
+        public static string Label_DeletePermanently {
+            get {
+                return ResourceManager.GetString("Label_DeletePermanently", resourceCulture);
             }
         }
         
@@ -2859,6 +2877,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You are about to delete the following items:.
+        /// </summary>
+        public static string Text_DeleteFollowingItems {
+            get {
+                return ResourceManager.GetString("Text_DeleteFollowingItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Choose your preferred interface to get started.
         /// </summary>
         public static string Text_OneClickInstaller_SubHeader {
@@ -2909,6 +2936,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Text_WelcomeToStabilityMatrix {
             get {
                 return ResourceManager.GetString("Text_WelcomeToStabilityMatrix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are about to delete the following {0} items:.
+        /// </summary>
+        public static string TextTemplate_DeleteFollowingCountItems {
+            get {
+                return ResourceManager.GetString("TextTemplate_DeleteFollowingCountItems", resourceCulture);
             }
         }
         

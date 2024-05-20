@@ -165,6 +165,7 @@ public class Settings
     public ListSortDirection CheckpointSortDirection { get; set; } = ListSortDirection.Descending;
     public bool SortConnectedModelsFirst { get; set; } = true;
     public int ConsoleFontSize { get; set; } = 14;
+    public bool AutoLoadCivitModels { get; set; } = true;
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

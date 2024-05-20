@@ -76,6 +76,7 @@
             Document="{Binding Document}"
             FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
             IsReadOnly="True"
+            FontSize="14"
             LineNumbersForeground="DarkSlateGray"
             ShowLineNumbers="True"
             VerticalScrollBarVisibility="Auto"

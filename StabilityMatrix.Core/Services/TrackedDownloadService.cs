@@ -146,6 +146,9 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
                 case ModelPostDownloadContextAction action:
                     action.Invoke(modelIndexService);
                     break;
+                case GenericPostDownloadAction action:
+                    action.Invoke();
+                    break;
             }
         }
     }

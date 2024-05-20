@@ -109,6 +109,12 @@ public class Settings
     /// Whether the Inference Image Viewer shows pixel grids at high zoom levels
     /// </summary>
     public bool IsImageViewerPixelGridEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Whether Inference Image Browser delete action uses recycle bin if available
+    /// </summary>
+    public bool IsInferenceImageBrowserUseRecycleBinForDelete { get; set; } = true;
+
     public bool RemoveFolderLinksOnShutdown { get; set; }
 
     public bool IsDiscordRichPresenceEnabled { get; set; }

@@ -37,6 +37,10 @@
                         Command="{Binding ImportSelectedCommand}"
                         Label="{x:Static lang:Resources.Action_Import}" />
                     <ui:CommandBarSeparator />
+                    <ui:CommandBarButton 
+                        IconSource="Refresh"
+                        Label="{x:Static lang:Resources.Action_Refresh}"
+                        Command="{Binding Refresh}"/>
                     <ui:CommandBarButton
                         Command="{Binding SelectAll}"
                         IconSource="SelectAll"
@@ -47,11 +51,6 @@
                         IsEnabled="{Binding !!NumSelected}"
                         Label="{x:Static lang:Resources.Action_ClearSelection}" />
                     <ui:CommandBarSeparator IsVisible="{Binding !!NumSelected}" />
-                    
-                    <ui:CommandBarButton 
-                        IconSource="Refresh"
-                        Label="{x:Static lang:Resources.Action_Refresh}"
-                        Command="{Binding Refresh}"/>
                 </ui:CommandBar.PrimaryCommands>
             </ui:CommandBar>
             

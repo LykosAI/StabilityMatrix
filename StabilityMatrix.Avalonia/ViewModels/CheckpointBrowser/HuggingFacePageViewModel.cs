@@ -163,10 +163,13 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
                 Directory.CreateDirectory(downloadPath.Directory);
                 var download = trackedDownloadService.NewDownload(url, downloadPath);
                 download.ProgressUpdate += DownloadOnProgressUpdate;
-                download.ContextAction = new GenericPostDownloadAction(() =>
+                download.ProgressStateChanged += (_, e) =>
                 {
-                    viewModel.NotifyExistsChanged();
-                });
+                    if (e == ProgressState.Success)
+                    {
+                        viewModel.NotifyExistsChanged();
+                    }
+                };
                 download.Start();
 
                 await Task.Delay(Random.Shared.Next(50, 100));

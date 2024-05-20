@@ -165,6 +165,13 @@ public record LocalModelFile
             : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
 
+    public string GetConnectedModelInfoFullPath(string rootModelDirectory)
+    {
+        var modelNameNoExt = Path.GetFileNameWithoutExtension(RelativePath);
+        var modelDir = Path.GetDirectoryName(rootModelDirectory) ?? "";
+        return Path.Combine(modelDir, $"{modelNameNoExt}.cm-info.json");
+    }
+
     public static readonly HashSet<string> SupportedCheckpointExtensions =
     [
         ".safetensors",

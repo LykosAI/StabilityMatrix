@@ -393,6 +393,8 @@ public static class DesignData
             new(
                 settingsManager,
                 new MockModelIndexService(),
+                notificationService,
+                dialogFactory,
                 new LocalModelFile
                 {
                     SharedFolderType = SharedFolderType.StableDiffusion,
@@ -420,6 +422,8 @@ public static class DesignData
             new(
                 settingsManager,
                 new MockModelIndexService(),
+                notificationService,
+                dialogFactory,
                 new LocalModelFile
                 {
                     RelativePath = "~/Models/Lora/model.safetensors",

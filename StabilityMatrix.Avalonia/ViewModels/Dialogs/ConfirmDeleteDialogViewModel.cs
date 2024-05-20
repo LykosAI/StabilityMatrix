@@ -133,7 +133,7 @@ public partial class ConfirmDeleteDialogViewModel(ILogger<ConfirmDeleteDialogVie
         if (!IsPermanentDelete)
         {
             // Recycle bin
-            if (NativeFileOperations.IsRecycleBinAvailable)
+            if (!NativeFileOperations.IsRecycleBinAvailable)
             {
                 throw new NotSupportedException("Recycle bin is not available on this platform");
             }
@@ -142,7 +142,7 @@ public partial class ConfirmDeleteDialogViewModel(ILogger<ConfirmDeleteDialogVie
             {
                 try
                 {
-                    NativeFileOperations.RecycleBin!.MoveFilesToRecycleBin(paths);
+                    NativeFileOperations.RecycleBin.MoveFilesToRecycleBin(paths);
                 }
                 catch (Exception e)
                 {

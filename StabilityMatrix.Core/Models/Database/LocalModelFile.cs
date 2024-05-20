@@ -168,8 +168,8 @@ public record LocalModelFile
     public string GetConnectedModelInfoFullPath(string rootModelDirectory)
     {
         var modelNameNoExt = Path.GetFileNameWithoutExtension(RelativePath);
-        var modelDir = Path.GetDirectoryName(rootModelDirectory) ?? "";
-        return Path.Combine(modelDir, $"{modelNameNoExt}.cm-info.json");
+        var modelParentDir = Path.GetDirectoryName(GetFullPath(rootModelDirectory)) ?? "";
+        return Path.Combine(modelParentDir, $"{modelNameNoExt}.cm-info.json");
     }
 
     public IEnumerable<string> GetDeleteFullPaths(string rootModelDirectory)

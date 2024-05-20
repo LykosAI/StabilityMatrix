@@ -139,6 +139,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool infinitelyScrollWorkflowBrowser;
 
+    [ObservableProperty]
+    private bool autoLoadCivitModels;
+
     #region System Info
 
     private static Lazy<IReadOnlyList<GpuInfo>> GpuInfosLazy { get; } =
@@ -238,6 +241,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.SelectedNumberFormatMode,
             settings => settings.NumberFormatMode,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.AutoLoadCivitModels,
+            settings => settings.AutoLoadCivitModels,
             true
         );
 

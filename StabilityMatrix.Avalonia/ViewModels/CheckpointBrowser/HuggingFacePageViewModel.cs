@@ -7,19 +7,13 @@ using System.Reactive.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
-using Avalonia.Data;
-using Avalonia.Input;
-using Avalonia.Markup.Xaml.MarkupExtensions;
-using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
-using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.HuggingFace;
 using StabilityMatrix.Avalonia.Services;
@@ -91,6 +85,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
             .SortBy(vm => vm.Title)
             .Bind(Categories)
             .WhenAnyPropertyChanged()
+            .Throttle(TimeSpan.FromMilliseconds(50))
             .Subscribe(_ => NumSelected = Categories.Sum(c => c.NumSelected));
 
         progressTimer.Tick += (_, _) =>
@@ -139,6 +134,12 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
         }
     }
 
+    public void Refresh()
+    {
+        ItemsCache.Clear();
+        OnLoaded();
+    }
+
     [RelayCommand]
     private async Task ImportSelected()
     {
@@ -162,10 +163,19 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
                 Directory.CreateDirectory(downloadPath.Directory);
                 var download = trackedDownloadService.NewDownload(url, downloadPath);
                 download.ProgressUpdate += DownloadOnProgressUpdate;
+                download.ProgressStateChanged += (_, e) =>
+                {
+                    if (e == ProgressState.Success)
+                    {
+                        viewModel.NotifyExistsChanged();
+                    }
+                };
                 download.Start();
 
                 await Task.Delay(Random.Shared.Next(50, 100));
             }
+
+            viewModel.IsSelected = false;
         }
         progressTimer.Start();
     }
@@ -188,6 +198,8 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
                 NotificationType.Success
             );
             progressTimer.Stop();
+
+            ClearSelection();
             DelayedClearProgress(TimeSpan.FromSeconds(1.5));
         }
     }

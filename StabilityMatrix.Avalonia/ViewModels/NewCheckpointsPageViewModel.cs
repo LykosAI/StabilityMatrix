@@ -241,7 +241,16 @@ public partial class NewCheckpointsPageViewModel(
             .DeferUntilLoaded()
             .Filter(filterPredicate)
             .Filter(searchPredicate)
-            .Transform(x => new CheckpointFileViewModel(settingsManager, modelIndexService, x))
+            .Transform(
+                x =>
+                    new CheckpointFileViewModel(
+                        settingsManager,
+                        modelIndexService,
+                        notificationService,
+                        dialogFactory,
+                        x
+                    )
+            )
             .Sort(comparerObservable)
             .Bind(Models)
             .WhenPropertyChanged(p => p.IsSelected)
@@ -270,8 +279,6 @@ public partial class NewCheckpointsPageViewModel(
             );
         };
 
-        EventManager.Instance.DeleteModelRequested += OnDeleteModelRequested;
-
         settingsManager.RelayPropertyFor(
             this,
             vm => vm.SortConnectedModelsFirst,
@@ -295,15 +302,6 @@ public partial class NewCheckpointsPageViewModel(
 
         // make sure a sort happens
         OnPropertyChanged(nameof(SortConnectedModelsFirst));
-    }
-
-    private void OnDeleteModelRequested(object? sender, string e)
-    {
-        if (sender is not CheckpointFileViewModel vm)
-            return;
-
-        DeleteModelAsync(vm).SafeFireAndForget();
-        modelIndexService.RemoveModelAsync(vm.CheckpointFile).SafeFireAndForget();
     }
 
     public void ClearSearchQuery()
@@ -333,28 +331,42 @@ public partial class NewCheckpointsPageViewModel(
     [RelayCommand]
     private async Task DeleteAsync()
     {
-        if (NumItemsSelected <= 0)
-            return;
-
-        var confirmationDialog = new BetterContentDialog
+        if (
+            NumItemsSelected <= 0
+            || Models.Where(o => o.IsSelected).Select(vm => vm.CheckpointFile).ToList()
+                is not { Count: > 0 } selectedModelFiles
+        )
         {
-            Title = string.Format(Resources.Label_AreYouSureDeleteModels, NumItemsSelected),
-            Content = Resources.Label_ActionCannotBeUndone,
-            PrimaryButtonText = Resources.Action_Delete,
-            SecondaryButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Primary,
-            IsSecondaryButtonEnabled = true,
-            CloseOnClickOutside = true
-        };
-
-        var dialogResult = await confirmationDialog.ShowAsync();
-        if (dialogResult != ContentDialogResult.Primary)
             return;
+        }
 
-        var selectedModels = Models.Where(o => o.IsSelected).ToList();
+        var pathsToDelete = selectedModelFiles
+            .SelectMany(x => x.GetDeleteFullPaths(settingsManager.ModelsDirectory))
+            .ToList();
 
-        await Parallel.ForEachAsync(selectedModels, async (model, _) => await DeleteModelAsync(model));
-        await modelIndexService.RemoveModelsAsync(selectedModels.Select(vm => vm.CheckpointFile));
+        var confirmDeleteVm = dialogFactory.Get<ConfirmDeleteDialogViewModel>();
+        confirmDeleteVm.PathsToDelete = pathsToDelete;
+
+        if (await confirmDeleteVm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        try
+        {
+            await confirmDeleteVm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent("Error deleting files", e.Message, NotificationType.Error);
+
+            await modelIndexService.RefreshIndex();
+
+            return;
+        }
+
+        await modelIndexService.RemoveModelsAsync(selectedModelFiles);
+
         NumItemsSelected = 0;
     }
 
@@ -621,50 +633,6 @@ public partial class NewCheckpointsPageViewModel(
 
             await modelIndexService.RefreshIndex();
             DelayedClearProgress(TimeSpan.FromSeconds(1.5));
-        }
-    }
-
-    private async Task DeleteModelAsync(CheckpointFileViewModel viewModel)
-    {
-        var filePath = viewModel.CheckpointFile.GetFullPath(settingsManager.ModelsDirectory);
-        if (File.Exists(filePath))
-        {
-            viewModel.IsLoading = true;
-            viewModel.Progress = new ProgressReport(0f, "Deleting...");
-            try
-            {
-                await using var delay = new MinimumDelay(200, 500);
-                await Task.Run(() => File.Delete(filePath));
-                if (File.Exists(viewModel.ThumbnailUri))
-                {
-                    await Task.Run(() => File.Delete(viewModel.ThumbnailUri));
-                }
-
-                if (viewModel.CheckpointFile.HasConnectedModel)
-                {
-                    var cmInfoPath = GetConnectedModelInfoFilePath(filePath);
-                    if (File.Exists(cmInfoPath))
-                    {
-                        await Task.Run(() => File.Delete(cmInfoPath));
-                    }
-
-                    settingsManager.Transaction(s =>
-                    {
-                        s.InstalledModelHashes?.Remove(
-                            viewModel.CheckpointFile.ConnectedModelInfo.Hashes.BLAKE3
-                        );
-                    });
-                }
-            }
-            catch (IOException ex)
-            {
-                // Logger.Warn($"Failed to delete checkpoint file {FilePath}: {ex.Message}");
-                return; // Don't delete from collection
-            }
-            finally
-            {
-                viewModel.IsLoading = false;
-            }
         }
     }
 

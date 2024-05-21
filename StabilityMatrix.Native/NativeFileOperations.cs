@@ -12,7 +12,7 @@ public static class NativeFileOperations
 {
     public static INativeRecycleBinProvider? RecycleBin { get; }
 
-    [MemberNotNullWhen(true, nameof(IsRecycleBinAvailable))]
+    [MemberNotNullWhen(true, nameof(RecycleBin))]
     public static bool IsRecycleBinAvailable => RecycleBin is not null;
 
     static NativeFileOperations()

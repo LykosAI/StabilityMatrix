@@ -165,6 +165,36 @@ public record LocalModelFile
             : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
     }
 
+    public string GetConnectedModelInfoFullPath(string rootModelDirectory)
+    {
+        var modelNameNoExt = Path.GetFileNameWithoutExtension(RelativePath);
+        var modelParentDir = Path.GetDirectoryName(GetFullPath(rootModelDirectory)) ?? "";
+        return Path.Combine(modelParentDir, $"{modelNameNoExt}.cm-info.json");
+    }
+
+    public IEnumerable<string> GetDeleteFullPaths(string rootModelDirectory)
+    {
+        if (GetFullPath(rootModelDirectory) is { } filePath && File.Exists(filePath))
+        {
+            yield return filePath;
+        }
+
+        if (
+            HasConnectedModel
+            && GetConnectedModelInfoFullPath(rootModelDirectory) is { } cmInfoPath
+            && File.Exists(cmInfoPath)
+        )
+        {
+            yield return cmInfoPath;
+        }
+
+        var previewImagePath = GetPreviewImageFullPath(rootModelDirectory);
+        if (File.Exists(previewImagePath))
+        {
+            yield return previewImagePath;
+        }
+    }
+
     public static readonly HashSet<string> SupportedCheckpointExtensions =
     [
         ".safetensors",

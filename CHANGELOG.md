@@ -10,9 +10,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added download speed indicator to model downloads in the Downloads tab
 - Added XL ControlNets section to HuggingFace model browser
 - Added toggle in Settings for model browser auto-search on load
+- Added Recycle Bin support for deleting files, currently on Windows only
 ### Changed
 - Revamped Checkpoints page now shows available model updates and has better drag & drop functionality
 - Updated HuggingFace page so the command bar stays fixed at the top
+- Revamped file deletion confirmation dialog with affected file paths display and recycle bin / permanent delete options
 ### Fixed
 - Fixed issue where the "installed" state on HuggingFace model browser was not always correct
 ### Supporters

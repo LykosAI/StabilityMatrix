@@ -834,6 +834,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Auto-Search on Load.
+        /// </summary>
+        public static string Label_AutoSearchOnLoad {
+            get {
+                return ResourceManager.GetString("Label_AutoSearchOnLoad", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Automatically initiate a search when the model browser page is loaded.
+        /// </summary>
+        public static string Label_AutoSearchOnLoad_Description {
+            get {
+                return ResourceManager.GetString("Label_AutoSearchOnLoad_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Auto Updates.
         /// </summary>
         public static string Label_AutoUpdates {

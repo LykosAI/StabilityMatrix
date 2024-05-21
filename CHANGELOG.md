@@ -8,8 +8,16 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.11.0-dev.3
 ### Added
 - Added download speed indicator to model downloads in the Downloads tab
+- Added XL ControlNets section to HuggingFace model browser
+- Added toggle in Settings for model browser auto-search on load
 ### Changed
-- Revamped Checkpoints tab now shows available model updates and has better drag & drop functionality
+- Revamped Checkpoints page now shows available model updates and has better drag & drop functionality
+- Updated HuggingFace page so the command bar stays fixed at the top
+### Fixed
+- Fixed issue where the "installed" state on HuggingFace model browser was not always correct
+### Supporters
+#### Visionaries
+- Special thanks to our first Visionary on Patreon, **Scopp Mcdee**, for their generous support!
 
 ## v2.11.0-dev.2
 ### Added

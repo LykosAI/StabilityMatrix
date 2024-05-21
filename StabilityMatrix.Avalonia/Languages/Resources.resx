@@ -1095,4 +1095,10 @@
   <data name="Label_AreYouSureDeleteModels" xml:space="preserve">
     <value>Are you sure you want to delete {0} models?</value>
   </data>
+  <data name="Label_AutoSearchOnLoad" xml:space="preserve">
+    <value>Auto-Search on Load</value>
+  </data>
+  <data name="Label_AutoSearchOnLoad_Description" xml:space="preserve">
+    <value>Automatically initiate a search when the model browser page is loaded</value>
+  </data>
 </root>

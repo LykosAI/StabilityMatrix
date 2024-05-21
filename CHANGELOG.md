@@ -17,10 +17,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed issue where the "installed" state on HuggingFace model browser was not always correct
 ### Supporters
 #### Visionaries
-- Special shoutout to our first two Visionaries on Patreon!
-  - **Scopp Mcdee**
-  - **Waterclouds**
-- Thank you for your generous support!
+- Special shoutout to our first two Visionaries on Patreon, **Scopp Mcdee** and **Waterclouds**! Thank you for your generous support!
 
 ## v2.11.0-dev.2
 ### Added

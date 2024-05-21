@@ -62,6 +62,9 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private string? outputImageFileNameFormatSample;
 
+    [ObservableProperty]
+    private bool isInferenceImageBrowserUseRecycleBinForDelete = true;
+
     public IEnumerable<FileNameFormatVar> OutputImageFileNameFormatVars =>
         FileNameFormatProvider
             .GetSample()
@@ -106,6 +109,13 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
             this,
             vm => vm.IsCompletionRemoveUnderscoresEnabled,
             settings => settings.IsCompletionRemoveUnderscoresEnabled,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsInferenceImageBrowserUseRecycleBinForDelete,
+            settings => settings.IsInferenceImageBrowserUseRecycleBinForDelete,
             true
         );
 

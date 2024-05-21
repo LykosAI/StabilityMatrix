@@ -1,14 +1,19 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
@@ -35,6 +40,8 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
 
     private readonly ISettingsManager settingsManager;
     private readonly IModelIndexService modelIndexService;
+    private readonly INotificationService notificationService;
+    private readonly ServiceManager<ViewModelBase> vmFactory;
 
     public bool CanShowTriggerWords => CheckpointFile.ConnectedModelInfo?.TrainedWords?.Length > 0;
     public string BaseModelName => CheckpointFile.ConnectedModelInfo?.BaseModel ?? string.Empty;
@@ -44,11 +51,15 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     public CheckpointFileViewModel(
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
+        INotificationService notificationService,
+        ServiceManager<ViewModelBase> vmFactory,
         LocalModelFile checkpointFile
     )
     {
         this.settingsManager = settingsManager;
         this.modelIndexService = modelIndexService;
+        this.notificationService = notificationService;
+        this.vmFactory = vmFactory;
         CheckpointFile = checkpointFile;
         ThumbnailUri = settingsManager.IsLibraryDirSet
             ? CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
@@ -139,22 +150,51 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [RelayCommand]
     private async Task DeleteAsync(bool showConfirmation = true)
     {
+        var pathsToDelete = CheckpointFile
+            .GetDeleteFullPaths(settingsManager.ModelsDirectory)
+            .ToImmutableArray();
+
+        if (pathsToDelete.IsEmpty)
+            return;
+
+        var confirmDeleteVm = vmFactory.Get<ConfirmDeleteDialogViewModel>();
+        confirmDeleteVm.PathsToDelete = pathsToDelete;
+
         if (showConfirmation)
         {
-            var confirmationDialog = new BetterContentDialog
+            if (await confirmDeleteVm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
             {
-                Title = Resources.Label_AreYouSure,
-                Content = Resources.Label_ActionCannotBeUndone,
-                PrimaryButtonText = Resources.Action_Delete,
-                SecondaryButtonText = Resources.Action_Cancel,
-                DefaultButton = ContentDialogButton.Primary,
-                IsSecondaryButtonEnabled = true,
-            };
-            var dialogResult = await confirmationDialog.ShowAsync();
-            if (dialogResult != ContentDialogResult.Primary)
                 return;
+            }
         }
 
-        EventManager.Instance.OnDeleteModelRequested(this, CheckpointFile.RelativePath);
+        await using var delay = new MinimumDelay(200, 500);
+
+        IsLoading = true;
+        Progress = new ProgressReport(0f, "Deleting...");
+
+        try
+        {
+            await confirmDeleteVm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+
+            settingsManager.Transaction(s =>
+            {
+                s.InstalledModelHashes?.Remove(CheckpointFile.ConnectedModelInfo.Hashes.BLAKE3);
+            });
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent("Error deleting files", e.Message, NotificationType.Error);
+
+            await modelIndexService.RefreshIndex();
+
+            return;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+
+        await modelIndexService.RemoveModelAsync(CheckpointFile);
     }
 }

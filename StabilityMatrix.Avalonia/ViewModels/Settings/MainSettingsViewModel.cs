@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media.Imaging;
@@ -812,8 +813,23 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugShowNativeNotificationCommand),
             new CommandItem(DebugClearImageCacheCommand),
             new CommandItem(DebugGCCollectCommand),
-            new CommandItem(DebugExtractImagePromptsToTxtCommand)
+            new CommandItem(DebugExtractImagePromptsToTxtCommand),
+            new CommandItem(DebugShowConfirmDeleteDialogCommand),
         ];
+
+    [RelayCommand]
+    private async Task DebugShowConfirmDeleteDialog()
+    {
+        var vm = dialogFactory.Get<ConfirmDeleteDialogViewModel>();
+
+        vm.IsRecycleBinAvailable = false;
+        vm.PathsToDelete = Enumerable
+            .Range(1, 64)
+            .Select(i => $"C:/Users/ExampleUser/Data/ExampleFile{i}.txt")
+            .ToArray();
+
+        await vm.GetDialog().ShowAsync();
+    }
 
     [RelayCommand]
     private async Task DebugRefreshModelIndex()

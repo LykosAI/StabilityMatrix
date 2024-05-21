@@ -30,7 +30,16 @@ public abstract class TaskDialogViewModelBase : ViewModelBase
 
     protected static TaskDialogButton GetCloseButton()
     {
-        return new TaskDialogButton { Text = Resources.Action_Close, DialogResult = TaskDialogStandardResult.Close };
+        return new TaskDialogButton
+        {
+            Text = Resources.Action_Close,
+            DialogResult = TaskDialogStandardResult.Close
+        };
+    }
+
+    protected static TaskDialogButton GetCloseButton(string text)
+    {
+        return new TaskDialogButton { Text = text, DialogResult = TaskDialogStandardResult.Close };
     }
 
     /// <summary>

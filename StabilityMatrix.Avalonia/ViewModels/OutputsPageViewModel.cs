@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -11,6 +10,7 @@ using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -52,6 +52,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly ILogger<OutputsPageViewModel> logger;
     private readonly List<CancellationTokenSource> cancellationTokenSources = [];
+    private readonly ServiceManager<ViewModelBase> vmFactory;
 
     public override string Title => Resources.Label_OutputsPageTitle;
 
@@ -112,7 +113,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
         IPackageFactory packageFactory,
         INotificationService notificationService,
         INavigationService<MainWindowViewModel> navigationService,
-        ILogger<OutputsPageViewModel> logger
+        ILogger<OutputsPageViewModel> logger,
+        ServiceManager<ViewModelBase> vmFactory
     )
     {
         this.settingsManager = settingsManager;
@@ -120,6 +122,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         this.notificationService = notificationService;
         this.navigationService = navigationService;
         this.logger = logger;
+        this.vmFactory = vmFactory;
 
         var searcher = new ImageSearcher();
 
@@ -301,32 +304,35 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (item is null)
             return;
 
-        var confirmationDialog = new BetterContentDialog
+        var itemPath = item.ImageFile.AbsolutePath;
+        var pathsToDelete = new List<string> { itemPath };
+
+        // Add .txt sidecar to paths if they exist
+        var sideCar = Path.ChangeExtension(itemPath, ".txt");
+        if (File.Exists(sideCar))
         {
-            Title = Resources.Label_AreYouSure,
-            Content = Resources.Label_ActionCannotBeUndone,
-            PrimaryButtonText = Resources.Action_Delete,
-            SecondaryButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Primary,
-            IsSecondaryButtonEnabled = true,
-        };
-        var dialogResult = await confirmationDialog.ShowAsync();
-        if (dialogResult != ContentDialogResult.Primary)
-            return;
+            pathsToDelete.Add(sideCar);
+        }
 
-        // Delete the file
-        var imageFile = new FilePath(item.ImageFile.AbsolutePath);
-        var result = await notificationService.TryAsync(imageFile.DeleteAsync());
+        var vm = vmFactory.Get<ConfirmDeleteDialogViewModel>();
+        vm.PathsToDelete = pathsToDelete;
 
-        if (!result.IsSuccessful)
+        if (await vm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
         {
             return;
         }
-        //Attempt to remove .txt sidecar if it exists
-        var sideCar = new FilePath(Path.ChangeExtension(imageFile, ".txt"));
-        if (File.Exists(sideCar))
+
+        try
         {
-            await notificationService.TryAsync(sideCar.DeleteAsync());
+            await vm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent("Error deleting files", e.Message, NotificationType.Error);
+
+            Refresh();
+
+            return;
         }
 
         OutputsCache.Remove(item.ImageFile);
@@ -334,7 +340,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         // Invalidate cache
         if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
         {
-            loader.RemoveAllNamesFromCache(imageFile.Name);
+            loader.RemoveAllNamesFromCache(itemPath);
         }
     }
 
@@ -380,44 +386,41 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public async Task DeleteAllSelected()
     {
-        var confirmationDialog = new BetterContentDialog
+        var pathsToDelete = new List<string>();
+
+        foreach (var path in Outputs.Where(o => o.IsSelected).Select(o => o.ImageFile.AbsolutePath))
         {
-            Title = string.Format(Resources.Label_AreYouSureDeleteImages, NumItemsSelected),
-            Content = Resources.Label_ActionCannotBeUndone,
-            PrimaryButtonText = Resources.Action_Delete,
-            SecondaryButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Primary,
-            IsSecondaryButtonEnabled = true,
-        };
-        var dialogResult = await confirmationDialog.ShowAsync();
-        if (dialogResult != ContentDialogResult.Primary)
-            return;
-
-        var selected = Outputs.Where(o => o.IsSelected).ToList();
-        Debug.Assert(selected.Count == NumItemsSelected);
-
-        var imagesToRemove = new List<LocalImageFile>();
-        foreach (var output in selected)
-        {
-            // Delete the file
-            var imageFile = new FilePath(output.ImageFile.AbsolutePath);
-            var result = await notificationService.TryAsync(imageFile.DeleteAsync());
-            if (!result.IsSuccessful)
-            {
-                continue;
-            }
-
-            //Attempt to remove .txt sidecar if it exists
-            var sideCar = new FilePath(Path.ChangeExtension(imageFile, ".txt"));
+            pathsToDelete.Add(path);
+            // Add .txt sidecars to paths if they exist
+            var sideCar = Path.ChangeExtension(path, ".txt");
             if (File.Exists(sideCar))
             {
-                await notificationService.TryAsync(sideCar.DeleteAsync());
+                pathsToDelete.Add(sideCar);
             }
-
-            imagesToRemove.Add(output.ImageFile);
         }
 
-        OutputsCache.Remove(imagesToRemove);
+        var vm = vmFactory.Get<ConfirmDeleteDialogViewModel>();
+        vm.PathsToDelete = pathsToDelete;
+
+        if (await vm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        try
+        {
+            await vm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent("Error deleting files", e.Message, NotificationType.Error);
+
+            Refresh();
+
+            return;
+        }
+
+        OutputsCache.Remove(pathsToDelete);
         NumItemsSelected = 0;
         ClearSelection();
     }

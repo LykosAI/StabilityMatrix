@@ -24,6 +24,12 @@ public class NativeRecycleBinProvider : INativeRecycleBinProvider
     }
 
     /// <inheritdoc />
+    public Task MoveFileToRecycleBinAsync(string path, NativeFileOperationFlags flags = default)
+    {
+        return Task.Run(() => MoveFileToRecycleBin(path, flags));
+    }
+
+    /// <inheritdoc />
     public void MoveFilesToRecycleBin(IEnumerable<string> paths, NativeFileOperationFlags flags = default)
     {
         using var fo = new FileOperationWrapper();
@@ -36,6 +42,15 @@ public class NativeRecycleBinProvider : INativeRecycleBinProvider
         );
         fo.DeleteItems(paths.ToArray());
         fo.PerformOperations();
+    }
+
+    /// <inheritdoc />
+    public Task MoveFilesToRecycleBinAsync(
+        IEnumerable<string> paths,
+        NativeFileOperationFlags flags = default
+    )
+    {
+        return Task.Run(() => MoveFilesToRecycleBin(paths, flags));
     }
 
     /// <inheritdoc />
@@ -54,6 +69,12 @@ public class NativeRecycleBinProvider : INativeRecycleBinProvider
     }
 
     /// <inheritdoc />
+    public Task MoveDirectoryToRecycleBinAsync(string path, NativeFileOperationFlags flags = default)
+    {
+        return Task.Run(() => MoveDirectoryToRecycleBin(path, flags));
+    }
+
+    /// <inheritdoc />
     public void MoveDirectoriesToRecycleBin(
         IEnumerable<string> paths,
         NativeFileOperationFlags flags = default
@@ -69,5 +90,14 @@ public class NativeRecycleBinProvider : INativeRecycleBinProvider
         );
         fo.DeleteItems(paths.ToArray());
         fo.PerformOperations();
+    }
+
+    /// <inheritdoc />
+    public Task MoveDirectoriesToRecycleBinAsync(
+        IEnumerable<string> paths,
+        NativeFileOperationFlags flags = default
+    )
+    {
+        return Task.Run(() => MoveDirectoriesToRecycleBin(paths, flags));
     }
 }

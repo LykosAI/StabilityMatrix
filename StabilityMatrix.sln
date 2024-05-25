@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Native.Wind
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Native.Abstractions", "StabilityMatrix.Native.Abstractions\StabilityMatrix.Native.Abstractions.csproj", "{C521F1CF-7A5E-4016-AAD0-427FEDC53FB8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Native.macOS", "StabilityMatrix.Native.macOS\StabilityMatrix.Native.macOS.csproj", "{473AE646-17E4-4247-9271-858D257DFFE1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -67,6 +69,10 @@ Global
 		{C521F1CF-7A5E-4016-AAD0-427FEDC53FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C521F1CF-7A5E-4016-AAD0-427FEDC53FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C521F1CF-7A5E-4016-AAD0-427FEDC53FB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{473AE646-17E4-4247-9271-858D257DFFE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{473AE646-17E4-4247-9271-858D257DFFE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{473AE646-17E4-4247-9271-858D257DFFE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{473AE646-17E4-4247-9271-858D257DFFE1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

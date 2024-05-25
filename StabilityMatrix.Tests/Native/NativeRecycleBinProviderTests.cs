@@ -12,11 +12,16 @@ public class NativeRecycleBinProviderTests
     [TestInitialize]
     public void Initialize()
     {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (
+            !(
+                RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                || RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+            )
+        )
         {
             Assert.IsFalse(NativeFileOperations.IsRecycleBinAvailable);
             Assert.IsNull(NativeFileOperations.RecycleBin);
-            Assert.Inconclusive("Recycle bin is only available on Windows.");
+            Assert.Inconclusive("Recycle bin is only available on Windows and macOS.");
             return;
         }
 

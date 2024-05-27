@@ -571,5 +571,259 @@
     ],
     "Subfolder": "t2i-adapter-canny-sdxl-1.0",
     "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Canny (Small, Diffusers)",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "diffusers_xl_canny_small.safetensors"
+    ],
+    "LicenseType": "Open RAIL++"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Canny (Mid, Diffusers)",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "diffusers_xl_canny_mid.safetensors"
+    ],
+    "LicenseType": "Open RAIL++"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Canny (Full, Diffusers)",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "diffusers_xl_canny_full.safetensors"
+    ],
+    "LicenseType": "Open RAIL++"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Depth (Small, Diffusers)",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "diffusers_xl_depth_small.safetensors"
+    ],
+    "LicenseType": "Open RAIL++"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Depth (Mid, Diffusers)",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "diffusers_xl_depth_mid.safetensors"
+    ],
+    "LicenseType": "Open RAIL++"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Depth (Full, Diffusers)",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "diffusers_xl_depth_full.safetensors"
+    ],
+    "LicenseType": "Open RAIL++"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Ioclab Recolor",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "ioclab_sd15_recolor.safetensors"
+    ],
+    "LicenseType": "Open RAIL++"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Kohya Control-lllite Blur",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "kohya_controllllite_xl_blur.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Kohya Control-lllite Blur (Anime)",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "kohya_controllllite_xl_blur_anime.safetensors",
+      "kohya_controllllite_xl_blur_anime_beta.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Kohya Control-lllite Canny",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "kohya_controllllite_xl_canny.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Kohya Control-lllite Canny (Anime)",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "kohya_controllllite_xl_canny_anime.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Kohya Control-lllite Depth",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "kohya_controllllite_xl_depth.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Kohya Control-lllite Depth (Anime)",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "kohya_controllllite_xl_depth_anime.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Kohya Control-lllite Openpose (Anime)",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "kohya_controllllite_xl_openpose_anime.safetensors",
+      "kohya_controllllite_xl_openpose_anime_v2.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Kohya Controllllite Scribble Anime",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "kohya_controllllite_xl_scribble_anime.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "SAI XL Depth 256 Lora",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "sai_xl_depth_256lora.safetensors"
+    ],
+    "LicenseType": "Stability AI Control-Lora CLA"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "SAI XL Depth 128 Lora",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "sai_xl_depth_128lora.safetensors"
+    ],
+    "LicenseType": "Stability AI Control-Lora CLA"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "SAI XL Canny 256 Lora",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "sai_xl_canny_256lora.safetensors"
+    ],
+    "LicenseType": "Stability AI Control-Lora CLA"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "SAI XL Canny 128 Lora",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "sai_xl_canny_128lora.safetensors"
+    ],
+    "LicenseType": "Stability AI Control-Lora CLA"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "SAI XL Recolor 256 Lora",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "sai_xl_recolor_256lora.safetensors"
+    ],
+    "LicenseType": "Stability AI Control-Lora CLA"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "SAI XL Recolor 128 Lora",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "sai_xl_recolor_128lora.safetensors"
+    ],
+    "LicenseType": "Stability AI Control-Lora CLA"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "SAI XL Sketch 256 Lora",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "sai_xl_sketch_256lora.safetensors"
+    ],
+    "LicenseType": "Stability AI Control-Lora CLA"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "SAI XL Sketch 128 Lora",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "sai_xl_sketch_128lora.safetensors"
+    ],
+    "LicenseType": "Stability AI Control-Lora CLA"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "SargeZT XL Depth",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "sargezt_xl_depth.safetensors"
+    ],
+    "LicenseType": "CreativeML Open RAIL-M"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "SargeZT XL Depth Faid Vidit",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "sargezt_xl_depth_faid_vidit.safetensors"
+    ],
+    "LicenseType": "CreativeML Open RAIL-M"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "SargeZT XL Depth Zeed",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "sargezt_xl_depth_zeed.safetensors"
+    ],
+    "LicenseType": "CreativeML Open RAIL-M"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "SargeZT XL Softedge",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "sargezt_xl_softedge.safetensors"
+    ],
+    "LicenseType": "CreativeML Open RAIL-M"
+  },
+  {
+    "ModelCategory": "ControlNetXl",
+    "ModelName": "Thibaud XL Openpose",
+    "RepositoryPath": "lllyasviel/sd_control_collection",
+    "Files": [
+      "thibaud_xl_openpose.safetensors"
+    ],
+    "LicenseType": "Unknown"
   }
 ]

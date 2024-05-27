@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Headers;
 using Microsoft.Extensions.Logging;
 using Polly.Contrib.WaitAndRetry;
@@ -90,6 +91,7 @@ public class DownloadService : IDownloadService
         await using var stream = await response
             .Content.ReadAsStreamAsync(cancellationToken)
             .ConfigureAwait(false);
+        var stopwatch = Stopwatch.StartNew();
         var totalBytesRead = 0L;
         var buffer = new byte[BufferSize];
         while (true)
@@ -101,6 +103,9 @@ public class DownloadService : IDownloadService
 
             totalBytesRead += bytesRead;
 
+            var elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
+            var speedInMBps = (totalBytesRead / elapsedSeconds) / (1024 * 1024);
+
             if (isIndeterminate)
             {
                 progress?.Report(new ProgressReport(-1, isIndeterminate: true));
@@ -111,7 +116,9 @@ public class DownloadService : IDownloadService
                     new ProgressReport(
                         current: Convert.ToUInt64(totalBytesRead),
                         total: Convert.ToUInt64(contentLength),
-                        message: "Downloading..."
+                        message: "Downloading...",
+                        printToConsole: false,
+                        speedInMBps: speedInMBps
                     )
                 );
             }
@@ -220,6 +227,7 @@ public class DownloadService : IDownloadService
             .Content.ReadAsStreamAsync(cancellationToken)
             .ConfigureAwait(false);
         var totalBytesRead = 0L;
+        var stopwatch = Stopwatch.StartNew();
         var buffer = new byte[BufferSize];
         while (true)
         {
@@ -231,6 +239,9 @@ public class DownloadService : IDownloadService
             await file.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
 
             totalBytesRead += bytesRead;
+
+            var elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
+            var speedInMBps = (totalBytesRead / elapsedSeconds) / (1024 * 1024);
 
             if (isIndeterminate)
             {
@@ -244,7 +255,8 @@ public class DownloadService : IDownloadService
                         current: Convert.ToUInt64(totalBytesRead + existingFileSize),
                         // Total as the original total
                         total: Convert.ToUInt64(originalContentLength),
-                        message: "Downloading..."
+                        message: "Downloading...",
+                        speedInMBps: speedInMBps
                     )
                 );
             }

@@ -5,6 +5,22 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.11.0-dev.3
+### Added
+- Added download speed indicator to model downloads in the Downloads tab
+- Added XL ControlNets section to HuggingFace model browser
+- Added toggle in Settings for model browser auto-search on load
+- Added optional Recycle Bin mode when deleting images in the Inference image browser, can be disabled in settings (Currently on Windows only)
+### Changed
+- Revamped Checkpoints page now shows available model updates and has better drag & drop functionality
+- Updated HuggingFace page so the command bar stays fixed at the top
+- Revamped file deletion confirmation dialog with affected file paths display and recycle bin / permanent delete options (Checkpoint and Output Browsers) (Currently on Windows only)
+### Fixed
+- Fixed issue where the "installed" state on HuggingFace model browser was not always correct
+### Supporters
+#### Visionaries
+- Special shoutout to our first two Visionaries on Patreon, **Scopp Mcdee** and **Waterclouds**! Thank you for your generous support!
+
 ## v2.11.0-dev.2
 ### Added
 - Added Brazilian Portuguese language option, thanks to jbostroski for the translation!

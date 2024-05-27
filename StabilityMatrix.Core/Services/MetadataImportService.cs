@@ -23,7 +23,7 @@ public class MetadataImportService(
         IProgress<ProgressReport>? progress = null
     )
     {
-        progress?.Report(new ProgressReport(-1f, "Scanning directory...", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, message: "Scanning directory...", isIndeterminate: true));
 
         var checkpointsWithoutMetadata = directory
             .EnumerateFiles(searchOption: SearchOption.AllDirectories)
@@ -41,7 +41,7 @@ public class MetadataImportService(
                     new ProgressReport(
                         current: scanned,
                         total: checkpointsWithoutMetadata.Count,
-                        $"Scanning directory..."
+                        message: "Scanning directory..."
                     )
                 );
             }
@@ -51,7 +51,7 @@ public class MetadataImportService(
                     new ProgressReport(
                         current: scanned,
                         total: checkpointsWithoutMetadata.Count,
-                        $"{success} files imported successfully"
+                        message: $"{success} files imported successfully"
                     )
                 );
             }
@@ -70,7 +70,8 @@ public class MetadataImportService(
                     new ProgressReport(
                         current: report.Current ?? 0,
                         total: report.Total ?? 0,
-                        $"Scanning file {scanned}/{checkpointsWithoutMetadata.Count} ... {report.Percentage}%"
+                        message: $"Scanning file {scanned}/{checkpointsWithoutMetadata.Count} ... {report.Percentage}%",
+                        printToConsole: false
                     )
                 );
             });
@@ -134,7 +135,7 @@ public class MetadataImportService(
             new ProgressReport(
                 current: scanned,
                 total: checkpointsWithoutMetadata.Count,
-                $"Metadata found for {success}/{checkpointsWithoutMetadata.Count} files"
+                message: $"Metadata found for {success}/{checkpointsWithoutMetadata.Count} files"
             )
         );
     }
@@ -150,7 +151,7 @@ public class MetadataImportService(
         IProgress<ProgressReport>? progress = null
     )
     {
-        progress?.Report(new ProgressReport(-1f, "Scanning directory...", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, message: "Scanning directory...", isIndeterminate: true));
 
         var cmInfoList = new Dictionary<FilePath, ConnectedModelInfo>();
         foreach (var cmInfoPath in directory.EnumerateFiles("*.cm-info.json", SearchOption.AllDirectories))
@@ -179,7 +180,7 @@ public class MetadataImportService(
                 new ProgressReport(
                     current: success,
                     total: cmInfoList.Count,
-                    $"Updating metadata {success}/{cmInfoList.Count}"
+                    message: $"Updating metadata {success}/{cmInfoList.Count}"
                 )
             );
 
@@ -235,7 +236,7 @@ public class MetadataImportService(
         bool forceReimport = false
     )
     {
-        progress?.Report(new ProgressReport(-1f, "Getting metadata...", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, message: "Getting metadata...", isIndeterminate: true));
 
         var fileNameWithoutExtension = filePath.NameWithoutExtension;
         var cmInfoPath = filePath.Directory?.JoinFile($"{fileNameWithoutExtension}.cm-info.json");
@@ -249,7 +250,8 @@ public class MetadataImportService(
                 new ProgressReport(
                     current: report.Current ?? 0,
                     total: report.Total ?? 0,
-                    $"Getting metadata for {fileNameWithoutExtension} ... {report.Percentage}%"
+                    message: $"Getting metadata for {fileNameWithoutExtension} ... {report.Percentage}%",
+                    printToConsole: false
                 )
             );
         });
@@ -284,7 +286,8 @@ public class MetadataImportService(
         if (image == null)
             return updatedCmInfo;
 
-        await DownloadImage(image, filePath, progress).ConfigureAwait(false);
+        var imagePath = await DownloadImage(image, filePath, progress).ConfigureAwait(false);
+        updatedCmInfo.ThumbnailImageUrl = imagePath;
 
         return updatedCmInfo;
     }
@@ -306,13 +309,21 @@ public class MetadataImportService(
         return cmInfo?.Hashes.BLAKE3;
     }
 
-    private Task DownloadImage(CivitImage image, FilePath modelFilePath, IProgress<ProgressReport>? progress)
+    private async Task<string> DownloadImage(
+        CivitImage image,
+        FilePath modelFilePath,
+        IProgress<ProgressReport>? progress
+    )
     {
         var imageExt = Path.GetExtension(image.Url).TrimStart('.');
         var nameWithoutCmInfo = modelFilePath.NameWithoutExtension.Replace(".cm-info", string.Empty);
         var imageDownloadPath = Path.GetFullPath(
             Path.Combine(modelFilePath.Directory, $"{nameWithoutCmInfo}.preview.{imageExt}")
         );
-        return downloadService.DownloadToFileAsync(image.Url, imageDownloadPath, progress);
+        await downloadService
+            .DownloadToFileAsync(image.Url, imageDownloadPath, progress)
+            .ConfigureAwait(false);
+
+        return imageDownloadPath;
     }
 }

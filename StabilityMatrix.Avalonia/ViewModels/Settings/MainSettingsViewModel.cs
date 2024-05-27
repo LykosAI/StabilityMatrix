@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media.Imaging;
@@ -140,6 +141,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool infinitelyScrollWorkflowBrowser;
 
+    [ObservableProperty]
+    private bool autoLoadCivitModels;
+
     #region System Info
 
     private static Lazy<IReadOnlyList<GpuInfo>> GpuInfosLazy { get; } =
@@ -239,6 +243,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.SelectedNumberFormatMode,
             settings => settings.NumberFormatMode,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.AutoLoadCivitModels,
+            settings => settings.AutoLoadCivitModels,
             true
         );
 
@@ -805,7 +816,23 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugGCCollectCommand),
             new CommandItem(DebugExtractImagePromptsToTxtCommand),
             new CommandItem(DebugShowImageMaskEditorCommand),
+            new CommandItem(DebugExtractImagePromptsToTxtCommand),
+            new CommandItem(DebugShowConfirmDeleteDialogCommand),
         ];
+
+    [RelayCommand]
+    private async Task DebugShowConfirmDeleteDialog()
+    {
+        var vm = dialogFactory.Get<ConfirmDeleteDialogViewModel>();
+
+        vm.IsRecycleBinAvailable = false;
+        vm.PathsToDelete = Enumerable
+            .Range(1, 64)
+            .Select(i => $"C:/Users/ExampleUser/Data/ExampleFile{i}.txt")
+            .ToArray();
+
+        await vm.GetDialog().ShowAsync();
+    }
 
     [RelayCommand]
     private async Task DebugRefreshModelIndex()

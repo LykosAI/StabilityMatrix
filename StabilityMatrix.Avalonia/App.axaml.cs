@@ -331,7 +331,7 @@ public sealed class App : Application
                     {
                         provider.GetRequiredService<NewPackageManagerViewModel>(),
                         provider.GetRequiredService<InferenceViewModel>(),
-                        provider.GetRequiredService<CheckpointsPageViewModel>(),
+                        provider.GetRequiredService<NewCheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
                         provider.GetRequiredService<OutputsPageViewModel>(),
                         provider.GetRequiredService<WorkflowsPageViewModel>()

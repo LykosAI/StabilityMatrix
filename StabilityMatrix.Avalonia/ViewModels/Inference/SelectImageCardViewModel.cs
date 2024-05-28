@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
@@ -19,6 +20,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Database;
 using Size = System.Drawing.Size;
@@ -29,13 +31,18 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(SelectImageCard))]
 [ManagedService]
 [Transient]
-public partial class SelectImageCardViewModel(INotificationService notificationService)
-    : LoadableViewModelBase,
-        IDropTarget,
-        IComfyStep,
-        IInputImageProvider
+public partial class SelectImageCardViewModel(
+    INotificationService notificationService,
+    ServiceManager<ViewModelBase> vmFactory
+) : LoadableViewModelBase, IDropTarget, IComfyStep, IInputImageProvider
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    /// <summary>
+    /// When true, enables a button to open a mask editor for the image.
+    /// </summary>
+    [ObservableProperty]
+    private bool isMaskEditorEnabled;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSelectionAvailable))]
@@ -65,6 +72,8 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
     /// Path of the not found image
     /// </summary>
     public string? NotFoundImagePath => ImageSource?.LocalFile?.FullPath;
+
+    public MaskEditorViewModel? MaskEditorViewModel { get; private set; }
 
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)
@@ -105,6 +114,17 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
         }
     }
 
+    /// <summary>
+    /// When IsMaskEditorEnabled is set to true, initializes the MaskEditorViewModel.
+    /// </summary>
+    partial void OnIsMaskEditorEnabledChanged(bool value)
+    {
+        if (value)
+        {
+            MaskEditorViewModel ??= vmFactory.Get<MaskEditorViewModel>();
+        }
+    }
+
     private static FilePickerFileType SupportedImages { get; } =
         new("Supported Images")
         {
@@ -127,6 +147,27 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
         {
             Dispatcher.UIThread.Post(() => LoadUserImageSafe(new ImageSource(path)));
         }
+    }
+
+    [RelayCommand]
+    private async Task OpenEditMaskDialogAsync()
+    {
+        if (ImageSource is null)
+        {
+            return;
+        }
+
+        MaskEditorViewModel ??= vmFactory.Get<MaskEditorViewModel>();
+
+        if (await ImageSource.GetBitmapAsync() is not { } currentBitmap)
+        {
+            Logger.Warn("GetBitmapAsync returned null for image {Path}", ImageSource.LocalFile?.FullPath);
+            return;
+        }
+
+        MaskEditorViewModel.BackgroundImage = currentBitmap.ToSKBitmap();
+
+        await MaskEditorViewModel.GetDialog().ShowAsync();
     }
 
     /// <summary>

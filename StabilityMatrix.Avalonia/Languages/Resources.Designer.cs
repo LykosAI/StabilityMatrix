@@ -231,6 +231,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edit Clipping Mask.
+        /// </summary>
+        public static string Action_EditClippingMask {
+            get {
+                return ResourceManager.GetString("Action_EditClippingMask", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exit Application.
         /// </summary>
         public static string Action_ExitApplication {

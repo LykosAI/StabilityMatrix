@@ -2,13 +2,15 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmControls="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Controls"
+    xmlns:faIcons="https://github.com/projektanker/icons.avalonia"
     x:DataType="vmControls:PaintCanvasViewModel">
     <Design.PreviewWith>
-        <controls:PaintCanvas />
+        <controls:PaintCanvas DataContext="{x:Static mocks:DesignData.PaintCanvasViewModel}" />
     </Design.PreviewWith>
 
     <Style Selector="controls|PaintCanvas">
@@ -24,13 +26,13 @@
                             Label="Clear" />
                         <input:StandardUICommand
                             x:Key="UndoCommand"
-                            HotKey="Ctrl+Z"
                             Command="{Binding UndoCommand}"
+                            HotKey="Ctrl+Z"
                             IconSource="Undo"
                             Label="Undo" />
                     </Grid.Resources>
                     <Grid.Styles>
-                        <!-- Change cursor to crosshair when mouse is over the canvas -->
+                        <!--  Change cursor to crosshair when mouse is over the canvas  -->
                         <!--<Style Selector="controls|SkiaCustomCanvas:pointerover">
                             <Setter Property="Cursor" Value="Cross"/>
                         </Style>
@@ -38,54 +40,72 @@
                             <Setter Property="Cursor" Value="Arrow"/>
                         </Style>-->
                     </Grid.Styles>
-                    <StackPanel Margin="8,2" Orientation="Horizontal" Spacing="6">
-
-                        <ui:ColorPickerButton
-                            VerticalAlignment="Center"
-                            Color="{Binding PaintBrushColor}" />
-                        <Label 
-                            Margin="8,0,0,0"
-                            Content="Pressure:" VerticalAlignment="Center" />
-                        <Label 
-                            Margin="-4,0,0,0"
-                            Content="{Binding CurrentPenPressure}" VerticalAlignment="Center" />
+                    
+                    <!-- Top bar -->
+                    <StackPanel
+                        Orientation="Horizontal"
+                        Spacing="6">
                         
-                        <ui:CommandBar HorizontalAlignment="Right" Margin="0,4">
+                        <!-- Tools -->
+                        <controls:Card Padding="4">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <ToggleButton>
+                                    <faIcons:Icon
+                                        FontSize="18"
+                                        Value="fa-solid fa-paintbrush" />
+                                </ToggleButton>
+                                <ToggleButton>
+                                    <faIcons:Icon
+                                        FontSize="18"
+                                        Value="fa-solid fa-eraser" />
+                                </ToggleButton>
+                            </StackPanel>
+                        </controls:Card>
+                        
+                        <GridSplitter BorderThickness="1" Margin="0,16"/>
+
+                        <ui:ColorPickerButton VerticalAlignment="Center" Color="{Binding PaintBrushColor}" />
+                        <Label
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center"
+                            Content="Pressure:" />
+                        <Label
+                            Margin="-4,0,0,0"
+                            VerticalAlignment="Center"
+                            Content="{Binding CurrentPenPressure}" />
+
+                        <ui:CommandBar Margin="0,4" HorizontalAlignment="Right">
                             <ui:CommandBar.PrimaryCommands>
-                                <!-- Brush Size -->
+                                <!--  Brush Size  -->
                                 <ui:CommandBarButton>
                                     <ui:CommandBarButton.IconSource>
-                                        <fluentIcons:SymbolIconSource
-                                            FontSize="12"
-                                            Symbol="ArrowAutofitWidth" />
+                                        <fluentIcons:SymbolIconSource FontSize="12" Symbol="ArrowAutofitWidth" />
                                     </ui:CommandBarButton.IconSource>
                                     <ui:CommandBarButton.Flyout>
                                         <Flyout>
                                             <StackPanel>
-                                                <Label Content="Brush Size"/>
-                                                <ui:NumberBox 
+                                                <Label Content="Brush Size" />
+                                                <ui:NumberBox
                                                     MinWidth="120"
-                                                    Maximum="100" 
-                                                    Minimum="0" 
-                                                    SmallChange="1" 
                                                     LargeChange="1"
+                                                    Maximum="100"
+                                                    Minimum="0"
+                                                    SmallChange="1"
                                                     SpinButtonPlacementMode="Inline"
                                                     Value="{Binding PaintBrushSize}" />
                                             </StackPanel>
                                         </Flyout>
                                     </ui:CommandBarButton.Flyout>
                                 </ui:CommandBarButton>
-                                <!-- Opacity -->
+                                <!--  Opacity  -->
                                 <ui:CommandBarButton>
                                     <ui:CommandBarButton.IconSource>
-                                        <fluentIcons:SymbolIconSource
-                                            FontSize="12"
-                                            Symbol="CircleHalfFill" />
+                                        <fluentIcons:SymbolIconSource FontSize="12" Symbol="CircleHalfFill" />
                                     </ui:CommandBarButton.IconSource>
                                     <ui:CommandBarButton.Flyout>
                                         <Flyout>
                                             <StackPanel>
-                                                <Label Content="Brush Opacity"/>
+                                                <Label Content="Brush Opacity" />
                                                 <Slider
                                                     MinWidth="200"
                                                     IsSnapToTickEnabled="True"
@@ -98,21 +118,23 @@
                                         </Flyout>
                                     </ui:CommandBarButton.Flyout>
                                 </ui:CommandBarButton>
-                                
-                                <ui:CommandBarButton Command="{StaticResource UndoCommand}" />
+
+                                <ui:CommandBarButton Command="{Binding UndoCommand}" IconSource="Undo" />
                                 <ui:CommandBarButton Command="{StaticResource ClearCanvasCommand}" />
-                                
+
                             </ui:CommandBar.PrimaryCommands>
-                            
+
                             <!--<ui:CommandBar.SecondaryCommands>
                                 <ui:CommandBarButton Command="{StaticResource UndoCommand}" />
                                 <ui:CommandBarButton Command="{StaticResource ClearCanvasCommand}" />
                             </ui:CommandBar.SecondaryCommands>-->
                         </ui:CommandBar>
                     </StackPanel>
+                    
                     <ZoomBorder
                         x:Name="PART_ZoomBorder"
                         Grid.Row="1"
+                        Margin="0,2,0,0"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Background="SlateBlue"
@@ -126,7 +148,7 @@
                             Height="1000"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Stretch"
-                            Background="Transparent"/>
+                            Background="Transparent" />
                     </ZoomBorder>
 
                 </Grid>

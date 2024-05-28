@@ -2,29 +2,31 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using Avalonia.Media;
 using Avalonia.Skia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SkiaSharp;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.Models;
+using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Attributes;
+#pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Controls;
 
-public partial class PaintCanvasViewModel : ObservableObject
+[Transient]
+[ManagedService]
+public partial class PaintCanvasViewModel : LoadableViewModelBase
 {
     public ConcurrentDictionary<long, PenPath> TemporaryPaths { get; } = new();
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanUndo))]
     [NotifyCanExecuteChangedFor(nameof(UndoCommand))]
     private ImmutableList<PenPath> paths = [];
-
-    public bool CanUndo => Paths.Count > 0;
 
     [ObservableProperty]
     private Color? paintBrushColor;
@@ -53,49 +55,39 @@ public partial class PaintCanvasViewModel : ObservableObject
     private bool isEraserSelected;
 
     [ObservableProperty]
+    [property: JsonIgnore]
     private SKBitmap? backgroundImage;
 
+    [JsonIgnore]
     public List<SKBitmap> LayerImages { get; } = [];
 
-    public Action<Stream>? LoadCanvasFromImage { get; set; }
+    /// <summary>
+    /// Set by <see cref="PaintCanvas"/> to allow the view model to take a snapshot of the canvas.
+    /// </summary>
+    [JsonIgnore]
+    public Func<SKImage>? GetCanvasSnapshot { get; set; }
 
-    public Action<Stream>? SaveCanvasToImage { get; set; }
-
+    /// <summary>
+    /// Set by <see cref="PaintCanvas"/> to allow the view model to
+    /// refresh the canvas view after updating points or bitmap layers.
+    /// </summary>
+    [JsonIgnore]
     public Action? RefreshCanvas { get; set; }
 
-    public async Task SaveCanvasToJson(Stream stream)
+    public void LoadCanvasFromBitmap(SKBitmap bitmap)
     {
-        var model = new PaintCanvasModel
-        {
-            TemporaryPaths = TemporaryPaths.ToDictionary(x => x.Key, x => x.Value),
-            Paths = Paths,
-            PaintBrushColor = PaintBrushColor,
-            PaintBrushSize = PaintBrushSize,
-            PaintBrushAlpha = PaintBrushAlpha
-        };
-
-        await JsonSerializer.SerializeAsync(stream, model);
-    }
-
-    public async Task LoadCanvasFromJson(Stream stream)
-    {
-        var model = await JsonSerializer.DeserializeAsync<PaintCanvasModel>(stream);
-
-        TemporaryPaths.Clear();
-        foreach (var (key, value) in model!.TemporaryPaths)
-        {
-            TemporaryPaths.TryAdd(key, value);
-        }
-
-        Paths = model.Paths;
-        PaintBrushColor = model.PaintBrushColor;
-        PaintBrushSize = model.PaintBrushSize;
-        PaintBrushAlpha = model.PaintBrushAlpha;
+        LayerImages.Clear();
+        LayerImages.Add(bitmap);
 
         RefreshCanvas?.Invoke();
     }
 
-    [RelayCommand(CanExecute = nameof(CanUndo))]
+    private bool CanExecuteUndo()
+    {
+        return Paths.Count > 0;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanExecuteUndo))]
     public void Undo()
     {
         // Remove last path
@@ -111,16 +103,54 @@ public partial class PaintCanvasViewModel : ObservableObject
         RefreshCanvas?.Invoke();
     }
 
-    public class PaintCanvasModel
+    /// <inheritdoc />
+    public override void LoadStateFromJsonObject(JsonObject state)
     {
-        public Dictionary<long, PenPath> TemporaryPaths { get; set; } = new();
+        base.LoadStateFromJsonObject(state);
 
-        public ImmutableList<PenPath> Paths { get; set; } = ImmutableList<PenPath>.Empty;
+        RefreshCanvas?.Invoke();
+    }
 
-        public Color? PaintBrushColor { get; set; }
+    protected PaintCanvasModel SaveCanvas()
+    {
+        var model = new PaintCanvasModel
+        {
+            TemporaryPaths = TemporaryPaths.ToDictionary(x => x.Key, x => x.Value),
+            Paths = Paths,
+            PaintBrushColor = PaintBrushColor,
+            PaintBrushSize = PaintBrushSize,
+            PaintBrushAlpha = PaintBrushAlpha
+        };
 
-        public double PaintBrushSize { get; set; }
+        return model;
+    }
 
-        public double PaintBrushAlpha { get; set; }
+    protected void LoadCanvas(PaintCanvasModel model)
+    {
+        TemporaryPaths.Clear();
+        foreach (var (key, value) in model.TemporaryPaths)
+        {
+            TemporaryPaths.TryAdd(key, value);
+        }
+
+        Paths = model.Paths;
+        PaintBrushColor = model.PaintBrushColor;
+        PaintBrushSize = model.PaintBrushSize;
+        PaintBrushAlpha = model.PaintBrushAlpha;
+
+        RefreshCanvas?.Invoke();
+    }
+
+    protected class PaintCanvasModel
+    {
+        public Dictionary<long, PenPath> TemporaryPaths { get; init; } = new();
+
+        public ImmutableList<PenPath> Paths { get; init; } = ImmutableList<PenPath>.Empty;
+
+        public Color? PaintBrushColor { get; init; }
+
+        public double PaintBrushSize { get; init; }
+
+        public double PaintBrushAlpha { get; init; }
     }
 }

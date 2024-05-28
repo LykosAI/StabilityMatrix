@@ -45,23 +45,14 @@ public class PaintCanvas : TemplatedControl
         AffectsRender<PaintCanvas>(BoundsProperty);
     }
 
-    public void SaveCanvasToRasterWebp(Stream stream)
+    public SKImage GetCanvasSnapshot()
     {
         using var surface = SKSurface.Create(new SKImageInfo((int)Bounds.Width, (int)Bounds.Height));
         using var canvas = surface.Canvas;
 
         RenderCanvasCore(canvas);
 
-        using var image = surface.Snapshot();
-        using var data = image.Encode(SKEncodedImageFormat.Webp, 100);
-        data.SaveTo(stream);
-    }
-
-    public void LoadCanvasFromRasterWebp(Stream stream)
-    {
-        ViewModel?.LayerImages.Add(SKBitmap.Decode(stream));
-
-        Dispatcher.UIThread.Post(() => MainCanvas?.InvalidateVisual(), DispatcherPriority.Render);
+        return surface.Snapshot();
     }
 
     public void RefreshCanvas()
@@ -104,6 +95,13 @@ public class PaintCanvas : TemplatedControl
                     UpdateCanvasCursor();
                 }
             };
+
+            if (ViewModel is not null)
+            {
+                ViewModel.CurrentZoom = zoomBorder.ZoomX;
+
+                UpdateCanvasCursor();
+            }
         }
 
         OnDataContextChanged(EventArgs.Empty);
@@ -117,8 +115,7 @@ public class PaintCanvas : TemplatedControl
         if (DataContext is PaintCanvasViewModel viewModel)
         {
             // Set the remote actions
-            viewModel.SaveCanvasToImage = SaveCanvasToRasterWebp;
-            viewModel.LoadCanvasFromImage = LoadCanvasFromRasterWebp;
+            viewModel.GetCanvasSnapshot = GetCanvasSnapshot;
             viewModel.RefreshCanvas = RefreshCanvas;
 
             viewModelSubscription?.Dispose();
@@ -183,13 +180,10 @@ public class PaintCanvas : TemplatedControl
             return;
         }
 
-        // if (e.Pointer.Type != PointerType.Pen || lastPointer.Properties.Pressure > 0)
-
         e.Handled = true;
 
         // Must have this or stylus inputs lost after a while
         // https://github.com/AvaloniaUI/Avalonia/issues/12289#issuecomment-1695620412
-
         e.PreventGestureRecognition();
 
         if (DataContext is not PaintCanvasViewModel viewModel)
@@ -209,21 +203,14 @@ public class PaintCanvas : TemplatedControl
 
             isPenDown = true;
 
-            var cursorPosition = e.GetPosition(MainCanvas);
-
-            // Start a new path
-            var path = new SKPath();
-            path.MoveTo(cursorPosition.ToSKPoint());
-
-            TemporaryPaths[e.Pointer.Id] = new PenPath(path)
-            {
-                FillColor = viewModel.PaintBrushSKColor.WithAlpha((byte)(viewModel.PaintBrushAlpha * 255))
-            };
+            HandlePointerMoved(e);
         }
         else if (e.RoutedEvent == PointerReleasedEvent)
         {
             if (isPenDown)
             {
+                HandlePointerMoved(e);
+
                 isPenDown = false;
             }
 
@@ -242,39 +229,54 @@ public class PaintCanvas : TemplatedControl
                 return;
             }
 
-            // Use intermediate points to include past events we missed
-            var points = e.GetIntermediatePoints(MainCanvas);
-
-            viewModel.CurrentPenPressure = points.FirstOrDefault().Properties.Pressure;
-
-            // Get existing temp path
-            if (TemporaryPaths.TryGetValue(e.Pointer.Id, out var penPath))
-            {
-                var cursorPosition = e.GetPosition(MainCanvas);
-
-                // Add line for path
-                penPath.Path.LineTo(cursorPosition.ToSKPoint());
-
-                // Add points
-                foreach (var point in points)
-                {
-                    var skCanvasPoint = point.Position.ToSKPoint();
-
-                    // penPath.Path.LineTo(skCanvasPoint);
-
-                    var penPoint = new PenPoint(skCanvasPoint)
-                    {
-                        Pressure = point.Pointer.Type != PointerType.Mouse ? 1 : point.Properties.Pressure,
-                        Radius = viewModel.PaintBrushSize,
-                        IsPen = point.Pointer.Type == PointerType.Pen
-                    };
-
-                    penPath.Points.Add(penPoint);
-                }
-            }
+            HandlePointerMoved(e);
         }
 
         Dispatcher.UIThread.Post(() => MainCanvas?.InvalidateVisual(), DispatcherPriority.Render);
+    }
+
+    private void HandlePointerMoved(PointerEventArgs e)
+    {
+        if (DataContext is not PaintCanvasViewModel viewModel)
+        {
+            return;
+        }
+
+        // Use intermediate points to include past events we missed
+        var points = e.GetIntermediatePoints(MainCanvas);
+
+        viewModel.CurrentPenPressure = points.FirstOrDefault().Properties.Pressure;
+
+        // Get or create a temp path
+        if (!TemporaryPaths.TryGetValue(e.Pointer.Id, out var penPath))
+        {
+            penPath = new PenPath(new SKPath())
+            {
+                FillColor = viewModel.PaintBrushSKColor.WithAlpha((byte)(viewModel.PaintBrushAlpha * 255))
+            };
+            TemporaryPaths[e.Pointer.Id] = penPath;
+        }
+
+        // Add line for path
+        // var cursorPosition = e.GetPosition(MainCanvas);
+        // penPath.Path.LineTo(cursorPosition.ToSKPoint());
+
+        // Add points
+        foreach (var point in points)
+        {
+            var skCanvasPoint = point.Position.ToSKPoint();
+
+            penPath.Path.LineTo(skCanvasPoint);
+
+            var penPoint = new PenPoint(skCanvasPoint)
+            {
+                Pressure = point.Pointer.Type == PointerType.Mouse ? null : point.Properties.Pressure,
+                Radius = viewModel.PaintBrushSize,
+                IsPen = point.Pointer.Type == PointerType.Pen
+            };
+
+            penPath.Points.Add(penPoint);
+        }
     }
 
     /// <inheritdoc />
@@ -347,31 +349,40 @@ public class PaintCanvas : TemplatedControl
         var currentZoom = ViewModel?.CurrentZoom ?? 1;
 
         // Get brush size
-        var currentBrushSize = Math.Max(ViewModel?.PaintBrushSize ?? 1, 1);
-        var brushPixels = (int)Math.Ceiling(currentBrushSize * 2 * currentZoom);
-        var brushCanvasPixels = brushPixels * 2;
+        var currentBrushSize = Math.Max((ViewModel?.PaintBrushSize ?? 1) - 1, 1);
+        var brushRadius = (int)Math.Ceiling(currentBrushSize * 2 * currentZoom);
 
         // Only update cursor if brush size has changed
-        if (brushCanvasPixels == lastCanvasCursorRadius)
+        if (brushRadius == lastCanvasCursorRadius)
         {
             canvas.Cursor = lastCanvasCursor;
             return;
         }
 
-        lastCanvasCursorRadius = brushCanvasPixels;
+        lastCanvasCursorRadius = brushRadius;
 
-        using var cursorBitmap = new SKBitmap(brushCanvasPixels, brushCanvasPixels);
+        var brushDiameter = brushRadius * 2;
+
+        const int padding = 4;
+
+        var canvasCenter = brushRadius + padding;
+        var canvasSize = brushDiameter + padding * 2;
+
+        using var cursorBitmap = new SKBitmap(canvasSize, canvasSize);
+
         using var cursorCanvas = new SKCanvas(cursorBitmap);
         cursorCanvas.Clear(SKColors.Transparent);
         cursorCanvas.DrawCircle(
-            brushPixels,
-            brushPixels,
-            brushPixels,
+            brushRadius + padding,
+            brushRadius + padding,
+            brushRadius,
             new SKPaint
             {
                 Color = SKColors.Black,
                 Style = SKPaintStyle.Stroke,
-                StrokeWidth = 1,
+                StrokeWidth = 1.5f,
+                StrokeCap = SKStrokeCap.Round,
+                StrokeJoin = SKStrokeJoin.Round,
                 IsDither = true,
                 IsAntialias = true
             }
@@ -383,7 +394,7 @@ public class PaintCanvas : TemplatedControl
 
         var bitmap = WriteableBitmap.Decode(stream);
 
-        canvas.Cursor = new Cursor(bitmap, new PixelPoint(brushCanvasPixels / 2, brushCanvasPixels / 2));
+        canvas.Cursor = new Cursor(bitmap, new PixelPoint(canvasCenter, canvasCenter));
 
         lastCanvasCursor?.Dispose();
         lastCanvasCursor = canvas.Cursor;
@@ -431,6 +442,13 @@ public class PaintCanvas : TemplatedControl
 
         // Apply Color
         paint.Color = penPath.FillColor;
+
+        if (penPath.IsErase)
+        {
+            paint.BlendMode = SKBlendMode.SrcIn;
+            paint.Color = SKColors.Transparent;
+        }
+
         // Defaults
         paint.IsDither = true;
         paint.IsAntialias = true;
@@ -445,40 +463,42 @@ public class PaintCanvas : TemplatedControl
             var penPoint = penPath.Points[i];
 
             // Skip non-pen points
-            if (!penPoint.IsPen)
+            /*if (!penPoint.IsPen)
             {
                 continue;
-            }
+            }*/
 
             hasPenPoints = true;
 
             var radius = penPoint.Radius;
             var pressure = penPoint.Pressure ?? 1;
-            var thickness = pressure * radius * 1.5;
-            // var radius = pressure * penPoint.Radius * 1.5;
+            var thickness = pressure * radius * 2.5;
 
             // Draw path
-            if (i < penPath.Points.Count - 1)
+            /*if (i < penPath.Points.Count - 1)
             {
-                paint.Style = SKPaintStyle.Fill;
+                paint.Style = SKPaintStyle.Stroke;
                 paint.StrokeWidth = (float)thickness;
+                paint.StrokeCap = SKStrokeCap.Round;
+                paint.StrokeJoin = SKStrokeJoin.Round;
                 canvas.DrawLine(penPoint.Point, penPath.Points[i + 1].Point, paint);
-            }
+            }*/
 
             // Draw circles for pens
             paint.Style = SKPaintStyle.Fill;
-            canvas.DrawCircle(penPoint.Point, (float)thickness, paint);
+            canvas.DrawCircle(penPoint.Point, (float)thickness / 2, paint);
         }
 
         // Draw paths directly if we didn't have any pen points
         if (!hasPenPoints)
         {
             var point = penPath.Points[0];
-            var thickness = point.Radius * 1.5;
+            var thickness = point.Radius * 2;
 
             paint.Style = SKPaintStyle.Stroke;
             paint.StrokeWidth = (float)thickness;
             paint.StrokeCap = SKStrokeCap.Round;
+            paint.StrokeJoin = SKStrokeJoin.Round;
 
             canvas.DrawPath(penPath.Path, paint);
         }

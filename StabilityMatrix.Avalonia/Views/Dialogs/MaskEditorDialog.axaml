@@ -22,14 +22,14 @@
                 <StackPanel 
                     Grid.Column="1"
                     Orientation="Horizontal" Spacing="16">
-                    <Button Content="Load Mask" Command="{Binding LoadMaskFromFileCommand}" />
-                    <Button Content="Save Mask" Command="{Binding SaveMaskToFileCommand}" />
+                    <Button Content="Load Mask" Command="{Binding DebugSelectFileLoadMaskCommand}" />
+                    <Button Content="Save Mask" Command="{Binding DebugSelectFileSaveMaskCommand}" />
                     <ToggleButton Content="Use Image Alpha Channel as Mask" IsChecked="{Binding UseImageAlphaAsMask}"/>
                 </StackPanel>
             </Grid>
         </controls:Card>
 
-        <controls:Card Grid.Row="1">
+        <controls:Card Padding="8,4,8,8" Grid.Row="1">
             <controls:PaintCanvas DataContext="{Binding PaintCanvasViewModel, Mode=OneWay}" />
         </controls:Card>
 

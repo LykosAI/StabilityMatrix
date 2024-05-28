@@ -8,6 +8,12 @@ public enum CivitBaseModelType
 {
     All,
 
+    [StringValue("PixArt a")]
+    PixArtA,
+
+    [StringValue("PixArt E")]
+    PixArtE,
+
     [StringValue("Pony")]
     Pony,
 
@@ -31,6 +37,9 @@ public enum CivitBaseModelType
 
     [StringValue("SDXL Distilled")]
     SdxlDistilled,
+
+    [StringValue("SDXL Hyper")]
+    SdxlHyper,
 
     [StringValue("SDXL Lightning")]
     SdxlLightning,

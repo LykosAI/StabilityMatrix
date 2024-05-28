@@ -237,15 +237,6 @@ public class A3WebUI(
             pipArgs = pipArgs.WithXFormers("==0.0.23.post1");
         }
 
-        // v1.6.0 needs a httpx qualifier to fix a gradio issue
-        if (versionOptions.VersionTag?.Contains("1.6.0") ?? false)
-        {
-            pipArgs = pipArgs.AddArg("httpx==0.24.1");
-        }
-
-        // Add jsonmerge to fix https://github.com/AUTOMATIC1111/stable-diffusion-webui/issues/12482
-        pipArgs = pipArgs.AddArg("jsonmerge");
-
         if (exists)
         {
             pipArgs = pipArgs.AddArg("--upgrade");

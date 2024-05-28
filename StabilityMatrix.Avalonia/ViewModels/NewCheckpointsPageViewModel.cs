@@ -74,6 +74,9 @@ public partial class NewCheckpointsPageViewModel(
     private bool showFolders = true;
 
     [ObservableProperty]
+    private bool showModelsInSubfolders = true;
+
+    [ObservableProperty]
     private CheckpointCategory? selectedCategory;
 
     [ObservableProperty]
@@ -148,7 +151,11 @@ public partial class NewCheckpointsPageViewModel(
             )
             .AsObservable();
 
-        var filterPredicate = this.WhenPropertyChanged(vm => vm.SelectedCategory)
+        var filterPredicate = Observable
+            .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
+            .Where(
+                x => x.EventArgs.PropertyName is nameof(SelectedCategory) or nameof(ShowModelsInSubfolders)
+            )
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(
                 _ =>
@@ -157,14 +164,21 @@ public partial class NewCheckpointsPageViewModel(
                         ? (Func<LocalModelFile, bool>)(_ => true)
                         : (Func<LocalModelFile, bool>)(
                             file =>
-                                Path.GetDirectoryName(file.RelativePath)
-                                    ?.Contains(
-                                        SelectedCategory
-                                            ?.Path
-                                            .Replace(settingsManager.ModelsDirectory, string.Empty)
-                                            .TrimStart(Path.DirectorySeparatorChar)
-                                    )
-                                    is true
+                                ShowModelsInSubfolders
+                                    ? Path.GetDirectoryName(file.RelativePath)
+                                        ?.Contains(
+                                            SelectedCategory
+                                                ?.Path
+                                                .Replace(settingsManager.ModelsDirectory, string.Empty)
+                                                .TrimStart(Path.DirectorySeparatorChar)
+                                        )
+                                        is true
+                                    : SelectedCategory
+                                        ?.Path
+                                        .Replace(settingsManager.ModelsDirectory, string.Empty)
+                                        .TrimStart(Path.DirectorySeparatorChar)
+                                        .Equals(Path.GetDirectoryName(file.RelativePath))
+                                        is true
                         )
             )
             .AsObservable();
@@ -297,6 +311,13 @@ public partial class NewCheckpointsPageViewModel(
             this,
             vm => vm.SelectedSortDirection,
             settings => settings.CheckpointSortDirection,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ShowModelsInSubfolders,
+            settings => settings.ShowModelsInSubfolders,
             true
         );
 

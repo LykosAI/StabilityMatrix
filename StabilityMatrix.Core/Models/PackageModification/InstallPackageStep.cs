@@ -4,34 +4,19 @@ using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
-public class InstallPackageStep : IPackageStep
+public class InstallPackageStep(
+    BasePackage package,
+    TorchVersion torchVersion,
+    SharedFolderMethod selectedSharedFolderMethod,
+    DownloadPackageVersionOptions versionOptions,
+    string installPath
+) : IPackageStep
 {
-    private readonly BasePackage package;
-    private readonly TorchVersion torchVersion;
-    private readonly SharedFolderMethod selectedSharedFolderMethod;
-    private readonly DownloadPackageVersionOptions versionOptions;
-    private readonly string installPath;
-
-    public InstallPackageStep(
-        BasePackage package,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
-        string installPath
-    )
-    {
-        this.package = package;
-        this.torchVersion = torchVersion;
-        this.selectedSharedFolderMethod = selectedSharedFolderMethod;
-        this.versionOptions = versionOptions;
-        this.installPath = installPath;
-    }
-
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
         void OnConsoleOutput(ProcessOutput output)
         {
-            progress?.Report(new ProgressReport { IsIndeterminate = true, ProcessOutput = output });
+            progress?.Report(new ProgressReport(-1f, isIndeterminate: true) { ProcessOutput = output });
         }
 
         await package

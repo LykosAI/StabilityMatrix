@@ -169,6 +169,7 @@ public class Settings
     public bool IsOutputsTreeViewEnabled { get; set; } = true;
     public CheckpointSortMode CheckpointSortMode { get; set; } = CheckpointSortMode.SharedFolderType;
     public ListSortDirection CheckpointSortDirection { get; set; } = ListSortDirection.Descending;
+    public bool ShowModelsInSubfolders { get; set; } = true;
     public bool SortConnectedModelsFirst { get; set; } = true;
     public int ConsoleFontSize { get; set; } = 14;
     public bool AutoLoadCivitModels { get; set; } = true;

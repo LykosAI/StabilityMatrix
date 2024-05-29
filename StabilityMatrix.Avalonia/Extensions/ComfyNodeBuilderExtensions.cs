@@ -1,12 +1,8 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.IO;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.Models.Inference;
-using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
-using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Extensions;
 
@@ -71,6 +67,75 @@ public static class ComfyNodeBuilderExtensions
 
         builder.Connections.Primary = loadImage.Output1;
         builder.Connections.PrimarySize = imageSize;
+
+        // If batch index is selected, add a LatentFromBatch
+        if (batchIndex is not null)
+        {
+            builder.Connections.Primary = builder
+                .Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.LatentFromBatch
+                    {
+                        Name = "LatentFromBatch",
+                        Samples = builder.GetPrimaryAsLatent(),
+                        // remote expects a 0-based index, vm is 1-based
+                        BatchIndex = batchIndex.Value - 1,
+                        Length = 1
+                    }
+                )
+                .Output;
+        }
+    }
+
+    /// <summary>
+    /// Setup an image as the <see cref="ComfyNodeBuilder.NodeBuilderConnections.Primary"/> connection
+    /// </summary>
+    public static void SetupImagePrimarySourceWithMask(
+        this ComfyNodeBuilder builder,
+        ImageSource image,
+        Size imageSize,
+        ImageSource mask,
+        Size maskSize,
+        int? batchIndex = null
+    )
+    {
+        // Get image paths
+        var sourceImageRelativePath = Path.Combine("Inference", image.GetHashGuidFileNameCached());
+        var maskImageRelativePath = Path.Combine("Inference", mask.GetHashGuidFileNameCached());
+
+        // Load image
+        var loadImage = builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.LoadImage
+            {
+                Name = builder.Nodes.GetUniqueName("LoadImage"),
+                Image = sourceImageRelativePath
+            }
+        );
+
+        // Load mask for alpha channel
+        var loadMask = builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.LoadImageMask
+            {
+                Name = builder.Nodes.GetUniqueName("LoadMask"),
+                Image = maskImageRelativePath,
+                Channel = "alpha"
+            }
+        );
+
+        builder.Connections.Primary = loadImage.Output1;
+        builder.Connections.PrimarySize = imageSize;
+
+        // Encode VAE to latent with mask, and replace primary
+        builder.Connections.Primary = builder
+            .Nodes.AddTypedNode(
+                new ComfyNodeBuilder.VAEEncodeForInpaint
+                {
+                    Name = builder.Nodes.GetUniqueName("VAEEncode"),
+                    Pixels = loadImage.Output1,
+                    Mask = loadMask.Output,
+                    Vae = builder.Connections.GetDefaultVAE()
+                }
+            )
+            .Output;
 
         // If batch index is selected, add a LatentFromBatch
         if (batchIndex is not null)

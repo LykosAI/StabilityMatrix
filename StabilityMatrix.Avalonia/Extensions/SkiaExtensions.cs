@@ -96,6 +96,11 @@ public static class SkiaExtensions
         return default;
     }
 
+    public static Bitmap ToAvaloniaBitmap(this SKBitmap bitmap)
+    {
+        return ToAvaloniaBitmap(bitmap, new Vector(96, 96));
+    }
+
     public static Bitmap ToAvaloniaBitmap(this SKBitmap bitmap, Vector dpi)
     {
         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
@@ -124,6 +129,43 @@ public static class SkiaExtensions
             new PixelSize(bitmap.Width, bitmap.Height),
             dpi,
             bitmap.RowBytes
+        );
+    }
+
+    public static Bitmap ToAvaloniaBitmap(this SKImage image)
+    {
+        return ToAvaloniaBitmap(image, new Vector(96, 96));
+    }
+
+    public static Bitmap ToAvaloniaBitmap(this SKImage image, Vector dpi)
+    {
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        var avaloniaColorFormat = image.ColorType switch
+        {
+            SKColorType.Rgba8888 => PixelFormat.Rgba8888,
+            SKColorType.Bgra8888 => PixelFormat.Bgra8888,
+            _ => throw new NotSupportedException($"Unsupported SKColorType: {bitmap.ColorType}")
+        };
+
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        var avaloniaAlphaFormat = image.AlphaType switch
+        {
+            SKAlphaType.Opaque => AlphaFormat.Opaque,
+            SKAlphaType.Premul => AlphaFormat.Premul,
+            SKAlphaType.Unpremul => AlphaFormat.Unpremul,
+            _ => throw new NotSupportedException($"Unsupported SKAlphaType: {bitmap.AlphaType}")
+        };
+
+        var pixmap = image.PeekPixels();
+        var dataPointer = pixmap.GetPixels();
+
+        return new Bitmap(
+            avaloniaColorFormat,
+            avaloniaAlphaFormat,
+            dataPointer,
+            new PixelSize(image.Width, image.Height),
+            dpi,
+            pixmap.RowBytes
         );
     }
 }

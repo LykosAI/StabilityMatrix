@@ -2,10 +2,12 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.Primitives;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SkiaSharp;
@@ -22,7 +24,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [Transient]
 [ManagedService]
 [View(typeof(MaskEditorDialog))]
-public partial class MaskEditorViewModel : ContentDialogViewModelBase
+public partial class MaskEditorViewModel : LoadableViewModelBase
 {
     /// <summary>
     /// When true, the mask will be applied to the image.
@@ -36,8 +38,10 @@ public partial class MaskEditorViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private bool useImageAlphaAsMask;
 
+    [JsonInclude]
     public PaintCanvasViewModel PaintCanvasViewModel { get; } = new();
 
+    [JsonIgnore]
     public SKBitmap? BackgroundImage
     {
         get => PaintCanvasViewModel.BackgroundImage;
@@ -123,20 +127,59 @@ public partial class MaskEditorViewModel : ContentDialogViewModelBase
         }
     }
 
-    /// <inheritdoc />
-    public override BetterContentDialog GetDialog()
+    public BetterContentDialog GetDialog()
     {
-        var dialog = base.GetDialog();
+        Dispatcher.UIThread.VerifyAccess();
 
-        dialog.ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled;
-        dialog.MaxDialogHeight = 2000;
-        dialog.MaxDialogWidth = 2000;
-        dialog.ContentMargin = new Thickness(16);
-        dialog.FullSizeDesired = true;
-        dialog.PrimaryButtonText = Resources.Action_Save;
-        dialog.CloseButtonText = Resources.Action_Cancel;
-        dialog.DefaultButton = ContentDialogButton.Primary;
+        var dialog = new BetterContentDialog
+        {
+            Content = this,
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            MaxDialogHeight = 2000,
+            MaxDialogWidth = 2000,
+            ContentMargin = new Thickness(16),
+            FullSizeDesired = true,
+            PrimaryButtonText = Resources.Action_Save,
+            CloseButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Primary
+        };
 
         return dialog;
     }
+
+    /*public void LoadStateFromJsonObject(JsonObject state, int version)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void LoadStateFromJsonObject(JsonObject state)
+    {
+        var model = state.Deserialize<MaskEditorModel>()!;
+        IsMaskEnabled = model.IsMaskEnabled;
+        UseImageAlphaAsMask = model.UseImageAlphaAsMask;
+        
+        if (model.PaintCanvasViewModel is not null)
+        {
+            PaintCanvasViewModel.LoadStateFromJsonObject(model.PaintCanvasViewModel);
+        }
+    }
+
+    public JsonObject SaveStateToJsonObject()
+    {
+        var model = new MaskEditorModel
+        {
+            IsMaskEnabled = IsMaskEnabled,
+            UseImageAlphaAsMask = UseImageAlphaAsMask,
+            PaintCanvasViewModel = PaintCanvasViewModel.SaveStateToJsonObject()
+        };
+
+        return JsonSerializer.SerializeToNode(model)!.AsObject();
+    }
+
+    public record MaskEditorModel
+    {
+        public bool IsMaskEnabled { get; init; }
+        public bool UseImageAlphaAsMask { get; init; }
+        public JsonObject? PaintCanvasViewModel { get; init; }
+    }*/
 }

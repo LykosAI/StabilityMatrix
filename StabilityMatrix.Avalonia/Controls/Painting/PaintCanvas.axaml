@@ -8,10 +8,16 @@
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmControls="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Controls"
     xmlns:faIcons="https://github.com/projektanker/icons.avalonia"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     x:DataType="vmControls:PaintCanvasViewModel">
     <Design.PreviewWith>
         <controls:PaintCanvas DataContext="{x:Static mocks:DesignData.PaintCanvasViewModel}" />
     </Design.PreviewWith>
+    
+    <Styles.Resources>
+        <converters:EnumToBooleanConverter x:Key="EnumBoolConverter" />
+    </Styles.Resources>
 
     <Style Selector="controls|PaintCanvas">
         <Setter Property="Background" Value="Transparent" />
@@ -49,12 +55,12 @@
                         <!-- Tools -->
                         <controls:Card Padding="4">
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <ToggleButton>
+                                <ToggleButton IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.PaintBrush}}">
                                     <faIcons:Icon
                                         FontSize="18"
                                         Value="fa-solid fa-paintbrush" />
                                 </ToggleButton>
-                                <ToggleButton>
+                                <ToggleButton IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.Eraser}}">
                                     <faIcons:Icon
                                         FontSize="18"
                                         Value="fa-solid fa-eraser" />

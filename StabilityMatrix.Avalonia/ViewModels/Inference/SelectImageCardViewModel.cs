@@ -73,7 +73,8 @@ public partial class SelectImageCardViewModel(
     /// </summary>
     public string? NotFoundImagePath => ImageSource?.LocalFile?.FullPath;
 
-    public MaskEditorViewModel? MaskEditorViewModel { get; private set; }
+    [JsonInclude]
+    public MaskEditorViewModel? MaskEditorViewModel { get; set; }
 
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)

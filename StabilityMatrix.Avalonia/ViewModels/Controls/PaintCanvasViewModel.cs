@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Avalonia.Media;
@@ -12,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.Models;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
@@ -22,14 +24,14 @@ namespace StabilityMatrix.Avalonia.ViewModels.Controls;
 [ManagedService]
 public partial class PaintCanvasViewModel : LoadableViewModelBase
 {
-    public ConcurrentDictionary<long, PenPath> TemporaryPaths { get; } = new();
+    public ConcurrentDictionary<long, PenPath> TemporaryPaths { get; set; } = new();
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(UndoCommand))]
     private ImmutableList<PenPath> paths = [];
 
     [ObservableProperty]
-    private Color? paintBrushColor;
+    private Color? paintBrushColor = Colors.White;
 
     public SKColor PaintBrushSKColor => (PaintBrushColor ?? Colors.Transparent).ToSKColor();
 
@@ -49,10 +51,7 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
     private bool isPenDown;
 
     [ObservableProperty]
-    private bool isPaintBrushSelected;
-
-    [ObservableProperty]
-    private bool isEraserSelected;
+    private PaintCanvasTool selectedTool = PaintCanvasTool.PaintBrush;
 
     [ObservableProperty]
     [property: JsonIgnore]
@@ -103,10 +102,26 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         RefreshCanvas?.Invoke();
     }
 
+    public override JsonObject SaveStateToJsonObject()
+    {
+        var model = SaveCanvas();
+
+        return JsonSerializer
+                .SerializeToNode(model, PaintCanvasModelSerializerContext.Default.Options)
+                ?.AsObject() ?? throw new InvalidOperationException();
+    }
+
     /// <inheritdoc />
     public override void LoadStateFromJsonObject(JsonObject state)
     {
-        base.LoadStateFromJsonObject(state);
+        // base.LoadStateFromJsonObject(state);
+
+        var model = state.Deserialize<PaintCanvasModel>(PaintCanvasModelSerializerContext.Default.Options);
+
+        if (model is null)
+            return;
+
+        LoadCanvas(model);
 
         RefreshCanvas?.Invoke();
     }
@@ -119,7 +134,11 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
             Paths = Paths,
             PaintBrushColor = PaintBrushColor,
             PaintBrushSize = PaintBrushSize,
-            PaintBrushAlpha = PaintBrushAlpha
+            PaintBrushAlpha = PaintBrushAlpha,
+            CurrentPenPressure = CurrentPenPressure,
+            CurrentZoom = CurrentZoom,
+            IsPenDown = IsPenDown,
+            SelectedTool = SelectedTool
         };
 
         return model;
@@ -137,20 +156,28 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         PaintBrushColor = model.PaintBrushColor;
         PaintBrushSize = model.PaintBrushSize;
         PaintBrushAlpha = model.PaintBrushAlpha;
+        CurrentPenPressure = model.CurrentPenPressure;
+        CurrentZoom = model.CurrentZoom;
+        IsPenDown = model.IsPenDown;
+        SelectedTool = model.SelectedTool;
 
         RefreshCanvas?.Invoke();
     }
 
-    protected class PaintCanvasModel
+    public class PaintCanvasModel
     {
         public Dictionary<long, PenPath> TemporaryPaths { get; init; } = new();
-
         public ImmutableList<PenPath> Paths { get; init; } = ImmutableList<PenPath>.Empty;
-
         public Color? PaintBrushColor { get; init; }
-
         public double PaintBrushSize { get; init; }
-
         public double PaintBrushAlpha { get; init; }
+        public double CurrentPenPressure { get; init; }
+        public double CurrentZoom { get; init; }
+        public bool IsPenDown { get; init; }
+        public PaintCanvasTool SelectedTool { get; init; }
     }
+
+    [JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
+    [JsonSerializable(typeof(PaintCanvasModel))]
+    internal partial class PaintCanvasModelSerializerContext : JsonSerializerContext;
 }

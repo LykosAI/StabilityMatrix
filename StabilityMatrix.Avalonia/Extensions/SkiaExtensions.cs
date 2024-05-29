@@ -144,7 +144,7 @@ public static class SkiaExtensions
         {
             SKColorType.Rgba8888 => PixelFormat.Rgba8888,
             SKColorType.Bgra8888 => PixelFormat.Bgra8888,
-            _ => throw new NotSupportedException($"Unsupported SKColorType: {bitmap.ColorType}")
+            _ => throw new NotSupportedException($"Unsupported SKColorType: {image.ColorType}")
         };
 
         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
@@ -153,7 +153,7 @@ public static class SkiaExtensions
             SKAlphaType.Opaque => AlphaFormat.Opaque,
             SKAlphaType.Premul => AlphaFormat.Premul,
             SKAlphaType.Unpremul => AlphaFormat.Unpremul,
-            _ => throw new NotSupportedException($"Unsupported SKAlphaType: {bitmap.AlphaType}")
+            _ => throw new NotSupportedException($"Unsupported SKAlphaType: {image.AlphaType}")
         };
 
         var pixmap = image.PeekPixels();

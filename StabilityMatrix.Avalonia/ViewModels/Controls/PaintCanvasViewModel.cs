@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Drawing;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -17,7 +16,9 @@ using StabilityMatrix.Avalonia.Controls.Models;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using Color = Avalonia.Media.Color;
+using Size = System.Drawing.Size;
 
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
@@ -187,6 +188,8 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
 
     public SKImage RenderToImage()
     {
+        using var _ = CodeTimer.StartDebug();
+
         if (BackgroundImageSize == Size.Empty)
         {
             throw new InvalidOperationException("Background image size is not set");

@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
-using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -16,7 +14,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using NLog;
-using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
@@ -25,9 +22,8 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
-using Bitmap = Avalonia.Media.Imaging.Bitmap;
-using Path = System.IO.Path;
 using Size = System.Drawing.Size;
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
@@ -43,10 +39,24 @@ public partial class SelectImageCardViewModel(
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private static FilePickerFileType SupportedImages { get; } =
+        new("Supported Images")
+        {
+            Patterns = new[] { "*.png", "*.jpg", "*.jpeg" },
+            AppleUniformTypeIdentifiers = new[] { "public.jpeg", "public.png" },
+            MimeTypes = new[] { "image/jpeg", "image/png" }
+        };
+
+    private readonly Lazy<MaskEditorViewModel> _lazyMaskEditorViewModel =
+        new(vmFactory.Get<MaskEditorViewModel>);
+
     /// <summary>
     /// When true, enables a button to open a mask editor for the image.
+    /// This is not saved or loaded from state.
     /// </summary>
     [ObservableProperty]
+    [property: JsonIgnore]
+    [property: MemberNotNull(nameof(MaskEditorViewModel))]
     private bool isMaskEditorEnabled;
 
     [ObservableProperty]
@@ -79,7 +89,8 @@ public partial class SelectImageCardViewModel(
     public string? NotFoundImagePath => ImageSource?.LocalFile?.FullPath;
 
     [JsonInclude]
-    public MaskEditorViewModel? MaskEditorViewModel { get; set; }
+    public MaskEditorViewModel? MaskEditorViewModel =>
+        IsMaskEditorEnabled ? _lazyMaskEditorViewModel.Value : null;
 
     [JsonIgnore]
     public ImageSource? LastMaskImage { get; private set; }
@@ -99,28 +110,24 @@ public partial class SelectImageCardViewModel(
     /// <inheritdoc />
     public IEnumerable<ImageSource> GetInputImages()
     {
+        // Main image
         if (ImageSource is { } image && !IsImageFileNotFound)
         {
             yield return image;
         }
 
-        if (MaskEditorViewModel?.IsMaskEnabled == true)
+        // Mask image
+        if (IsMaskEditorEnabled && MaskEditorViewModel.IsMaskEnabled)
         {
-            if (LastMaskImage is null)
-            {
-                MaskEditorViewModel.PaintCanvasViewModel.BackgroundImage ??= ImageSource
-                    ?.Bitmap
-                    ?.ToSKBitmap();
+            using var timer = CodeTimer.StartDebug("MaskImage");
 
-                var maskImage = MaskEditorViewModel.PaintCanvasViewModel.RenderToImage();
+            MaskEditorViewModel.PaintCanvasViewModel.BackgroundImageSize = CurrentBitmapSize;
 
-                using var skData = maskImage.Encode(SKEncodedImageFormat.Png, 100);
-                using var stream = skData.AsStream();
+            var maskImage = MaskEditorViewModel.GetCachedOrNewMaskRenderImage();
 
-                LastMaskImage = new ImageSource(new Bitmap(stream));
-            }
+            timer.Dispose();
 
-            yield return LastMaskImage;
+            yield return maskImage;
         }
     }
 
@@ -142,25 +149,6 @@ public partial class SelectImageCardViewModel(
         }
     }
 
-    /// <summary>
-    /// When IsMaskEditorEnabled is set to true, initializes the MaskEditorViewModel.
-    /// </summary>
-    partial void OnIsMaskEditorEnabledChanged(bool value)
-    {
-        if (value)
-        {
-            MaskEditorViewModel ??= vmFactory.Get<MaskEditorViewModel>();
-        }
-    }
-
-    private static FilePickerFileType SupportedImages { get; } =
-        new("Supported Images")
-        {
-            Patterns = new[] { "*.png", "*.jpg", "*.jpeg" },
-            AppleUniformTypeIdentifiers = new[] { "public.jpeg", "public.png" },
-            MimeTypes = new[] { "image/jpeg", "image/png" }
-        };
-
     [RelayCommand]
     private async Task SelectImageFromFilePickerAsync()
     {
@@ -180,22 +168,31 @@ public partial class SelectImageCardViewModel(
     [RelayCommand]
     private async Task OpenEditMaskDialogAsync()
     {
-        if (ImageSource is null)
+        if (!IsMaskEditorEnabled || ImageSource is null)
         {
             return;
         }
 
-        MaskEditorViewModel ??= vmFactory.Get<MaskEditorViewModel>();
+        // Make a backup to restore if not saving later
+        var maskEditorStateBackup = MaskEditorViewModel.SaveStateToJsonObject();
 
+        // Set the background image
         if (await ImageSource.GetBitmapAsync() is not { } currentBitmap)
         {
             Logger.Warn("GetBitmapAsync returned null for image {Path}", ImageSource.LocalFile?.FullPath);
             return;
         }
+        MaskEditorViewModel.PaintCanvasViewModel.BackgroundImage = currentBitmap.ToSKBitmap();
 
-        MaskEditorViewModel.BackgroundImage = currentBitmap.ToSKBitmap();
-
-        if (await MaskEditorViewModel.GetDialog().ShowAsync() == ContentDialogResult.Primary) { }
+        if (await MaskEditorViewModel.GetDialog().ShowAsync() == ContentDialogResult.Primary)
+        {
+            MaskEditorViewModel.InvalidateCachedMaskRenderImage();
+        }
+        else
+        {
+            // Restore the backup
+            MaskEditorViewModel.LoadStateFromJsonObject(maskEditorStateBackup);
+        }
     }
 
     /// <summary>

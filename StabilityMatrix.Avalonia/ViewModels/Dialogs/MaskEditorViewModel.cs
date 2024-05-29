@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -12,7 +13,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -24,13 +27,24 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [Transient]
 [ManagedService]
 [View(typeof(MaskEditorDialog))]
-public partial class MaskEditorViewModel : LoadableViewModelBase
+public partial class MaskEditorViewModel : LoadableViewModelBase, IDisposable
 {
+    private static FilePickerFileType MaskImageFilePickerType { get; } =
+        new("Mask image or json")
+        {
+            Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.webp", "*.json" },
+            AppleUniformTypeIdentifiers = new[] { "public.image", "public.json" },
+            MimeTypes = new[] { "image/*", "application/json" }
+        };
+
+    [JsonIgnore]
+    private ImageSource? _cachedMaskRenderImage;
+
     /// <summary>
     /// When true, the mask will be applied to the image.
     /// </summary>
     [ObservableProperty]
-    private bool isMaskEnabled = true;
+    private bool isMaskEnabled;
 
     /// <summary>
     /// When true, the alpha channel of the image will be used as the mask.
@@ -41,20 +55,43 @@ public partial class MaskEditorViewModel : LoadableViewModelBase
     [JsonInclude]
     public PaintCanvasViewModel PaintCanvasViewModel { get; } = new();
 
-    [JsonIgnore]
-    public SKBitmap? BackgroundImage
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public ImageSource GetCachedOrNewMaskRenderImage()
     {
-        get => PaintCanvasViewModel.BackgroundImage;
-        set => PaintCanvasViewModel.BackgroundImage = value;
+        if (_cachedMaskRenderImage is null)
+        {
+            using var skImage = PaintCanvasViewModel.RenderToImage();
+            _cachedMaskRenderImage = new ImageSource(skImage.ToAvaloniaBitmap());
+        }
+
+        return _cachedMaskRenderImage;
     }
 
-    public static FilePickerFileType MaskImageFilePickerType { get; } =
-        new("Mask image or json")
+    public void InvalidateCachedMaskRenderImage()
+    {
+        _cachedMaskRenderImage?.Dispose();
+        _cachedMaskRenderImage = null;
+    }
+
+    public BetterContentDialog GetDialog()
+    {
+        Dispatcher.UIThread.VerifyAccess();
+
+        var dialog = new BetterContentDialog
         {
-            Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.webp", "*.json" },
-            AppleUniformTypeIdentifiers = new[] { "public.image", "public.json" },
-            MimeTypes = new[] { "image/*", "application/json" }
+            Content = this,
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            MaxDialogHeight = 2000,
+            MaxDialogWidth = 2000,
+            ContentMargin = new Thickness(16),
+            FullSizeDesired = true,
+            PrimaryButtonText = Resources.Action_Save,
+            CloseButtonText = Resources.Action_Cancel,
+            DefaultButton = ContentDialogButton.Primary
         };
+
+        return dialog;
+    }
 
     [RelayCommand]
     private async Task DebugSelectFileLoadMask()
@@ -127,30 +164,14 @@ public partial class MaskEditorViewModel : LoadableViewModelBase
         }
     }
 
-    public BetterContentDialog GetDialog()
+    public override void LoadStateFromJsonObject(JsonObject state)
     {
-        Dispatcher.UIThread.VerifyAccess();
+        base.LoadStateFromJsonObject(state);
 
-        var dialog = new BetterContentDialog
-        {
-            Content = this,
-            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            MaxDialogHeight = 2000,
-            MaxDialogWidth = 2000,
-            ContentMargin = new Thickness(16),
-            FullSizeDesired = true,
-            PrimaryButtonText = Resources.Action_Save,
-            CloseButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Primary
-        };
-
-        return dialog;
+        InvalidateCachedMaskRenderImage();
     }
 
-    /*public void LoadStateFromJsonObject(JsonObject state, int version)
-    {
-        throw new NotImplementedException();
-    }
+    /*
 
     public void LoadStateFromJsonObject(JsonObject state)
     {
@@ -182,4 +203,9 @@ public partial class MaskEditorViewModel : LoadableViewModelBase
         public bool UseImageAlphaAsMask { get; init; }
         public JsonObject? PaintCanvasViewModel { get; init; }
     }*/
+    public void Dispose()
+    {
+        _cachedMaskRenderImage?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

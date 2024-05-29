@@ -49,6 +49,9 @@ public class ComfyNodeBuilder
         public required ImageNodeConnection Pixels { get; init; }
         public required VAENodeConnection Vae { get; init; }
         public required ImageMaskConnection Mask { get; init; }
+
+        [Range(0, 64)]
+        public int GrowMaskBy { get; init; } = 6;
     }
 
     public record VAEDecode : ComfyTypedNodeBase<ImageNodeConnection>

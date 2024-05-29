@@ -1,6 +1,7 @@
 ﻿using System;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Rendering.SceneGraph;
 using Avalonia.Skia;
@@ -93,5 +94,36 @@ public static class SkiaExtensions
             return new AvaloniaImage(bitmap);
         }
         return default;
+    }
+
+    public static Bitmap ToAvaloniaBitmap(this SKBitmap bitmap, Vector dpi)
+    {
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        var avaloniaColorFormat = bitmap.ColorType switch
+        {
+            SKColorType.Rgba8888 => PixelFormat.Rgba8888,
+            SKColorType.Bgra8888 => PixelFormat.Bgra8888,
+            _ => throw new NotSupportedException($"Unsupported SKColorType: {bitmap.ColorType}")
+        };
+
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        var avaloniaAlphaFormat = bitmap.AlphaType switch
+        {
+            SKAlphaType.Opaque => AlphaFormat.Opaque,
+            SKAlphaType.Premul => AlphaFormat.Premul,
+            SKAlphaType.Unpremul => AlphaFormat.Unpremul,
+            _ => throw new NotSupportedException($"Unsupported SKAlphaType: {bitmap.AlphaType}")
+        };
+
+        var dataPointer = bitmap.GetPixels();
+
+        return new Bitmap(
+            avaloniaColorFormat,
+            avaloniaAlphaFormat,
+            dataPointer,
+            new PixelSize(bitmap.Width, bitmap.Height),
+            dpi,
+            bitmap.RowBytes
+        );
     }
 }

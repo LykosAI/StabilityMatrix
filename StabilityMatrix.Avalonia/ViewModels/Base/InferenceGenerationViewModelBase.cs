@@ -237,27 +237,7 @@ public abstract partial class InferenceGenerationViewModelBase
     {
         foreach (var image in GetInputImages())
         {
-            if (image.LocalFile is { } localFile)
-            {
-                var uploadName = await image.GetHashGuidFileNameAsync();
-
-                Logger.Debug("Uploading image {FileName} as {UploadName}", localFile.Name, uploadName);
-
-                // For pngs, strip metadata since Pillow can't handle some valid files?
-                if (localFile.Info.Extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
-                {
-                    var bytes = PngDataHelper.RemoveMetadata(await localFile.ReadAllBytesAsync());
-                    using var stream = new MemoryStream(bytes);
-
-                    await client.UploadImageAsync(stream, uploadName);
-                }
-                else
-                {
-                    await using var stream = localFile.Info.OpenRead();
-
-                    await client.UploadImageAsync(stream, uploadName);
-                }
-            }
+            await ClientManager.UploadInputImageAsync(image);
         }
     }
 

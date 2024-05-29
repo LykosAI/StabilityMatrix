@@ -117,7 +117,7 @@ public static class ComfyNodeBuilderExtensions
             {
                 Name = builder.Nodes.GetUniqueName("LoadMask"),
                 Image = maskImageRelativePath,
-                Channel = "alpha"
+                Channel = "red"
             }
         );
 

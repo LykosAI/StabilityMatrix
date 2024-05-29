@@ -56,11 +56,12 @@ public partial class MaskEditorViewModel : LoadableViewModelBase, IDisposable
     public PaintCanvasViewModel PaintCanvasViewModel { get; } = new();
 
     [MethodImpl(MethodImplOptions.Synchronized)]
-    public ImageSource GetCachedOrNewMaskRenderImage()
+    public ImageSource GetCachedOrNewMaskRenderInverseAlphaImage()
     {
         if (_cachedMaskRenderImage is null)
         {
-            using var skImage = PaintCanvasViewModel.RenderToImage();
+            using var skImage = PaintCanvasViewModel.RenderToWhiteChannelImage();
+
             _cachedMaskRenderImage = new ImageSource(skImage.ToAvaloniaBitmap());
         }
 

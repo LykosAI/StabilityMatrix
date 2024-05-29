@@ -98,13 +98,32 @@ public partial class SelectImageCardViewModel(
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)
     {
-        e.Builder.SetupImagePrimarySource(
-            ImageSource ?? throw new ValidationException("Input Image is required"),
-            !CurrentBitmapSize.IsEmpty
-                ? CurrentBitmapSize
-                : throw new ValidationException("CurrentBitmapSize is null"),
-            e.Builder.Connections.BatchIndex
-        );
+        // With Mask image
+        if (IsMaskEditorEnabled && MaskEditorViewModel.IsMaskEnabled)
+        {
+            MaskEditorViewModel.PaintCanvasViewModel.BackgroundImageSize = CurrentBitmapSize;
+
+            e.Builder.SetupImagePrimarySourceWithMask(
+                ImageSource ?? throw new ValidationException("Input Image is required"),
+                !CurrentBitmapSize.IsEmpty
+                    ? CurrentBitmapSize
+                    : throw new ValidationException("CurrentBitmapSize is null"),
+                MaskEditorViewModel.GetCachedOrNewMaskRenderInverseAlphaImage(),
+                MaskEditorViewModel.PaintCanvasViewModel.BackgroundImageSize,
+                e.Builder.Connections.BatchIndex
+            );
+        }
+        // Normal image only
+        else
+        {
+            e.Builder.SetupImagePrimarySource(
+                ImageSource ?? throw new ValidationException("Input Image is required"),
+                !CurrentBitmapSize.IsEmpty
+                    ? CurrentBitmapSize
+                    : throw new ValidationException("CurrentBitmapSize is null"),
+                e.Builder.Connections.BatchIndex
+            );
+        }
     }
 
     /// <inheritdoc />
@@ -123,7 +142,7 @@ public partial class SelectImageCardViewModel(
 
             MaskEditorViewModel.PaintCanvasViewModel.BackgroundImageSize = CurrentBitmapSize;
 
-            var maskImage = MaskEditorViewModel.GetCachedOrNewMaskRenderImage();
+            var maskImage = MaskEditorViewModel.GetCachedOrNewMaskRenderInverseAlphaImage();
 
             timer.Dispose();
 

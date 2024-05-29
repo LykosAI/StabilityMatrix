@@ -186,7 +186,7 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         }
     }
 
-    public SKImage RenderToImage()
+    public SKImage RenderToWhiteChannelImage()
     {
         using var _ = CodeTimer.StartDebug();
 
@@ -201,6 +201,61 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         using var canvas = surface.Canvas;
 
         RenderToCanvas(canvas);
+
+        using var originalImage = surface.Snapshot();
+        // Replace all colors to white (255, 255, 255), keep original alpha
+        // csharpier-ignore
+        using var colorFilter = SKColorFilter.CreateColorMatrix(
+            [
+                // R, G, B, A, Bias
+                255, 0, 0, 0, 0,
+                0, 255, 0, 0, 0,
+                0, 0, 255, 0, 0,
+                0, 0, 0, 1, 0
+            ]
+        );
+
+        using var paint = new SKPaint();
+        paint.ColorFilter = colorFilter;
+
+        canvas.Clear(SKColors.Transparent);
+        canvas.DrawImage(originalImage, originalImage.Info.Rect, paint);
+
+        return surface.Snapshot();
+    }
+
+    public SKImage RenderToImage(bool invertAlpha = false)
+    {
+        using var _ = CodeTimer.StartDebug();
+
+        if (BackgroundImageSize == Size.Empty)
+        {
+            throw new InvalidOperationException("Background image size is not set");
+        }
+
+        using var surface = SKSurface.Create(
+            new SKImageInfo(BackgroundImageSize.Width, BackgroundImageSize.Height)
+        );
+        using var canvas = surface.Canvas;
+
+        RenderToCanvas(canvas);
+
+        if (invertAlpha)
+        {
+            // Invert alpha
+            using var originalImage = surface.Snapshot();
+
+            canvas.Clear(SKColors.White);
+            canvas.DrawImage(
+                originalImage,
+                new SKPoint(0, 0),
+                new SKPaint
+                {
+                    BlendMode = SKBlendMode.Difference,
+                    // ColorFilter = SKColorFilter.CreateBlendMode(SKColors.White, SKBlendMode.SrcIn)
+                }
+            );
+        }
 
         return surface.Snapshot();
     }

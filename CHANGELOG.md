@@ -7,10 +7,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.11.0-pre.1
 ### Added
+- Added new package: [SDFX](https://github.com/sdfxai/sdfx/) by sdfxai
 - Added "Show Nested Models" toggle for new Checkpoints page, allowing users to show or hide models in subfolders of the selected folder
 - Added ZLUDA option for SD.Next
 - Added PixArt & SDXL Hyper options to the Civitai model browser
-- Added release date to model update notification card on the Checkpoints page 
+- Added release date to model update notification card on the Checkpoints page
 ### Changed
 - Maximized state is now stored on exit and restored on launch
 - Clicking outside the Select Model Version dialog will now close it

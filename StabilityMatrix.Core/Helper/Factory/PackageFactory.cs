@@ -85,6 +85,7 @@ public class PackageFactory : IPackageFactory
                 => new VladAutomatic(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             "voltaML-fast-stable-diffusion"
                 => new VoltaML(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "sdfx" => new Sdfx(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage))
         };
     }

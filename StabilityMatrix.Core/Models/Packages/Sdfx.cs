@@ -245,9 +245,6 @@ public class Sdfx(
                 Path.Combine(modelsDir, "InvokeIpAdapters15"),
                 Path.Combine(modelsDir, "InvokeIpAdaptersXl")
             );
-            paths["models"]["prompt_expansion"] = new JsonArray(Path.Combine(modelsDir, "PromptExpansion"));
-
-            config["paths"] = paths;
 
             await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
         }
@@ -284,8 +281,6 @@ public class Sdfx(
             );
             paths["models"]["vae"] = new JsonArray(Path.Combine("data", "models", "vae"));
             paths["models"]["vae_approx"] = new JsonArray(Path.Combine("data", "models", "vae_approx"));
-
-            config["paths"] = paths;
 
             await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
         }

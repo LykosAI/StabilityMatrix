@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Drawing;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -16,6 +17,8 @@ using StabilityMatrix.Avalonia.Controls.Models;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using Color = Avalonia.Media.Color;
+
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Controls;
@@ -57,14 +60,11 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
     [property: JsonIgnore]
     private SKBitmap? backgroundImage;
 
+    [ObservableProperty]
+    private Size backgroundImageSize = Size.Empty;
+
     [JsonIgnore]
     public List<SKBitmap> LayerImages { get; } = [];
-
-    /// <summary>
-    /// Set by <see cref="PaintCanvas"/> to allow the view model to take a snapshot of the canvas.
-    /// </summary>
-    [JsonIgnore]
-    public Func<SKImage>? GetCanvasSnapshot { get; set; }
 
     /// <summary>
     /// Set by <see cref="PaintCanvas"/> to allow the view model to
@@ -72,6 +72,15 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
     /// </summary>
     [JsonIgnore]
     public Action? RefreshCanvas { get; set; }
+
+    partial void OnBackgroundImageChanged(SKBitmap? value)
+    {
+        // Set the size of the background image
+        if (value is not null)
+        {
+            BackgroundImageSize = new Size(value.Width, value.Height);
+        }
+    }
 
     public void LoadCanvasFromBitmap(SKBitmap bitmap)
     {
@@ -100,6 +109,134 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         Paths = currentPaths.RemoveAt(currentPaths.Count - 1);
 
         RefreshCanvas?.Invoke();
+    }
+
+    private static void RenderPenPath(SKCanvas canvas, PenPath penPath, SKPaint paint)
+    {
+        if (penPath.Points.Count == 0)
+        {
+            return;
+        }
+
+        // Apply Color
+        paint.Color = penPath.FillColor;
+
+        if (penPath.IsErase)
+        {
+            paint.BlendMode = SKBlendMode.SrcIn;
+            paint.Color = SKColors.Transparent;
+        }
+
+        // Defaults
+        paint.IsDither = true;
+        paint.IsAntialias = true;
+
+        // Track if we have any pen points
+        var hasPenPoints = false;
+
+        // Can't use foreach since this list may be modified during iteration
+        // ReSharper disable once ForCanBeConvertedToForeach
+        for (var i = 0; i < penPath.Points.Count; i++)
+        {
+            var penPoint = penPath.Points[i];
+
+            // Skip non-pen points
+            if (!penPoint.IsPen)
+            {
+                continue;
+            }
+
+            hasPenPoints = true;
+
+            var radius = penPoint.Radius;
+            var pressure = penPoint.Pressure ?? 1;
+            var thickness = pressure * radius * 2.5;
+
+            // Draw path
+            if (i < penPath.Points.Count - 1)
+            {
+                paint.Style = SKPaintStyle.Stroke;
+                paint.StrokeWidth = (float)thickness;
+                paint.StrokeCap = SKStrokeCap.Round;
+                paint.StrokeJoin = SKStrokeJoin.Round;
+
+                var nextPoint = penPath.Points[i + 1];
+                canvas.DrawLine(penPoint.X, penPoint.Y, nextPoint.X, nextPoint.Y, paint);
+            }
+
+            // Draw circles for pens
+            paint.Style = SKPaintStyle.Fill;
+            canvas.DrawCircle(penPoint.X, penPoint.Y, (float)thickness / 2, paint);
+        }
+
+        // Draw paths directly if we didn't have any pen points
+        if (!hasPenPoints)
+        {
+            var point = penPath.Points[0];
+            var thickness = point.Radius * 2;
+
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeWidth = (float)thickness;
+            paint.StrokeCap = SKStrokeCap.Round;
+            paint.StrokeJoin = SKStrokeJoin.Round;
+
+            var skPath = penPath.ToSKPath();
+            canvas.DrawPath(skPath, paint);
+        }
+    }
+
+    public SKImage RenderToImage()
+    {
+        if (BackgroundImageSize == Size.Empty)
+        {
+            throw new InvalidOperationException("Background image size is not set");
+        }
+
+        using var surface = SKSurface.Create(
+            new SKImageInfo(BackgroundImageSize.Width, BackgroundImageSize.Height)
+        );
+        using var canvas = surface.Canvas;
+
+        RenderToCanvas(canvas);
+
+        return surface.Snapshot();
+    }
+
+    public void RenderToCanvas(
+        SKCanvas canvas,
+        bool renderBackgroundFill = false,
+        bool renderBackgroundImage = false
+    )
+    {
+        // Draw background color
+        canvas.Clear(SKColors.Transparent);
+
+        // Draw background image if set
+        if (renderBackgroundImage && BackgroundImage is not null)
+        {
+            canvas.DrawBitmap(BackgroundImage, new SKPoint(0, 0));
+        }
+
+        // Draw any additional images
+        foreach (var layerImage in LayerImages)
+        {
+            canvas.DrawBitmap(layerImage, new SKPoint(0, 0));
+        }
+
+        using var paint = new SKPaint();
+
+        // Draw the paths
+        foreach (var penPath in TemporaryPaths.Values)
+        {
+            RenderPenPath(canvas, penPath, paint);
+        }
+
+        foreach (var penPath in Paths)
+        {
+            RenderPenPath(canvas, penPath, paint);
+        }
+
+        canvas.Flush();
     }
 
     public override JsonObject SaveStateToJsonObject()
@@ -138,7 +275,8 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
             CurrentPenPressure = CurrentPenPressure,
             CurrentZoom = CurrentZoom,
             IsPenDown = IsPenDown,
-            SelectedTool = SelectedTool
+            SelectedTool = SelectedTool,
+            BackgroundImageSize = BackgroundImageSize
         };
 
         return model;
@@ -160,6 +298,7 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         CurrentZoom = model.CurrentZoom;
         IsPenDown = model.IsPenDown;
         SelectedTool = model.SelectedTool;
+        BackgroundImageSize = model.BackgroundImageSize;
 
         RefreshCanvas?.Invoke();
     }
@@ -175,6 +314,7 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         public double CurrentZoom { get; init; }
         public bool IsPenDown { get; init; }
         public PaintCanvasTool SelectedTool { get; init; }
+        public Size BackgroundImageSize { get; init; }
     }
 
     [JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]

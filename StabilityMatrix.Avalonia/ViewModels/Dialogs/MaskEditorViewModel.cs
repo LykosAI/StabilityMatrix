@@ -110,7 +110,7 @@ public partial class MaskEditorViewModel : LoadableViewModelBase
         }
         else
         {
-            var image = PaintCanvasViewModel.GetCanvasSnapshot?.Invoke();
+            var image = PaintCanvasViewModel.RenderToImage();
             await image!
                 .Encode(
                     Path.GetExtension(file.Name.ToLowerInvariant()) switch

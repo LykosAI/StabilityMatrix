@@ -45,16 +45,6 @@ public class PaintCanvas : TemplatedControl
         AffectsRender<PaintCanvas>(BoundsProperty);
     }
 
-    public SKImage GetCanvasSnapshot()
-    {
-        using var surface = SKSurface.Create(new SKImageInfo((int)Bounds.Width, (int)Bounds.Height));
-        using var canvas = surface.Canvas;
-
-        RenderCanvasCore(canvas);
-
-        return surface.Snapshot();
-    }
-
     public void RefreshCanvas()
     {
         Dispatcher.UIThread.Post(() => MainCanvas?.InvalidateVisual(), DispatcherPriority.Render);
@@ -115,7 +105,6 @@ public class PaintCanvas : TemplatedControl
         if (DataContext is PaintCanvasViewModel viewModel)
         {
             // Set the remote actions
-            viewModel.GetCanvasSnapshot = GetCanvasSnapshot;
             viewModel.RefreshCanvas = RefreshCanvas;
 
             viewModelSubscription?.Dispose();
@@ -436,125 +425,8 @@ public class PaintCanvas : TemplatedControl
         await Dispatcher.UIThread.InvokeAsync(() => MainCanvas?.InvalidateVisual());
     }
 
-    private static void RenderPenPath(SKCanvas canvas, PenPath penPath, SKPaint paint)
-    {
-        if (penPath.Points.Count == 0)
-        {
-            return;
-        }
-
-        // Apply Color
-        paint.Color = penPath.FillColor;
-
-        if (penPath.IsErase)
-        {
-            paint.BlendMode = SKBlendMode.SrcIn;
-            paint.Color = SKColors.Transparent;
-        }
-
-        // Defaults
-        paint.IsDither = true;
-        paint.IsAntialias = true;
-
-        // Track if we have any pen points
-        var hasPenPoints = false;
-
-        // Can't use foreach since this list may be modified during iteration
-        // ReSharper disable once ForCanBeConvertedToForeach
-        for (var i = 0; i < penPath.Points.Count; i++)
-        {
-            var penPoint = penPath.Points[i];
-
-            // Skip non-pen points
-            if (!penPoint.IsPen)
-            {
-                continue;
-            }
-
-            hasPenPoints = true;
-
-            var radius = penPoint.Radius;
-            var pressure = penPoint.Pressure ?? 1;
-            var thickness = pressure * radius * 2.5;
-
-            // Draw path
-            if (i < penPath.Points.Count - 1)
-            {
-                paint.Style = SKPaintStyle.Stroke;
-                paint.StrokeWidth = (float)thickness;
-                paint.StrokeCap = SKStrokeCap.Round;
-                paint.StrokeJoin = SKStrokeJoin.Round;
-
-                var nextPoint = penPath.Points[i + 1];
-                canvas.DrawLine(
-                    (float)penPoint.X,
-                    (float)penPoint.Y,
-                    (float)nextPoint.X,
-                    (float)nextPoint.Y,
-                    paint
-                );
-            }
-
-            // Draw circles for pens
-            paint.Style = SKPaintStyle.Fill;
-            canvas.DrawCircle((float)penPoint.X, (float)penPoint.Y, (float)thickness / 2, paint);
-        }
-
-        // Draw paths directly if we didn't have any pen points
-        if (!hasPenPoints)
-        {
-            var point = penPath.Points[0];
-            var thickness = point.Radius * 2;
-
-            paint.Style = SKPaintStyle.Stroke;
-            paint.StrokeWidth = (float)thickness;
-            paint.StrokeCap = SKStrokeCap.Round;
-            paint.StrokeJoin = SKStrokeJoin.Round;
-
-            var skPath = penPath.ToSKPath();
-            canvas.DrawPath(skPath, paint);
-        }
-    }
-
     private void OnRenderSkia(SKCanvas canvas)
     {
-        RenderCanvasCore(canvas, renderBackgroundFill: true, renderBackgroundImage: true);
-    }
-
-    private void RenderCanvasCore(
-        SKCanvas canvas,
-        bool renderBackgroundFill = false,
-        bool renderBackgroundImage = false
-    )
-    {
-        // Draw background color
-        canvas.Clear(SKColors.Transparent);
-
-        // Draw background image if set
-        if (renderBackgroundImage && ViewModel?.BackgroundImage is { } backgroundImage)
-        {
-            canvas.DrawBitmap(backgroundImage, new SKPoint(0, 0));
-        }
-
-        // Draw any additional images
-        foreach (var layerImage in ViewModel?.LayerImages ?? Enumerable.Empty<SKBitmap>())
-        {
-            canvas.DrawBitmap(layerImage, new SKPoint(0, 0));
-        }
-
-        using var paint = new SKPaint();
-
-        // Draw the paths
-        foreach (var penPath in TemporaryPaths.Values)
-        {
-            RenderPenPath(canvas, penPath, paint);
-        }
-
-        foreach (var penPath in Paths)
-        {
-            RenderPenPath(canvas, penPath, paint);
-        }
-
-        canvas.Flush();
+        ViewModel?.RenderToCanvas(canvas, renderBackgroundFill: true, renderBackgroundImage: true);
     }
 }

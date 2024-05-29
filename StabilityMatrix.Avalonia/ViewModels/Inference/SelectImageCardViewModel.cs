@@ -8,12 +8,15 @@ using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
 using NLog;
+using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
@@ -23,6 +26,8 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Database;
+using Bitmap = Avalonia.Media.Imaging.Bitmap;
+using Path = System.IO.Path;
 using Size = System.Drawing.Size;
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
@@ -76,6 +81,9 @@ public partial class SelectImageCardViewModel(
     [JsonInclude]
     public MaskEditorViewModel? MaskEditorViewModel { get; set; }
 
+    [JsonIgnore]
+    public ImageSource? LastMaskImage { get; private set; }
+
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)
     {
@@ -94,6 +102,25 @@ public partial class SelectImageCardViewModel(
         if (ImageSource is { } image && !IsImageFileNotFound)
         {
             yield return image;
+        }
+
+        if (MaskEditorViewModel?.IsMaskEnabled == true)
+        {
+            if (LastMaskImage is null)
+            {
+                MaskEditorViewModel.PaintCanvasViewModel.BackgroundImage ??= ImageSource
+                    ?.Bitmap
+                    ?.ToSKBitmap();
+
+                var maskImage = MaskEditorViewModel.PaintCanvasViewModel.RenderToImage();
+
+                using var skData = maskImage.Encode(SKEncodedImageFormat.Png, 100);
+                using var stream = skData.AsStream();
+
+                LastMaskImage = new ImageSource(new Bitmap(stream));
+            }
+
+            yield return LastMaskImage;
         }
     }
 
@@ -168,7 +195,7 @@ public partial class SelectImageCardViewModel(
 
         MaskEditorViewModel.BackgroundImage = currentBitmap.ToSKBitmap();
 
-        await MaskEditorViewModel.GetDialog().ShowAsync();
+        if (await MaskEditorViewModel.GetDialog().ShowAsync() == ContentDialogResult.Primary) { }
     }
 
     /// <summary>

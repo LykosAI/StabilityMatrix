@@ -432,7 +432,7 @@
                                             FontSize="11"
                                             FontWeight="Medium">
                                             <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}"/>
-                                            <!-- <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}"/> -->
+                                            <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}"/>
                                         </TextBlock>
                                     </controls:Card>
                                 </StackPanel>

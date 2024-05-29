@@ -44,6 +44,13 @@ public class ComfyNodeBuilder
         public required VAENodeConnection Vae { get; init; }
     }
 
+    public record VAEEncodeForInpaint : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required ImageNodeConnection Pixels { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+        public required ImageMaskConnection Mask { get; init; }
+    }
+
     public record VAEDecode : ComfyTypedNodeBase<ImageNodeConnection>
     {
         public required LatentNodeConnection Samples { get; init; }
@@ -281,6 +288,20 @@ public class ComfyNodeBuilder
         /// Path relative to the Comfy input directory
         /// </summary>
         public required string Image { get; init; }
+    }
+
+    public record LoadImageMask : ComfyTypedNodeBase<ImageMaskConnection>
+    {
+        /// <summary>
+        /// Path relative to the Comfy input directory
+        /// </summary>
+        public required string Image { get; init; }
+
+        /// <summary>
+        /// Color channel to use as mask.
+        /// ("alpha", "red", "green", "blue")
+        /// </summary>
+        public string Channel { get; init; } = "alpha";
     }
 
     public record PreviewImage : ComfyTypedNodeBase

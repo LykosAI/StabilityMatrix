@@ -216,6 +216,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
+            CloseOnClickOutside = true,
             MaxDialogWidth = 750,
             MaxDialogHeight = 950,
         };

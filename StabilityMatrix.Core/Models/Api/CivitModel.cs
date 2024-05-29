@@ -65,6 +65,10 @@ public class CivitModel
     public CivitModelStats ModelVersionStats =>
         ModelVersions is { Count: > 0 } ? ModelVersions[0].Stats : new CivitModelStats();
 
-    public DateTimeOffset LatestVersionCreatedAt =>
-        ModelVersions is { Count: > 0 } ? ModelVersions[0].CreatedAt : DateTimeOffset.MinValue;
+    public string LatestVersionCreatedAt =>
+        (
+            ModelVersions is { Count: > 0 }
+                ? ModelVersions[0].PublishedAt ?? DateTimeOffset.MinValue
+                : DateTimeOffset.MinValue
+        ).ToString("d");
 }

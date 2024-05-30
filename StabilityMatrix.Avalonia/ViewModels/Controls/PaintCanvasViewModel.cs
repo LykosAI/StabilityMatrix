@@ -2,9 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Avalonia.Media;
 using Avalonia.Skia;
@@ -110,80 +107,6 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         Paths = currentPaths.RemoveAt(currentPaths.Count - 1);
 
         RefreshCanvas?.Invoke();
-    }
-
-    private static void RenderPenPath(SKCanvas canvas, PenPath penPath, SKPaint paint)
-    {
-        if (penPath.Points.Count == 0)
-        {
-            return;
-        }
-
-        // Apply Color
-        paint.Color = penPath.FillColor;
-
-        if (penPath.IsErase)
-        {
-            paint.BlendMode = SKBlendMode.SrcIn;
-            paint.Color = SKColors.Transparent;
-        }
-
-        // Defaults
-        paint.IsDither = true;
-        paint.IsAntialias = true;
-
-        // Track if we have any pen points
-        var hasPenPoints = false;
-
-        // Can't use foreach since this list may be modified during iteration
-        // ReSharper disable once ForCanBeConvertedToForeach
-        for (var i = 0; i < penPath.Points.Count; i++)
-        {
-            var penPoint = penPath.Points[i];
-
-            // Skip non-pen points
-            if (!penPoint.IsPen)
-            {
-                continue;
-            }
-
-            hasPenPoints = true;
-
-            var radius = penPoint.Radius;
-            var pressure = penPoint.Pressure ?? 1;
-            var thickness = pressure * radius * 2.5;
-
-            // Draw path
-            if (i < penPath.Points.Count - 1)
-            {
-                paint.Style = SKPaintStyle.Stroke;
-                paint.StrokeWidth = (float)thickness;
-                paint.StrokeCap = SKStrokeCap.Round;
-                paint.StrokeJoin = SKStrokeJoin.Round;
-
-                var nextPoint = penPath.Points[i + 1];
-                canvas.DrawLine(penPoint.X, penPoint.Y, nextPoint.X, nextPoint.Y, paint);
-            }
-
-            // Draw circles for pens
-            paint.Style = SKPaintStyle.Fill;
-            canvas.DrawCircle(penPoint.X, penPoint.Y, (float)thickness / 2, paint);
-        }
-
-        // Draw paths directly if we didn't have any pen points
-        if (!hasPenPoints)
-        {
-            var point = penPath.Points[0];
-            var thickness = point.Radius * 2;
-
-            paint.Style = SKPaintStyle.Stroke;
-            paint.StrokeWidth = (float)thickness;
-            paint.StrokeCap = SKStrokeCap.Round;
-            paint.StrokeJoin = SKStrokeJoin.Round;
-
-            var skPath = penPath.ToSKPath();
-            canvas.DrawPath(skPath, paint);
-        }
     }
 
     public SKImage RenderToWhiteChannelImage()
@@ -297,85 +220,77 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         canvas.Flush();
     }
 
-    public override JsonObject SaveStateToJsonObject()
+    private static void RenderPenPath(SKCanvas canvas, PenPath penPath, SKPaint paint)
     {
-        var model = SaveCanvas();
-
-        return JsonSerializer
-                .SerializeToNode(model, PaintCanvasModelSerializerContext.Default.Options)
-                ?.AsObject() ?? throw new InvalidOperationException();
-    }
-
-    /// <inheritdoc />
-    public override void LoadStateFromJsonObject(JsonObject state)
-    {
-        // base.LoadStateFromJsonObject(state);
-
-        var model = state.Deserialize<PaintCanvasModel>(PaintCanvasModelSerializerContext.Default.Options);
-
-        if (model is null)
+        if (penPath.Points.Count == 0)
+        {
             return;
-
-        LoadCanvas(model);
-
-        RefreshCanvas?.Invoke();
-    }
-
-    protected PaintCanvasModel SaveCanvas()
-    {
-        var model = new PaintCanvasModel
-        {
-            TemporaryPaths = TemporaryPaths.ToDictionary(x => x.Key, x => x.Value),
-            Paths = Paths,
-            PaintBrushColor = PaintBrushColor,
-            PaintBrushSize = PaintBrushSize,
-            PaintBrushAlpha = PaintBrushAlpha,
-            CurrentPenPressure = CurrentPenPressure,
-            CurrentZoom = CurrentZoom,
-            IsPenDown = IsPenDown,
-            SelectedTool = SelectedTool,
-            BackgroundImageSize = BackgroundImageSize
-        };
-
-        return model;
-    }
-
-    protected void LoadCanvas(PaintCanvasModel model)
-    {
-        TemporaryPaths.Clear();
-        foreach (var (key, value) in model.TemporaryPaths)
-        {
-            TemporaryPaths.TryAdd(key, value);
         }
 
-        Paths = model.Paths;
-        PaintBrushColor = model.PaintBrushColor;
-        PaintBrushSize = model.PaintBrushSize;
-        PaintBrushAlpha = model.PaintBrushAlpha;
-        CurrentPenPressure = model.CurrentPenPressure;
-        CurrentZoom = model.CurrentZoom;
-        IsPenDown = model.IsPenDown;
-        SelectedTool = model.SelectedTool;
-        BackgroundImageSize = model.BackgroundImageSize;
+        // Apply Color
+        paint.Color = penPath.FillColor;
 
-        RefreshCanvas?.Invoke();
+        if (penPath.IsErase)
+        {
+            paint.BlendMode = SKBlendMode.SrcIn;
+            paint.Color = SKColors.Transparent;
+        }
+
+        // Defaults
+        paint.IsDither = true;
+        paint.IsAntialias = true;
+
+        // Track if we have any pen points
+        var hasPenPoints = false;
+
+        // Can't use foreach since this list may be modified during iteration
+        // ReSharper disable once ForCanBeConvertedToForeach
+        for (var i = 0; i < penPath.Points.Count; i++)
+        {
+            var penPoint = penPath.Points[i];
+
+            // Skip non-pen points
+            if (!penPoint.IsPen)
+            {
+                continue;
+            }
+
+            hasPenPoints = true;
+
+            var radius = penPoint.Radius;
+            var pressure = penPoint.Pressure ?? 1;
+            var thickness = pressure * radius * 2.5;
+
+            // Draw path
+            if (i < penPath.Points.Count - 1)
+            {
+                paint.Style = SKPaintStyle.Stroke;
+                paint.StrokeWidth = (float)thickness;
+                paint.StrokeCap = SKStrokeCap.Round;
+                paint.StrokeJoin = SKStrokeJoin.Round;
+
+                var nextPoint = penPath.Points[i + 1];
+                canvas.DrawLine(penPoint.X, penPoint.Y, nextPoint.X, nextPoint.Y, paint);
+            }
+
+            // Draw circles for pens
+            paint.Style = SKPaintStyle.Fill;
+            canvas.DrawCircle(penPoint.X, penPoint.Y, (float)thickness / 2, paint);
+        }
+
+        // Draw paths directly if we didn't have any pen points
+        if (!hasPenPoints)
+        {
+            var point = penPath.Points[0];
+            var thickness = point.Radius * 2;
+
+            paint.Style = SKPaintStyle.Stroke;
+            paint.StrokeWidth = (float)thickness;
+            paint.StrokeCap = SKStrokeCap.Round;
+            paint.StrokeJoin = SKStrokeJoin.Round;
+
+            var skPath = penPath.ToSKPath();
+            canvas.DrawPath(skPath, paint);
+        }
     }
-
-    public class PaintCanvasModel
-    {
-        public Dictionary<long, PenPath> TemporaryPaths { get; init; } = new();
-        public ImmutableList<PenPath> Paths { get; init; } = ImmutableList<PenPath>.Empty;
-        public Color? PaintBrushColor { get; init; }
-        public double PaintBrushSize { get; init; }
-        public double PaintBrushAlpha { get; init; }
-        public double CurrentPenPressure { get; init; }
-        public double CurrentZoom { get; init; }
-        public bool IsPenDown { get; init; }
-        public PaintCanvasTool SelectedTool { get; init; }
-        public Size BackgroundImageSize { get; init; }
-    }
-
-    [JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
-    [JsonSerializable(typeof(PaintCanvasModel))]
-    internal partial class PaintCanvasModelSerializerContext : JsonSerializerContext;
 }

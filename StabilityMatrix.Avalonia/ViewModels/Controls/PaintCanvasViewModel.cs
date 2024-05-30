@@ -88,11 +88,6 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         RefreshCanvas?.Invoke();
     }
 
-    private bool CanExecuteUndo()
-    {
-        return Paths.Count > 0;
-    }
-
     [RelayCommand(CanExecute = nameof(CanExecuteUndo))]
     public void Undo()
     {
@@ -107,6 +102,11 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         Paths = currentPaths.RemoveAt(currentPaths.Count - 1);
 
         RefreshCanvas?.Invoke();
+    }
+
+    private bool CanExecuteUndo()
+    {
+        return Paths.Count > 0;
     }
 
     public SKImage RenderToWhiteChannelImage()
@@ -147,7 +147,7 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         return surface.Snapshot();
     }
 
-    public SKImage RenderToImage(bool invertAlpha = false)
+    public SKImage RenderToImage()
     {
         using var _ = CodeTimer.StartDebug();
 
@@ -162,23 +162,6 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         using var canvas = surface.Canvas;
 
         RenderToCanvas(canvas);
-
-        if (invertAlpha)
-        {
-            // Invert alpha
-            using var originalImage = surface.Snapshot();
-
-            canvas.Clear(SKColors.White);
-            canvas.DrawImage(
-                originalImage,
-                new SKPoint(0, 0),
-                new SKPaint
-                {
-                    BlendMode = SKBlendMode.Difference,
-                    // ColorFilter = SKColorFilter.CreateBlendMode(SKColors.White, SKBlendMode.SrcIn)
-                }
-            );
-        }
 
         return surface.Snapshot();
     }

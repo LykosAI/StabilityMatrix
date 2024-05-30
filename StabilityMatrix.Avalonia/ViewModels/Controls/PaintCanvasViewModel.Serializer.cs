@@ -16,7 +16,7 @@ public partial class PaintCanvasViewModel
 {
     public override JsonObject SaveStateToJsonObject()
     {
-        var model = SaveCanvas();
+        var model = SaveState();
 
         return JsonSerializer
                 .SerializeToNode(model, PaintCanvasModelSerializerContext.Default.Options)
@@ -26,19 +26,17 @@ public partial class PaintCanvasViewModel
     /// <inheritdoc />
     public override void LoadStateFromJsonObject(JsonObject state)
     {
-        // base.LoadStateFromJsonObject(state);
-
         var model = state.Deserialize<PaintCanvasModel>(PaintCanvasModelSerializerContext.Default.Options);
 
         if (model is null)
             return;
 
-        LoadCanvas(model);
+        LoadState(model);
 
         RefreshCanvas?.Invoke();
     }
 
-    protected PaintCanvasModel SaveCanvas()
+    protected PaintCanvasModel SaveState()
     {
         var model = new PaintCanvasModel
         {
@@ -57,7 +55,7 @@ public partial class PaintCanvasViewModel
         return model;
     }
 
-    protected void LoadCanvas(PaintCanvasModel model)
+    protected void LoadState(PaintCanvasModel model)
     {
         TemporaryPaths.Clear();
         foreach (var (key, value) in model.TemporaryPaths)

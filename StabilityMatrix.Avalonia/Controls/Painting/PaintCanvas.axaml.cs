@@ -257,9 +257,18 @@ public class PaintCanvas : TemplatedControl
         // var cursorPosition = e.GetPosition(MainCanvas);
         // penPath.Path.LineTo(cursorPosition.ToSKPoint());
 
+        // Get bounds for discarding invalid points
+        var canvasBounds = MainCanvas?.Bounds ?? new Rect();
+
         // Add points
         foreach (var point in points)
         {
+            // Discard invalid points
+            if (!canvasBounds.Contains(point.Position) || point.Position.X < 0 || point.Position.Y < 0)
+            {
+                continue;
+            }
+
             var penPoint = new PenPoint(point.Position.X, point.Position.Y)
             {
                 Pressure = point.Pointer.Type == PointerType.Mouse ? null : point.Properties.Pressure,

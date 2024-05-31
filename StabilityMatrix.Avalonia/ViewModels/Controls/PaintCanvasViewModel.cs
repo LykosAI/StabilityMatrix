@@ -133,9 +133,9 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         using var colorFilter = SKColorFilter.CreateColorMatrix(
             [
                 // R, G, B, A, Bias
-                255, 0, 0, 0, 0,
-                0, 255, 0, 0, 0,
-                0, 0, 255, 0, 0,
+                -1, 0, 0, 0, 255,
+                0, -1, 0, 0, 255,
+                0, 0, -1, 0, 255,
                 0, 0, 0, 1, 0
             ]
         );

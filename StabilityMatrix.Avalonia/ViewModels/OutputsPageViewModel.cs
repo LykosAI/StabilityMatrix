@@ -34,6 +34,7 @@ using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Size = StabilityMatrix.Core.Models.Settings.Size;
@@ -347,25 +348,25 @@ public partial class OutputsPageViewModel : PageViewModelBase
     public void SendToTextToImage(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceTextToImageRequested(vm.ImageFile);
+        EventManager.Instance.OnInferenceProjectRequested(vm.ImageFile, InferenceProjectType.TextToImage);
     }
 
     public void SendToUpscale(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceUpscaleRequested(vm.ImageFile);
+        EventManager.Instance.OnInferenceProjectRequested(vm.ImageFile, InferenceProjectType.Upscale);
     }
 
     public void SendToImageToImage(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceImageToImageRequested(vm.ImageFile);
+        EventManager.Instance.OnInferenceProjectRequested(vm.ImageFile, InferenceProjectType.ImageToImage);
     }
 
     public void SendToImageToVideo(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceImageToVideoRequested(vm.ImageFile);
+        EventManager.Instance.OnInferenceProjectRequested(vm.ImageFile, InferenceProjectType.ImageToVideo);
     }
 
     public void ClearSelection()

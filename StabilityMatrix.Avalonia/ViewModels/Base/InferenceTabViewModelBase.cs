@@ -181,7 +181,7 @@ public abstract partial class InferenceTabViewModelBase
     /// <exception cref="FileNotFoundException"></exception>
     /// <exception cref="ApplicationException"></exception>
     /// <exception cref="InvalidOperationException"></exception>
-    private void LoadImageMetadata(FilePath? filePath)
+    public void LoadImageMetadata(FilePath? filePath)
     {
         if (filePath is not { Exists: true })
         {

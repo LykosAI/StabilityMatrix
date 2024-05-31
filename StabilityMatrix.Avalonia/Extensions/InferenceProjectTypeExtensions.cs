@@ -1,18 +1,8 @@
 ﻿using System;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Core.Models.Inference;
 
-namespace StabilityMatrix.Avalonia.Models;
-
-public enum InferenceProjectType
-{
-    Unknown,
-    TextToImage,
-    ImageToImage,
-    Inpainting,
-    Upscale,
-    ImageToVideo
-}
-
+namespace StabilityMatrix.Avalonia.Extensions;
 public static class InferenceProjectTypeExtensions
 {
     public static Type? ToViewModelType(this InferenceProjectType type)

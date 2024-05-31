@@ -661,7 +661,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         switch (vm)
         {
-            case InferenceImageToImageViewModel imgToImgVm when imageFile.FileName.EndsWith("webp") is false:
+            case InferenceImageToImageViewModel imgToImgVm:
                 imgToImgVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
                 vm.LoadImageMetadata(imageFile.AbsolutePath);
                 break;
@@ -672,7 +672,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                 upscaleVm.IsUpscaleEnabled = true;
                 upscaleVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
                 break;
-            case InferenceImageToVideoViewModel imgToVidVm when imageFile.FileName.EndsWith("webp") is false:
+            case InferenceImageToVideoViewModel imgToVidVm:
                 imgToVidVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
                 break;
         }

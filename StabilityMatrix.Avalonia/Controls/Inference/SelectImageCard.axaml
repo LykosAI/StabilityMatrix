@@ -128,8 +128,13 @@
                                         Padding="2"
                                         IsChecked="{Binding IsMaskOverlayEnabled}"
                                         CornerRadius="10"
-                                        FontSize="{TemplateBinding FontSize}"
-                                        ToolTip.Tip="{x:Static lang:Resources.Action_ToggleVisibility}">
+                                        FontSize="{TemplateBinding FontSize}">
+                                        <ToolTip.Tip>
+                                            <MultiBinding StringFormat="{}{0} - {1}">
+                                                <CompiledBinding Source="{x:Static lang:Resources.Label_ClippingMask}" />
+                                                <CompiledBinding Source="{x:Static lang:Resources.Action_ToggleVisibility}" />
+                                            </MultiBinding>
+                                        </ToolTip.Tip>
                                         <fluentIcons:SymbolIcon
                                             Effect="{StaticResource ImageDropShadowEffect}"
                                             FontSize="28"
@@ -159,8 +164,13 @@
                                         Classes="transparent"
                                         Command="{Binding OpenEditMaskDialogCommand}"
                                         CornerRadius="10"
-                                        FontSize="{TemplateBinding FontSize}"
-                                        ToolTip.Tip="{x:Static lang:Resources.Action_EditClippingMask}">
+                                        FontSize="{TemplateBinding FontSize}">
+                                        <ToolTip.Tip>
+                                            <MultiBinding StringFormat="{}{0} - {1}">
+                                                <CompiledBinding Source="{x:Static lang:Resources.Label_ClippingMask}" />
+                                                <CompiledBinding Source="{x:Static lang:Resources.Action_Edit}" />
+                                            </MultiBinding>
+                                        </ToolTip.Tip>
                                         <fluentIcons:SymbolIcon
                                             Effect="{StaticResource ImageDropShadowEffect}"
                                             FontSize="28"

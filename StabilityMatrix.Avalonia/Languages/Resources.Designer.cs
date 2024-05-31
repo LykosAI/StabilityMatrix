@@ -9,7 +9,6 @@
 
 namespace StabilityMatrix.Avalonia.Languages {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -39,7 +38,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("StabilityMatrix.Avalonia.Languages.Resources", typeof(Resources).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("StabilityMatrix.Avalonia.Languages.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -637,7 +636,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to Toggle Visibility.
         /// </summary>
         public static string Action_ToggleVisibility {
             get {
@@ -993,6 +992,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_CivitAiLoginRequired {
             get {
                 return ResourceManager.GetString("Label_CivitAiLoginRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string Label_ClippingMask {
+            get {
+                return ResourceManager.GetString("Label_ClippingMask", resourceCulture);
             }
         }
         

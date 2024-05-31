@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed error when deleting Inference browser images in a nested project path with recycle bin mode
 - Fixed extra text in positive prompt when loading image parameters in Inference with empty negative prompt value
+- Fixed NullReferenceException that sometimes occured when closing Inference tabs with images due to Avalonia.Bitmap.Size accessor issue
 - Fixed package installs not showing any progress messages
 
 ## v2.11.0-dev.3

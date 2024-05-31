@@ -178,9 +178,6 @@ public abstract partial class InferenceTabViewModelBase
     /// </summary>
     /// <remarks>This is safe to call from non-UI threads</remarks>
     /// <param name="filePath">File path</param>
-    /// <exception cref="FileNotFoundException"></exception>
-    /// <exception cref="ApplicationException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
     public void LoadImageMetadata(FilePath? filePath)
     {
         Logger.Info("Loading image metadata from '{Path}'", filePath?.FullPath);
@@ -192,6 +189,30 @@ public abstract partial class InferenceTabViewModelBase
 
         var metadata = ImageMetadata.GetAllFileMetadata(filePath);
 
+        LoadImageMetadata(filePath.FullPath, metadata);
+    }
+
+    /// <summary>
+    /// Loads image and metadata from a LocalImageFile
+    /// </summary>
+    /// <param name="localImageFile">LocalImageFile</param>
+    public void LoadImageMetadata(LocalImageFile localImageFile)
+    {
+        Logger.Info("Loading image metadata from LocalImageFile at '{Path}'", localImageFile.AbsolutePath);
+
+        var metadata = localImageFile.ReadMetadata();
+
+        LoadImageMetadata(localImageFile.AbsolutePath, metadata);
+    }
+
+    /// <summary>
+    /// Loads image and metadata from a file path and metadata tuple
+    /// </summary>
+    private void LoadImageMetadata(
+        string imageFilePath,
+        (string? Parameters, string? ParametersJson, string? SMProject, string? ComfyNodes) metadata
+    )
+    {
         // Has SMProject metadata
         if (metadata.SMProject is not null)
         {
@@ -222,7 +243,7 @@ public abstract partial class InferenceTabViewModelBase
                 if (this is IImageGalleryComponent imageGalleryComponent)
                 {
                     Dispatcher.UIThread.Invoke(
-                        () => imageGalleryComponent.LoadImagesToGallery(new ImageSource(filePath))
+                        () => imageGalleryComponent.LoadImagesToGallery(new ImageSource(imageFilePath))
                     );
                 }
 
@@ -255,7 +276,7 @@ public abstract partial class InferenceTabViewModelBase
             if (this is IImageGalleryComponent imageGalleryComponent)
             {
                 Dispatcher.UIThread.Invoke(
-                    () => imageGalleryComponent.LoadImagesToGallery(new ImageSource(filePath))
+                    () => imageGalleryComponent.LoadImagesToGallery(new ImageSource(imageFilePath))
                 );
             }
 
@@ -304,30 +325,7 @@ public abstract partial class InferenceTabViewModelBase
                 {
                     try
                     {
-                        var metadata = imageFile.ReadMetadata();
-                        if (metadata.SMProject is not null)
-                        {
-                            var project = JsonSerializer.Deserialize<InferenceProjectDocument>(
-                                metadata.SMProject
-                            );
-
-                            // Check project type matches
-                            if (
-                                project?.ProjectType.ToViewModelType() == GetType()
-                                && project.State is not null
-                            )
-                            {
-                                LoadStateFromJsonObject(project.State);
-                            }
-
-                            // Load image
-                            if (this is IImageGalleryComponent imageGalleryComponent)
-                            {
-                                imageGalleryComponent.LoadImagesToGallery(
-                                    new ImageSource(imageFile.AbsolutePath)
-                                );
-                            }
-                        }
+                        LoadImageMetadata(imageFile);
                     }
                     catch (Exception ex)
                     {

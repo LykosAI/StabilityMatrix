@@ -267,8 +267,9 @@ public abstract partial class InferenceTabViewModelBase
             }
             else
             {
-                throw new InvalidOperationException(
-                    "Load parameters target does not implement IParametersLoadableState"
+                Logger.Warn(
+                    "Load parameters target {Type} does not implement IParametersLoadableState, skipping",
+                    GetType().Name
                 );
             }
 

@@ -649,110 +649,6 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         await SyncTabStatesWithDatabase();
     }
 
-    // private async Task AddTabFromImage(LocalImageFile imageFile)
-    // {
-    //     var metadata = imageFile.ReadMetadata();
-    //     InferenceTabViewModelBase? vm = null;
-    //
-    //     if (!string.IsNullOrWhiteSpace(metadata.SMProject))
-    //     {
-    //         var document = JsonSerializer.Deserialize<InferenceProjectDocument>(metadata.SMProject);
-    //         if (document is null)
-    //         {
-    //             throw new ApplicationException("MenuOpenProject: Deserialize project file returned null");
-    //         }
-    //
-    //         if (document.State is null)
-    //         {
-    //             throw new ApplicationException("Project file does not have 'State' key");
-    //         }
-    //
-    //         document.VerifyVersion();
-    //         var textToImage = vmFactory.Get<InferenceTextToImageViewModel>();
-    //         textToImage.LoadStateFromJsonObject(document.State);
-    //         vm = textToImage;
-    //     }
-    //     else if (!string.IsNullOrWhiteSpace(metadata.Parameters))
-    //     {
-    //         if (GenerationParameters.TryParse(metadata.Parameters, out var generationParameters))
-    //         {
-    //             var textToImageViewModel = vmFactory.Get<InferenceTextToImageViewModel>();
-    //             textToImageViewModel.LoadStateFromParameters(generationParameters);
-    //             vm = textToImageViewModel;
-    //         }
-    //     }
-    //
-    //     if (vm == null)
-    //     {
-    //         notificationService.Show(
-    //             "Unable to load project from image",
-    //             "No image metadata found",
-    //             NotificationType.Error
-    //         );
-    //         return;
-    //     }
-    //
-    //     Tabs.Add(vm);
-    //
-    //     SelectedTab = vm;
-    //
-    //     await SyncTabStatesWithDatabase();
-    // }
-    //
-    // private async Task AddUpscalerTabFromImage(LocalImageFile imageFile)
-    // {
-    //     var upscaleVm = vmFactory.Get<InferenceImageUpscaleViewModel>();
-    //     upscaleVm.IsUpscaleEnabled = true;
-    //     upscaleVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
-    //
-    //     Tabs.Add(upscaleVm);
-    //     SelectedTab = upscaleVm;
-    //
-    //     await SyncTabStatesWithDatabase();
-    // }
-    //
-    // private async Task AddImageToImageFromImage(LocalImageFile imageFile)
-    // {
-    //     var imgToImgVm = vmFactory.Get<InferenceImageToImageViewModel>();
-    //
-    //     imgToImgVm.LoadImageMetadata(imageFile.AbsolutePath);
-    //
-    //     // if (!imageFile.FileName.EndsWith("webp"))
-    //     // {
-    //     //     imgToImgVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
-    //     // }
-    //     //
-    //     // if (imageFile.GenerationParameters != null)
-    //     // {
-    //     //     imgToImgVm.LoadStateFromParameters(imageFile.GenerationParameters);
-    //     // }
-    //
-    //     Tabs.Add(imgToImgVm);
-    //     SelectedTab = imgToImgVm;
-    //
-    //     await SyncTabStatesWithDatabase();
-    // }
-    //
-    // private async Task AddImageToVideoFromImage(LocalImageFile imageFile)
-    // {
-    //     var imgToVidVm = vmFactory.Get<InferenceImageToVideoViewModel>();
-    //
-    //     if (imageFile.GenerationParameters != null && imageFile.FileName.EndsWith("webp"))
-    //     {
-    //         imgToVidVm.LoadStateFromParameters(imageFile.GenerationParameters);
-    //     }
-    //
-    //     if (!imageFile.FileName.EndsWith("webp"))
-    //     {
-    //         imgToVidVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
-    //     }
-    //
-    //     Tabs.Add(imgToVidVm);
-    //     SelectedTab = imgToVidVm;
-    //
-    //     await SyncTabStatesWithDatabase();
-    // }
-
     private async Task AddTabFromFileAsync(LocalImageFile imageFile, InferenceProjectType projectType)
     {
         InferenceTabViewModelBase vm = projectType switch
@@ -763,7 +659,23 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             InferenceProjectType.Upscale => vmFactory.Get<InferenceImageUpscaleViewModel>(),
         };
 
-        vm.LoadImageMetadata(imageFile.AbsolutePath);
+        switch (vm)
+        {
+            case InferenceImageToImageViewModel imgToImgVm when imageFile.FileName.EndsWith("webp") is false:
+                imgToImgVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
+                vm.LoadImageMetadata(imageFile.AbsolutePath);
+                break;
+            case InferenceTextToImageViewModel _:
+                vm.LoadImageMetadata(imageFile.AbsolutePath);
+                break;
+            case InferenceImageUpscaleViewModel upscaleVm:
+                upscaleVm.IsUpscaleEnabled = true;
+                upscaleVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
+                break;
+            case InferenceImageToVideoViewModel imgToVidVm when imageFile.FileName.EndsWith("webp") is false:
+                imgToVidVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
+                break;
+        }
 
         Tabs.Add(vm);
         SelectedTab = vm;

@@ -5,6 +5,20 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.11.0-pre.1
+### Added
+- Added new package: [SDFX](https://github.com/sdfxai/sdfx/) by sdfxai
+- Added "Show Nested Models" toggle for new Checkpoints page, allowing users to show or hide models in subfolders of the selected folder
+- Added ZLUDA option for SD.Next
+- Added PixArt & SDXL Hyper options to the Civitai model browser
+- Added release date to model update notification card on the Checkpoints page
+### Changed
+- Maximized state is now stored on exit and restored on launch
+- Clicking outside the Select Model Version dialog will now close it
+### Fixed
+- Fixed error when deleting Inference browser images in a nested project path with recycle bin mode
+- Fixed package installs not showing any progress messages
+
 ## v2.11.0-dev.3
 ### Added
 - Added download speed indicator to model downloads in the Downloads tab

@@ -152,6 +152,9 @@ internal partial class FileOperationWrapper : IDisposable
 
     private static ComReleaser<IShellItem> CreateShellItem(string path)
     {
+        // Normalize path slashes
+        path = path.Replace('/', '\\');
+
         return new ComReleaser<IShellItem>(
             (IShellItem)SHCreateItemFromParsingName(path, IntPtr.Zero, ref _shellItemGuid)
         );

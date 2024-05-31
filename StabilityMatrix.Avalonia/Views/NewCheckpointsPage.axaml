@@ -168,12 +168,16 @@
                             </SplitButton.Flyout>
                         </SplitButton>
                     </ui:CommandBarElementContainer>
-                    <ui:CommandBarButton
-                        IconSource="OpenFolder"
-                        VerticalAlignment="Center"
-                        Command="{x:Static helpers:IOCommands.OpenFolderBrowserCommand}"
-                        CommandParameter="{Binding ModelsFolder}"
-                        Label="{x:Static lang:Resources.Label_ModelsFolder}" />
+                    <ui:CommandBarToggleButton
+                        Label="Show Nested Models"
+                        IsChecked="{Binding ShowModelsInSubfolders, Mode=TwoWay}">
+                        <ui:CommandBarToggleButton.IconSource>
+                            <controls:FASymbolIconSource Symbol="fa-solid fa-folder-tree"/>
+                        </ui:CommandBarToggleButton.IconSource>
+                    </ui:CommandBarToggleButton>
+                    
+                    <ui:CommandBarSeparator Padding="8, 4"/>
+                    
                     <ui:CommandBarButton
                         IconSource="Refresh"
                         VerticalAlignment="Center"
@@ -231,6 +235,12 @@
                 </ui:CommandBar.PrimaryCommands>
 
                 <ui:CommandBar.SecondaryCommands>
+                    <ui:CommandBarButton
+                        IconSource="OpenFolder"
+                        VerticalAlignment="Center"
+                        Command="{x:Static helpers:IOCommands.OpenFolderBrowserCommand}"
+                        CommandParameter="{Binding ModelsFolder}"
+                        Label="{x:Static lang:Resources.Label_ModelsFolder}" />
                     <ui:CommandBarToggleButton
                         IconSource="Cloud"
                         Label="{x:Static lang:Resources.Label_ImportAsConnected}"
@@ -420,8 +430,10 @@
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
                                             FontSize="11"
-                                            FontWeight="Medium"
-                                            Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
+                                            FontWeight="Medium">
+                                            <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}"/>
+                                            <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}"/>
+                                        </TextBlock>
                                     </controls:Card>
                                 </StackPanel>
                                 

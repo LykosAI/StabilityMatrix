@@ -269,6 +269,7 @@ public sealed class App : Application
             mainWindow.Position = new PixelPoint(windowSettings.X, windowSettings.Y);
             mainWindow.Width = windowSettings.Width;
             mainWindow.Height = windowSettings.Height;
+            mainWindow.WindowState = windowSettings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
         }
         else
         {

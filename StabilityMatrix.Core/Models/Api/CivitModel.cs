@@ -57,13 +57,18 @@ public class CivitModel
     }
 
     public string LatestModelVersionName =>
-        ModelVersions != null && ModelVersions.Any() ? ModelVersions[0].Name : string.Empty;
+        ModelVersions is { Count: > 0 } ? ModelVersions[0].Name : string.Empty;
 
     public string? BaseModelType =>
-        ModelVersions != null && ModelVersions.Any()
-            ? ModelVersions[0].BaseModel?.Replace("SD", "").Trim()
-            : string.Empty;
+        ModelVersions is { Count: > 0 } ? ModelVersions[0].BaseModel?.Replace("SD", "").Trim() : string.Empty;
 
     public CivitModelStats ModelVersionStats =>
-        ModelVersions != null && ModelVersions.Any() ? ModelVersions[0].Stats : new CivitModelStats();
+        ModelVersions is { Count: > 0 } ? ModelVersions[0].Stats : new CivitModelStats();
+
+    public string LatestVersionCreatedAt =>
+        (
+            ModelVersions is { Count: > 0 }
+                ? ModelVersions[0].PublishedAt ?? DateTimeOffset.MinValue
+                : DateTimeOffset.MinValue
+        ).ToString("d");
 }

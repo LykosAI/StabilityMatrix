@@ -435,7 +435,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// Run a custom install command. Waits for the process to exit.
     /// workingDirectory defaults to RootPath.
     /// </summary>
-    public async Task CustomInstall(string args, Action<ProcessOutput>? outputDataReceived = null)
+    public async Task CustomInstall(ProcessArgs args, Action<ProcessOutput>? outputDataReceived = null)
     {
         // Record output for errors
         var output = new StringBuilder();

@@ -38,6 +38,7 @@ using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.WebSocketData;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Settings;

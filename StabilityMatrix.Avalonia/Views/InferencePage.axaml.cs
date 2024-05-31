@@ -5,9 +5,9 @@ using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.Views;
 
@@ -28,7 +28,8 @@ public partial class InferencePage : UserControlBase
         InitializeComponent();
 
         addTabFlyout =
-            Resources["AddTabFlyout"] as CommandBarFlyout ?? throw new NullReferenceException("AddTabFlyout not found");
+            Resources["AddTabFlyout"] as CommandBarFlyout
+            ?? throw new NullReferenceException("AddTabFlyout not found");
     }
 
     private void TabView_OnTabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)

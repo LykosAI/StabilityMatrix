@@ -60,7 +60,9 @@
                                         FontSize="18"
                                         Value="fa-solid fa-paintbrush" />
                                 </ToggleButton>
-                                <ToggleButton IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.Eraser}}">
+                                <ToggleButton 
+                                    IsEnabled="False"
+                                    IsChecked="{Binding SelectedTool, Converter={StaticResource EnumBoolConverter}, ConverterParameter={x:Static models:PaintCanvasTool.Eraser}}">
                                     <faIcons:Icon
                                         FontSize="18"
                                         Value="fa-solid fa-eraser" />

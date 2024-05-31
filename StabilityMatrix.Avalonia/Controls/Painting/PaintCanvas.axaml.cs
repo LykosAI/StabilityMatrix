@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -12,12 +11,12 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
-using Avalonia.Skia;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls.Models;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Controls;
 
 namespace StabilityMatrix.Avalonia.Controls;
@@ -248,7 +247,8 @@ public class PaintCanvas : TemplatedControl
         {
             penPath = new PenPath
             {
-                FillColor = viewModel.PaintBrushSKColor.WithAlpha((byte)(viewModel.PaintBrushAlpha * 255))
+                FillColor = viewModel.PaintBrushSKColor.WithAlpha((byte)(viewModel.PaintBrushAlpha * 255)),
+                IsErase = viewModel.SelectedTool == PaintCanvasTool.Eraser
             };
             TemporaryPaths[e.Pointer.Id] = penPath;
         }

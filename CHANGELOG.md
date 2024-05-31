@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Maximized state is now stored on exit and restored on launch
 - Clicking outside the Select Model Version dialog will now close it
 ### Fixed
+- Fixed error when deleting Inference browser images in a nested project path with recycle bin mode
 - Fixed package installs not showing any progress messages
 
 ## v2.11.0-dev.3

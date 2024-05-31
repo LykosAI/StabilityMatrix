@@ -43,6 +43,7 @@ public class SelectImageCard : DropTargetTemplatedControlBase
                             Convert.ToInt32(size.Value.Width),
                             Convert.ToInt32(size.Value.Height)
                         );
+                        return;
                     }
                 }
 

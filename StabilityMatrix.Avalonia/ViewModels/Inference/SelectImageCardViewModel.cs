@@ -59,6 +59,12 @@ public partial class SelectImageCardViewModel(
     [property: MemberNotNull(nameof(MaskEditorViewModel))]
     private bool isMaskEditorEnabled;
 
+    /// <summary>
+    /// Toggles whether the mask overlay is shown over the image.
+    /// </summary>
+    [ObservableProperty]
+    private bool isMaskOverlayEnabled;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSelectionAvailable))]
     [NotifyPropertyChangedFor(nameof(IsImageFileNotFound))]

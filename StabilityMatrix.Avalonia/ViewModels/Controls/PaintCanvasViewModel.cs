@@ -7,6 +7,7 @@ using Avalonia.Media;
 using Avalonia.Skia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.Models;
@@ -23,7 +24,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Controls;
 
 [Transient]
 [ManagedService]
-public partial class PaintCanvasViewModel : LoadableViewModelBase
+public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) : LoadableViewModelBase
 {
     public ConcurrentDictionary<long, PenPath> TemporaryPaths { get; set; } = new();
 
@@ -109,13 +110,14 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         return Paths.Count > 0;
     }
 
-    public SKImage RenderToWhiteChannelImage()
+    public SKImage? RenderToWhiteChannelImage()
     {
         using var _ = CodeTimer.StartDebug();
 
         if (BackgroundImageSize == Size.Empty)
         {
-            throw new InvalidOperationException("Background image size is not set");
+            logger.LogWarning("RenderToImage: Background image size is not set, null.");
+            return null;
         }
 
         using var surface = SKSurface.Create(
@@ -147,13 +149,14 @@ public partial class PaintCanvasViewModel : LoadableViewModelBase
         return surface.Snapshot();
     }
 
-    public SKImage RenderToImage()
+    public SKImage? RenderToImage()
     {
         using var _ = CodeTimer.StartDebug();
 
         if (BackgroundImageSize == Size.Empty)
         {
-            throw new InvalidOperationException("Background image size is not set");
+            logger.LogWarning("RenderToImage: Background image size is not set, returning null.");
+            return null;
         }
 
         using var surface = SKSurface.Create(

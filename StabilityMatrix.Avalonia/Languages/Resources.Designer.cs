@@ -9,6 +9,7 @@
 
 namespace StabilityMatrix.Avalonia.Languages {
     using System;
+    using System.Reflection;
     
     
     /// <summary>
@@ -38,7 +39,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("StabilityMatrix.Avalonia.Languages.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("StabilityMatrix.Avalonia.Languages.Resources", typeof(Resources).GetTypeInfo().Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -632,6 +633,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_Stop {
             get {
                 return ResourceManager.GetString("Action_Stop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string Action_ToggleVisibility {
+            get {
+                return ResourceManager.GetString("Action_ToggleVisibility", resourceCulture);
             }
         }
         

@@ -1104,4 +1104,7 @@
   <data name="Action_EditClippingMask" xml:space="preserve">
     <value>Edit Clipping Mask</value>
   </data>
+  <data name="Action_ToggleVisibility" xml:space="preserve">
+    <value>Toggle Visibility</value>
+  </data>
 </root>

@@ -16,6 +16,7 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -27,7 +28,9 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [Transient]
 [ManagedService]
 [View(typeof(MaskEditorDialog))]
-public partial class MaskEditorViewModel : LoadableViewModelBase, IDisposable
+public partial class MaskEditorViewModel(ServiceManager<ViewModelBase> vmFactory)
+    : LoadableViewModelBase,
+        IDisposable
 {
     private static FilePickerFileType MaskImageFilePickerType { get; } =
         new("Mask image or json")
@@ -36,6 +39,9 @@ public partial class MaskEditorViewModel : LoadableViewModelBase, IDisposable
             AppleUniformTypeIdentifiers = new[] { "public.image", "public.json" },
             MimeTypes = new[] { "image/*", "application/json" }
         };
+
+    [JsonIgnore]
+    private ImageSource? _cachedMaskRenderInverseAlphaImage;
 
     [JsonIgnore]
     private ImageSource? _cachedMaskRenderImage;
@@ -53,25 +59,55 @@ public partial class MaskEditorViewModel : LoadableViewModelBase, IDisposable
     private bool useImageAlphaAsMask;
 
     [JsonInclude]
-    public PaintCanvasViewModel PaintCanvasViewModel { get; } = new();
+    public PaintCanvasViewModel PaintCanvasViewModel { get; } = vmFactory.Get<PaintCanvasViewModel>();
 
     [MethodImpl(MethodImplOptions.Synchronized)]
     public ImageSource GetCachedOrNewMaskRenderInverseAlphaImage()
     {
-        if (_cachedMaskRenderImage is null)
+        if (_cachedMaskRenderInverseAlphaImage is null)
         {
             using var skImage = PaintCanvasViewModel.RenderToWhiteChannelImage();
 
-            _cachedMaskRenderImage = new ImageSource(skImage.ToAvaloniaBitmap());
+            if (skImage is null)
+            {
+                throw new InvalidOperationException(
+                    "RenderToWhiteChannelImage returned null, BackgroundImageSize likely not set"
+                );
+            }
+
+            _cachedMaskRenderInverseAlphaImage = new ImageSource(skImage.ToAvaloniaBitmap());
         }
 
-        return _cachedMaskRenderImage;
+        return _cachedMaskRenderInverseAlphaImage;
+    }
+
+    public ImageSource? CachedOrNewMaskRenderImage
+    {
+        get
+        {
+            if (_cachedMaskRenderImage is null)
+            {
+                using var skImage = PaintCanvasViewModel.RenderToImage();
+
+                if (skImage is not null)
+                {
+                    _cachedMaskRenderImage = new ImageSource(skImage.ToAvaloniaBitmap());
+                }
+            }
+
+            return _cachedMaskRenderImage;
+        }
     }
 
     public void InvalidateCachedMaskRenderImage()
     {
         _cachedMaskRenderImage?.Dispose();
         _cachedMaskRenderImage = null;
+
+        _cachedMaskRenderInverseAlphaImage?.Dispose();
+        _cachedMaskRenderInverseAlphaImage = null;
+
+        OnPropertyChanged(nameof(CachedOrNewMaskRenderImage));
     }
 
     public BetterContentDialog GetDialog()
@@ -206,7 +242,7 @@ public partial class MaskEditorViewModel : LoadableViewModelBase, IDisposable
     }*/
     public void Dispose()
     {
-        _cachedMaskRenderImage?.Dispose();
+        _cachedMaskRenderInverseAlphaImage?.Dispose();
         GC.SuppressFinalize(this);
     }
 }

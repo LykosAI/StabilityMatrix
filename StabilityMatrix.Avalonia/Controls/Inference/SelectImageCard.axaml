@@ -2,11 +2,9 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mocks="using:StabilityMatrix.Avalonia.DesignData"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     x:DataType="vmInference:SelectImageCardViewModel">
 
@@ -50,6 +48,23 @@
                                 Source="{Binding ImageSource}"
                                 Stretch="Uniform"
                                 StretchDirection="Both" />
+                            
+                            <!--  Overlay Image  -->
+                            <Panel>
+                                <Panel.IsVisible>
+                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                        <CompiledBinding Path="!IsSelectionAvailable" />
+                                        <CompiledBinding Path="IsMaskOverlayEnabled" />
+                                    </MultiBinding>
+                                </Panel.IsVisible>
+                                <controls:BetterImage 
+                                    VerticalAlignment="Stretch"
+                                    Stretch="Uniform"
+                                    StretchDirection="Both"
+                                    RenderOptions.BitmapInterpolationMode="HighQuality"
+                                    DataContext="{Binding MaskEditorViewModel}"
+                                    Source="{Binding CachedOrNewMaskRenderImage.Bitmap}"/>
+                            </Panel>
 
                             <!--  Missing image  -->
                             <Border
@@ -92,6 +107,36 @@
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Top"
                                 IsVisible="{Binding !IsSelectionAvailable}">
+                                <!-- Mask Overlay Toggle -->
+                                <Border
+                                    IsVisible="{Binding IsMaskEditorEnabled}"
+                                    BoxShadow="inset 1.2 0 80 1.8 #66000000"
+                                    CornerRadius="10">
+                                    <Border.Resources>
+                                        <DropShadowEffect
+                                            x:Key="TextDropShadowEffect"
+                                            BlurRadius="12"
+                                            Opacity="0.9"
+                                            Color="#FF000000" />
+                                        <DropShadowEffect
+                                            x:Key="ImageDropShadowEffect"
+                                            BlurRadius="12"
+                                            Opacity="0.2"
+                                            Color="#FF000000" />
+                                    </Border.Resources>
+                                    <ToggleButton
+                                        Padding="2"
+                                        IsChecked="{Binding IsMaskOverlayEnabled}"
+                                        CornerRadius="10"
+                                        FontSize="{TemplateBinding FontSize}"
+                                        ToolTip.Tip="{x:Static lang:Resources.Action_ToggleVisibility}">
+                                        <fluentIcons:SymbolIcon
+                                            Effect="{StaticResource ImageDropShadowEffect}"
+                                            FontSize="28"
+                                            IsFilled="True"
+                                            Symbol="Eye" />
+                                    </ToggleButton>
+                                </Border>
                                 <!-- Mask Editor -->
                                 <Border
                                     IsVisible="{Binding IsMaskEditorEnabled}"

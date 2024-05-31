@@ -5,22 +5,15 @@
     xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
-    xmlns:ct="clr-namespace:CommunityToolkit.Mvvm.Input;assembly=CommunityToolkit.Mvvm"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:hardwareInfo="clr-namespace:StabilityMatrix.Core.Helper.HardwareInfo;assembly=StabilityMatrix.Core"
-    xmlns:helper="clr-namespace:StabilityMatrix.Core.Helper;assembly=StabilityMatrix.Core"
-    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
-    xmlns:input="clr-namespace:System.Windows.Input;assembly=System.ObjectModel"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
-    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
-    xmlns:update="clr-namespace:StabilityMatrix.Core.Models.Update;assembly=StabilityMatrix.Core"
-    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
     d:DataContext="{x:Static mocks:DesignData.MainSettingsViewModel}"
     d:DesignHeight="700"
@@ -118,14 +111,28 @@
             </sg:SpacedGrid>
 
             <!--  Checkpoints Manager Options  -->
-            <Grid RowDefinitions="auto,*,Auto">
+            <Grid RowDefinitions="Auto,*,Auto,Auto">
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
                     Text="{x:Static lang:Resources.Label_CheckpointManager}" />
                 <ui:SettingsExpander
                     Grid.Row="1"
-                    Margin="8,0"
+                    Margin="8,4"
+                    Description="Choose whether to Copy or Move files when dragging and dropping files into the Checkpoint Manager"
+                    Header="Import Behaviour">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-file-import"/>
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding MoveFilesOnImport}"
+                                      OnContent="Move"
+                                      OffContent="Copy" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+                <ui:SettingsExpander
+                    Grid.Row="2"
+                    Margin="8,0,8,4"
                     Description="{x:Static lang:Resources.Label_RemoveSymlinksOnShutdown_Details}"
                     Header="{x:Static lang:Resources.Label_RemoveSymlinksOnShutdown}"
                     IconSource="Folder">
@@ -134,8 +141,8 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
                 <ui:SettingsExpander
-                    Grid.Row="2"
-                    Margin="8,4"
+                    Grid.Row="3"
+                    Margin="8,0"
                     Description="{x:Static lang:Resources.Label_ResetCheckpointsCache_Details}"
                     Header="{x:Static lang:Resources.Label_ResetCheckpointsCache}"
                     IconSource="Refresh">

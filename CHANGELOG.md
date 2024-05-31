@@ -12,12 +12,17 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added ZLUDA option for SD.Next
 - Added PixArt & SDXL Hyper options to the Civitai model browser
 - Added release date to model update notification card on the Checkpoints page
+- Added option in Settings to choose whether to Copy or Move files when dragging and dropping files into the Checkpoint Manager
 ### Changed
 - Maximized state is now stored on exit and restored on launch
 - Clicking outside the Select Model Version dialog will now close it
 ### Fixed
 - Fixed error when deleting Inference browser images in a nested project path with recycle bin mode
 - Fixed package installs not showing any progress messages
+- Fixed crash when viewing model details for Unknown model types in the Checkpoint Manager
+### Supporters
+#### Visionaries
+- Many thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your generous support helps us continue to improve Stability Matrix!
 
 ## v2.11.0-dev.3
 ### Added

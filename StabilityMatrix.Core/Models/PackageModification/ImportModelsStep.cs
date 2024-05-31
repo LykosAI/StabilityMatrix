@@ -12,7 +12,8 @@ public class ImportModelsStep(
     IModelIndexService modelIndexService,
     IEnumerable<string> files,
     DirectoryPath destinationFolder,
-    bool isImportAsConnectedEnabled
+    bool isImportAsConnectedEnabled,
+    bool moveFiles = false
 ) : IPackageStep
 {
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
@@ -53,7 +54,17 @@ public class ImportModelsStep(
             lastMessage = message;
         });
 
-        await FileTransfers.CopyFiles(copyPaths, transferProgress).ConfigureAwait(false);
+        if (moveFiles)
+        {
+            foreach (var (source, destination) in copyPaths)
+            {
+                await FileTransfers.MoveFileAsync(source, destination).ConfigureAwait(false);
+            }
+        }
+        else
+        {
+            await FileTransfers.CopyFiles(copyPaths, transferProgress).ConfigureAwait(false);
+        }
 
         // Hash files and convert them to connected model if found
         if (isImportAsConnectedEnabled)

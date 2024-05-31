@@ -174,6 +174,12 @@ public class Settings
     public int ConsoleFontSize { get; set; } = 14;
     public bool AutoLoadCivitModels { get; set; } = true;
 
+    /// <summary>
+    /// When false, will copy files when drag/drop import happens
+    /// Otherwise, it will move, as it states
+    /// </summary>
+    public bool MoveFilesOnImport { get; set; } = false;
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

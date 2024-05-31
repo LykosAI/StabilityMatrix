@@ -202,7 +202,7 @@ public abstract partial class InferenceTabViewModelBase
             if (projectType != GetType())
             {
                 Logger.Warn(
-                    "Attempted to load project of mismatched type '{Type}' into '{ThisType}', skipping",
+                    "Attempted to load project of mismatched type {Type} into {ThisType}, skipping",
                     projectType?.Name,
                     GetType().Name
                 );
@@ -233,6 +233,8 @@ public abstract partial class InferenceTabViewModelBase
         // Has generic metadata
         if (metadata.Parameters is not null)
         {
+            Logger.Info("Loading Parameters from metadata");
+
             if (!GenerationParameters.TryParse(metadata.Parameters, out var parameters))
             {
                 throw new ApplicationException("Failed to parse parameters");

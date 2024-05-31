@@ -183,6 +183,8 @@ public abstract partial class InferenceTabViewModelBase
     /// <exception cref="InvalidOperationException"></exception>
     public void LoadImageMetadata(FilePath? filePath)
     {
+        Logger.Info("Loading image metadata from '{Path}'", filePath?.FullPath);
+
         if (filePath is not { Exists: true })
         {
             throw new FileNotFoundException("File does not exist", filePath?.FullPath);
@@ -196,25 +198,42 @@ public abstract partial class InferenceTabViewModelBase
             var project = JsonSerializer.Deserialize<InferenceProjectDocument>(metadata.SMProject);
 
             // Check project type matches
-            if (project?.ProjectType.ToViewModelType() == GetType() && project.State is not null)
+            var projectType = project?.ProjectType.ToViewModelType();
+            if (projectType != GetType())
             {
-                Dispatcher.UIThread.Invoke(() => LoadStateFromJsonObject(project.State));
+                Logger.Warn(
+                    "Attempted to load project of mismatched type '{Type}' into '{ThisType}', skipping",
+                    projectType?.Name,
+                    GetType().Name
+                );
+                // Fallback to try loading as parameters
+            }
+            else if (project?.State is null)
+            {
+                Logger.Warn("Project State is null, skipping");
+                // Fallback to try loading as parameters
             }
             else
             {
-                throw new ApplicationException("Unsupported project type");
-            }
+                Logger.Info("Loading Project State (Type: {Type})", projectType.Name);
+                Dispatcher.UIThread.Invoke(() => LoadStateFromJsonObject(project.State));
 
-            // Load image
-            if (this is IImageGalleryComponent imageGalleryComponent)
-            {
-                imageGalleryComponent.LoadImagesToGallery(new ImageSource(filePath));
+                // Load image
+                if (this is IImageGalleryComponent imageGalleryComponent)
+                {
+                    Dispatcher.UIThread.Invoke(
+                        () => imageGalleryComponent.LoadImagesToGallery(new ImageSource(filePath))
+                    );
+                }
+
+                return;
             }
         }
+
         // Has generic metadata
-        else if (metadata.Parameters is { } parametersString)
+        if (metadata.Parameters is not null)
         {
-            if (!GenerationParameters.TryParse(parametersString, out var parameters))
+            if (!GenerationParameters.TryParse(metadata.Parameters, out var parameters))
             {
                 throw new ApplicationException("Failed to parse parameters");
             }
@@ -237,11 +256,11 @@ public abstract partial class InferenceTabViewModelBase
                     () => imageGalleryComponent.LoadImagesToGallery(new ImageSource(filePath))
                 );
             }
+
+            return;
         }
-        else
-        {
-            throw new ApplicationException("File does not contain any metadata");
-        }
+
+        throw new ApplicationException("File does not contain SMProject or Parameters Metadata");
     }
 
     /// <inheritdoc />

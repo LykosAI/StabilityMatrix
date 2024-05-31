@@ -2,11 +2,8 @@
                           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                           xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                           xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-                          xmlns:ui="using:FluentAvalonia.UI.Controls"
                           xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
                           xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
                           xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
                           d:DataContext="{x:Static mocks:DesignData.MaskEditorViewModel}"
@@ -24,7 +21,10 @@
                     Orientation="Horizontal" Spacing="16">
                     <Button Content="Load Mask" Command="{Binding DebugSelectFileLoadMaskCommand}" />
                     <Button Content="Save Mask" Command="{Binding DebugSelectFileSaveMaskCommand}" />
-                    <ToggleButton Content="Use Image Alpha Channel as Mask" IsChecked="{Binding UseImageAlphaAsMask}"/>
+                    <ToggleButton 
+                        Content="Use Image Alpha Channel as Mask" 
+                        IsVisible="False"
+                        IsChecked="{Binding UseImageAlphaAsMask}"/>
                 </StackPanel>
             </Grid>
         </controls:Card>

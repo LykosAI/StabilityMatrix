@@ -139,6 +139,8 @@ public static class SkiaExtensions
 
     public static Bitmap ToAvaloniaBitmap(this SKImage image, Vector dpi)
     {
+        ArgumentNullException.ThrowIfNull(image, nameof(image));
+
         // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
         var avaloniaColorFormat = image.ColorType switch
         {

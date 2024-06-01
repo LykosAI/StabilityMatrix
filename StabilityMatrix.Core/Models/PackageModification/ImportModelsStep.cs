@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Core.Extensions;
+﻿using StabilityMatrix.Core.Exceptions;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -56,9 +57,27 @@ public class ImportModelsStep(
 
         if (moveFiles)
         {
+            var filesMoved = 0;
             foreach (var (source, destination) in copyPaths)
             {
-                await FileTransfers.MoveFileAsync(source, destination).ConfigureAwait(false);
+                try
+                {
+                    await FileTransfers.MoveFileAsync(source, destination).ConfigureAwait(false);
+                    filesMoved++;
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+
+                progress?.Report(
+                    new ProgressReport(
+                        filesMoved,
+                        copyPaths.Count,
+                        Path.GetFileName(source),
+                        $"{filesMoved}/{copyPaths.Count}"
+                    )
+                );
             }
         }
         else

@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
+using System.Linq;
 using System.Text.Json.Serialization;
 using Avalonia.Media;
 using Avalonia.Skia;
@@ -9,6 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
+using SoftCircuits.Collections;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.Models;
 using StabilityMatrix.Avalonia.Models;
@@ -56,11 +59,45 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
     private PaintCanvasTool selectedTool = PaintCanvasTool.PaintBrush;
 
     [ObservableProperty]
-    [property: JsonIgnore]
-    private SKBitmap? backgroundImage;
+    private Size canvasSize = Size.Empty;
 
-    [ObservableProperty]
-    private Size backgroundImageSize = Size.Empty;
+    [JsonIgnore]
+    private SKCanvas? SourceCanvas { set; get; }
+
+    [Localizable(false)]
+    [JsonIgnore]
+    private OrderedDictionary<string, SKLayer> Layers { get; } =
+        new()
+        {
+            ["Background"] = new SKLayer(),
+            ["Images"] = new SKLayer(),
+            ["Brush"] = new SKLayer(),
+        };
+
+    [JsonIgnore]
+    private SKLayer BrushLayer => Layers["Brush"];
+
+    [JsonIgnore]
+    private SKLayer BackgroundLayer => Layers["Background"];
+
+    [JsonIgnore]
+    public SKBitmap? BackgroundImage
+    {
+        get => BackgroundLayer.Bitmaps.FirstOrDefault();
+        set
+        {
+            if (value is not null)
+            {
+                CanvasSize = new Size(value.Width, value.Height);
+                BackgroundLayer.Bitmaps = [value];
+            }
+            else
+            {
+                CanvasSize = Size.Empty;
+                BackgroundLayer.Bitmaps = [];
+            }
+        }
+    }
 
     [JsonIgnore]
     public List<SKBitmap> LayerImages { get; } = [];
@@ -72,13 +109,10 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
     [JsonIgnore]
     public Action? RefreshCanvas { get; set; }
 
-    partial void OnBackgroundImageChanged(SKBitmap? value)
+    public void SetSourceCanvas(SKCanvas canvas)
     {
-        // Set the size of the background image
-        if (value is not null)
-        {
-            BackgroundImageSize = new Size(value.Width, value.Height);
-        }
+        ArgumentNullException.ThrowIfNull(canvas, nameof(canvas));
+        SourceCanvas = canvas;
     }
 
     public void LoadCanvasFromBitmap(SKBitmap bitmap)
@@ -114,18 +148,15 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
     {
         using var _ = CodeTimer.StartDebug();
 
-        if (BackgroundImageSize == Size.Empty)
+        if (CanvasSize == Size.Empty)
         {
-            logger.LogWarning("RenderToImage: Background image size is not set, null.");
+            logger.LogWarning($"RenderToImage: {nameof(CanvasSize)} is not set, returning null.");
             return null;
         }
 
-        using var surface = SKSurface.Create(
-            new SKImageInfo(BackgroundImageSize.Width, BackgroundImageSize.Height)
-        );
-        using var canvas = surface.Canvas;
+        using var surface = SKSurface.Create(new SKImageInfo(CanvasSize.Width, CanvasSize.Height));
 
-        RenderToCanvas(canvas);
+        RenderToSurface(surface);
 
         using var originalImage = surface.Snapshot();
         // Replace all colors to white (255, 255, 255), keep original alpha
@@ -143,8 +174,8 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         using var paint = new SKPaint();
         paint.ColorFilter = colorFilter;
 
-        canvas.Clear(SKColors.Transparent);
-        canvas.DrawImage(originalImage, originalImage.Info.Rect, paint);
+        surface.Canvas.Clear(SKColors.Transparent);
+        surface.Canvas.DrawImage(originalImage, originalImage.Info.Rect, paint);
 
         return surface.Snapshot();
     }
@@ -153,57 +184,92 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
     {
         using var _ = CodeTimer.StartDebug();
 
-        if (BackgroundImageSize == Size.Empty)
+        if (CanvasSize == Size.Empty)
         {
-            logger.LogWarning("RenderToImage: Background image size is not set, returning null.");
+            logger.LogWarning($"RenderToImage: {nameof(CanvasSize)} is not set, returning null.");
             return null;
         }
 
-        using var surface = SKSurface.Create(
-            new SKImageInfo(BackgroundImageSize.Width, BackgroundImageSize.Height)
-        );
-        using var canvas = surface.Canvas;
+        using var surface = SKSurface.Create(new SKImageInfo(CanvasSize.Width, CanvasSize.Height));
 
-        RenderToCanvas(canvas);
+        RenderToSurface(surface);
 
         return surface.Snapshot();
     }
 
-    public void RenderToCanvas(
-        SKCanvas canvas,
+    public void RenderToSurface(
+        SKSurface surface,
         bool renderBackgroundFill = false,
         bool renderBackgroundImage = false
     )
     {
-        // Draw background color
-        canvas.Clear(SKColors.Transparent);
+        var layers = Layers.Values.ToList();
 
-        // Draw background image if set
-        if (renderBackgroundImage && BackgroundImage is not null)
+        // Initialize canvas layers
+        foreach (var layer in layers)
         {
-            canvas.DrawBitmap(BackgroundImage, new SKPoint(0, 0));
+            lock (layer)
+            {
+                if (layer.Surface is null)
+                {
+                    layer.Surface = SKSurface.Create(new SKImageInfo(CanvasSize.Width, CanvasSize.Height));
+                    /*layer.Surface = SKSurface.Create(
+                        surface.Context,
+                        true,
+                        new SKImageInfo(CanvasSize.Width, CanvasSize.Height)
+                    );*/
+                }
+                else
+                {
+                    layer.Surface.Canvas.Clear(SKColors.Transparent);
+                }
+            }
         }
 
-        // Draw any additional images
-        foreach (var layerImage in LayerImages)
+        // Render all layer images in order
+        foreach (var layer in layers)
         {
-            canvas.DrawBitmap(layerImage, new SKPoint(0, 0));
+            lock (layer)
+            {
+                var layerCanvas = layer.Surface!.Canvas;
+                foreach (var bitmap in layer.Bitmaps)
+                {
+                    layerCanvas.DrawBitmap(bitmap, new SKPoint(0, 0));
+                }
+            }
         }
+
+        // Render paint layer
+        var paintLayerCanvas = BrushLayer.Surface!.Canvas;
 
         using var paint = new SKPaint();
 
         // Draw the paths
-        foreach (var penPath in TemporaryPaths.Values)
-        {
-            RenderPenPath(canvas, penPath, paint);
-        }
-
         foreach (var penPath in Paths)
         {
-            RenderPenPath(canvas, penPath, paint);
+            RenderPenPath(paintLayerCanvas, penPath, paint);
         }
 
-        canvas.Flush();
+        foreach (var penPath in TemporaryPaths.Values)
+        {
+            RenderPenPath(paintLayerCanvas, penPath, paint);
+        }
+
+        // Draw background color
+        surface.Canvas.Clear(SKColors.Transparent);
+
+        // Draw the layers to the main surface
+        foreach (var layer in layers)
+        {
+            lock (layer)
+            {
+                layer.Surface!.Canvas.Flush();
+
+                surface.Canvas.DrawSurface(layer.Surface!, new SKPoint(0, 0));
+            }
+        }
+
+        surface.Canvas!.Flush();
     }
 
     private static void RenderPenPath(SKCanvas canvas, PenPath penPath, SKPaint paint)
@@ -214,12 +280,16 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         }
 
         // Apply Color
-        paint.Color = penPath.FillColor;
-
         if (penPath.IsErase)
         {
-            paint.BlendMode = SKBlendMode.SrcIn;
+            // paint.BlendMode = SKBlendMode.SrcIn;
+            paint.BlendMode = SKBlendMode.Clear;
             paint.Color = SKColors.Transparent;
+        }
+        else
+        {
+            paint.BlendMode = SKBlendMode.SrcOver;
+            paint.Color = penPath.FillColor;
         }
 
         // Defaults

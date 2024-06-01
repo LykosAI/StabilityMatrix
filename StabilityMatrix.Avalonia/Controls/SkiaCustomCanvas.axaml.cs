@@ -13,7 +13,7 @@ public partial class SkiaCustomCanvas : UserControl
 {
     private readonly RenderingLogic renderingLogic;
 
-    public event Action<SKCanvas>? RenderSkia;
+    public event Action<SKSurface>? RenderSkia;
 
     public SkiaCustomCanvas()
     {
@@ -22,7 +22,7 @@ public partial class SkiaCustomCanvas : UserControl
         Background = Brushes.Transparent;
 
         renderingLogic = new RenderingLogic();
-        renderingLogic.RenderCall += canvas => RenderSkia?.Invoke(canvas);
+        renderingLogic.RenderCall += surface => RenderSkia?.Invoke(surface);
     }
 
     public override void Render(DrawingContext context)
@@ -34,7 +34,7 @@ public partial class SkiaCustomCanvas : UserControl
 
     private class RenderingLogic : ICustomDrawOperation
     {
-        public Action<SKCanvas>? RenderCall;
+        public Action<SKSurface>? RenderCall;
 
         public Rect Bounds { get; set; }
 
@@ -58,15 +58,15 @@ public partial class SkiaCustomCanvas : UserControl
 
             using var lease = skia?.Lease();
 
-            if (lease?.SkCanvas is { } skCanvas)
+            if (lease?.SkSurface is { } skSurface)
             {
-                Render(skCanvas);
+                Render(skSurface);
             }
         }
 
-        private void Render(SKCanvas canvas)
+        private void Render(SKSurface surface)
         {
-            RenderCall?.Invoke(canvas);
+            RenderCall?.Invoke(surface);
         }
     }
 }

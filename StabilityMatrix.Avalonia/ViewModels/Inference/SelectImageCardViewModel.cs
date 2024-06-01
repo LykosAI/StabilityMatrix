@@ -107,7 +107,7 @@ public partial class SelectImageCardViewModel(
         // With Mask image
         if (IsMaskEditorEnabled && MaskEditorViewModel.IsMaskEnabled)
         {
-            MaskEditorViewModel.PaintCanvasViewModel.BackgroundImageSize = CurrentBitmapSize;
+            MaskEditorViewModel.PaintCanvasViewModel.CanvasSize = CurrentBitmapSize;
 
             e.Builder.SetupImagePrimarySourceWithMask(
                 ImageSource ?? throw new ValidationException("Input Image is required"),
@@ -115,7 +115,7 @@ public partial class SelectImageCardViewModel(
                     ? CurrentBitmapSize
                     : throw new ValidationException("CurrentBitmapSize is null"),
                 MaskEditorViewModel.GetCachedOrNewMaskRenderInverseAlphaImage(),
-                MaskEditorViewModel.PaintCanvasViewModel.BackgroundImageSize,
+                MaskEditorViewModel.PaintCanvasViewModel.CanvasSize,
                 e.Builder.Connections.BatchIndex
             );
         }
@@ -146,7 +146,7 @@ public partial class SelectImageCardViewModel(
         {
             using var timer = CodeTimer.StartDebug("MaskImage");
 
-            MaskEditorViewModel.PaintCanvasViewModel.BackgroundImageSize = CurrentBitmapSize;
+            MaskEditorViewModel.PaintCanvasViewModel.CanvasSize = CurrentBitmapSize;
 
             var maskImage = MaskEditorViewModel.GetCachedOrNewMaskRenderInverseAlphaImage();
 

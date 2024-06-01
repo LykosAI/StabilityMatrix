@@ -49,7 +49,7 @@ public partial class PaintCanvasViewModel
             CurrentZoom = CurrentZoom,
             IsPenDown = IsPenDown,
             SelectedTool = SelectedTool,
-            BackgroundImageSize = BackgroundImageSize
+            CanvasSize = CanvasSize
         };
 
         return model;
@@ -71,7 +71,7 @@ public partial class PaintCanvasViewModel
         CurrentZoom = model.CurrentZoom;
         IsPenDown = model.IsPenDown;
         SelectedTool = model.SelectedTool;
-        BackgroundImageSize = model.BackgroundImageSize;
+        CanvasSize = model.CanvasSize;
 
         RefreshCanvas?.Invoke();
     }
@@ -87,7 +87,7 @@ public partial class PaintCanvasViewModel
         public double CurrentZoom { get; init; }
         public bool IsPenDown { get; init; }
         public PaintCanvasTool SelectedTool { get; init; }
-        public Size BackgroundImageSize { get; init; }
+        public Size CanvasSize { get; init; }
     }
 
     [JsonSourceGenerationOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]

@@ -434,8 +434,8 @@ public class PaintCanvas : TemplatedControl
         await Dispatcher.UIThread.InvokeAsync(() => MainCanvas?.InvalidateVisual());
     }
 
-    private void OnRenderSkia(SKCanvas canvas)
+    private void OnRenderSkia(SKSurface surface)
     {
-        ViewModel?.RenderToCanvas(canvas, renderBackgroundFill: true, renderBackgroundImage: true);
+        ViewModel?.RenderToSurface(surface, renderBackgroundFill: true, renderBackgroundImage: true);
     }
 }

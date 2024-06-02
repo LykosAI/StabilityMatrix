@@ -203,10 +203,8 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         bool renderBackgroundImage = false
     )
     {
-        var layers = Layers.Values.ToList();
-
         // Initialize canvas layers
-        foreach (var layer in layers)
+        foreach (var layer in Layers.Values)
         {
             lock (layer)
             {
@@ -227,8 +225,14 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         }
 
         // Render all layer images in order
-        foreach (var layer in layers)
+        foreach (var (layerName, layer) in Layers)
         {
+            // Skip background image if not requested
+            if (!renderBackgroundImage && layerName == "Background")
+            {
+                continue;
+            }
+
             lock (layer)
             {
                 var layerCanvas = layer.Surface!.Canvas;
@@ -259,7 +263,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         surface.Canvas.Clear(SKColors.Transparent);
 
         // Draw the layers to the main surface
-        foreach (var layer in layers)
+        foreach (var layer in Layers.Values)
         {
             lock (layer)
             {

@@ -183,7 +183,7 @@
                                         <TextBlock
                                             Grid.Column="1"
                                             VerticalAlignment="Center"
-                                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
                                             Inlines="{Binding TextInlines}"
                                             FontSize="13"/>
 
@@ -191,7 +191,7 @@
                                         <TextBlock
                                             Grid.Column="2"
                                             VerticalAlignment="Center"
-                                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
                                             FontSize="13"
                                             Foreground="{DynamicResource CompletionSecondaryForegroundBrush}"
                                             Text="{Binding Description}"

@@ -37,7 +37,10 @@ public enum CivitModelType
     Model,
     MotionModule,
     Poses,
+
+    [ConvertTo<SharedFolderType>(SharedFolderType.ESRGAN)]
     Upscaler,
+
     Wildcards,
     Workflows,
     Other,

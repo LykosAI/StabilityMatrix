@@ -571,7 +571,8 @@ public partial class NewCheckpointsPageViewModel(
             modelIndexService,
             fileList,
             destinationFolder,
-            IsImportAsConnectedEnabled
+            IsImportAsConnectedEnabled,
+            settingsManager.Settings.MoveFilesOnImport
         );
 
         var runner = new PackageModificationRunner

@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -16,7 +14,6 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media.Imaging;
@@ -25,10 +22,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DynamicData.Binding;
-using ExifLibrary;
 using FluentAvalonia.UI.Controls;
-using MetadataExtractor.Formats.Exif;
 using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Animations;
@@ -37,7 +31,6 @@ using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -54,7 +47,6 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
-using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -143,6 +135,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     [ObservableProperty]
     private bool autoLoadCivitModels;
+
+    [ObservableProperty]
+    private bool moveFilesOnImport;
 
     #region System Info
 
@@ -250,6 +245,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.AutoLoadCivitModels,
             settings => settings.AutoLoadCivitModels,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.MoveFilesOnImport,
+            settings => settings.MoveFilesOnImport,
             true
         );
 

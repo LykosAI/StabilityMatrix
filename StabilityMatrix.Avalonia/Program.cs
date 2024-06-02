@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -64,6 +65,16 @@ public static class Program
                     Console.Error.WriteLine(error.ToString());
                 }
             });
+
+        if (
+            parseResult.Errors.Any(
+                x => x.Tag is ErrorType.HelpRequestedError or ErrorType.VersionRequestedError
+            )
+        )
+        {
+            Environment.Exit(0);
+            return;
+        }
 
         Args = parseResult.Value ?? new AppArgs();
 

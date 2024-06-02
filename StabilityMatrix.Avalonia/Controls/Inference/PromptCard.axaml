@@ -94,7 +94,7 @@
                                 <avaloniaEdit:TextEditor
                                     x:Name="PromptEditor"
                                     Document="{Binding PromptDocument}"
-                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace">
+                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace">
                                     <i:Interaction.Behaviors>
                                         <behaviors:TextEditorCompletionBehavior
                                             CompletionProvider="{Binding CompletionProvider}"
@@ -134,7 +134,7 @@
                                 <avaloniaEdit:TextEditor
                                     x:Name="NegativePromptEditor"
                                     Document="{Binding NegativePromptDocument}"
-                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace">
+                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace">
                                     <i:Interaction.Behaviors>
                                         <behaviors:TextEditorCompletionBehavior
                                             CompletionProvider="{Binding CompletionProvider}"
@@ -182,7 +182,7 @@
                                 <avaloniaEdit:TextEditor
                                     x:Name="ExtraPromptEditor"
                                     Document="{Binding NegativePromptDocument}"
-                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace">
+                                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace">
                                     <i:Interaction.Behaviors>
                                         <behaviors:TextEditorCompletionBehavior
                                             CompletionProvider="{Binding CompletionProvider}"

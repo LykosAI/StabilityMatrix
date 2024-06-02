@@ -91,7 +91,7 @@
                                                Margin="8,0,8,0"
                                                VerticalAlignment="Center"
                                                Text="{Binding InstalledVersion}" />
-                                    
+
                                     <Button
                                         Grid.Row="0"
                                         Grid.Column="1"
@@ -224,23 +224,22 @@
                                                           IsEnabled="{Binding !IsRunning}"
                                                           Command="{Binding Uninstall}">
                                                     <MenuItem.Icon>
-                                                        <ui:SymbolIcon Symbol="Delete"/>
+                                                        <ui:SymbolIcon Symbol="Delete" />
                                                     </MenuItem.Icon>
                                                 </MenuItem>
                                             </MenuFlyout>
                                         </Button.Flyout>
                                     </Button>
-                                    
+
                                     <StackPanel Grid.Row="2"
                                                 Grid.Column="0"
-                                                Margin="0,4,0,0"
-                                                Orientation="Horizontal">
-                                        <Button Classes="transparent-full"
                                                 Margin="4,4,0,0"
-                                                Padding="4"
+                                                Orientation="Horizontal">
+                                        <Button Classes="transparent"
+                                                Margin="4,4,4,0"
+                                                Padding="6"
                                                 ToolTip.Tip="{x:Static lang:Resources.Action_CheckForUpdates}"
-                                                Command="{Binding OnLoadedAsync}"
-                                                >
+                                                Command="{Binding OnLoadedAsync}">
                                             <Button.IsVisible>
                                                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                                                     <Binding Path="!IsUnknownPackage" />
@@ -248,19 +247,22 @@
                                                 </MultiBinding>
                                             </Button.IsVisible>
                                             <ui:SymbolIcon Symbol="Refresh"
-                                                           FontSize="20"/>
+                                                           FontSize="20" />
                                         </Button>
-                                        
-                                        <Button Classes="transparent-full"
-                                                Margin="4,4,0,0"
+
+                                        <Button Classes="borderless-success"
+                                                Margin="4,4,4,0"
                                                 Padding="4"
                                                 IsEnabled="{Binding !IsRunning}"
                                                 markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
                                                 Command="{Binding Update}">
                                             <ToolTip.Tip>
                                                 <TextBlock>
-                                                    <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}"/>
-                                                    <Run Text="(" /><Run Text="{Binding UpdateVersion.ReadableVersionString, FallbackValue=Unknown}"/><Run Text=")"/>
+                                                    <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
+                                                    <Run Text="(" />
+                                                    <Run
+                                                        Text="{Binding UpdateVersion.ReadableVersionString, FallbackValue=Unknown}" />
+                                                    <Run Text=")" />
                                                 </TextBlock>
                                             </ToolTip.Tip>
                                             <Button.IsVisible>
@@ -269,35 +271,50 @@
                                                     <Binding Path="IsUpdateAvailable" />
                                                 </MultiBinding>
                                             </Button.IsVisible>
-                                            <ui:SymbolIcon Symbol="CloudDownload"
-                                                           IsEnabled="{Binding !IsRunning}"
-                                                           FontSize="24">
-                                                <ui:SymbolIcon.Styles>
-                                                    <Style Selector="ui|SymbolIcon">
-                                                        <Setter Property="Foreground" Value="Lime" />
-                                                    </Style>
-                                                    <Style Selector="ui|SymbolIcon:disabled">
-                                                        <Setter Property="Foreground" Value="Gray" />
-                                                    </Style>
-                                                </ui:SymbolIcon.Styles>
-                                            </ui:SymbolIcon>
+                                            <StackPanel Orientation="Horizontal">
+                                                <ui:SymbolIcon Symbol="CloudDownload"
+                                                               IsEnabled="{Binding !IsRunning}"
+                                                               FontSize="24">
+                                                    <ui:SymbolIcon.Styles>
+                                                        <Style Selector="ui|SymbolIcon">
+                                                            <Setter Property="Foreground" Value="White" />
+                                                        </Style>
+                                                        <Style Selector="ui|SymbolIcon:disabled">
+                                                            <Setter Property="Foreground" Value="Gray" />
+                                                        </Style>
+                                                    </ui:SymbolIcon.Styles>
+                                                </ui:SymbolIcon>
+                                                <TextBlock Text="{x:Static lang:Resources.Action_Update}"
+                                                           FontSize="12"
+                                                           VerticalAlignment="Center"
+                                                           Margin="8,0,4,0">
+                                                    <TextBlock.Styles>
+                                                        <Style Selector="TextBlock">
+                                                            <Setter Property="Foreground" Value="White" />
+                                                        </Style>
+                                                        <Style Selector="TextBlock:disabled">
+                                                            <Setter Property="Foreground" Value="Gray" />
+                                                        </Style>
+                                                    </TextBlock.Styles>
+                                                </TextBlock>
+                                            </StackPanel>
                                         </Button>
-                                        <Button Classes="transparent-full"
-                                                Margin="4,4,0,0"
-                                                Padding="4"
+                                        <Button Classes="transparent"
+                                                Margin="4,4,4,0"
+                                                Padding="6"
                                                 ToolTip.Tip="Launch Options"
                                                 IsVisible="{Binding !IsUnknownPackage}"
                                                 Command="{Binding ShowLaunchOptionsCommand}">
                                             <ui:SymbolIcon Symbol="SettingsFilled"
-                                                           FontSize="20"/>
+                                                           FontSize="20" />
                                         </Button>
-                                        <Button Classes="transparent-full"
-                                                Margin="6,2,0,0"
-                                                Padding="4"
+                                        <Button Classes="transparent"
+                                                Margin="4,4,4,0"
+                                                Padding="6"
                                                 ToolTip.Tip="Extensions"
                                                 IsVisible="{Binding CanUseExtensions}"
                                                 Command="{Binding OpenExtensionsDialogCommand}">
-                                            <icons:Icon FontSize="18"
+                                            <icons:Icon FontSize="20"
                                                         HorizontalAlignment="Center"
                                                         VerticalAlignment="Center"
                                                         Value="fa-solid fa-puzzle-piece" />
@@ -400,7 +417,7 @@
                                     CornerRadius="8"
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Stretch"
-                                    IsVisible="{Binding IsProgressVisible}"/>
+                                    IsVisible="{Binding IsProgressVisible}" />
                                 <Grid Grid.Column="0"
                                       Grid.ColumnSpan="2"
                                       HorizontalAlignment="Center"
@@ -438,15 +455,15 @@
                         Title="{x:Static lang:Resources.TeachingTip_AddPackageToGetStarted}"
                         PreferredPlacement="Top"
                         IsOpen="{Binding !Packages.Count}" />
-        
+
         <ui:TeachingTip Grid.Row="0"
-            Name="LaunchTeachingTip"
-            MinWidth="100"
-            Title="{x:Static lang:Resources.TeachingTip_ClickLaunchToGetStarted}"
-            PreferredPlacement="Bottom"
-            Margin="8,0,0,0"
-            PlacementMargin="0,0,0,0"
-            TailVisibility="Auto"/>
+                        Name="LaunchTeachingTip"
+                        MinWidth="100"
+                        Title="{x:Static lang:Resources.TeachingTip_ClickLaunchToGetStarted}"
+                        PreferredPlacement="Bottom"
+                        Margin="8,0,0,0"
+                        PlacementMargin="0,0,0,0"
+                        TailVisibility="Auto" />
 
         <!-- Add Packages Button -->
         <Button Grid.Row="2"

@@ -13,13 +13,17 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added PixArt & SDXL Hyper options to the Civitai model browser
 - Added release date to model update notification card on the Checkpoints page
 - Added option in Settings to choose whether to Copy or Move files when dragging and dropping files into the Checkpoint Manager
+- Added more launch options for Forge - [#618](https://github.com/LykosAI/StabilityMatrix/issues/618)
 ### Changed
 - Maximized state is now stored on exit and restored on launch
 - Clicking outside the Select Model Version dialog will now close it
+- Changed Package card buttons to better indicate that they are buttons
 ### Fixed
 - Fixed error when deleting Inference browser images in a nested project path with recycle bin mode
 - Fixed package installs not showing any progress messages
 - Fixed crash when viewing model details for Unknown model types in the Checkpoint Manager
+- Fixed [#598](https://github.com/LykosAI/StabilityMatrix/issues/598) - program not exiting after printing help or version text
+- Fixed [#630](https://github.com/LykosAI/StabilityMatrix/issues/630) - InvokeAI update hangs forever waiting for input
 ### Supporters
 #### Visionaries
 - Many thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your generous support helps us continue to improve Stability Matrix!

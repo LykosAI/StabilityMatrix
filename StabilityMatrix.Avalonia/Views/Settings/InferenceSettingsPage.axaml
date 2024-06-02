@@ -136,7 +136,7 @@
                             <TextBox
                                 Name="OutputImageFileNameFormatTextBox"
                                 MinWidth="150"
-                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
                                 FontSize="13"
                                 Text="{Binding OutputImageFileNameFormat}"
                                 Watermark="{x:Static inference:FileNameFormat.DefaultTemplate}" />

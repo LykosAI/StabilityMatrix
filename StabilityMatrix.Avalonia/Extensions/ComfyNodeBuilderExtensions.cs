@@ -68,6 +68,21 @@ public static class ComfyNodeBuilderExtensions
         builder.Connections.Primary = loadImage.Output1;
         builder.Connections.PrimarySize = imageSize;
 
+        // Add batch if selected
+        if (builder.Connections.BatchSize > 1)
+        {
+            builder.Connections.Primary = builder
+                .Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.RepeatLatentBatch
+                    {
+                        Name = builder.Nodes.GetUniqueName("RepeatLatentBatch"),
+                        Samples = builder.GetPrimaryAsLatent(),
+                        Amount = builder.Connections.BatchSize
+                    }
+                )
+                .Output;
+        }
+
         // If batch index is selected, add a LatentFromBatch
         if (batchIndex is not null)
         {
@@ -136,6 +151,21 @@ public static class ComfyNodeBuilderExtensions
                 }
             )
             .Output;
+
+        // Add batch if selected
+        if (builder.Connections.BatchSize > 1)
+        {
+            builder.Connections.Primary = builder
+                .Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.RepeatLatentBatch
+                    {
+                        Name = builder.Nodes.GetUniqueName("RepeatLatentBatch"),
+                        Samples = builder.GetPrimaryAsLatent(),
+                        Amount = builder.Connections.BatchSize
+                    }
+                )
+                .Output;
+        }
 
         // If batch index is selected, add a LatentFromBatch
         if (batchIndex is not null)

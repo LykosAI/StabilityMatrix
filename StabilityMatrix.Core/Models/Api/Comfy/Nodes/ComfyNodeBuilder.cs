@@ -153,6 +153,14 @@ public class ComfyNodeBuilder
         public int Length { get; init; } = 1;
     }
 
+    public record RepeatLatentBatch : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required LatentNodeConnection Samples { get; init; }
+
+        [Range(1, 64)]
+        public int Amount { get; init; } = 1;
+    }
+
     public record LatentBlend : ComfyTypedNodeBase<LatentNodeConnection>
     {
         public required LatentNodeConnection Samples1 { get; init; }

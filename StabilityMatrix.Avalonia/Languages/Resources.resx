@@ -1101,4 +1101,10 @@
   <data name="Label_AutoSearchOnLoad_Description" xml:space="preserve">
     <value>Automatically initiate a search when the model browser page is loaded</value>
   </data>
+  <data name="Action_ToggleVisibility" xml:space="preserve">
+    <value>Toggle Visibility</value>
+  </data>
+  <data name="Label_ClippingMask" xml:space="preserve">
+    <value>Clipping Mask</value>
+  </data>
 </root>

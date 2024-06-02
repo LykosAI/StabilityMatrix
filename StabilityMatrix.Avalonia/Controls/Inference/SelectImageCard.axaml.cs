@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Drawing;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using DynamicData.Binding;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Attributes;
+using Size = Avalonia.Size;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
@@ -19,21 +19,35 @@ public class SelectImageCard : DropTargetTemplatedControlBase
         if (DataContext is not SelectImageCardViewModel vm)
             return;
 
-        if (e.NameScope.Find<BetterAdvancedImage>("PART_BetterAdvancedImage") is not { } image)
+        if (e.NameScope.Find<BetterAdvancedImage>("PART_BetterAdvancedImage") is not { } imageControl)
             return;
 
-        image
+        imageControl
             .WhenPropertyChanged(x => x.CurrentImage)
             .Subscribe(propertyValue =>
             {
-                if (propertyValue.Value?.Size is { } size)
+                if (propertyValue.Value is { } image)
                 {
-                    vm.CurrentBitmapSize = new Size(Convert.ToInt32(size.Width), Convert.ToInt32(size.Height));
+                    // Sometimes Avalonia Bitmap.Size getter throws a NullReferenceException depending on skia lifetimes (probably)
+                    // so just catch it and ignore it
+                    Size? size = null;
+                    try
+                    {
+                        size = image.Size;
+                    }
+                    catch (NullReferenceException) { }
+
+                    if (size is not null)
+                    {
+                        vm.CurrentBitmapSize = new System.Drawing.Size(
+                            Convert.ToInt32(size.Value.Width),
+                            Convert.ToInt32(size.Value.Height)
+                        );
+                        return;
+                    }
                 }
-                else
-                {
-                    vm.CurrentBitmapSize = Size.Empty;
-                }
+
+                vm.CurrentBitmapSize = System.Drawing.Size.Empty;
             });
     }
 }

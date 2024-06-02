@@ -34,6 +34,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -816,6 +817,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugClearImageCacheCommand),
             new CommandItem(DebugGCCollectCommand),
             new CommandItem(DebugExtractImagePromptsToTxtCommand),
+            new CommandItem(DebugShowImageMaskEditorCommand),
+            new CommandItem(DebugExtractImagePromptsToTxtCommand),
             new CommandItem(DebugShowConfirmDeleteDialogCommand),
         ];
 
@@ -1003,6 +1006,25 @@ public partial class MainSettingsViewModel : PageViewModelBase
             $"Extracted prompts from {successfulFiles.Count}/{images.Count} images.",
             NotificationType.Success
         );
+    }
+
+    [RelayCommand]
+    private async Task DebugShowImageMaskEditor()
+    {
+        // Choose background image
+        var provider = App.StorageProvider;
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions());
+
+        if (files.Count == 0)
+            return;
+
+        var bitmap = await Task.Run(() => SKBitmap.Decode(files[0].TryGetLocalPath()!));
+
+        var vm = dialogFactory.Get<MaskEditorViewModel>();
+
+        vm.PaintCanvasViewModel.BackgroundImage = bitmap;
+
+        await vm.GetDialog().ShowAsync();
     }
 
     #endregion

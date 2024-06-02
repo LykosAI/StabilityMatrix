@@ -231,6 +231,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edit Clipping Mask.
+        /// </summary>
+        public static string Action_EditClippingMask {
+            get {
+                return ResourceManager.GetString("Action_EditClippingMask", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exit Application.
         /// </summary>
         public static string Action_ExitApplication {
@@ -627,6 +636,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Toggle Visibility.
+        /// </summary>
+        public static string Action_ToggleVisibility {
+            get {
+                return ResourceManager.GetString("Action_ToggleVisibility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Uninstall.
         /// </summary>
         public static string Action_Uninstall {
@@ -974,6 +992,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_CivitAiLoginRequired {
             get {
                 return ResourceManager.GetString("Label_CivitAiLoginRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string Label_ClippingMask {
+            get {
+                return ResourceManager.GetString("Label_ClippingMask", resourceCulture);
             }
         }
         

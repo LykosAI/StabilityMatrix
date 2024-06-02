@@ -77,6 +77,12 @@ public partial record GenerationParameters
         // Join lines before last line, split at 'Negative prompt: '
         var joinedLines = string.Join("\n", lines[..^1]).Trim();
 
+        // Apparently there is no space after the colon if value is empty, so check and add space here
+        if (joinedLines.EndsWith("Negative prompt:"))
+        {
+            joinedLines += ' ';
+        }
+
         var splitFirstPart = joinedLines.Split("Negative prompt: ", 2);
 
         var positivePrompt = splitFirstPart.ElementAtOrDefault(0)?.Trim();

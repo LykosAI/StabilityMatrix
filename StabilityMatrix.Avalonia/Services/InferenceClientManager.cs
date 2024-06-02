@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,8 @@ using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
+using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Api;
@@ -400,15 +403,44 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     {
         EnsureConnected();
 
-        if (image.LocalFile is not { } localFile)
-        {
-            throw new ArgumentException("Image is not a local file", nameof(image));
-        }
-
         var uploadName = await image.GetHashGuidFileNameAsync();
 
-        await using var stream = localFile.Info.OpenRead();
-        await Client.UploadImageAsync(stream, uploadName, cancellationToken);
+        if (image.LocalFile is { } localFile)
+        {
+            logger.LogDebug("Uploading image {FileName} as {UploadName}", localFile.Name, uploadName);
+
+            // For pngs, strip metadata since Pillow can't handle some valid files?
+            if (localFile.Extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
+            {
+                var bytes = PngDataHelper.RemoveMetadata(
+                    await localFile.ReadAllBytesAsync(cancellationToken)
+                );
+                using var stream = new MemoryStream(bytes);
+
+                await Client.UploadImageAsync(stream, uploadName, cancellationToken);
+            }
+            else
+            {
+                await using var stream = localFile.Info.OpenRead();
+
+                await Client.UploadImageAsync(stream, uploadName, cancellationToken);
+            }
+        }
+        else
+        {
+            logger.LogDebug("Uploading bitmap as {UploadName}", uploadName);
+
+            if (await image.GetBitmapAsync() is not { } bitmap)
+            {
+                throw new InvalidOperationException("Failed to get bitmap from image");
+            }
+
+            await using var ms = new MemoryStream();
+            bitmap.Save(ms);
+            ms.Position = 0;
+
+            await Client.UploadImageAsync(ms, uploadName, cancellationToken);
+        }
     }
 
     /// <inheritdoc />

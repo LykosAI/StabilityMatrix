@@ -2,6 +2,7 @@
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
@@ -38,10 +39,13 @@ public class EventManager
     public event EventHandler<CultureInfo>? CultureChanged;
     public event EventHandler? ModelIndexChanged;
     public event EventHandler<FilePath>? ImageFileAdded;
-    public event EventHandler<LocalImageFile>? InferenceTextToImageRequested;
-    public event EventHandler<LocalImageFile>? InferenceUpscaleRequested;
-    public event EventHandler<LocalImageFile>? InferenceImageToImageRequested;
-    public event EventHandler<LocalImageFile>? InferenceImageToVideoRequested;
+
+    public delegate Task InferenceProjectRequestedEventHandler(
+        object? sender,
+        LocalImageFile imageFile,
+        InferenceProjectType type
+    );
+    public event InferenceProjectRequestedEventHandler? InferenceProjectRequested;
     public event EventHandler<InferenceQueueCustomPromptEventArgs>? InferenceQueueCustomPrompt;
     public event EventHandler<int>? NavigateAndFindCivitModelRequested;
     public event EventHandler? DownloadsTeachingTipRequested;
@@ -84,18 +88,6 @@ public class EventManager
 
     public void OnImageFileAdded(FilePath filePath) => ImageFileAdded?.Invoke(this, filePath);
 
-    public void OnInferenceTextToImageRequested(LocalImageFile imageFile) =>
-        InferenceTextToImageRequested?.Invoke(this, imageFile);
-
-    public void OnInferenceUpscaleRequested(LocalImageFile imageFile) =>
-        InferenceUpscaleRequested?.Invoke(this, imageFile);
-
-    public void OnInferenceImageToImageRequested(LocalImageFile imageFile) =>
-        InferenceImageToImageRequested?.Invoke(this, imageFile);
-
-    public void OnInferenceImageToVideoRequested(LocalImageFile imageFile) =>
-        InferenceImageToVideoRequested?.Invoke(this, imageFile);
-
     public void OnInferenceQueueCustomPrompt(InferenceQueueCustomPromptEventArgs e) =>
         InferenceQueueCustomPrompt?.Invoke(this, e);
 
@@ -115,4 +107,7 @@ public class EventManager
 
     public void OnDeleteModelRequested(object? sender, string relativePath) =>
         DeleteModelRequested?.Invoke(sender, relativePath);
+
+    public void OnInferenceProjectRequested(LocalImageFile imageFile, InferenceProjectType type) =>
+        InferenceProjectRequested?.Invoke(this, imageFile, type);
 }

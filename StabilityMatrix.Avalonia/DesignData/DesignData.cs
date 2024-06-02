@@ -21,6 +21,7 @@ using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
+using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Video;
@@ -791,6 +792,8 @@ The gallery images are often inpainted, but you will get something very similar 
                 + "redirect_uri=http://localhost:5022/api/oauth/patreon/callback";
         });
 
+    public static MaskEditorViewModel MaskEditorViewModel => DialogFactory.Get<MaskEditorViewModel>();
+
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
         DialogFactory.Get<InferenceTextToImageViewModel>(vm =>
         {
@@ -1085,6 +1088,8 @@ The gallery images are often inpainted, but you will get something very similar 
                 )
             );
         });
+
+    public static PaintCanvasViewModel PaintCanvasViewModel => DialogFactory.Get<PaintCanvasViewModel>();
 
     public static ImageSource SampleImageSource =>
         new(

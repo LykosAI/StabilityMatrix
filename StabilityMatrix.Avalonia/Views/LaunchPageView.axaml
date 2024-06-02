@@ -175,7 +175,7 @@
             Margin="8,8,16,10"
             DataContext="{Binding Console}"
             Document="{Binding Document}"
-            FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+            FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
             IsReadOnly="True"
             LineNumbersForeground="DarkSlateGray"
             ShowLineNumbers="True"

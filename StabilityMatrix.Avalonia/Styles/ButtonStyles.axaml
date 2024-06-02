@@ -58,6 +58,43 @@
         </Style>
     </Style>
     
+        <!-- Borderless Success -->
+    <Style Selector="Button.borderless-success">
+        <Style Selector="^ /template/ ui|FABorder#Root">
+            <Setter Property="Background" Value="{DynamicResource ThemeGreenColor}" />
+        </Style>
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+        </Style>
+
+        <Style Selector="^:pointerover">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ThemeDarkGreenColor}"/>
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPointerOver}" />
+            </Style>
+        </Style>
+
+        <Style Selector="^:pressed">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ThemeDarkDarkGreenColor}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPressed}" />
+            </Style>
+        </Style>
+
+        <Style Selector="^:disabled">
+            <Style Selector="^ /template/ ui|FABorder#Root">
+                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
+            </Style>
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundDisabled}" />
+            </Style>
+        </Style>
+    </Style>
+    
     <!-- Danger -->
     <Style Selector="Button.danger">
         <Style Selector="^ /template/ ui|FABorder#Root">

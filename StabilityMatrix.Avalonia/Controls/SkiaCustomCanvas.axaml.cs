@@ -11,7 +11,7 @@ namespace StabilityMatrix.Avalonia.Controls;
 
 public partial class SkiaCustomCanvas : UserControl
 {
-    private readonly RenderingLogic renderingLogic;
+    private readonly RenderingLogic renderingLogic = new();
 
     public event Action<SKSurface>? RenderSkia;
 
@@ -21,7 +21,6 @@ public partial class SkiaCustomCanvas : UserControl
 
         Background = Brushes.Transparent;
 
-        renderingLogic = new RenderingLogic();
         renderingLogic.RenderCall += surface => RenderSkia?.Invoke(surface);
     }
 

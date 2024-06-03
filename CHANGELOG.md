@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.11.0-pre.2
+### Fixed
+- Fixed crash when parsing invalid generated images in Output Browser and Inference image viewer, errors will be logged instead and the image will be skipped
+
 ## v2.11.0-pre.1
 ### Added
 - Added new package: [SDFX](https://github.com/sdfxai/sdfx/) by sdfxai

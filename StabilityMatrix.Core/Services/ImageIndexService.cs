@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using AsyncAwaitBestPractices;
-using DynamicData;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
@@ -55,6 +54,7 @@ public class ImageIndexService : IImageIndexService
         var stopwatch = Stopwatch.StartNew();
         logger.LogInformation("Refreshing images index at {SearchDir}...", searchDir.ToString());
 
+        var errors = 0;
         var toAdd = new ConcurrentBag<LocalImageFile>();
 
         await Task.Run(() =>
@@ -67,7 +67,19 @@ public class ImageIndexService : IImageIndexService
                     files,
                     f =>
                     {
-                        toAdd.Add(LocalImageFile.FromPath(f));
+                        try
+                        {
+                            toAdd.Add(LocalImageFile.FromPath(f));
+                        }
+                        catch (Exception e)
+                        {
+                            Interlocked.Increment(ref errors);
+                            logger.LogWarning(
+                                e,
+                                "Failed to add indexed image file at {Path}, skipping",
+                                f.FullPath
+                            );
+                        }
                     }
                 );
             })
@@ -82,9 +94,10 @@ public class ImageIndexService : IImageIndexService
         var editElapsed = stopwatch.Elapsed - indexElapsed;
 
         logger.LogInformation(
-            "Image index updated for {Prefix} with {Entries} files, took {IndexDuration:F1}ms ({EditDuration:F1}ms edit)",
+            "Image index updated for {Prefix} with ({Added}/{Total}) files, took {IndexDuration:F1}ms ({EditDuration:F1}ms edit)",
             subPath,
             toAdd.Count,
+            toAdd.Count + errors,
             indexElapsed.TotalMilliseconds,
             editElapsed.TotalMilliseconds
         );
@@ -92,11 +105,25 @@ public class ImageIndexService : IImageIndexService
 
     private void OnImageFileAdded(object? sender, FilePath filePath)
     {
-        var fullPath = settingsManager.ImagesDirectory.JoinDir(InferenceImages.RelativePath!);
+        var imagesFolder = settingsManager.ImagesDirectory.JoinDir(InferenceImages.RelativePath!);
 
-        if (!string.IsNullOrEmpty(Path.GetRelativePath(fullPath, filePath)))
+        if (string.IsNullOrEmpty(Path.GetRelativePath(imagesFolder, filePath)))
+        {
+            logger.LogWarning(
+                "Image file {Path} added outside of relative directory {DirPath}, skipping",
+                filePath,
+                imagesFolder
+            );
+            return;
+        }
+
+        try
         {
             InferenceImages.Add(LocalImageFile.FromPath(filePath));
+        }
+        catch (Exception e)
+        {
+            logger.LogWarning(e, "Failed to add image file at {Path}", filePath);
         }
     }
 

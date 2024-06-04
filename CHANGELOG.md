@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.11.0-pre.2
 ### Fixed
 - Fixed crash when parsing invalid generated images in Output Browser and Inference image viewer, errors will be logged instead and the image will be skipped
+- Fixed issue where blue and red color channels were swapped in the mask editor dialog
+- Fixed missing progress text during package updates
+- Fixed "Git and Node.js are required" error during SDFX install
 
 ## v2.11.0-pre.1
 ### Added

@@ -36,7 +36,8 @@ public class UpdatePackageStep : IPackageStep
                 {
                     IsIndeterminate = true,
                     Message = output.Text,
-                    ProcessOutput = output
+                    ProcessOutput = output,
+                    PrintToConsole = true
                 }
             );
         }

@@ -1,8 +1,8 @@
 ﻿using System;
-using System.IO;
 using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using SkiaSharp;
 
 namespace StabilityMatrix.Avalonia.Extensions;
@@ -16,11 +16,30 @@ public static class BitmapExtensions
     /// <returns>The SkiaSharp bitmap.</returns>
     public static SKBitmap ToSKBitmap(this Bitmap bitmap)
     {
+        if (bitmap.Format != PixelFormat.Rgba8888 && bitmap.Format != PixelFormat.Bgra8888)
+        {
+            throw new NotSupportedException($"Unknown pixel format {bitmap.Format}");
+        }
+
+        var skColorType = SKColorType.Bgra8888;
+        if (bitmap.Format == PixelFormat.Rgba8888)
+        {
+            skColorType = SKColorType.Rgba8888;
+        }
+
+        var skAlphaType = bitmap.AlphaFormat switch
+        {
+            AlphaFormat.Premul => SKAlphaType.Premul,
+            AlphaFormat.Unpremul => SKAlphaType.Unpremul,
+            AlphaFormat.Opaque => SKAlphaType.Opaque,
+            _ => SKAlphaType.Premul
+        };
+
         var skBitmap = new SKBitmap(
             bitmap.PixelSize.Width,
             bitmap.PixelSize.Height,
-            SKColorType.Bgra8888,
-            SKAlphaType.Premul
+            skColorType,
+            skAlphaType
         );
 
         var stride = skBitmap.RowBytes;

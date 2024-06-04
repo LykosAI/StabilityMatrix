@@ -118,7 +118,7 @@ public class Sdfx(
         Action<ProcessOutput>? onConsoleOutput
     )
     {
-        var venvRunner = await SetupVenvPure(installedPackagePath).ConfigureAwait(false);
+        var venvRunner = await SetupVenv(installedPackagePath).ConfigureAwait(false);
         venvRunner.EnvironmentVariables = GetEnvVars(venvRunner, installedPackagePath);
 
         void HandleConsoleOutput(ProcessOutput s)
@@ -148,28 +148,32 @@ public class Sdfx(
         env.Update(venvRunner.EnvironmentVariables ?? SettingsManager.Settings.EnvironmentVariables);
         env["VIRTUAL_ENV"] = venvRunner.RootPath;
 
-        if (env.ContainsKey("PATH"))
-        {
-            env["PATH"] +=
-                $"{Compat.PathDelimiter}{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs")}";
-        }
-        else
-        {
-            env["PATH"] = Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs");
-        }
-        env["PATH"] += $"{Compat.PathDelimiter}{Path.Combine(installPath, "src", "node_modules", ".bin")}";
+        var pathBuilder = new EnvPathBuilder();
 
-        if (Compat.IsMacOS || Compat.IsLinux)
+        if (env.TryGetValue("PATH", out var value))
         {
-            env["PATH"] +=
-                $"{Compat.PathDelimiter}{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs", "bin")}";
+            pathBuilder.AddPath(value);
         }
 
         if (Compat.IsWindows)
         {
-            env["PATH"] +=
-                $"{Compat.PathDelimiter}{Environment.GetFolderPath(Environment.SpecialFolder.System)}";
+            pathBuilder.AddPath(Environment.GetFolderPath(Environment.SpecialFolder.System));
         }
+        else
+        {
+            var existingPath = Environment.GetEnvironmentVariable("PATH");
+            if (!string.IsNullOrWhiteSpace(existingPath))
+            {
+                pathBuilder.AddPath(existingPath);
+            }
+            pathBuilder.AddPath(Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs", "bin"));
+        }
+
+        pathBuilder
+            .AddPath(Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs"))
+            .AddPath(Path.Combine(installPath, "src", "node_modules", ".bin"));
+
+        env["PATH"] = pathBuilder.ToString();
 
         return env;
     }

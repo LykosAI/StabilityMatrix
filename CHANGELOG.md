@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed issue where blue and red color channels were swapped in the mask editor dialog
 - Fixed missing progress text during package updates
 - Fixed "Git and Node.js are required" error during SDFX install
+- (Windows) Fixed "Open in Explorer" buttons across the app not opening the correct path on ReFS partitions
 
 ## v2.11.0-pre.1
 ### Added

@@ -16,6 +16,11 @@ public static class BitmapExtensions
     /// <returns>The SkiaSharp bitmap.</returns>
     public static SKBitmap ToSKBitmap(this Bitmap bitmap)
     {
+        if (bitmap.Format != PixelFormat.Rgba8888 && bitmap.Format != PixelFormat.Bgra8888)
+        {
+            throw new NotSupportedException($"Unknown pixel format {bitmap.Format}");
+        }
+
         var skColorType = SKColorType.Bgra8888;
         if (bitmap.Format == PixelFormat.Rgba8888)
         {

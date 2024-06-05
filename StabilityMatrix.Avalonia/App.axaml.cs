@@ -349,9 +349,6 @@ public sealed class App : Application
                     FooterPages = { provider.GetRequiredService<SettingsViewModel>() }
                 }
         );
-
-        // Register disposable view models for shutdown cleanup
-        services.AddSingleton<IDisposable>(p => p.GetRequiredService<LaunchPageViewModel>());
     }
 
     internal static void ConfigureDialogViewModels(IServiceCollection services, Type[] exportedTypes)
@@ -441,6 +438,30 @@ public sealed class App : Application
                 else
                 {
                     services.AddSingleton(attribute.InterfaceType, typePair.Type);
+                }
+
+                // IDisposable registering
+                var serviceType = attribute.InterfaceType ?? typePair.Type;
+
+                if (serviceType == typeof(IDisposable) || serviceType == typeof(IAsyncDisposable))
+                {
+                    continue;
+                }
+
+                if (typePair.Type.IsAssignableTo(typeof(IDisposable)))
+                {
+                    Debug.WriteLine("Registering IDisposable: {Name}", typePair.Type.Name);
+                    services.AddSingleton<IDisposable>(
+                        provider => (IDisposable)provider.GetRequiredService(serviceType)
+                    );
+                }
+
+                if (typePair.Type.IsAssignableTo(typeof(IAsyncDisposable)))
+                {
+                    Debug.WriteLine("Registering IAsyncDisposable: {Name}", typePair.Type.Name);
+                    services.AddSingleton<IAsyncDisposable>(
+                        provider => (IAsyncDisposable)provider.GetRequiredService(serviceType)
+                    );
                 }
             }
         }

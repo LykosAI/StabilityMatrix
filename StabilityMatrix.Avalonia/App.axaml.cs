@@ -75,6 +75,7 @@ public sealed class App : Application
     private static Logger Logger => LoggerLazy.Value;
 
     private static bool isAsyncDisposeComplete;
+    private static bool isOnExitComplete;
 
     private static readonly SemaphoreSlim OnExitSemaphore = new(1, 1);
 
@@ -766,84 +767,103 @@ public sealed class App : Application
     )
     {
         Logger.Debug("OnApplicationLifetimeExit: {@Args}", args);
+
+        OnExit(sender, args);
     }
 
     private static void OnExit(object? sender, EventArgs _)
     {
-        // Skip if another OnExit is running or has already run
-        if (!OnExitSemaphore.Wait(0))
+        // Skip if already run
+        if (isOnExitComplete)
         {
             return;
         }
 
-        const int timeoutTotalMs = 10000;
-        const int timeoutPerDisposeMs = 2000;
-
-        var timeoutTotalCts = new CancellationTokenSource(timeoutTotalMs);
-
-        var toDispose = Services.GetServices<IDisposable>().ToImmutableArray();
-
-        Logger.Debug("OnExit: Preparing to Dispose {Count} Services", toDispose.Length);
-
-        // Dispose IDisposable services
-        foreach (var disposable in toDispose)
+        // Skip if another OnExit is running
+        if (!OnExitSemaphore.Wait(0))
         {
-            Logger.Debug("OnExit: Disposing {Name}", disposable.GetType().Name);
-
-            using var instanceCts = CancellationTokenSource.CreateLinkedTokenSource(
-                timeoutTotalCts.Token,
-                new CancellationTokenSource(timeoutPerDisposeMs).Token
-            );
-
-            try
-            {
-                Task.Run(() => disposable.Dispose(), instanceCts.Token).Wait(instanceCts.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                Logger.Warn("OnExit: Timeout disposing {Name}", disposable.GetType().Name);
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e, "OnExit: Failed to dispose {Name}", disposable.GetType().Name);
-            }
+            // Block until the other OnExit is done to delay shutdown
+            OnExitSemaphore.Wait();
+            OnExitSemaphore.Release();
+            return;
         }
 
-        var settingsManager = Services.GetRequiredService<ISettingsManager>();
-
-        // If RemoveFolderLinksOnShutdown is set, delete all package junctions
-        if (settingsManager is { IsLibraryDirSet: true, Settings.RemoveFolderLinksOnShutdown: true })
+        try
         {
-            Logger.Debug("OnExit: Removing package junctions");
+            const int timeoutTotalMs = 10000;
+            const int timeoutPerDisposeMs = 2000;
 
-            using var instanceCts = CancellationTokenSource.CreateLinkedTokenSource(
-                timeoutTotalCts.Token,
-                new CancellationTokenSource(timeoutPerDisposeMs).Token
-            );
+            var timeoutTotalCts = new CancellationTokenSource(timeoutTotalMs);
 
-            try
+            var toDispose = Services.GetServices<IDisposable>().ToImmutableArray();
+
+            Logger.Debug("OnExit: Preparing to Dispose {Count} Services", toDispose.Length);
+
+            // Dispose IDisposable services
+            foreach (var disposable in toDispose)
             {
-                Task.Run(
-                        () =>
-                        {
-                            var sharedFolders = Services.GetRequiredService<ISharedFolders>();
-                            sharedFolders.RemoveLinksForAllPackages();
-                        },
-                        instanceCts.Token
-                    )
-                    .Wait(instanceCts.Token);
+                Logger.Debug("OnExit: Disposing {Name}", disposable.GetType().Name);
+
+                using var instanceCts = CancellationTokenSource.CreateLinkedTokenSource(
+                    timeoutTotalCts.Token,
+                    new CancellationTokenSource(timeoutPerDisposeMs).Token
+                );
+
+                try
+                {
+                    Task.Run(() => disposable.Dispose(), instanceCts.Token).Wait(instanceCts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    Logger.Warn("OnExit: Timeout disposing {Name}", disposable.GetType().Name);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e, "OnExit: Failed to dispose {Name}", disposable.GetType().Name);
+                }
             }
-            catch (OperationCanceledException)
+
+            var settingsManager = Services.GetRequiredService<ISettingsManager>();
+
+            // If RemoveFolderLinksOnShutdown is set, delete all package junctions
+            if (settingsManager is { IsLibraryDirSet: true, Settings.RemoveFolderLinksOnShutdown: true })
             {
-                Logger.Warn("OnExit: Timeout removing package junctions");
+                Logger.Debug("OnExit: Removing package junctions");
+
+                using var instanceCts = CancellationTokenSource.CreateLinkedTokenSource(
+                    timeoutTotalCts.Token,
+                    new CancellationTokenSource(timeoutPerDisposeMs).Token
+                );
+
+                try
+                {
+                    Task.Run(
+                            () =>
+                            {
+                                var sharedFolders = Services.GetRequiredService<ISharedFolders>();
+                                sharedFolders.RemoveLinksForAllPackages();
+                            },
+                            instanceCts.Token
+                        )
+                        .Wait(instanceCts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    Logger.Warn("OnExit: Timeout removing package junctions");
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e, "OnExit: Failed to remove package junctions");
+                }
             }
-            catch (Exception e)
-            {
-                Logger.Error(e, "OnExit: Failed to remove package junctions");
-            }
+
+            Logger.Debug("OnExit: Finished");
         }
-
-        Logger.Debug("OnExit: Finished");
+        finally
+        {
+            isOnExitComplete = true;
+            OnExitSemaphore.Release();
+        }
     }
 
     private static LoggingConfiguration ConfigureLogging()

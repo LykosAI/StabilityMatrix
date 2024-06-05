@@ -27,6 +27,9 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
     public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    public IObservableCollection<HybridModelFile> LoraModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     public IObservableCollection<HybridModelFile> PromptExpansionModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 

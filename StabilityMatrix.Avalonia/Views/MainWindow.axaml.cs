@@ -119,7 +119,8 @@ public partial class MainWindow : AppWindowBase
                             newSize.Width,
                             newSize.Height,
                             validWindowPosition ? Position.X : 0,
-                            validWindowPosition ? Position.Y : 0
+                            validWindowPosition ? Position.Y : 0,
+                            WindowState == WindowState.Maximized
                         );
                     },
                     ignoreMissingLibraryDir: true
@@ -137,7 +138,13 @@ public partial class MainWindow : AppWindowBase
                 settingsManager.Transaction(
                     s =>
                     {
-                        s.WindowSettings = new WindowSettings(Width, Height, position.X, position.Y);
+                        s.WindowSettings = new WindowSettings(
+                            Width,
+                            Height,
+                            position.X,
+                            position.Y,
+                            WindowState == WindowState.Maximized
+                        );
                     },
                     ignoreMissingLibraryDir: true
                 );

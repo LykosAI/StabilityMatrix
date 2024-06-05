@@ -1,5 +1,7 @@
-﻿using LiteDB;
+﻿using System.Diagnostics.CodeAnalysis;
+using LiteDB;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models.Api;
 
 namespace StabilityMatrix.Core.Models.Database;
 
@@ -8,6 +10,48 @@ namespace StabilityMatrix.Core.Models.Database;
 /// </summary>
 public record LocalModelFile
 {
+    private sealed class RelativePathConnectedModelInfoEqualityComparer : IEqualityComparer<LocalModelFile>
+    {
+        public bool Equals(LocalModelFile? x, LocalModelFile? y)
+        {
+            if (ReferenceEquals(x, y))
+                return true;
+            if (ReferenceEquals(x, null))
+                return false;
+            if (ReferenceEquals(y, null))
+                return false;
+            if (x.GetType() != y.GetType())
+                return false;
+            return x.RelativePath == y.RelativePath
+                && Equals(x.ConnectedModelInfo, y.ConnectedModelInfo)
+                && x.HasUpdate == y.HasUpdate;
+        }
+
+        public int GetHashCode(LocalModelFile obj)
+        {
+            return HashCode.Combine(obj.RelativePath, obj.ConnectedModelInfo, obj.HasUpdate);
+        }
+    }
+
+    public static IEqualityComparer<LocalModelFile> RelativePathConnectedModelInfoComparer { get; } =
+        new RelativePathConnectedModelInfoEqualityComparer();
+
+    public virtual bool Equals(LocalModelFile? other)
+    {
+        if (ReferenceEquals(null, other))
+            return false;
+        if (ReferenceEquals(this, other))
+            return true;
+        return RelativePath == other.RelativePath
+            && Equals(ConnectedModelInfo, other.ConnectedModelInfo)
+            && HasUpdate == other.HasUpdate;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(RelativePath, ConnectedModelInfo, HasUpdate);
+    }
+
     /// <summary>
     /// Relative path to the file from the root model directory.
     /// </summary>
@@ -48,6 +92,12 @@ public record LocalModelFile
     /// Last time this model was checked for an update
     /// </summary>
     public DateTimeOffset LastUpdateCheck { get; set; }
+
+    /// <summary>
+    /// The latest CivitModel info
+    /// </summary>
+    [BsonRef("CivitModels")]
+    public CivitModel? LatestModelInfo { get; set; }
 
     /// <summary>
     /// File name of the relative path.
@@ -96,6 +146,10 @@ public record LocalModelFile
     [BsonIgnore]
     public string DisplayConfigFileName => Path.GetFileName(ConfigFullPath) ?? string.Empty;
 
+    [BsonIgnore]
+    [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
+    public bool HasConnectedModel => ConnectedModelInfo != null;
+
     public string GetFullPath(string rootModelDirectory)
     {
         return Path.Combine(rootModelDirectory, RelativePath);
@@ -109,6 +163,36 @@ public record LocalModelFile
         return PreviewImageRelativePath == null
             ? null
             : Path.Combine(rootModelDirectory, PreviewImageRelativePath);
+    }
+
+    public string GetConnectedModelInfoFullPath(string rootModelDirectory)
+    {
+        var modelNameNoExt = Path.GetFileNameWithoutExtension(RelativePath);
+        var modelParentDir = Path.GetDirectoryName(GetFullPath(rootModelDirectory)) ?? "";
+        return Path.Combine(modelParentDir, $"{modelNameNoExt}.cm-info.json");
+    }
+
+    public IEnumerable<string> GetDeleteFullPaths(string rootModelDirectory)
+    {
+        if (GetFullPath(rootModelDirectory) is { } filePath && File.Exists(filePath))
+        {
+            yield return filePath;
+        }
+
+        if (
+            HasConnectedModel
+            && GetConnectedModelInfoFullPath(rootModelDirectory) is { } cmInfoPath
+            && File.Exists(cmInfoPath)
+        )
+        {
+            yield return cmInfoPath;
+        }
+
+        var previewImagePath = GetPreviewImageFullPath(rootModelDirectory);
+        if (File.Exists(previewImagePath))
+        {
+            yield return previewImagePath;
+        }
     }
 
     public static readonly HashSet<string> SupportedCheckpointExtensions =

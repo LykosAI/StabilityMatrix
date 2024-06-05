@@ -20,12 +20,17 @@ public interface IModelIndexService
     /// <summary>
     /// Get all models of the specified type from the existing (in-memory) index.
     /// </summary>
-    IEnumerable<LocalModelFile> GetFromModelIndex(SharedFolderType types);
+    IEnumerable<LocalModelFile> FindByModelType(SharedFolderType types);
+
+    /// <summary>
+    /// Gets all models in a hierarchical structure.
+    /// </summary>
+    Task<Dictionary<SharedFolderType, LocalModelFolder>> FindAllFolders();
 
     /// <summary>
     /// Find all models of the specified SharedFolderType.
     /// </summary>
-    Task<IEnumerable<LocalModelFile>> FindAsync(SharedFolderType type);
+    Task<IEnumerable<LocalModelFile>> FindByModelTypeAsync(SharedFolderType type);
 
     /// <summary>
     /// Find all models with the specified Blake3 hash.
@@ -36,4 +41,7 @@ public interface IModelIndexService
     /// Remove a model from the index.
     /// </summary>
     Task<bool> RemoveModelAsync(LocalModelFile model);
+
+    Task<bool> RemoveModelsAsync(IEnumerable<LocalModelFile> models);
+    Task CheckModelsForUpdateAsync();
 }

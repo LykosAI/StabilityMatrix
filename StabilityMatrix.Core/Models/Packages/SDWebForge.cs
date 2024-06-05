@@ -77,6 +77,24 @@ public class SDWebForge(
             },
             new LaunchOptionDefinition
             {
+                Name = "Pin Shared Memory",
+                Type = LaunchOptionType.Bool,
+                Options = { "--pin-shared-memory" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "CUDA Malloc",
+                Type = LaunchOptionType.Bool,
+                Options = { "--cuda-malloc" }
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "CUDA Stream",
+                Type = LaunchOptionType.Bool,
+                Options = { "--cuda-stream" }
+            },
+            new LaunchOptionDefinition
+            {
                 Name = "Always Offload from VRAM",
                 Type = LaunchOptionType.Bool,
                 Options = ["--always-offload-from-vram"]

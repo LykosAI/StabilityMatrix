@@ -737,7 +737,7 @@
     <value>Cela déplacera toutes les images générées des packages sélectionnés vers le répertoire consolidé du dossier de sorties partagées. Cette action ne peut pas être annulée.</value>
   </data>
   <data name="Action_Refresh" xml:space="preserve">
-    <value>Rafraichir</value>
+    <value>Actualiser</value>
   </data>
   <data name="Action_Upgrade" xml:space="preserve">
     <value>Passer à la version supérieure</value>
@@ -977,5 +977,56 @@
   </data>
   <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
     <value>Nous recommandons un GPU avec prise en charge CUDA pour une meilleure expérience. Vous pouvez continuer sans en avoir un, mais certains packages peuvent ne pas fonctionner et l&apos;inférence peut être plus lente.</value>
+  </data>
+  <data name="Label_ModelBrowser" xml:space="preserve">
+    <value>Explorateur de modèle</value>
+  </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>Workflows</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>Scroll infini</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>Explorateur de workflow</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>Ouvrir sur OpenArt</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>Plus de détails</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>Description du workflow</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>Explorateur OpenArt</value>
+  </data>
+  <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
+    <value>Une autre instance de Stability Matrix est déjà lancée. Merci de la quitter avant d&apos;en démarrer une nouvelle.</value>
+  </data>
+  <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrix est déjà lancé</value>
+  </data>
+  <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
+    <value>{0} suppressions réalisées</value>
+  </data>
+  <data name="Label_WorkflowDeleted" xml:space="preserve">
+    <value>Workflow supprimé</value>
+  </data>
+  <data name="Label_ErrorRetrievingWorkflows" xml:space="preserve">
+    <value>Erreur lors de l&apos;obtention des workflows</value>
+  </data>
+  <data name="TabLabel_InstalledWorkflows" xml:space="preserve">
+    <value>Workflows installés</value>
+  </data>
+  <data name="Label_WorkflowImported" xml:space="preserve">
+    <value>Workflows importé</value>
+  </data>
+  <data name="Label_FinishedImportingWorkflow" xml:space="preserve">
+    <value>L&apos;import du workflow et des custom nodes est terminé</value>
+  </data>
+  <data name="Label_WorkflowImportComplete" xml:space="preserve">
+    <value>Le workflow et les custom nodes ont été importés.</value>
   </data>
 </root>

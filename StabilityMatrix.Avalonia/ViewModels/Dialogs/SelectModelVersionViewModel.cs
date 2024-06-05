@@ -314,13 +314,17 @@ public partial class SelectModelVersionViewModel(
                 : CivitModel.Type.ConvertTo<SharedFolderType>().GetStringValue()
         );
 
-        installLocations.Add(downloadDirectory.ToString().Replace(rootModelsDirectory, "Models"));
-
-        foreach (
-            var directory in downloadDirectory.EnumerateDirectories(searchOption: SearchOption.AllDirectories)
-        )
+        if (!downloadDirectory.ToString().EndsWith("Unknown"))
         {
-            installLocations.Add(directory.ToString().Replace(rootModelsDirectory, "Models"));
+            installLocations.Add(downloadDirectory.ToString().Replace(rootModelsDirectory, "Models"));
+            foreach (
+                var directory in downloadDirectory.EnumerateDirectories(
+                    searchOption: SearchOption.AllDirectories
+                )
+            )
+            {
+                installLocations.Add(directory.ToString().Replace(rootModelsDirectory, "Models"));
+            }
         }
 
         installLocations.Add("Custom...");

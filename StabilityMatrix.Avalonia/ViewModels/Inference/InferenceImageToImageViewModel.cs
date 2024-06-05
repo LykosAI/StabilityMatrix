@@ -39,7 +39,10 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
             runningPackageService
         )
     {
-        SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>();
+        SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>(vm =>
+        {
+            vm.IsMaskEditorEnabled = true;
+        });
 
         SamplerCardViewModel.IsDenoiseStrengthEnabled = true;
     }

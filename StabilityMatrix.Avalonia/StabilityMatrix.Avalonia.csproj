@@ -17,7 +17,7 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
-        <Version>2.10.0-dev.999</Version>
+        <Version>2.11.0-dev.999</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -92,6 +92,7 @@
         <PackageReference Include="RockLib.Reflection.Optimized" Version="3.0.0" />
         <PackageReference Include="Sentry" Version="4.1.2" />
         <PackageReference Include="Sentry.NLog" Version="4.1.2" />
+        <PackageReference Include="SoftCircuits.OrderedDictionary" Version="3.2.0" />
         <PackageReference Include="SpacedGrid-Avalonia" Version="11.0.0" />
         <PackageReference Include="Sylvan.Common" Version="0.4.3" />
         <PackageReference Include="Sylvan.Data" Version="0.2.13" />

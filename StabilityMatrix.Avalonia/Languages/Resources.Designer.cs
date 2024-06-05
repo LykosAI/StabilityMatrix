@@ -231,6 +231,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Edit Clipping Mask.
+        /// </summary>
+        public static string Action_EditClippingMask {
+            get {
+                return ResourceManager.GetString("Action_EditClippingMask", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exit Application.
         /// </summary>
         public static string Action_ExitApplication {
@@ -290,6 +299,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_Login {
             get {
                 return ResourceManager.GetString("Action_Login", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move to Trash.
+        /// </summary>
+        public static string Action_MoveToTrash {
+            get {
+                return ResourceManager.GetString("Action_MoveToTrash", resourceCulture);
             }
         }
         
@@ -618,6 +636,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Toggle Visibility.
+        /// </summary>
+        public static string Action_ToggleVisibility {
+            get {
+                return ResourceManager.GetString("Action_ToggleVisibility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Uninstall.
         /// </summary>
         public static string Action_Uninstall {
@@ -789,6 +816,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete {0} models?.
+        /// </summary>
+        public static string Label_AreYouSureDeleteModels {
+            get {
+                return ResourceManager.GetString("Label_AreYouSureDeleteModels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Augmentation Level.
         /// </summary>
         public static string Label_AugmentationLevel {
@@ -812,6 +848,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_AutoScrollToEnd {
             get {
                 return ResourceManager.GetString("Label_AutoScrollToEnd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Auto-Search on Load.
+        /// </summary>
+        public static string Label_AutoSearchOnLoad {
+            get {
+                return ResourceManager.GetString("Label_AutoSearchOnLoad", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Automatically initiate a search when the model browser page is loaded.
+        /// </summary>
+        public static string Label_AutoSearchOnLoad_Description {
+            get {
+                return ResourceManager.GetString("Label_AutoSearchOnLoad_Description", resourceCulture);
             }
         }
         
@@ -942,11 +996,29 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to .
+        /// </summary>
+        public static string Label_ClippingMask {
+            get {
+                return ResourceManager.GetString("Label_ClippingMask", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to CLIP Skip.
         /// </summary>
         public static string Label_CLIPSkip {
             get {
                 return ResourceManager.GetString("Label_CLIPSkip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to CLIP Strength.
+        /// </summary>
+        public static string Label_CLIPStrength {
+            get {
+                return ResourceManager.GetString("Label_CLIPStrength", resourceCulture);
             }
         }
         
@@ -1176,6 +1248,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Delete Permanently.
+        /// </summary>
+        public static string Label_DeletePermanently {
+            get {
+                return ResourceManager.GetString("Label_DeletePermanently", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Denoising Strength.
         /// </summary>
         public static string Label_DenoisingStrength {
@@ -1334,6 +1415,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_EverythingLooksGood {
             get {
                 return ResourceManager.GetString("Label_EverythingLooksGood", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extra Networks (Lora / LyCORIS).
+        /// </summary>
+        public static string Label_ExtraNetworks {
+            get {
+                return ResourceManager.GetString("Label_ExtraNetworks", resourceCulture);
             }
         }
         
@@ -1847,6 +1937,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Notifications {
             get {
                 return ResourceManager.GetString("Label_Notifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number Format.
+        /// </summary>
+        public static string Label_NumberFormat {
+            get {
+                return ResourceManager.GetString("Label_NumberFormat", resourceCulture);
             }
         }
         
@@ -2832,6 +2931,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You are about to delete the following items:.
+        /// </summary>
+        public static string Text_DeleteFollowingItems {
+            get {
+                return ResourceManager.GetString("Text_DeleteFollowingItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Choose your preferred interface to get started.
         /// </summary>
         public static string Text_OneClickInstaller_SubHeader {
@@ -2882,6 +2990,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Text_WelcomeToStabilityMatrix {
             get {
                 return ResourceManager.GetString("Text_WelcomeToStabilityMatrix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are about to delete the following {0} items:.
+        /// </summary>
+        public static string TextTemplate_DeleteFollowingCountItems {
+            get {
+                return ResourceManager.GetString("TextTemplate_DeleteFollowingCountItems", resourceCulture);
             }
         }
         

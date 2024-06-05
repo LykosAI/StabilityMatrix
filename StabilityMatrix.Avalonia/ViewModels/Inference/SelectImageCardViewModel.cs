@@ -12,6 +12,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
@@ -19,7 +20,9 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
 using Size = System.Drawing.Size;
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
@@ -29,13 +32,38 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(SelectImageCard))]
 [ManagedService]
 [Transient]
-public partial class SelectImageCardViewModel(INotificationService notificationService)
-    : LoadableViewModelBase,
-        IDropTarget,
-        IComfyStep,
-        IInputImageProvider
+public partial class SelectImageCardViewModel(
+    INotificationService notificationService,
+    ServiceManager<ViewModelBase> vmFactory
+) : LoadableViewModelBase, IDropTarget, IComfyStep, IInputImageProvider
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    private static FilePickerFileType SupportedImages { get; } =
+        new("Supported Images")
+        {
+            Patterns = new[] { "*.png", "*.jpg", "*.jpeg" },
+            AppleUniformTypeIdentifiers = new[] { "public.jpeg", "public.png" },
+            MimeTypes = new[] { "image/jpeg", "image/png" }
+        };
+
+    private readonly Lazy<MaskEditorViewModel> _lazyMaskEditorViewModel =
+        new(vmFactory.Get<MaskEditorViewModel>);
+
+    /// <summary>
+    /// When true, enables a button to open a mask editor for the image.
+    /// This is not saved or loaded from state.
+    /// </summary>
+    [ObservableProperty]
+    [property: JsonIgnore]
+    [property: MemberNotNull(nameof(MaskEditorViewModel))]
+    private bool isMaskEditorEnabled;
+
+    /// <summary>
+    /// Toggles whether the mask overlay is shown over the image.
+    /// </summary>
+    [ObservableProperty]
+    private bool isMaskOverlayEnabled;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSelectionAvailable))]
@@ -66,24 +94,65 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
     /// </summary>
     public string? NotFoundImagePath => ImageSource?.LocalFile?.FullPath;
 
+    [JsonInclude]
+    public MaskEditorViewModel? MaskEditorViewModel =>
+        IsMaskEditorEnabled ? _lazyMaskEditorViewModel.Value : null;
+
+    [JsonIgnore]
+    public ImageSource? LastMaskImage { get; private set; }
+
     /// <inheritdoc />
     public void ApplyStep(ModuleApplyStepEventArgs e)
     {
-        e.Builder.SetupImagePrimarySource(
-            ImageSource ?? throw new ValidationException("Input Image is required"),
-            !CurrentBitmapSize.IsEmpty
-                ? CurrentBitmapSize
-                : throw new ValidationException("CurrentBitmapSize is null"),
-            e.Builder.Connections.BatchIndex
-        );
+        // With Mask image
+        if (IsMaskEditorEnabled && MaskEditorViewModel.IsMaskEnabled)
+        {
+            MaskEditorViewModel.PaintCanvasViewModel.CanvasSize = CurrentBitmapSize;
+
+            e.Builder.SetupImagePrimarySourceWithMask(
+                ImageSource ?? throw new ValidationException("Input Image is required"),
+                !CurrentBitmapSize.IsEmpty
+                    ? CurrentBitmapSize
+                    : throw new ValidationException("CurrentBitmapSize is null"),
+                MaskEditorViewModel.GetCachedOrNewMaskRenderInverseAlphaImage(),
+                MaskEditorViewModel.PaintCanvasViewModel.CanvasSize,
+                e.Builder.Connections.BatchIndex
+            );
+        }
+        // Normal image only
+        else
+        {
+            e.Builder.SetupImagePrimarySource(
+                ImageSource ?? throw new ValidationException("Input Image is required"),
+                !CurrentBitmapSize.IsEmpty
+                    ? CurrentBitmapSize
+                    : throw new ValidationException("CurrentBitmapSize is null"),
+                e.Builder.Connections.BatchIndex
+            );
+        }
     }
 
     /// <inheritdoc />
     public IEnumerable<ImageSource> GetInputImages()
     {
+        // Main image
         if (ImageSource is { } image && !IsImageFileNotFound)
         {
             yield return image;
+        }
+
+        // Mask image
+        if (IsMaskEditorEnabled && MaskEditorViewModel.IsMaskEnabled)
+        {
+            using var timer = CodeTimer.StartDebug("MaskImage");
+
+            MaskEditorViewModel.PaintCanvasViewModel.CanvasSize = CurrentBitmapSize;
+
+            var maskImage = MaskEditorViewModel.GetCachedOrNewMaskRenderInverseAlphaImage();
+
+            timer.Dispose();
+
+            yield return maskImage;
         }
     }
 
@@ -105,14 +174,6 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
         }
     }
 
-    private static FilePickerFileType SupportedImages { get; } =
-        new("Supported Images")
-        {
-            Patterns = new[] { "*.png", "*.jpg", "*.jpeg" },
-            AppleUniformTypeIdentifiers = new[] { "public.jpeg", "public.png" },
-            MimeTypes = new[] { "image/jpeg", "image/png" }
-        };
-
     [RelayCommand]
     private async Task SelectImageFromFilePickerAsync()
     {
@@ -126,6 +187,36 @@ public partial class SelectImageCardViewModel(INotificationService notificationS
         if (files.FirstOrDefault()?.TryGetLocalPath() is { } path)
         {
             Dispatcher.UIThread.Post(() => LoadUserImageSafe(new ImageSource(path)));
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenEditMaskDialogAsync()
+    {
+        if (!IsMaskEditorEnabled || ImageSource is null)
+        {
+            return;
+        }
+
+        // Make a backup to restore if not saving later
+        var maskEditorStateBackup = MaskEditorViewModel.SaveStateToJsonObject();
+
+        // Set the background image
+        if (await ImageSource.GetBitmapAsync() is not { } currentBitmap)
+        {
+            Logger.Warn("GetBitmapAsync returned null for image {Path}", ImageSource.LocalFile?.FullPath);
+            return;
+        }
+        MaskEditorViewModel.PaintCanvasViewModel.BackgroundImage = currentBitmap.ToSKBitmap();
+
+        if (await MaskEditorViewModel.GetDialog().ShowAsync() == ContentDialogResult.Primary)
+        {
+            MaskEditorViewModel.InvalidateCachedMaskRenderImage();
+        }
+        else
+        {
+            // Restore the backup
+            MaskEditorViewModel.LoadStateFromJsonObject(maskEditorStateBackup);
         }
     }
 

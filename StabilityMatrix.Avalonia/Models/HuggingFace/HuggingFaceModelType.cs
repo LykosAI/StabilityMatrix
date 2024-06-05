@@ -12,13 +12,17 @@ public enum HuggingFaceModelType
     [ConvertTo<SharedFolderType>(SharedFolderType.StableDiffusion)]
     BaseModel,
 
-    [Description("ControlNets")]
+    [Description("ControlNets (SD1.5)")]
     [ConvertTo<SharedFolderType>(SharedFolderType.ControlNet)]
     ControlNet,
 
-    [Description("ControlNets (Diffusers)")]
+    [Description("ControlNets (Diffusers SD1.5)")]
     [ConvertTo<SharedFolderType>(SharedFolderType.ControlNet)]
     DiffusersControlNet,
+
+    [Description("ControlNets (SDXL)")]
+    [ConvertTo<SharedFolderType>(SharedFolderType.ControlNet)]
+    ControlNetXl,
 
     [Description("IP Adapters")]
     [ConvertTo<SharedFolderType>(SharedFolderType.IpAdapter)]

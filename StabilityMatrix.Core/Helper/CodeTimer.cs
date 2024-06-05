@@ -5,21 +5,27 @@ using System.Text;
 
 namespace StabilityMatrix.Core.Helper;
 
-public class CodeTimer : IDisposable
+public class CodeTimer(string postFix = "", [CallerMemberName] string callerName = "") : IDisposable
 {
     private static readonly Stack<CodeTimer> RunningTimers = new();
 
-    private readonly string name;
-    private readonly Stopwatch stopwatch;
+    private readonly string name = $"{callerName}" + (string.IsNullOrEmpty(postFix) ? "" : $" ({postFix})");
+    private readonly Stopwatch stopwatch = new();
     private bool isDisposed;
 
-    private CodeTimer? ParentTimer { get; }
+    private CodeTimer? ParentTimer { get; set; }
     private List<CodeTimer> SubTimers { get; } = new();
 
-    public CodeTimer(string postFix = "", [CallerMemberName] string callerName = "")
+    public void Start()
     {
-        name = $"{callerName}" + (string.IsNullOrEmpty(postFix) ? "" : $" ({postFix})");
-        stopwatch = Stopwatch.StartNew();
+        ObjectDisposedException.ThrowIf(isDisposed, this);
+
+        if (stopwatch.IsRunning)
+        {
+            return;
+        }
+
+        stopwatch.Start();
 
         // Set parent as the top of the stack
         if (RunningTimers.TryPeek(out var timer))
@@ -33,18 +39,28 @@ public class CodeTimer : IDisposable
     }
 
     /// <summary>
+    /// Start a new timer and return it.
+    /// </summary>
+    /// <param name="postFix"></param>
+    /// <param name="callerName"></param>
+    /// <returns></returns>
+    public static CodeTimer StartNew(string postFix = "", [CallerMemberName] string callerName = "")
+    {
+        var timer = new CodeTimer(postFix, callerName);
+        timer.Start();
+        return timer;
+    }
+
+    /// <summary>
     /// Starts a new timer and returns it if DEBUG is defined, otherwise returns an empty IDisposable
     /// </summary>
     /// <param name="postFix"></param>
     /// <param name="callerName"></param>
     /// <returns></returns>
-    public static IDisposable StartDebug(
-        string postFix = "",
-        [CallerMemberName] string callerName = ""
-    )
+    public static IDisposable StartDebug(string postFix = "", [CallerMemberName] string callerName = "")
     {
 #if DEBUG
-        return new CodeTimer(postFix, callerName);
+        return StartNew(postFix, callerName);
 #else
         return Disposable.Empty;
 #endif
@@ -75,7 +91,7 @@ public class CodeTimer : IDisposable
 
     private static void OutputDebug(string message)
     {
-        Debug.WriteLine(message);
+        Debug.Write(message);
     }
 
     /// <summary>
@@ -85,7 +101,7 @@ public class CodeTimer : IDisposable
     {
         var builder = new StringBuilder();
 
-        builder.AppendLine($"{name}: took {FormatTime(stopwatch.Elapsed)}");
+        builder.AppendLine($"{name}:\ttook {FormatTime(stopwatch.Elapsed)}");
 
         foreach (var timer in SubTimers)
         {
@@ -96,10 +112,18 @@ public class CodeTimer : IDisposable
         return builder.ToString();
     }
 
-    public void Dispose()
+    public void Stop()
     {
-        if (isDisposed)
+        // Output if we're a root timer
+        Stop(printOutput: ParentTimer is null);
+    }
+
+    public void Stop(bool printOutput)
+    {
+        if (isDisposed || !stopwatch.IsRunning)
+        {
             return;
+        }
 
         stopwatch.Stop();
 
@@ -117,11 +141,23 @@ public class CodeTimer : IDisposable
         }
 
         // If we're a root timer, output all results
-        if (ParentTimer is null)
+        if (printOutput)
         {
+#if DEBUG
             OutputDebug(GetResult());
+#else
+            Console.WriteLine(GetResult());
+#endif
             SubTimers.Clear();
         }
+    }
+
+    public void Dispose()
+    {
+        if (isDisposed)
+            return;
+
+        Stop();
 
         isDisposed = true;
         GC.SuppressFinalize(this);

@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.ComponentModel;
+using System.Globalization;
 using System.Text.Json.Serialization;
 using Semver;
 using StabilityMatrix.Core.Converters.Json;
@@ -14,6 +15,8 @@ public class Settings
     public bool FirstLaunchSetupComplete { get; set; }
     public string? Theme { get; set; } = "Dark";
     public string? Language { get; set; } = GetDefaultCulture().Name;
+
+    public NumberFormatMode NumberFormatMode { get; set; } = NumberFormatMode.CurrentCulture;
 
     public List<InstalledPackage> InstalledPackages { get; set; } = new();
 
@@ -106,6 +109,12 @@ public class Settings
     /// Whether the Inference Image Viewer shows pixel grids at high zoom levels
     /// </summary>
     public bool IsImageViewerPixelGridEnabled { get; set; } = true;
+
+    /// <summary>
+    /// Whether Inference Image Browser delete action uses recycle bin if available
+    /// </summary>
+    public bool IsInferenceImageBrowserUseRecycleBinForDelete { get; set; } = true;
+
     public bool RemoveFolderLinksOnShutdown { get; set; }
 
     public bool IsDiscordRichPresenceEnabled { get; set; }
@@ -158,6 +167,18 @@ public class Settings
     public HolidayMode HolidayModeSetting { get; set; } = HolidayMode.Automatic;
     public bool IsWorkflowInfiniteScrollEnabled { get; set; } = true;
     public bool IsOutputsTreeViewEnabled { get; set; } = true;
+    public CheckpointSortMode CheckpointSortMode { get; set; } = CheckpointSortMode.SharedFolderType;
+    public ListSortDirection CheckpointSortDirection { get; set; } = ListSortDirection.Descending;
+    public bool ShowModelsInSubfolders { get; set; } = true;
+    public bool SortConnectedModelsFirst { get; set; } = true;
+    public int ConsoleFontSize { get; set; } = 14;
+    public bool AutoLoadCivitModels { get; set; } = true;
+
+    /// <summary>
+    /// When false, will copy files when drag/drop import happens
+    /// Otherwise, it will move, as it states
+    /// </summary>
+    public bool MoveFilesOnImport { get; set; } = false;
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

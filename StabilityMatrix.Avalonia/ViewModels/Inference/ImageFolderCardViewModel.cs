@@ -28,6 +28,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Native;
 using SortDirection = DynamicData.Binding.SortDirection;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -74,8 +75,8 @@ public partial class ImageFolderCardViewModel : ViewModelBase
             .Select(property => searcher.GetPredicate(property.Value))
             .AsObservable();
 
-        imageIndexService.InferenceImages.ItemsSource
-            .Connect()
+        imageIndexService
+            .InferenceImages.ItemsSource.Connect()
             .DeferUntilLoaded()
             .Filter(searchPredicate)
             .SortBy(file => file.LastModifiedAt, SortDirection.Descending)
@@ -185,8 +186,8 @@ public partial class ImageFolderCardViewModel : ViewModelBase
             )
             .Subscribe(ctx =>
             {
-                Dispatcher.UIThread
-                    .InvokeAsync(async () =>
+                Dispatcher
+                    .UIThread.InvokeAsync(async () =>
                     {
                         var sender = (ImageViewerViewModel)ctx.Sender!;
                         var newIndex = currentIndex + (ctx.EventArgs.IsNext ? 1 : -1);
@@ -227,20 +228,30 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         }
 
         // Delete the file
-        var result = await notificationService.TryAsync(imageFile.DeleteAsync());
+        var isRecycle =
+            settingsManager.Settings.IsInferenceImageBrowserUseRecycleBinForDelete
+            && NativeFileOperations.IsRecycleBinAvailable;
 
-        if (!result.IsSuccessful)
+        var result = isRecycle
+            ? await notificationService.TryAsync(
+                Task.Run(() => NativeFileOperations.RecycleBin!.MoveFileToRecycleBin(imageFile))
+            )
+            : await notificationService.TryAsync(imageFile.DeleteAsync());
+
+        if (result.IsSuccessful)
         {
-            return;
+            // Remove from index
+            imageIndexService.InferenceImages.Remove(item);
+
+            // Invalidate cache
+            if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
+            {
+                loader.RemoveAllNamesFromCache(imageFile.Name);
+            }
         }
-
-        // Remove from index
-        imageIndexService.InferenceImages.Remove(item);
-
-        // Invalidate cache
-        if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
+        else
         {
-            loader.RemoveAllNamesFromCache(imageFile.Name);
+            logger.LogWarning(result.Exception, "Failed to delete image");
         }
     }
 
@@ -350,34 +361,23 @@ public partial class ImageFolderCardViewModel : ViewModelBase
         catch (IOException e)
         {
             logger.LogWarning(e, "Failed to export image");
-            notificationService.ShowPersistent(
-                "Failed to export image",
-                e.Message,
-                NotificationType.Error
-            );
+            notificationService.ShowPersistent("Failed to export image", e.Message, NotificationType.Error);
             return;
         }
 
-        notificationService.Show(
-            "Image Exported",
-            $"Saved to {targetPath}",
-            NotificationType.Success
-        );
+        notificationService.Show("Image Exported", $"Saved to {targetPath}", NotificationType.Success);
     }
 
     [RelayCommand]
-    private Task OnImageExportPng(LocalImageFile? item) =>
-        ImageExportImpl(item, SKEncodedImageFormat.Png);
+    private Task OnImageExportPng(LocalImageFile? item) => ImageExportImpl(item, SKEncodedImageFormat.Png);
 
     [RelayCommand]
     private Task OnImageExportPngWithMetadata(LocalImageFile? item) =>
         ImageExportImpl(item, SKEncodedImageFormat.Png, true);
 
     [RelayCommand]
-    private Task OnImageExportJpeg(LocalImageFile? item) =>
-        ImageExportImpl(item, SKEncodedImageFormat.Jpeg);
+    private Task OnImageExportJpeg(LocalImageFile? item) => ImageExportImpl(item, SKEncodedImageFormat.Jpeg);
 
     [RelayCommand]
-    private Task OnImageExportWebp(LocalImageFile? item) =>
-        ImageExportImpl(item, SKEncodedImageFormat.Webp);
+    private Task OnImageExportWebp(LocalImageFile? item) => ImageExportImpl(item, SKEncodedImageFormat.Webp);
 }

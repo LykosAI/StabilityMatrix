@@ -242,7 +242,7 @@ public sealed class App : Application
     /// </summary>
     private void Setup()
     {
-        using var _ = new CodeTimer();
+        using var _ = CodeTimer.StartNew();
 
         // Setup uri handler for `stabilitymatrix://` protocol
         Program.UriHandler.RegisterUriScheme();
@@ -269,6 +269,7 @@ public sealed class App : Application
             mainWindow.Position = new PixelPoint(windowSettings.X, windowSettings.Y);
             mainWindow.Width = windowSettings.Width;
             mainWindow.Height = windowSettings.Height;
+            mainWindow.WindowState = windowSettings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
         }
         else
         {
@@ -301,7 +302,10 @@ public sealed class App : Application
 
         if (settingsManager.TryFindLibrary())
         {
-            Cultures.SetSupportedCultureOrDefault(settingsManager.Settings.Language);
+            Cultures.SetSupportedCultureOrDefault(
+                settingsManager.Settings.Language,
+                settingsManager.Settings.NumberFormatMode
+            );
         }
         else
         {
@@ -328,7 +332,7 @@ public sealed class App : Application
                     {
                         provider.GetRequiredService<NewPackageManagerViewModel>(),
                         provider.GetRequiredService<InferenceViewModel>(),
-                        provider.GetRequiredService<CheckpointsPageViewModel>(),
+                        provider.GetRequiredService<NewCheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
                         provider.GetRequiredService<OutputsPageViewModel>(),
                         provider.GetRequiredService<WorkflowsPageViewModel>()

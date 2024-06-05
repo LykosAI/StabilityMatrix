@@ -81,13 +81,13 @@
                 <DataGrid.Columns>
                     <DataGridTextColumn x:DataType="models:EnvVarKeyPair" 
                                         Width="5*"
-                                        FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                        FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
                                         Header="{x:Static lang:Resources.Label_EnvVarsTable_Name}" 
                                         Binding="{Binding Key}" />
                     <DataGridTemplateColumn MinWidth="0" Width="1" CellTemplate="{StaticResource DataGridCellDividerTemplate}"/>
                     <DataGridTextColumn x:DataType="models:EnvVarKeyPair" 
                                         Width="5*"
-                                        FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                        FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
                                         Header="{x:Static lang:Resources.Label_EnvVarsTable_Value}" 
                                         Binding="{Binding Value}" />
                 </DataGrid.Columns>

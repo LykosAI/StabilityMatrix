@@ -1,0 +1,94 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ConfirmDeleteDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    d:DataContext="{x:Static mocks:DesignData.ConfirmDeleteDialogViewModel}"
+    d:DesignHeight="550"
+    d:DesignWidth="500"
+    x:DataType="dialogs:ConfirmDeleteDialogViewModel"
+    mc:Ignorable="d">
+    
+    <sg:SpacedGrid
+        RowDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto"
+        RowSpacing="12">
+        <TextBlock
+            Margin="0,0,0,8"
+            Text="{Binding Title}"
+            TextWrapping="Wrap"
+            Theme="{DynamicResource TitleTextBlockStyle}" />
+
+        <TextBlock
+            Grid.Row="1"
+            Margin="4,0"
+            Text="{Binding DeleteFollowingFilesText}"
+            Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+
+        <controls:Card
+            Grid.Row="2"
+            Margin="2"
+            Padding="4,6"
+            VerticalAlignment="Top"
+            ScrollViewer.VerticalScrollBarVisibility="Visible">
+            <ListBox ItemsSource="{Binding PathsToDelete}" />
+        </controls:Card>
+
+        <!--<ui:InfoBar Grid.Row="3"
+                    Margin="4,0"
+                    IsClosable="False"
+                    VerticalAlignment="Bottom"
+                    IsOpen="{Binding ShowFilesWillBeMovedToRecycleBinNotice}"
+                    Title="{x:Static lang:Resources.Label_FilesWillBeMovedToRecycleBin}"
+                    Severity="Informational"/>-->
+
+        <ui:InfoBar
+            Title="{x:Static lang:Resources.Label_ActionCannotBeUndone}"
+            Grid.Row="3"
+            Margin="4,0"
+            VerticalAlignment="Bottom"
+            IsClosable="False"
+            IsOpen="{Binding IsPermanentDelete}"
+            Severity="Warning" />
+
+        <CheckBox
+            Grid.Row="5"
+            Margin="12,0"
+            IsVisible="{Binding IsRecycleBinAvailable}"
+            IsChecked="{Binding IsRecycleBinOptOutChecked}"
+            Content="{x:Static lang:Resources.Label_DeletePermanently}" />
+
+        <TextBlock
+            Grid.Row="4"
+            Margin="4,0"
+            VerticalAlignment="Bottom"
+            Text="{x:Static lang:Resources.Label_AreYouSure}"
+            Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+        
+        <UniformGrid
+            Grid.Row="6"
+            Margin="0,4,0,-24"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Bottom">
+            <Button
+                Margin="0,0,8,0"
+                HorizontalAlignment="Stretch"
+                Command="{Binding OnCloseButtonClick}"
+                Content="{x:Static lang:Resources.Action_Cancel}"/>
+            <Button
+                Margin="0,0,8,0"
+                HorizontalAlignment="Stretch"
+                Classes="danger"
+                Command="{Binding ConfirmDeleteClickCommand}"
+                Content="{Binding ConfirmDeleteButtonText}"/>
+        </UniformGrid>
+    </sg:SpacedGrid>
+</controls:UserControlBase>

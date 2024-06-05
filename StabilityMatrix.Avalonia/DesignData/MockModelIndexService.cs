@@ -20,13 +20,19 @@ public class MockModelIndexService : IModelIndexService
     }
 
     /// <inheritdoc />
-    public IEnumerable<LocalModelFile> GetFromModelIndex(SharedFolderType types)
+    public IEnumerable<LocalModelFile> FindByModelType(SharedFolderType types)
     {
         return Array.Empty<LocalModelFile>();
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<LocalModelFile>> FindAsync(SharedFolderType type)
+    public Task<Dictionary<SharedFolderType, LocalModelFolder>> FindAllFolders()
+    {
+        return Task.FromResult(new Dictionary<SharedFolderType, LocalModelFolder>());
+    }
+
+    /// <inheritdoc />
+    public Task<IEnumerable<LocalModelFile>> FindByModelTypeAsync(SharedFolderType type)
     {
         return Task.FromResult(Enumerable.Empty<LocalModelFile>());
     }
@@ -43,7 +49,12 @@ public class MockModelIndexService : IModelIndexService
         return Task.FromResult(false);
     }
 
-    public Task CheckModelsForUpdates()
+    public Task<bool> RemoveModelsAsync(IEnumerable<LocalModelFile> models)
+    {
+        return Task.FromResult(false);
+    }
+
+    public Task CheckModelsForUpdateAsync()
     {
         return Task.CompletedTask;
     }

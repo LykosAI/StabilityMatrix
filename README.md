@@ -25,6 +25,7 @@
 [onetrainer]: https://github.com/Nerogar/OneTrainer
 [forge]: https://github.com/lllyasviel/stable-diffusion-webui-forge
 [stable-swarm]: https://github.com/Stability-AI/StableSwarmUI
+[sdfx]: https://github.com/sdfxai/sdfx
 
 [civitai]: https://civitai.com/
 [huggingface]: https://huggingface.co/
@@ -46,6 +47,7 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
   - [StableSwarmUI][stable-swarm]
   - [VoltaML][voltaml]
   - [InvokeAI][invokeai]
+  - [SDFX][sdfx]
   - [Kohya's GUI][kohya-ss]
   - [OneTrainer][onetrainer]
 - Manage plugins / extensions for supported packages ([Automatic1111][auto1111], [Comfy UI][comfy], [SD Web UI-UX][webui-ux], and [SD.Next][sdnext])

@@ -37,4 +37,9 @@ public partial class HuggingfaceItemViewModel : ViewModelBase
     {
         IsSelected = !IsSelected;
     }
+
+    public void NotifyExistsChanged()
+    {
+        OnPropertyChanged(nameof(Exists));
+    }
 }

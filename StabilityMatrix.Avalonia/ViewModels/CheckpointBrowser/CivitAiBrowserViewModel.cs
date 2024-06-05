@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Collections;
@@ -12,9 +11,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DynamicData;
-using DynamicData.Alias;
-using DynamicData.Binding;
 using LiteDB;
 using LiteDB.Async;
 using NLog;
@@ -178,7 +174,10 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             settings => settings.ModelBrowserNsfwEnabled
         );
 
-        SearchModelsCommand.ExecuteAsync(false);
+        if (settingsManager.Settings.AutoLoadCivitModels)
+        {
+            SearchModelsCommand.ExecuteAsync(false);
+        }
     }
 
     /// <summary>

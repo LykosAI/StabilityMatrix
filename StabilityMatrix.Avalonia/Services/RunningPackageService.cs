@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ public partial class RunningPackageService(
     INotificationService notificationService,
     ISettingsManager settingsManager,
     IPyRunner pyRunner
-) : ObservableObject
+) : ObservableObject, IDisposable
 {
     // 🤔 what if we put the ConsoleViewModel inside the BasePackage? 🤔
     [ObservableProperty]
@@ -137,6 +138,8 @@ public partial class RunningPackageService(
             var runningPackage = vm.RunningPackage;
             await runningPackage.BasePackage.WaitForShutdown();
             RunningPackages.Remove(id);
+
+            await vm.DisposeAsync();
         }
     }
 
@@ -149,5 +152,29 @@ public partial class RunningPackageService(
         var file = sitePackages.JoinFile("sitecustomize.py");
         file.Directory?.Create();
         await Assets.PyScriptSiteCustomize.ExtractTo(file, true);
+    }
+
+    public void Dispose()
+    {
+        var exceptions = new List<Exception>();
+
+        foreach (var (_, vm) in RunningPackages)
+        {
+            try
+            {
+                vm.Dispose();
+            }
+            catch (Exception e)
+            {
+                exceptions.Add(e);
+            }
+        }
+
+        if (exceptions.Count != 0)
+        {
+            throw new AggregateException(exceptions);
+        }
+
+        GC.SuppressFinalize(this);
     }
 }

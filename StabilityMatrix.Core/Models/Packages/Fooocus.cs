@@ -312,7 +312,11 @@ public class Fooocus(
         }
 
         fooocusConfig["path_checkpoints"] = Path.Combine(settingsManager.ModelsDirectory, "StableDiffusion");
-        fooocusConfig["path_loras"] = Path.Combine(settingsManager.ModelsDirectory, "Lora");
+        fooocusConfig["path_loras"] = new JsonArray
+        {
+            Path.Combine(settingsManager.ModelsDirectory, "Lora"),
+            Path.Combine(settingsManager.ModelsDirectory, "LyCORIS")
+        };
         fooocusConfig["path_embeddings"] = Path.Combine(settingsManager.ModelsDirectory, "TextualInversion");
         fooocusConfig["path_vae_approx"] = Path.Combine(settingsManager.ModelsDirectory, "ApproxVAE");
         fooocusConfig["path_upscale_models"] = Path.Combine(settingsManager.ModelsDirectory, "ESRGAN");

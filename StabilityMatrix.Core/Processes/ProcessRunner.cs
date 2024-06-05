@@ -58,11 +58,21 @@ public static class ProcessRunner
     {
         if (Compat.IsWindows)
         {
+            // Ensure path ends in DirectorySeparatorChar to unambiguously point to a directory
+            if (!directoryPath.EndsWith(Path.DirectorySeparatorChar))
+            {
+                directoryPath += Path.DirectorySeparatorChar;
+            }
+
             using var process = new Process();
-            process.StartInfo.FileName = "explorer.exe";
-            process.StartInfo.Arguments = Quote(directoryPath);
+
+            process.StartInfo.FileName = Quote(directoryPath);
+            process.StartInfo.UseShellExecute = true;
+            process.StartInfo.Verb = "open";
+
             process.Start();
-            await process.WaitForExitAsync().ConfigureAwait(false);
+
+            // Apparently using verb open detaches the process object, so we can't wait for process exit here
         }
         else if (Compat.IsLinux)
         {

@@ -122,12 +122,13 @@
                     Description="Choose whether to Copy or Move files when dragging and dropping files into the Checkpoint Manager"
                     Header="Import Behaviour">
                     <ui:SettingsExpander.IconSource>
-                        <controls:FASymbolIconSource Symbol="fa-solid fa-file-import"/>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-file-import" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
-                        <ToggleSwitch IsChecked="{Binding MoveFilesOnImport}"
-                                      OnContent="Move"
-                                      OffContent="Copy" />
+                        <ToggleSwitch
+                            IsChecked="{Binding MoveFilesOnImport}"
+                            OffContent="Copy"
+                            OnContent="Move" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
                 <ui:SettingsExpander
@@ -188,7 +189,7 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </Grid>
-            
+
             <!--  Model Browser Options  -->
             <Grid RowDefinitions="auto,*,Auto">
                 <TextBlock
@@ -198,10 +199,10 @@
                 <ui:SettingsExpander
                     Grid.Row="1"
                     Margin="8,0"
-                    Header="{x:Static lang:Resources.Label_AutoSearchOnLoad}"
-                    Description="{x:Static lang:Resources.Label_AutoSearchOnLoad_Description}">
+                    Description="{x:Static lang:Resources.Label_AutoSearchOnLoad_Description}"
+                    Header="{x:Static lang:Resources.Label_AutoSearchOnLoad}">
                     <ui:SettingsExpander.IconSource>
-                        <controls:FASymbolIconSource Symbol="fa-solid fa-spinner"/>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-spinner" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
                         <ToggleSwitch IsChecked="{Binding AutoLoadCivitModels}" />
@@ -316,7 +317,7 @@
             </Grid>
 
             <!--  System Options  -->
-            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -407,7 +408,34 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 
-                <ui:SettingsExpander Grid.Row="4" Header="{x:Static lang:Resources.Label_SystemInformation}">
+                <!-- App Folders -->
+                <ui:SettingsExpander 
+                    Grid.Row="4" 
+                    IconSource="FolderLink"
+                    Header="{x:Static lang:Resources.Label_AppFolders}">
+
+                    <ui:SettingsExpanderItem>
+                        <ItemsRepeater ItemsSource="{Binding DirectoryShortcutCommands}">
+                            <ItemsRepeater.Layout>
+                                <WrapLayout/>
+                            </ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate DataType="models:CommandItem">
+                                    <controls:HyperlinkIconButton
+                                        Command="{Binding Command}"
+                                        Margin="4"
+                                        Padding="12,6"
+                                        Content="{Binding DisplayName}" />
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+
+                        </ItemsRepeater>
+                    </ui:SettingsExpanderItem>
+
+                </ui:SettingsExpander>
+
+                <!-- System Information -->
+                <ui:SettingsExpander Grid.Row="5" Header="{x:Static lang:Resources.Label_SystemInformation}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"

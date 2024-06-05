@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -59,6 +60,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 using Application = Avalonia.Application;
+using Logger = NLog.Logger;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 #if DEBUG
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer;
@@ -69,7 +71,13 @@ namespace StabilityMatrix.Avalonia;
 
 public sealed class App : Application
 {
+    private static readonly Lazy<Logger> LoggerLazy = new(LogManager.GetCurrentClassLogger);
+    private static Logger Logger => LoggerLazy.Value;
+
     private static bool isAsyncDisposeComplete;
+    private static bool isOnExitComplete;
+
+    private static readonly SemaphoreSlim OnExitSemaphore = new(1, 1);
 
     [NotNull]
     public static IServiceProvider? Services { get; private set; }
@@ -231,7 +239,7 @@ public sealed class App : Application
         }
         catch (Exception e)
         {
-            LogManager.GetCurrentClassLogger().Error(e);
+            Logger.Error(e);
 
             return FontFamily.Default;
         }
@@ -281,8 +289,10 @@ public sealed class App : Application
         Clipboard = mainWindow.Clipboard ?? throw new NullReferenceException("Clipboard is null");
 
         DesktopLifetime.MainWindow = mainWindow;
-        DesktopLifetime.Exit += OnExit;
+        DesktopLifetime.Exit += OnApplicationLifetimeExit;
         DesktopLifetime.ShutdownRequested += OnShutdownRequested;
+
+        AppDomain.CurrentDomain.ProcessExit += OnExit;
     }
 
     private static void ConfigureServiceProvider()
@@ -340,9 +350,6 @@ public sealed class App : Application
                     FooterPages = { provider.GetRequiredService<SettingsViewModel>() }
                 }
         );
-
-        // Register disposable view models for shutdown cleanup
-        services.AddSingleton<IDisposable>(p => p.GetRequiredService<LaunchPageViewModel>());
     }
 
     internal static void ConfigureDialogViewModels(IServiceCollection services, Type[] exportedTypes)
@@ -432,6 +439,30 @@ public sealed class App : Application
                 else
                 {
                     services.AddSingleton(attribute.InterfaceType, typePair.Type);
+                }
+
+                // IDisposable registering
+                var serviceType = attribute.InterfaceType ?? typePair.Type;
+
+                if (serviceType == typeof(IDisposable) || serviceType == typeof(IAsyncDisposable))
+                {
+                    continue;
+                }
+
+                if (typePair.Type.IsAssignableTo(typeof(IDisposable)))
+                {
+                    Debug.WriteLine("Registering IDisposable: {Name}", typePair.Type.Name);
+                    services.AddSingleton<IDisposable>(
+                        provider => (IDisposable)provider.GetRequiredService(serviceType)
+                    );
+                }
+
+                if (typePair.Type.IsAssignableTo(typeof(IAsyncDisposable)))
+                {
+                    Debug.WriteLine("Registering IAsyncDisposable: {Name}", typePair.Type.Name);
+                    services.AddSingleton<IAsyncDisposable>(
+                        provider => (IAsyncDisposable)provider.GetRequiredService(serviceType)
+                    );
                 }
             }
         }
@@ -616,6 +647,8 @@ public sealed class App : Application
 
         ConditionalAddLogViewer(services);
 
+        var logConfig = ConfigureLogging();
+
         // Add logging
         services.AddLogging(builder =>
         {
@@ -625,10 +658,10 @@ public sealed class App : Application
                 .AddFilter("Microsoft.Extensions.Http.DefaultHttpClientFactory", LogLevel.Warning)
                 .AddFilter("Microsoft", LogLevel.Warning)
                 .AddFilter("System", LogLevel.Warning);
-            builder.SetMinimumLevel(LogLevel.Debug);
+            builder.SetMinimumLevel(LogLevel.Trace);
 #if DEBUG
             builder.AddNLog(
-                ConfigureLogging(),
+                logConfig,
                 new NLogProviderOptions
                 {
                     IgnoreEmptyEventId = false,
@@ -636,7 +669,7 @@ public sealed class App : Application
                 }
             );
 #else
-            builder.AddNLog(ConfigureLogging());
+            builder.AddNLog(logConfig);
 #endif
         });
 
@@ -728,29 +761,109 @@ public sealed class App : Application
             .SafeFireAndForget();
     }
 
-    private static void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs args)
+    private static void OnApplicationLifetimeExit(
+        object? sender,
+        ControlledApplicationLifetimeExitEventArgs args
+    )
     {
-        Debug.WriteLine("Start OnExit");
-        // Services.GetRequiredService<LaunchViewModel>().OnShutdown();
-        var settingsManager = Services.GetRequiredService<ISettingsManager>();
+        Logger.Debug("OnApplicationLifetimeExit: {@Args}", args);
 
-        // If RemoveFolderLinksOnShutdown is set, delete all package junctions
-        if (settingsManager is { IsLibraryDirSet: true, Settings.RemoveFolderLinksOnShutdown: true })
+        OnExit(sender, args);
+    }
+
+    private static void OnExit(object? sender, EventArgs _)
+    {
+        // Skip if already run
+        if (isOnExitComplete)
         {
-            var sharedFolders = Services.GetRequiredService<ISharedFolders>();
-            sharedFolders.RemoveLinksForAllPackages();
+            return;
         }
 
-        Debug.WriteLine("Start OnExit: Disposing services");
-
-        // Dispose IDisposable services
-        foreach (var disposable in Services.GetServices<IDisposable>())
+        // Skip if another OnExit is running
+        if (!OnExitSemaphore.Wait(0))
         {
-            Debug.WriteLine($"Disposing {disposable.GetType().Name}");
-            disposable.Dispose();
+            // Block until the other OnExit is done to delay shutdown
+            OnExitSemaphore.Wait();
+            OnExitSemaphore.Release();
+            return;
         }
 
-        Debug.WriteLine("End OnExit");
+        try
+        {
+            const int timeoutTotalMs = 10000;
+            const int timeoutPerDisposeMs = 2000;
+
+            var timeoutTotalCts = new CancellationTokenSource(timeoutTotalMs);
+
+            var toDispose = Services.GetServices<IDisposable>().ToImmutableArray();
+
+            Logger.Debug("OnExit: Preparing to Dispose {Count} Services", toDispose.Length);
+
+            // Dispose IDisposable services
+            foreach (var disposable in toDispose)
+            {
+                Logger.Debug("OnExit: Disposing {Name}", disposable.GetType().Name);
+
+                using var instanceCts = CancellationTokenSource.CreateLinkedTokenSource(
+                    timeoutTotalCts.Token,
+                    new CancellationTokenSource(timeoutPerDisposeMs).Token
+                );
+
+                try
+                {
+                    Task.Run(() => disposable.Dispose(), instanceCts.Token).Wait(instanceCts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    Logger.Warn("OnExit: Timeout disposing {Name}", disposable.GetType().Name);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e, "OnExit: Failed to dispose {Name}", disposable.GetType().Name);
+                }
+            }
+
+            var settingsManager = Services.GetRequiredService<ISettingsManager>();
+
+            // If RemoveFolderLinksOnShutdown is set, delete all package junctions
+            if (settingsManager is { IsLibraryDirSet: true, Settings.RemoveFolderLinksOnShutdown: true })
+            {
+                Logger.Debug("OnExit: Removing package junctions");
+
+                using var instanceCts = CancellationTokenSource.CreateLinkedTokenSource(
+                    timeoutTotalCts.Token,
+                    new CancellationTokenSource(timeoutPerDisposeMs).Token
+                );
+
+                try
+                {
+                    Task.Run(
+                            () =>
+                            {
+                                var sharedFolders = Services.GetRequiredService<ISharedFolders>();
+                                sharedFolders.RemoveLinksForAllPackages();
+                            },
+                            instanceCts.Token
+                        )
+                        .Wait(instanceCts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    Logger.Warn("OnExit: Timeout removing package junctions");
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e, "OnExit: Failed to remove package junctions");
+                }
+            }
+
+            Logger.Debug("OnExit: Finished");
+        }
+        finally
+        {
+            isOnExitComplete = true;
+            OnExitSemaphore.Release();
+        }
     }
 
     private static LoggingConfiguration ConfigureLogging()
@@ -761,35 +874,6 @@ public sealed class App : Application
 
         setupBuilder.LoadConfiguration(builder =>
         {
-            var debugTarget = builder
-                .ForTarget("console")
-                .WriteTo(
-                    new DebuggerTarget
-                    {
-                        Layout =
-                            "[${level:format=TriLetter}] "
-                            + "${callsite:includeNamespace=false:captureStackTrace=false}: ${message}"
-                    }
-                )
-                .WithAsync();
-
-            var fileTarget = builder
-                .ForTarget("logfile")
-                .WriteTo(
-                    new FileTarget
-                    {
-                        Layout =
-                            "${longdate}|${level:uppercase=true}|${logger}|${message:withexception=true}",
-                        ArchiveOldFileOnStartup = true,
-                        FileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.log",
-                        ArchiveFileName =
-                            "${specialfolder:folder=ApplicationData}/StabilityMatrix/app.{#}.log",
-                        ArchiveNumbering = ArchiveNumberingMode.Rolling,
-                        MaxArchiveFiles = 2
-                    }
-                )
-                .WithAsync();
-
             // Filter some sources to be warn levels or above only
             builder.ForLogger("System.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.*").WriteToNil(NLog.LogLevel.Warn);
@@ -805,14 +889,60 @@ public sealed class App : Application
                 .ForLogger("StabilityMatrix.Avalonia.ViewModels.Base.LoadableViewModelBase")
                 .WriteToNil(NLog.LogLevel.Debug);
 
-            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(debugTarget);
-            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget);
+            // Debug console logging
+            /*if (Debugger.IsAttached)
+            {
+                builder
+                    .ForLogger()
+                    .FilterMinLevel(NLog.LogLevel.Trace)
+                    .WriteTo(
+                        new DebuggerTarget("debugger")
+                        {
+                            Layout = "[${level:uppercase=true}]\t${logger:shortName=true}\t${message}"
+                        }
+                    )
+                    .WithAsync();
+            }*/
+
+            // Console logging
+            builder
+                .ForLogger()
+                .FilterMinLevel(NLog.LogLevel.Trace)
+                .WriteTo(
+                    new ConsoleTarget("console")
+                    {
+                        Layout = "[${level:uppercase=true}]\t${logger:shortName=true}\t${message}",
+                        DetectConsoleAvailable = true
+                    }
+                )
+                .WithAsync();
+
+            // File logging
+            builder
+                .ForLogger()
+                .FilterMinLevel(NLog.LogLevel.Debug)
+                .WriteTo(
+                    new FileTarget("logfile")
+                    {
+                        Layout =
+                            "${longdate}|${level:uppercase=true}|${logger}|${message:withexception=true}",
+                        FileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/Logs/app.log",
+                        ArchiveOldFileOnStartup = true,
+                        ArchiveFileName =
+                            "${specialfolder:folder=ApplicationData}/StabilityMatrix/Logs/app.{#}.log",
+                        ArchiveDateFormat = "yyyy-MM-dd HH_mm_ss",
+                        ArchiveNumbering = ArchiveNumberingMode.Date,
+                        MaxArchiveFiles = 9
+                    }
+                )
+                .WithAsync();
 
 #if DEBUG
-            var logViewerTarget = builder
-                .ForTarget("DataStoreLogger")
-                .WriteTo(new DataStoreLoggerTarget() { Layout = "${message}" });
-            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(logViewerTarget);
+            // LogViewer target when debug mode
+            builder
+                .ForLogger()
+                .FilterMinLevel(NLog.LogLevel.Trace)
+                .WriteTo(new DataStoreLoggerTarget { Layout = "${message}" });
 #endif
         });
 

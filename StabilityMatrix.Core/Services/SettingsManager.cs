@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
-using NLog;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -16,10 +16,8 @@ using StabilityMatrix.Core.Python;
 namespace StabilityMatrix.Core.Services;
 
 [Singleton(typeof(ISettingsManager))]
-public class SettingsManager : ISettingsManager
+public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
     private static string GlobalSettingsPath => Path.Combine(Compat.AppDataHome, "global.json");
 
     private readonly SemaphoreSlim fileLock = new(1, 1);
@@ -192,7 +190,7 @@ public class SettingsManager : ISettingsManager
             // Skip if event is relay and the sender is the source, to prevent duplicate
             if (args.IsRelay && ReferenceEquals(sender, source))
                 return;
-            Logger.Trace(
+            logger.LogTrace(
                 "[RelayPropertyFor] " + "Settings.{TargetProperty:l} -> {SourceType:l}.{SourceProperty:l}",
                 targetPropertyName,
                 sourceTypeName,
@@ -208,7 +206,7 @@ public class SettingsManager : ISettingsManager
             if (args.PropertyName != propertyName)
                 return;
 
-            Logger.Trace(
+            logger.LogTrace(
                 "[RelayPropertyFor] " + "{SourceType:l}.{SourceProperty:l} -> Settings.{TargetProperty:l}",
                 sourceTypeName,
                 propertyName,
@@ -230,7 +228,12 @@ public class SettingsManager : ISettingsManager
             }
             else
             {
-                Logger.Warn("[RelayPropertyFor] LibraryDir not set when saving");
+                logger.LogWarning(
+                    "[RelayPropertyFor] LibraryDir not set when saving ({SourceType:l}.{SourceProperty:l} -> Settings.{TargetProperty:l})",
+                    sourceTypeName,
+                    propertyName,
+                    targetPropertyName
+                );
             }
 
             // Invoke property changed event, passing along sender
@@ -279,7 +282,8 @@ public class SettingsManager : ISettingsManager
         if (libraryDirOverride is not null)
         {
             var fullOverridePath = libraryDirOverride.Info.FullName;
-            Logger.Info("Using library override path: {Path}", fullOverridePath);
+            logger.LogInformation("Using library override path: {Path}", fullOverridePath);
+
             LibraryDir = libraryDirOverride;
             SetStaticLibraryPaths();
             LoadSettings();
@@ -320,7 +324,7 @@ public class SettingsManager : ISettingsManager
         }
         catch (Exception e)
         {
-            Logger.Warn("Failed to read library.json in AppData: {Message}", e.Message);
+            logger.LogWarning("Failed to read library.json in AppData: {Message}", e.Message);
         }
         return false;
     }
@@ -441,14 +445,14 @@ public class SettingsManager : ISettingsManager
             }
             catch (Exception e)
             {
-                Logger.Warn(e, "Failed to parse connected model info from {JsonFile}", jsonFile);
+                logger.LogWarning(e, "Failed to parse connected model info from {JsonFile}", jsonFile);
             }
         }
 
         Transaction(s => s.InstalledModelHashes = modelHashes);
 
         sw.Stop();
-        Logger.Info($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
+        logger.LogInformation($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
     }
 
     /// <summary>
@@ -470,7 +474,7 @@ public class SettingsManager : ISettingsManager
 
             if (fileStream.Length == 0)
             {
-                Logger.Warn("Settings file is empty, using default settings");
+                logger.LogWarning("Settings file is empty, using default settings");
                 return;
             }
 
@@ -513,7 +517,7 @@ public class SettingsManager : ISettingsManager
 
             if (fileStream.Length == 0)
             {
-                Logger.Warn("Settings file is empty, using default settings");
+                logger.LogWarning("Settings file is empty, using default settings");
                 return;
             }
 
@@ -558,7 +562,7 @@ public class SettingsManager : ISettingsManager
             // Check disk space
             if (SystemInfo.GetDiskFreeSpaceBytes(SettingsFile) is < 1 * SystemInfo.Mebibyte)
             {
-                Logger.Warn("Not enough disk space to save settings");
+                logger.LogWarning("Not enough disk space to save settings");
                 return;
             }
 
@@ -569,7 +573,7 @@ public class SettingsManager : ISettingsManager
 
             if (jsonBytes.Length == 0)
             {
-                Logger.Error("JsonSerializer returned empty bytes for some reason");
+                logger.LogError("JsonSerializer returned empty bytes for some reason");
                 return;
             }
 
@@ -607,7 +611,7 @@ public class SettingsManager : ISettingsManager
             // Check disk space
             if (SystemInfo.GetDiskFreeSpaceBytes(SettingsFile) is < 1 * SystemInfo.Mebibyte)
             {
-                Logger.Warn("Not enough disk space to save settings");
+                logger.LogWarning("Not enough disk space to save settings");
                 return;
             }
 
@@ -618,7 +622,7 @@ public class SettingsManager : ISettingsManager
 
             if (jsonBytes.Length == 0)
             {
-                Logger.Error("JsonSerializer returned empty bytes for some reason");
+                logger.LogError("JsonSerializer returned empty bytes for some reason");
                 return;
             }
 

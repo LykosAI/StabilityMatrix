@@ -45,7 +45,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 
 [Preload]
 [View(typeof(InferencePage))]
-[Singleton, Singleton(typeof(IAsyncDisposable))]
+[Singleton]
 public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

@@ -40,7 +40,6 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(LaunchPageView))]
-[Singleton]
 public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyncDisposable
 {
     private readonly ILogger<LaunchPageViewModel> logger;

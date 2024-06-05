@@ -1107,4 +1107,13 @@
   <data name="Label_ClippingMask" xml:space="preserve">
     <value>Clipping Mask</value>
   </data>
+  <data name="Label_AppFolders" xml:space="preserve">
+    <value>App Folders</value>
+  </data>
+  <data name="Label_Logs" xml:space="preserve">
+    <value>Logs</value>
+  </data>
+  <data name="Label_AppData" xml:space="preserve">
+    <value>App Data</value>
+  </data>
 </root>

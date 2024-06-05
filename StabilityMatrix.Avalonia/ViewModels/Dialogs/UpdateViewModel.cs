@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -85,7 +83,6 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
             IsUpdateAvailable = true;
             UpdateInfo = info;
         };
-        updateHelper.StartCheckingForUpdates().SafeFireAndForget();
     }
 
     public async Task Preload()

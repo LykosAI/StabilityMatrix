@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added folder shortcuts in Settings for opening common app and system folders, such as Data Directory and Logs.
 ### Changed
 - Log file storage have been moved from `%AppData%/StabilityMatrix` to a subfolder: `%AppData%/StabilityMatrix/Logs`
+- Archived log files now have an increased rolling limit of 9 files, from 2 files previously. Their file names will now be in the format `app.{yyyy-MM-dd HH_mm_ss}.log`. The current session log file remains named `app.log`.
 ### Fixed
 - Fixed crash when parsing invalid generated images in Output Browser and Inference image viewer, errors will be logged instead and the image will be skipped
 - Fixed issue where blue and red color channels were swapped in the mask editor dialog

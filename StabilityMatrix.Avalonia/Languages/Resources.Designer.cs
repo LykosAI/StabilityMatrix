@@ -231,15 +231,6 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Edit Clipping Mask.
-        /// </summary>
-        public static string Action_EditClippingMask {
-            get {
-                return ResourceManager.GetString("Action_EditClippingMask", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Exit Application.
         /// </summary>
         public static string Action_ExitApplication {
@@ -789,11 +780,29 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to App Data.
+        /// </summary>
+        public static string Label_AppData {
+            get {
+                return ResourceManager.GetString("Label_AppData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Appearance.
         /// </summary>
         public static string Label_Appearance {
             get {
                 return ResourceManager.GetString("Label_Appearance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to App Folders.
+        /// </summary>
+        public static string Label_AppFolders {
+            get {
+                return ResourceManager.GetString("Label_AppFolders", resourceCulture);
             }
         }
         
@@ -996,7 +1005,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to Clipping Mask.
         /// </summary>
         public static string Label_ClippingMask {
             get {
@@ -1766,6 +1775,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_LocalModel {
             get {
                 return ResourceManager.GetString("Label_LocalModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Logs.
+        /// </summary>
+        public static string Label_Logs {
+            get {
+                return ResourceManager.GetString("Label_Logs", resourceCulture);
             }
         }
         

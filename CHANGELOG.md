@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.11.0-pre.2
+### Added
+- Added folder shortcuts in Settings for opening common app and system folders, such as Data Directory and Logs.
+### Changed
+- Log file storage have been moved from `%AppData%/StabilityMatrix` to a subfolder: `%AppData%/StabilityMatrix/Logs`
 ### Fixed
 - Fixed crash when parsing invalid generated images in Output Browser and Inference image viewer, errors will be logged instead and the image will be skipped
 - Fixed issue where blue and red color channels were swapped in the mask editor dialog
@@ -15,6 +19,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - (macOS, Linux) Fixed Subprocesses of packages sometimes not being closed when the app is closed
 - Fixed Inference tabs sometimes not being restored from previous sessions
 - Improved app shutdown clean-up process reliability and speed
+- Fixed multiple log files being archived in a single session, and losing some log entries
 
 ## v2.11.0-pre.1
 ### Added

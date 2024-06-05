@@ -34,7 +34,6 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -47,6 +46,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -444,6 +444,38 @@ public partial class MainSettingsViewModel : PageViewModelBase
         };
         await dialog.ShowAsync();
     }
+
+    #endregion
+
+    #region Directory Shortcuts
+
+    public CommandItem[] DirectoryShortcutCommands =>
+        [
+            new CommandItem(
+                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(Compat.AppDataHome)),
+                Resources.Label_AppData
+            ),
+            new CommandItem(
+                new AsyncRelayCommand(
+                    () => ProcessRunner.OpenFolderBrowser(Compat.AppDataHome.JoinDir("Logs"))
+                ),
+                Resources.Label_Logs
+            ),
+            new CommandItem(
+                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(settingsManager.LibraryDir)),
+                Resources.Label_DataDirectory
+            ),
+            new CommandItem(
+                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(settingsManager.ModelsDirectory)),
+                Resources.Label_Checkpoints
+            ),
+            new CommandItem(
+                new AsyncRelayCommand(
+                    () => ProcessRunner.OpenFolderBrowser(settingsManager.LibraryDir.JoinDir("Packages"))
+                ),
+                Resources.Label_Packages
+            )
+        ];
 
     #endregion
 

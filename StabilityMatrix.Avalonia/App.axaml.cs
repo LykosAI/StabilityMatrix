@@ -293,6 +293,9 @@ public sealed class App : Application
         DesktopLifetime.ShutdownRequested += OnShutdownRequested;
 
         AppDomain.CurrentDomain.ProcessExit += OnExit;
+
+        // Since we're manually shutting down NLog in OnExit
+        LogManager.AutoShutdown = false;
     }
 
     private static void ConfigureServiceProvider()
@@ -863,6 +866,8 @@ public sealed class App : Application
         {
             isOnExitComplete = true;
             OnExitSemaphore.Release();
+
+            LogManager.Shutdown();
         }
     }
 

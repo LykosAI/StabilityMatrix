@@ -140,6 +140,12 @@ public class Sdfx(
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" --run {arguments}";
 
         venvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+
+        // Cuz node was getting detached on process exit
+        if (Compat.IsWindows)
+        {
+            ProcessTracker.AttachExitHandlerJobToProcess(venvRunner.Process);
+        }
     }
 
     private Dictionary<string, string> GetEnvVars(PyVenvRunner venvRunner, DirectoryPath installPath)

@@ -20,10 +20,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - (Windows) Fixed "Open in Explorer" buttons across the app not opening the correct path on ReFS partitions
 - (macOS, Linux) Fixed Subprocesses of packages sometimes not being closed when the app is closed
 - Fixed Inference tabs sometimes not being restored from previous sessions
-- Improved app shutdown clean-up process reliability and speed
 - Fixed multiple log files being archived in a single session, and losing some log entries
 - Fixed error when installing certain packages with comments in the requirements file
 - Fixed some more missing progress texts during various activities
+- Improved app shutdown clean-up process reliability and speed
+- Improved ProcessTracker speed and clean-up safety for faster subprocess and package launching performance
 
 ## v2.11.0-pre.1
 ### Added

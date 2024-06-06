@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Log file storage have been moved from `%AppData%/StabilityMatrix` to a subfolder: `%AppData%/StabilityMatrix/Logs`
 - Archived log files now have an increased rolling limit of 9 files, from 2 files previously. Their file names will now be in the format `app.{yyyy-MM-dd HH_mm_ss}.log`. The current session log file remains named `app.log`.
 - Updated image controls on Recommended Models dialog to match the rest of the app
+- Improved app shutdown clean-up process reliability and speed
+- Improved ProcessTracker speed and clean-up safety for faster subprocess and package launching performance
 ### Fixed
 - Fixed crash when parsing invalid generated images in Output Browser and Inference image viewer, errors will be logged instead and the image will be skipped
 - Fixed issue where blue and red color channels were swapped in the mask editor dialog
@@ -20,7 +22,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - (Windows) Fixed "Open in Explorer" buttons across the app not opening the correct path on ReFS partitions
 - (macOS, Linux) Fixed Subprocesses of packages sometimes not being closed when the app is closed
 - Fixed Inference tabs sometimes not being restored from previous sessions
-- Improved app shutdown clean-up process reliability and speed
 - Fixed multiple log files being archived in a single session, and losing some log entries
 - Fixed error when installing certain packages with comments in the requirements file
 - Fixed some more missing progress texts during various activities

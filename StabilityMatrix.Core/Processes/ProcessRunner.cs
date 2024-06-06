@@ -141,16 +141,13 @@ public static class ProcessRunner
     private static Process StartTrackedProcess(Process process)
     {
         process.Start();
+
         // Currently only supported on Windows
         if (Compat.IsWindows)
         {
-            // Supress errors here since the process may have already exited
-            try
-            {
-                ProcessTracker.AddProcess(process);
-            }
-            catch (InvalidOperationException) { }
+            ProcessTracker.AddProcess(process);
         }
+
         return process;
     }
 

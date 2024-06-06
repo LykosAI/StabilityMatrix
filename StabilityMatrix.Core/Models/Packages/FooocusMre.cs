@@ -144,7 +144,13 @@ public class FooocusMre(
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
         await venvRunner
-            .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
+            .PipInstall(
+                new PipInstallArgs().WithParsedFromRequirementsTxt(
+                    await requirements.ReadAllTextAsync().ConfigureAwait(false),
+                    excludePattern: "torch"
+                ),
+                onConsoleOutput
+            )
             .ConfigureAwait(false);
     }
 

@@ -160,7 +160,8 @@ public class ImportModelsStep(
                 {
                     IsIndeterminate = true,
                     Progress = -1f,
-                    Message = "Checking connected model information"
+                    Message = "Checking connected model information",
+                    PrintToConsole = true
                 }
             );
 

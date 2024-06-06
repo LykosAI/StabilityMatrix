@@ -263,33 +263,6 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
-    /// Pip install from a requirements.txt file.
-    /// </summary>
-    public async Task PipInstallFromRequirements(
-        FilePath file,
-        Action<ProcessOutput>? outputDataReceived = null,
-        [StringSyntax(StringSyntaxAttribute.Regex)] string? excludes = null
-    )
-    {
-        var requirementsText = await file.ReadAllTextAsync().ConfigureAwait(false);
-        var requirements = requirementsText
-            .SplitLines(StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .AsEnumerable();
-
-        if (excludes is not null)
-        {
-            var excludeRegex = new Regex($"^{excludes}$");
-
-            requirements = requirements.Where(s => !excludeRegex.IsMatch(s));
-        }
-
-        var pipArgs = string.Join(' ', requirements);
-
-        Logger.Info("Installing {FileName} ({PipArgs})", file.Name, pipArgs);
-        await PipInstall(pipArgs, outputDataReceived).ConfigureAwait(false);
-    }
-
-    /// <summary>
     /// Run a pip list command, return results as PipPackageInfo objects.
     /// </summary>
     public async Task<IReadOnlyList<PipPackageInfo>> PipList()

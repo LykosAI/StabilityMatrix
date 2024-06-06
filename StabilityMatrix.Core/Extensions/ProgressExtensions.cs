@@ -18,7 +18,8 @@ public static class ProgressExtensions
                     {
                         IsIndeterminate = true,
                         Message = output.Text,
-                        ProcessOutput = output
+                        ProcessOutput = output,
+                        PrintToConsole = true
                     }
                 );
             };

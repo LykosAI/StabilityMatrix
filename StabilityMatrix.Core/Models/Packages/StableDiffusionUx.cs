@@ -224,7 +224,13 @@ public class StableDiffusionUx(
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
         await venvRunner
-            .PipInstallFromRequirements(requirements, onConsoleOutput, excludes: "torch")
+            .PipInstall(
+                new PipInstallArgs().WithParsedFromRequirementsTxt(
+                    await requirements.ReadAllTextAsync().ConfigureAwait(false),
+                    excludePattern: "torch"
+                ),
+                onConsoleOutput
+            )
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
@@ -268,11 +274,14 @@ public class StableDiffusionUx(
     {
         progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true));
 
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall(["--upgrade", "pip", "wheel"], onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
             .PipInstall(
-                new PipInstallArgs().WithTorch("==2.0.1").WithTorchVision().WithTorchExtraIndex("rocm5.1.1"),
+                new PipInstallArgs()
+                    .WithTorch("==2.0.1")
+                    .WithTorchVision("==0.15.2")
+                    .WithTorchExtraIndex("rocm5.4.2"),
                 onConsoleOutput
             )
             .ConfigureAwait(false);

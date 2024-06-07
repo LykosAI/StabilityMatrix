@@ -367,13 +367,18 @@ public sealed class App : Application
                     t => new { t, attributes = t.GetCustomAttributes(typeof(ManagedServiceAttribute), true) }
                 )
                 .Where(t1 => t1.attributes is { Length: > 0 })
-                .Select(t1 => t1.t)
-                .ToList();
+                .Select(t1 => t1.t);
 
             foreach (var type in serviceManagedTypes)
             {
-                ViewModelBase? GetInstance() => provider.GetRequiredService(type) as ViewModelBase;
-                serviceManager.Register(type, GetInstance);
+                if (!type.IsAssignableTo(typeof(ViewModelBase)))
+                {
+                    throw new InvalidOperationException(
+                        $"Type {type.Name} with [ManagedService] attribute is not assignable to {nameof(ViewModelBase)}"
+                    );
+                }
+
+                serviceManager.Register(type, () => (ViewModelBase)provider.GetRequiredService(type));
             }
 
             return serviceManager;

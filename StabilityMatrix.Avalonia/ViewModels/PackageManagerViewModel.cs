@@ -33,7 +33,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
     {
         SubPages = new PageViewModelBase[]
         {
-            vmFactory.Get<PackageManager.MainPackageManagerViewModel>(),
+            vmFactory.Get<MainPackageManagerViewModel>(),
             vmFactory.Get<PackageInstallBrowserViewModel>(),
         };
 
@@ -49,7 +49,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
             return;
         }
 
-        if (value is PackageManager.MainPackageManagerViewModel)
+        if (value is MainPackageManagerViewModel)
         {
             CurrentPagePath.Clear();
             CurrentPagePath.Add(value);

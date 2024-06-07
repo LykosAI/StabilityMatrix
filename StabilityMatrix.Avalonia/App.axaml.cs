@@ -74,10 +74,11 @@ public sealed class App : Application
     private static readonly Lazy<Logger> LoggerLazy = new(LogManager.GetCurrentClassLogger);
     private static Logger Logger => LoggerLazy.Value;
 
-    private static bool isAsyncDisposeComplete;
-    private static bool isOnExitComplete;
+    private readonly SemaphoreSlim onExitSemaphore = new(1, 1);
 
-    private static readonly SemaphoreSlim OnExitSemaphore = new(1, 1);
+    private bool isAsyncDisposeComplete;
+
+    private bool isOnExitComplete;
 
     [NotNull]
     public static IServiceProvider? Services { get; private set; }
@@ -718,7 +719,7 @@ public sealed class App : Application
         }
     }
 
-    private static void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
+    private void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
     {
         Debug.WriteLine("Start OnShutdownRequested");
 
@@ -769,17 +770,14 @@ public sealed class App : Application
             .SafeFireAndForget();
     }
 
-    private static void OnApplicationLifetimeExit(
-        object? sender,
-        ControlledApplicationLifetimeExitEventArgs args
-    )
+    private void OnApplicationLifetimeExit(object? sender, ControlledApplicationLifetimeExitEventArgs args)
     {
         Logger.Debug("OnApplicationLifetimeExit: {@Args}", args);
 
         OnExit(sender, args);
     }
 
-    private static void OnExit(object? sender, EventArgs _)
+    private void OnExit(object? sender, EventArgs _)
     {
         // Skip if already run
         if (isOnExitComplete)
@@ -788,11 +786,11 @@ public sealed class App : Application
         }
 
         // Skip if another OnExit is running
-        if (!OnExitSemaphore.Wait(0))
+        if (!onExitSemaphore.Wait(0))
         {
             // Block until the other OnExit is done to delay shutdown
-            OnExitSemaphore.Wait();
-            OnExitSemaphore.Release();
+            onExitSemaphore.Wait();
+            onExitSemaphore.Release();
             return;
         }
 
@@ -870,7 +868,7 @@ public sealed class App : Application
         finally
         {
             isOnExitComplete = true;
-            OnExitSemaphore.Release();
+            onExitSemaphore.Release();
 
             LogManager.Shutdown();
         }

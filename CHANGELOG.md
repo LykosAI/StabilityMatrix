@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#630](https://github.com/LykosAI/StabilityMatrix/issues/630) - InvokeAI update hangs forever waiting for input
 ### Supporters
 #### Visionaries
-- Many thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your generous support helps us continue to improve Stability Matrix!
+- A heartfelt thank you to our Visionary-tier Patreon supporters, **Scopp Mcdee** and **Waterclouds**! Your generous contributions enable us to keep enhancing Stability Matrix!
 
 ## v2.11.0-dev.3
 ### Added

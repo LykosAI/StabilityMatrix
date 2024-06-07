@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed multiple log files being archived in a single session, and losing some log entries
 - Fixed error when installing certain packages with comments in the requirements file
 - Fixed some more missing progress texts during various activities
+### Supporters
+#### Visionaries
+- Many thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your generous support helps us continue to improve Stability Matrix!
 
 ## v2.11.0-pre.1
 ### Added

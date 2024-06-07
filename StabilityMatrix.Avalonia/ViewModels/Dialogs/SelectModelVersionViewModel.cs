@@ -39,7 +39,7 @@ public partial class SelectModelVersionViewModel(
     public required ContentDialog Dialog { get; set; }
     public required IReadOnlyList<ModelVersionViewModel> Versions { get; set; }
     public required string Description { get; set; }
-    public required string Title { get; set; }
+    public new required string Title { get; set; }
     public required CivitModel CivitModel { get; set; }
 
     [ObservableProperty]

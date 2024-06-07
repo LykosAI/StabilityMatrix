@@ -11,7 +11,6 @@ namespace StabilityMatrix.Avalonia.Models;
 /// <summary>
 /// This is the project file for inference tabs
 /// </summary>
-[JsonSerializable(typeof(InferenceProjectDocument))]
 public class InferenceProjectDocument : ICloneable
 {
     [JsonIgnore]

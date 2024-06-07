@@ -82,7 +82,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
                         Title = g.Key.GetDescription() ?? g.Key.ToString()
                     }
             )
-            .SortBy(vm => vm.Title)
+            .SortBy(vm => vm.Title ?? "")
             .Bind(Categories)
             .WhenAnyPropertyChanged()
             .Throttle(TimeSpan.FromMilliseconds(50))
@@ -160,7 +160,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
                         file
                     )
                 );
-                Directory.CreateDirectory(downloadPath.Directory);
+                downloadPath.Directory?.Create();
                 var download = trackedDownloadService.NewDownload(url, downloadPath);
                 download.ProgressUpdate += DownloadOnProgressUpdate;
                 download.ProgressStateChanged += (_, e) =>

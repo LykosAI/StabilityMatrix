@@ -257,9 +257,9 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     /// <summary>
     /// Update the Lykos profile image URL when the user changes.
     /// </summary>
-    partial void OnLykosStatusChanged(LykosAccountStatusUpdateEventArgs? value)
+    partial void OnLykosStatusChanged(LykosAccountStatusUpdateEventArgs value)
     {
-        if (value?.User?.Id is { } userEmail)
+        if (value.User?.Id is { } userEmail)
         {
             userEmail = userEmail.Trim().ToLowerInvariant();
 

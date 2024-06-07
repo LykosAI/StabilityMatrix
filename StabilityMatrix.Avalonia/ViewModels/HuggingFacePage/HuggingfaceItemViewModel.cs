@@ -23,7 +23,8 @@ public partial class HuggingfaceItemViewModel : ViewModelBase
     public required string? ModelsDir { get; init; }
 
     public bool Exists =>
-        File.Exists(
+        ModelsDir != null
+        && File.Exists(
             Path.Combine(
                 ModelsDir,
                 Item.ModelCategory.ConvertTo<SharedFolderType>().ToString(),

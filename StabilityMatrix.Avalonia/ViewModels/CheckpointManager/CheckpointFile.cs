@@ -141,7 +141,7 @@ public partial class CheckpointFile : ViewModelBase
                     var settingsManager = App.Services.GetRequiredService<ISettingsManager>();
                     settingsManager.Transaction(s =>
                     {
-                        s.InstalledModelHashes?.Remove(ConnectedModel.Hashes.BLAKE3);
+                        s.InstalledModelHashes?.Remove(ConnectedModel.Hashes.BLAKE3!);
                     });
                 }
             }

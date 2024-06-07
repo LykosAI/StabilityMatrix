@@ -43,7 +43,7 @@ public partial class PackageCardViewModel(
     IPackageFactory packageFactory,
     INotificationService notificationService,
     ISettingsManager settingsManager,
-    INavigationService<NewPackageManagerViewModel> navigationService,
+    INavigationService<PackageManagerViewModel> navigationService,
     ServiceManager<ViewModelBase> vmFactory,
     RunningPackageService runningPackageService
 ) : ProgressViewModel

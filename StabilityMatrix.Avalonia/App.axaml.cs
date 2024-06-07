@@ -344,7 +344,7 @@ public sealed class App : Application
                 {
                     Pages =
                     {
-                        provider.GetRequiredService<NewPackageManagerViewModel>(),
+                        provider.GetRequiredService<PackageManagerViewModel>(),
                         provider.GetRequiredService<InferenceViewModel>(),
                         provider.GetRequiredService<NewCheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),

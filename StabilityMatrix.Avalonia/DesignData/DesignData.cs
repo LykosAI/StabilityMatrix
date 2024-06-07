@@ -50,6 +50,7 @@ using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using CivitAiBrowserViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.CivitAiBrowserViewModel;
 using HuggingFacePageViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.HuggingFacePageViewModel;
+using MainPackageManagerViewModel = StabilityMatrix.Avalonia.ViewModels.PackageManager.MainPackageManagerViewModel;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -567,12 +568,12 @@ public static class DesignData
         }
     }
 
-    public static PackageManagerViewModel PackageManagerViewModel
+    public static MainPackageManagerViewModel MainPackageManagerViewModel
     {
         get
         {
             var settings = Services.GetRequiredService<ISettingsManager>();
-            var vm = Services.GetRequiredService<PackageManagerViewModel>();
+            var vm = Services.GetRequiredService<MainPackageManagerViewModel>();
 
             vm.SetPackages(settings.Settings.InstalledPackages);
             vm.SetUnknownPackages(
@@ -629,8 +630,8 @@ public static class DesignData
 
     public static SettingsViewModel SettingsViewModel => Services.GetRequiredService<SettingsViewModel>();
 
-    public static NewPackageManagerViewModel NewPackageManagerViewModel =>
-        Services.GetRequiredService<NewPackageManagerViewModel>();
+    public static PackageManagerViewModel PackageManagerViewModel =>
+        Services.GetRequiredService<PackageManagerViewModel>();
 
     public static InferenceSettingsViewModel InferenceSettingsViewModel =>
         Services.GetRequiredService<InferenceSettingsViewModel>();

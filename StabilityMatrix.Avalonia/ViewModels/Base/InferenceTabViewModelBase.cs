@@ -125,7 +125,7 @@ public abstract partial class InferenceTabViewModelBase
         // TODO: Dock reset not working, using this hack for now to get a new view
 
         var navService = App.Services.GetRequiredService<INavigationService<MainWindowViewModel>>();
-        navService.NavigateTo<NewPackageManagerViewModel>(new SuppressNavigationTransitionInfo());
+        navService.NavigateTo<PackageManagerViewModel>(new SuppressNavigationTransitionInfo());
         ((IPersistentViewProvider)this).AttachedPersistentView = null;
         navService.NavigateTo<InferenceViewModel>(new BetterEntranceNavigationTransition());
     }

@@ -187,7 +187,7 @@
         <DependentUpon>VideoOutputSettingsCard.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
-      <Compile Update="Views\NewPackageManagerPage.axaml.cs">
+      <Compile Update="Views\PackageManagerPage.axaml.cs">
         <DependentUpon>NewPackageManagerPage.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
@@ -201,6 +201,10 @@
       </Compile>
       <Compile Update="Models\OpenArtMetadata.cs">
         <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
+      </Compile>
+      <Compile Update="Views\PackageManager\MainPackageManagerView.axaml.cs">
+        <DependentUpon>MainPackageManagerView.axaml</DependentUpon>
+        <SubType>Code</SubType>
       </Compile>
     </ItemGroup>
 

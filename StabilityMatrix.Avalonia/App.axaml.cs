@@ -311,7 +311,15 @@ public sealed class App : Application
 
         if (Program.Args.DataDirectoryOverride is not null)
         {
-            settingsManager.SetLibraryDirOverride(Program.Args.DataDirectoryOverride);
+            var normalizedDataDirPath = Path.GetFullPath(Program.Args.DataDirectoryOverride);
+
+            if (Compat.IsWindows)
+            {
+                // ReSharper disable twice LocalizableElement
+                normalizedDataDirPath = normalizedDataDirPath.Replace("\\\\", "\\");
+            }
+
+            settingsManager.SetLibraryDirOverride(normalizedDataDirPath);
         }
 
         if (settingsManager.TryFindLibrary())

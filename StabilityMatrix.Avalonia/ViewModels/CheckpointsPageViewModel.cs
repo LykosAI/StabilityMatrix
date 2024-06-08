@@ -273,8 +273,8 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     {
         var modelsDirectory = settingsManager.ModelsDirectory;
 
-        // Setup shared folders in case they're missing
-        sharedFolders.SetupSharedModelFolders();
+        // // Setup shared folders in case they're missing
+        // sharedFolders.SetupSharedModelFolders();
 
         var folders = Directory.GetDirectories(modelsDirectory);
 

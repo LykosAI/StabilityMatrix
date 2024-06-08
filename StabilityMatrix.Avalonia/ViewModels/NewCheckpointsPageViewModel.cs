@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -18,6 +17,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -32,7 +32,6 @@ using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -47,6 +46,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [View(typeof(NewCheckpointsPage))]
 [Singleton]
 public partial class NewCheckpointsPageViewModel(
+    ILogger<NewCheckpointsPageViewModel> logger,
     ISettingsManager settingsManager,
     IModelIndexService modelIndexService,
     ModelFinder modelFinder,
@@ -281,6 +281,15 @@ public partial class NewCheckpointsPageViewModel(
             s => s.IsImportAsConnected,
             true
         );
+
+        try
+        {
+            SharedFolders.SetupSharedModelFolders(settingsManager.ModelsDirectory);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, @"Failed to setup shared model folders");
+        }
 
         Refresh().SafeFireAndForget();
 

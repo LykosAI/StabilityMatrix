@@ -456,7 +456,9 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
 
         if (SortMode == CivitSortMode.Installed)
         {
-            var connectedModels = await liteDbContext.LocalModelFiles.FindAsync(m => m.HasConnectedModel);
+            var connectedModels = await liteDbContext.LocalModelFiles.FindAsync(
+                m => m.ConnectedModelInfo != null
+            );
 
             modelRequest.CommaSeparatedModelIds = string.Join(
                 ",",

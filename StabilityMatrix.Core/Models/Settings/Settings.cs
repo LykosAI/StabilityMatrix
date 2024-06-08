@@ -178,7 +178,7 @@ public class Settings
     /// When false, will copy files when drag/drop import happens
     /// Otherwise, it will move, as it states
     /// </summary>
-    public bool MoveFilesOnImport { get; set; } = false;
+    public bool MoveFilesOnImport { get; set; } = true;
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

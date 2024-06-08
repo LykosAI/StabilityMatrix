@@ -161,7 +161,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             searchOptions = settingsManager.Settings.ModelSearchOptions;
         }
 
-        SelectedPeriod = searchOptions?.SelectedPeriod ?? CivitPeriod.Month;
+        SelectedPeriod = searchOptions?.SelectedPeriod ?? CivitPeriod.AllTime;
         SortMode = searchOptions?.SortMode ?? CivitSortMode.HighestRated;
         SelectedModelType = searchOptions?.SelectedModelType ?? CivitModelType.Checkpoint;
         SelectedBaseModelType = searchOptions?.SelectedBaseModelType ?? "All";

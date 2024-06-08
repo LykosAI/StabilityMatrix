@@ -1,21 +1,15 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
-using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Progress;
@@ -179,7 +173,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
 
             settingsManager.Transaction(s =>
             {
-                s.InstalledModelHashes?.Remove(CheckpointFile.ConnectedModelInfo.Hashes.BLAKE3);
+                s.InstalledModelHashes?.Remove(CheckpointFile.ConnectedModelInfo?.Hashes.BLAKE3!);
             });
         }
         catch (Exception e)

@@ -19,7 +19,6 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
@@ -457,14 +456,14 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
 
         if (SortMode == CivitSortMode.Installed)
         {
-            var connectedModels = CheckpointFile
-                .GetAllCheckpointFiles(settingsManager.ModelsDirectory)
-                .Where(c => c.IsConnectedModel)
-                .ToList();
+            var connectedModels = await liteDbContext.LocalModelFiles.FindAsync(m => m.HasConnectedModel);
 
             modelRequest.CommaSeparatedModelIds = string.Join(
                 ",",
-                connectedModels.Select(c => c.ConnectedModel!.ModelId).GroupBy(m => m).Select(g => g.First())
+                connectedModels
+                    .Select(c => c.ConnectedModelInfo!.ModelId)
+                    .GroupBy(m => m)
+                    .Select(g => g.First())
             );
 
             modelRequest.Sort = null;

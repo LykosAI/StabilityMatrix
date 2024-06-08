@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -113,7 +112,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             return;
 
         var installedModels = settingsManager.Settings.InstalledModelHashes;
-        if (!installedModels.Any())
+        if (installedModels is null || installedModels.Count == 0)
             return;
 
         // check if latest version is installed

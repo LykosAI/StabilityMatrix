@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 
-[Transient]
-[ManagedService]
 public partial class NotificationSettingsItem(ISettingsManager settingsManager) : ObservableObject
 {
     public NotificationKey? Key { get; set; }

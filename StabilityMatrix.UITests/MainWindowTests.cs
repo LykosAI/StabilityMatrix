@@ -40,15 +40,15 @@ public class MainWindowTests : TestBase
         await DoInitialSetup();
 
         var y = window
-            .FindDescendantOfType<NavigationView>()
+            .FindDescendantOfType<NavigationView>()!
             .GetVisualDescendants()
             .OfType<NavigationViewItem>()
-            .FirstOrDefault(i => i.Content.ToString() == "Model Browser");
+            .FirstOrDefault(i => i.Content?.ToString() == "Model Browser")!;
 
         await window.ClickTargetAsync(y);
 
         var frame = window.FindControl<Frame>("FrameView");
-        Assert.IsType<CheckpointBrowserPage>(frame.Content);
+        Assert.IsType<CheckpointBrowserPage>(frame!.Content);
 
         await Task.Delay(1000);
         SaveScreenshot(window);

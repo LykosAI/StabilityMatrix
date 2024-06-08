@@ -1,170 +1,224 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Markup.Xaml;
-using Avalonia.VisualTree;
-using DynamicData.Binding;
+using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Controls.Scroll;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Models.FileInterfaces;
-using CheckpointFolder = StabilityMatrix.Avalonia.ViewModels.CheckpointManager.CheckpointFolder;
+using StabilityMatrix.Core.Models.Database;
 
 namespace StabilityMatrix.Avalonia.Views;
 
 [Singleton]
 public partial class CheckpointsPage : UserControlBase
 {
-    private ItemsControl? repeater;
-    private IDisposable? subscription;
+    private Dictionary<CheckpointCategory, DispatcherTimer> dragTimers = new();
 
     public CheckpointsPage()
     {
         InitializeComponent();
 
+        AddHandler(DragDrop.DropEvent, OnDrop);
         AddHandler(DragDrop.DragEnterEvent, OnDragEnter);
         AddHandler(DragDrop.DragLeaveEvent, OnDragExit);
-        AddHandler(DragDrop.DropEvent, OnDrop);
+        AddHandler(DragDrop.DragOverEvent, OnDragOver);
     }
 
-    private void InitializeComponent()
+    private void OnDragOver(object? sender, DragEventArgs e)
     {
-        AvaloniaXamlLoader.Load(this);
+        if (e.Data.Get(DataFormats.Files) is not IEnumerable<IStorageItem> files)
+            return;
+
+        var paths = files.Select(f => f.Path.LocalPath);
+        if (paths.All(p => LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(p))))
+            return;
+
+        e.DragEffects = DragDropEffects.None;
+        e.Handled = true;
     }
 
-    protected override void OnDataContextChanged(EventArgs e)
+    private void OnDragExit(object? sender, DragEventArgs e)
     {
-        base.OnDataContextChanged(e);
+        if (e.Source is not Control control)
+            return;
 
-        subscription?.Dispose();
-        subscription = null;
+        if (DataContext as CheckpointsPageViewModel is not { SelectedCategory: not null } checkpointsVm)
+            return;
 
-        if (DataContext is CheckpointsPageViewModel vm)
+        switch (control)
         {
-            subscription = vm.WhenPropertyChanged(m => m.ShowConnectedModelImages)
-                .Subscribe(_ => InvalidateRepeater());
+            case TreeViewItem treeViewItem:
+                treeViewItem.Classes.Remove("dragover");
+                break;
+            case Border { Tag: "DragOverlay" }:
+                checkpointsVm.IsDragOver = false;
+                break;
+            case Border border:
+                border.Classes.Remove("dragover");
+                break;
+            case TextBlock textBlock:
+                textBlock.Parent?.Classes.Remove("dragover");
+                break;
         }
+
+        var sourceDataContext = control switch
+        {
+            TreeViewItem treeView => treeView.DataContext,
+            Border border => border.Parent?.Parent?.DataContext,
+            TextBlock textBlock => textBlock.Parent?.DataContext,
+            _ => null
+        };
+
+        if (sourceDataContext is not CheckpointCategory category)
+            return;
+
+        if (!dragTimers.TryGetValue(category, out var timer))
+            return;
+
+        timer.Stop();
+        dragTimers.Remove(category);
     }
 
-    private void InvalidateRepeater()
+    private void OnDragEnter(object? sender, DragEventArgs e)
     {
-        repeater ??= this.FindControl<ItemsControl>("FilesRepeater");
-        repeater?.InvalidateArrange();
-        repeater?.InvalidateMeasure();
+        if (e.Source is not Control control)
+            return;
 
-        foreach (var child in this.GetVisualDescendants().OfType<ItemsRepeater>())
+        if (DataContext as CheckpointsPageViewModel is not { SelectedCategory: not null } checkpointsVm)
+            return;
+
+        if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
         {
-            child?.InvalidateArrange();
-            child?.InvalidateMeasure();
+            var paths = files.Select(f => f.Path.LocalPath);
+            if (paths.Any(p => !LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(p))))
+            {
+                e.DragEffects = DragDropEffects.None;
+                e.Handled = true;
+                return;
+            }
+        }
+
+        switch (control)
+        {
+            case TreeViewItem treeViewItem:
+                treeViewItem.Classes.Add("dragover");
+                break;
+            case Border border:
+                border.Classes.Add("dragover");
+                break;
+            case TextBlock textBlock:
+                textBlock.Parent?.Classes.Add("dragover");
+                break;
+            case BetterScrollContentPresenter _:
+                checkpointsVm.IsDragOver = true;
+                break;
+        }
+
+        var sourceDataContext = control switch
+        {
+            TreeViewItem treeView => treeView.DataContext,
+            Border border => border.Parent?.Parent?.DataContext,
+            TextBlock textBlock => textBlock.Parent?.DataContext,
+            _ => null
+        };
+
+        if (sourceDataContext is not CheckpointCategory category)
+            return;
+
+        if (dragTimers.TryGetValue(category, out var timer))
+        {
+            timer.Stop();
+            timer.Start();
+        }
+        else
+        {
+            var newTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMilliseconds(500),
+                IsEnabled = true
+            };
+            newTimer.Tick += (timerObj, _) =>
+            {
+                var treeViewItem = control switch
+                {
+                    TreeViewItem treeView => treeView,
+                    Border border => border.Parent?.Parent as TreeViewItem,
+                    TextBlock textBlock => textBlock.Parent as TreeViewItem,
+                    _ => null
+                };
+
+                if (treeViewItem != null && category.SubDirectories.Count > 0)
+                {
+                    treeViewItem.IsExpanded = true;
+                }
+
+                (timerObj as DispatcherTimer)?.Stop();
+                dragTimers.Remove(category);
+            };
+            dragTimers.Add(category, newTimer);
         }
     }
 
     private async void OnDrop(object? sender, DragEventArgs e)
     {
-        var sourceDataContext = (e.Source as Control)?.DataContext;
+        var control = e.Source as Control;
+        var sourceDataContext = control?.DataContext;
+        if (DataContext as CheckpointsPageViewModel is not { SelectedCategory: not null } checkpointsVm)
+        {
+            return;
+        }
+
+        switch (control)
+        {
+            case TreeViewItem treeViewItem:
+                treeViewItem.Classes.Remove("dragover");
+                break;
+            case Border border:
+                border.Classes.Remove("dragover");
+                break;
+            case TextBlock textBlock:
+                textBlock.Parent?.Classes.Remove("dragover");
+                break;
+        }
+
+        checkpointsVm.IsDragOver = false;
+
         switch (sourceDataContext)
         {
-            case CheckpointFolder folder:
-            {
-                if (e.Data.GetContext<CheckpointFile>() is not { } file)
+            case CheckpointCategory category:
+                if (e.Data.GetContext<CheckpointFileViewModel>() is { } vm)
                 {
-                    await folder.OnDrop(e);
-                    break;
+                    await checkpointsVm.MoveBetweenFolders(vm.CheckpointFile, category.Path);
                 }
-
-                var filePath = new FilePath(file.FilePath);
-                if (filePath.Directory?.FullPath != folder.DirectoryPath)
+                else if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
                 {
-                    await folder.OnDrop(e);
+                    var paths = files.Select(f => f.Path.LocalPath).ToArray();
+                    await checkpointsVm.ImportFilesAsync(paths, category.Path);
                 }
                 break;
-            }
-            case CheckpointFile file:
-            {
-                if (e.Data.GetContext<CheckpointFile>() is not { } dragFile)
+            case CheckpointsPageViewModel _:
+            case CheckpointFileViewModel _:
+                if (e.Data.GetContext<CheckpointFileViewModel>() is { } fileVm)
                 {
-                    await file.ParentFolder.OnDrop(e);
-                    break;
+                    await checkpointsVm.MoveBetweenFolders(
+                        fileVm.CheckpointFile,
+                        checkpointsVm.SelectedCategory.Path
+                    );
                 }
-
-                var parentFolder = file.ParentFolder;
-                var dragFilePath = new FilePath(dragFile.FilePath);
-                if (dragFilePath.Directory?.FullPath != parentFolder.DirectoryPath)
+                else if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
                 {
-                    await parentFolder.OnDrop(e);
+                    var paths = files.Select(f => f.Path.LocalPath).ToArray();
+                    await checkpointsVm.ImportFilesAsync(paths, checkpointsVm.SelectedCategory.Path);
                 }
                 break;
-            }
-        }
-    }
-
-    private static void OnDragExit(object? sender, DragEventArgs e)
-    {
-        var sourceDataContext = (e.Source as Control)?.DataContext;
-        switch (sourceDataContext)
-        {
-            case CheckpointFolder folder:
-                folder.IsCurrentDragTarget = false;
-                break;
-            case CheckpointFile file:
-                file.ParentFolder.IsCurrentDragTarget = false;
-                break;
-        }
-    }
-
-    private void OnDragEnter(object? sender, DragEventArgs e)
-    {
-        // Only allow Copy or Link as Drop Operations.
-        e.DragEffects &= DragDropEffects.Copy | DragDropEffects.Link;
-
-        // Only allow if the dragged data contains text or filenames.
-        if (!e.Data.Contains(DataFormats.Text) && !e.Data.Contains(DataFormats.Files))
-        {
-            e.DragEffects = DragDropEffects.None;
-        }
-
-        // Forward to view model
-        var sourceDataContext = (e.Source as Control)?.DataContext;
-        switch (sourceDataContext)
-        {
-            case CheckpointFolder folder:
-            {
-                folder.IsExpanded = true;
-                if (e.Data.GetContext<CheckpointFile>() is not { } file)
-                {
-                    folder.IsCurrentDragTarget = true;
-                    break;
-                }
-
-                var filePath = new FilePath(file.FilePath);
-                folder.IsCurrentDragTarget = filePath.Directory?.FullPath != folder.DirectoryPath;
-                break;
-            }
-            case CheckpointFile file:
-            {
-                if (e.Data.GetContext<CheckpointFile>() is not { } dragFile)
-                {
-                    file.ParentFolder.IsCurrentDragTarget = true;
-                    break;
-                }
-
-                var parentFolder = file.ParentFolder;
-                var dragFilePath = new FilePath(dragFile.FilePath);
-                parentFolder.IsCurrentDragTarget =
-                    dragFilePath.Directory?.FullPath != parentFolder.DirectoryPath;
-                break;
-            }
-        }
-    }
-
-    private void InputElement_OnKeyDown(object? sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Escape && DataContext is CheckpointsPageViewModel vm)
-        {
-            vm.ClearSearchQuery();
         }
     }
 }

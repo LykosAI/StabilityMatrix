@@ -1,8 +1,6 @@
-﻿using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using NLog;
 using Salaros.Configuration;
 using StabilityMatrix.Core.Exceptions;
@@ -11,7 +9,6 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
-using Yoh.Text.Json.NamingPolicies;
 
 namespace StabilityMatrix.Core.Python;
 
@@ -94,9 +91,9 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// </summary>
     public List<string> SuppressOutput { get; } = new() { "fatal: not a git repository" };
 
-    public PyVenvRunner(DirectoryPath path)
+    public PyVenvRunner(DirectoryPath rootPath)
     {
-        RootPath = path;
+        RootPath = rootPath;
     }
 
     /// <returns>True if the venv has a Scripts\python.exe file</returns>

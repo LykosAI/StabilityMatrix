@@ -61,7 +61,7 @@ public class Sdfx(
             [SharedFolderType.T2IAdapter] = new[] { "data/models/controlnet/T2IAdapter" },
             [SharedFolderType.PromptExpansion] = new[] { "data/models/prompt_expansion" }
         };
-    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = new[] { "data/media/output" } };
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
@@ -210,38 +210,33 @@ public class Sdfx(
         {
             var configText = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
             var config = JsonSerializer.Deserialize<JsonObject>(configText) ?? new JsonObject();
-            var modelsDir = settingsManager.ModelsDirectory;
+            var modelsDir = SettingsManager.ModelsDirectory;
 
-            var paths = config["paths"] as JsonObject ?? new JsonObject();
+            var models = config.GetOrAddNonNullJsonObject(["paths", "models"]);
 
-            if (!paths.ContainsKey("models"))
-            {
-                paths["models"] = new JsonObject();
-            }
-
-            paths["models"]["checkpoints"] = new JsonArray(Path.Combine(modelsDir, "StableDiffusion"));
-            paths["models"]["vae"] = new JsonArray(Path.Combine(modelsDir, "VAE"));
-            paths["models"]["loras"] = new JsonArray(
+            models["checkpoints"] = new JsonArray(Path.Combine(modelsDir, "StableDiffusion"));
+            models["vae"] = new JsonArray(Path.Combine(modelsDir, "VAE"));
+            models["loras"] = new JsonArray(
                 Path.Combine(modelsDir, "Lora"),
                 Path.Combine(modelsDir, "LyCORIS")
             );
-            paths["models"]["upscale_models"] = new JsonArray(
+            models["upscale_models"] = new JsonArray(
                 Path.Combine(modelsDir, "ESRGAN"),
                 Path.Combine(modelsDir, "RealESRGAN"),
                 Path.Combine(modelsDir, "SwinIR")
             );
-            paths["models"]["embeddings"] = new JsonArray(Path.Combine(modelsDir, "TextualInversion"));
-            paths["models"]["hypernetworks"] = new JsonArray(Path.Combine(modelsDir, "Hypernetwork"));
-            paths["models"]["controlnet"] = new JsonArray(
+            models["embeddings"] = new JsonArray(Path.Combine(modelsDir, "TextualInversion"));
+            models["hypernetworks"] = new JsonArray(Path.Combine(modelsDir, "Hypernetwork"));
+            models["controlnet"] = new JsonArray(
                 Path.Combine(modelsDir, "ControlNet"),
                 Path.Combine(modelsDir, "T2IAdapter")
             );
-            paths["models"]["clip"] = new JsonArray(Path.Combine(modelsDir, "CLIP"));
-            paths["models"]["clip_vision"] = new JsonArray(Path.Combine(modelsDir, "InvokeClipVision"));
-            paths["models"]["diffusers"] = new JsonArray(Path.Combine(modelsDir, "Diffusers"));
-            paths["models"]["gligen"] = new JsonArray(Path.Combine(modelsDir, "GLIGEN"));
-            paths["models"]["vae_approx"] = new JsonArray(Path.Combine(modelsDir, "ApproxVAE"));
-            paths["models"]["ipadapter"] = new JsonArray(
+            models["clip"] = new JsonArray(Path.Combine(modelsDir, "CLIP"));
+            models["clip_vision"] = new JsonArray(Path.Combine(modelsDir, "InvokeClipVision"));
+            models["diffusers"] = new JsonArray(Path.Combine(modelsDir, "Diffusers"));
+            models["gligen"] = new JsonArray(Path.Combine(modelsDir, "GLIGEN"));
+            models["vae_approx"] = new JsonArray(Path.Combine(modelsDir, "ApproxVAE"));
+            models["ipadapter"] = new JsonArray(
                 Path.Combine(modelsDir, "IpAdapter"),
                 Path.Combine(modelsDir, "InvokeIpAdapters15"),
                 Path.Combine(modelsDir, "InvokeIpAdaptersXl")
@@ -260,28 +255,21 @@ public class Sdfx(
             var configText = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
             var config = JsonSerializer.Deserialize<JsonObject>(configText) ?? new JsonObject();
 
-            var paths = config["paths"] as JsonObject ?? new JsonObject();
+            var models = config.GetOrAddNonNullJsonObject(["paths", "models"]);
 
-            if (!paths.ContainsKey("models"))
-            {
-                paths["models"] = new JsonObject();
-            }
-
-            paths["models"]["checkpoints"] = new JsonArray(Path.Combine("data", "models", "checkpoints"));
-            paths["models"]["clip"] = new JsonArray(Path.Combine("data", "models", "clip"));
-            paths["models"]["clip_vision"] = new JsonArray(Path.Combine("data", "models", "clip_vision"));
-            paths["models"]["controlnet"] = new JsonArray(Path.Combine("data", "models", "controlnet"));
-            paths["models"]["diffusers"] = new JsonArray(Path.Combine("data", "models", "diffusers"));
-            paths["models"]["embeddings"] = new JsonArray(Path.Combine("data", "models", "embeddings"));
-            paths["models"]["gligen"] = new JsonArray(Path.Combine("data", "models", "gligen"));
-            paths["models"]["ipadapter"] = new JsonArray(Path.Combine("data", "models", "ipadapter"));
-            paths["models"]["hypernetworks"] = new JsonArray(Path.Combine("data", "models", "hypernetworks"));
-            paths["models"]["loras"] = new JsonArray(Path.Combine("data", "models", "loras"));
-            paths["models"]["upscale_models"] = new JsonArray(
-                Path.Combine("data", "models", "upscale_models")
-            );
-            paths["models"]["vae"] = new JsonArray(Path.Combine("data", "models", "vae"));
-            paths["models"]["vae_approx"] = new JsonArray(Path.Combine("data", "models", "vae_approx"));
+            models["checkpoints"] = new JsonArray(Path.Combine("data", "models", "checkpoints"));
+            models["clip"] = new JsonArray(Path.Combine("data", "models", "clip"));
+            models["clip_vision"] = new JsonArray(Path.Combine("data", "models", "clip_vision"));
+            models["controlnet"] = new JsonArray(Path.Combine("data", "models", "controlnet"));
+            models["diffusers"] = new JsonArray(Path.Combine("data", "models", "diffusers"));
+            models["embeddings"] = new JsonArray(Path.Combine("data", "models", "embeddings"));
+            models["gligen"] = new JsonArray(Path.Combine("data", "models", "gligen"));
+            models["ipadapter"] = new JsonArray(Path.Combine("data", "models", "ipadapter"));
+            models["hypernetworks"] = new JsonArray(Path.Combine("data", "models", "hypernetworks"));
+            models["loras"] = new JsonArray(Path.Combine("data", "models", "loras"));
+            models["upscale_models"] = new JsonArray(Path.Combine("data", "models", "upscale_models"));
+            models["vae"] = new JsonArray(Path.Combine("data", "models", "vae"));
+            models["vae_approx"] = new JsonArray(Path.Combine("data", "models", "vae_approx"));
 
             await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
         }

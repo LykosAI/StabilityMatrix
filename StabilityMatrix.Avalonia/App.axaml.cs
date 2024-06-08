@@ -74,10 +74,11 @@ public sealed class App : Application
     private static readonly Lazy<Logger> LoggerLazy = new(LogManager.GetCurrentClassLogger);
     private static Logger Logger => LoggerLazy.Value;
 
-    private static bool isAsyncDisposeComplete;
-    private static bool isOnExitComplete;
+    private readonly SemaphoreSlim onExitSemaphore = new(1, 1);
 
-    private static readonly SemaphoreSlim OnExitSemaphore = new(1, 1);
+    private bool isAsyncDisposeComplete;
+
+    private bool isOnExitComplete;
 
     [NotNull]
     public static IServiceProvider? Services { get; private set; }
@@ -343,9 +344,9 @@ public sealed class App : Application
                 {
                     Pages =
                     {
-                        provider.GetRequiredService<NewPackageManagerViewModel>(),
+                        provider.GetRequiredService<PackageManagerViewModel>(),
                         provider.GetRequiredService<InferenceViewModel>(),
-                        provider.GetRequiredService<NewCheckpointsPageViewModel>(),
+                        provider.GetRequiredService<CheckpointsPageViewModel>(),
                         provider.GetRequiredService<CheckpointBrowserViewModel>(),
                         provider.GetRequiredService<OutputsPageViewModel>(),
                         provider.GetRequiredService<WorkflowsPageViewModel>()
@@ -367,13 +368,18 @@ public sealed class App : Application
                     t => new { t, attributes = t.GetCustomAttributes(typeof(ManagedServiceAttribute), true) }
                 )
                 .Where(t1 => t1.attributes is { Length: > 0 })
-                .Select(t1 => t1.t)
-                .ToList();
+                .Select(t1 => t1.t);
 
             foreach (var type in serviceManagedTypes)
             {
-                ViewModelBase? GetInstance() => provider.GetRequiredService(type) as ViewModelBase;
-                serviceManager.Register(type, GetInstance);
+                if (!type.IsAssignableTo(typeof(ViewModelBase)))
+                {
+                    throw new InvalidOperationException(
+                        $"Type {type.Name} with [ManagedService] attribute is not assignable to {nameof(ViewModelBase)}"
+                    );
+                }
+
+                serviceManager.Register(type, () => (ViewModelBase)provider.GetRequiredService(type));
             }
 
             return serviceManager;
@@ -713,7 +719,7 @@ public sealed class App : Application
         }
     }
 
-    private static void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
+    private void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
     {
         Debug.WriteLine("Start OnShutdownRequested");
 
@@ -764,17 +770,14 @@ public sealed class App : Application
             .SafeFireAndForget();
     }
 
-    private static void OnApplicationLifetimeExit(
-        object? sender,
-        ControlledApplicationLifetimeExitEventArgs args
-    )
+    private void OnApplicationLifetimeExit(object? sender, ControlledApplicationLifetimeExitEventArgs args)
     {
         Logger.Debug("OnApplicationLifetimeExit: {@Args}", args);
 
         OnExit(sender, args);
     }
 
-    private static void OnExit(object? sender, EventArgs _)
+    private void OnExit(object? sender, EventArgs _)
     {
         // Skip if already run
         if (isOnExitComplete)
@@ -783,11 +786,11 @@ public sealed class App : Application
         }
 
         // Skip if another OnExit is running
-        if (!OnExitSemaphore.Wait(0))
+        if (!onExitSemaphore.Wait(0))
         {
             // Block until the other OnExit is done to delay shutdown
-            OnExitSemaphore.Wait();
-            OnExitSemaphore.Release();
+            onExitSemaphore.Wait();
+            onExitSemaphore.Release();
             return;
         }
 
@@ -865,7 +868,7 @@ public sealed class App : Application
         finally
         {
             isOnExitComplete = true;
-            OnExitSemaphore.Release();
+            onExitSemaphore.Release();
 
             LogManager.Shutdown();
         }

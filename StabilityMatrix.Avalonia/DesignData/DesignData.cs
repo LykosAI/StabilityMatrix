@@ -8,7 +8,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using AvaloniaEdit.Utils;
-using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -213,8 +212,8 @@ public static class DesignData
             packageFactory
         );
 
-        ObservableCacheEx.AddOrUpdate(
-            CheckpointsPageViewModel.CheckpointFoldersCache,
+        /*ObservableCacheEx.AddOrUpdate(
+            OldCheckpointsPageViewModel.CheckpointFoldersCache,
             new CheckpointFolder[]
             {
                 new(settingsManager, downloadService, modelFinder, notificationService, modelImportService)
@@ -258,76 +257,7 @@ public static class DesignData
                     }
                 }
             }
-        );
-
-        /*// Checkpoints page
-        CheckpointsPageViewModel.CheckpointFolders =
-            new CheckpointFolder[]
-            {
-                new(settingsManager, downloadService, modelFinder, notificationService)
-                {
-                    Title = "StableDiffusion",
-                    DirectoryPath = "Models/StableDiffusion",
-                    CheckpointFiles = CheckpointFile[]
-                    {
-                        new()
-                        {
-                            FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
-                            Title = "Auroral Background",
-                            PreviewImagePath =
-                                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
-                                + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
-                            ConnectedModel = new ConnectedModelInfo
-                            {
-                                VersionName = "Lightning Auroral",
-                                BaseModel = "SD 1.5",
-                                ModelName = "Auroral Background",
-                                ModelType = CivitModelType.Model,
-                                FileMetadata = new CivitFileMetadata
-                                {
-                                    Format = CivitModelFormat.SafeTensor,
-                                    Fp = CivitModelFpType.fp16,
-                                    Size = CivitModelSize.pruned,
-                                }
-                            }
-                        },
-                        new()
-                        {
-                            FilePath = "~/Models/Lora/model.safetensors",
-                            Title = "Some model"
-                        },
-                    },
-                },
-                new(settingsManager, downloadService, modelFinder, notificationService)
-                {
-                    Title = "Lora",
-                    DirectoryPath = "Packages/Lora",
-                    SubFolders = CheckpointFolder[]
-                    {
-                        new(settingsManager, downloadService, modelFinder, notificationService)
-                        {
-                            Title = "StableDiffusion",
-                            DirectoryPath = "Packages/Lora/Subfolder",
-                        },
-                        new(settingsManager, downloadService, modelFinder, notificationService)
-                        {
-                            Title = "Lora",
-                            DirectoryPath = "Packages/StableDiffusion/Subfolder",
-                        }
-                    },
-                    CheckpointFiles = new AdvancedObservableList<CheckpointFile>
-                    {
-                        new() { FilePath = "~/Models/Lora/lora_v2.pt", Title = "Best Lora v2", }
-                    }
-                }
-            };
-
-        foreach (var folder in CheckpointsPageViewModel.CheckpointFolders)
-        {
-            folder.DisplayedCheckpointFiles = new AdvancedObservableList<CheckpointFile>(
-                folder.CheckpointFiles
-            );
-        }*/
+        );*/
 
         CivitAiBrowserViewModel.ModelCards = new ObservableCollectionExtended<CheckpointBrowserCardViewModel>
         {
@@ -379,7 +309,7 @@ public static class DesignData
             })
         };
 
-        NewCheckpointsPageViewModel.Categories = new ObservableCollectionExtended<CheckpointCategory>
+        CheckpointsPageViewModel.Categories = new ObservableCollectionExtended<CheckpointCategory>
         {
             new()
             {
@@ -390,7 +320,7 @@ public static class DesignData
             new() { Name = "Category 2", Path = "path2" }
         };
 
-        NewCheckpointsPageViewModel.Models = new ObservableCollectionExtended<CheckpointFileViewModel>()
+        CheckpointsPageViewModel.Models = new ObservableCollectionExtended<CheckpointFileViewModel>()
         {
             new(
                 settingsManager,
@@ -624,9 +554,6 @@ public static class DesignData
 
     public static CheckpointsPageViewModel CheckpointsPageViewModel =>
         Services.GetRequiredService<CheckpointsPageViewModel>();
-
-    public static NewCheckpointsPageViewModel NewCheckpointsPageViewModel =>
-        Services.GetRequiredService<NewCheckpointsPageViewModel>();
 
     public static SettingsViewModel SettingsViewModel => Services.GetRequiredService<SettingsViewModel>();
 

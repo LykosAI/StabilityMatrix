@@ -2,7 +2,7 @@ namespace StabilityMatrix.Core.Helper;
 
 public class EnvPathBuilder(params string[] initialPaths)
 {
-    private readonly HashSet<string> paths = [..initialPaths];
+    private readonly List<string> paths = [..initialPaths];
 
     public EnvPathBuilder AddPath(string path)
     {

@@ -281,9 +281,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
         // 0. Check Override
         if (libraryDirOverride is not null)
         {
-            var fullOverridePath = Path.GetFullPath(libraryDirOverride.FullPath);
-
-            logger.LogInformation("Using library override path {Path}", fullOverridePath);
+            logger.LogInformation("Using library override path {Path}", libraryDirOverride.FullPath);
 
             LibraryDir = libraryDirOverride;
             SetStaticLibraryPaths();

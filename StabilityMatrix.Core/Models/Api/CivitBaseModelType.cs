@@ -26,6 +26,9 @@ public enum CivitBaseModelType
     [StringValue("SD 2.1")]
     Sd21,
 
+    [StringValue("SD 3")]
+    Sd3,
+
     [StringValue("SDXL 0.9")]
     Sdxl09,
 

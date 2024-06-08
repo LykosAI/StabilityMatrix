@@ -561,7 +561,7 @@ public partial class CheckpointsPageViewModel(
         var fileList = files.ToList();
         if (
             fileList.Any(
-                file => !CheckpointFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(file))
+                file => !LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(file))
             )
         )
         {
@@ -711,7 +711,7 @@ public partial class CheckpointsPageViewModel(
         {
             checkpointCategory.Count = Directory
                 .EnumerateFileSystemEntries(checkpointCategory.Path, "*", SearchOption.AllDirectories)
-                .Count(x => CheckpointFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(x)));
+                .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(x)));
         }
     }
 
@@ -732,7 +732,7 @@ public partial class CheckpointsPageViewModel(
                 Path = dir,
                 Count = new DirectoryInfo(dir)
                     .EnumerateFileSystemInfos("*", SearchOption.AllDirectories)
-                    .Count(x => CheckpointFile.SupportedCheckpointExtensions.Contains(x.Extension)),
+                    .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(x.Extension)),
             };
 
             if (Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly).Length > 0)

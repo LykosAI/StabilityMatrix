@@ -13,6 +13,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models.Database;
 
 namespace StabilityMatrix.Avalonia.Views;
 
@@ -37,7 +38,7 @@ public partial class CheckpointsPage : UserControlBase
             return;
 
         var paths = files.Select(f => f.Path.LocalPath);
-        if (paths.All(p => CheckpointFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(p))))
+        if (paths.All(p => LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(p))))
             return;
 
         e.DragEffects = DragDropEffects.None;
@@ -97,12 +98,7 @@ public partial class CheckpointsPage : UserControlBase
         if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
         {
             var paths = files.Select(f => f.Path.LocalPath);
-            if (
-                paths.Any(
-                    p =>
-                        !CheckpointFile.SupportedCheckpointExtensions.Contains(System.IO.Path.GetExtension(p))
-                )
-            )
+            if (paths.Any(p => !LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(p))))
             {
                 e.DragEffects = DragDropEffects.None;
                 e.Handled = true;

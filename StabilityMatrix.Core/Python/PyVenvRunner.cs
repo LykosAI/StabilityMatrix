@@ -516,7 +516,14 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         {
             var portableGitBin = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
             var venvBin = RootPath.JoinDir(RelativeBinPath);
-            env["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, venvBin);
+            if (env.TryGetValue("PATH", out var pathValue))
+            {
+                env["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, venvBin, pathValue);
+            }
+            else
+            {
+                env["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, venvBin);
+            }
             env["GIT"] = portableGitBin.JoinFile("git.exe");
         }
 
@@ -535,6 +542,8 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
                 arguments = "-u " + arguments;
             }
         }
+
+        Logger.Info("PATH: {Path}", env["PATH"]);
 
         Process = ProcessRunner.StartAnsiProcess(
             PythonPath,

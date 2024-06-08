@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using NLog;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -161,23 +162,13 @@ public class Sdfx(
             pathBuilder.AddPath(value);
         }
 
-        if (Compat.IsWindows)
-        {
-            pathBuilder.AddPath(Environment.GetFolderPath(Environment.SpecialFolder.System));
-        }
-        else
-        {
-            var existingPath = Environment.GetEnvironmentVariable("PATH");
-            if (!string.IsNullOrWhiteSpace(existingPath))
-            {
-                pathBuilder.AddPath(existingPath);
-            }
-            pathBuilder.AddPath(Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs", "bin"));
-        }
+        pathBuilder.AddPath(
+            Compat.IsWindows
+                ? Environment.GetFolderPath(Environment.SpecialFolder.System)
+                : Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs", "bin")
+        );
 
-        pathBuilder
-            .AddPath(Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs"))
-            .AddPath(Path.Combine(installPath, "src", "node_modules", ".bin"));
+        pathBuilder.AddPath(Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs"));
 
         env["PATH"] = pathBuilder.ToString();
 

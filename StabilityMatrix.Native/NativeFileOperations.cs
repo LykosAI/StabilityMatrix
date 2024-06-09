@@ -1,11 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using StabilityMatrix.Native.Abstractions;
-#if Windows
-using StabilityMatrix.Native.Windows;
-#elif OSX
-using StabilityMatrix.Native.macOS;
-#endif
 
 namespace StabilityMatrix.Native;
 
@@ -19,8 +15,28 @@ public static class NativeFileOperations
 
     static NativeFileOperations()
     {
-#if Windows || OSX
-        RecycleBin = new NativeRecycleBinProvider();
+#if Windows
+        if (!OperatingSystem.IsWindows())
+        {
+            Debug.Fail(
+                $"Assembly of {nameof(NativeFileOperations)} was compiled for Windows, "
+                    + $"the current OS is '{Environment.OSVersion}'"
+            );
+            return;
+        }
+
+        RecycleBin = new Windows.NativeRecycleBinProvider();
+#elif OSX
+        if (!OperatingSystem.IsMacOS())
+        {
+            Debug.Fail(
+                $"Assembly of {nameof(NativeFileOperations)} was compiled for macOS, "
+                    + $"the current OS is '{Environment.OSVersion}'"
+            );
+            return;
+        }
+
+        RecycleBin = new macOS.NativeRecycleBinProvider();
 #endif
     }
 }

@@ -39,7 +39,7 @@ public class Sdfx(
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
-    public override List<LaunchOptionDefinition> LaunchOptions => [];
+    public override List<LaunchOptionDefinition> LaunchOptions => [LaunchOptionDefinition.Extras];
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {

@@ -526,6 +526,17 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             }
             env["GIT"] = portableGitBin.JoinFile("git.exe");
         }
+        else
+        {
+            if (env.TryGetValue("PATH", out var pathValue))
+            {
+                env["PATH"] = Compat.GetEnvPathWithExtensions(pathValue);
+            }
+            else
+            {
+                env["PATH"] = Compat.GetEnvPathWithExtensions();
+            }
+        }
 
         if (unbuffered)
         {

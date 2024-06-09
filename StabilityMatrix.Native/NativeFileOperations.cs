@@ -3,6 +3,8 @@ using JetBrains.Annotations;
 using StabilityMatrix.Native.Abstractions;
 #if Windows
 using StabilityMatrix.Native.Windows;
+#elif OSX
+using StabilityMatrix.Native.macOS;
 #endif
 
 namespace StabilityMatrix.Native;
@@ -17,7 +19,7 @@ public static class NativeFileOperations
 
     static NativeFileOperations()
     {
-#if Windows
+#if Windows || OSX
         RecycleBin = new NativeRecycleBinProvider();
 #endif
     }

@@ -3,12 +3,13 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 public partial class ModelVersionViewModel : ObservableObject
 {
-    private readonly IReadOnlySet<string> installedModelHashes;
+    private readonly IModelIndexService modelIndexService;
 
     [ObservableProperty]
     private CivitModelVersion modelVersion;
@@ -19,20 +20,21 @@ public partial class ModelVersionViewModel : ObservableObject
     [ObservableProperty]
     private bool isInstalled;
 
-    public ModelVersionViewModel(IReadOnlySet<string> installedModelHashes, CivitModelVersion modelVersion)
+    public ModelVersionViewModel(IModelIndexService modelIndexService, CivitModelVersion modelVersion)
     {
-        this.installedModelHashes = installedModelHashes;
+        this.modelIndexService = modelIndexService;
+
         ModelVersion = modelVersion;
 
         IsInstalled =
             ModelVersion.Files?.Any(
                 file =>
                     file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-                    && installedModelHashes.Contains(file.Hashes.BLAKE3)
+                    && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
             ) ?? false;
 
         CivitFileViewModels = new ObservableCollection<CivitFileViewModel>(
-            ModelVersion.Files?.Select(file => new CivitFileViewModel(installedModelHashes, file))
+            ModelVersion.Files?.Select(file => new CivitFileViewModel(modelIndexService, file))
                 ?? new List<CivitFileViewModel>()
         );
     }
@@ -43,7 +45,7 @@ public partial class ModelVersionViewModel : ObservableObject
             ModelVersion.Files?.Any(
                 file =>
                     file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-                    && installedModelHashes.Contains(file.Hashes.BLAKE3)
+                    && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
             ) ?? false;
     }
 }

@@ -16,7 +16,7 @@ public class NativeRecycleBinProvider : INativeRecycleBinProvider
     /// <inheritdoc />
     public async Task MoveFileToRecycleBinAsync(string path, NativeFileOperationFlags flags = default)
     {
-        await RunAppleScriptAsync($"tell application \"Finder\" to delete POSIX file \"{path}\"");
+        await RunAppleScriptAsync($"tell application \\\"Finder\\\" to delete POSIX file \\\"{path}\\\"");
     }
 
     /// <inheritdoc />
@@ -31,9 +31,9 @@ public class NativeRecycleBinProvider : INativeRecycleBinProvider
         NativeFileOperationFlags flags = default
     )
     {
-        var pathsArrayString = string.Join(", ", paths.Select(p => $"POSIX file \"{p}\""));
+        var pathsArrayString = string.Join(", ", paths.Select(p => $"POSIX file \\\"{p}\\\""));
 
-        await RunAppleScriptAsync($"tell application \"Finder\" to delete {{{pathsArrayString}}}");
+        await RunAppleScriptAsync($"tell application \\\"Finder\\\" to delete {{{pathsArrayString}}}");
     }
 
     /// <inheritdoc />
@@ -45,7 +45,9 @@ public class NativeRecycleBinProvider : INativeRecycleBinProvider
     /// <inheritdoc />
     public async Task MoveDirectoryToRecycleBinAsync(string path, NativeFileOperationFlags flags = default)
     {
-        await RunAppleScriptAsync($"tell application \"Finder\" to delete folder POSIX file \"{path}\"");
+        await RunAppleScriptAsync(
+            $"tell application \\\"Finder\\\" to delete folder POSIX file \\\"{path}\\\""
+        );
     }
 
     /// <inheritdoc />
@@ -63,9 +65,9 @@ public class NativeRecycleBinProvider : INativeRecycleBinProvider
         NativeFileOperationFlags flags = default
     )
     {
-        var pathsArrayString = string.Join(", ", paths.Select(p => $"folder POSIX file \"{p}\""));
+        var pathsArrayString = string.Join(", ", paths.Select(p => $"folder POSIX file \\\"{p}\\\""));
 
-        await RunAppleScriptAsync($"tell application \"Finder\" to delete {{{pathsArrayString}}}");
+        await RunAppleScriptAsync($"tell application \\\"Finder\\\" to delete {{{pathsArrayString}}}");
     }
 
     /// <summary>
@@ -81,7 +83,7 @@ public class NativeRecycleBinProvider : INativeRecycleBinProvider
         process.StartInfo = new ProcessStartInfo
         {
             FileName = "/usr/bin/osascript",
-            Arguments = $"-e '{script}'",
+            Arguments = $"-e \"{script}\"",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,

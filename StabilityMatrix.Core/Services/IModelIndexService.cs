@@ -8,6 +8,12 @@ public interface IModelIndexService
     Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; }
 
     /// <summary>
+    /// Set of all <see cref="ModelIndex"/> files Blake3 hashes.
+    /// Synchronized with internal changes to <see cref="ModelIndex"/>.
+    /// </summary>
+    IReadOnlySet<string> ModelIndexBlake3Hashes { get; }
+
+    /// <summary>
     /// Refreshes the local model file index.
     /// </summary>
     Task RefreshIndex();

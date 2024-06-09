@@ -5,7 +5,6 @@ using System.Text;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
 using AutoCtor;
-using JetBrains.Annotations;
 using KGySoft.CoreLibraries;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
@@ -30,12 +29,27 @@ public partial class ModelIndexService : IModelIndexService
 
     private DateTimeOffset lastUpdateCheck = DateTimeOffset.MinValue;
 
+    private Dictionary<SharedFolderType, List<LocalModelFile>> _modelIndex = new();
+
+    private HashSet<string>? _modelIndexBlake3Hashes;
+
     /// <summary>
     /// Whether the database has been initially loaded.
     /// </summary>
     private bool IsDbLoaded { get; set; }
 
-    public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; private set; } = new();
+    public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex
+    {
+        get => _modelIndex;
+        private set
+        {
+            _modelIndex = value;
+            OnModelIndexReset();
+        }
+    }
+
+    public IReadOnlySet<string> ModelIndexBlake3Hashes =>
+        _modelIndexBlake3Hashes ??= CollectModelHashes(ModelIndex.Values.SelectMany(x => x));
 
     [AutoPostConstruct]
     private void Initialize()
@@ -616,5 +630,49 @@ public partial class ModelIndexService : IModelIndexService
     {
         await liteDbContext.LocalModelFiles.UpsertAsync(model).ConfigureAwait(false);
         await LoadFromDbAsync().ConfigureAwait(false);
+    }
+
+    private void OnModelIndexAdded(IEnumerable<LocalModelFile> modelFiles)
+    {
+        if (_modelIndexBlake3Hashes is not { } modelBlake3Hashes)
+        {
+            return;
+        }
+
+        modelBlake3Hashes.UnionWith(CollectModelHashes(modelFiles));
+    }
+
+    private void OnModelIndexRemoved(IEnumerable<LocalModelFile> modelFiles)
+    {
+        if (_modelIndexBlake3Hashes is not { } modelBlake3Hashes)
+        {
+            return;
+        }
+
+        foreach (var model in modelFiles)
+        {
+            if (model.ConnectedModelInfo?.Hashes.BLAKE3 is { } hashBlake3)
+            {
+                modelBlake3Hashes.TryRemove(hashBlake3);
+            }
+        }
+    }
+
+    private void OnModelIndexReset()
+    {
+        _modelIndexBlake3Hashes = null;
+    }
+
+    private static HashSet<string> CollectModelHashes(IEnumerable<LocalModelFile> models)
+    {
+        var hashes = new HashSet<string>();
+        foreach (var model in models)
+        {
+            if (model.ConnectedModelInfo?.Hashes.BLAKE3 is { } hashBlake3)
+            {
+                hashes.Add(hashBlake3);
+            }
+        }
+        return hashes;
     }
 }

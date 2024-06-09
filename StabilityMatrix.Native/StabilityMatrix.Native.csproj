@@ -30,5 +30,8 @@
     <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
       <ProjectReference Include="..\StabilityMatrix.Native.Windows\StabilityMatrix.Native.Windows.csproj" />
     </ItemGroup>
+    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' || '$(RuntimeIdentifier)' == 'osx-arm64'">
+        <ProjectReference Include="..\StabilityMatrix.Native.macOS\StabilityMatrix.Native.macOS.csproj" />
+    </ItemGroup>
 
 </Project>

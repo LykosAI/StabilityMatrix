@@ -503,13 +503,7 @@ public partial class CheckpointsPageViewModel(
         viewModel.Description = prunedDescription;
         viewModel.CivitModel = model;
         viewModel.Versions = versions
-            .Select(
-                version =>
-                    new ModelVersionViewModel(
-                        settingsManager.Settings.InstalledModelHashes ?? new HashSet<string>(),
-                        version
-                    )
-            )
+            .Select(version => new ModelVersionViewModel(modelIndexService, version))
             .ToImmutableArray();
         viewModel.SelectedVersionViewModel = viewModel.Versions[0];
 

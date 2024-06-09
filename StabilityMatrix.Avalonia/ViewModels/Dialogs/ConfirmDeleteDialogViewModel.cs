@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -97,27 +96,24 @@ public partial class ConfirmDeleteDialogViewModel(ILogger<ConfirmDeleteDialogVie
                 throw new NotSupportedException("Recycle bin is not available on this platform");
             }
 
-            await Task.Run(() =>
+            try
             {
-                try
-                {
-                    NativeFileOperations.RecycleBin.MoveFilesToRecycleBin(paths);
-                }
-                catch (Exception e)
-                {
-                    logger.LogWarning(e, "Failed to move path to recycle bin");
+                await NativeFileOperations.RecycleBin.MoveFilesToRecycleBinAsync(paths);
+            }
+            catch (Exception e)
+            {
+                logger.LogWarning(e, "Failed to move path to recycle bin");
 
-                    if (!ignoreErrors)
+                if (!ignoreErrors)
+                {
+                    exceptions.Add(e);
+
+                    if (failFast)
                     {
-                        exceptions.Add(e);
-
-                        if (failFast)
-                        {
-                            throw new AggregateException(exceptions);
-                        }
+                        throw new AggregateException(exceptions);
                     }
                 }
-            });
+            }
         }
         else
         {

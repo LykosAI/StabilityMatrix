@@ -5,7 +5,6 @@ using System.Text;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
 using AutoCtor;
-using JetBrains.Annotations;
 using KGySoft.CoreLibraries;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
@@ -30,12 +29,27 @@ public partial class ModelIndexService : IModelIndexService
 
     private DateTimeOffset lastUpdateCheck = DateTimeOffset.MinValue;
 
+    private Dictionary<SharedFolderType, List<LocalModelFile>> _modelIndex = new();
+
+    private HashSet<string>? _modelIndexBlake3Hashes;
+
     /// <summary>
     /// Whether the database has been initially loaded.
     /// </summary>
     private bool IsDbLoaded { get; set; }
 
-    public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; private set; } = new();
+    public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex
+    {
+        get => _modelIndex;
+        private set
+        {
+            _modelIndex = value;
+            OnModelIndexReset();
+        }
+    }
+
+    public IReadOnlySet<string> ModelIndexBlake3Hashes =>
+        _modelIndexBlake3Hashes ??= CollectModelHashes(ModelIndex.Values.SelectMany(x => x));
 
     [AutoPostConstruct]
     private void Initialize()
@@ -524,10 +538,11 @@ public partial class ModelIndexService : IModelIndexService
             // Remove from index
             if (ModelIndex.TryGetValue(model.SharedFolderType, out var list))
             {
-                list.Remove(model);
-            }
+                list.RemoveAll(x => x.RelativePath == model.RelativePath);
 
-            EventManager.Instance.OnModelIndexChanged();
+                OnModelIndexReset();
+                EventManager.Instance.OnModelIndexChanged();
+            }
 
             return true;
         }
@@ -550,10 +565,11 @@ public partial class ModelIndexService : IModelIndexService
         {
             if (ModelIndex.TryGetValue(model.SharedFolderType, out var list))
             {
-                list.Remove(model);
+                list.RemoveAll(x => x.RelativePath == model.RelativePath);
             }
         }
 
+        OnModelIndexReset();
         EventManager.Instance.OnModelIndexChanged();
 
         return result;
@@ -568,10 +584,9 @@ public partial class ModelIndexService : IModelIndexService
 
         lastUpdateCheck = DateTimeOffset.UtcNow;
 
-        var installedHashes = settingsManager.Settings.InstalledModelHashes ?? [];
+        var installedHashes = ModelIndexBlake3Hashes;
         var dbModels = (
-            await liteDbContext.LocalModelFiles.FindAllAsync().ConfigureAwait(false)
-            ?? Enumerable.Empty<LocalModelFile>()
+            await liteDbContext.LocalModelFiles.FindAllAsync().ConfigureAwait(false) ?? []
         ).ToList();
 
         var ids = dbModels
@@ -593,16 +608,19 @@ public partial class ModelIndexService : IModelIndexService
             var remoteModel = remoteModels.FirstOrDefault(m => m.Id == dbModel.ConnectedModelInfo!.ModelId);
 
             var latestVersion = remoteModel?.ModelVersions?.FirstOrDefault();
-            var latestHashes = latestVersion
-                ?.Files
-                ?.Where(f => f.Type == CivitFileType.Model)
+
+            if (latestVersion?.Files is not { } latestVersionFiles)
+            {
+                continue;
+            }
+
+            var latestHashes = latestVersionFiles
+                .Where(f => f.Type == CivitFileType.Model)
                 .Select(f => f.Hashes.BLAKE3)
+                .Where(hash => hash is not null)
                 .ToList();
 
-            if (latestHashes == null)
-                continue;
-
-            dbModel.HasUpdate = !latestHashes.Any(hash => installedHashes.Contains(hash));
+            dbModel.HasUpdate = !latestHashes.Any(hash => installedHashes.Contains(hash!));
             dbModel.LastUpdateCheck = DateTimeOffset.UtcNow;
             dbModel.LatestModelInfo = remoteModel;
 
@@ -616,5 +634,23 @@ public partial class ModelIndexService : IModelIndexService
     {
         await liteDbContext.LocalModelFiles.UpsertAsync(model).ConfigureAwait(false);
         await LoadFromDbAsync().ConfigureAwait(false);
+    }
+
+    private void OnModelIndexReset()
+    {
+        _modelIndexBlake3Hashes = null;
+    }
+
+    private static HashSet<string> CollectModelHashes(IEnumerable<LocalModelFile> models)
+    {
+        var hashes = new HashSet<string>();
+        foreach (var model in models)
+        {
+            if (model.ConnectedModelInfo?.Hashes.BLAKE3 is { } hashBlake3)
+            {
+                hashes.Add(hashBlake3);
+            }
+        }
+        return hashes;
     }
 }

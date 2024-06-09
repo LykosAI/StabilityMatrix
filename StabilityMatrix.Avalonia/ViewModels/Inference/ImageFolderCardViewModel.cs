@@ -234,7 +234,7 @@ public partial class ImageFolderCardViewModel : ViewModelBase
 
         var result = isRecycle
             ? await notificationService.TryAsync(
-                Task.Run(() => NativeFileOperations.RecycleBin!.MoveFileToRecycleBin(imageFile))
+                NativeFileOperations.RecycleBin!.MoveFileToRecycleBinAsync(imageFile)
             )
             : await notificationService.TryAsync(imageFile.DeleteAsync());
 

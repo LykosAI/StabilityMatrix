@@ -230,7 +230,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         viewModel.Description = prunedDescription;
         viewModel.CivitModel = model;
         viewModel.Versions = versions
-            .Select(version => new ModelVersionViewModel(modelIndexService.ModelIndexBlake3Hashes, version))
+            .Select(version => new ModelVersionViewModel(modelIndexService, version))
             .ToImmutableArray();
         viewModel.SelectedVersionViewModel = viewModel.Versions[0];
 

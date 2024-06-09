@@ -405,54 +405,6 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
         File.WriteAllText(GlobalSettingsPath, json);
     }
 
-    /*public void IndexCheckpoints()
-    {
-        Settings.InstalledModelHashes ??= new HashSet<string>();
-        if (Settings.InstalledModelHashes.Any())
-            return;
-
-        var sw = new Stopwatch();
-        sw.Start();
-
-        var modelHashes = new HashSet<string>();
-        var sharedModelDirectory = Path.Combine(LibraryDir, "Models");
-
-        if (!Directory.Exists(sharedModelDirectory))
-            return;
-
-        var connectedModelJsons = Directory.GetFiles(
-            sharedModelDirectory,
-            "*.cm-info.json",
-            SearchOption.AllDirectories
-        );
-        foreach (var jsonFile in connectedModelJsons)
-        {
-            var json = File.ReadAllText(jsonFile);
-
-            if (string.IsNullOrWhiteSpace(json))
-                continue;
-
-            try
-            {
-                var connectedModel = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
-
-                if (connectedModel?.Hashes.BLAKE3 != null)
-                {
-                    modelHashes.Add(connectedModel.Hashes.BLAKE3);
-                }
-            }
-            catch (Exception e)
-            {
-                logger.LogWarning(e, "Failed to parse connected model info from {JsonFile}", jsonFile);
-            }
-        }
-
-        Transaction(s => s.InstalledModelHashes = modelHashes);
-
-        sw.Stop();
-        logger.LogInformation($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
-    }*/
-
     /// <summary>
     /// Loads settings from the settings file. Continues without loading if the file does not exist or is empty.
     /// Will set <see cref="isLoaded"/> to true when finished in any case.

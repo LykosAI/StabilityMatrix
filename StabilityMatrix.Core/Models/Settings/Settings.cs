@@ -144,8 +144,6 @@ public class Settings
         }
     }
 
-    // public HashSet<string>? InstalledModelHashes { get; set; } = new();
-
     public float AnimationScale { get; set; } = 1.0f;
 
     public bool AutoScrollLaunchConsoleToEnd { get; set; } = true;

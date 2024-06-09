@@ -170,11 +170,6 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         try
         {
             await confirmDeleteVm.ExecuteCurrentDeleteOperationAsync(failFast: true);
-
-            settingsManager.Transaction(s =>
-            {
-                s.InstalledModelHashes?.Remove(CheckpointFile.ConnectedModelInfo?.Hashes.BLAKE3!);
-            });
         }
         catch (Exception e)
         {

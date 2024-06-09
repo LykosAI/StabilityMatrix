@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -406,7 +405,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
         File.WriteAllText(GlobalSettingsPath, json);
     }
 
-    public void IndexCheckpoints()
+    /*public void IndexCheckpoints()
     {
         Settings.InstalledModelHashes ??= new HashSet<string>();
         if (Settings.InstalledModelHashes.Any())
@@ -452,7 +451,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
 
         sw.Stop();
         logger.LogInformation($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
-    }
+    }*/
 
     /// <summary>
     /// Loads settings from the settings file. Continues without loading if the file does not exist or is empty.

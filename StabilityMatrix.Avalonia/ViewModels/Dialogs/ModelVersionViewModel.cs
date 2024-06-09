@@ -8,7 +8,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 public partial class ModelVersionViewModel : ObservableObject
 {
-    private readonly HashSet<string> installedModelHashes;
+    private readonly IReadOnlySet<string> installedModelHashes;
 
     [ObservableProperty]
     private CivitModelVersion modelVersion;
@@ -19,7 +19,7 @@ public partial class ModelVersionViewModel : ObservableObject
     [ObservableProperty]
     private bool isInstalled;
 
-    public ModelVersionViewModel(HashSet<string> installedModelHashes, CivitModelVersion modelVersion)
+    public ModelVersionViewModel(IReadOnlySet<string> installedModelHashes, CivitModelVersion modelVersion)
     {
         this.installedModelHashes = installedModelHashes;
         ModelVersion = modelVersion;

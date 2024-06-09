@@ -582,7 +582,7 @@ public partial class ModelIndexService : IModelIndexService
 
         lastUpdateCheck = DateTimeOffset.UtcNow;
 
-        var installedHashes = settingsManager.Settings.InstalledModelHashes ?? [];
+        var installedHashes = ModelIndexBlake3Hashes;
         var dbModels = (
             await liteDbContext.LocalModelFiles.FindAllAsync().ConfigureAwait(false)
             ?? Enumerable.Empty<LocalModelFile>()
@@ -607,16 +607,19 @@ public partial class ModelIndexService : IModelIndexService
             var remoteModel = remoteModels.FirstOrDefault(m => m.Id == dbModel.ConnectedModelInfo!.ModelId);
 
             var latestVersion = remoteModel?.ModelVersions?.FirstOrDefault();
-            var latestHashes = latestVersion
-                ?.Files
-                ?.Where(f => f.Type == CivitFileType.Model)
+
+            if (latestVersion?.Files is not { } latestVersionFiles)
+            {
+                continue;
+            }
+
+            var latestHashes = latestVersionFiles
+                .Where(f => f.Type == CivitFileType.Model)
                 .Select(f => f.Hashes.BLAKE3)
+                .Where(hash => hash is not null)
                 .ToList();
 
-            if (latestHashes == null)
-                continue;
-
-            dbModel.HasUpdate = !latestHashes.Any(hash => installedHashes.Contains(hash));
+            dbModel.HasUpdate = !latestHashes.Any(hash => installedHashes.Contains(hash!));
             dbModel.LastUpdateCheck = DateTimeOffset.UtcNow;
             dbModel.LatestModelInfo = remoteModel;
 

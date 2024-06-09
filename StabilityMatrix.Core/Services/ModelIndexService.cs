@@ -538,10 +538,13 @@ public partial class ModelIndexService : IModelIndexService
             // Remove from index
             if (ModelIndex.TryGetValue(model.SharedFolderType, out var list))
             {
-                list.Remove(model);
+                if (list.Remove(model))
+                {
+                    OnModelIndexRemoved([model]);
+                    EventManager.Instance.OnModelIndexChanged();
+                    return true;
+                }
             }
-
-            EventManager.Instance.OnModelIndexChanged();
 
             return true;
         }
@@ -564,7 +567,10 @@ public partial class ModelIndexService : IModelIndexService
         {
             if (ModelIndex.TryGetValue(model.SharedFolderType, out var list))
             {
-                list.Remove(model);
+                if (list.Remove(model))
+                {
+                    OnModelIndexRemoved([model]);
+                }
             }
         }
 

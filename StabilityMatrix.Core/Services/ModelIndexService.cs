@@ -538,12 +538,10 @@ public partial class ModelIndexService : IModelIndexService
             // Remove from index
             if (ModelIndex.TryGetValue(model.SharedFolderType, out var list))
             {
-                if (list.Remove(model))
-                {
-                    OnModelIndexRemoved([model]);
-                    EventManager.Instance.OnModelIndexChanged();
-                    return true;
-                }
+                list.RemoveAll(x => x.RelativePath == model.RelativePath);
+
+                OnModelIndexReset();
+                EventManager.Instance.OnModelIndexChanged();
             }
 
             return true;
@@ -567,13 +565,11 @@ public partial class ModelIndexService : IModelIndexService
         {
             if (ModelIndex.TryGetValue(model.SharedFolderType, out var list))
             {
-                if (list.Remove(model))
-                {
-                    OnModelIndexRemoved([model]);
-                }
+                list.RemoveAll(x => x.RelativePath == model.RelativePath);
             }
         }
 
+        OnModelIndexReset();
         EventManager.Instance.OnModelIndexChanged();
 
         return result;
@@ -590,8 +586,7 @@ public partial class ModelIndexService : IModelIndexService
 
         var installedHashes = ModelIndexBlake3Hashes;
         var dbModels = (
-            await liteDbContext.LocalModelFiles.FindAllAsync().ConfigureAwait(false)
-            ?? Enumerable.Empty<LocalModelFile>()
+            await liteDbContext.LocalModelFiles.FindAllAsync().ConfigureAwait(false) ?? []
         ).ToList();
 
         var ids = dbModels
@@ -639,32 +634,6 @@ public partial class ModelIndexService : IModelIndexService
     {
         await liteDbContext.LocalModelFiles.UpsertAsync(model).ConfigureAwait(false);
         await LoadFromDbAsync().ConfigureAwait(false);
-    }
-
-    private void OnModelIndexAdded(IEnumerable<LocalModelFile> modelFiles)
-    {
-        if (_modelIndexBlake3Hashes is not { } modelBlake3Hashes)
-        {
-            return;
-        }
-
-        modelBlake3Hashes.UnionWith(CollectModelHashes(modelFiles));
-    }
-
-    private void OnModelIndexRemoved(IEnumerable<LocalModelFile> modelFiles)
-    {
-        if (_modelIndexBlake3Hashes is not { } modelBlake3Hashes)
-        {
-            return;
-        }
-
-        foreach (var model in modelFiles)
-        {
-            if (model.ConnectedModelInfo?.Hashes.BLAKE3 is { } hashBlake3)
-            {
-                modelBlake3Hashes.TryRemove(hashBlake3);
-            }
-        }
     }
 
     private void OnModelIndexReset()

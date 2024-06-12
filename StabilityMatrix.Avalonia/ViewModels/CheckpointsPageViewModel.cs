@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -38,6 +39,7 @@ using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
 using CheckpointSortMode = StabilityMatrix.Core.Models.CheckpointSortMode;
+using Notification = Avalonia.Controls.Notifications.Notification;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
@@ -58,6 +60,7 @@ public partial class CheckpointsPageViewModel(
 ) : PageViewModelBase
 {
     public override string Title => Resources.Label_CheckpointManager;
+
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };
 
@@ -67,6 +70,7 @@ public partial class CheckpointsPageViewModel(
         new ObservableCollectionExtended<CheckpointCategory>();
 
     public SourceCache<LocalModelFile, string> ModelsCache { get; } = new(file => file.RelativePath);
+
     public IObservableCollection<CheckpointFileViewModel> Models { get; set; } =
         new ObservableCollectionExtended<CheckpointFileViewModel>();
 
@@ -94,6 +98,7 @@ public partial class CheckpointsPageViewModel(
 
     [ObservableProperty]
     private CheckpointSortMode selectedSortOption = CheckpointSortMode.Title;
+
     public List<CheckpointSortMode> SortOptions => Enum.GetValues<CheckpointSortMode>().ToList();
 
     [ObservableProperty]
@@ -187,41 +192,7 @@ public partial class CheckpointsPageViewModel(
                             or nameof(SelectedBaseModels)
             )
             .Throttle(TimeSpan.FromMilliseconds(50))
-            .Select(
-                _ =>
-                    SelectedCategory?.Path is null
-                    || SelectedCategory?.Path == settingsManager.ModelsDirectory
-                        ? (Func<LocalModelFile, bool>)(
-                            file =>
-                                file.HasConnectedModel
-                                    ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel)
-                                    : SelectedBaseModels.Contains("Other")
-                        )
-                        : (Func<LocalModelFile, bool>)(
-                            file =>
-                                ShowModelsInSubfolders
-                                    ? Path.GetDirectoryName(file.RelativePath)
-                                        ?.Contains(
-                                            SelectedCategory
-                                                ?.Path
-                                                .Replace(settingsManager.ModelsDirectory, string.Empty)
-                                                .TrimStart(Path.DirectorySeparatorChar)
-                                        )
-                                        is true
-                                    && file.HasConnectedModel
-                                        ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel)
-                                        : SelectedBaseModels.Contains("Other")
-                                    : SelectedCategory
-                                        ?.Path
-                                        .Replace(settingsManager.ModelsDirectory, string.Empty)
-                                        .TrimStart(Path.DirectorySeparatorChar)
-                                        .Equals(Path.GetDirectoryName(file.RelativePath))
-                                        is true
-                                    && file.HasConnectedModel
-                                        ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel)
-                                        : SelectedBaseModels.Contains("Other")
-                        )
-            )
+            .Select(_ => (Func<LocalModelFile, bool>)FilterModels)
             .AsObservable();
 
         var comparerObservable = Observable
@@ -834,5 +805,47 @@ public partial class CheckpointsPageViewModel(
                 viewModel.IsLoading = false;
                 viewModel.Progress = new ProgressReport(0f, "");
             });
+    }
+
+    private bool FilterModels(LocalModelFile file)
+    {
+        if (SelectedCategory?.Path is null || SelectedCategory?.Path == settingsManager.ModelsDirectory)
+        {
+            return file.HasConnectedModel
+                ? SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
+                : SelectedBaseModels.Contains("Other");
+        }
+
+        var folderPath = Path.GetDirectoryName(file.RelativePath);
+        var categoryRelativePath = SelectedCategory
+            ?.Path
+            .Replace(settingsManager.ModelsDirectory, string.Empty)
+            .TrimStart(Path.DirectorySeparatorChar);
+
+        if (categoryRelativePath == null || folderPath == null)
+        {
+            return false;
+        }
+
+        if (ShowModelsInSubfolders)
+        {
+            if (folderPath.Contains(categoryRelativePath))
+            {
+                return file.HasConnectedModel
+                    ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
+                    : SelectedBaseModels.Contains("Other");
+            }
+
+            return false;
+        }
+
+        if (categoryRelativePath.Equals(folderPath))
+        {
+            return file.HasConnectedModel
+                ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
+                : SelectedBaseModels.Contains("Other");
+        }
+
+        return false;
     }
 }

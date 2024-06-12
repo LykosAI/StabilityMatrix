@@ -79,3 +79,11 @@ public class ConnectedModelInfo
     [JsonIgnore]
     public string TrainedWordsString => TrainedWords != null ? string.Join(", ", TrainedWords) : string.Empty;
 }
+
+[JsonSourceGenerationOptions(
+    GenerationMode = JsonSourceGenerationMode.Default,
+    WriteIndented = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+[JsonSerializable(typeof(ConnectedModelInfo))]
+internal partial class ConnectedModelInfoSerializerContext : JsonSerializerContext;

@@ -5,6 +5,157 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.11.0
+### Added
+#### Packages
+- Added new package: [SDFX](https://github.com/sdfxai/sdfx/) by sdfxai
+- Added ZLUDA option for SD.Next
+- Added more launch options for Forge - [#618](https://github.com/LykosAI/StabilityMatrix/issues/618)
+- Added search bar to the Python Packages dialog
+#### Inference
+- Added Inpainting support for Image To Image projects using the new image mask canvas editor
+- Added alternate Lora / LyCORIS drop-down model selection, can be toggled via the model settings button. Allows choosing both CLIP and Model Weights. The existing prompt-based `<lora:model:1.0>` method is still available.
+- Added optional Recycle Bin mode when deleting images in the Inference image browser, can be disabled in settings (Currently available on Windows and macOS)
+#### Model Browsers
+- Added PixArt, SDXL Hyper, and SD3 options to the CivitAI Model Browser
+- Added XL ControlNets section to HuggingFace model browser
+- Added download speed indicator to model downloads in the Downloads tab
+#### Output Browser
+- Added support for indexing and displaying jpg/jpeg & gif images (in additional to png and webp / animated webp), with metadata parsing and search for compatible formats
+#### Settings
+- Added setting for locale specific or invariant number formatting
+- Added setting for toggling model browser auto-search on load
+- Added option in Settings to choose whether to Copy or Move files when dragging and dropping files into the Checkpoint Manager
+- Added folder shortcuts in Settings for opening common app and system folders, such as Data Directory and Logs
+#### Translations
+- Added Brazilian Portuguese language option, thanks to jbostroski for the translation!
+### Changed
+- Maximized state is now stored on exit and restored on launch
+- Drag & drop imports now move files by default instead of copying
+- Clicking outside the Select Model Version dialog will now close it
+- Changed Package card buttons to better indicate that they are buttons
+- Log file storage has been moved from `%AppData%/StabilityMatrix` to a subfolder: `%AppData%/StabilityMatrix/Logs`
+- Archived log files now have an increased rolling limit of 9 files, from 2 files previously. Their file names will now be in the format `app.{yyyy-MM-dd HH_mm_ss}.log`. The current session log file remains named `app.log`.
+- Updated image controls on Recommended Models dialog to match the rest of the app
+- Improved app shutdown clean-up process reliability and speed
+- Improved ProcessTracker speed and clean-up safety for faster subprocess and package launching performance
+- Updated HuggingFace page so the command bar stays fixed at the top
+- Revamped Checkpoints page now shows available model updates and has better drag & drop functionality
+- Revamped file deletion confirmation dialog with affected file paths display and recycle bin / permanent delete options (Checkpoint and Output Browsers) (Currently available on Windows and macOS)
+### Fixed
+- Fixed crash when parsing invalid generated images in Output Browser and Inference image viewer, errors will be logged instead and the image will be skipped
+- Fixed missing progress text during package updates
+- (Windows) Fixed "Open in Explorer" buttons across the app not opening the correct path on ReFS partitions
+- (macOS, Linux) Fixed Subprocesses of packages sometimes not being closed when the app is closed
+- Fixed Inference tabs sometimes not being restored from previous sessions
+- Fixed multiple log files being archived in a single session, and losing some log entries
+- Fixed error when installing certain packages with comments in the requirements file
+- Fixed error when deleting Inference browser images in a nested project path with recycle bin mode
+- Fixed extra text in positive prompt when loading image parameters in Inference with empty negative prompt value
+- Fixed NullReferenceException that sometimes occurred when closing Inference tabs with images due to Avalonia.Bitmap.Size accessor issue
+- Fixed [#598](https://github.com/LykosAI/StabilityMatrix/issues/598) - program not exiting after printing help or version text
+- Fixed [#630](https://github.com/LykosAI/StabilityMatrix/issues/630) - InvokeAI update hangs forever waiting for input
+- Fixed issue where the "installed" state on HuggingFace model browser was not always correct
+- Fixed model folders not being created on startup
+
+### Supporters
+#### Visionaries
+- Shoutout to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your generous support is appreciated and helps us continue to make Stability Matrix better for everyone!
+#### Pioneers
+- A big thank you to our Pioneer-tier supporters on Patreon, **tankfox** and **tanangular**! Your support helps us continue to improve Stability Matrix!
+
+## v2.11.0-pre.2
+### Added
+- Added folder shortcuts in Settings for opening common app and system folders, such as Data Directory and Logs.
+### Changed
+- Log file storage have been moved from `%AppData%/StabilityMatrix` to a subfolder: `%AppData%/StabilityMatrix/Logs`
+- Archived log files now have an increased rolling limit of 9 files, from 2 files previously. Their file names will now be in the format `app.{yyyy-MM-dd HH_mm_ss}.log`. The current session log file remains named `app.log`.
+- Updated image controls on Recommended Models dialog to match the rest of the app
+- Improved app shutdown clean-up process reliability and speed
+- Improved ProcessTracker speed and clean-up safety for faster subprocess and package launching performance
+### Fixed
+- Fixed crash when parsing invalid generated images in Output Browser and Inference image viewer, errors will be logged instead and the image will be skipped
+- Fixed issue where blue and red color channels were swapped in the mask editor dialog
+- Fixed missing progress text during package updates
+- Fixed "Git and Node.js are required" error during SDFX install
+- (Windows) Fixed "Open in Explorer" buttons across the app not opening the correct path on ReFS partitions
+- (Windows) Fixed Sdfx electron window not closing when stopping the package
+- (macOS, Linux) Fixed Subprocesses of packages sometimes not being closed when the app is closed
+- Fixed Inference tabs sometimes not being restored from previous sessions
+- Fixed multiple log files being archived in a single session, and losing some log entries
+- Fixed error when installing certain packages with comments in the requirements file
+- Fixed some more missing progress texts during various activities
+### Supporters
+#### Visionaries
+- A heartfelt thank you to our Visionary-tier Patreon supporters, **Scopp Mcdee** and **Waterclouds**! Your generous contributions enable us to keep enhancing Stability Matrix!
+
+## v2.11.0-pre.1
+### Added
+- Added new package: [SDFX](https://github.com/sdfxai/sdfx/) by sdfxai
+- Added "Show Nested Models" toggle for new Checkpoints page, allowing users to show or hide models in subfolders of the selected folder
+- Added ZLUDA option for SD.Next
+- Added PixArt & SDXL Hyper options to the Civitai model browser
+- Added release date to model update notification card on the Checkpoints page
+- Added option in Settings to choose whether to Copy or Move files when dragging and dropping files into the Checkpoint Manager
+- Added more launch options for Forge - [#618](https://github.com/LykosAI/StabilityMatrix/issues/618)
+#### Inference
+- Added Inpainting support for Image To Image projects using the new image mask canvas editor
+### Changed
+- Maximized state is now stored on exit and restored on launch
+- Clicking outside the Select Model Version dialog will now close it
+- Changed Package card buttons to better indicate that they are buttons
+### Fixed
+- Fixed error when deleting Inference browser images in a nested project path with recycle bin mode
+- Fixed extra text in positive prompt when loading image parameters in Inference with empty negative prompt value
+- Fixed NullReferenceException that sometimes occured when closing Inference tabs with images due to Avalonia.Bitmap.Size accessor issue
+- Fixed package installs not showing any progress messages
+- Fixed crash when viewing model details for Unknown model types in the Checkpoint Manager
+- Fixed [#598](https://github.com/LykosAI/StabilityMatrix/issues/598) - program not exiting after printing help or version text
+- Fixed [#630](https://github.com/LykosAI/StabilityMatrix/issues/630) - InvokeAI update hangs forever waiting for input
+### Supporters
+#### Visionaries
+- Many thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your generous support helps us continue to improve Stability Matrix!
+
+## v2.11.0-dev.3
+### Added
+- Added download speed indicator to model downloads in the Downloads tab
+- Added XL ControlNets section to HuggingFace model browser
+- Added toggle in Settings for model browser auto-search on load
+- Added optional Recycle Bin mode when deleting images in the Inference image browser, can be disabled in settings (Currently on Windows only)
+### Changed
+- Revamped Checkpoints page now shows available model updates and has better drag & drop functionality
+- Updated HuggingFace page so the command bar stays fixed at the top
+- Revamped file deletion confirmation dialog with affected file paths display and recycle bin / permanent delete options (Checkpoint and Output Browsers) (Currently on Windows only)
+### Fixed
+- Fixed issue where the "installed" state on HuggingFace model browser was not always correct
+### Supporters
+#### Visionaries
+- Special shoutout to our first two Visionaries on Patreon, **Scopp Mcdee** and **Waterclouds**! Thank you for your generous support!
+
+## v2.11.0-dev.2
+### Added
+- Added Brazilian Portuguese language option, thanks to jbostroski for the translation!
+- Added setting for locale specific or invariant number formatting
+- Added support for jpg/jpeg & gif images in the Output Browser
+### Changed
+- Centered OpenArt browser cards
+### Fixed
+- Fixed MPS install on macOS for ComfyUI, A1111, SDWebUI Forge, and SDWebUI UX causing torch to be upgraded to dev nightly versions and causing incompatibilities with dependencies.
+- Fixed "Auto Scroll to End" not working in some scenarios
+- Fixed "Auto Scroll to End" toggle button not scrolling to the end when toggled on
+- Fixed/reverted output folder name changes for Automatic1111
+- Fixed xformers being uninstalled with every ComfyUI update
+- Fixed Inference Lora menu strength resetting to default if out of slider range (0 to 1)
+- Fixed missing progress text during package installs
+
+## v2.11.0-dev.1
+### Added
+- Added search bar to the Python Packages dialog
+#### Inference
+- Alternate Lora / LyCORIS drop-down model selection, can be toggled via the model settings button. The existing prompt-based Lora / LyCORIS method is still available.
+### Fixed
+- Fixed crash when failing to parse Python package details
+
 ## v2.10.3
 ### Changed
 - Centered OpenArt browser cards

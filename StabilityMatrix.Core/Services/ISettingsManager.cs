@@ -111,5 +111,4 @@ public interface ISettingsManager
     void SaveLaunchArgs(Guid packageId, IEnumerable<LaunchOption> launchArgs);
     bool IsEulaAccepted();
     void SetEulaAccepted();
-    void IndexCheckpoints();
 }

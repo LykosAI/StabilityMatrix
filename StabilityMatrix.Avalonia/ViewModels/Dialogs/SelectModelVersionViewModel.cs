@@ -39,7 +39,7 @@ public partial class SelectModelVersionViewModel(
     public required ContentDialog Dialog { get; set; }
     public required IReadOnlyList<ModelVersionViewModel> Versions { get; set; }
     public required string Description { get; set; }
-    public required string Title { get; set; }
+    public new required string Title { get; set; }
     public required CivitModel CivitModel { get; set; }
 
     [ObservableProperty]
@@ -258,8 +258,6 @@ public partial class SelectModelVersionViewModel(
 
                 await modelIndexService.RemoveModelAsync(localModel);
             }
-
-            settingsManager.Transaction(settings => settings.InstalledModelHashes?.Remove(hash));
             fileToDelete.IsInstalled = false;
             originalSelectedVersionVm?.RefreshInstallStatus();
         }
@@ -314,13 +312,17 @@ public partial class SelectModelVersionViewModel(
                 : CivitModel.Type.ConvertTo<SharedFolderType>().GetStringValue()
         );
 
-        installLocations.Add(downloadDirectory.ToString().Replace(rootModelsDirectory, "Models"));
-
-        foreach (
-            var directory in downloadDirectory.EnumerateDirectories(searchOption: SearchOption.AllDirectories)
-        )
+        if (!downloadDirectory.ToString().EndsWith("Unknown"))
         {
-            installLocations.Add(directory.ToString().Replace(rootModelsDirectory, "Models"));
+            installLocations.Add(downloadDirectory.ToString().Replace(rootModelsDirectory, "Models"));
+            foreach (
+                var directory in downloadDirectory.EnumerateDirectories(
+                    searchOption: SearchOption.AllDirectories
+                )
+            )
+            {
+                installLocations.Add(directory.ToString().Replace(rootModelsDirectory, "Models"));
+            }
         }
 
         installLocations.Add("Custom...");

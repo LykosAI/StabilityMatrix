@@ -1,10 +1,11 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging.Abstractions;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
-public class MockSettingsManager : SettingsManager
+public class MockSettingsManager() : SettingsManager(NullLogger<SettingsManager>.Instance)
 {
     protected override void LoadSettings(CancellationToken cancellationToken = default) { }
 

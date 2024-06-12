@@ -95,7 +95,7 @@ public partial class ImageViewerViewModel : ContentDialogViewModelBase
         });
     }
 
-    public BetterContentDialog GetDialog()
+    public override BetterContentDialog GetDialog()
     {
         var margins = new Thickness(64, 32);
 

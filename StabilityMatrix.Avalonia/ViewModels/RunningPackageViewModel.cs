@@ -175,11 +175,15 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
 
     public void Dispose()
     {
+        RunningPackage.BasePackage.Shutdown();
         Console.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     public async ValueTask DisposeAsync()
     {
+        RunningPackage.BasePackage.Shutdown();
         await Console.DisposeAsync();
+        GC.SuppressFinalize(this);
     }
 }

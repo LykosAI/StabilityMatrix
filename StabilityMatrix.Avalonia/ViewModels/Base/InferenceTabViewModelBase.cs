@@ -125,7 +125,7 @@ public abstract partial class InferenceTabViewModelBase
         // TODO: Dock reset not working, using this hack for now to get a new view
 
         var navService = App.Services.GetRequiredService<INavigationService<MainWindowViewModel>>();
-        navService.NavigateTo<NewPackageManagerViewModel>(new SuppressNavigationTransitionInfo());
+        navService.NavigateTo<PackageManagerViewModel>(new SuppressNavigationTransitionInfo());
         ((IPersistentViewProvider)this).AttachedPersistentView = null;
         navService.NavigateTo<InferenceViewModel>(new BetterEntranceNavigationTransition());
     }
@@ -178,11 +178,10 @@ public abstract partial class InferenceTabViewModelBase
     /// </summary>
     /// <remarks>This is safe to call from non-UI threads</remarks>
     /// <param name="filePath">File path</param>
-    /// <exception cref="FileNotFoundException"></exception>
-    /// <exception cref="ApplicationException"></exception>
-    /// <exception cref="InvalidOperationException"></exception>
-    private void LoadImageMetadata(FilePath? filePath)
+    public void LoadImageMetadata(FilePath? filePath)
     {
+        Logger.Info("Loading image metadata from '{Path}'", filePath?.FullPath);
+
         if (filePath is not { Exists: true })
         {
             throw new FileNotFoundException("File does not exist", filePath?.FullPath);
@@ -190,31 +189,74 @@ public abstract partial class InferenceTabViewModelBase
 
         var metadata = ImageMetadata.GetAllFileMetadata(filePath);
 
+        LoadImageMetadata(filePath.FullPath, metadata);
+    }
+
+    /// <summary>
+    /// Loads image and metadata from a LocalImageFile
+    /// </summary>
+    /// <param name="localImageFile">LocalImageFile</param>
+    public void LoadImageMetadata(LocalImageFile localImageFile)
+    {
+        Logger.Info("Loading image metadata from LocalImageFile at '{Path}'", localImageFile.AbsolutePath);
+
+        var metadata = localImageFile.ReadMetadata();
+
+        LoadImageMetadata(localImageFile.AbsolutePath, metadata);
+    }
+
+    /// <summary>
+    /// Loads image and metadata from a file path and metadata tuple
+    /// </summary>
+    private void LoadImageMetadata(
+        string imageFilePath,
+        (string? Parameters, string? ParametersJson, string? SMProject, string? ComfyNodes) metadata
+    )
+    {
         // Has SMProject metadata
         if (metadata.SMProject is not null)
         {
             var project = JsonSerializer.Deserialize<InferenceProjectDocument>(metadata.SMProject);
 
             // Check project type matches
-            if (project?.ProjectType.ToViewModelType() == GetType() && project.State is not null)
+            var projectType = project?.ProjectType.ToViewModelType();
+            if (projectType != GetType())
             {
-                Dispatcher.UIThread.Invoke(() => LoadStateFromJsonObject(project.State));
+                Logger.Warn(
+                    "Attempted to load project of mismatched type {Type} into {ThisType}, skipping",
+                    projectType?.Name,
+                    GetType().Name
+                );
+                // Fallback to try loading as parameters
+            }
+            else if (project?.State is null)
+            {
+                Logger.Warn("Project State is null, skipping");
+                // Fallback to try loading as parameters
             }
             else
             {
-                throw new ApplicationException("Unsupported project type");
-            }
+                Logger.Info("Loading Project State (Type: {Type})", projectType.Name);
+                Dispatcher.UIThread.Invoke(() => LoadStateFromJsonObject(project.State));
 
-            // Load image
-            if (this is IImageGalleryComponent imageGalleryComponent)
-            {
-                imageGalleryComponent.LoadImagesToGallery(new ImageSource(filePath));
+                // Load image
+                if (this is IImageGalleryComponent imageGalleryComponent)
+                {
+                    Dispatcher.UIThread.Invoke(
+                        () => imageGalleryComponent.LoadImagesToGallery(new ImageSource(imageFilePath))
+                    );
+                }
+
+                return;
             }
         }
+
         // Has generic metadata
-        else if (metadata.Parameters is { } parametersString)
+        if (metadata.Parameters is not null)
         {
-            if (!GenerationParameters.TryParse(parametersString, out var parameters))
+            Logger.Info("Loading Parameters from metadata");
+
+            if (!GenerationParameters.TryParse(metadata.Parameters, out var parameters))
             {
                 throw new ApplicationException("Failed to parse parameters");
             }
@@ -225,8 +267,9 @@ public abstract partial class InferenceTabViewModelBase
             }
             else
             {
-                throw new InvalidOperationException(
-                    "Load parameters target does not implement IParametersLoadableState"
+                Logger.Warn(
+                    "Load parameters target {Type} does not implement IParametersLoadableState, skipping",
+                    GetType().Name
                 );
             }
 
@@ -234,14 +277,14 @@ public abstract partial class InferenceTabViewModelBase
             if (this is IImageGalleryComponent imageGalleryComponent)
             {
                 Dispatcher.UIThread.Invoke(
-                    () => imageGalleryComponent.LoadImagesToGallery(new ImageSource(filePath))
+                    () => imageGalleryComponent.LoadImagesToGallery(new ImageSource(imageFilePath))
                 );
             }
+
+            return;
         }
-        else
-        {
-            throw new ApplicationException("File does not contain any metadata");
-        }
+
+        throw new ApplicationException("File does not contain SMProject or Parameters Metadata");
     }
 
     /// <inheritdoc />
@@ -283,30 +326,7 @@ public abstract partial class InferenceTabViewModelBase
                 {
                     try
                     {
-                        var metadata = imageFile.ReadMetadata();
-                        if (metadata.SMProject is not null)
-                        {
-                            var project = JsonSerializer.Deserialize<InferenceProjectDocument>(
-                                metadata.SMProject
-                            );
-
-                            // Check project type matches
-                            if (
-                                project?.ProjectType.ToViewModelType() == GetType()
-                                && project.State is not null
-                            )
-                            {
-                                LoadStateFromJsonObject(project.State);
-                            }
-
-                            // Load image
-                            if (this is IImageGalleryComponent imageGalleryComponent)
-                            {
-                                imageGalleryComponent.LoadImagesToGallery(
-                                    new ImageSource(imageFile.AbsolutePath)
-                                );
-                            }
-                        }
+                        LoadImageMetadata(imageFile);
                     }
                     catch (Exception ex)
                     {

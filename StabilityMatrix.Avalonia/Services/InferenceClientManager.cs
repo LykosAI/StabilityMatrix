@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,6 +11,8 @@ using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
+using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Api;
@@ -73,6 +76,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         new(p => p.GetId());
 
     public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
+    private readonly SourceCache<HybridModelFile, string> loraModelsSource = new(p => p.GetId());
+
+    public IObservableCollection<HybridModelFile> LoraModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
     private readonly SourceCache<HybridModelFile, string> promptExpansionModelsSource = new(p => p.GetId());
@@ -142,6 +150,17 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(ControlNetModels)
+            .Subscribe();
+
+        loraModelsSource
+            .Connect()
+            .Sort(
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
+            )
+            .DeferUntilLoaded()
+            .Bind(LoraModels)
             .Subscribe();
 
         promptExpansionModelsSource
@@ -227,6 +246,15 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             );
         }
 
+        // Get Lora model names
+        if (await Client.GetNodeOptionNamesAsync("LoraLoader", "lora_name") is { } loraModelNames)
+        {
+            loraModelsSource.EditDiff(
+                loraModelNames.Select(HybridModelFile.FromRemote),
+                HybridModelFile.Comparer
+            );
+        }
+
         // Prompt Expansion indexing is local only
 
         // Fetch sampler names from KSampler node
@@ -297,16 +325,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Load local models
         modelsSource.EditDiff(
             modelIndexService
-                .GetFromModelIndex(SharedFolderType.StableDiffusion)
+                .FindByModelType(SharedFolderType.StableDiffusion)
                 .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
         // Load local control net models
         controlNetModelsSource.EditDiff(
-            modelIndexService
-                .GetFromModelIndex(SharedFolderType.ControlNet)
-                .Select(HybridModelFile.FromLocal),
+            modelIndexService.FindByModelType(SharedFolderType.ControlNet).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
@@ -316,10 +342,18 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         );
         downloadableControlNetModelsSource.EditDiff(downloadableControlNets, HybridModelFile.Comparer);
 
+        // Load local Lora / LyCORIS models
+        loraModelsSource.EditDiff(
+            modelIndexService
+                .FindByModelType(SharedFolderType.Lora | SharedFolderType.LyCORIS)
+                .Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
+
         // Load local prompt expansion models
         promptExpansionModelsSource.EditDiff(
             modelIndexService
-                .GetFromModelIndex(SharedFolderType.PromptExpansion)
+                .FindByModelType(SharedFolderType.PromptExpansion)
                 .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
@@ -334,7 +368,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         // Load local VAE models
         vaeModelsSource.EditDiff(
-            modelIndexService.GetFromModelIndex(SharedFolderType.VAE).Select(HybridModelFile.FromLocal),
+            modelIndexService.FindByModelType(SharedFolderType.VAE).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
@@ -347,7 +381,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Load Upscalers
         modelUpscalersSource.EditDiff(
             modelIndexService
-                .GetFromModelIndex(
+                .FindByModelType(
                     SharedFolderType.ESRGAN | SharedFolderType.RealESRGAN | SharedFolderType.SwinIR
                 )
                 .Select(m => new ComfyUpscaler(m.FileName, ComfyUpscalerType.ESRGAN)),
@@ -369,15 +403,44 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     {
         EnsureConnected();
 
-        if (image.LocalFile is not { } localFile)
-        {
-            throw new ArgumentException("Image is not a local file", nameof(image));
-        }
-
         var uploadName = await image.GetHashGuidFileNameAsync();
 
-        await using var stream = localFile.Info.OpenRead();
-        await Client.UploadImageAsync(stream, uploadName, cancellationToken);
+        if (image.LocalFile is { } localFile)
+        {
+            logger.LogDebug("Uploading image {FileName} as {UploadName}", localFile.Name, uploadName);
+
+            // For pngs, strip metadata since Pillow can't handle some valid files?
+            if (localFile.Extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
+            {
+                var bytes = PngDataHelper.RemoveMetadata(
+                    await localFile.ReadAllBytesAsync(cancellationToken)
+                );
+                using var stream = new MemoryStream(bytes);
+
+                await Client.UploadImageAsync(stream, uploadName, cancellationToken);
+            }
+            else
+            {
+                await using var stream = localFile.Info.OpenRead();
+
+                await Client.UploadImageAsync(stream, uploadName, cancellationToken);
+            }
+        }
+        else
+        {
+            logger.LogDebug("Uploading bitmap as {UploadName}", uploadName);
+
+            if (await image.GetBitmapAsync() is not { } bitmap)
+            {
+                throw new InvalidOperationException("Failed to get bitmap from image");
+            }
+
+            await using var ms = new MemoryStream();
+            bitmap.Save(ms);
+            ms.Position = 0;
+
+            await Client.UploadImageAsync(ms, uploadName, cancellationToken);
+        }
     }
 
     /// <inheritdoc />

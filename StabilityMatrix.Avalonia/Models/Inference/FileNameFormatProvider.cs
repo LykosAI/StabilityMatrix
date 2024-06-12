@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Avalonia.Data;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
 
@@ -27,10 +28,7 @@ public partial class FileNameFormatProvider
             { "seed", () => GenerationParameters?.Seed.ToString() },
             { "prompt", () => GenerationParameters?.PositivePrompt },
             { "negative_prompt", () => GenerationParameters?.NegativePrompt },
-            {
-                "model_name",
-                () => Path.GetFileNameWithoutExtension(GenerationParameters?.ModelName)
-            },
+            { "model_name", () => Path.GetFileNameWithoutExtension(GenerationParameters?.ModelName) },
             { "model_hash", () => GenerationParameters?.ModelHash },
             { "width", () => GenerationParameters?.Width.ToString() },
             { "height", () => GenerationParameters?.Height.ToString() },
@@ -114,8 +112,7 @@ public partial class FileNameFormatProvider
                             }
                             else
                             {
-                                var length =
-                                    Math.Min(value.Length, slice.End.Value) - (slice.Start ?? 0);
+                                var length = Math.Min(value.Length, slice.End.Value) - (slice.Start ?? 0);
                                 value = value.Substring(slice.Start ?? 0, length);
                             }
 

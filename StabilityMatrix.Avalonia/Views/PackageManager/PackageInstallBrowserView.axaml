@@ -159,6 +159,28 @@
                                                         </Template>
                                                     </Setter>
                                                 </Style>
+                                                <Style Selector="controls|Card[Tag=Zluda]">
+                                                    <Setter Property="Background"
+                                                            Value="{DynamicResource ThemeDarkDarkRedColor}" />
+                                                    <Setter Property="BorderBrush"
+                                                            Value="{DynamicResource ThemeDarkDarkRedColor}" />
+                                                    <Style
+                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground"
+                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    </Style>
+                                                    <Setter Property="Content">
+                                                        <Template>
+                                                            <TextBlock
+                                                                FontWeight="Medium"
+                                                                HorizontalAlignment="Center"
+                                                                Text="ZLUDA"
+                                                                TextAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                ToolTip.Tip="For AMD GPUs that support ZLUDA" />
+                                                        </Template>
+                                                    </Setter>
+                                                </Style>
                                                 <Style Selector="controls|Card[Tag=Cpu]">
                                                     <Setter Property="Background"
                                                             Value="{DynamicResource ThemeBlueGreyColor}" />

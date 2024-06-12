@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -20,7 +19,6 @@ using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Processes;
@@ -46,11 +44,27 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private PythonPackagesItemViewModel? selectedPackage;
 
+    [ObservableProperty]
+    private string searchQuery = string.Empty;
+
     public PythonPackagesViewModel()
     {
+        var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
+            .Throttle(TimeSpan.FromMilliseconds(100))
+            .DistinctUntilChanged()
+            .Select(
+                value =>
+                    (Func<PipPackageInfo, bool>)(
+                        p =>
+                            string.IsNullOrWhiteSpace(value.Value)
+                            || p.Name.Contains(value.Value, StringComparison.OrdinalIgnoreCase)
+                    )
+            );
+
         packageSource
             .Connect()
             .DeferUntilLoaded()
+            .Filter(searchPredicate)
             .Transform(p => new PythonPackagesItemViewModel { Package = p })
             .SortBy(vm => vm.Package.Name)
             .Bind(Packages)
@@ -290,7 +304,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         RefreshBackground().SafeFireAndForget();
     }
 
-    public BetterContentDialog GetDialog()
+    public override BetterContentDialog GetDialog()
     {
         return new BetterContentDialog
         {

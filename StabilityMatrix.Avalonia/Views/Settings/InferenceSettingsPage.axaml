@@ -14,6 +14,7 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
+    xmlns:native="clr-namespace:StabilityMatrix.Native;assembly=StabilityMatrix.Native"
     d:DataContext="{x:Static mocks:DesignData.InferenceSettingsViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="900"
@@ -102,6 +103,20 @@
                             <CheckBox Margin="8" IsChecked="{Binding IsImageViewerPixelGridEnabled}" />
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
+                    
+                    <!-- Recycle Option -->
+                    <ui:SettingsExpanderItem 
+                        IsVisible="{x:Static native:NativeFileOperations.IsRecycleBinAvailable}"
+                        Content="Move files to the Recycle Bin when deleting" 
+                        Description="If disabled, files will be permanently deleted">
+                        <ui:SettingsExpanderItem.IconSource>
+                            <fluentIcons:SymbolIconSource Symbol="Delete" />
+                        </ui:SettingsExpanderItem.IconSource>
+                        <ui:SettingsExpanderItem.Footer>
+                            <CheckBox Margin="8" IsChecked="{Binding IsInferenceImageBrowserUseRecycleBinForDelete}" />
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                    
                 </ui:SettingsExpander>
 
                 <!--  Output Image Files  -->
@@ -121,7 +136,7 @@
                             <TextBox
                                 Name="OutputImageFileNameFormatTextBox"
                                 MinWidth="150"
-                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace"
+                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
                                 FontSize="13"
                                 Text="{Binding OutputImageFileNameFormat}"
                                 Watermark="{x:Static inference:FileNameFormat.DefaultTemplate}" />

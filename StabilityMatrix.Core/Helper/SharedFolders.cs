@@ -210,17 +210,16 @@ public class SharedFolders : ISharedFolders
         }
     }
 
-    public void SetupSharedModelFolders()
+    public static void SetupSharedModelFolders(DirectoryPath rootModelsDir)
     {
-        var modelsDir = settingsManager.ModelsDirectory;
-        if (string.IsNullOrWhiteSpace(modelsDir))
+        if (string.IsNullOrWhiteSpace(rootModelsDir))
             return;
 
-        Directory.CreateDirectory(modelsDir);
+        Directory.CreateDirectory(rootModelsDir);
         var allSharedFolderTypes = Enum.GetValues<SharedFolderType>();
         foreach (var sharedFolder in allSharedFolderTypes)
         {
-            var dir = new DirectoryPath(modelsDir, sharedFolder.GetStringValue());
+            var dir = new DirectoryPath(rootModelsDir, sharedFolder.GetStringValue());
             dir.Create();
         }
     }

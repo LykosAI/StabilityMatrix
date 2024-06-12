@@ -10,7 +10,6 @@ using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -18,7 +17,6 @@ using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Avalonia.Styling;
 using Avalonia.Threading;
-using FluentAvalonia.Interop;
 using FluentAvalonia.Styling;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media;
@@ -26,16 +24,13 @@ using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Windowing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using NLog;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
-using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -43,7 +38,6 @@ using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
-using ILogger = NLog.ILogger;
 using TeachingTip = FluentAvalonia.UI.Controls.TeachingTip;
 #if DEBUG
 using StabilityMatrix.Avalonia.Diagnostics.Views;
@@ -65,9 +59,17 @@ public partial class MainWindow : AppWindowBase
     [DesignOnly(true)]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public MainWindow()
+        : this(
+            DesignData.DesignData.Services.GetRequiredService<INotificationService>(),
+            DesignData.DesignData.Services.GetRequiredService<INavigationService<MainWindowViewModel>>(),
+            DesignData.DesignData.Services.GetRequiredService<ISettingsManager>(),
+            DesignData.DesignData.Services.GetRequiredService<ILogger<MainWindow>>()
+        )
     {
-        notificationService = null!;
-        navigationService = null!;
+        if (!Design.IsDesignMode)
+        {
+            throw new InvalidOperationException("Design constructor called in non-design mode");
+        }
     }
 
     public MainWindow(
@@ -119,7 +121,8 @@ public partial class MainWindow : AppWindowBase
                             newSize.Width,
                             newSize.Height,
                             validWindowPosition ? Position.X : 0,
-                            validWindowPosition ? Position.Y : 0
+                            validWindowPosition ? Position.Y : 0,
+                            WindowState == WindowState.Maximized
                         );
                     },
                     ignoreMissingLibraryDir: true
@@ -137,7 +140,13 @@ public partial class MainWindow : AppWindowBase
                 settingsManager.Transaction(
                     s =>
                     {
-                        s.WindowSettings = new WindowSettings(Width, Height, position.X, position.Y);
+                        s.WindowSettings = new WindowSettings(
+                            Width,
+                            Height,
+                            position.X,
+                            position.Y,
+                            WindowState == WindowState.Maximized
+                        );
                     },
                     ignoreMissingLibraryDir: true
                 );

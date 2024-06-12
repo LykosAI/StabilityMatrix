@@ -55,8 +55,10 @@ public class CompletionList : TemplatedControl
     /// <summary>
     /// Dependency property for <see cref="EmptyTemplate" />.
     /// </summary>
-    public static readonly StyledProperty<ControlTemplate> EmptyTemplateProperty =
-        AvaloniaProperty.Register<CompletionList, ControlTemplate>(nameof(EmptyTemplate));
+    public static readonly StyledProperty<ControlTemplate> EmptyTemplateProperty = AvaloniaProperty.Register<
+        CompletionList,
+        ControlTemplate
+    >(nameof(EmptyTemplate));
 
     /// <summary>
     /// Content of EmptyTemplate will be shown when CompletionList contains no items.
@@ -222,10 +224,7 @@ public class CompletionList : TemplatedControl
                 break;
             default:
                 // Check insertion keys
-                if (
-                    CompletionAcceptKeys.TryGetValue(e.Key, out var appendText)
-                    && CurrentList?.Count > 0
-                )
+                if (CompletionAcceptKeys.TryGetValue(e.Key, out var appendText) && CurrentList?.Count > 0)
                 {
                     e.Handled = true;
 
@@ -340,12 +339,9 @@ public class CompletionList : TemplatedControl
         _currentText = text;
     }
 
-    private IReadOnlyList<ICompletionData> FilterItems(
-        IEnumerable<ICompletionData> items,
-        string query
-    )
+    private IReadOnlyList<ICompletionData> FilterItems(IEnumerable<ICompletionData> items, string query)
     {
-        using var _ = new CodeTimer();
+        using var _ = CodeTimer.StartDebug();
 
         // Order first by quality, then by priority
         var matchingItems = items
@@ -453,8 +449,7 @@ public class CompletionList : TemplatedControl
             orderby quality
             select new { Item = item, Quality = quality };*/
 
-        var suggestedItem =
-            _listBox.SelectedIndex != -1 ? (ICompletionData)_listBox.SelectedItem! : null;
+        var suggestedItem = _listBox.SelectedIndex != -1 ? (ICompletionData)_listBox.SelectedItem! : null;
 
         var listBoxItems = new ObservableCollection<ICompletionData>();
         var bestIndex = -1;
@@ -464,9 +459,7 @@ public class CompletionList : TemplatedControl
         foreach (var matchingItem in matchingItems)
         {
             var priority =
-                matchingItem.Item == suggestedItem
-                    ? double.PositiveInfinity
-                    : matchingItem.Item.Priority;
+                matchingItem.Item == suggestedItem ? double.PositiveInfinity : matchingItem.Item.Priority;
             var quality = matchingItem.Quality;
             if (quality > bestQuality || quality == bestQuality && priority > bestPriority)
             {

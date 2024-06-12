@@ -1,8 +1,6 @@
-﻿using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using NLog;
 using Salaros.Configuration;
 using StabilityMatrix.Core.Exceptions;
@@ -11,7 +9,6 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
-using Yoh.Text.Json.NamingPolicies;
 
 namespace StabilityMatrix.Core.Python;
 
@@ -94,9 +91,9 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// </summary>
     public List<string> SuppressOutput { get; } = new() { "fatal: not a git repository" };
 
-    public PyVenvRunner(DirectoryPath path)
+    public PyVenvRunner(DirectoryPath rootPath)
     {
-        RootPath = path;
+        RootPath = rootPath;
     }
 
     /// <returns>True if the venv has a Scripts\python.exe file</returns>
@@ -263,33 +260,6 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
-    /// Pip install from a requirements.txt file.
-    /// </summary>
-    public async Task PipInstallFromRequirements(
-        FilePath file,
-        Action<ProcessOutput>? outputDataReceived = null,
-        [StringSyntax(StringSyntaxAttribute.Regex)] string? excludes = null
-    )
-    {
-        var requirementsText = await file.ReadAllTextAsync().ConfigureAwait(false);
-        var requirements = requirementsText
-            .SplitLines(StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .AsEnumerable();
-
-        if (excludes is not null)
-        {
-            var excludeRegex = new Regex($"^{excludes}$");
-
-            requirements = requirements.Where(s => !excludeRegex.IsMatch(s));
-        }
-
-        var pipArgs = string.Join(' ', requirements);
-
-        Logger.Info("Installing {FileName} ({PipArgs})", file.Name, pipArgs);
-        await PipInstall(pipArgs, outputDataReceived).ConfigureAwait(false);
-    }
-
-    /// <summary>
     /// Run a pip list command, return results as PipPackageInfo objects.
     /// </summary>
     public async Task<IReadOnlyList<PipPackageInfo>> PipList()
@@ -435,7 +405,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// Run a custom install command. Waits for the process to exit.
     /// workingDirectory defaults to RootPath.
     /// </summary>
-    public async Task CustomInstall(string args, Action<ProcessOutput>? outputDataReceived = null)
+    public async Task CustomInstall(ProcessArgs args, Action<ProcessOutput>? outputDataReceived = null)
     {
         // Record output for errors
         var output = new StringBuilder();
@@ -546,8 +516,26 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         {
             var portableGitBin = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
             var venvBin = RootPath.JoinDir(RelativeBinPath);
-            env["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, venvBin);
+            if (env.TryGetValue("PATH", out var pathValue))
+            {
+                env["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, venvBin, pathValue);
+            }
+            else
+            {
+                env["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, venvBin);
+            }
             env["GIT"] = portableGitBin.JoinFile("git.exe");
+        }
+        else
+        {
+            if (env.TryGetValue("PATH", out var pathValue))
+            {
+                env["PATH"] = Compat.GetEnvPathWithExtensions(pathValue);
+            }
+            else
+            {
+                env["PATH"] = Compat.GetEnvPathWithExtensions();
+            }
         }
 
         if (unbuffered)
@@ -565,6 +553,8 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
                 arguments = "-u " + arguments;
             }
         }
+
+        Logger.Info("PATH: {Path}", env["PATH"]);
 
         Process = ProcessRunner.StartAnsiProcess(
             PythonPath,

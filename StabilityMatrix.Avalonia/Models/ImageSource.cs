@@ -8,6 +8,7 @@ using AsyncImageLoader;
 using Avalonia.Media.Imaging;
 using Blake3;
 using Microsoft.Extensions.DependencyInjection;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Webp;
@@ -117,6 +118,12 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
             return false;
         }
 
+        if (extension.Equals(".gif", StringComparison.OrdinalIgnoreCase))
+        {
+            TemplateKey = ImageSourceTemplateType.WebpAnimation;
+            return true;
+        }
+
         TemplateKey = ImageSourceTemplateType.Image;
 
         return true;
@@ -167,14 +174,20 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
             return contentHashBlake3.Value;
         }
 
-        // Only available for local files
-        if (LocalFile is null)
+        if (LocalFile is not null)
         {
-            throw new InvalidOperationException("ImageSource is not a local file");
+            var data = await LocalFile.ReadAllBytesAsync();
+            contentHashBlake3 = await FileHash.GetBlake3ParallelAsync(data);
         }
+        else
+        {
+            if (await GetBitmapAsync() is not { } bitmap)
+            {
+                throw new InvalidOperationException("GetBitmapAsync returned null");
+            }
 
-        var data = await LocalFile.ReadAllBytesAsync();
-        contentHashBlake3 = await FileHash.GetBlake3ParallelAsync(data);
+            contentHashBlake3 = await FileHash.GetBlake3ParallelAsync(bitmap.ToByteArray());
+        }
 
         return contentHashBlake3.Value;
     }
@@ -184,17 +197,20 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
     /// </summary>
     public async Task<string> GetHashGuidFileNameAsync()
     {
-        if (LocalFile is null)
+        var hash = await GetBlake3HashAsync();
+        var guid = hash.ToGuid().ToString();
+
+        if (LocalFile?.Extension is { } extension)
         {
-            throw new InvalidOperationException("ImageSource is not a local file");
+            guid += extension;
+        }
+        else
+        {
+            // Default to PNG if no extension
+            guid += ".png";
         }
 
-        var extension = LocalFile.Info.Extension;
-
-        var hash = await GetBlake3HashAsync();
-        var guid = hash.ToGuid();
-
-        return guid + extension;
+        return guid;
     }
 
     /// <summary>
@@ -203,32 +219,49 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
     /// </summary>
     public string GetHashGuidFileNameCached()
     {
-        if (LocalFile is null)
-        {
-            throw new InvalidOperationException("ImageSource is not a local file");
-        }
-
         // Calculate hash if not available
         if (contentHashBlake3 is null)
         {
-            // File must exist
-            if (!LocalFile.Exists)
+            // Local file
+            if (LocalFile is not null)
             {
-                throw new FileNotFoundException("Image file does not exist", LocalFile);
+                // File must exist
+                if (!LocalFile.Exists)
+                {
+                    throw new FileNotFoundException("Image file does not exist", LocalFile);
+                }
+
+                // Fail in debug since hash should have been pre-calculated
+                Debug.Fail("Hash has not been calculated when GetHashGuidFileNameCached() was called");
+
+                var data = LocalFile.ReadAllBytes();
+                contentHashBlake3 = FileHash.GetBlake3Parallel(data);
             }
-
-            // Fail in debug since hash should have been pre-calculated
-            Debug.Fail("Hash has not been calculated when GetHashGuidFileNameCached() was called");
-
-            var data = LocalFile.ReadAllBytes();
-            contentHashBlake3 = FileHash.GetBlake3Parallel(data);
+            // Bitmap
+            else if (Bitmap is not null)
+            {
+                var data = Bitmap.ToByteArray();
+                contentHashBlake3 = FileHash.GetBlake3Parallel(data);
+            }
+            else
+            {
+                throw new InvalidOperationException("ImageSource is not a local file or bitmap");
+            }
         }
 
-        var extension = LocalFile.Info.Extension;
+        var guid = contentHashBlake3.Value.ToGuid().ToString();
 
-        var guid = contentHashBlake3.Value.ToGuid();
+        if (LocalFile?.Extension is { } extension)
+        {
+            guid += extension;
+        }
+        else
+        {
+            // Default to PNG if no extension
+            guid += ".png";
+        }
 
-        return guid + extension;
+        return guid;
     }
 
     public string GetHashGuidFileNameCached(string pathPrefix)

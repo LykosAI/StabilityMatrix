@@ -8,7 +8,6 @@ using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services;
@@ -24,8 +23,8 @@ namespace StabilityMatrix.Avalonia.Services;
     InterfaceType = typeof(INavigationService<SettingsViewModel>)
 )]
 [Singleton(
-    ImplType = typeof(NavigationService<NewPackageManagerViewModel>),
-    InterfaceType = typeof(INavigationService<NewPackageManagerViewModel>)
+    ImplType = typeof(NavigationService<PackageManagerViewModel>),
+    InterfaceType = typeof(INavigationService<PackageManagerViewModel>)
 )]
 public class NavigationService<T> : INavigationService<T>
 {

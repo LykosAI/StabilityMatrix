@@ -41,7 +41,7 @@ public partial class PackageInstallDetailViewModel(
     ILogger<PackageInstallDetailViewModel> logger,
     IPyRunner pyRunner,
     IPrerequisiteHelper prerequisiteHelper,
-    INavigationService<NewPackageManagerViewModel> packageNavigationService,
+    INavigationService<PackageManagerViewModel> packageNavigationService,
     IPackageFactory packageFactory
 ) : PageViewModelBase
 {

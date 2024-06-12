@@ -8,7 +8,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using AvaloniaEdit.Utils;
-using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -21,6 +20,7 @@ using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
+using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Video;
@@ -49,6 +49,7 @@ using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using CivitAiBrowserViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.CivitAiBrowserViewModel;
 using HuggingFacePageViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.HuggingFacePageViewModel;
+using MainPackageManagerViewModel = StabilityMatrix.Avalonia.ViewModels.PackageManager.MainPackageManagerViewModel;
 
 namespace StabilityMatrix.Avalonia.DesignData;
 
@@ -211,8 +212,8 @@ public static class DesignData
             packageFactory
         );
 
-        ObservableCacheEx.AddOrUpdate(
-            CheckpointsPageViewModel.CheckpointFoldersCache,
+        /*ObservableCacheEx.AddOrUpdate(
+            OldCheckpointsPageViewModel.CheckpointFoldersCache,
             new CheckpointFolder[]
             {
                 new(settingsManager, downloadService, modelFinder, notificationService, modelImportService)
@@ -256,76 +257,7 @@ public static class DesignData
                     }
                 }
             }
-        );
-
-        /*// Checkpoints page
-        CheckpointsPageViewModel.CheckpointFolders =
-            new CheckpointFolder[]
-            {
-                new(settingsManager, downloadService, modelFinder, notificationService)
-                {
-                    Title = "StableDiffusion",
-                    DirectoryPath = "Models/StableDiffusion",
-                    CheckpointFiles = CheckpointFile[]
-                    {
-                        new()
-                        {
-                            FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
-                            Title = "Auroral Background",
-                            PreviewImagePath =
-                                "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
-                                + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
-                            ConnectedModel = new ConnectedModelInfo
-                            {
-                                VersionName = "Lightning Auroral",
-                                BaseModel = "SD 1.5",
-                                ModelName = "Auroral Background",
-                                ModelType = CivitModelType.Model,
-                                FileMetadata = new CivitFileMetadata
-                                {
-                                    Format = CivitModelFormat.SafeTensor,
-                                    Fp = CivitModelFpType.fp16,
-                                    Size = CivitModelSize.pruned,
-                                }
-                            }
-                        },
-                        new()
-                        {
-                            FilePath = "~/Models/Lora/model.safetensors",
-                            Title = "Some model"
-                        },
-                    },
-                },
-                new(settingsManager, downloadService, modelFinder, notificationService)
-                {
-                    Title = "Lora",
-                    DirectoryPath = "Packages/Lora",
-                    SubFolders = CheckpointFolder[]
-                    {
-                        new(settingsManager, downloadService, modelFinder, notificationService)
-                        {
-                            Title = "StableDiffusion",
-                            DirectoryPath = "Packages/Lora/Subfolder",
-                        },
-                        new(settingsManager, downloadService, modelFinder, notificationService)
-                        {
-                            Title = "Lora",
-                            DirectoryPath = "Packages/StableDiffusion/Subfolder",
-                        }
-                    },
-                    CheckpointFiles = new AdvancedObservableList<CheckpointFile>
-                    {
-                        new() { FilePath = "~/Models/Lora/lora_v2.pt", Title = "Best Lora v2", }
-                    }
-                }
-            };
-
-        foreach (var folder in CheckpointsPageViewModel.CheckpointFolders)
-        {
-            folder.DisplayedCheckpointFiles = new AdvancedObservableList<CheckpointFile>(
-                folder.CheckpointFiles
-            );
-        }*/
+        );*/
 
         CivitAiBrowserViewModel.ModelCards = new ObservableCollectionExtended<CheckpointBrowserCardViewModel>
         {
@@ -377,30 +309,59 @@ public static class DesignData
             })
         };
 
-        NewCheckpointsPageViewModel.AllCheckpoints = new ObservableCollection<CheckpointFile>
+        CheckpointsPageViewModel.Categories = new ObservableCollectionExtended<CheckpointCategory>
         {
             new()
             {
-                FilePath = "~/Models/StableDiffusion/electricity-light.safetensors",
-                Title = "Auroral Background",
-                PreviewImagePath =
-                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
-                    + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
-                ConnectedModel = new ConnectedModelInfo
+                Name = "Category 1",
+                Path = "path1",
+                SubDirectories = [new CheckpointCategory { Name = "SubCategory 1", Path = "path3" }]
+            },
+            new() { Name = "Category 2", Path = "path2" }
+        };
+
+        CheckpointsPageViewModel.Models = new ObservableCollectionExtended<CheckpointFileViewModel>()
+        {
+            new(
+                settingsManager,
+                new MockModelIndexService(),
+                notificationService,
+                dialogFactory,
+                new LocalModelFile
                 {
-                    VersionName = "Lightning Auroral",
-                    BaseModel = "SD 1.5",
-                    ModelName = "Auroral Background",
-                    ModelType = CivitModelType.Model,
-                    FileMetadata = new CivitFileMetadata
+                    SharedFolderType = SharedFolderType.StableDiffusion,
+                    RelativePath = "~/Models/StableDiffusion/electricity-light.safetensors",
+                    PreviewImageFullPath =
+                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
+                        + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                    HasUpdate = true,
+                    ConnectedModelInfo = new ConnectedModelInfo
                     {
-                        Format = CivitModelFormat.SafeTensor,
-                        Fp = CivitModelFpType.fp16,
-                        Size = CivitModelSize.pruned,
+                        VersionName = "Lightning Auroral",
+                        BaseModel = "SD 1.5",
+                        ModelName = "Auroral Background",
+                        ModelType = CivitModelType.Model,
+                        FileMetadata = new CivitFileMetadata
+                        {
+                            Format = CivitModelFormat.SafeTensor,
+                            Fp = CivitModelFpType.fp16,
+                            Size = CivitModelSize.pruned,
+                        },
+                        TrainedWords = ["aurora", "lightning"]
                     }
                 }
-            },
-            new() { FilePath = "~/Models/Lora/model.safetensors", Title = "Some model" }
+            ),
+            new(
+                settingsManager,
+                new MockModelIndexService(),
+                notificationService,
+                dialogFactory,
+                new LocalModelFile
+                {
+                    RelativePath = "~/Models/Lora/model.safetensors",
+                    SharedFolderType = SharedFolderType.StableDiffusion
+                }
+            ),
         };
 
         ProgressManagerViewModel.ProgressItems.AddRange(
@@ -523,13 +484,13 @@ public static class DesignData
                     }
                 )
             };
-            vm.Categories = new ObservableCollectionExtended<PackageOutputCategory>
+            vm.Categories = new ObservableCollectionExtended<TreeViewDirectory>
             {
                 new()
                 {
                     Name = "Category 1",
                     Path = "path1",
-                    SubDirectories = [new PackageOutputCategory { Name = "SubCategory 1", Path = "path3" }]
+                    SubDirectories = [new TreeViewDirectory { Name = "SubCategory 1", Path = "path3" }]
                 },
                 new() { Name = "Category 2", Path = "path2" }
             };
@@ -537,12 +498,12 @@ public static class DesignData
         }
     }
 
-    public static PackageManagerViewModel PackageManagerViewModel
+    public static MainPackageManagerViewModel MainPackageManagerViewModel
     {
         get
         {
             var settings = Services.GetRequiredService<ISettingsManager>();
-            var vm = Services.GetRequiredService<PackageManagerViewModel>();
+            var vm = Services.GetRequiredService<MainPackageManagerViewModel>();
 
             vm.SetPackages(settings.Settings.InstalledPackages);
             vm.SetUnknownPackages(
@@ -594,13 +555,10 @@ public static class DesignData
     public static CheckpointsPageViewModel CheckpointsPageViewModel =>
         Services.GetRequiredService<CheckpointsPageViewModel>();
 
-    public static NewCheckpointsPageViewModel NewCheckpointsPageViewModel =>
-        Services.GetRequiredService<NewCheckpointsPageViewModel>();
-
     public static SettingsViewModel SettingsViewModel => Services.GetRequiredService<SettingsViewModel>();
 
-    public static NewPackageManagerViewModel NewPackageManagerViewModel =>
-        Services.GetRequiredService<NewPackageManagerViewModel>();
+    public static PackageManagerViewModel PackageManagerViewModel =>
+        Services.GetRequiredService<PackageManagerViewModel>();
 
     public static InferenceSettingsViewModel InferenceSettingsViewModel =>
         Services.GetRequiredService<InferenceSettingsViewModel>();
@@ -694,7 +652,7 @@ The gallery images are often inpainted, but you will get something very similar 
                 }
             };
             var sampleViewModel = new ModelVersionViewModel(
-                new HashSet<string> { "ABCD" },
+                Services.GetRequiredService<IModelIndexService>(),
                 sampleCivitVersions[0]
             );
 
@@ -761,6 +719,8 @@ The gallery images are often inpainted, but you will get something very similar 
                 + "response_type=code&state=test%40example.org&"
                 + "redirect_uri=http://localhost:5022/api/oauth/patreon/callback";
         });
+
+    public static MaskEditorViewModel MaskEditorViewModel => DialogFactory.Get<MaskEditorViewModel>();
 
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>
         DialogFactory.Get<InferenceTextToImageViewModel>(vm =>
@@ -925,7 +885,10 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static LayerDiffuseCardViewModel LayerDiffuseCardViewModel =>
         DialogFactory.Get<LayerDiffuseCardViewModel>();
-  
+
+    public static ExtraNetworkCardViewModel ExtraNetworkCardViewModel =>
+        DialogFactory.Get<ExtraNetworkCardViewModel>();
+
     public static InstalledWorkflowsViewModel InstalledWorkflowsViewModel
     {
         get
@@ -1054,6 +1017,8 @@ The gallery images are often inpainted, but you will get something very similar 
             );
         });
 
+    public static PaintCanvasViewModel PaintCanvasViewModel => DialogFactory.Get<PaintCanvasViewModel>();
+
     public static ImageSource SampleImageSource =>
         new(
             new Uri(
@@ -1066,6 +1031,16 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static ControlNetCardViewModel ControlNetCardViewModel =>
         DialogFactory.Get<ControlNetCardViewModel>();
+
+    public static ConfirmDeleteDialogViewModel ConfirmDeleteDialogViewModel =>
+        DialogFactory.Get<ConfirmDeleteDialogViewModel>(vm =>
+        {
+            vm.IsRecycleBinAvailable = true;
+            vm.PathsToDelete = Enumerable
+                .Range(1, 64)
+                .Select(i => $"C:/Users/ExampleUser/Data/ExampleFile{i}.txt")
+                .ToArray();
+        });
 
     public static OpenArtWorkflowViewModel OpenArtWorkflowViewModel =>
         new(Services.GetRequiredService<ISettingsManager>(), Services.GetRequiredService<IPackageFactory>())

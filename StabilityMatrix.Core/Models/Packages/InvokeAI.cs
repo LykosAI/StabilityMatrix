@@ -281,7 +281,7 @@ public class InvokeAI : BaseGitPackage
 
         var process = ProcessRunner.StartAnsiProcess(
             pnpmPath,
-            "i --ignore-scripts=true",
+            "i --ignore-scripts=true --force",
             invokeFrontendPath,
             onConsoleOutput,
             envVars

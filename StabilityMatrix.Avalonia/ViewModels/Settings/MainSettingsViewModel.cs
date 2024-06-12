@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -24,10 +22,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DynamicData.Binding;
-using ExifLibrary;
 using FluentAvalonia.UI.Controls;
-using MetadataExtractor.Formats.Exif;
 using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Animations;
@@ -36,7 +31,6 @@ using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -101,6 +95,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public IReadOnlyList<CultureInfo> AvailableLanguages => Cultures.SupportedCultures;
 
+    [ObservableProperty]
+    private NumberFormatMode selectedNumberFormatMode;
+
+    public IReadOnlyList<NumberFormatMode> NumberFormatModes { get; } =
+        Enum.GetValues<NumberFormatMode>().Where(mode => mode != default).ToList();
+
     public IReadOnlyList<float> AnimationScaleOptions { get; } =
         new[] { 0f, 0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f, };
 
@@ -132,6 +132,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     [ObservableProperty]
     private bool infinitelyScrollWorkflowBrowser;
+
+    [ObservableProperty]
+    private bool autoLoadCivitModels;
+
+    [ObservableProperty]
+    private bool moveFilesOnImport;
 
     #region System Info
 
@@ -228,6 +234,27 @@ public partial class MainSettingsViewModel : PageViewModelBase
             true
         );
 
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedNumberFormatMode,
+            settings => settings.NumberFormatMode,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.AutoLoadCivitModels,
+            settings => settings.AutoLoadCivitModels,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.MoveFilesOnImport,
+            settings => settings.MoveFilesOnImport,
+            true
+        );
+
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 
         hardwareInfoUpdateTimer.Tick += OnHardwareInfoUpdateTimerTick;
@@ -298,7 +325,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         {
             Logger.Info("Changing language from {Old} to {New}", oldValue, newValue);
 
-            Cultures.TrySetSupportedCulture(newValue);
+            Cultures.TrySetSupportedCulture(newValue, settingsManager.Settings.NumberFormatMode);
             settingsManager.Transaction(s => s.Language = newValue.Name);
 
             var dialog = new BetterContentDialog
@@ -335,8 +362,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public async Task ResetCheckpointCache()
     {
-        settingsManager.Transaction(s => s.InstalledModelHashes = new HashSet<string>());
-        await Task.Run(() => settingsManager.IndexCheckpoints());
+        await notificationService.TryAsync(modelIndexService.RefreshIndex());
+
         notificationService.Show(
             "Checkpoint cache reset",
             "The checkpoint cache has been reset.",
@@ -417,6 +444,38 @@ public partial class MainSettingsViewModel : PageViewModelBase
         };
         await dialog.ShowAsync();
     }
+
+    #endregion
+
+    #region Directory Shortcuts
+
+    public CommandItem[] DirectoryShortcutCommands =>
+        [
+            new CommandItem(
+                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(Compat.AppDataHome)),
+                Resources.Label_AppData
+            ),
+            new CommandItem(
+                new AsyncRelayCommand(
+                    () => ProcessRunner.OpenFolderBrowser(Compat.AppDataHome.JoinDir("Logs"))
+                ),
+                Resources.Label_Logs
+            ),
+            new CommandItem(
+                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(settingsManager.LibraryDir)),
+                Resources.Label_DataDirectory
+            ),
+            new CommandItem(
+                new AsyncRelayCommand(() => ProcessRunner.OpenFolderBrowser(settingsManager.ModelsDirectory)),
+                Resources.Label_Checkpoints
+            ),
+            new CommandItem(
+                new AsyncRelayCommand(
+                    () => ProcessRunner.OpenFolderBrowser(settingsManager.LibraryDir.JoinDir("Packages"))
+                ),
+                Resources.Label_Packages
+            )
+        ];
 
     #endregion
 
@@ -783,13 +842,37 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public CommandItem[] DebugCommands =>
         [
+            new CommandItem(DebugRefreshModelIndexCommand),
             new CommandItem(DebugFindLocalModelFromIndexCommand),
             new CommandItem(DebugExtractDmgCommand),
             new CommandItem(DebugShowNativeNotificationCommand),
             new CommandItem(DebugClearImageCacheCommand),
             new CommandItem(DebugGCCollectCommand),
-            new CommandItem(DebugExtractImagePromptsToTxtCommand)
+            new CommandItem(DebugExtractImagePromptsToTxtCommand),
+            new CommandItem(DebugShowImageMaskEditorCommand),
+            new CommandItem(DebugExtractImagePromptsToTxtCommand),
+            new CommandItem(DebugShowConfirmDeleteDialogCommand),
         ];
+
+    [RelayCommand]
+    private async Task DebugShowConfirmDeleteDialog()
+    {
+        var vm = dialogFactory.Get<ConfirmDeleteDialogViewModel>();
+
+        vm.IsRecycleBinAvailable = false;
+        vm.PathsToDelete = Enumerable
+            .Range(1, 64)
+            .Select(i => $"C:/Users/ExampleUser/Data/ExampleFile{i}.txt")
+            .ToArray();
+
+        await vm.GetDialog().ShowAsync();
+    }
+
+    [RelayCommand]
+    private async Task DebugRefreshModelIndex()
+    {
+        await modelIndexService.RefreshIndex();
+    }
 
     [RelayCommand]
     private async Task DebugFindLocalModelFromIndex()
@@ -804,34 +887,34 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
-            Func<Task<IEnumerable<LocalModelFile>>> modelGetter;
+            var timer = new Stopwatch();
+            List<LocalModelFile> results;
 
             if (textFields.ElementAtOrDefault(0)?.Text is { } hash && !string.IsNullOrWhiteSpace(hash))
             {
-                modelGetter = () => modelIndexService.FindByHashAsync(hash);
+                timer.Restart();
+                results = (await modelIndexService.FindByHashAsync(hash)).ToList();
+                timer.Stop();
             }
             else if (textFields.ElementAtOrDefault(1)?.Text is { } type && !string.IsNullOrWhiteSpace(type))
             {
-                modelGetter = () => modelIndexService.FindAsync(Enum.Parse<SharedFolderType>(type));
+                var folderTypes = Enum.Parse<SharedFolderType>(type, true);
+                timer.Restart();
+                results = (await modelIndexService.FindByModelTypeAsync(folderTypes)).ToList();
+                timer.Stop();
             }
             else
             {
                 return;
             }
 
-            var timer = Stopwatch.StartNew();
-
-            var result = (await modelGetter()).ToImmutableArray();
-
-            timer.Stop();
-
-            if (result.Length != 0)
+            if (results.Count != 0)
             {
                 await DialogHelper
                     .CreateMarkdownDialog(
                         string.Join(
                             "\n\n",
-                            result.Select(
+                            results.Select(
                                 (model, i) =>
                                     $"[{i + 1}] {model.RelativePath.ToRepr()} "
                                     + $"({model.DisplayModelName}, {model.DisplayModelVersion})"
@@ -955,6 +1038,25 @@ public partial class MainSettingsViewModel : PageViewModelBase
             $"Extracted prompts from {successfulFiles.Count}/{images.Count} images.",
             NotificationType.Success
         );
+    }
+
+    [RelayCommand]
+    private async Task DebugShowImageMaskEditor()
+    {
+        // Choose background image
+        var provider = App.StorageProvider;
+        var files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions());
+
+        if (files.Count == 0)
+            return;
+
+        var bitmap = await Task.Run(() => SKBitmap.Decode(files[0].TryGetLocalPath()!));
+
+        var vm = dialogFactory.Get<MaskEditorViewModel>();
+
+        vm.PaintCanvasViewModel.BackgroundImage = bitmap;
+
+        await vm.GetDialog().ShowAsync();
     }
 
     #endregion

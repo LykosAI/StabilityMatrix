@@ -10,7 +10,6 @@ using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Models.Update;
-using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Updater;
@@ -60,6 +59,11 @@ public class UpdateHelper : IUpdateHelper
         {
             await CheckForUpdate().ConfigureAwait(false);
         };
+
+        settingsManager.RegisterOnLibraryDirSet(_ =>
+        {
+            timer.Start();
+        });
     }
 
     public async Task StartCheckingForUpdates()

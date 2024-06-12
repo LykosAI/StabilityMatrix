@@ -126,7 +126,7 @@ public class TestBase
     {
         var (window, _) = GetMainWindow();
 
-        var updateTip = window.FindControl<TeachingTip>("UpdateAvailableTeachingTip");
+        var updateTip = window.FindControl<TeachingTip>("UpdateAvailableTeachingTip")!;
         await window.ClickTargetAsync(updateTip);
 
         await Task.Delay(300);

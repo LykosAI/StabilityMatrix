@@ -82,7 +82,9 @@
         <StyleInclude Source="Controls/Inference/FreeUCard.axaml"/>
         <StyleInclude Source="Controls/Inference/ControlNetCard.axaml"/>
         <StyleInclude Source="Controls/Inference/PromptExpansionCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/ExtraNetworkCard.axaml"/>
         <StyleInclude Source="Controls/Inference/LayerDiffuseCard.axaml"/>
+        <StyleInclude Source="Controls/Painting/PaintCanvas.axaml"/>
         <labs:ControlThemes/>
         
         <Style Selector="DockControl">

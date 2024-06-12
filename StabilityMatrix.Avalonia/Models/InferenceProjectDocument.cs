@@ -4,13 +4,13 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
+using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.Models;
 
 /// <summary>
 /// This is the project file for inference tabs
 /// </summary>
-[JsonSerializable(typeof(InferenceProjectDocument))]
 public class InferenceProjectDocument : ICloneable
 {
     [JsonIgnore]

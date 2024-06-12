@@ -347,7 +347,8 @@ public sealed class App : Application
                     provider.GetRequiredService<ServiceManager<ViewModelBase>>(),
                     provider.GetRequiredService<ITrackedDownloadService>(),
                     provider.GetRequiredService<IModelIndexService>(),
-                    provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>()
+                    provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
+                    provider.GetRequiredService<INotificationService>()
                 )
                 {
                     Pages =

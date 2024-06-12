@@ -2,7 +2,10 @@
 
 [![Build](https://github.com/LykosAI/StabilityMatrix/actions/workflows/build.yml/badge.svg)](https://github.com/LykosAI/StabilityMatrix/actions/workflows/build.yml)
 [![Discord Server](https://img.shields.io/discord/1115555685476868168?logo=discord&logoColor=white&label=Discord%20Server)](https://discord.com/invite/TUrgfECxHz)
-[![Release](https://img.shields.io/github/v/release/LykosAI/StabilityMatrix?label=Latest%20Release&link=https%3A%2F%2Fgithub.com%2FLykosAI%2FStabilityMatrix%2Freleases%2Flatest)][release]
+
+[![Latest Stable](https://img.shields.io/github/v/release/LykosAI/StabilityMatrix?label=Latest%20Stable&link=https%3A%2F%2Fgithub.com%2FLykosAI%2FStabilityMatrix%2Freleases%2Flatest)][release]
+[![Latest Preview](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fcdn.lykos.ai%2Fupdate-v3.json&query=%24.updates.preview%5B%22win-x64%22%5D.version&prefix=v&label=Latest%20Preview&color=b57400&cacheSeconds=60&link=https%3A%2F%2Flykos.ai%2Fdownloads)](https://lykos.ai/downloads)
+[![Latest Dev](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fcdn.lykos.ai%2Fupdate-v3.json&query=%24.updates.development%5B%22win-x64%22%5D.version&prefix=v&label=Latest%20Dev&color=880c21&cacheSeconds=60&link=https%3A%2F%2Flykos.ai%2Fdownloads)](https://lykos.ai/downloads)
 
 [release]: https://github.com/LykosAI/StabilityMatrix/releases/latest
 [download-win-x64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-win-x64.zip

@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added download speed indicator to model downloads in the Downloads tab
 - Added XL ControlNets section to HuggingFace model browser
 - Added toggle in Settings for model browser auto-search on load
-- Added optional Recycle Bin mode when deleting images in the Inference image browser, can be disabled in settings (Currently on Windows only)
+- Added optional Recycle Bin mode when deleting images in the Inference image browser, can be disabled in settings (Currently available on Windows and macOS)
 - Added Brazilian Portuguese language option, thanks to jbostroski for the translation!
 - Added setting for locale specific or invariant number formatting
 - Added support for jpg/jpeg & gif images in the Output Browser
@@ -36,7 +36,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Improved ProcessTracker speed and clean-up safety for faster subprocess and package launching performance
 - Updated HuggingFace page so the command bar stays fixed at the top
 - Revamped Checkpoints page now shows available model updates and has better drag & drop functionality
-- Revamped file deletion confirmation dialog with affected file paths display and recycle bin / permanent delete options (Checkpoint and Output Browsers) (Currently on Windows only)
+- Revamped file deletion confirmation dialog with affected file paths display and recycle bin / permanent delete options (Checkpoint and Output Browsers) (Currently available on Windows and macOS)
 ### Fixed
 - Fixed crash when parsing invalid generated images in Output Browser and Inference image viewer, errors will be logged instead and the image will be skipped
 - Fixed missing progress text during package updates

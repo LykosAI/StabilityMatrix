@@ -652,7 +652,7 @@ The gallery images are often inpainted, but you will get something very similar 
                 }
             };
             var sampleViewModel = new ModelVersionViewModel(
-                new HashSet<string> { "ABCD" },
+                Services.GetRequiredService<IModelIndexService>(),
                 sampleCivitVersions[0]
             );
 

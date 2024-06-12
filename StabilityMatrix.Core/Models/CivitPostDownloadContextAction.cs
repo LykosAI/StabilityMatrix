@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
-using AsyncAwaitBestPractices;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Services;
 
@@ -32,11 +31,6 @@ public class CivitPostDownloadContextAction : IContextAction
         }
 
         Debug.WriteLine($"Adding {result} to installed models.");
-        settingsManager.Transaction(s =>
-        {
-            s.InstalledModelHashes ??= new HashSet<string>();
-            s.InstalledModelHashes.Add(result);
-        });
 
         // Also request reindex
         modelIndexService.BackgroundRefreshIndex();

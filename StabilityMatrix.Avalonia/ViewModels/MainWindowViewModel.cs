@@ -138,7 +138,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ProgressManagerViewModel.AddDownloads(trackedDownloadService.Downloads);
 
         // Index checkpoints if we dont have
-        Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
+        // Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
 
         // Disable preload for now, might be causing https://github.com/LykosAI/StabilityMatrix/issues/249
         /*if (!App.IsHeadlessMode)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Nito.Disposables.Internals;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Services;
@@ -12,6 +13,10 @@ public class MockModelIndexService : IModelIndexService
 {
     /// <inheritdoc />
     public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; } = new();
+
+    /// <inheritdoc />
+    public IReadOnlySet<string> ModelIndexBlake3Hashes =>
+        ModelIndex.Values.SelectMany(x => x).Select(x => x.HashBlake3).WhereNotNull().ToHashSet();
 
     /// <inheritdoc />
     public Task RefreshIndex()

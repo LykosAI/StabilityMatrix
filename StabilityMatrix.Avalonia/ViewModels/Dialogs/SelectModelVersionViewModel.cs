@@ -258,8 +258,6 @@ public partial class SelectModelVersionViewModel(
 
                 await modelIndexService.RemoveModelAsync(localModel);
             }
-
-            settingsManager.Transaction(settings => settings.InstalledModelHashes?.Remove(hash));
             fileToDelete.IsInstalled = false;
             originalSelectedVersionVm?.RefreshInstallStatus();
         }

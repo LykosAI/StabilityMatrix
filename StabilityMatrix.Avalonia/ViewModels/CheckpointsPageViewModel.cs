@@ -821,25 +821,20 @@ public partial class CheckpointsPageViewModel(
             return false;
         }
 
-        if (ShowModelsInSubfolders)
-        {
-            if (folderPath.Contains(categoryRelativePath))
-            {
-                return file.HasConnectedModel
+        if (
+            (
+                file.HasConnectedModel
                     ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
-                    : SelectedBaseModels.Contains("Other");
-            }
-
+                    : SelectedBaseModels.Contains("Other")
+            )
+            is false
+        )
+        {
             return false;
         }
 
-        if (categoryRelativePath.Equals(folderPath))
-        {
-            return file.HasConnectedModel
-                ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
-                : SelectedBaseModels.Contains("Other");
-        }
-
-        return false;
+        return ShowModelsInSubfolders
+            ? folderPath.Contains(categoryRelativePath)
+            : categoryRelativePath.Equals(folderPath);
     }
 }

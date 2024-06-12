@@ -11,7 +11,7 @@
 [download-macos-arm64]: https://github.com/LykosAI/StabilityMatrix/releases/latest/download/StabilityMatrix-macos-arm64.dmg
 
 [auto1111]: https://github.com/AUTOMATIC1111/stable-diffusion-webui
-[sdwebui-directml]: https://github.com/lshqqytiger/stable-diffusion-webui-directml
+[auto1111-directml]: https://github.com/lshqqytiger/stable-diffusion-webui-directml
 [webui-ux]: https://github.com/anapnoe/stable-diffusion-webui-ux
 [comfy]: https://github.com/comfyanonymous/ComfyUI
 [sdnext]: https://github.com/vladmandic/automatic

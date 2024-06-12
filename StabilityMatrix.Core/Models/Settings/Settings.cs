@@ -71,6 +71,12 @@ public class Settings
     [JsonConverter(typeof(SemVersionJsonConverter))]
     public SemVersion? LastSeenUpdateVersion { get; set; }
 
+    /// <summary>
+    /// Set to the version the user is updating from when updating
+    /// </summary>
+    [JsonConverter(typeof(SemVersionJsonConverter))]
+    public SemVersion? UpdatingFromVersion { get; set; }
+
     // UI states
     public bool ModelBrowserNsfwEnabled { get; set; }
     public bool IsNavExpanded { get; set; }

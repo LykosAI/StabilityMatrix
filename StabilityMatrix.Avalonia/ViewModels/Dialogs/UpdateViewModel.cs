@@ -166,6 +166,12 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
             );
         }
 
+        // Set current version for update messages
+        settingsManager.Transaction(
+            s => s.UpdatingFromVersion = Compat.AppVersion,
+            ignoreMissingLibraryDir: true
+        );
+
         UpdateText = "Getting a few things ready...";
         await using (new MinimumDelay(500, 1000))
         {

@@ -8,6 +8,8 @@ namespace StabilityMatrix.Core.Models;
 [Flags]
 public enum SharedFolderType
 {
+    Unknown = 0,
+
     [Description("Base Models")]
     StableDiffusion = 1 << 0,
     Lora = 1 << 1,

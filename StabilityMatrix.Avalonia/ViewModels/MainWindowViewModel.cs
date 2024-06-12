@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
@@ -21,6 +20,7 @@ using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
@@ -38,6 +38,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IDiscordRichPresenceService discordRichPresenceService;
     private readonly IModelIndexService modelIndexService;
     private readonly Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler;
+    private readonly INotificationService notificationService;
     public string Greeting => "Welcome to Avalonia!";
 
     [ObservableProperty]
@@ -65,6 +66,7 @@ public partial class MainWindowViewModel : ViewModelBase
             { Name: "tr-TR" } => 235,
             { Name: "de" } => 250,
             { Name: "pt-PT" } => 300,
+            { Name: "pt-BR" } => 260,
             _ => 200
         };
 
@@ -74,7 +76,8 @@ public partial class MainWindowViewModel : ViewModelBase
         ServiceManager<ViewModelBase> dialogFactory,
         ITrackedDownloadService trackedDownloadService,
         IModelIndexService modelIndexService,
-        Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler
+        Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler,
+        INotificationService notificationService
     )
     {
         this.settingsManager = settingsManager;
@@ -83,6 +86,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.trackedDownloadService = trackedDownloadService;
         this.modelIndexService = modelIndexService;
         this.modelDownloadLinkHandler = modelDownloadLinkHandler;
+        this.notificationService = notificationService;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
     }
@@ -137,7 +141,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ProgressManagerViewModel.AddDownloads(trackedDownloadService.Downloads);
 
         // Index checkpoints if we dont have
-        Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
+        // Task.Run(() => settingsManager.IndexCheckpoints()).SafeFireAndForget();
 
         // Disable preload for now, might be causing https://github.com/LykosAI/StabilityMatrix/issues/249
         /*if (!App.IsHeadlessMode)
@@ -184,6 +188,19 @@ public partial class MainWindowViewModel : ViewModelBase
 
             EventManager.Instance.OnRecommendedModelsDialogClosed();
             EventManager.Instance.OnDownloadsTeachingTipRequested();
+        }
+
+        // Show what's new for updates
+        if (settingsManager.Settings.UpdatingFromVersion is { } updatingFromVersion)
+        {
+            var currentVersion = Compat.AppVersion;
+
+            notificationService.Show(
+                "Update Successful",
+                $"Stability Matrix has been updated from {updatingFromVersion.ToDisplayString()} to {currentVersion.ToDisplayString()}."
+            );
+
+            settingsManager.Transaction(s => s.UpdatingFromVersion = null);
         }
     }
 

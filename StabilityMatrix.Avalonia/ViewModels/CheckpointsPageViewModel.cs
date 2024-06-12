@@ -1,53 +1,117 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
-using NLog;
+using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
-using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
-using Resources = StabilityMatrix.Avalonia.Languages.Resources;
+using CheckpointSortMode = StabilityMatrix.Core.Models.CheckpointSortMode;
+using Notification = Avalonia.Controls.Notifications.Notification;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
-using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(CheckpointsPage))]
 [Singleton]
-public partial class CheckpointsPageViewModel : PageViewModelBase
+public partial class CheckpointsPageViewModel(
+    ILogger<CheckpointsPageViewModel> logger,
+    ISettingsManager settingsManager,
+    IModelIndexService modelIndexService,
+    ModelFinder modelFinder,
+    IDownloadService downloadService,
+    INotificationService notificationService,
+    IMetadataImportService metadataImportService,
+    IModelImportService modelImportService,
+    ServiceManager<ViewModelBase> dialogFactory
+) : PageViewModelBase
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private readonly ISharedFolders sharedFolders;
-    private readonly ISettingsManager settingsManager;
-    private readonly ModelFinder modelFinder;
-    private readonly IDownloadService downloadService;
-    private readonly INotificationService notificationService;
-    private readonly IMetadataImportService metadataImportService;
-
-    public override string Title => Resources.Label_Checkpoints;
+    public override string Title => Resources.Label_CheckpointManager;
 
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };
+
+    private SourceCache<CheckpointCategory, string> categoriesCache = new(category => category.Path);
+
+    public IObservableCollection<CheckpointCategory> Categories { get; set; } =
+        new ObservableCollectionExtended<CheckpointCategory>();
+
+    public SourceCache<LocalModelFile, string> ModelsCache { get; } = new(file => file.RelativePath);
+
+    public IObservableCollection<CheckpointFileViewModel> Models { get; set; } =
+        new ObservableCollectionExtended<CheckpointFileViewModel>();
+
+    [ObservableProperty]
+    private bool showFolders = true;
+
+    [ObservableProperty]
+    private bool showModelsInSubfolders = true;
+
+    [ObservableProperty]
+    private CheckpointCategory? selectedCategory;
+
+    [ObservableProperty]
+    private string searchQuery = string.Empty;
+
+    [ObservableProperty]
+    private bool isImportAsConnectedEnabled;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NumImagesSelected))]
+    private int numItemsSelected;
+
+    [ObservableProperty]
+    private bool sortConnectedModelsFirst = true;
+
+    [ObservableProperty]
+    private CheckpointSortMode selectedSortOption = CheckpointSortMode.Title;
+
+    public List<CheckpointSortMode> SortOptions => Enum.GetValues<CheckpointSortMode>().ToList();
+
+    [ObservableProperty]
+    private ListSortDirection selectedSortDirection = ListSortDirection.Ascending;
+
+    [ObservableProperty]
+    private ProgressViewModel progress = new();
+
+    [ObservableProperty]
+    private bool isLoading;
+
+    [ObservableProperty]
+    private bool isDragOver;
 
     [ObservableProperty]
     private ObservableCollection<string> baseModelOptions =
@@ -60,137 +124,437 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
     [ObservableProperty]
     private ObservableCollection<string> selectedBaseModels = [];
 
-    // Toggle button for auto hashing new drag-and-dropped files for connected upgrade
-    [ObservableProperty]
-    private bool isImportAsConnected;
-
-    [ObservableProperty]
-    private bool isLoading;
-
-    [ObservableProperty]
-    private bool isIndexing;
-
-    [ObservableProperty]
-    private bool showConnectedModelImages;
-
-    [ObservableProperty]
-    private string searchFilter = string.Empty;
-
-    [ObservableProperty]
-    private bool isCategoryTipOpen;
-
-    [ObservableProperty]
-    private ProgressReport progress;
-
-    partial void OnIsImportAsConnectedChanged(bool value)
-    {
-        if (settingsManager.IsLibraryDirSet && value != settingsManager.Settings.IsImportAsConnected)
-        {
-            settingsManager.Transaction(s => s.IsImportAsConnected = value);
-        }
-    }
-
-    public SourceCache<CheckpointFolder, string> CheckpointFoldersCache { get; } = new(x => x.DirectoryPath);
-
-    public IObservableCollection<CheckpointFolder> CheckpointFolders { get; } =
-        new ObservableCollectionExtended<CheckpointFolder>();
-
-    public IObservableCollection<CheckpointFolder> DisplayedCheckpointFolders { get; } =
-        new ObservableCollectionExtended<CheckpointFolder>();
-
     public string ClearButtonText =>
         SelectedBaseModels.Count == BaseModelOptions.Count
             ? Resources.Action_ClearSelection
             : Resources.Action_SelectAll;
 
-    private bool isClearing = false;
+    public List<ListSortDirection> SortDirections => Enum.GetValues<ListSortDirection>().ToList();
 
-    public CheckpointsPageViewModel(
-        ISharedFolders sharedFolders,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        INotificationService notificationService,
-        IMetadataImportService metadataImportService,
-        ModelFinder modelFinder
-    )
+    public string ModelsFolder => settingsManager.ModelsDirectory;
+
+    public string NumImagesSelected =>
+        NumItemsSelected == 1
+            ? Resources.Label_OneImageSelected.Replace("images ", "")
+            : string.Format(Resources.Label_NumImagesSelected, NumItemsSelected).Replace("images ", "");
+
+    protected override void OnInitialLoaded()
     {
-        this.sharedFolders = sharedFolders;
-        this.settingsManager = settingsManager;
-        this.downloadService = downloadService;
-        this.notificationService = notificationService;
-        this.metadataImportService = metadataImportService;
-        this.modelFinder = modelFinder;
+        if (Design.IsDesignMode)
+            return;
+
+        base.OnInitialLoaded();
 
         SelectedBaseModels = new ObservableCollection<string>(BaseModelOptions);
         SelectedBaseModels.CollectionChanged += (_, _) =>
         {
-            foreach (var folder in CheckpointFolders)
-            {
-                folder.BaseModelOptionsCache.EditDiff(SelectedBaseModels);
-            }
-
-            CheckpointFoldersCache.Refresh();
             OnPropertyChanged(nameof(ClearButtonText));
-            if (!isClearing)
-            {
-                settingsManager.Transaction(
-                    settings => settings.SelectedBaseModels = SelectedBaseModels.ToList()
-                );
-            }
+            OnPropertyChanged(nameof(SelectedBaseModels));
+            settingsManager.Transaction(
+                settings => settings.SelectedBaseModels = SelectedBaseModels.ToList()
+            );
         };
 
-        CheckpointFoldersCache
+        // Observable predicate from SearchQuery changes
+        var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
+            .Throttle(TimeSpan.FromMilliseconds(100))!
+            .Select(
+                _ =>
+                    (Func<LocalModelFile, bool>)(
+                        file =>
+                            string.IsNullOrWhiteSpace(SearchQuery)
+                            || file.DisplayModelFileName.Contains(
+                                SearchQuery,
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                            || file.DisplayModelName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
+                            || file.DisplayModelVersion.Contains(
+                                SearchQuery,
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                            || (
+                                file.ConnectedModelInfo?.TrainedWordsString.Contains(
+                                    SearchQuery,
+                                    StringComparison.OrdinalIgnoreCase
+                                ) ?? false
+                            )
+                    )
+            )
+            .AsObservable();
+
+        var filterPredicate = Observable
+            .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
+            .Where(
+                x =>
+                    x.EventArgs.PropertyName
+                        is nameof(SelectedCategory)
+                            or nameof(ShowModelsInSubfolders)
+                            or nameof(SelectedBaseModels)
+            )
+            .Throttle(TimeSpan.FromMilliseconds(50))
+            .Select(_ => (Func<LocalModelFile, bool>)FilterModels)
+            .AsObservable();
+
+        var comparerObservable = Observable
+            .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
+            .Where(
+                x =>
+                    x.EventArgs.PropertyName
+                        is nameof(SelectedSortOption)
+                            or nameof(SelectedSortDirection)
+                            or nameof(SortConnectedModelsFirst)
+            )
+            .Select(_ =>
+            {
+                var comparer = new SortExpressionComparer<CheckpointFileViewModel>();
+                if (SortConnectedModelsFirst)
+                {
+                    comparer = comparer.ThenByDescending(vm => vm.CheckpointFile.HasConnectedModel);
+                }
+
+                switch (SelectedSortOption)
+                {
+                    case CheckpointSortMode.FileName:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.CheckpointFile.FileName)
+                                : comparer.ThenByDescending(vm => vm.CheckpointFile.FileName);
+                        break;
+                    case CheckpointSortMode.Title:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName)
+                                : comparer.ThenByDescending(vm => vm.CheckpointFile.DisplayModelName);
+                        break;
+                    case CheckpointSortMode.BaseModel:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(
+                                    vm => vm.CheckpointFile.ConnectedModelInfo?.BaseModel
+                                )
+                                : comparer.ThenByDescending(
+                                    vm => vm.CheckpointFile.ConnectedModelInfo?.BaseModel
+                                );
+
+                        comparer = comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName);
+                        break;
+                    case CheckpointSortMode.SharedFolderType:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.CheckpointFile.SharedFolderType)
+                                : comparer.ThenByDescending(vm => vm.CheckpointFile.SharedFolderType);
+
+                        comparer = comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName);
+                        break;
+                    case CheckpointSortMode.UpdateAvailable:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.CheckpointFile.HasUpdate)
+                                : comparer.ThenByDescending(vm => vm.CheckpointFile.HasUpdate);
+                        comparer = comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName);
+                        comparer = comparer.ThenByDescending(vm => vm.CheckpointFile.DisplayModelVersion);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+
+                return comparer;
+            })
+            .AsObservable();
+
+        ModelsCache
             .Connect()
             .DeferUntilLoaded()
-            .Bind(CheckpointFolders)
-            .Filter(ContainsSearchFilter)
-            .Filter(ContainsBaseModel)
-            .SortBy(x => x.Title)
-            .Bind(DisplayedCheckpointFolders)
-            .Subscribe();
-    }
+            .Filter(filterPredicate)
+            .Filter(searchPredicate)
+            .Transform(
+                x =>
+                    new CheckpointFileViewModel(
+                        settingsManager,
+                        modelIndexService,
+                        notificationService,
+                        dialogFactory,
+                        x
+                    )
+            )
+            .Sort(comparerObservable)
+            .Bind(Models)
+            .WhenPropertyChanged(p => p.IsSelected)
+            .Throttle(TimeSpan.FromMilliseconds(50))
+            .Subscribe(_ =>
+            {
+                NumItemsSelected = Models.Count(o => o.IsSelected);
+            });
 
-    public override void OnLoaded()
-    {
-        base.OnLoaded();
-        var sw = Stopwatch.StartNew();
+        categoriesCache.Connect().DeferUntilLoaded().Bind(Categories).Subscribe();
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsImportAsConnectedEnabled,
+            s => s.IsImportAsConnected,
+            true
+        );
 
-        // Set UI states
-        IsImportAsConnected = settingsManager.Settings.IsImportAsConnected;
-        ShowConnectedModelImages = settingsManager.Settings.ShowConnectedModelImages;
-        // Refresh search filter
-        OnSearchFilterChanged(string.Empty);
-
-        if (Design.IsDesignMode)
-            return;
-
-        if (!settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.CheckpointCategoriesTip))
+        try
         {
-            IsCategoryTipOpen = true;
-            settingsManager.Transaction(s => s.SeenTeachingTips.Add(TeachingTip.CheckpointCategoriesTip));
+            SharedFolders.SetupSharedModelFolders(settingsManager.ModelsDirectory);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, @"Failed to setup shared model folders");
         }
 
-        IsLoading = CheckpointFolders.Count == 0;
-        IsIndexing = CheckpointFolders.Count > 0;
-        IndexFolders();
-        IsLoading = false;
-        IsIndexing = false;
+        Refresh().SafeFireAndForget();
 
-        isClearing = true;
-        SelectedBaseModels.Clear();
-        isClearing = false;
+        EventManager.Instance.ModelIndexChanged += (_, _) =>
+        {
+            RefreshCategories();
+            ModelsCache.EditDiff(
+                modelIndexService.ModelIndex.Values.SelectMany(x => x),
+                LocalModelFile.RelativePathConnectedModelInfoComparer
+            );
+        };
 
-        SelectedBaseModels.AddRange(settingsManager.Settings.SelectedBaseModels);
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SortConnectedModelsFirst,
+            settings => settings.SortConnectedModelsFirst,
+            true
+        );
 
-        Logger.Info($"OnLoadedAsync in {sw.ElapsedMilliseconds}ms");
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedSortOption,
+            settings => settings.CheckpointSortMode,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.SelectedSortDirection,
+            settings => settings.CheckpointSortDirection,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ShowModelsInSubfolders,
+            settings => settings.ShowModelsInSubfolders,
+            true
+        );
+
+        // make sure a sort happens
+        OnPropertyChanged(nameof(SortConnectedModelsFirst));
     }
 
     public void ClearSearchQuery()
     {
-        SearchFilter = string.Empty;
+        SearchQuery = string.Empty;
     }
 
-    public void ClearOrSelectAllBaseModels()
+    [RelayCommand]
+    private async Task Refresh()
+    {
+        await modelIndexService.RefreshIndex();
+        Task.Run(async () => await modelIndexService.CheckModelsForUpdateAsync()).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private void ClearSelection()
+    {
+        var selected = Models.Where(x => x.IsSelected).ToList();
+        foreach (var model in selected)
+        {
+            model.IsSelected = false;
+        }
+
+        NumItemsSelected = 0;
+    }
+
+    [RelayCommand]
+    private async Task DeleteAsync()
+    {
+        if (
+            NumItemsSelected <= 0
+            || Models.Where(o => o.IsSelected).Select(vm => vm.CheckpointFile).ToList()
+                is not { Count: > 0 } selectedModelFiles
+        )
+        {
+            return;
+        }
+
+        var pathsToDelete = selectedModelFiles
+            .SelectMany(x => x.GetDeleteFullPaths(settingsManager.ModelsDirectory))
+            .ToList();
+
+        var confirmDeleteVm = dialogFactory.Get<ConfirmDeleteDialogViewModel>();
+        confirmDeleteVm.PathsToDelete = pathsToDelete;
+
+        if (await confirmDeleteVm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        try
+        {
+            await confirmDeleteVm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent("Error deleting files", e.Message, NotificationType.Error);
+
+            await modelIndexService.RefreshIndex();
+
+            return;
+        }
+
+        await modelIndexService.RemoveModelsAsync(selectedModelFiles);
+
+        NumItemsSelected = 0;
+    }
+
+    [RelayCommand]
+    private async Task ScanMetadata(bool updateExistingMetadata)
+    {
+        if (SelectedCategory == null)
+        {
+            notificationService.Show(
+                "No Category Selected",
+                "Please select a category to scan for metadata.",
+                NotificationType.Error
+            );
+            return;
+        }
+
+        var scanMetadataStep = new ScanMetadataStep(
+            SelectedCategory.Path,
+            metadataImportService,
+            updateExistingMetadata
+        );
+
+        var runner = new PackageModificationRunner
+        {
+            ModificationCompleteMessage = "Metadata scan complete",
+            HideCloseButton = false,
+            ShowDialogOnStart = true
+        };
+
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await Dispatcher.UIThread.InvokeAsync(async () => await runner.ExecuteSteps([scanMetadataStep]));
+
+        await modelIndexService.RefreshIndex();
+        var message = updateExistingMetadata
+            ? "Finished updating metadata."
+            : "Finished scanning for missing metadata.";
+        notificationService.Show("Scan Complete", message, NotificationType.Success);
+    }
+
+    [RelayCommand]
+    private Task OnItemClick(CheckpointFileViewModel item)
+    {
+        // Select item if we're in "select mode"
+        if (NumItemsSelected > 0)
+        {
+            item.IsSelected = !item.IsSelected;
+        }
+        else if (item.CheckpointFile.HasConnectedModel)
+        {
+            return ShowVersionDialog(item);
+        }
+        else
+        {
+            item.IsSelected = !item.IsSelected;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    private async Task ShowVersionDialog(CheckpointFileViewModel item)
+    {
+        var model = item.CheckpointFile.LatestModelInfo;
+        if (model is null)
+        {
+            notificationService.Show(
+                "Model not found",
+                "Model not found in index, please try again later.",
+                NotificationType.Error
+            );
+            return;
+        }
+
+        var versions = model.ModelVersions;
+        if (versions is null || versions.Count == 0)
+        {
+            notificationService.Show(
+                new Notification(
+                    "Model has no versions available",
+                    "This model has no versions available for download",
+                    NotificationType.Warning
+                )
+            );
+            return;
+        }
+
+        item.IsLoading = true;
+
+        var dialog = new BetterContentDialog
+        {
+            Title = model.Name,
+            IsPrimaryButtonEnabled = false,
+            IsSecondaryButtonEnabled = false,
+            IsFooterVisible = false,
+            CloseOnClickOutside = true,
+            MaxDialogWidth = 750,
+            MaxDialogHeight = 950,
+        };
+
+        var prunedDescription = Utilities.RemoveHtml(model.Description);
+
+        var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
+        viewModel.Dialog = dialog;
+        viewModel.Title = model.Name;
+        viewModel.Description = prunedDescription;
+        viewModel.CivitModel = model;
+        viewModel.Versions = versions
+            .Select(version => new ModelVersionViewModel(modelIndexService, version))
+            .ToImmutableArray();
+        viewModel.SelectedVersionViewModel = viewModel.Versions[0];
+
+        dialog.Content = new SelectModelVersionDialog { DataContext = viewModel };
+
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary)
+        {
+            DelayedClearViewModelProgress(item, TimeSpan.FromMilliseconds(100));
+            return;
+        }
+
+        var selectedVersion = viewModel?.SelectedVersionViewModel?.ModelVersion;
+        var selectedFile = viewModel?.SelectedFile?.CivitFile;
+
+        DirectoryPath downloadPath;
+        if (viewModel?.IsCustomSelected is true)
+        {
+            downloadPath = viewModel.CustomInstallLocation;
+        }
+        else
+        {
+            var subFolder =
+                viewModel?.SelectedInstallLocation
+                ?? Path.Combine(@"Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
+            downloadPath = Path.Combine(settingsManager.LibraryDir, subFolder);
+        }
+
+        await Task.Delay(100);
+        await modelImportService.DoImport(model, downloadPath, selectedVersion, selectedFile);
+
+        item.Progress = new ProgressReport(1f, "Import started. Check the downloads tab for progress.");
+        DelayedClearViewModelProgress(item, TimeSpan.FromMilliseconds(1000));
+    }
+
+    [RelayCommand]
+    private void ClearOrSelectAllBaseModels()
     {
         if (SelectedBaseModels.Count == BaseModelOptions.Count)
         {
@@ -203,159 +567,218 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
         }
     }
 
-    // ReSharper disable once UnusedParameterInPartialMethod
-    partial void OnSearchFilterChanged(string value)
+    public async Task ImportFilesAsync(IEnumerable<string> files, DirectoryPath destinationFolder)
     {
-        foreach (var folder in CheckpointFolders)
+        if (destinationFolder.FullPath == settingsManager.ModelsDirectory)
         {
-            folder.SearchFilter = value;
+            notificationService.Show(
+                "Invalid Folder",
+                "Please select a different folder to import the files into.",
+                NotificationType.Error
+            );
+            return;
         }
 
-        CheckpointFoldersCache.Refresh();
-    }
-
-    partial void OnShowConnectedModelImagesChanged(bool value)
-    {
-        if (settingsManager.IsLibraryDirSet && value != settingsManager.Settings.ShowConnectedModelImages)
-        {
-            settingsManager.Transaction(s => s.ShowConnectedModelImages = value);
-        }
-    }
-
-    private bool ContainsSearchFilter(CheckpointFolder folder)
-    {
-        ArgumentNullException.ThrowIfNull(folder);
-
-        if (string.IsNullOrWhiteSpace(SearchFilter))
-        {
-            return true;
-        }
-
-        // Check files in the current folder
-        return folder.CheckpointFiles.Any(
-                x =>
-                    x.FileName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
-                    || x.Title.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
-                    || x.ConnectedModel?.ModelName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
-                        == true
-                    || x.ConnectedModel?.Tags.Any(
-                        t => t.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
-                    ) == true
-                    || x.ConnectedModel?.TrainedWordsString.Contains(
-                        SearchFilter,
-                        StringComparison.OrdinalIgnoreCase
-                    ) == true
+        var fileList = files.ToList();
+        if (
+            fileList.Any(
+                file => !LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(file))
             )
-            ||
-            // If no matching files were found in the current folder, check in all subfolders
-            folder.SubFolders.Any(ContainsSearchFilter);
-    }
-
-    private bool ContainsBaseModel(CheckpointFolder folder)
-    {
-        ArgumentNullException.ThrowIfNull(folder);
-
-        if (SelectedBaseModels.Count == 0 || SelectedBaseModels.Count == BaseModelOptions.Count)
-            return true;
-
-        if (!folder.DisplayedCheckpointFiles.Any())
-            return true;
-
-        return folder.CheckpointFiles.Any(
-                x =>
-                    x.IsConnectedModel
-                        ? SelectedBaseModels.Contains(x.ConnectedModel?.BaseModel)
-                        : SelectedBaseModels.Contains("Other")
-            ) || folder.SubFolders.Any(ContainsBaseModel);
-    }
-
-    private void IndexFolders()
-    {
-        var modelsDirectory = settingsManager.ModelsDirectory;
-
-        // Setup shared folders in case they're missing
-        sharedFolders.SetupSharedModelFolders();
-
-        var folders = Directory.GetDirectories(modelsDirectory);
-
-        var sw = Stopwatch.StartNew();
-
-        var updatedFolders = new List<CheckpointFolder>();
-
-        // Index all folders
-        foreach (var folder in folders)
+        )
         {
-            // Get from cache or create new
-            if (CheckpointFoldersCache.Lookup(folder) is { HasValue: true } result)
-            {
-                result.Value.Index();
-                updatedFolders.Add(result.Value);
-            }
-            else
-            {
-                var checkpointFolder = new CheckpointFolder(
-                    settingsManager,
-                    downloadService,
-                    modelFinder,
-                    notificationService,
-                    metadataImportService
-                )
-                {
-                    Title = Path.GetFileName(folder),
-                    DirectoryPath = folder,
-                    IsExpanded = true // Top level folders expanded by default
-                };
-                checkpointFolder.Index();
-                updatedFolders.Add(checkpointFolder);
-            }
+            notificationService.Show(
+                "Invalid File",
+                "Please select only checkpoint files to import.",
+                NotificationType.Error
+            );
+            return;
         }
 
-        CheckpointFoldersCache.EditDiff(updatedFolders, (a, b) => a.Title == b.Title);
-
-        sw.Stop();
-        Logger.Info($"IndexFolders in {sw.Elapsed.TotalMilliseconds:F1}ms");
-    }
-
-    [RelayCommand]
-    private async Task OpenModelsFolder()
-    {
-        await ProcessRunner.OpenFolderBrowser(settingsManager.ModelsDirectory);
-    }
-
-    [RelayCommand]
-    private async Task FindConnectedMetadata()
-    {
-        var progressHandler = new Progress<ProgressReport>(report =>
-        {
-            Progress = report;
-        });
-
-        await metadataImportService.ScanDirectoryForMissingInfo(
-            settingsManager.ModelsDirectory,
-            progressHandler
+        var importModelsStep = new ImportModelsStep(
+            modelFinder,
+            downloadService,
+            modelIndexService,
+            fileList,
+            destinationFolder,
+            IsImportAsConnectedEnabled,
+            settingsManager.Settings.MoveFilesOnImport
         );
 
-        notificationService.Show(
-            "Scan Complete",
-            "Finished scanning for missing metadata.",
-            NotificationType.Success
-        );
+        var runner = new PackageModificationRunner
+        {
+            ModificationCompleteMessage = "Import Complete",
+            HideCloseButton = false,
+            ShowDialogOnStart = true
+        };
 
-        DelayedClearProgress(TimeSpan.FromSeconds(1.5));
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps([importModelsStep]);
+
+        SelectedCategory = Categories
+            .SelectMany(c => c.Flatten())
+            .FirstOrDefault(x => x.Path == destinationFolder.FullPath);
     }
 
-    [RelayCommand]
-    private async Task UpdateExistingMetadata()
+    public async Task MoveBetweenFolders(LocalModelFile sourceFile, DirectoryPath destinationFolder)
     {
-        var progressHandler = new Progress<ProgressReport>(report =>
+        var sourceDirectory = Path.GetDirectoryName(sourceFile.GetFullPath(settingsManager.ModelsDirectory));
+        if (
+            destinationFolder.FullPath == settingsManager.ModelsDirectory
+            || (sourceDirectory != null && sourceDirectory == destinationFolder.FullPath)
+        )
         {
-            Progress = report;
-        });
+            notificationService.Show(
+                "Invalid Folder",
+                "Please select a different folder to import the files into.",
+                NotificationType.Error
+            );
+            return;
+        }
 
-        await metadataImportService.UpdateExistingMetadata(settingsManager.ModelsDirectory, progressHandler);
-        notificationService.Show("Scan Complete", "Finished updating metadata.", NotificationType.Success);
+        try
+        {
+            var sourcePath = new FilePath(sourceFile.GetFullPath(settingsManager.ModelsDirectory));
+            var fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourcePath);
+            var sourceCmInfoPath = Path.Combine(sourcePath.Directory!, $"{fileNameWithoutExt}.cm-info.json");
+            var sourcePreviewPath = Path.Combine(sourcePath.Directory!, $"{fileNameWithoutExt}.preview.jpeg");
+            var destinationFilePath = Path.Combine(destinationFolder, sourcePath.Name);
+            var destinationCmInfoPath = Path.Combine(destinationFolder, $"{fileNameWithoutExt}.cm-info.json");
+            var destinationPreviewPath = Path.Combine(
+                destinationFolder,
+                $"{fileNameWithoutExt}.preview.jpeg"
+            );
 
-        DelayedClearProgress(TimeSpan.FromSeconds(1.5));
+            // Move files
+            if (File.Exists(sourcePath))
+            {
+                await FileTransfers.MoveFileAsync(sourcePath, destinationFilePath);
+            }
+
+            if (File.Exists(sourceCmInfoPath))
+            {
+                await FileTransfers.MoveFileAsync(sourceCmInfoPath, destinationCmInfoPath);
+            }
+
+            if (File.Exists(sourcePreviewPath))
+            {
+                await FileTransfers.MoveFileAsync(sourcePreviewPath, destinationPreviewPath);
+            }
+
+            notificationService.Show(
+                "Model moved successfully",
+                $"Moved '{sourcePath.Name}' to '{Path.GetFileName(destinationFolder)}'"
+            );
+        }
+        catch (FileTransferExistsException)
+        {
+            notificationService.Show(
+                "Failed to move file",
+                "Destination file exists",
+                NotificationType.Error
+            );
+        }
+        finally
+        {
+            SelectedCategory = Categories
+                .SelectMany(c => c.Flatten())
+                .FirstOrDefault(x => x.Path == destinationFolder.FullPath);
+
+            await modelIndexService.RefreshIndex();
+            DelayedClearProgress(TimeSpan.FromSeconds(1.5));
+        }
+    }
+
+    private void RefreshCategories()
+    {
+        if (Design.IsDesignMode)
+            return;
+
+        if (!settingsManager.IsLibraryDirSet)
+            return;
+
+        var previouslySelectedCategory = SelectedCategory;
+
+        var modelCategories = Directory
+            .EnumerateDirectories(settingsManager.ModelsDirectory, "*", SearchOption.TopDirectoryOnly)
+            .Select(
+                d =>
+                    new CheckpointCategory
+                    {
+                        Path = d,
+                        Name = Path.GetFileName(d),
+                        SubDirectories = GetSubfolders(d)
+                    }
+            )
+            .ToList();
+
+        var rootCategory = new CheckpointCategory
+        {
+            Path = settingsManager.ModelsDirectory,
+            Name = "All Models",
+            Count = modelIndexService.ModelIndex.Values.SelectMany(x => x).Count(),
+        };
+
+        categoriesCache.EditDiff(
+            [rootCategory, ..modelCategories],
+            (a, b) => a.Path == b.Path && a.SubDirectories.Count == b.SubDirectories.Count
+        );
+
+        SelectedCategory =
+            previouslySelectedCategory
+            ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
+            ?? Categories.First();
+
+        foreach (var checkpointCategory in Categories.SelectMany(c => c.Flatten()))
+        {
+            checkpointCategory.Count = Directory
+                .EnumerateFileSystemEntries(checkpointCategory.Path, "*", SearchOption.AllDirectories)
+                .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(x)));
+        }
+    }
+
+    private ObservableCollection<CheckpointCategory> GetSubfolders(string strPath)
+    {
+        var subfolders = new ObservableCollection<CheckpointCategory>();
+
+        if (!Directory.Exists(strPath))
+            return subfolders;
+
+        var directories = Directory.EnumerateDirectories(strPath, "*", SearchOption.TopDirectoryOnly);
+
+        foreach (var dir in directories)
+        {
+            var category = new CheckpointCategory
+            {
+                Name = Path.GetFileName(dir),
+                Path = dir,
+                Count = new DirectoryInfo(dir)
+                    .EnumerateFileSystemInfos("*", SearchOption.AllDirectories)
+                    .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(x.Extension)),
+            };
+
+            if (Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly).Length > 0)
+            {
+                category.SubDirectories = GetSubfolders(dir);
+            }
+
+            subfolders.Add(category);
+        }
+
+        return subfolders;
+    }
+
+    private string GetConnectedModelInfoFilePath(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath))
+        {
+            throw new InvalidOperationException(
+                "Cannot get connected model info file path when filePath is empty"
+            );
+        }
+
+        var modelNameNoExt = Path.GetFileNameWithoutExtension((string?)filePath);
+        var modelDir = Path.GetDirectoryName((string?)filePath) ?? "";
+        return Path.Combine(modelDir, $"{modelNameNoExt}.cm-info.json");
     }
 
     private void DelayedClearProgress(TimeSpan delay)
@@ -364,7 +787,54 @@ public partial class CheckpointsPageViewModel : PageViewModelBase
             .ContinueWith(_ =>
             {
                 IsLoading = false;
-                Progress = new ProgressReport(0, 0);
+                Progress.Value = 0;
             });
+    }
+
+    private void DelayedClearViewModelProgress(CheckpointFileViewModel viewModel, TimeSpan delay)
+    {
+        Task.Delay(delay)
+            .ContinueWith(_ =>
+            {
+                viewModel.IsLoading = false;
+                viewModel.Progress = new ProgressReport(0f, "");
+            });
+    }
+
+    private bool FilterModels(LocalModelFile file)
+    {
+        if (SelectedCategory?.Path is null || SelectedCategory?.Path == settingsManager.ModelsDirectory)
+        {
+            return file.HasConnectedModel
+                ? SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
+                : SelectedBaseModels.Contains("Other");
+        }
+
+        var folderPath = Path.GetDirectoryName(file.RelativePath);
+        var categoryRelativePath = SelectedCategory
+            ?.Path
+            .Replace(settingsManager.ModelsDirectory, string.Empty)
+            .TrimStart(Path.DirectorySeparatorChar);
+
+        if (categoryRelativePath == null || folderPath == null)
+        {
+            return false;
+        }
+
+        if (
+            (
+                file.HasConnectedModel
+                    ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
+                    : SelectedBaseModels.Contains("Other")
+            )
+            is false
+        )
+        {
+            return false;
+        }
+
+        return ShowModelsInSubfolders
+            ? folderPath.Contains(categoryRelativePath)
+            : categoryRelativePath.Equals(folderPath);
     }
 }

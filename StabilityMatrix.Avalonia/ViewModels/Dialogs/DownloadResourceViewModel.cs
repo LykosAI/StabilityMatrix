@@ -92,16 +92,17 @@ public partial class DownloadResourceViewModel(
         return download;
     }
 
-    public BetterContentDialog GetDialog()
+    public override BetterContentDialog GetDialog()
     {
-        return new BetterContentDialog
-        {
-            MinDialogWidth = 400,
-            Title = "Download Model",
-            Content = new DownloadResourceDialog { DataContext = this },
-            PrimaryButtonText = Resources.Action_Continue,
-            CloseButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Primary
-        };
+        var dialog = base.GetDialog();
+
+        dialog.MinDialogWidth = 400;
+        dialog.Title = "Download Model";
+        dialog.Content = new DownloadResourceDialog { DataContext = this };
+        dialog.PrimaryButtonText = Resources.Action_Continue;
+        dialog.CloseButtonText = Resources.Action_Cancel;
+        dialog.DefaultButton = ContentDialogButton.Primary;
+
+        return dialog;
     }
 }

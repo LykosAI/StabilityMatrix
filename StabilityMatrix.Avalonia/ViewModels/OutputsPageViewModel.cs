@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
@@ -11,6 +10,7 @@ using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Media;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -34,6 +34,7 @@ using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Size = StabilityMatrix.Core.Models.Settings.Size;
@@ -52,6 +53,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly ILogger<OutputsPageViewModel> logger;
     private readonly List<CancellationTokenSource> cancellationTokenSources = [];
+    private readonly ServiceManager<ViewModelBase> vmFactory;
 
     public override string Title => Resources.Label_OutputsPageTitle;
 
@@ -59,17 +61,17 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public SourceCache<LocalImageFile, string> OutputsCache { get; } = new(file => file.AbsolutePath);
 
-    private SourceCache<PackageOutputCategory, string> categoriesCache = new(category => category.Path);
+    private SourceCache<TreeViewDirectory, string> categoriesCache = new(category => category.Path);
 
     public IObservableCollection<OutputImageViewModel> Outputs { get; set; } =
         new ObservableCollectionExtended<OutputImageViewModel>();
 
-    public IObservableCollection<PackageOutputCategory> Categories { get; set; } =
-        new ObservableCollectionExtended<PackageOutputCategory>();
+    public IObservableCollection<TreeViewDirectory> Categories { get; set; } =
+        new ObservableCollectionExtended<TreeViewDirectory>();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanShowOutputTypes))]
-    private PackageOutputCategory? selectedCategory;
+    private TreeViewDirectory? selectedCategory;
 
     [ObservableProperty]
     private SharedOutputType? selectedOutputType;
@@ -103,16 +105,17 @@ public partial class OutputsPageViewModel : PageViewModelBase
             ? Resources.Label_OneImageSelected
             : string.Format(Resources.Label_NumImagesSelected, NumItemsSelected);
 
-    private string[] allowedExtensions = [".png", ".webp"];
+    private string[] allowedExtensions = [".png", ".webp", ".jpg", ".jpeg", ".gif"];
 
-    private PackageOutputCategory? lastOutputCategory;
+    private TreeViewDirectory? lastOutputCategory;
 
     public OutputsPageViewModel(
         ISettingsManager settingsManager,
         IPackageFactory packageFactory,
         INotificationService notificationService,
         INavigationService<MainWindowViewModel> navigationService,
-        ILogger<OutputsPageViewModel> logger
+        ILogger<OutputsPageViewModel> logger,
+        ServiceManager<ViewModelBase> vmFactory
     )
     {
         this.settingsManager = settingsManager;
@@ -120,6 +123,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         this.notificationService = notificationService;
         this.navigationService = navigationService;
         this.logger = logger;
+        this.vmFactory = vmFactory;
 
         var searcher = new ImageSearcher();
 
@@ -191,7 +195,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         GetOutputs(path);
     }
 
-    partial void OnSelectedCategoryChanged(PackageOutputCategory? oldValue, PackageOutputCategory? newValue)
+    partial void OnSelectedCategoryChanged(TreeViewDirectory? oldValue, TreeViewDirectory? newValue)
     {
         if (oldValue == newValue || oldValue == null || newValue == null)
             return;
@@ -301,32 +305,35 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (item is null)
             return;
 
-        var confirmationDialog = new BetterContentDialog
+        var itemPath = item.ImageFile.AbsolutePath;
+        var pathsToDelete = new List<string> { itemPath };
+
+        // Add .txt sidecar to paths if they exist
+        var sideCar = Path.ChangeExtension(itemPath, ".txt");
+        if (File.Exists(sideCar))
         {
-            Title = Resources.Label_AreYouSure,
-            Content = Resources.Label_ActionCannotBeUndone,
-            PrimaryButtonText = Resources.Action_Delete,
-            SecondaryButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Primary,
-            IsSecondaryButtonEnabled = true,
-        };
-        var dialogResult = await confirmationDialog.ShowAsync();
-        if (dialogResult != ContentDialogResult.Primary)
-            return;
+            pathsToDelete.Add(sideCar);
+        }
 
-        // Delete the file
-        var imageFile = new FilePath(item.ImageFile.AbsolutePath);
-        var result = await notificationService.TryAsync(imageFile.DeleteAsync());
+        var vm = vmFactory.Get<ConfirmDeleteDialogViewModel>();
+        vm.PathsToDelete = pathsToDelete;
 
-        if (!result.IsSuccessful)
+        if (await vm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
         {
             return;
         }
-        //Attempt to remove .txt sidecar if it exists
-        var sideCar = new FilePath(Path.ChangeExtension(imageFile, ".txt"));
-        if (File.Exists(sideCar))
+
+        try
         {
-            await notificationService.TryAsync(sideCar.DeleteAsync());
+            await vm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent("Error deleting files", e.Message, NotificationType.Error);
+
+            Refresh();
+
+            return;
         }
 
         OutputsCache.Remove(item.ImageFile);
@@ -334,32 +341,32 @@ public partial class OutputsPageViewModel : PageViewModelBase
         // Invalidate cache
         if (ImageLoader.AsyncImageLoader is FallbackRamCachedWebImageLoader loader)
         {
-            loader.RemoveAllNamesFromCache(imageFile.Name);
+            loader.RemoveAllNamesFromCache(itemPath);
         }
     }
 
     public void SendToTextToImage(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceTextToImageRequested(vm.ImageFile);
+        EventManager.Instance.OnInferenceProjectRequested(vm.ImageFile, InferenceProjectType.TextToImage);
     }
 
     public void SendToUpscale(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceUpscaleRequested(vm.ImageFile);
+        EventManager.Instance.OnInferenceProjectRequested(vm.ImageFile, InferenceProjectType.Upscale);
     }
 
     public void SendToImageToImage(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceImageToImageRequested(vm.ImageFile);
+        EventManager.Instance.OnInferenceProjectRequested(vm.ImageFile, InferenceProjectType.ImageToImage);
     }
 
     public void SendToImageToVideo(OutputImageViewModel vm)
     {
         navigationService.NavigateTo<InferenceViewModel>();
-        EventManager.Instance.OnInferenceImageToVideoRequested(vm.ImageFile);
+        EventManager.Instance.OnInferenceProjectRequested(vm.ImageFile, InferenceProjectType.ImageToVideo);
     }
 
     public void ClearSelection()
@@ -380,44 +387,41 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public async Task DeleteAllSelected()
     {
-        var confirmationDialog = new BetterContentDialog
+        var pathsToDelete = new List<string>();
+
+        foreach (var path in Outputs.Where(o => o.IsSelected).Select(o => o.ImageFile.AbsolutePath))
         {
-            Title = string.Format(Resources.Label_AreYouSureDeleteImages, NumItemsSelected),
-            Content = Resources.Label_ActionCannotBeUndone,
-            PrimaryButtonText = Resources.Action_Delete,
-            SecondaryButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Primary,
-            IsSecondaryButtonEnabled = true,
-        };
-        var dialogResult = await confirmationDialog.ShowAsync();
-        if (dialogResult != ContentDialogResult.Primary)
-            return;
-
-        var selected = Outputs.Where(o => o.IsSelected).ToList();
-        Debug.Assert(selected.Count == NumItemsSelected);
-
-        var imagesToRemove = new List<LocalImageFile>();
-        foreach (var output in selected)
-        {
-            // Delete the file
-            var imageFile = new FilePath(output.ImageFile.AbsolutePath);
-            var result = await notificationService.TryAsync(imageFile.DeleteAsync());
-            if (!result.IsSuccessful)
-            {
-                continue;
-            }
-
-            //Attempt to remove .txt sidecar if it exists
-            var sideCar = new FilePath(Path.ChangeExtension(imageFile, ".txt"));
+            pathsToDelete.Add(path);
+            // Add .txt sidecars to paths if they exist
+            var sideCar = Path.ChangeExtension(path, ".txt");
             if (File.Exists(sideCar))
             {
-                await notificationService.TryAsync(sideCar.DeleteAsync());
+                pathsToDelete.Add(sideCar);
             }
-
-            imagesToRemove.Add(output.ImageFile);
         }
 
-        OutputsCache.Remove(imagesToRemove);
+        var vm = vmFactory.Get<ConfirmDeleteDialogViewModel>();
+        vm.PathsToDelete = pathsToDelete;
+
+        if (await vm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        try
+        {
+            await vm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent("Error deleting files", e.Message, NotificationType.Error);
+
+            Refresh();
+
+            return;
+        }
+
+        OutputsCache.Remove(pathsToDelete);
         NumItemsSelected = 0;
         ClearSelection();
     }
@@ -617,7 +621,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             )
             .Select(
                 pair =>
-                    new PackageOutputCategory
+                    new TreeViewDirectory
                     {
                         Path = Path.Combine(
                             pair.InstalledPackage.FullPath!,
@@ -633,7 +637,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         packageCategories.Insert(
             0,
-            new PackageOutputCategory
+            new TreeViewDirectory
             {
                 Path = settingsManager.ImagesDirectory,
                 Name = "Shared Output Folder",
@@ -646,9 +650,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
         SelectedCategory = previouslySelectedCategory ?? Categories.First();
     }
 
-    private ObservableCollection<PackageOutputCategory> GetSubfolders(string strPath)
+    private ObservableCollection<TreeViewDirectory> GetSubfolders(string strPath)
     {
-        var subfolders = new ObservableCollection<PackageOutputCategory>();
+        var subfolders = new ObservableCollection<TreeViewDirectory>();
 
         if (!Directory.Exists(strPath))
             return subfolders;
@@ -657,7 +661,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         foreach (var dir in directories)
         {
-            var category = new PackageOutputCategory { Name = Path.GetFileName(dir), Path = dir };
+            var category = new TreeViewDirectory { Name = Path.GetFileName(dir), Path = dir };
 
             if (Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly).Length > 0)
             {

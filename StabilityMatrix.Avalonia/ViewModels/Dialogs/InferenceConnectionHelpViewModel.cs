@@ -12,10 +12,8 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
@@ -109,7 +107,7 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
     {
         Dispatcher.UIThread.Post(() =>
         {
-            navigationService.NavigateTo<NewPackageManagerViewModel>(
+            navigationService.NavigateTo<PackageManagerViewModel>(
                 param: new PackageManagerNavigationOptions
                 {
                     OpenInstallerDialog = true,

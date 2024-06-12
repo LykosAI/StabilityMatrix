@@ -72,7 +72,7 @@ public partial class OAuthConnectViewModel : ContentDialogViewModelBase
         }
     }
 
-    public BetterContentDialog GetDialog()
+    public override BetterContentDialog GetDialog()
     {
         return new BetterContentDialog
         {

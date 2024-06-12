@@ -1,11 +1,10 @@
 ﻿using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
-using NLog;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -16,10 +15,8 @@ using StabilityMatrix.Core.Python;
 namespace StabilityMatrix.Core.Services;
 
 [Singleton(typeof(ISettingsManager))]
-public class SettingsManager : ISettingsManager
+public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
     private static string GlobalSettingsPath => Path.Combine(Compat.AppDataHome, "global.json");
 
     private readonly SemaphoreSlim fileLock = new(1, 1);
@@ -192,7 +189,7 @@ public class SettingsManager : ISettingsManager
             // Skip if event is relay and the sender is the source, to prevent duplicate
             if (args.IsRelay && ReferenceEquals(sender, source))
                 return;
-            Logger.Trace(
+            logger.LogTrace(
                 "[RelayPropertyFor] " + "Settings.{TargetProperty:l} -> {SourceType:l}.{SourceProperty:l}",
                 targetPropertyName,
                 sourceTypeName,
@@ -208,7 +205,7 @@ public class SettingsManager : ISettingsManager
             if (args.PropertyName != propertyName)
                 return;
 
-            Logger.Trace(
+            logger.LogTrace(
                 "[RelayPropertyFor] " + "{SourceType:l}.{SourceProperty:l} -> Settings.{TargetProperty:l}",
                 sourceTypeName,
                 propertyName,
@@ -230,7 +227,12 @@ public class SettingsManager : ISettingsManager
             }
             else
             {
-                Logger.Warn("[RelayPropertyFor] LibraryDir not set when saving");
+                logger.LogWarning(
+                    "[RelayPropertyFor] LibraryDir not set when saving ({SourceType:l}.{SourceProperty:l} -> Settings.{TargetProperty:l})",
+                    sourceTypeName,
+                    propertyName,
+                    targetPropertyName
+                );
             }
 
             // Invoke property changed event, passing along sender
@@ -278,8 +280,8 @@ public class SettingsManager : ISettingsManager
         // 0. Check Override
         if (libraryDirOverride is not null)
         {
-            var fullOverridePath = libraryDirOverride.Info.FullName;
-            Logger.Info("Using library override path: {Path}", fullOverridePath);
+            logger.LogInformation("Using library override path {Path}", libraryDirOverride.FullPath);
+
             LibraryDir = libraryDirOverride;
             SetStaticLibraryPaths();
             LoadSettings();
@@ -320,7 +322,7 @@ public class SettingsManager : ISettingsManager
         }
         catch (Exception e)
         {
-            Logger.Warn("Failed to read library.json in AppData: {Message}", e.Message);
+            logger.LogWarning("Failed to read library.json in AppData: {Message}", e.Message);
         }
         return false;
     }
@@ -403,54 +405,6 @@ public class SettingsManager : ISettingsManager
         File.WriteAllText(GlobalSettingsPath, json);
     }
 
-    public void IndexCheckpoints()
-    {
-        Settings.InstalledModelHashes ??= new HashSet<string>();
-        if (Settings.InstalledModelHashes.Any())
-            return;
-
-        var sw = new Stopwatch();
-        sw.Start();
-
-        var modelHashes = new HashSet<string>();
-        var sharedModelDirectory = Path.Combine(LibraryDir, "Models");
-
-        if (!Directory.Exists(sharedModelDirectory))
-            return;
-
-        var connectedModelJsons = Directory.GetFiles(
-            sharedModelDirectory,
-            "*.cm-info.json",
-            SearchOption.AllDirectories
-        );
-        foreach (var jsonFile in connectedModelJsons)
-        {
-            var json = File.ReadAllText(jsonFile);
-
-            if (string.IsNullOrWhiteSpace(json))
-                continue;
-
-            try
-            {
-                var connectedModel = JsonSerializer.Deserialize<ConnectedModelInfo>(json);
-
-                if (connectedModel?.Hashes.BLAKE3 != null)
-                {
-                    modelHashes.Add(connectedModel.Hashes.BLAKE3);
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.Warn(e, "Failed to parse connected model info from {JsonFile}", jsonFile);
-            }
-        }
-
-        Transaction(s => s.InstalledModelHashes = modelHashes);
-
-        sw.Stop();
-        Logger.Info($"Indexed {modelHashes.Count} checkpoints in {sw.ElapsedMilliseconds}ms");
-    }
-
     /// <summary>
     /// Loads settings from the settings file. Continues without loading if the file does not exist or is empty.
     /// Will set <see cref="isLoaded"/> to true when finished in any case.
@@ -470,7 +424,7 @@ public class SettingsManager : ISettingsManager
 
             if (fileStream.Length == 0)
             {
-                Logger.Warn("Settings file is empty, using default settings");
+                logger.LogWarning("Settings file is empty, using default settings");
                 return;
             }
 
@@ -513,7 +467,7 @@ public class SettingsManager : ISettingsManager
 
             if (fileStream.Length == 0)
             {
-                Logger.Warn("Settings file is empty, using default settings");
+                logger.LogWarning("Settings file is empty, using default settings");
                 return;
             }
 
@@ -558,7 +512,7 @@ public class SettingsManager : ISettingsManager
             // Check disk space
             if (SystemInfo.GetDiskFreeSpaceBytes(SettingsFile) is < 1 * SystemInfo.Mebibyte)
             {
-                Logger.Warn("Not enough disk space to save settings");
+                logger.LogWarning("Not enough disk space to save settings");
                 return;
             }
 
@@ -569,7 +523,7 @@ public class SettingsManager : ISettingsManager
 
             if (jsonBytes.Length == 0)
             {
-                Logger.Error("JsonSerializer returned empty bytes for some reason");
+                logger.LogError("JsonSerializer returned empty bytes for some reason");
                 return;
             }
 
@@ -607,7 +561,7 @@ public class SettingsManager : ISettingsManager
             // Check disk space
             if (SystemInfo.GetDiskFreeSpaceBytes(SettingsFile) is < 1 * SystemInfo.Mebibyte)
             {
-                Logger.Warn("Not enough disk space to save settings");
+                logger.LogWarning("Not enough disk space to save settings");
                 return;
             }
 
@@ -618,7 +572,7 @@ public class SettingsManager : ISettingsManager
 
             if (jsonBytes.Length == 0)
             {
-                Logger.Error("JsonSerializer returned empty bytes for some reason");
+                logger.LogError("JsonSerializer returned empty bytes for some reason");
                 return;
             }
 

@@ -18,7 +18,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-[Singleton(typeof(IModelDownloadLinkHandler)), Singleton(typeof(IAsyncDisposable))]
+[Singleton(typeof(IModelDownloadLinkHandler))]
 public class ModelDownloadLinkHandler(
     IDistributedSubscriber<string, Uri> uriHandlerSubscriber,
     ILogger<ModelDownloadLinkHandler> logger,

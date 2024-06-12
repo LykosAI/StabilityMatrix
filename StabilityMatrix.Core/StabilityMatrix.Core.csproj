@@ -16,6 +16,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\StabilityMatrix.Native\StabilityMatrix.Native.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
       <PackageReference Include="AsyncAwaitBestPractices" Version="7.0.0" />
       <PackageReference Include="AutoCtor" Version="2.2.0" />
       <PackageReference Include="Blake3" Version="1.1.0" />
@@ -39,8 +43,8 @@
       <PackageReference Include="MetadataExtractor" Version="2.8.1" />
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
-      <PackageReference Include="NLog" Version="5.2.8" />
-      <PackageReference Include="NLog.Extensions.Logging" Version="5.3.8" />
+      <PackageReference Include="NLog" Version="5.3.2" />
+      <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" />
       <PackageReference Include="NSec.Cryptography" Version="22.4.0" />
       <PackageReference Include="Octokit" Version="10.0.0" />
       <PackageReference Include="OneOf" Version="3.0.263" />

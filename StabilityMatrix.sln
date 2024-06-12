@@ -17,6 +17,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.UITests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avalonia.Gif", "Avalonia.Gif\Avalonia.Gif.csproj", "{72A73F1E-024B-4A25-AD34-626198D9527F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Native", "StabilityMatrix.Native\StabilityMatrix.Native.csproj", "{254FC709-B602-4EF8-8714-FF5E47E14E50}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Native.Windows", "StabilityMatrix.Native.Windows\StabilityMatrix.Native.Windows.csproj", "{27B4D892-B507-4A01-B25F-67C9499E61B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Native.Abstractions", "StabilityMatrix.Native.Abstractions\StabilityMatrix.Native.Abstractions.csproj", "{C521F1CF-7A5E-4016-AAD0-427FEDC53FB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Native.macOS", "StabilityMatrix.Native.macOS\StabilityMatrix.Native.macOS.csproj", "{473AE646-17E4-4247-9271-858D257DFFE1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +57,22 @@ Global
 		{72A73F1E-024B-4A25-AD34-626198D9527F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72A73F1E-024B-4A25-AD34-626198D9527F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{72A73F1E-024B-4A25-AD34-626198D9527F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{254FC709-B602-4EF8-8714-FF5E47E14E50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{254FC709-B602-4EF8-8714-FF5E47E14E50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{254FC709-B602-4EF8-8714-FF5E47E14E50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{254FC709-B602-4EF8-8714-FF5E47E14E50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27B4D892-B507-4A01-B25F-67C9499E61B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27B4D892-B507-4A01-B25F-67C9499E61B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27B4D892-B507-4A01-B25F-67C9499E61B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27B4D892-B507-4A01-B25F-67C9499E61B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C521F1CF-7A5E-4016-AAD0-427FEDC53FB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C521F1CF-7A5E-4016-AAD0-427FEDC53FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C521F1CF-7A5E-4016-AAD0-427FEDC53FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C521F1CF-7A5E-4016-AAD0-427FEDC53FB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{473AE646-17E4-4247-9271-858D257DFFE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{473AE646-17E4-4247-9271-858D257DFFE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{473AE646-17E4-4247-9271-858D257DFFE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{473AE646-17E4-4247-9271-858D257DFFE1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

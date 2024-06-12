@@ -7,5 +7,6 @@ public enum TorchVersion
     DirectMl,
     Cpu,
     Mps,
+    Zluda,
     None
 }

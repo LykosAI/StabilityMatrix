@@ -63,6 +63,8 @@
                                         IsVisible="{Binding !Progress.IsIndeterminate}">
                                         <Run Text="{Binding Progress.Text, Mode=OneWay}" />
                                         <Run Text="{Binding Progress.Value, Mode=OneWay}" /><Run Text="%" />
+                                        <Run Text=" - "/>
+                                        <Run Text="{Binding Progress.FormattedDownloadSpeed}" Foreground="Lime"/>
                                     </TextBlock>
 
                                     <!--  indeterminate progress  -->

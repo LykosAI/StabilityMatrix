@@ -70,7 +70,10 @@ public class LiteDbContext : ILiteDbContext
             }
             catch (IOException e)
             {
-                logger.LogWarning("Database in use or not accessible ({Message}), using temporary database", e.Message);
+                logger.LogWarning(
+                    "Database in use or not accessible ({Message}), using temporary database",
+                    e.Message
+                );
             }
         }
 
@@ -80,6 +83,7 @@ public class LiteDbContext : ILiteDbContext
         // Register reference fields
         LiteDBExtensions.Register<CivitModel, CivitModelVersion>(m => m.ModelVersions, "CivitModelVersions");
         LiteDBExtensions.Register<CivitModelQueryCacheEntry, CivitModel>(e => e.Items, "CivitModels");
+        LiteDBExtensions.Register<LocalModelFile, CivitModel>(e => e.LatestModelInfo, "CivitModels");
 
         return db;
     }
@@ -89,7 +93,10 @@ public class LiteDbContext : ILiteDbContext
         var version = await CivitModelVersions
             .Query()
             .Where(
-                mv => mv.Files!.Select(f => f.Hashes).Select(hashes => hashes.BLAKE3).Any(hash => hash == hashBlake3)
+                mv =>
+                    mv.Files!.Select(f => f.Hashes)
+                        .Select(hashes => hashes.BLAKE3)
+                        .Any(hash => hash == hashBlake3)
             )
             .FirstOrDefaultAsync()
             .ConfigureAwait(false);
@@ -110,7 +117,9 @@ public class LiteDbContext : ILiteDbContext
     public async Task<bool> UpsertCivitModelAsync(CivitModel civitModel)
     {
         // Insert model versions first then model
-        var versionsUpdated = await CivitModelVersions.UpsertAsync(civitModel.ModelVersions).ConfigureAwait(false);
+        var versionsUpdated = await CivitModelVersions
+            .UpsertAsync(civitModel.ModelVersions)
+            .ConfigureAwait(false);
         var updated = await CivitModels.UpsertAsync(civitModel).ConfigureAwait(false);
         // Notify listeners on any change
         var anyUpdated = versionsUpdated > 0 || updated;
@@ -162,7 +171,8 @@ public class LiteDbContext : ILiteDbContext
         return null;
     }
 
-    public Task<bool> UpsertGithubCacheEntry(GithubCacheEntry cacheEntry) => GithubCache.UpsertAsync(cacheEntry);
+    public Task<bool> UpsertGithubCacheEntry(GithubCacheEntry cacheEntry) =>
+        GithubCache.UpsertAsync(cacheEntry);
 
     public void Dispose()
     {

@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Collections;
@@ -12,9 +11,6 @@ using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DynamicData;
-using DynamicData.Alias;
-using DynamicData.Binding;
 using LiteDB;
 using LiteDB.Async;
 using NLog;
@@ -23,7 +19,6 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
@@ -165,7 +160,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             searchOptions = settingsManager.Settings.ModelSearchOptions;
         }
 
-        SelectedPeriod = searchOptions?.SelectedPeriod ?? CivitPeriod.Month;
+        SelectedPeriod = searchOptions?.SelectedPeriod ?? CivitPeriod.AllTime;
         SortMode = searchOptions?.SortMode ?? CivitSortMode.HighestRated;
         SelectedModelType = searchOptions?.SelectedModelType ?? CivitModelType.Checkpoint;
         SelectedBaseModelType = searchOptions?.SelectedBaseModelType ?? "All";
@@ -178,7 +173,10 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             settings => settings.ModelBrowserNsfwEnabled
         );
 
-        SearchModelsCommand.ExecuteAsync(false);
+        if (settingsManager.Settings.AutoLoadCivitModels)
+        {
+            SearchModelsCommand.ExecuteAsync(false);
+        }
     }
 
     /// <summary>
@@ -458,14 +456,16 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
 
         if (SortMode == CivitSortMode.Installed)
         {
-            var connectedModels = CheckpointFile
-                .GetAllCheckpointFiles(settingsManager.ModelsDirectory)
-                .Where(c => c.IsConnectedModel)
-                .ToList();
+            var connectedModels = await liteDbContext.LocalModelFiles.FindAsync(
+                m => m.ConnectedModelInfo != null
+            );
 
             modelRequest.CommaSeparatedModelIds = string.Join(
                 ",",
-                connectedModels.Select(c => c.ConnectedModel!.ModelId).GroupBy(m => m).Select(g => g.First())
+                connectedModels
+                    .Select(c => c.ConnectedModelInfo!.ModelId)
+                    .GroupBy(m => m)
+                    .Select(g => g.First())
             );
 
             modelRequest.Sort = null;

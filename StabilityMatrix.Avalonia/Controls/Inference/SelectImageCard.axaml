@@ -2,11 +2,9 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mocks="using:StabilityMatrix.Avalonia.DesignData"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     x:DataType="vmInference:SelectImageCardViewModel">
 
@@ -50,6 +48,23 @@
                                 Source="{Binding ImageSource}"
                                 Stretch="Uniform"
                                 StretchDirection="Both" />
+                            
+                            <!--  Overlay Image  -->
+                            <Panel>
+                                <Panel.IsVisible>
+                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                        <CompiledBinding Path="!IsSelectionAvailable" />
+                                        <CompiledBinding Path="IsMaskOverlayEnabled" />
+                                    </MultiBinding>
+                                </Panel.IsVisible>
+                                <controls:BetterImage 
+                                    VerticalAlignment="Stretch"
+                                    Stretch="Uniform"
+                                    StretchDirection="Both"
+                                    RenderOptions.BitmapInterpolationMode="HighQuality"
+                                    DataContext="{Binding MaskEditorViewModel}"
+                                    Source="{Binding CachedOrNewMaskRenderImage.Bitmap}"/>
+                            </Panel>
 
                             <!--  Missing image  -->
                             <Border
@@ -85,39 +100,116 @@
                             </Border>
 
                             <!--  Active Selection Prompt  -->
-                            <Border
+                            <StackPanel
                                 Margin="4"
+                                Spacing="4"
+                                Orientation="Horizontal"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Top"
-                                BoxShadow="inset 1.2 0 80 1.8 #66000000"
-                                CornerRadius="10"
                                 IsVisible="{Binding !IsSelectionAvailable}">
-                                <Border.Resources>
-                                    <DropShadowEffect
-                                        x:Key="TextDropShadowEffect"
-                                        BlurRadius="12"
-                                        Opacity="0.9"
-                                        Color="#FF000000" />
-                                    <DropShadowEffect
-                                        x:Key="ImageDropShadowEffect"
-                                        BlurRadius="12"
-                                        Opacity="0.2"
-                                        Color="#FF000000" />
-                                </Border.Resources>
-                                <Button
-                                    Padding="2"
-                                    Classes="transparent"
-                                    Command="{Binding SelectImageFromFilePickerCommand}"
-                                    CornerRadius="10"
-                                    FontSize="{TemplateBinding FontSize}"
-                                    ToolTip.Tip="{x:Static lang:Resources.Action_ReplaceContents}">
-                                    <fluentIcons:SymbolIcon
-                                        Effect="{StaticResource ImageDropShadowEffect}"
-                                        FontSize="28"
-                                        IsFilled="True"
-                                        Symbol="ImageArrowCounterclockwise" />
-                                </Button>
-                            </Border>
+                                <!-- Mask Overlay Toggle -->
+                                <Border
+                                    IsVisible="{Binding IsMaskEditorEnabled}"
+                                    BoxShadow="inset 1.2 0 80 1.8 #66000000"
+                                    CornerRadius="10">
+                                    <Border.Resources>
+                                        <DropShadowEffect
+                                            x:Key="TextDropShadowEffect"
+                                            BlurRadius="12"
+                                            Opacity="0.9"
+                                            Color="#FF000000" />
+                                        <DropShadowEffect
+                                            x:Key="ImageDropShadowEffect"
+                                            BlurRadius="12"
+                                            Opacity="0.2"
+                                            Color="#FF000000" />
+                                    </Border.Resources>
+                                    <ToggleButton
+                                        Padding="2"
+                                        IsChecked="{Binding IsMaskOverlayEnabled}"
+                                        CornerRadius="10"
+                                        FontSize="{TemplateBinding FontSize}">
+                                        <ToolTip.Tip>
+                                            <MultiBinding StringFormat="{}{0} - {1}">
+                                                <CompiledBinding Source="{x:Static lang:Resources.Label_ClippingMask}" />
+                                                <CompiledBinding Source="{x:Static lang:Resources.Action_ToggleVisibility}" />
+                                            </MultiBinding>
+                                        </ToolTip.Tip>
+                                        <fluentIcons:SymbolIcon
+                                            Effect="{StaticResource ImageDropShadowEffect}"
+                                            FontSize="28"
+                                            IsFilled="True"
+                                            Symbol="Eye" />
+                                    </ToggleButton>
+                                </Border>
+                                <!-- Mask Editor -->
+                                <Border
+                                    IsVisible="{Binding IsMaskEditorEnabled}"
+                                    BoxShadow="inset 1.2 0 80 1.8 #66000000"
+                                    CornerRadius="10">
+                                    <Border.Resources>
+                                        <DropShadowEffect
+                                            x:Key="TextDropShadowEffect"
+                                            BlurRadius="12"
+                                            Opacity="0.9"
+                                            Color="#FF000000" />
+                                        <DropShadowEffect
+                                            x:Key="ImageDropShadowEffect"
+                                            BlurRadius="12"
+                                            Opacity="0.2"
+                                            Color="#FF000000" />
+                                    </Border.Resources>
+                                    <Button
+                                        Padding="2"
+                                        Classes="transparent"
+                                        Command="{Binding OpenEditMaskDialogCommand}"
+                                        CornerRadius="10"
+                                        FontSize="{TemplateBinding FontSize}">
+                                        <ToolTip.Tip>
+                                            <MultiBinding StringFormat="{}{0} - {1}">
+                                                <CompiledBinding Source="{x:Static lang:Resources.Label_ClippingMask}" />
+                                                <CompiledBinding Source="{x:Static lang:Resources.Action_Edit}" />
+                                            </MultiBinding>
+                                        </ToolTip.Tip>
+                                        <fluentIcons:SymbolIcon
+                                            Effect="{StaticResource ImageDropShadowEffect}"
+                                            FontSize="28"
+                                            IsFilled="True"
+                                            Symbol="Layer" />
+                                    </Button>
+                                </Border>
+                                <!-- Replace Contents -->
+                                <Border
+                                    BoxShadow="inset 1.2 0 80 1.8 #66000000"
+                                    CornerRadius="10">
+                                    <Border.Resources>
+                                        <DropShadowEffect
+                                            x:Key="TextDropShadowEffect"
+                                            BlurRadius="12"
+                                            Opacity="0.9"
+                                            Color="#FF000000" />
+                                        <DropShadowEffect
+                                            x:Key="ImageDropShadowEffect"
+                                            BlurRadius="12"
+                                            Opacity="0.2"
+                                            Color="#FF000000" />
+                                    </Border.Resources>
+                                    <Button
+                                        Padding="2"
+                                        Classes="transparent"
+                                        Command="{Binding SelectImageFromFilePickerCommand}"
+                                        CornerRadius="10"
+                                        FontSize="{TemplateBinding FontSize}"
+                                        ToolTip.Tip="{x:Static lang:Resources.Action_ReplaceContents}">
+                                        <fluentIcons:SymbolIcon
+                                            Effect="{StaticResource ImageDropShadowEffect}"
+                                            FontSize="28"
+                                            IsFilled="True"
+                                            Symbol="ImageArrowCounterclockwise" />
+                                    </Button>
+                                </Border>
+                            </StackPanel>
+
 
                             <!--  No Image Selection Prompt  -->
                             <controls:LineDashFrame

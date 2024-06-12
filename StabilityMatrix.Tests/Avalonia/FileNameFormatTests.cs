@@ -1,6 +1,6 @@
-﻿using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Avalonia.Models.Inference;
+﻿using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Tests.Avalonia;
 

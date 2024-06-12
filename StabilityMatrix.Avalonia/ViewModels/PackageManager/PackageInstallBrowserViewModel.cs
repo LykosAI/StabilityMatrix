@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Reactive.Linq;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -27,7 +26,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 public partial class PackageInstallBrowserViewModel : PageViewModelBase
 {
     private readonly IPackageFactory packageFactory;
-    private readonly INavigationService<NewPackageManagerViewModel> packageNavigationService;
+    private readonly INavigationService<PackageManagerViewModel> packageNavigationService;
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
     private readonly ILogger<PackageInstallDetailViewModel> logger;
@@ -50,7 +49,7 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
 
     public PackageInstallBrowserViewModel(
         IPackageFactory packageFactory,
-        INavigationService<NewPackageManagerViewModel> packageNavigationService,
+        INavigationService<PackageManagerViewModel> packageNavigationService,
         ISettingsManager settingsManager,
         INotificationService notificationService,
         ILogger<PackageInstallDetailViewModel> logger,

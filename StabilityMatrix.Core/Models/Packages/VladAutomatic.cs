@@ -43,7 +43,14 @@ public class VladAutomatic(
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
+        new[]
+        {
+            TorchVersion.Cpu,
+            TorchVersion.Cuda,
+            TorchVersion.DirectMl,
+            TorchVersion.Rocm,
+            TorchVersion.Zluda
+        };
 
     // https://github.com/vladmandic/automatic/blob/master/modules/shared.py#L324
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
@@ -146,6 +153,13 @@ public class VladAutomatic(
             },
             new()
             {
+                Name = "Force use of ZLUDA backend",
+                Type = LaunchOptionType.Bool,
+                InitialValue = HardwareHelper.PreferRocm(),
+                Options = ["--use-zluda"]
+            },
+            new()
+            {
                 Name = "CUDA Device ID",
                 Type = LaunchOptionType.String,
                 Options = ["--device-id"]
@@ -202,6 +216,11 @@ public class VladAutomatic(
             case TorchVersion.DirectMl:
                 await venvRunner
                     .CustomInstall("launch.py --use-directml --debug --test", onConsoleOutput)
+                    .ConfigureAwait(false);
+                break;
+            case TorchVersion.Zluda:
+                await venvRunner
+                    .CustomInstall("launch.py --use-zluda --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             default:

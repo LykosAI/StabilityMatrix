@@ -13,7 +13,7 @@ public class PackageFactoryTests
     public void Setup()
     {
         fakeBasePackages = new List<BasePackage> { new DankDiffusion(null!, null!, null!, null!) };
-        packageFactory = new PackageFactory(fakeBasePackages, null, null, null, null, null);
+        packageFactory = new PackageFactory(fakeBasePackages, null!, null!, null!, null!, null!);
     }
 
     [TestMethod]

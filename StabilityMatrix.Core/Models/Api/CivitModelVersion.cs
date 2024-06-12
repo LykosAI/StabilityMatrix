@@ -13,9 +13,6 @@ public class CivitModelVersion
     [JsonPropertyName("description")]
     public string Description { get; set; }
 
-    [JsonPropertyName("createdAt")]
-    public DateTime CreatedAt { get; set; }
-
     [JsonPropertyName("downloadUrl")]
     public string DownloadUrl { get; set; }
 

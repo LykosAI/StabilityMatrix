@@ -476,7 +476,11 @@ public partial class InstallerViewModel : PageViewModelBase
                         Dispatcher.UIThread.Post(() =>
                         {
                             AvailableCommits = new ObservableCollection<GitCommit>(hashes);
-                            SelectedCommit = AvailableCommits[0];
+
+                            if (AvailableCommits.Count > 0)
+                            {
+                                SelectedCommit = AvailableCommits[0];
+                            }
                         });
                     }
                     catch (Exception e)

@@ -224,6 +224,36 @@
                             </Flyout>
                         </ui:CommandBarButton.Flyout>
                     </ui:CommandBarButton>
+                    <ui:CommandBarButton
+                        IconSource="Filter"
+                        VerticalAlignment="Center"
+                        Label="Filter">
+                        <ui:CommandBarButton.Flyout>
+                            <Flyout>
+                                <StackPanel Orientation="Vertical">
+                                    <Button Content="{Binding ClearButtonText}"
+                                            HorizontalAlignment="Stretch"
+                                            Classes="transparent"
+                                            Command="{Binding ClearOrSelectAllBaseModelsCommand}"
+                                            Margin="0,0,0,8" />
+                                    <ListBox ItemsSource="{Binding BaseModelOptions}"
+                                             SelectionMode="Multiple, Toggle"
+                                             SelectedItems="{Binding SelectedBaseModels}">
+                                        <ListBox.Template>
+                                            <ControlTemplate>
+                                                <ItemsPresenter />
+                                            </ControlTemplate>
+                                        </ListBox.Template>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type checkpointManager:BaseModelOptionViewModel}">
+                                                <TextBlock Text="{Binding ModelType}" />
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </StackPanel>
+                            </Flyout>
+                        </ui:CommandBarButton.Flyout>
+                    </ui:CommandBarButton>
                     <!-- <ui:CommandBarToggleButton -->
                     <!--     IconSource="Image" -->
                     <!--     Label="{x:Static lang:Resources.Label_ShowModelImages}" -->

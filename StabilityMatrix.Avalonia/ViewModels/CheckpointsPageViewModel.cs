@@ -31,6 +31,7 @@ using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -107,6 +108,22 @@ public partial class CheckpointsPageViewModel(
     [ObservableProperty]
     private bool isDragOver;
 
+    [ObservableProperty]
+    private ObservableCollection<string> baseModelOptions =
+        new(
+            Enum.GetValues<CivitBaseModelType>()
+                .Where(x => x != CivitBaseModelType.All)
+                .Select(x => x.GetStringValue())
+        );
+
+    [ObservableProperty]
+    private ObservableCollection<string> selectedBaseModels = [];
+
+    public string ClearButtonText =>
+        SelectedBaseModels.Count == BaseModelOptions.Count
+            ? Resources.Action_ClearSelection
+            : Resources.Action_SelectAll;
+
     public List<ListSortDirection> SortDirections => Enum.GetValues<ListSortDirection>().ToList();
 
     public string ModelsFolder => settingsManager.ModelsDirectory;
@@ -122,6 +139,16 @@ public partial class CheckpointsPageViewModel(
             return;
 
         base.OnInitialLoaded();
+
+        SelectedBaseModels = new ObservableCollection<string>(BaseModelOptions);
+        SelectedBaseModels.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(ClearButtonText));
+            OnPropertyChanged(nameof(SelectedBaseModels));
+            settingsManager.Transaction(
+                settings => settings.SelectedBaseModels = SelectedBaseModels.ToList()
+            );
+        };
 
         // Observable predicate from SearchQuery changes
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
@@ -153,14 +180,23 @@ public partial class CheckpointsPageViewModel(
         var filterPredicate = Observable
             .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
             .Where(
-                x => x.EventArgs.PropertyName is nameof(SelectedCategory) or nameof(ShowModelsInSubfolders)
+                x =>
+                    x.EventArgs.PropertyName
+                        is nameof(SelectedCategory)
+                            or nameof(ShowModelsInSubfolders)
+                            or nameof(SelectedBaseModels)
             )
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(
                 _ =>
                     SelectedCategory?.Path is null
                     || SelectedCategory?.Path == settingsManager.ModelsDirectory
-                        ? (Func<LocalModelFile, bool>)(_ => true)
+                        ? (Func<LocalModelFile, bool>)(
+                            file =>
+                                file.HasConnectedModel
+                                    ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel)
+                                    : SelectedBaseModels.Contains("Other")
+                        )
                         : (Func<LocalModelFile, bool>)(
                             file =>
                                 ShowModelsInSubfolders
@@ -172,12 +208,18 @@ public partial class CheckpointsPageViewModel(
                                                 .TrimStart(Path.DirectorySeparatorChar)
                                         )
                                         is true
+                                    && file.HasConnectedModel
+                                        ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel)
+                                        : SelectedBaseModels.Contains("Other")
                                     : SelectedCategory
                                         ?.Path
                                         .Replace(settingsManager.ModelsDirectory, string.Empty)
                                         .TrimStart(Path.DirectorySeparatorChar)
                                         .Equals(Path.GetDirectoryName(file.RelativePath))
                                         is true
+                                    && file.HasConnectedModel
+                                        ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel)
+                                        : SelectedBaseModels.Contains("Other")
                         )
             )
             .AsObservable();
@@ -544,6 +586,20 @@ public partial class CheckpointsPageViewModel(
 
         item.Progress = new ProgressReport(1f, "Import started. Check the downloads tab for progress.");
         DelayedClearViewModelProgress(item, TimeSpan.FromMilliseconds(1000));
+    }
+
+    [RelayCommand]
+    private void ClearOrSelectAllBaseModels()
+    {
+        if (SelectedBaseModels.Count == BaseModelOptions.Count)
+        {
+            SelectedBaseModels.Clear();
+        }
+        else
+        {
+            SelectedBaseModels.Clear();
+            SelectedBaseModels.AddRange(BaseModelOptions);
+        }
     }
 
     public async Task ImportFilesAsync(IEnumerable<string> files, DirectoryPath destinationFolder)

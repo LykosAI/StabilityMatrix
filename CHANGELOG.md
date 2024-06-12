@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added search bar to the Python Packages dialog
 #### Inference
 - Added Inpainting support for Image To Image projects using the new image mask canvas editor
-- Added alternate Lora / LyCORIS drop-down model selection, can be toggled via the model settings button. Allows choosing both CLIP and Model Weights. The existing prompt-based "<lora:model:1.0>" method is still available.
+- Added alternate Lora / LyCORIS drop-down model selection, can be toggled via the model settings button. Allows choosing both CLIP and Model Weights. The existing prompt-based `<lora:model:1.0>` method is still available.
 - Added optional Recycle Bin mode when deleting images in the Inference image browser, can be disabled in settings (Currently available on Windows and macOS)
 #### Model Browsers
 - Added PixArt, SDXL Hyper, and SD3 options to the CivitAI Model Browser

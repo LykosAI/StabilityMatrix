@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -40,6 +39,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
+    private readonly IModelIndexService modelIndexService;
 
     public Action<CheckpointBrowserCardViewModel>? OnDownloadStart { get; set; }
 
@@ -81,7 +81,8 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         ITrackedDownloadService trackedDownloadService,
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
-        INotificationService notificationService
+        INotificationService notificationService,
+        IModelIndexService modelIndexService
     )
     {
         this.downloadService = downloadService;
@@ -89,6 +90,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         this.settingsManager = settingsManager;
         this.dialogFactory = dialogFactory;
         this.notificationService = notificationService;
+        this.modelIndexService = modelIndexService;
 
         // Update image when nsfw setting changes
         settingsManager.RegisterPropertyChangedHandler(
@@ -111,8 +113,8 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         if (CivitModel.ModelVersions == null)
             return;
 
-        var installedModels = settingsManager.Settings.InstalledModelHashes;
-        if (installedModels is null || installedModels.Count == 0)
+        var installedModels = modelIndexService.ModelIndexBlake3Hashes;
+        if (installedModels.Count == 0)
             return;
 
         // check if latest version is installed
@@ -228,13 +230,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         viewModel.Description = prunedDescription;
         viewModel.CivitModel = model;
         viewModel.Versions = versions
-            .Select(
-                version =>
-                    new ModelVersionViewModel(
-                        settingsManager.Settings.InstalledModelHashes ?? new HashSet<string>(),
-                        version
-                    )
-            )
+            .Select(version => new ModelVersionViewModel(modelIndexService, version))
             .ToImmutableArray();
         viewModel.SelectedVersionViewModel = viewModel.Versions[0];
 

@@ -362,8 +362,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public async Task ResetCheckpointCache()
     {
-        settingsManager.Transaction(s => s.InstalledModelHashes = new HashSet<string>());
-        await Task.Run(() => settingsManager.IndexCheckpoints());
+        await notificationService.TryAsync(modelIndexService.RefreshIndex());
+
         notificationService.Show(
             "Checkpoint cache reset",
             "The checkpoint cache has been reset.",

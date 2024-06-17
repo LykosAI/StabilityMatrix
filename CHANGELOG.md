@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Unobserved Task Exceptions across the app will now show a toast notification to aid in debugging
 ### Fixed
 - Fixed [#689](https://github.com/LykosAI/StabilityMatrix/issues/689) - New ComfyUI installs encountering launch error due to torch 2.0.0 update, added pinned `numpy==1.26.4` to install and update.
+- Fixed Inference image mask editor's 'Load Mask' not able to load image files
 
 ## v2.11.0
 ### Added

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Linq;
@@ -78,6 +77,9 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
     private SKLayer BrushLayer => Layers["Brush"];
 
     [JsonIgnore]
+    private SKLayer ImagesLayer => Layers["Images"];
+
+    [JsonIgnore]
     private SKLayer BackgroundLayer => Layers["Background"];
 
     [JsonIgnore]
@@ -99,9 +101,6 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
         }
     }
 
-    [JsonIgnore]
-    public List<SKBitmap> LayerImages { get; } = [];
-
     /// <summary>
     /// Set by <see cref="PaintCanvas"/> to allow the view model to
     /// refresh the canvas view after updating points or bitmap layers.
@@ -117,8 +116,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
 
     public void LoadCanvasFromBitmap(SKBitmap bitmap)
     {
-        LayerImages.Clear();
-        LayerImages.Add(bitmap);
+        ImagesLayer.Bitmaps = [bitmap];
 
         RefreshCanvas?.Invoke();
     }

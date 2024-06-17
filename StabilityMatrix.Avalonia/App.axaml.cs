@@ -294,6 +294,7 @@ public sealed class App : Application
         DesktopLifetime.ShutdownRequested += OnShutdownRequested;
 
         AppDomain.CurrentDomain.ProcessExit += OnExit;
+        TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
         // Since we're manually shutting down NLog in OnExit
         LogManager.AutoShutdown = false;
@@ -880,6 +881,32 @@ public sealed class App : Application
             onExitSemaphore.Release();
 
             LogManager.Shutdown();
+        }
+    }
+
+    private static void TaskScheduler_UnobservedTaskException(
+        object? sender,
+        UnobservedTaskExceptionEventArgs e
+    )
+    {
+        if (e.Exception is not Exception unobservedEx)
+            return;
+
+        try
+        {
+            var notificationService = Services.GetRequiredService<INotificationService>();
+
+            notificationService.ShowPersistent(
+                $"Unobserved Task Exception - {unobservedEx.GetType().Name}",
+                unobservedEx.Message
+            );
+
+            // Consider the exception observed if we were able to show a notification
+            e.SetObserved();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to show Unobserved Task Exception notification");
         }
     }
 

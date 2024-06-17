@@ -367,8 +367,8 @@
                                         IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
 
                                     <ui:MenuFlyoutSeparator />
-                                    <!-- <ui:MenuFlyoutItem Command="{Binding RenameCommand}" -->
-                                    <!--                    Text="{x:Static lang:Resources.Action_Rename}" IconSource="Rename" /> -->
+                                    <ui:MenuFlyoutItem Command="{Binding RenameCommand}"
+                                                       Text="{x:Static lang:Resources.Action_Rename}" IconSource="Rename" />
                                     <ui:MenuFlyoutItem Command="{Binding DeleteCommand}"
                                                        CommandParameter="{StaticResource True}"
                                                        Text="{x:Static lang:Resources.Action_Delete}"

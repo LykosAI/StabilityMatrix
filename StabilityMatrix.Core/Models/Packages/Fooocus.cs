@@ -377,7 +377,11 @@ public class Fooocus(
         installDirectory.JoinDir(OutputFolderName).Create();
 
         await SharedFoldersConfigHelper
-            .UpdateJsonConfigFileForDefaultAsync(SharedFolderLayout, installDirectory)
+            .UpdateJsonConfigFileForSharedAsync(
+                SharedFolderLayout,
+                installDirectory,
+                SettingsManager.ModelsDirectory
+            )
             .ConfigureAwait(false);
     }
 

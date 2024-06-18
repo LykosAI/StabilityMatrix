@@ -7,27 +7,25 @@ namespace StabilityMatrix.Core.Helper;
 
 public static class SharedFoldersConfigHelper
 {
-    /// <summary>
-    /// Updates a JSON object with shared folder layout rules, using the SourceTypes,
-    /// converted to absolute paths using the sharedModelsDirectory.
-    /// </summary>
-    public static void UpdateJsonConfigForShared(
+    public static async Task UpdateJsonConfigFileForSharedAsync(
         SharedFolderLayout layout,
-        JsonObject jsonObject,
+        string packageRootDirectory,
         string sharedModelsDirectory,
         SharedFoldersConfigOptions? options = null
     )
     {
-        UpdateJsonConfig(
-            layout,
-            jsonObject,
-            rule =>
-                rule.SourceTypes.Select(type => Path.Combine(sharedModelsDirectory, type.GetStringValue())),
-            options
+        var configPath = Path.Combine(
+            packageRootDirectory,
+            layout.RelativeConfigPath ?? throw new InvalidOperationException("RelativeConfigPath is null")
         );
+
+        await using var stream = File.Open(configPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+
+        await UpdateJsonConfigFileForSharedAsync(layout, stream, sharedModelsDirectory, options)
+            .ConfigureAwait(false);
     }
 
-    public static async Task UpdateJsonConfigFileForSharedAsync(
+    private static async Task UpdateJsonConfigFileForSharedAsync(
         SharedFolderLayout layout,
         Stream configStream,
         string sharedModelsDirectory,
@@ -60,10 +58,29 @@ public static class SharedFoldersConfigHelper
             .ConfigureAwait(false);
     }
 
-    public static async Task UpdateJsonConfigFileForSharedAsync(
+    /// <summary>
+    /// Updates a JSON object with shared folder layout rules, using the SourceTypes,
+    /// converted to absolute paths using the sharedModelsDirectory.
+    /// </summary>
+    private static void UpdateJsonConfigForShared(
+        SharedFolderLayout layout,
+        JsonObject jsonObject,
+        string sharedModelsDirectory,
+        SharedFoldersConfigOptions? options = null
+    )
+    {
+        UpdateJsonConfig(
+            layout,
+            jsonObject,
+            rule =>
+                rule.SourceTypes.Select(type => Path.Combine(sharedModelsDirectory, type.GetStringValue())),
+            options
+        );
+    }
+
+    public static async Task UpdateJsonConfigFileForDefaultAsync(
         SharedFolderLayout layout,
         string packageRootDirectory,
-        string sharedModelsDirectory,
         SharedFoldersConfigOptions? options = null
     )
     {
@@ -74,32 +91,11 @@ public static class SharedFoldersConfigHelper
 
         await using var stream = File.Open(configPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
 
-        await UpdateJsonConfigFileForSharedAsync(layout, stream, sharedModelsDirectory, options)
+        await UpdateJsonConfigFileForDefaultAsync(layout, stream, packageRootDirectory, options)
             .ConfigureAwait(false);
     }
 
-    /// <summary>
-    /// Updates a JSON object with shared folder layout rules, using the TargetRelativePaths,
-    /// converted to absolute paths using the packageRootDirectory.
-    /// </summary>
-    public static void UpdateJsonConfigForDefault(
-        SharedFolderLayout layout,
-        JsonObject jsonObject,
-        string packageRootDirectory,
-        SharedFoldersConfigOptions? options = null
-    )
-    {
-        UpdateJsonConfig(
-            layout,
-            jsonObject,
-            rule =>
-                rule.TargetRelativePaths.Select(NormalizePathSlashes)
-                    .Select(path => Path.Combine(packageRootDirectory, path)),
-            options
-        );
-    }
-
-    public static async Task UpdateJsonConfigFileForDefaultAsync(
+    private static async Task UpdateJsonConfigFileForDefaultAsync(
         SharedFolderLayout layout,
         Stream configStream,
         string packageRootDirectory,
@@ -132,24 +128,28 @@ public static class SharedFoldersConfigHelper
             .ConfigureAwait(false);
     }
 
-    public static async Task UpdateJsonConfigFileForDefaultAsync(
+    /// <summary>
+    /// Updates a JSON object with shared folder layout rules, using the TargetRelativePaths,
+    /// converted to absolute paths using the packageRootDirectory.
+    /// </summary>
+    private static void UpdateJsonConfigForDefault(
         SharedFolderLayout layout,
+        JsonObject jsonObject,
         string packageRootDirectory,
         SharedFoldersConfigOptions? options = null
     )
     {
-        var configPath = Path.Combine(
-            packageRootDirectory,
-            layout.RelativeConfigPath ?? throw new InvalidOperationException("RelativeConfigPath is null")
+        UpdateJsonConfig(
+            layout,
+            jsonObject,
+            rule =>
+                rule.TargetRelativePaths.Select(NormalizePathSlashes)
+                    .Select(path => Path.Combine(packageRootDirectory, path)),
+            options
         );
-
-        await using var stream = File.Open(configPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-
-        await UpdateJsonConfigFileForDefaultAsync(layout, stream, packageRootDirectory, options)
-            .ConfigureAwait(false);
     }
 
-    public static void UpdateJsonConfig(
+    private static void UpdateJsonConfig(
         SharedFolderLayout layout,
         JsonObject jsonObject,
         Func<SharedFolderLayoutRule, IEnumerable<string>> pathsSelector,

@@ -1,7 +1,4 @@
 ﻿using System.Diagnostics;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -21,7 +18,9 @@ public class Fooocus(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+)
+    : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper),
+        ISharedFolderLayoutPackage
 {
     public override string Name => "Fooocus";
     public override string DisplayName { get; set; } = "Fooocus";
@@ -154,22 +153,100 @@ public class Fooocus(
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.Configuration, SharedFolderMethod.None };
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
+        ((ISharedFolderLayoutPackage)this).LegacySharedFolders;
+
+    public virtual SharedFolderLayout SharedFolderLayout =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = new[] { "models/checkpoints" },
-            [SharedFolderType.Diffusers] = new[] { "models/diffusers" },
-            [SharedFolderType.Lora] = new[] { "models/loras" },
-            [SharedFolderType.CLIP] = new[] { "models/clip" },
-            [SharedFolderType.TextualInversion] = new[] { "models/embeddings" },
-            [SharedFolderType.VAE] = new[] { "models/vae" },
-            [SharedFolderType.ApproxVAE] = new[] { "models/vae_approx" },
-            [SharedFolderType.ControlNet] = new[] { "models/controlnet" },
-            [SharedFolderType.GLIGEN] = new[] { "models/gligen" },
-            [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
-            [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" }
+            RelativeConfigPath = "config.txt",
+            Rules =
+            [
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.StableDiffusion],
+                    TargetRelativePaths = ["models/checkpoints"],
+                    ConfigDocumentPaths = ["path_checkpoints"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Diffusers],
+                    TargetRelativePaths = ["models/diffusers"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.CLIP],
+                    TargetRelativePaths = ["models/clip"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.GLIGEN],
+                    TargetRelativePaths = ["models/gligen"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ESRGAN],
+                    TargetRelativePaths = ["models/upscale_models"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Hypernetwork],
+                    TargetRelativePaths = ["models/hypernetworks"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.TextualInversion],
+                    TargetRelativePaths = ["models/embeddings"],
+                    ConfigDocumentPaths = ["path_embeddings"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.VAE],
+                    TargetRelativePaths = ["models/vae"],
+                    ConfigDocumentPaths = ["path_vae"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ApproxVAE],
+                    TargetRelativePaths = ["models/vae_approx"],
+                    ConfigDocumentPaths = ["path_vae_approx"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
+                    TargetRelativePaths = ["models/loras"],
+                    ConfigDocumentPaths = ["path_loras"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.InvokeClipVision],
+                    TargetRelativePaths = ["models/clip_vision"],
+                    ConfigDocumentPaths = ["path_clip_vision"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ControlNet],
+                    TargetRelativePaths = ["models/controlnet"],
+                    ConfigDocumentPaths = ["path_controlnet"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    TargetRelativePaths = ["models/inpaint"],
+                    ConfigDocumentPaths = ["path_inpaint"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    TargetRelativePaths = ["models/prompt_expansion/fooocus_expansion"],
+                    ConfigDocumentPaths = ["path_fooocus_expansion"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    TargetRelativePaths = [OutputFolderName],
+                    ConfigDocumentPaths = ["path_outputs"]
+                }
+            ]
         };
 
-    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
@@ -193,7 +270,7 @@ public class Fooocus(
     )
     {
         var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
-        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
+        venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
@@ -294,85 +371,28 @@ public class Fooocus(
         };
     }
 
-    private JsonSerializerOptions jsonSerializerOptions =
-        new() { WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault };
-
     private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)
     {
-        var fooocusConfigPath = installDirectory.JoinFile("config.txt");
-
-        var fooocusConfig = new JsonObject();
-
-        if (fooocusConfigPath.Exists)
-        {
-            fooocusConfig =
-                JsonSerializer.Deserialize<JsonObject>(
-                    await fooocusConfigPath.ReadAllTextAsync().ConfigureAwait(false)
-                ) ?? new JsonObject();
-        }
-
-        fooocusConfig["path_checkpoints"] = Path.Combine(settingsManager.ModelsDirectory, "StableDiffusion");
-        fooocusConfig["path_loras"] = new JsonArray
-        {
-            Path.Combine(settingsManager.ModelsDirectory, "Lora"),
-            Path.Combine(settingsManager.ModelsDirectory, "LyCORIS")
-        };
-        fooocusConfig["path_embeddings"] = Path.Combine(settingsManager.ModelsDirectory, "TextualInversion");
-        fooocusConfig["path_vae_approx"] = Path.Combine(settingsManager.ModelsDirectory, "ApproxVAE");
-        fooocusConfig["path_upscale_models"] = Path.Combine(settingsManager.ModelsDirectory, "ESRGAN");
-        fooocusConfig["path_inpaint"] = Path.Combine(installDirectory, "models", "inpaint");
-        fooocusConfig["path_controlnet"] = Path.Combine(settingsManager.ModelsDirectory, "ControlNet");
-        fooocusConfig["path_clip_vision"] = Path.Combine(settingsManager.ModelsDirectory, "CLIP");
-        fooocusConfig["path_fooocus_expansion"] = Path.Combine(
-            installDirectory,
-            "models",
-            "prompt_expansion",
-            "fooocus_expansion"
-        );
-
-        var outputsPath = Path.Combine(installDirectory, OutputFolderName);
-
         // doesn't always exist on first install
-        Directory.CreateDirectory(outputsPath);
-        fooocusConfig["path_outputs"] = outputsPath;
+        installDirectory.JoinDir(OutputFolderName).Create();
 
-        await fooocusConfigPath
-            .WriteAllTextAsync(JsonSerializer.Serialize(fooocusConfig, jsonSerializerOptions))
+        await SharedFoldersConfigHelper
+            .UpdateJsonConfigFileForSharedAsync(
+                SharedFolderLayout,
+                installDirectory,
+                SettingsManager.ModelsDirectory
+            )
             .ConfigureAwait(false);
     }
 
-    private async Task WriteDefaultConfig(DirectoryPath installDirectory)
+    private Task WriteDefaultConfig(DirectoryPath installDirectory)
     {
-        var fooocusConfigPath = installDirectory.JoinFile("config.txt");
+        // doesn't always exist on first install
+        installDirectory.JoinDir(OutputFolderName).Create();
 
-        var fooocusConfig = new JsonObject();
-
-        if (fooocusConfigPath.Exists)
-        {
-            fooocusConfig =
-                JsonSerializer.Deserialize<JsonObject>(
-                    await fooocusConfigPath.ReadAllTextAsync().ConfigureAwait(false)
-                ) ?? new JsonObject();
-        }
-
-        fooocusConfig["path_checkpoints"] = Path.Combine(installDirectory, "models", "checkpoints");
-        fooocusConfig["path_loras"] = Path.Combine(installDirectory, "models", "loras");
-        fooocusConfig["path_embeddings"] = Path.Combine(installDirectory, "models", "embeddings");
-        fooocusConfig["path_vae_approx"] = Path.Combine(installDirectory, "models", "vae_approx");
-        fooocusConfig["path_upscale_models"] = Path.Combine(installDirectory, "models", "upscale_models");
-        fooocusConfig["path_inpaint"] = Path.Combine(installDirectory, "models", "inpaint");
-        fooocusConfig["path_controlnet"] = Path.Combine(installDirectory, "models", "controlnet");
-        fooocusConfig["path_clip_vision"] = Path.Combine(installDirectory, "models", "clip_vision");
-        fooocusConfig["path_fooocus_expansion"] = Path.Combine(
-            installDirectory,
-            "models",
-            "prompt_expansion",
-            "fooocus_expansion"
+        return SharedFoldersConfigHelper.UpdateJsonConfigFileForDefaultAsync(
+            SharedFolderLayout,
+            installDirectory
         );
-        fooocusConfig["path_outputs"] = Path.Combine(installDirectory, OutputFolderName);
-
-        await fooocusConfigPath
-            .WriteAllTextAsync(JsonSerializer.Serialize(fooocusConfig, jsonSerializerOptions))
-            .ConfigureAwait(false);
     }
 }

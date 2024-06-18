@@ -896,10 +896,14 @@ public sealed class App : Application
         {
             var notificationService = Services.GetRequiredService<INotificationService>();
 
-            notificationService.ShowPersistent(
-                $"Unobserved Task Exception - {unobservedEx.GetType().Name}",
-                unobservedEx.Message
-            );
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                var originException = unobservedEx.InnerException ?? unobservedEx;
+                notificationService.ShowPersistent(
+                    $"Unobserved Task Exception - {originException.GetType().Name}",
+                    originException.Message
+                );
+            });
 
             // Consider the exception observed if we were able to show a notification
             e.SetObserved();

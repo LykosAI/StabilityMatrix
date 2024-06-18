@@ -237,6 +237,11 @@ public class Fooocus(
                 {
                     TargetRelativePaths = ["models/prompt_expansion/fooocus_expansion"],
                     ConfigDocumentPaths = ["path_fooocus_expansion"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    TargetRelativePaths = [OutputFolderName],
+                    ConfigDocumentPaths = ["path_outputs"]
                 }
             ]
         };
@@ -346,12 +351,7 @@ public class Fooocus(
         {
             SharedFolderMethod.Symlink
                 => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
-            SharedFolderMethod.Configuration
-                => SharedFoldersConfigHelper.UpdateJsonConfigFileForSharedAsync(
-                    SharedFolderLayout,
-                    installDirectory,
-                    SettingsManager.ModelsDirectory
-                ),
+            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
             SharedFolderMethod.None => Task.CompletedTask,
             _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
         };
@@ -365,13 +365,30 @@ public class Fooocus(
         return sharedFolderMethod switch
         {
             SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
-            SharedFolderMethod.Configuration
-                => SharedFoldersConfigHelper.UpdateJsonConfigFileForDefaultAsync(
-                    SharedFolderLayout,
-                    installDirectory
-                ),
+            SharedFolderMethod.Configuration => WriteDefaultConfig(installDirectory),
             SharedFolderMethod.None => Task.CompletedTask,
             _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
         };
+    }
+
+    private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)
+    {
+        // doesn't always exist on first install
+        installDirectory.JoinDir(OutputFolderName).Create();
+
+        await SharedFoldersConfigHelper
+            .UpdateJsonConfigFileForDefaultAsync(SharedFolderLayout, installDirectory)
+            .ConfigureAwait(false);
+    }
+
+    private Task WriteDefaultConfig(DirectoryPath installDirectory)
+    {
+        // doesn't always exist on first install
+        installDirectory.JoinDir(OutputFolderName).Create();
+
+        return SharedFoldersConfigHelper.UpdateJsonConfigFileForDefaultAsync(
+            SharedFolderLayout,
+            installDirectory
+        );
     }
 }

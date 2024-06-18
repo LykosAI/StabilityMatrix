@@ -17,9 +17,7 @@ public class FocusControlNet(
     public override string DisplayName { get; set; } = "Fooocus-ControlNet";
     public override string Author => "fenneishi";
     public override string Blurb => "Fooocus-ControlNet adds more control to the original Fooocus software.";
-    public override string Disclaimer =>
-        "This package has not been updated in over 8 months and may be abandoned.";
-
+    public override string Disclaimer => "This package may no longer be actively maintained";
     public override string LicenseUrl =>
         "https://github.com/fenneishi/Fooocus-ControlNet-SDXL/blob/main/LICENSE";
     public override Uri PreviewImageUri =>

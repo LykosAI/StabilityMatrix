@@ -10,6 +10,9 @@ public interface ISharedFolderLayoutPackage
     {
         get
         {
+            // Keep track of unique paths since symbolic links can't do multiple targets
+            // So we'll ignore duplicates once they appear here
+            var addedPaths = new HashSet<string>();
             var result = new Dictionary<SharedFolderType, IReadOnlyList<string>>();
 
             foreach (var rule in SharedFolderLayout.Rules)
@@ -27,10 +30,15 @@ public interface ISharedFolderLayoutPackage
 
                     foreach (var path in value)
                     {
-                        if (!existingList.Contains(path))
-                        {
-                            result[folderTypeKey] = existingList.Add(path);
-                        }
+                        // Skip if the path is already in the list
+                        if (existingList.Contains(path))
+                            continue;
+
+                        // Skip if the path is already added globally
+                        if (!addedPaths.Add(path))
+                            continue;
+
+                        result[folderTypeKey] = existingList.Add(path);
                     }
                 }
             }

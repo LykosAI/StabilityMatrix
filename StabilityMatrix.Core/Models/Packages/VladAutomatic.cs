@@ -28,15 +28,15 @@ public class VladAutomatic(
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public override string Name => "automatic";
-    public override string DisplayName { get; set; } = "SD.Next Web UI";
+    public override string DisplayName { get; set; } = "SD.Next";
     public override string Author => "vladmandic";
     public override string LicenseType => "AGPL-3.0";
     public override string LicenseUrl => "https://github.com/vladmandic/automatic/blob/master/LICENSE.txt";
-    public override string Blurb => "Stable Diffusion implementation with advanced features";
+    public override string Blurb => "Stable Diffusion implementation with advanced features and modern UI";
     public override string LaunchCommand => "launch.py";
 
     public override Uri PreviewImageUri =>
-        new("https://github.com/vladmandic/automatic/raw/master/html/black-orange.jpg");
+        new("https://github.com/vladmandic/automatic/raw/master/html/screenshot-modernui.jpg");
     public override bool ShouldIgnoreReleases => true;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;

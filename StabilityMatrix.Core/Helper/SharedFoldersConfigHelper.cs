@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Packages;
 
@@ -193,15 +192,5 @@ public static class SharedFoldersConfigHelper
         }
 
         return path;
-    }
-
-    public class SharedFoldersConfigOptions
-    {
-        public bool AlwaysWriteArray { get; set; } = false;
-
-        public static SharedFoldersConfigOptions Default => new();
-
-        public JsonSerializerOptions JsonSerializerOptions =
-            new() { WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault };
     }
 }

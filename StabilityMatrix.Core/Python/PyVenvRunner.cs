@@ -91,6 +91,12 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// </summary>
     public List<string> SuppressOutput { get; } = new() { "fatal: not a git repository" };
 
+    internal PyVenvRunner(DirectoryPath baseInstallRootPath, DirectoryPath rootPath)
+    {
+        RootPath = rootPath;
+    }
+
+    [Obsolete("Use `PyBaseInstall.CreateVenvRunner` instead.")]
     public PyVenvRunner(DirectoryPath rootPath)
     {
         RootPath = rootPath;

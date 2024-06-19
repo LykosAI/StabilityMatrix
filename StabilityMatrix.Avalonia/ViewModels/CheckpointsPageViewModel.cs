@@ -274,6 +274,7 @@ public partial class CheckpointsPageViewModel(
                         modelIndexService,
                         notificationService,
                         dialogFactory,
+                        logger,
                         x
                     )
             )

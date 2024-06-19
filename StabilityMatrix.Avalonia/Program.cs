@@ -349,7 +349,7 @@ public static class Program
     {
         if (e.Exception is Exception ex)
         {
-            Logger.Error(ex, "Unobserved task exception");
+            Logger.Error(ex, "Unobserved Task Exception");
         }
     }
 

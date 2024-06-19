@@ -2,7 +2,6 @@
 using System.IO.Compression;
 using NLog;
 using Octokit;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Database;
@@ -144,36 +143,26 @@ public abstract class BaseGitPackage : BasePackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        var venvPath = Path.Combine(installedPackagePath, venvName);
         if (VenvRunner != null)
         {
             await VenvRunner.DisposeAsync().ConfigureAwait(false);
         }
 
-        // Set additional required environment variables
-        var env = new Dictionary<string, string>();
-        if (SettingsManager.Settings.EnvironmentVariables is not null)
+        VenvRunner = await PyBaseInstall
+            .Default.CreateVenvRunnerAsync(
+                Path.Combine(installedPackagePath, venvName),
+                workingDirectory: installedPackagePath,
+                environmentVariables: SettingsManager.Settings.EnvironmentVariables,
+                withDefaultTclTkEnv: Compat.IsWindows,
+                withQueriedTclTkEnv: Compat.IsUnix
+            )
+            .ConfigureAwait(false);
+
+        if (forceRecreate || !VenvRunner.Exists())
         {
-            env.Update(SettingsManager.Settings.EnvironmentVariables);
+            await VenvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         }
 
-        if (Compat.IsWindows)
-        {
-            var tkPath = Path.Combine(SettingsManager.LibraryDir, "Assets", "Python310", "tcl", "tcl8.6");
-            env["TCL_LIBRARY"] = tkPath;
-            env["TK_LIBRARY"] = tkPath;
-        }
-
-        VenvRunner = new PyVenvRunner(venvPath)
-        {
-            WorkingDirectory = installedPackagePath,
-            EnvironmentVariables = env
-        };
-
-        if (!VenvRunner.Exists() || forceRecreate)
-        {
-            await VenvRunner.Setup(forceRecreate, onConsoleOutput).ConfigureAwait(false);
-        }
         return VenvRunner;
     }
 
@@ -188,31 +177,19 @@ public abstract class BaseGitPackage : BasePackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        var venvPath = Path.Combine(installedPackagePath, venvName);
+        var venvRunner = await PyBaseInstall
+            .Default.CreateVenvRunnerAsync(
+                Path.Combine(installedPackagePath, venvName),
+                workingDirectory: installedPackagePath,
+                environmentVariables: SettingsManager.Settings.EnvironmentVariables,
+                withDefaultTclTkEnv: Compat.IsWindows,
+                withQueriedTclTkEnv: Compat.IsUnix
+            )
+            .ConfigureAwait(false);
 
-        // Set additional required environment variables
-        var env = new Dictionary<string, string>();
-        if (SettingsManager.Settings.EnvironmentVariables is not null)
+        if (forceRecreate || !venvRunner.Exists())
         {
-            env.Update(SettingsManager.Settings.EnvironmentVariables);
-        }
-
-        if (Compat.IsWindows)
-        {
-            var tkPath = Path.Combine(SettingsManager.LibraryDir, "Assets", "Python310", "tcl", "tcl8.6");
-            env["TCL_LIBRARY"] = tkPath;
-            env["TK_LIBRARY"] = tkPath;
-        }
-
-        var venvRunner = new PyVenvRunner(venvPath)
-        {
-            WorkingDirectory = installedPackagePath,
-            EnvironmentVariables = env
-        };
-
-        if (!venvRunner.Exists() || forceRecreate)
-        {
-            await venvRunner.Setup(forceRecreate, onConsoleOutput).ConfigureAwait(false);
+            await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         }
 
         return venvRunner;

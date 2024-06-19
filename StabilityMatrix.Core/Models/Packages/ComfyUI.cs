@@ -193,11 +193,8 @@ public class ComfyUI(
     {
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         // Setup venv
-        await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
-        venvRunner.WorkingDirectory = installLocation;
-        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
+        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
-        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(
@@ -231,12 +228,7 @@ public class ComfyUI(
                     )
         };
 
-        switch (torchVersion)
-        {
-            case TorchVersion.Mps:
-                pipArgs = pipArgs.AddArg("mpmath==1.3.0");
-                break;
-        }
+        pipArgs = pipArgs.AddArg("numpy==1.26.4").AddArg("mpmath==1.3.0");
 
         var requirements = new FilePath(installLocation, "requirements.txt");
 

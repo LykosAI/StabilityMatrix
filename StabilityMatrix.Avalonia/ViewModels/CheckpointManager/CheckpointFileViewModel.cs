@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.ComponentModel;
+using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
+using Avalonia.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -36,6 +39,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     private readonly IModelIndexService modelIndexService;
     private readonly INotificationService notificationService;
     private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly ILogger logger;
 
     public bool CanShowTriggerWords => CheckpointFile.ConnectedModelInfo?.TrainedWords?.Length > 0;
     public string BaseModelName => CheckpointFile.ConnectedModelInfo?.BaseModel ?? string.Empty;
@@ -47,6 +51,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         IModelIndexService modelIndexService,
         INotificationService notificationService,
         ServiceManager<ViewModelBase> vmFactory,
+        ILogger logger,
         LocalModelFile checkpointFile
     )
     {
@@ -54,6 +59,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         this.modelIndexService = modelIndexService;
         this.notificationService = notificationService;
         this.vmFactory = vmFactory;
+        this.logger = logger;
         CheckpointFile = checkpointFile;
         ThumbnailUri = settingsManager.IsLibraryDirSet
             ? CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
@@ -185,5 +191,72 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         }
 
         await modelIndexService.RemoveModelAsync(CheckpointFile);
+    }
+
+    [RelayCommand]
+    private async Task RenameAsync()
+    {
+        // Parent folder path
+        var parentPath =
+            Path.GetDirectoryName((string?)CheckpointFile.GetFullPath(settingsManager.ModelsDirectory)) ?? "";
+
+        var textFields = new TextBoxField[]
+        {
+            new()
+            {
+                Label = "File name",
+                Validator = text =>
+                {
+                    if (string.IsNullOrWhiteSpace(text))
+                        throw new DataValidationException("File name is required");
+
+                    if (File.Exists(Path.Combine(parentPath, text)))
+                        throw new DataValidationException("File name already exists");
+                },
+                Text = CheckpointFile.FileName
+            }
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("Rename Model", "", textFields);
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var name = textFields[0].Text;
+            var nameNoExt = Path.GetFileNameWithoutExtension(name);
+            var originalNameNoExt = Path.GetFileNameWithoutExtension(CheckpointFile.FileName);
+            // Rename file in OS
+            try
+            {
+                var newFilePath = Path.Combine(parentPath, name);
+                File.Move(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory), newFilePath);
+
+                // If preview image exists, rename it too
+                var previewPath = CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory);
+                if (previewPath != null && File.Exists(previewPath))
+                {
+                    var newPreviewImagePath = Path.Combine(
+                        parentPath,
+                        $"{nameNoExt}.preview{Path.GetExtension(previewPath)}"
+                    );
+                    File.Move(previewPath, newPreviewImagePath);
+                }
+
+                // If connected model info exists, rename it too (<name>.cm-info.json)
+                if (CheckpointFile.HasConnectedModel)
+                {
+                    var cmInfoPath = Path.Combine(parentPath, $"{originalNameNoExt}.cm-info.json");
+                    if (File.Exists(cmInfoPath))
+                    {
+                        File.Move(cmInfoPath, Path.Combine(parentPath, $"{nameNoExt}.cm-info.json"));
+                    }
+                }
+
+                await modelIndexService.RefreshIndex();
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to rename checkpoint file");
+            }
+        }
     }
 }

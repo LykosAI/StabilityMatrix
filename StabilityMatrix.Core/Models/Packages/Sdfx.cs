@@ -1,7 +1,7 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Immutable;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
-using NLog;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -9,7 +9,6 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
-using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -85,11 +84,8 @@ public class Sdfx(
     {
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         // Setup venv
-        await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
-        venvRunner.WorkingDirectory = installLocation;
-        venvRunner.EnvironmentVariables = GetEnvVars(venvRunner, installLocation);
-
-        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        venvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
         progress?.Report(
             new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
@@ -120,7 +116,7 @@ public class Sdfx(
     )
     {
         var venvRunner = await SetupVenv(installedPackagePath).ConfigureAwait(false);
-        venvRunner.EnvironmentVariables = GetEnvVars(venvRunner, installedPackagePath);
+        venvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -149,12 +145,8 @@ public class Sdfx(
         }
     }
 
-    private Dictionary<string, string> GetEnvVars(PyVenvRunner venvRunner, DirectoryPath installPath)
+    private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)
     {
-        var env = new Dictionary<string, string>();
-        env.Update(venvRunner.EnvironmentVariables ?? SettingsManager.Settings.EnvironmentVariables);
-        env["VIRTUAL_ENV"] = venvRunner.RootPath;
-
         var pathBuilder = new EnvPathBuilder();
 
         if (env.TryGetValue("PATH", out var value))
@@ -170,9 +162,7 @@ public class Sdfx(
 
         pathBuilder.AddPath(Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs"));
 
-        env["PATH"] = pathBuilder.ToString();
-
-        return env;
+        return env.SetItem("PATH", pathBuilder.ToString());
     }
 
     public override Task SetupModelFolders(

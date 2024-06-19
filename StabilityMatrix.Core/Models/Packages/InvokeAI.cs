@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Globalization;
+﻿using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Attributes;
@@ -162,11 +161,9 @@ public class InvokeAI : BaseGitPackage
         var venvPath = Path.Combine(installLocation, "venv");
         var exists = Directory.Exists(venvPath);
 
-        await using var venvRunner = new PyVenvRunner(venvPath);
-        venvRunner.WorkingDirectory = installLocation;
-        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        venvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installLocation));
 
-        venvRunner.EnvironmentVariables = GetEnvVars(installLocation);
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
 
         await SetupAndBuildInvokeFrontend(
@@ -323,7 +320,7 @@ public class InvokeAI : BaseGitPackage
 
         await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
-        VenvRunner.EnvironmentVariables = GetEnvVars(installedPackagePath);
+        VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installedPackagePath));
 
         // fix frontend build missing for people who updated to v3.6 before the fix
         var frontendExistsPath = Path.Combine(installedPackagePath, RelativeFrontendBuildPath);
@@ -410,44 +407,43 @@ public class InvokeAI : BaseGitPackage
         }
     }
 
-    private Dictionary<string, string> GetEnvVars(DirectoryPath installPath)
+    private ImmutableDictionary<string, string> GetEnvVars(
+        ImmutableDictionary<string, string> env,
+        DirectoryPath installPath
+    )
     {
         // Set additional required environment variables
-        var env = new Dictionary<string, string>();
-        if (SettingsManager.Settings.EnvironmentVariables is not null)
-        {
-            env.Update(SettingsManager.Settings.EnvironmentVariables);
-        }
 
         // Need to make subdirectory because they store config in the
         // directory *above* the root directory
         var root = installPath.JoinDir(RelativeRootPath);
         root.Create();
-        env["INVOKEAI_ROOT"] = root;
+        env = env.SetItem("INVOKEAI_ROOT", root);
 
-        if (env.ContainsKey("PATH"))
+        var path = env.GetValueOrDefault("PATH", string.Empty);
+
+        if (string.IsNullOrEmpty(path))
         {
-            env["PATH"] +=
-                $"{Compat.PathDelimiter}{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs")}";
+            path += $"{Compat.PathDelimiter}{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs")}";
         }
         else
         {
-            env["PATH"] = Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs");
+            path += Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs");
         }
-        env["PATH"] += $"{Compat.PathDelimiter}{Path.Combine(installPath, "node_modules", ".bin")}";
+
+        path += $"{Compat.PathDelimiter}{Path.Combine(installPath, "node_modules", ".bin")}";
 
         if (Compat.IsMacOS || Compat.IsLinux)
         {
-            env["PATH"] +=
+            path +=
                 $"{Compat.PathDelimiter}{Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs", "bin")}";
         }
 
         if (Compat.IsWindows)
         {
-            env["PATH"] +=
-                $"{Compat.PathDelimiter}{Environment.GetFolderPath(Environment.SpecialFolder.System)}";
+            path += $"{Compat.PathDelimiter}{Environment.GetFolderPath(Environment.SpecialFolder.System)}";
         }
 
-        return env;
+        return env.SetItem("PATH", path);
     }
 }

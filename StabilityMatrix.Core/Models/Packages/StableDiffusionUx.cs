@@ -187,12 +187,8 @@ public class StableDiffusionUx(
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-        // Setup venv
-        await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
-        venvRunner.WorkingDirectory = installLocation;
-        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
 
-        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         switch (torchVersion)
         {

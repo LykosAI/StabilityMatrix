@@ -125,11 +125,7 @@ public class KohyaSs(
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
         // Setup venv
-        await using var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
-        venvRunner.WorkingDirectory = installLocation;
-        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
-
-        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         // Extra dep needed before running setup since v23.0.x
         await venvRunner.PipInstall(["rich", "packaging"]).ConfigureAwait(false);
@@ -138,13 +134,20 @@ public class KohyaSs(
         {
             // Install
             await venvRunner
-                .CustomInstall("setup/setup_windows.py --headless", onConsoleOutput)
+                .CustomInstall(["setup/setup_windows.py", "--headless"], onConsoleOutput)
                 .ConfigureAwait(false);
         }
         else if (Compat.IsLinux)
         {
             await venvRunner
-                .CustomInstall("setup/setup_linux.py --headless", onConsoleOutput)
+                .CustomInstall(
+                    [
+                        "setup/setup_linux.py",
+                        "--platform-requirements-file=requirements_linux.txt",
+                        "--no_run_accelerate"
+                    ],
+                    onConsoleOutput
+                )
                 .ConfigureAwait(false);
         }
     }
@@ -156,7 +159,7 @@ public class KohyaSs(
         Action<ProcessOutput>? onConsoleOutput
     )
     {
-        var venvRunner = await SetupVenvPure(installedPackagePath).ConfigureAwait(false);
+        await SetupVenv(installedPackagePath).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -176,7 +179,7 @@ public class KohyaSs(
 
         var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
 
-        venvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
     }
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }

@@ -231,12 +231,7 @@ public class ComfyUI(
                     )
         };
 
-        switch (torchVersion)
-        {
-            case TorchVersion.Mps:
-                pipArgs = pipArgs.AddArg("mpmath==1.3.0");
-                break;
-        }
+        pipArgs = pipArgs.AddArg("numpy==1.26.4").AddArg("mpmath==1.3.0");
 
         var requirements = new FilePath(installLocation, "requirements.txt");
 

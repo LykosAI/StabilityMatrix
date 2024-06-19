@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.Json;
 using NLog;
@@ -29,6 +30,8 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             (PlatformKind.Unix, "lib/python3.10/site-packages")
         );
 
+    public PyBaseInstall BaseInstall { get; }
+
     /// <summary>
     /// The process running the python executable.
     /// </summary>
@@ -47,7 +50,8 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// <summary>
     /// Optional environment variables for the python process.
     /// </summary>
-    public IReadOnlyDictionary<string, string>? EnvironmentVariables { get; set; }
+    public ImmutableDictionary<string, string> EnvironmentVariables { get; set; } =
+        ImmutableDictionary<string, string>.Empty;
 
     /// <summary>
     /// Name of the python binary folder.
@@ -91,15 +95,25 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// </summary>
     public List<string> SuppressOutput { get; } = new() { "fatal: not a git repository" };
 
-    internal PyVenvRunner(DirectoryPath baseInstallRootPath, DirectoryPath rootPath)
+    internal PyVenvRunner(PyBaseInstall baseInstall, DirectoryPath rootPath)
     {
+        BaseInstall = baseInstall;
         RootPath = rootPath;
+        EnvironmentVariables = EnvironmentVariables.SetItem("VIRTUAL_ENV", rootPath.FullPath);
     }
 
     [Obsolete("Use `PyBaseInstall.CreateVenvRunner` instead.")]
     public PyVenvRunner(DirectoryPath rootPath)
     {
         RootPath = rootPath;
+        EnvironmentVariables = EnvironmentVariables.SetItem("VIRTUAL_ENV", rootPath.FullPath);
+    }
+
+    public void UpdateEnvironmentVariables(
+        Func<ImmutableDictionary<string, string>, ImmutableDictionary<string, string>> env
+    )
+    {
+        EnvironmentVariables = env(EnvironmentVariables);
     }
 
     /// <returns>True if the venv has a Scripts\python.exe file</returns>
@@ -508,11 +522,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
                     outputDataReceived.Invoke(s);
                 });
 
-        var env = new Dictionary<string, string>();
-        if (EnvironmentVariables != null)
-        {
-            env.Update(EnvironmentVariables);
-        }
+        var env = EnvironmentVariables;
 
         // Disable pip caching - uses significant memory for large packages like torch
         // env["PIP_NO_CACHE_DIR"] = "true";
@@ -524,29 +534,32 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             var venvBin = RootPath.JoinDir(RelativeBinPath);
             if (env.TryGetValue("PATH", out var pathValue))
             {
-                env["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, venvBin, pathValue);
+                env = env.SetItem(
+                    "PATH",
+                    Compat.GetEnvPathWithExtensions(portableGitBin, venvBin, pathValue)
+                );
             }
             else
             {
-                env["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, venvBin);
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(portableGitBin, venvBin));
             }
-            env["GIT"] = portableGitBin.JoinFile("git.exe");
+            env = env.SetItem("GIT", portableGitBin.JoinFile("git.exe"));
         }
         else
         {
             if (env.TryGetValue("PATH", out var pathValue))
             {
-                env["PATH"] = Compat.GetEnvPathWithExtensions(pathValue);
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(pathValue));
             }
             else
             {
-                env["PATH"] = Compat.GetEnvPathWithExtensions();
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions());
             }
         }
 
         if (unbuffered)
         {
-            env["PYTHONUNBUFFERED"] = "1";
+            env = env.SetItem("PYTHONUNBUFFERED", "1");
 
             // If arguments starts with -, it's a flag, insert `u` after it for unbuffered mode
             if (arguments.StartsWith('-'))

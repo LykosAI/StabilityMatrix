@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -12,7 +13,6 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
-using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -194,11 +194,7 @@ public class VladAutomatic(
     {
         progress?.Report(new ProgressReport(-1f, "Installing package...", isIndeterminate: true));
         // Setup venv
-        var venvRunner = new PyVenvRunner(Path.Combine(installLocation, "venv"));
-        venvRunner.WorkingDirectory = installLocation;
-        venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
-
-        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         switch (torchVersion)
         {
@@ -332,9 +328,8 @@ public class VladAutomatic(
         )
             .ConfigureAwait(false);
 
-        var venvRunner = new PyVenvRunner(Path.Combine(installedPackage.FullPath!, "venv"));
-        venvRunner.WorkingDirectory = installedPackage.FullPath!;
-        venvRunner.EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables;
+        await using var venvRunner = await SetupVenvPure(installedPackage.FullPath!.Unwrap())
+            .ConfigureAwait(false);
 
         await venvRunner.CustomInstall("launch.py --upgrade --test", onConsoleOutput).ConfigureAwait(false);
 

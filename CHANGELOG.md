@@ -10,10 +10,17 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added Rename option back to the Checkpoints page
 ### Changed
 - Unobserved Task Exceptions across the app will now show a toast notification to aid in debugging
+- Updated SD.Next Package details and thumbnail - [#697](https://github.com/LykosAI/StabilityMatrix/pull/697)
 ### Fixed
 - Fixed [#689](https://github.com/LykosAI/StabilityMatrix/issues/689) - New ComfyUI installs encountering launch error due to torch 2.0.0 update, added pinned `numpy==1.26.4` to install and update.
 - Fixed Inference image mask editor's 'Load Mask' not able to load image files
 - Fixed Fooocus ControlNet default config shared folder mode not taking effect
+- Fixed tkinter python libraries not working on macOS with 'Can't find a usable init.tcl' error
+### Supporters
+#### Visionaries
+- Shoutout to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your generous support is appreciated and helps us continue to make Stability Matrix better for everyone!
+#### Pioneers
+- A big thank you to our Pioneer-tier supporters on Patreon, **tankfox** and **tanangular**! Your support helps us continue to improve Stability Matrix!
 
 ## v2.11.0
 ### Added

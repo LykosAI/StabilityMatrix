@@ -204,11 +204,8 @@ public class A3WebUI(
         var venvPath = Path.Combine(installLocation, "venv");
         var exists = Directory.Exists(venvPath);
 
-        await using var venvRunner = new PyVenvRunner(venvPath);
-        venvRunner.WorkingDirectory = installLocation;
-        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
+        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
-        await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));

@@ -1,5 +1,4 @@
 ﻿using StabilityMatrix.Core.Extensions;
-using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -29,11 +28,11 @@ public class PipStep : IPackageStep
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        await using var venvRunner = new PyVenvRunner(VenvDirectory)
-        {
-            WorkingDirectory = WorkingDirectory,
-            EnvironmentVariables = EnvironmentVariables
-        };
+        await using var venvRunner = PyBaseInstall.Default.CreateVenvRunner(
+            VenvDirectory,
+            workingDirectory: WorkingDirectory,
+            environmentVariables: EnvironmentVariables
+        );
 
         var args = new List<string> { "-m", "pip" };
         args.AddRange(Args.ToArray());

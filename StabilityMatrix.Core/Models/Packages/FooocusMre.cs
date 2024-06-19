@@ -110,8 +110,7 @@ public class FooocusMre(
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
-        venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
+        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 

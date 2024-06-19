@@ -115,8 +115,8 @@ public class RuinedFooocus(
     {
         if (torchVersion == TorchVersion.Cuda)
         {
-            var venvRunner = await SetupVenv(installLocation, forceRecreate: true).ConfigureAwait(false);
-            venvRunner.EnvironmentVariables = settingsManager.Settings.EnvironmentVariables;
+            await using var venvRunner = await SetupVenvPure(installLocation, forceRecreate: true)
+                .ConfigureAwait(false);
 
             progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 

@@ -134,13 +134,20 @@ public class KohyaSs(
         {
             // Install
             await venvRunner
-                .CustomInstall("setup/setup_windows.py --headless", onConsoleOutput)
+                .CustomInstall(["setup/setup_windows.py", "--headless"], onConsoleOutput)
                 .ConfigureAwait(false);
         }
         else if (Compat.IsLinux)
         {
             await venvRunner
-                .CustomInstall("setup/setup_linux.py --headless", onConsoleOutput)
+                .CustomInstall(
+                    [
+                        "setup/setup_linux.py",
+                        "--platform-requirements-file=requirements_linux.txt",
+                        "--no_run_accelerate"
+                    ],
+                    onConsoleOutput
+                )
                 .ConfigureAwait(false);
         }
     }

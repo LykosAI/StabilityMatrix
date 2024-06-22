@@ -103,6 +103,8 @@ public partial class ImageViewerViewModel(
             var tempFile = new FilePath(Path.GetTempFileName() + ".png");
 
             bitmap.Save(tempFile);
+
+            await App.Clipboard.SetFileDataObjectAsync(tempFile);
         }
         else
         {

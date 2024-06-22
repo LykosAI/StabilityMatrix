@@ -37,6 +37,8 @@ public partial class AdvancedImageBoxView : UserControl
             var tempFile = new FilePath(Path.GetTempFileName() + ".png");
 
             bitmap.Save(tempFile);
+
+            await App.Clipboard.SetFileDataObjectAsync(tempFile);
         }
     }
 

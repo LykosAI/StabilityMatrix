@@ -10,6 +10,11 @@ jobs:
     name: Backport PR
     runs-on: ubuntu-latest
     steps:
+      # Get the merge target branch to decide mainline number
+      # git cherry-pick mainline is 2 for merge to 'dev', else 1
+      - name: Get target branch
+        run: echo "::set-env name=CP_MAINLINE::$(if [ '${{ github.event.pull_request.base.ref }}' == 'dev' ]; then echo 2; else echo 1; fi)"
+      
       - name: Write json
         id: create-json
         uses: jsdaniell/create-json@v1.2.3
@@ -18,11 +23,12 @@ jobs:
           json: |
             {
               "targetPRLabels": "backport",
+              "mainline": ${{ env.CP_MAINLINE }},
               "prTitle": "[{{sourceBranch}} to {{targetBranch}}] backport: {{sourcePullRequest.title}} ({{sourcePullRequest.number}})"
             }
         
       - name: Backport Action
-        uses: sorenlouv/backport-github-action@v9.3.0
+        uses: sorenlouv/backport-github-action@v9.5.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           auto_backport_label_prefix: backport-to-

@@ -1116,4 +1116,7 @@
   <data name="Label_AppData" xml:space="preserve">
     <value>App Data</value>
   </data>
+  <data name="Action_CopyAsBitmap" xml:space="preserve">
+    <value>Copy as Bitmap</value>
+  </data>
 </root>

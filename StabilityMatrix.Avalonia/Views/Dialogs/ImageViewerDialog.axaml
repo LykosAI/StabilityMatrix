@@ -54,6 +54,9 @@
             <input:StandardUICommand 
                 x:Key="CopyImageCommand" 
                 Command="{Binding CopyImageCommand}"/>
+            <input:StandardUICommand 
+                x:Key="CopyImageAsBitmapCommand" 
+                Command="{Binding CopyImageAsBitmapCommand}"/>
         </Grid.Resources>
 
         <!-- Tag is not used but sets TemplateKey which is used to select the DataTemplate later -->
@@ -81,11 +84,17 @@
                                     <ui:MenuFlyoutItem
                                         x:Name="CopyMenuItem"
                                         Command="{StaticResource CopyImageCommand}"
-                                        CommandParameter="{Binding $parent[controls:AdvancedImageBox].Image}"
+                                        CommandParameter="{Binding}"
                                         HotKey="Ctrl+C"
                                         IconSource="Copy"
-                                        IsEnabled="{OnPlatform Windows=True, Default=False}"
-                                        Text="Copy" />
+                                        Text="{x:Static lang:Resources.Action_Copy}" />
+                                    <ui:MenuFlyoutItem
+                                        x:Name="CopyAsBitmapMenuItem"
+                                        Command="{StaticResource CopyImageAsBitmapCommand}"
+                                        CommandParameter="{Binding}"
+                                        HotKey="Shift+Ctrl+C"
+                                        IsVisible="{OnPlatform Windows=True, Default=False}"
+                                        Text="{x:Static lang:Resources.Action_CopyAsBitmap}" />
                                 </ui:FAMenuFlyout>
                             </controls:AdvancedImageBox.ContextFlyout>
                         </controls:AdvancedImageBox>

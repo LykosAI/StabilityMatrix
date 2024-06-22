@@ -25,7 +25,7 @@ public class StableSwarm(
     private Process? dotnetProcess;
 
     public override string Name => "StableSwarmUI";
-    public override string GitName => "SwarmUI";
+    public override string RepositoryName => "SwarmUI";
     public override string DisplayName { get; set; } = "SwarmUI";
     public override string Author => "mcmonkeyprojects";
     public override string Blurb =>

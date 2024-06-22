@@ -29,14 +29,15 @@ public abstract class BaseGitPackage : BasePackage
     protected readonly IPrerequisiteHelper PrerequisiteHelper;
     public PyVenvRunner? VenvRunner;
 
-    public virtual string GitName => Name;
+    public virtual string RepositoryName => Name;
+    public virtual string RepositoryAuthor => Author;
 
     /// <summary>
     /// URL of the hosted web page on launch
     /// </summary>
     protected string WebUrl = string.Empty;
 
-    public override string GithubUrl => $"https://github.com/{Author}/{GitName}";
+    public override string GithubUrl => $"https://github.com/{Author}/{RepositoryName}";
 
     public string DownloadLocation => Path.Combine(SettingsManager.LibraryDir, "Packages", $"{Name}.zip");
 
@@ -44,17 +45,17 @@ public abstract class BaseGitPackage : BasePackage
     {
         if (!string.IsNullOrWhiteSpace(versionOptions.CommitHash))
         {
-            return $"https://github.com/{Author}/{GitName}/archive/{versionOptions.CommitHash}.zip";
+            return $"https://github.com/{Author}/{RepositoryName}/archive/{versionOptions.CommitHash}.zip";
         }
 
         if (!string.IsNullOrWhiteSpace(versionOptions.VersionTag))
         {
-            return $"https://api.github.com/repos/{Author}/{GitName}/zipball/{versionOptions.VersionTag}";
+            return $"https://api.github.com/repos/{Author}/{RepositoryName}/zipball/{versionOptions.VersionTag}";
         }
 
         if (!string.IsNullOrWhiteSpace(versionOptions.BranchName))
         {
-            return $"https://api.github.com/repos/{Author}/{GitName}/zipball/{versionOptions.BranchName}";
+            return $"https://api.github.com/repos/{Author}/{RepositoryName}/zipball/{versionOptions.BranchName}";
         }
 
         throw new Exception("No download URL available");
@@ -77,7 +78,9 @@ public abstract class BaseGitPackage : BasePackage
     {
         if (ShouldIgnoreReleases)
         {
-            var commits = await GithubApi.GetAllCommits(Author, GitName, MainBranch).ConfigureAwait(false);
+            var commits = await GithubApi
+                .GetAllCommits(Author, RepositoryName, MainBranch)
+                .ConfigureAwait(false);
             return new DownloadPackageVersionOptions
             {
                 IsLatest = true,
@@ -87,7 +90,7 @@ public abstract class BaseGitPackage : BasePackage
             };
         }
 
-        var releases = await GithubApi.GetAllReleases(Author, GitName).ConfigureAwait(false);
+        var releases = await GithubApi.GetAllReleases(Author, RepositoryName).ConfigureAwait(false);
         var latestRelease = includePrerelease ? releases.First() : releases.First(x => !x.Prerelease);
 
         return new DownloadPackageVersionOptions
@@ -100,7 +103,7 @@ public abstract class BaseGitPackage : BasePackage
 
     public override Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10)
     {
-        return GithubApi.GetAllCommits(Author, GitName, branch, page, perPage);
+        return GithubApi.GetAllCommits(Author, RepositoryName, branch, page, perPage);
     }
 
     public override async Task<PackageVersionOptions> GetAllVersionOptions()
@@ -109,7 +112,7 @@ public abstract class BaseGitPackage : BasePackage
 
         if (!ShouldIgnoreReleases)
         {
-            var allReleases = await GithubApi.GetAllReleases(Author, GitName).ConfigureAwait(false);
+            var allReleases = await GithubApi.GetAllReleases(Author, RepositoryName).ConfigureAwait(false);
             var releasesList = allReleases.ToList();
             if (releasesList.Any())
             {
@@ -126,7 +129,7 @@ public abstract class BaseGitPackage : BasePackage
         }
 
         // Branch mode
-        var allBranches = await GithubApi.GetAllBranches(Author, GitName).ConfigureAwait(false);
+        var allBranches = await GithubApi.GetAllBranches(Author, RepositoryName).ConfigureAwait(false);
         packageVersionOptions.AvailableBranches = allBranches.Select(
             b => new PackageVersion { TagName = $"{b.Name}", ReleaseNotesMarkdown = string.Empty }
         );
@@ -199,7 +202,7 @@ public abstract class BaseGitPackage : BasePackage
 
     public override async Task<IEnumerable<Release>> GetReleaseTags()
     {
-        var allReleases = await GithubApi.GetAllReleases(Author, GitName).ConfigureAwait(false);
+        var allReleases = await GithubApi.GetAllReleases(Author, RepositoryName).ConfigureAwait(false);
         return allReleases;
     }
 

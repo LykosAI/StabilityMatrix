@@ -5,7 +5,6 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
-using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FDS;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -25,9 +24,9 @@ public class StableSwarm(
     private Process? dotnetProcess;
 
     public override string Name => "StableSwarmUI";
+    public override string RepositoryName => "SwarmUI";
     public override string DisplayName { get; set; } = "SwarmUI";
     public override string Author => "mcmonkeyprojects";
-    public override string GithubUrl => $"https://github.com/{Author}/SwarmUI";
     public override string Blurb =>
         "A Modular Stable Diffusion Web-User-Interface, with an emphasis on making powertools easily accessible, high performance, and extensibility.";
 
@@ -315,19 +314,11 @@ public class StableSwarm(
         if (needsMigrate)
         {
             await prerequisiteHelper
-                .RunGit(
-                    ["remote", "set-url", "origin", $"https://github.com/{Author}/SwarmUI"],
-                    package.FullPath
-                )
+                .RunGit(["remote", "set-url", "origin", GithubUrl], package.FullPath)
                 .ConfigureAwait(false);
         }
 
         return await base.CheckForUpdates(package).ConfigureAwait(false);
-    }
-
-    public override Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10)
-    {
-        return GithubApi.GetAllCommits(Author, "SwarmUI", branch, page, perPage);
     }
 
     public override Task SetupModelFolders(

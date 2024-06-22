@@ -5,6 +5,11 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.11.2
+### Changed
+- StableSwarmUI installs will be migrated to SwarmUI by mcmonkeyprojects the next time the package is updated
+  - Note: As of 2024/06/21 StableSwarmUI will no longer be maintained under Stability AI. The original developer will be maintaining an independent version of this project
+
 ## v2.11.1
 ### Added
 - Added Rename option back to the Checkpoints page

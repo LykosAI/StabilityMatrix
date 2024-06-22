@@ -5,7 +5,6 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
-using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FDS;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -320,11 +319,6 @@ public class StableSwarm(
         }
 
         return await base.CheckForUpdates(package).ConfigureAwait(false);
-    }
-
-    public override Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10)
-    {
-        return GithubApi.GetAllCommits(Author, "SwarmUI", branch, page, perPage);
     }
 
     public override Task SetupModelFolders(

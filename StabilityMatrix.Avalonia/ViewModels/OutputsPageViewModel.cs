@@ -244,7 +244,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
         // Preload
         await image.GetBitmapAsync();
 
-        var vm = new ImageViewerViewModel { ImageSource = image, LocalImageFile = item.ImageFile };
+        var vm = vmFactory.Get<ImageViewerViewModel>();
+        vm.ImageSource = image;
+        vm.LocalImageFile = item.ImageFile;
 
         using var onNext = Observable
             .FromEventPattern<DirectionalNavigationEventArgs>(

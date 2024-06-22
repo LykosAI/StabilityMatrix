@@ -5,6 +5,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FDS;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -24,20 +25,18 @@ public class StableSwarm(
     private Process? dotnetProcess;
 
     public override string Name => "StableSwarmUI";
-    public override string DisplayName { get; set; } = "StableSwarmUI";
-    public override string Author => "Stability-AI";
-
+    public override string DisplayName { get; set; } = "SwarmUI";
+    public override string Author => "mcmonkeyprojects";
+    public override string GithubUrl => $"https://github.com/{Author}/SwarmUI";
     public override string Blurb =>
         "A Modular Stable Diffusion Web-User-Interface, with an emphasis on making powertools easily accessible, high performance, and extensibility.";
 
     public override string LicenseType => "MIT";
     public override string LicenseUrl =>
-        "https://github.com/Stability-AI/StableSwarmUI/blob/master/LICENSE.txt";
+        "https://github.com/mcmonkeyprojects/SwarmUI/blob/master/LICENSE.txt";
     public override string LaunchCommand => string.Empty;
     public override Uri PreviewImageUri =>
-        new(
-            "https://raw.githubusercontent.com/Stability-AI/StableSwarmUI/master/.github/images/stableswarmui.jpg"
-        );
+        new("https://github.com/mcmonkeyprojects/SwarmUI/raw/master/.github/images/swarmui.jpg");
     public override string OutputFolderName => "Output";
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         [SharedFolderMethod.Symlink, SharedFolderMethod.Configuration, SharedFolderMethod.None];
@@ -133,7 +132,7 @@ public class StableSwarm(
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        progress?.Report(new ProgressReport(-1f, "Installing StableSwarmUI...", isIndeterminate: true));
+        progress?.Report(new ProgressReport(-1f, "Installing SwarmUI...", isIndeterminate: true));
 
         var comfy = settingsManager.Settings.InstalledPackages.FirstOrDefault(
             x => x.PackageName == nameof(ComfyUI)
@@ -141,7 +140,7 @@ public class StableSwarm(
 
         if (comfy == null)
         {
-            throw new InvalidOperationException("ComfyUI must be installed to use StableSwarmUI");
+            throw new InvalidOperationException("ComfyUI must be installed to use SwarmUI");
         }
 
         try
@@ -166,16 +165,16 @@ public class StableSwarm(
             // ignore, probably means the source is already there
         }
 
+        var srcFolder = Path.Combine(installLocation, "src");
+        var csprojName = "StableSwarmUI.csproj";
+        if (File.Exists(Path.Combine(srcFolder, "SwarmUI.csproj")))
+        {
+            csprojName = "SwarmUI.csproj";
+        }
+
         await prerequisiteHelper
             .RunDotnet(
-                [
-                    "build",
-                    "src/StableSwarmUI.csproj",
-                    "--configuration",
-                    "Release",
-                    "-o",
-                    "src/bin/live_release"
-                ],
+                ["build", $"src/{csprojName}", "--configuration", "Release", "-o", "src/bin/live_release"],
                 workingDirectory: installLocation,
                 onProcessOutput: onConsoleOutput
             )
@@ -273,15 +272,62 @@ public class StableSwarm(
             }
         }
 
+        var releaseFolder = Path.Combine(installedPackagePath, "src", "bin", "live_release");
+        var dllName = "StableSwarmUI.dll";
+        if (File.Exists(Path.Combine(releaseFolder, "SwarmUI.dll")))
+        {
+            dllName = "SwarmUI.dll";
+        }
+
         dotnetProcess = await prerequisiteHelper
             .RunDotnet(
-                args: $"src{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}live_release{Path.DirectorySeparatorChar}StableSwarmUI.dll {arguments.TrimEnd()}",
+                args: $"{Path.Combine(releaseFolder, dllName)} {arguments.TrimEnd()}",
                 workingDirectory: installedPackagePath,
                 envVars: aspEnvVars,
                 onProcessOutput: HandleConsoleOutput,
                 waitForExit: false
             )
             .ConfigureAwait(false);
+    }
+
+    public override async Task<bool> CheckForUpdates(InstalledPackage package)
+    {
+        var needsMigrate = false;
+        try
+        {
+            var output = await prerequisiteHelper
+                .GetGitOutput(["remote", "get-url", "origin"], package.FullPath)
+                .ConfigureAwait(false);
+
+            if (
+                output.StandardOutput != null
+                && output.StandardOutput.Contains("Stability", StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                needsMigrate = true;
+            }
+        }
+        catch (Exception)
+        {
+            needsMigrate = true;
+        }
+
+        if (needsMigrate)
+        {
+            await prerequisiteHelper
+                .RunGit(
+                    ["remote", "set-url", "origin", $"https://github.com/{Author}/SwarmUI"],
+                    package.FullPath
+                )
+                .ConfigureAwait(false);
+        }
+
+        return await base.CheckForUpdates(package).ConfigureAwait(false);
+    }
+
+    public override Task<IEnumerable<GitCommit>?> GetAllCommits(string branch, int page = 1, int perPage = 10)
+    {
+        return GithubApi.GetAllCommits(Author, "SwarmUI", branch, page, perPage);
     }
 
     public override Task SetupModelFolders(

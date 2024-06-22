@@ -1,10 +1,12 @@
 ﻿using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
@@ -22,13 +24,12 @@ public partial class AdvancedImageBoxView : UserControl
         if (imageSource is null)
             return;
 
-        if (Compat.IsWindows && imageSource.Bitmap is { } bitmap)
+        var settings = App.Services.GetService<ISettingsManager>()?.Settings;
+
+        if (Compat.IsWindows && settings?.AlwaysCopyImagesAsFiles != true && imageSource.Bitmap is { } bitmap)
         {
             // Use bitmap on Windows if available
-            await Task.Run(() =>
-            {
-                WindowsClipboard.SetBitmap(bitmap);
-            });
+            await WindowsClipboard.SetBitmapAsync(bitmap);
         }
         else if (imageSource.LocalFile is { } imagePath)
         {

@@ -125,6 +125,11 @@ public class Settings
 
     public bool IsDiscordRichPresenceEnabled { get; set; }
 
+    /// <summary>
+    /// If true, bitmaps in image viewers will be copied as temp files instead of native bitmap clipboard data
+    /// </summary>
+    public bool AlwaysCopyImagesAsFiles { get; set; }
+
     [JsonIgnore]
     public Dictionary<string, string> DefaultEnvironmentVariables { get; } =
         new() { ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib" };

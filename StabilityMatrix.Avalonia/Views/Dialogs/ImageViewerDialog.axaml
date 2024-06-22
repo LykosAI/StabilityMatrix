@@ -81,10 +81,9 @@
                                     <ui:MenuFlyoutItem
                                         x:Name="CopyMenuItem"
                                         Command="{StaticResource CopyImageCommand}"
-                                        CommandParameter="{Binding $parent[controls:AdvancedImageBox].Image}"
+                                        CommandParameter="{Binding}"
                                         HotKey="Ctrl+C"
                                         IconSource="Copy"
-                                        IsEnabled="{OnPlatform Windows=True, Default=False}"
                                         Text="Copy" />
                                 </ui:FAMenuFlyout>
                             </controls:AdvancedImageBox.ContextFlyout>

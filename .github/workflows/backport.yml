@@ -13,8 +13,8 @@ jobs:
       # Get the merge target branch to decide mainline number
       # git cherry-pick mainline is 2 for merge to 'dev', else 1
       - name: Get target branch
-        run: echo "::set-env name=CP_MAINLINE::$(if [ '${{ github.event.pull_request.base.ref }}' == 'dev' ]; then echo 2; else echo 1; fi)"
-      
+        run: echo "CP_MAINLINE=$(if [ '${{ github.event.pull_request.base.ref }}' == 'dev' ]; then echo 2; else echo 1; fi)" >> $GITHUB_ENV
+
       - name: Write json
         id: create-json
         uses: jsdaniell/create-json@v1.2.3
@@ -26,7 +26,7 @@ jobs:
               "mainline": ${{ env.CP_MAINLINE }},
               "prTitle": "[{{sourceBranch}} to {{targetBranch}}] backport: {{sourcePullRequest.title}} ({{sourcePullRequest.number}})"
             }
-        
+
       - name: Backport Action
         uses: sorenlouv/backport-github-action@v9.5.1
         with:

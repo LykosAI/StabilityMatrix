@@ -1,12 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
@@ -19,23 +19,35 @@ public partial class AdvancedImageBoxView : UserControl
 
     public static AsyncRelayCommand<ImageSource?> FlyoutCopyCommand { get; } = new(FlyoutCopy);
 
+    public static AsyncRelayCommand<ImageSource?> FlyoutCopyAsBitmapCommand { get; } =
+        new(FlyoutCopyAsBitmap);
+
     private static async Task FlyoutCopy(ImageSource? imageSource)
     {
         if (imageSource is null)
             return;
 
-        var settings = App.Services.GetService<ISettingsManager>()?.Settings;
-
-        if (Compat.IsWindows && settings?.AlwaysCopyImagesAsFiles != true && imageSource.Bitmap is { } bitmap)
+        if (imageSource.LocalFile is { } imagePath)
         {
-            // Use bitmap on Windows if available
-            await WindowsClipboard.SetBitmapAsync(bitmap);
+            await App.Clipboard.SetFileDataObjectAsync(imagePath);
         }
-        else if (imageSource.LocalFile is { } imagePath)
+        else if (await imageSource.GetBitmapAsync() is { } bitmap)
         {
-            // Other OS or no bitmap, use image source
-            var clipboard = App.Clipboard;
-            await clipboard.SetFileDataObjectAsync(imagePath);
+            // Write to temp file
+            var tempFile = new FilePath(Path.GetTempFileName() + ".png");
+
+            bitmap.Save(tempFile);
+        }
+    }
+
+    private static async Task FlyoutCopyAsBitmap(ImageSource? imageSource)
+    {
+        if (imageSource is null || !Compat.IsWindows)
+            return;
+
+        if (await imageSource.GetBitmapAsync() is { } bitmap)
+        {
+            await WindowsClipboard.SetBitmapAsync(bitmap);
         }
     }
 }

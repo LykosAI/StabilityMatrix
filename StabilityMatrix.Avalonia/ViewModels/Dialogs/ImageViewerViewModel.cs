@@ -17,7 +17,9 @@ using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
+using Path = System.IO.Path;
 using Size = StabilityMatrix.Core.Helper.Size;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -91,21 +93,36 @@ public partial class ImageViewerViewModel(
         if (image is null)
             return;
 
-        if (
-            Compat.IsWindows
-            && !settingsManager.Settings.AlwaysCopyImagesAsFiles
-            && image.Bitmap is { } bitmap
-        )
-        {
-            await WindowsClipboard.SetBitmapAsync(bitmap);
-        }
-        else if (image.LocalFile is { } imagePath)
+        if (image.LocalFile is { } imagePath)
         {
             await App.Clipboard.SetFileDataObjectAsync(imagePath);
         }
+        else if (await image.GetBitmapAsync() is { } bitmap)
+        {
+            // Write to temp file
+            var tempFile = new FilePath(Path.GetTempFileName() + ".png");
+
+            bitmap.Save(tempFile);
+        }
         else
         {
-            logger.LogWarning("Failed to copy image: {Image}", image);
+            logger.LogWarning("Failed to copy image, no file path or bitmap: {Image}", image);
+        }
+    }
+
+    [RelayCommand]
+    private async Task CopyImageAsBitmap(ImageSource? image)
+    {
+        if (image is null || !Compat.IsWindows)
+            return;
+
+        if (await image.GetBitmapAsync() is { } bitmap)
+        {
+            await WindowsClipboard.SetBitmapAsync(bitmap);
+        }
+        else
+        {
+            logger.LogWarning("Failed to copy image, no bitmap: {Image}", image);
         }
     }
 

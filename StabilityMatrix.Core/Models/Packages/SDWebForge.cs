@@ -169,7 +169,7 @@ public class SDWebForge(
             await requirements.WriteAllTextAsync(requirementsContent).ConfigureAwait(false);
         }
 
-        var pipArgs = new PipInstallArgs();
+        var pipArgs = new PipInstallArgs("setuptools==69.5.1");
         if (torchVersion is TorchVersion.DirectMl)
         {
             pipArgs = pipArgs.WithTorchDirectML();

@@ -27,7 +27,7 @@ public class StableSwarm(
     public override string Name => "StableSwarmUI";
     public override string DisplayName { get; set; } = "SwarmUI";
     public override string Author => "mcmonkeyprojects";
-
+    public override string GithubUrl => $"https://github.com/{Author}/SwarmUI";
     public override string Blurb =>
         "A Modular Stable Diffusion Web-User-Interface, with an emphasis on making powertools easily accessible, high performance, and extensibility.";
 

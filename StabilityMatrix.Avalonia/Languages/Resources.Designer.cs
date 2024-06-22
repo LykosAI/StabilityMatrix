@@ -168,6 +168,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy as Bitmap.
+        /// </summary>
+        public static string Action_CopyAsBitmap {
+            get {
+                return ResourceManager.GetString("Action_CopyAsBitmap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Copy Details.
         /// </summary>
         public static string Action_CopyDetails {

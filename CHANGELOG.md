@@ -5,6 +5,7 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+
 ## v2.12.0-dev.1
 ### Added
 - Image viewer context menus now have 2 options: `Copy (Ctrl+C)` which now always copies the image as a file, and `Copy as Bitmap (Shift+Ctrl+C)` (Available on Windows) which copies to the clipboard as native bitmap. This changes the previous single `Copy` button behavior that would first attempt a native bitmap copy on Windows when available, and fall back to a file copy if not.
@@ -15,6 +16,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - Note: As of 2024/06/21 StableSwarmUI will no longer be maintained under Stability AI. The original developer will be maintaining an independent version of this project
 ### Fixed
 - Fixed [#700](https://github.com/LykosAI/StabilityMatrix/issues/700) - `cannot import 'packaging'` error for Forge
+### Supporters
+#### Visionaries
+- Huge thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your support helps us continue to improve Stability Matrix!
+#### Pioneers
+- Thank you to our Pioneer-tier supporters on Patreon, **tankfox** and **tanangular**! Your support is greatly appreciated!
 
 ## v2.11.1
 ### Added

@@ -10,6 +10,19 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Image viewer context menus now have 2 options: `Copy (Ctrl+C)` which now always copies the image as a file, and `Copy as Bitmap (Shift+Ctrl+C)` (Available on Windows) which copies to the clipboard as native bitmap. This changes the previous single `Copy` button behavior that would first attempt a native bitmap copy on Windows when available, and fall back to a file copy if not.
 
+## v2.11.3
+### Changed
+- Base Python install will now use `pip>=23.3.2,<24.1` for compatibility with `torchsde`.Individual Packages can upgrade as required.
+- Added default `PIP_DISABLE_PIP_VERSION_CHECK=1` environment variable to suppress notices about pip version checks.
+  - As with other default environment variables, this can be overridden by setting your own value in `Settings > Environment Variables [Edit]`.
+### Fixed
+- Fooocus Package - Added `pip>=23.3.2,<24.1` specifier before install, fixes potential install errors due to deprecated requirement spec used by `torchsde`.
+### Supporters
+#### Visionaries
+- Huge thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your support helps us continue to improve Stability Matrix!
+#### Pioneers
+- Thank you to our Pioneer-tier supporters on Patreon, **tankfox** and **tanangular**! Your support is greatly appreciated!
+
 ## v2.11.2
 ### Changed
 - StableSwarmUI installs will be migrated to SwarmUI by mcmonkeyprojects the next time the package is updated

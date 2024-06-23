@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - As with other default environment variables, this can be overridden by setting your own value in `Settings > Environment Variables [Edit]`.
 ### Fixed
 - Fooocus Package - Added `pip>=23.3.2,<24.1` specifier before install, fixes potential install errors due to deprecated requirement spec used by `torchsde`.
+### Supporters
+#### Visionaries
+- Huge thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your support helps us continue to improve Stability Matrix!
+#### Pioneers
+- Thank you to our Pioneer-tier supporters on Patreon, **tankfox** and **tanangular**! Your support is greatly appreciated!
 
 ## v2.11.2
 ### Changed

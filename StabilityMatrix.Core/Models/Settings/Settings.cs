@@ -127,7 +127,13 @@ public class Settings
 
     [JsonIgnore]
     public Dictionary<string, string> DefaultEnvironmentVariables { get; } =
-        new() { ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib" };
+        new()
+        {
+            // Fixes potential setuptools error on Portable Windows Python
+            ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib",
+            // Suppresses 'A new release of pip is available' messages
+            ["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
+        };
 
     [JsonPropertyName("EnvironmentVariables")]
     public Dictionary<string, string>? UserEnvironmentVariables { get; set; }

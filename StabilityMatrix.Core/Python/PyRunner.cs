@@ -116,10 +116,17 @@ public class PyRunner : IPyRunner
             throw new FileNotFoundException("get-pip not found", GetPipPath);
         }
 
-        var result = await ProcessRunner
-            .GetProcessResultAsync(PythonExePath, "-m get-pip")
+        await ProcessRunner
+            .GetProcessResultAsync(PythonExePath, ["-m", "get-pip"])
+            .EnsureSuccessExitCode()
             .ConfigureAwait(false);
-        result.EnsureSuccessExitCode();
+
+        // Pip version 24.1 deprecated numpy star requirement spec used by some packages
+        // So make the base pip less than that for compatibility, venvs can upgrade themselves if needed
+        await ProcessRunner
+            .GetProcessResultAsync(PythonExePath, ["-m", "pip", "install", "pip>=23.3.2,<24.1"])
+            .EnsureSuccessExitCode()
+            .ConfigureAwait(false);
     }
 
     /// <summary>

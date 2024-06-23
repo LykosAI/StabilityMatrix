@@ -22,8 +22,9 @@ jobs:
           name: ".backportrc.json"
           json: |
             {
-              "targetPRLabels": "backport",
+              "targetPRLabels": ["backport"],
               "mainline": ${{ env.CP_MAINLINE }},
+              "commitConflicts": "true",
               "prTitle": "[{{sourceBranch}} to {{targetBranch}}] backport: {{sourcePullRequest.title}} ({{sourcePullRequest.number}})"
             }
 

@@ -48,6 +48,7 @@ public class InstalledPackage : IJsonOnDeserialized
     public List<LaunchOption>? LaunchArgs { get; set; }
     public DateTimeOffset? LastUpdateCheck { get; set; }
     public bool UpdateAvailable { get; set; }
+    public bool DontCheckForUpdates { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter<TorchVersion>))]
     public TorchVersion? PreferredTorchVersion { get; set; }

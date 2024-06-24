@@ -225,6 +225,15 @@ public class Settings
         }
     }
 
+    public void SetUpdateCheckDisabledForPackage(InstalledPackage package, bool disabled)
+    {
+        var installedPackage = InstalledPackages.FirstOrDefault(p => p.Id == package.Id);
+        if (installedPackage != null)
+        {
+            installedPackage.DontCheckForUpdates = disabled;
+        }
+    }
+
     /// <summary>
     /// Return either the system default culture, if supported, or en-US
     /// </summary>

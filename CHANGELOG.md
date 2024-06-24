@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fooocus Package - Added `pip>=23.3.2,<24.1` specifier before install, fixes potential install errors due to deprecated requirement spec used by `torchsde`.
 - Fixed error when launching SwarmUI when installed to a path with spaces
 - Fixed issue where model folders were being created too late in certain cases
+- Fixed [#683](https://github.com/LykosAI/StabilityMatrix/issues/683) - Model indexing causing LiteDB errors after upgrading from older versions due to updated enum values
 ### Supporters
 #### Visionaries
 - Huge thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your support helps us continue to improve Stability Matrix!

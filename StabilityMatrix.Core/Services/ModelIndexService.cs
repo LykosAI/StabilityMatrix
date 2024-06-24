@@ -2,10 +2,11 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Text;
-using System.Text.Json;
 using AsyncAwaitBestPractices;
 using AutoCtor;
 using KGySoft.CoreLibraries;
+using LiteDB;
+using LiteDB.Async;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
@@ -15,6 +16,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace StabilityMatrix.Core.Services;
 
@@ -103,9 +105,34 @@ public partial class ModelIndexService : IModelIndexService
 
         logger.LogInformation("Loading models from database...");
 
-        var allModels = (
-            await liteDbContext.LocalModelFiles.IncludeAll().FindAllAsync().ConfigureAwait(false)
-        ).ToImmutableArray();
+        ImmutableArray<LocalModelFile> allModels = [];
+        try
+        {
+            allModels =
+            [
+                ..(
+                    await liteDbContext.LocalModelFiles.IncludeAll().FindAllAsync().ConfigureAwait(false)
+                )
+            ];
+        }
+        catch (Exception e)
+        {
+            // Handle enum deserialize exceptions from changes
+            if (e is LiteException or LiteAsyncException && e.InnerException is ArgumentException inner)
+            {
+                logger.LogWarning(
+                    e,
+                    "LiteDb Deserialize error while fetching LocalModelFiles '{Inner}', cache collections will be cleared",
+                    inner.ToString()
+                );
+
+                await liteDbContext.ClearAllCacheCollectionsAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                throw;
+            }
+        }
 
         ModelIndex = allModels.GroupBy(m => m.SharedFolderType).ToDictionary(g => g.Key, g => g.ToList());
 
@@ -479,12 +506,34 @@ public partial class ModelIndexService : IModelIndexService
 
             if (model.LatestModelInfo == null && model.HasConnectedModel)
             {
-                var civitModel = await liteDbContext
-                    .CivitModels.Include(m => m.ModelVersions)
-                    .FindByIdAsync(model.ConnectedModelInfo.ModelId)
-                    .ConfigureAwait(false);
+                try
+                {
+                    model.LatestModelInfo = await liteDbContext
+                        .CivitModels.Include(m => m.ModelVersions)
+                        .FindByIdAsync(model.ConnectedModelInfo.ModelId)
+                        .ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    // Handle enum deserialize exceptions from changes
+                    if (
+                        e is LiteException or LiteAsyncException
+                        && e.InnerException is ArgumentException inner
+                    )
+                    {
+                        logger.LogWarning(
+                            e,
+                            "LiteDb Deserialize error while fetching CivitModels '{Inner}', cache collections will be cleared",
+                            inner.ToString()
+                        );
 
-                model.LatestModelInfo = civitModel;
+                        await liteDbContext.ClearAllCacheCollectionsAsync().ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
             }
             var list = newIndex.GetOrAdd(model.SharedFolderType);
             list.Add(model);

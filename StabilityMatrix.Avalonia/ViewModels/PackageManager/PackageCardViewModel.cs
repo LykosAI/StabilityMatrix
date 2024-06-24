@@ -617,14 +617,25 @@ public partial class PackageCardViewModel(
             await runner.ExecuteSteps(steps);
 
             EventManager.Instance.OnInstalledPackagesChanged();
-
             IsUpdateAvailable = false;
             InstalledVersion = Package.Version?.DisplayVersion ?? "Unknown";
-            notificationService.Show(
-                Resources.Progress_UpdateComplete,
-                string.Format(Resources.TextTemplate_PackageUpdatedToSelected, packageName),
-                NotificationType.Success
-            );
+
+            if (runner.Failed)
+            {
+                notificationService.Show(
+                    Resources.Progress_UpdateFailed,
+                    string.Format(runner.ModificationFailedMessage, packageName),
+                    NotificationType.Error
+                );
+            }
+            else
+            {
+                notificationService.Show(
+                    Resources.Progress_UpdateComplete,
+                    string.Format(Resources.TextTemplate_PackageUpdatedToSelected, packageName),
+                    NotificationType.Success
+                );
+            }
         }
         catch (Exception e)
         {

@@ -901,21 +901,25 @@ public partial class PackageCardViewModel(
         {
             UpdateVersion = null;
             IsUpdateAvailable = false;
-            if (Package != null)
+
+            if (Package == null)
+                return;
+
+            Package.UpdateAvailable = false;
+            settingsManager.Transaction(s =>
             {
-                Package.UpdateAvailable = false;
-            }
+                s.SetUpdateCheckDisabledForPackage(Package, value);
+            });
         }
         else if (Package != null)
         {
             Package.LastUpdateCheck = DateTimeOffset.MinValue;
+            settingsManager.Transaction(s =>
+            {
+                s.SetUpdateCheckDisabledForPackage(Package, value);
+            });
             OnLoadedAsync().SafeFireAndForget();
         }
-
-        settingsManager.Transaction(s =>
-        {
-            s.SetUpdateCheckDisabledForPackage(Package, value);
-        });
     }
 
     private void RunningPackageOnStartupComplete(object? sender, string e)

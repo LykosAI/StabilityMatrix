@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
@@ -114,6 +115,12 @@ public partial class MainWindowViewModel : ViewModelBase
             App.Shutdown();
             return;
         }
+
+        Task.Run(() => SharedFolders.SetupSharedModelFolders(settingsManager.ModelsDirectory))
+            .SafeFireAndForget(ex =>
+            {
+                Logger.Error(ex, "Error setting up shared model folders");
+            });
 
         try
         {

@@ -1293,6 +1293,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disable Update Check.
+        /// </summary>
+        public static string Label_DisableUpdateCheck {
+            get {
+                return ResourceManager.GetString("Label_DisableUpdateCheck", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Discord Rich Presence.
         /// </summary>
         public static string Label_DiscordRichPresence {
@@ -3053,6 +3062,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string TextTemplate_PackageUpdatedToLatest {
             get {
                 return ResourceManager.GetString("TextTemplate_PackageUpdatedToLatest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} has been updated to the selected version.
+        /// </summary>
+        public static string TextTemplate_PackageUpdatedToSelected {
+            get {
+                return ResourceManager.GetString("TextTemplate_PackageUpdatedToSelected", resourceCulture);
             }
         }
         

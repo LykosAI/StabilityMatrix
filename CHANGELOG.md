@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - As with other default environment variables, this can be overridden by setting your own value in `Settings > Environment Variables [Edit]`.
 ### Fixed
 - Fooocus Package - Added `pip>=23.3.2,<24.1` specifier before install, fixes potential install errors due to deprecated requirement spec used by `torchsde`.
+- Fixed error when launching SwarmUI when installed to a path with spaces
+- Fixed issue where model folders were being created too late in certain cases
 ### Supporters
 #### Visionaries
 - Huge thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your support helps us continue to improve Stability Matrix!

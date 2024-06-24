@@ -295,15 +295,6 @@ public partial class CheckpointsPageViewModel(
             true
         );
 
-        try
-        {
-            SharedFolders.SetupSharedModelFolders(settingsManager.ModelsDirectory);
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, @"Failed to setup shared model folders");
-        }
-
         Refresh().SafeFireAndForget();
 
         EventManager.Instance.ModelIndexChanged += (_, _) =>

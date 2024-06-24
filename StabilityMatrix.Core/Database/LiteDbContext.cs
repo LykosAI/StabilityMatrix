@@ -174,6 +174,30 @@ public class LiteDbContext : ILiteDbContext
     public Task<bool> UpsertGithubCacheEntry(GithubCacheEntry cacheEntry) =>
         GithubCache.UpsertAsync(cacheEntry);
 
+    /// <summary>
+    /// Clear all Collections that store re-fetchable cache type data.
+    /// </summary>
+    public async Task ClearAllCacheCollectionsAsync()
+    {
+        var collectionNames = new List<string>
+        {
+            nameof(CivitModels),
+            nameof(CivitModelVersions),
+            nameof(CivitModelQueryCache),
+            nameof(GithubCache),
+            nameof(LocalModelFiles),
+            nameof(LocalImageFiles)
+        };
+
+        logger.LogInformation("Clearing all cache collections: [{@Names}]", collectionNames);
+
+        foreach (var name in collectionNames)
+        {
+            var collection = Database.GetCollection(name);
+            await collection.DeleteAllAsync().ConfigureAwait(false);
+        }
+    }
+
     public void Dispose()
     {
         if (lazyDatabase.IsValueCreated)

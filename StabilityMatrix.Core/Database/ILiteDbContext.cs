@@ -21,4 +21,9 @@ public interface ILiteDbContext : IDisposable
     Task<bool> UpsertCivitModelQueryCacheEntryAsync(CivitModelQueryCacheEntry entry);
     Task<GithubCacheEntry?> GetGithubCacheEntry(string cacheKey);
     Task<bool> UpsertGithubCacheEntry(GithubCacheEntry cacheEntry);
+
+    /// <summary>
+    /// Clear all Collections that store re-fetchable cache type data.
+    /// </summary>
+    Task ClearAllCacheCollectionsAsync();
 }

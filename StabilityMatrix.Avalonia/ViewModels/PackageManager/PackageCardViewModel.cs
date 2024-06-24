@@ -578,7 +578,7 @@ public partial class PackageCardViewModel(
                 XamlRoot = App.VisualRoot
             };
 
-            var result = await dialog.ShowAsync();
+            var result = await dialog.ShowAsync(true);
             if (result is not TaskDialogStandardResult.Yes)
                 return;
 

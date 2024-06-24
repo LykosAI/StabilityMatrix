@@ -1,0 +1,8 @@
+{
+  "sourceBranch": "dev",
+  "targetBranch": "main",
+  "mainline": 1,
+  "fork": false,
+  "targetPRLabels": ["backport"],
+  "prTitle": "[{{sourceBranch}} to {{targetBranch}}] backport: {{sourcePullRequest.title}} ({{sourcePullRequest.number}})"
+}

@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 
+<<<<<<< HEAD
+=======
+## v2.12.0-dev.1
+### Added
+- Image viewer context menus now have 2 options: `Copy (Ctrl+C)` which now always copies the image as a file, and `Copy as Bitmap (Shift+Ctrl+C)` (Available on Windows) which copies to the clipboard as native bitmap. This changes the previous single `Copy` button behavior that would first attempt a native bitmap copy on Windows when available, and fall back to a file copy if not.
+- Added "Change Version" option to the package card overflow menu, allowing you to downgrade or upgrade a package to a specific version or commit
+- Added "Disable Update Check" option to the package card overflow menu, allowing you to disable update checks for a specific package
+
+## v2.11.4
+### Fixed
+- Fixed [#719](https://github.com/LykosAI/StabilityMatrix/issues/719) - Fix comments in Inference prompt not being ignored
+### Supporters
+#### Visionaries
+- Huge thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your support helps us continue to improve Stability Matrix!
+#### Pioneers
+- Thank you to our Pioneer-tier supporters on Patreon, **tankfox** and **tanangular**! Your support is greatly appreciated!
+
+>>>>>>> 48a067c0 (Merge pull request #709 from ionite34/fix-inference-prompt)
 ## v2.11.3
 ### Changed
 - Base Python install will now use `pip>=23.3.2,<24.1` for compatibility with `torchsde`.Individual Packages can upgrade as required.

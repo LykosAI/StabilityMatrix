@@ -1,0 +1,15 @@
+﻿name: Feature or enhancement
+description: Submit a proposal for a new Stability Matrix feature or enhancement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Consider first discussing your idea on our [Discord server](https://link.lykos.ai/discord?ref=github-issue-template) to get feedback from the developers and the community.
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Explain your idea for a new feature or enhancement. Include any relevant details or links to resources like Package documentation.
+    validations:
+      required: true

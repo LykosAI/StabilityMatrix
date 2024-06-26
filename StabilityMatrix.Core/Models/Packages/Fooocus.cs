@@ -274,7 +274,7 @@ public class Fooocus(
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
         // Pip version 24.1 deprecated numpy requirement spec used by torchsde 0.2.5
-        await venvRunner.PipInstall(["pip>=23.3.2,<24.1"], onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall(["pip==23.3.2"], onConsoleOutput).ConfigureAwait(false);
 
         var pipArgs = new PipInstallArgs();
 

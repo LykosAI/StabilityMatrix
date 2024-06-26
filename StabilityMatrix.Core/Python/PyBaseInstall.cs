@@ -1,18 +1,23 @@
 ﻿using System.Text.Json;
+using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
+using MajorMinorVersion = (int Major, int Minor);
 
 namespace StabilityMatrix.Core.Python;
 
-public class PyBaseInstall(DirectoryPath rootPath)
+public class PyBaseInstall(DirectoryPath rootPath, MajorMinorVersion? version = null)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    public static PyBaseInstall Default { get; } = new(PyRunner.PythonDir);
+    private readonly Lazy<MajorMinorVersion> _lazyVersion =
+        version != null
+            ? new Lazy<MajorMinorVersion>(version.Value)
+            : new Lazy<MajorMinorVersion>(() => FindPythonVersion(rootPath));
 
     /// <summary>
     /// Root path of the Python installation.
@@ -25,15 +30,17 @@ public class PyBaseInstall(DirectoryPath rootPath)
     /// </summary>
     public bool IsWindowsPortable { get; init; }
 
-    private int MajorVersion { get; init; }
-
-    private int MinorVersion { get; init; }
+    /// <summary>
+    /// Major and minor version of the Python installation.
+    /// Set in the constructor or lazily queried via <see cref="FindPythonVersion"/>.
+    /// </summary>
+    public MajorMinorVersion Version => _lazyVersion.Value;
 
     public FilePath PythonExePath =>
         Compat.Switch(
             (PlatformKind.Windows, RootPath.JoinFile("python.exe")),
-            (PlatformKind.Linux, RootPath.JoinFile("bin", "python3")),
-            (PlatformKind.MacOS, RootPath.JoinFile("bin", "python3"))
+            (PlatformKind.Linux, RootPath.JoinFile("bin", $"python{Version.Major}")),
+            (PlatformKind.MacOS, RootPath.JoinFile("bin", $"python{Version.Major}"))
         );
 
     public string DefaultTclTkPath =>
@@ -42,6 +49,64 @@ public class PyBaseInstall(DirectoryPath rootPath)
             (PlatformKind.Linux, RootPath.JoinFile("lib", "tcl8.6")),
             (PlatformKind.MacOS, RootPath.JoinFile("lib", "tcl8.6"))
         );
+
+    public static PyBaseInstall Default { get; } = new(PyRunner.PythonDir, (3, 10));
+
+    // Attempt to find the major and minor version of the Python installation.
+    private static MajorMinorVersion FindPythonVersion(
+        DirectoryPath rootPath,
+        PlatformKind platform = default
+    )
+    {
+        if (platform == default)
+        {
+            platform = Compat.Platform;
+        }
+
+        var searchPath = rootPath;
+        string glob;
+        Regex regex;
+
+        if (platform.HasFlag(PlatformKind.Windows))
+        {
+            glob = "python*.dll";
+            regex = new Regex(@"python(\d)(\d+)\.dll");
+        }
+        else if (platform.HasFlag(PlatformKind.MacOS))
+        {
+            searchPath = rootPath.JoinDir("lib");
+            glob = "libpython*.*.dylib";
+            regex = new Regex(@"libpython(\d+)\.(\d+).dylib");
+        }
+        else if (platform.HasFlag(PlatformKind.Linux))
+        {
+            searchPath = rootPath.JoinDir("lib");
+            glob = "libpython*.*.so";
+            regex = new Regex(@"libpython(\d+)\.(\d+).so");
+        }
+        else
+        {
+            throw new NotSupportedException("Unsupported platform");
+        }
+
+        var globResults = rootPath.EnumerateFiles(glob).ToList();
+        if (globResults.Count == 0)
+        {
+            throw new FileNotFoundException("Python library file not found", searchPath + glob);
+        }
+
+        // Get first matching file
+        var match = globResults.Select(path => regex.Match(path.Name)).FirstOrDefault(x => x.Success);
+        if (match is null)
+        {
+            throw new FileNotFoundException(
+                $"Python library file not found with pattern '{regex}'",
+                searchPath + glob
+            );
+        }
+
+        return (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
+    }
 
     /// <summary>
     /// Creates a new virtual environment runner.

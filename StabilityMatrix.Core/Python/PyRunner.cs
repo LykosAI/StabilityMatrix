@@ -124,7 +124,10 @@ public class PyRunner : IPyRunner
         // Pip version 24.1 deprecated numpy star requirement spec used by some packages
         // So make the base pip less than that for compatibility, venvs can upgrade themselves if needed
         await ProcessRunner
-            .GetProcessResultAsync(PythonExePath, ["-m", "pip", "install", "pip==23.3.2"])
+            .GetProcessResultAsync(
+                PythonExePath,
+                ["-m", "pip", "install", "pip==23.3.2", "setuptools==69.5.1"]
+            )
             .EnsureSuccessExitCode()
             .ConfigureAwait(false);
     }

@@ -13,9 +13,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Disable Update Check" option to the package card overflow menu, allowing you to disable update checks for a specific package
 
 ## v2.11.4
+### Changed
+- Base Python install will now use `setuptools==69.5.1` for compatibility with `torchsde`. Individual Packages can upgrade as required.
 ### Fixed
 - Fixed [#719](https://github.com/LykosAI/StabilityMatrix/issues/719) - Fix comments in Inference prompt not being ignored
-- Fixed pip requirement syntax for base Python install and override in Fooocus package, should fix issues with `torchsde` install in Fooocus
 ### Supporters
 #### Visionaries
 - Huge thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your support helps us continue to improve Stability Matrix!

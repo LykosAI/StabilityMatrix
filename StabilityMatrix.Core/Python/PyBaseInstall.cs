@@ -6,7 +6,6 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
-using MajorMinorVersion = (int Major, int Minor);
 
 namespace StabilityMatrix.Core.Python;
 
@@ -50,7 +49,7 @@ public class PyBaseInstall(DirectoryPath rootPath, MajorMinorVersion? version = 
             (PlatformKind.MacOS, RootPath.JoinFile("lib", "tcl8.6"))
         );
 
-    public static PyBaseInstall Default { get; } = new(PyRunner.PythonDir, (3, 10));
+    public static PyBaseInstall Default { get; } = new(PyRunner.PythonDir, new MajorMinorVersion(3, 10));
 
     // Attempt to find the major and minor version of the Python installation.
     private static MajorMinorVersion FindPythonVersion(
@@ -105,7 +104,7 @@ public class PyBaseInstall(DirectoryPath rootPath, MajorMinorVersion? version = 
             );
         }
 
-        return (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
+        return new(int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
     }
 
     /// <summary>

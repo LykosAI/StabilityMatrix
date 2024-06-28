@@ -3055,5 +3055,14 @@ namespace StabilityMatrix.Avalonia.Languages {
                 return ResourceManager.GetString("TextTemplate_UpdatingPackage", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PLEASE EXTRACT THE APP FROM THE ZIP FILE BEFORE RUNNING STABILITY MATRIX.
+        /// </summary>
+        public static string Warning_PleaseExtractFirst {
+            get {
+                return ResourceManager.GetString("Warning_PleaseExtractFirst", resourceCulture);
+            }
+        }
     }
 }

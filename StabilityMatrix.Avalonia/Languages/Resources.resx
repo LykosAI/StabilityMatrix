@@ -1116,8 +1116,6 @@
   <data name="Label_AppData" xml:space="preserve">
     <value>App Data</value>
   </data>
-<<<<<<< HEAD
-=======
   <data name="TextTemplate_PackageUpdatedToSelected" xml:space="preserve">
     <value>{0} has been updated to the selected version</value>
   </data>
@@ -1130,5 +1128,4 @@
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>PLEASE EXTRACT THE APP FROM THE ZIP FILE BEFORE RUNNING STABILITY MATRIX</value>
   </data>
->>>>>>> de46fa8e (Merge pull request #712 from ionite34/show-temp-folder-warning)
 </root>

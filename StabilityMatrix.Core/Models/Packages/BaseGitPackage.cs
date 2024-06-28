@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
 using NLog;
 using Octokit;
@@ -152,27 +153,22 @@ public abstract class BaseGitPackage : BasePackage
         Action<ProcessOutput>? onConsoleOutput = null
     )
     {
-        if (VenvRunner != null)
+        if (Interlocked.Exchange(ref VenvRunner, null) is { } oldRunner)
         {
-            await VenvRunner.DisposeAsync().ConfigureAwait(false);
+            await oldRunner.DisposeAsync().ConfigureAwait(false);
         }
 
-        VenvRunner = await PyBaseInstall
-            .Default.CreateVenvRunnerAsync(
-                Path.Combine(installedPackagePath, venvName),
-                workingDirectory: installedPackagePath,
-                environmentVariables: SettingsManager.Settings.EnvironmentVariables,
-                withDefaultTclTkEnv: Compat.IsWindows,
-                withQueriedTclTkEnv: Compat.IsUnix
-            )
+        var venvRunner = await SetupVenvPure(installedPackagePath, venvName, forceRecreate, onConsoleOutput)
             .ConfigureAwait(false);
 
-        if (forceRecreate || !VenvRunner.Exists())
+        if (Interlocked.Exchange(ref VenvRunner, venvRunner) is { } oldRunner2)
         {
-            await VenvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
+            await oldRunner2.DisposeAsync().ConfigureAwait(false);
         }
 
-        return VenvRunner;
+        Debug.Assert(VenvRunner != null, "VenvRunner != null");
+
+        return venvRunner;
     }
 
     /// <summary>

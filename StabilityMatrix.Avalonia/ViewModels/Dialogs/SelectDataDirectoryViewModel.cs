@@ -41,6 +41,7 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
     private const string FatWarningText = "FAT32 / exFAT drives are not supported at this time";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsInTempFolder))]
     private string dataDirectory = DefaultInstallLocation;
 
     [ObservableProperty]
@@ -57,6 +58,12 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
 
     [ObservableProperty]
     private bool showFatWarning;
+
+    public bool IsInTempFolder =>
+        DataDirectory.StartsWith(
+            Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar),
+            StringComparison.OrdinalIgnoreCase
+        );
 
     public RefreshBadgeViewModel ValidatorRefreshBadge { get; } =
         new()
@@ -88,6 +95,9 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
         await using var delay = new MinimumDelay(100, 200);
 
         ShowFatWarning = IsDriveFat(DataDirectory);
+
+        if (IsInTempFolder)
+            return false;
 
         // Doesn't exist, this is fine as a new install, hide badge
         if (!Directory.Exists(DataDirectory))

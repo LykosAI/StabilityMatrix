@@ -20,6 +20,8 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private string? lastSetPyvenvCfgPath;
+
     /// <summary>
     /// Relative path to the site-packages folder from the venv root.
     /// This is platform specific.
@@ -102,13 +104,6 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         EnvironmentVariables = EnvironmentVariables.SetItem("VIRTUAL_ENV", rootPath.FullPath);
     }
 
-    [Obsolete("Use `PyBaseInstall.CreateVenvRunner` instead.")]
-    public PyVenvRunner(DirectoryPath rootPath)
-    {
-        RootPath = rootPath;
-        EnvironmentVariables = EnvironmentVariables.SetItem("VIRTUAL_ENV", rootPath.FullPath);
-    }
-
     public void UpdateEnvironmentVariables(
         Func<ImmutableDictionary<string, string>, ImmutableDictionary<string, string>> env
     )
@@ -171,10 +166,14 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
     /// Set current python path to pyvenv.cfg
     /// This should be called before using the venv, in case user moves the venv directory.
     /// </summary>
-    private void SetPyvenvCfg(string pythonDirectory)
+    private void SetPyvenvCfg(string pythonDirectory, bool force = false)
     {
         // Skip if we are not created yet
         if (!Exists())
+            return;
+
+        // Skip if already set to same value
+        if (lastSetPyvenvCfgPath == pythonDirectory && !force)
             return;
 
         // Path to pyvenv.cfg
@@ -205,6 +204,9 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         // Convert to string for writing, strip the top section
         var cfgString = cfg.ToString()!.Replace(topSection, "");
         File.WriteAllText(cfgPath, cfgString);
+
+        // Update last set path
+        lastSetPyvenvCfgPath = pythonDirectory;
     }
 
     /// <summary>
@@ -230,7 +232,6 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             outputDataReceived?.Invoke(s);
         });
 
-        SetPyvenvCfg(PyRunner.PythonDir);
         RunDetached(args.Prepend("-m pip install").Concat("--exists-action s"), outputAction);
         await Process.WaitForExitAsync().ConfigureAwait(false);
 
@@ -266,7 +267,6 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             outputDataReceived?.Invoke(s);
         });
 
-        SetPyvenvCfg(PyRunner.PythonDir);
         RunDetached($"-m pip uninstall -y {args}", outputAction);
         await Process.WaitForExitAsync().ConfigureAwait(false);
 
@@ -289,7 +289,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             throw new FileNotFoundException("pip not found", PipPath);
         }
 
-        SetPyvenvCfg(PyRunner.PythonDir);
+        SetPyvenvCfg(BaseInstall.RootPath);
 
         var result = await ProcessRunner
             .GetProcessResultAsync(
@@ -342,7 +342,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             throw new FileNotFoundException("pip not found", PipPath);
         }
 
-        SetPyvenvCfg(PyRunner.PythonDir);
+        SetPyvenvCfg(BaseInstall.RootPath);
 
         var result = await ProcessRunner
             .GetProcessResultAsync(
@@ -379,7 +379,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             throw new FileNotFoundException("pip not found", PipPath);
         }
 
-        SetPyvenvCfg(PyRunner.PythonDir);
+        SetPyvenvCfg(BaseInstall.RootPath);
 
         var args = new ProcessArgsBuilder(
             "-m",
@@ -442,7 +442,6 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
                     outputDataReceived(s);
                 });
 
-        SetPyvenvCfg(PyRunner.PythonDir);
         RunDetached(args, outputAction);
         await Process.WaitForExitAsync().ConfigureAwait(false);
 
@@ -472,7 +471,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
             output.Append(s);
         });
 
-        SetPyvenvCfg(PyRunner.PythonDir);
+        SetPyvenvCfg(BaseInstall.RootPath);
         using var process = ProcessRunner.StartProcess(
             PythonPath,
             arguments,
@@ -499,7 +498,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
         {
             throw new FileNotFoundException("Venv python not found", PythonPath);
         }
-        SetPyvenvCfg(PyRunner.PythonDir);
+        SetPyvenvCfg(BaseInstall.RootPath);
 
         Logger.Info(
             "Launching venv process [{PythonPath}] "

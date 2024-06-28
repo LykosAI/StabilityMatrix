@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 
 ## v2.11.4
+### Changed
+- Base Python install will now use `setuptools==69.5.1` for compatibility with `torchsde`. Individual Packages can upgrade as required.
 ### Fixed
 - Fixed [#719](https://github.com/LykosAI/StabilityMatrix/issues/719) - Fix comments in Inference prompt not being ignored
 ### Supporters

@@ -121,7 +121,6 @@
                 Command="{Binding OnCloseButtonClick}"
                 FontSize="16"
                 HorizontalAlignment="Center"
-                IsEnabled="{Binding IsDirectoryValid}"
                 Padding="16,8" />
             <Button
                 Content="{x:Static lang:Resources.Action_Continue}"

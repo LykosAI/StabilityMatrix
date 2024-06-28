@@ -60,10 +60,12 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
     private bool showFatWarning;
 
     public bool IsInTempFolder =>
-        DataDirectory.StartsWith(
-            Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar),
-            StringComparison.OrdinalIgnoreCase
-        );
+        Compat
+            .AppCurrentDir.ToString()
+            .StartsWith(
+                Path.GetTempPath().TrimEnd(Path.DirectorySeparatorChar),
+                StringComparison.OrdinalIgnoreCase
+            );
 
     public RefreshBadgeViewModel ValidatorRefreshBadge { get; } =
         new()

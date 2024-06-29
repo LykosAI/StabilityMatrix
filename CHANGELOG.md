@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.11.4
 ### Changed
 - Base Python install will now use `setuptools==69.5.1` for compatibility with `torchsde`. Individual Packages can upgrade as required.
+- (Debug) Logging verbosity for classes can now be configured with environment variables (`Logging__LogLevel__<TypeFullName>`).  
 ### Fixed
 - Fixed ComfyUI slower generation speed with new torch versions not including flash attention for windows, pinned `torch==2.1.2` for ComfyUI on Windows CUDA
 - Fixed [#719](https://github.com/LykosAI/StabilityMatrix/issues/719) - Fix comments in Inference prompt not being ignored

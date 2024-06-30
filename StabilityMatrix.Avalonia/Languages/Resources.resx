@@ -1116,4 +1116,7 @@
   <data name="Label_AppData" xml:space="preserve">
     <value>App Data</value>
   </data>
+  <data name="Warning_PleaseExtractFirst" xml:space="preserve">
+    <value>PLEASE EXTRACT THE APP FROM THE ZIP FILE BEFORE RUNNING STABILITY MATRIX</value>
+  </data>
 </root>

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -10,10 +9,11 @@ using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Python;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-public partial class PythonPackagesItemViewModel : ViewModelBase
+public partial class PythonPackagesItemViewModel(ISettingsManager settingsManager) : ViewModelBase
 {
     [ObservableProperty]
     private PipPackageInfo package;
@@ -101,7 +101,11 @@ public partial class PythonPackagesItemViewModel : ViewModelBase
             }
             else
             {
-                await using var venvRunner = new PyVenvRunner(venvPath);
+                await using var venvRunner = await PyBaseInstall.Default.CreateVenvRunnerAsync(
+                    venvPath,
+                    workingDirectory: venvPath.Parent,
+                    environmentVariables: settingsManager.Settings.EnvironmentVariables
+                );
 
                 PipShowResult = await venvRunner.PipShow(Package.Name);
 

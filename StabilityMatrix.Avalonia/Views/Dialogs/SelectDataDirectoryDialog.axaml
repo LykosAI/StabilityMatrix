@@ -73,6 +73,15 @@
                 IsVisible="{Binding ShowFatWarning}"
                 FontSize="14"
                 Margin="0,8,0,0" />
+            
+            <TextBlock
+                Text="{x:Static lang:Resources.Warning_PleaseExtractFirst}"
+                TextWrapping="Wrap"
+                TextAlignment="Center"
+                Foreground="Red"
+                FontSize="28"
+                IsVisible="{Binding IsInTempFolder}"
+                Margin="0,8,0,0" />
         </StackPanel>
         
         <StackPanel Grid.Row="2" Orientation="Vertical">
@@ -112,7 +121,6 @@
                 Command="{Binding OnCloseButtonClick}"
                 FontSize="16"
                 HorizontalAlignment="Center"
-                IsEnabled="{Binding IsDirectoryValid}"
                 Padding="16,8" />
             <Button
                 Content="{x:Static lang:Resources.Action_Continue}"

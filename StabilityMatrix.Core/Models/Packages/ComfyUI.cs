@@ -192,14 +192,9 @@ public class ComfyUI(
     )
     {
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
-        // Setup venv
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
-        progress?.Report(
-            new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
-        );
 
         var pipArgs = new PipInstallArgs();
 
@@ -207,6 +202,13 @@ public class ComfyUI(
         {
             TorchVersion.DirectMl => pipArgs.WithTorchDirectML(),
             TorchVersion.Mps => pipArgs.WithTorch().WithTorchVision().WithTorchExtraIndex("cpu"),
+            TorchVersion.Cuda when Compat.IsWindows
+                => pipArgs
+                    .AddArg("--upgrade")
+                    .WithTorch("==2.1.2")
+                    .WithTorchVision("==0.16.2")
+                    .WithTorchAudio("==2.1.2")
+                    .WithTorchExtraIndex("cu121"),
             _
                 => pipArgs
                     .AddArg("--upgrade")
@@ -237,6 +239,9 @@ public class ComfyUI(
             excludePattern: "torch"
         );
 
+        progress?.Report(
+            new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
+        );
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1, "Installed Package Requirements", isIndeterminate: false));

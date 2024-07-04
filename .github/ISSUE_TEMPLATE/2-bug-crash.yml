@@ -1,0 +1,58 @@
+﻿name: Crash report
+description: A crash of Stability Matrix, likely with the "An unexpected error occurred" dialog
+labels: ["bug", "crash", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This template is for reporting crashes of Stability Matrix, likely with the "An unexpected error occurred" dialog. 
+        If you are experiencing a different issue, please use the [Bug Report or Package Issue templates](https://github.com/LykosAI/StabilityMatrix/issues/new/choose).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Give a clear and concise description of what happened. Include some minimal steps to reproducible the issue if possible.
+      placeholder: |
+        1. Open Stability Matrix
+        2. Go to the "..." page
+        3. Click on the "..." button
+        4. See the crash
+    validations:
+      required: true
+  - type: textarea
+    id: exception-details
+    attributes:
+      label: Exception Details
+      description: Please click the "Copy Details" button on the crash dialog and paste the details exactly as formatted here.
+      placeholder: |
+        ## Exception
+        OperationCanceledException: Example Message
+        ### Sentry ID
+        ```
+        bc7da9b2fcc3e3568ceb81a72f3a128d
+        ```
+        ### Stack Trace
+        ```
+           at StabilityMatrix.Avalonia.ViewModels.Settings.MainSettingsViewModel.DebugThrowException() in MainSettingsViewModel.cs:line 716
+           at CommunityToolkit.Mvvm.Input.RelayCommand.Execute(Object parameter)
+           ...
+        ```
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of Stability Matrix are you running? (Can be found at the bottom of the settings page)
+      placeholder: ex. v2.11.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os-platform
+    attributes:
+      label: What Operating System are you using?
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true

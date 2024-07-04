@@ -504,6 +504,7 @@ public sealed class App : Application
         Config = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .AddEnvironmentVariables()
             .Build();
 
         services.Configure<DebugOptions>(Config.GetSection(nameof(DebugOptions)));
@@ -927,15 +928,22 @@ public sealed class App : Application
             builder.ForLogger("Microsoft.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.Extensions.Http.*").WriteToNil(NLog.LogLevel.Warn);
 
-            // Disable console trace logging by default
-            builder
-                .ForLogger("StabilityMatrix.Avalonia.ViewModels.ConsoleViewModel")
-                .WriteToNil(NLog.LogLevel.Debug);
+            // Disable some trace logging by default, unless overriden by app settings
+            var typesToDisableTrace = new[] { typeof(ConsoleViewModel), typeof(LoadableViewModelBase) };
 
-            // Disable LoadableViewModelBase trace logging by default
-            builder
-                .ForLogger("StabilityMatrix.Avalonia.ViewModels.Base.LoadableViewModelBase")
-                .WriteToNil(NLog.LogLevel.Debug);
+            foreach (var type in typesToDisableTrace)
+            {
+                // Skip if app settings already set a level for this type
+                if (
+                    Config[$"Logging:LogLevel:{type.FullName}"] is { } levelStr
+                    && Enum.TryParse<LogLevel>(levelStr, true, out _)
+                )
+                {
+                    continue;
+                }
+
+                builder.ForLogger(type.FullName).FilterMinLevel(NLog.LogLevel.Debug);
+            }
 
             // Debug console logging
             /*if (Debugger.IsAttached)

@@ -76,6 +76,8 @@ public class PackageModificationRunner : IPackageModificationRunner
 
     public bool HideCloseButton { get; init; }
 
+    public bool CloseWhenFinished { get; init; } = true;
+
     public bool ShowDialogOnStart { get; init; }
 
     public string? ModificationCompleteTitle { get; init; } = "Install Complete";

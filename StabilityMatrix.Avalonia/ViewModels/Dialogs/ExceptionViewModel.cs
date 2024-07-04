@@ -1,4 +1,6 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Text;
 using Sentry;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -9,7 +11,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [View(typeof(ExceptionDialog))]
 [ManagedService]
 [Transient]
-public partial class ExceptionViewModel : ViewModelBase
+public class ExceptionViewModel : ViewModelBase
 {
     public Exception? Exception { get; set; }
 
@@ -19,35 +21,53 @@ public partial class ExceptionViewModel : ViewModelBase
 
     public string? ExceptionType => Exception?.GetType().Name ?? "";
 
+    [Localizable(false)]
     public string? FormatAsMarkdown()
     {
-        if (Exception is null)
+        var msgBuilder = new StringBuilder();
+        msgBuilder.AppendLine();
+
+        if (Exception is not null)
         {
-            return null;
-        }
+            msgBuilder.AppendLine("## Exception");
+            msgBuilder.AppendLine($"```{ExceptionType}: {Message}```");
 
-        var message = $"## Exception\n{ExceptionType}: {Message}\n";
-
-        if (SentryId is not null)
-        {
-            message += $"### Sentry ID\n```\n{SentryId}\n```\n";
-        }
-
-        if (Exception.StackTrace != null)
-        {
-            message += $"### Stack Trace\n```\n{Exception.StackTrace}\n```\n";
-        }
-
-        if (Exception.InnerException is { } innerException)
-        {
-            message += $"## Inner Exception\n{innerException.GetType().Name}: {innerException.Message}\n";
-
-            if (innerException.StackTrace != null)
+            if (Exception.InnerException is not null)
             {
-                message += $"### Stack Trace\n```\n{innerException.StackTrace}\n```\n";
+                msgBuilder.AppendLine(
+                    $"```{Exception.InnerException.GetType().Name}: {Exception.InnerException.Message}```"
+                );
             }
         }
+        else
+        {
+            msgBuilder.AppendLine("## Exception");
+            msgBuilder.AppendLine("```(None)```");
+        }
 
-        return message;
+        if (SentryId is { } id)
+        {
+            msgBuilder.AppendLine("### Sentry ID");
+            msgBuilder.AppendLine($"[`{id.ToString()[..8]}`]({GetIssueUrl(id)})");
+        }
+
+        if (Exception?.StackTrace is not null)
+        {
+            msgBuilder.AppendLine("### Stack Trace");
+            msgBuilder.AppendLine($"```{Exception.StackTrace}```");
+        }
+
+        if (Exception?.InnerException is { StackTrace: not null } innerException)
+        {
+            msgBuilder.AppendLine($"```{innerException.StackTrace}```");
+        }
+
+        return msgBuilder.ToString();
+    }
+
+    [Localizable(false)]
+    private static string GetIssueUrl(SentryId sentryId)
+    {
+        return $"https://stability-matrix.sentry.io/issues/?query=id%3A{sentryId.ToString()}&referrer=sm-app-ex&statsPeriod=90d";
     }
 }

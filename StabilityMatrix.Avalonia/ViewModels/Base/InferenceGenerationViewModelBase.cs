@@ -355,7 +355,13 @@ public abstract partial class InferenceGenerationViewModelBase
                     },
                     cancellationToken
                 )
-                .SafeFireAndForget();
+                .SafeFireAndForget(ex =>
+                {
+                    if (ex is TaskCanceledException)
+                        return;
+
+                    Logger.Error(ex, "Error while attaching running node change handler");
+                });
 
             // Wait for prompt to finish
             try

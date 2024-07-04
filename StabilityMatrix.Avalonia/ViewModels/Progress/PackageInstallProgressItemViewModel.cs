@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
@@ -86,7 +84,7 @@ public class PackageInstallProgressItemViewModel : ProgressItemViewModelBase
 
     public async Task ShowProgressDialog()
     {
-        Progress.CloseWhenFinished = true;
+        Progress.CloseWhenFinished = packageModificationRunner.CloseWhenFinished;
         dialog = new BetterContentDialog
         {
             MaxDialogWidth = 900,

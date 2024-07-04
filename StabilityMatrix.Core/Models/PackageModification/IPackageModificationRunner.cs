@@ -30,6 +30,8 @@ public interface IPackageModificationRunner
 
     bool HideCloseButton { get; init; }
 
+    bool CloseWhenFinished { get; init; }
+
     string? ModificationCompleteTitle { get; init; }
 
     string ModificationCompleteMessage { get; init; }

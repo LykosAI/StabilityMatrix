@@ -942,7 +942,8 @@ public sealed class App : Application
                     continue;
                 }
 
-                builder.ForLogger(type.FullName).FilterMinLevel(NLog.LogLevel.Debug);
+                // Set minimum level to Debug for these types
+                builder.ForLogger(type.FullName).WriteToNil(NLog.LogLevel.Debug);
             }
 
             // Debug console logging

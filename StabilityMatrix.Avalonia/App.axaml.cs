@@ -604,12 +604,13 @@ public sealed class App : Application
         services.AddHttpClient("UpdateClient").AddPolicyHandler(retryPolicy);
 
         // Add Refit clients
+        // Note: HttpClient.Timeout should be high to allow Polly to handle timeouts instead
         services
             .AddRefitClient<ICivitApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://civitai.com");
-                c.Timeout = TimeSpan.FromSeconds(30);
+                c.Timeout = TimeSpan.FromHours(1);
             })
             .AddPolicyHandler(retryPolicy);
 
@@ -618,7 +619,7 @@ public sealed class App : Application
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://civitai.com");
-                c.Timeout = TimeSpan.FromSeconds(30);
+                c.Timeout = TimeSpan.FromHours(1);
             })
             .AddPolicyHandler(retryPolicy);
 
@@ -627,7 +628,7 @@ public sealed class App : Application
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://auth.lykos.ai");
-                c.Timeout = TimeSpan.FromSeconds(60);
+                c.Timeout = TimeSpan.FromHours(1);
             })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy)
@@ -641,7 +642,7 @@ public sealed class App : Application
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://openart.ai/api/public/workflows");
-                c.Timeout = TimeSpan.FromSeconds(30);
+                c.Timeout = TimeSpan.FromHours(1);
             })
             .AddPolicyHandler(retryPolicy);
 
@@ -652,9 +653,6 @@ public sealed class App : Application
             .AddHttpClient("DontFollowRedirects")
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy);
-
-        /*services.AddHttpClient("IComfyApi")
-            .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));*/
 
         // Add Refit client factory
         services.AddSingleton<IApiFactory, ApiFactory>(

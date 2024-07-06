@@ -595,7 +595,9 @@ public sealed class App : Application
                         );
                     }
                 }
-            );
+            )
+            // 10s timeout for each attempt
+            .WrapAsync(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(10)));
 
         // Longer retry policy: ~60s max
         var retryPolicyLonger = HttpPolicyExtensions
@@ -620,10 +622,11 @@ public sealed class App : Application
                         );
                     }
                 }
-            );
+            )
+            // 30s timeout for each attempt
+            .WrapAsync(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(30)));
 
         // Shorter local retry policy: ~5s total
-        var localTimeout = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(3));
         var localRetryPolicy = HttpPolicyExtensions
             .HandleTransientHttpError()
             .Or<TimeoutRejectedException>()
@@ -633,7 +636,9 @@ public sealed class App : Application
                     medianFirstRetryDelay: TimeSpan.FromMilliseconds(320),
                     retryCount: 5
                 )
-            );
+            )
+            // 3s timeout for each attempt
+            .WrapAsync(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(3)));
 
         // named client for update
         services.AddHttpClient("UpdateClient").AddPolicyHandler(retryPolicy);
@@ -682,7 +687,7 @@ public sealed class App : Application
             .AddPolicyHandler(retryPolicy);
 
         // Add Refit client managers
-        services.AddHttpClient("A3Client").AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));
+        services.AddHttpClient("A3Client").AddPolicyHandler(localRetryPolicy);
 
         services
             .AddHttpClient("DontFollowRedirects")

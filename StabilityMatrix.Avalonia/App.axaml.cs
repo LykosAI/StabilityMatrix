@@ -571,33 +571,72 @@ public sealed class App : Application
             HttpStatusCode.ServiceUnavailable, // 503
             HttpStatusCode.GatewayTimeout // 504
         };
-        var delay = Backoff.DecorrelatedJitterBackoffV2(
-            medianFirstRetryDelay: TimeSpan.FromMilliseconds(80),
-            retryCount: 5
-        );
+
+        // Default retry policy: ~30s max
         var retryPolicy = HttpPolicyExtensions
             .HandleTransientHttpError()
             .Or<TimeoutRejectedException>()
             .OrResult(r => retryStatusCodes.Contains(r.StatusCode))
-            .WaitAndRetryAsync(delay);
+            .WaitAndRetryAsync(
+                Backoff.DecorrelatedJitterBackoffV2(
+                    medianFirstRetryDelay: TimeSpan.FromMilliseconds(750),
+                    retryCount: 6
+                ),
+                onRetry: (result, timeSpan, retryCount, _) =>
+                {
+                    if (result.Exception is HttpRequestException ex)
+                    {
+                        // ex.
+                    }
+                    if (retryCount > 3)
+                    {
+                        Logger.Info(
+                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to {Exception}",
+                            retryCount,
+                            6,
+                            timeSpan.TotalSeconds,
+                            result.Exception?.ToString()
+                        );
+                    }
+                }
+            );
 
-        // Shorter timeout for local requests
+        // Longer retry policy: ~60s max
+        var retryPolicyLonger = HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .Or<TimeoutRejectedException>()
+            .OrResult(r => retryStatusCodes.Contains(r.StatusCode))
+            .WaitAndRetryAsync(
+                Backoff.DecorrelatedJitterBackoffV2(
+                    medianFirstRetryDelay: TimeSpan.FromMilliseconds(1000),
+                    retryCount: 7
+                ),
+                onRetry: (result, timeSpan, retryCount, _) =>
+                {
+                    if (retryCount > 4)
+                    {
+                        Logger.Info(
+                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to {Exception}",
+                            retryCount,
+                            7,
+                            timeSpan.TotalSeconds,
+                            result.Exception?.ToString()
+                        );
+                    }
+                }
+            );
+
+        // Shorter local retry policy: ~5s total
         var localTimeout = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(3));
-        var localDelay = Backoff.DecorrelatedJitterBackoffV2(
-            medianFirstRetryDelay: TimeSpan.FromMilliseconds(50),
-            retryCount: 3
-        );
         var localRetryPolicy = HttpPolicyExtensions
             .HandleTransientHttpError()
             .Or<TimeoutRejectedException>()
             .OrResult(r => retryStatusCodes.Contains(r.StatusCode))
             .WaitAndRetryAsync(
-                localDelay,
-                onRetryAsync: (_, _) =>
-                {
-                    Debug.WriteLine("Retrying local request...");
-                    return Task.CompletedTask;
-                }
+                Backoff.DecorrelatedJitterBackoffV2(
+                    medianFirstRetryDelay: TimeSpan.FromMilliseconds(320),
+                    retryCount: 5
+                )
             );
 
         // named client for update
@@ -612,7 +651,7 @@ public sealed class App : Application
                 c.BaseAddress = new Uri("https://civitai.com");
                 c.Timeout = TimeSpan.FromHours(1);
             })
-            .AddPolicyHandler(retryPolicy);
+            .AddPolicyHandler(retryPolicyLonger);
 
         services
             .AddRefitClient<ICivitTRPCApi>(defaultRefitSettings)
@@ -621,7 +660,7 @@ public sealed class App : Application
                 c.BaseAddress = new Uri("https://civitai.com");
                 c.Timeout = TimeSpan.FromHours(1);
             })
-            .AddPolicyHandler(retryPolicy);
+            .AddPolicyHandler(retryPolicyLonger);
 
         services
             .AddRefitClient<ILykosAuthApi>(defaultRefitSettings)

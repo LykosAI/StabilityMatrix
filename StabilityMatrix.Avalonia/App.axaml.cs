@@ -584,10 +584,6 @@ public sealed class App : Application
                 ),
                 onRetry: (result, timeSpan, retryCount, _) =>
                 {
-                    if (result.Exception is HttpRequestException ex)
-                    {
-                        // ex.
-                    }
                     if (retryCount > 3)
                     {
                         Logger.Info(

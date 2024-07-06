@@ -597,7 +597,7 @@ public sealed class App : Application
                 }
             )
             // 10s timeout for each attempt
-            .WrapAsync(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(10)));
+            .WrapAsync(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(60)));
 
         // Longer retry policy: ~60s max
         var retryPolicyLonger = HttpPolicyExtensions
@@ -624,7 +624,7 @@ public sealed class App : Application
                 }
             )
             // 30s timeout for each attempt
-            .WrapAsync(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(30)));
+            .WrapAsync(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(120)));
 
         // Shorter local retry policy: ~5s total
         var localRetryPolicy = HttpPolicyExtensions

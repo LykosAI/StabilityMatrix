@@ -70,6 +70,7 @@
         <PackageReference Include="FluentIcons.Avalonia.Fluent" Version="1.1.228" />
         <PackageReference Include="FuzzySharp" Version="2.0.2" />
         <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+        <PackageReference Include="KeyedSemaphores" Version="5.0.0" />
         <PackageReference Include="Markdown.Avalonia" Version="11.0.2" />
         <PackageReference Include="MessagePipe" Version="1.7.4" />
         <PackageReference Include="MessagePipe.Interprocess" Version="1.7.4" />

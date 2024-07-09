@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly name="Microsoft.Extensions.Logging.Abstractions">
+    <!-- Mark all members of LoggerExtensions as non-localizable -->
+    <member name="T:Microsoft.Extensions.Logging.LoggerExtensions">
+        <attribute ctor="M:System.ComponentModel.LocalizableAttribute.#ctor(System.Boolean)">
+            <argument>false</argument>
+        </attribute>
+        <attribute ctor="M:JetBrains.Annotations.LocalizationRequiredAttribute.#ctor(System.Boolean)">
+            <argument>false</argument>
+        </attribute>
+    </member>
+    <!-- Mark all members of ILogger as non-localizable -->
+    <member name="T:Microsoft.Extensions.Logging.ILogger">
+        <attribute ctor="M:System.ComponentModel.LocalizableAttribute.#ctor(System.Boolean)">
+            <argument>false</argument>
+        </attribute>
+        <attribute ctor="M:JetBrains.Annotations.LocalizationRequiredAttribute.#ctor(System.Boolean)">
+            <argument>false</argument>
+        </attribute>
+    </member>
+</assembly>

@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Change Version" option to the package card overflow menu, allowing you to downgrade or upgrade a package to a specific version or commit
 - Added "Disable Update Check" option to the package card overflow menu, allowing you to disable update checks for a specific package
 
+## v2.11.5
+### Fixed
+- Fixed `TaskCanceledException` when adding CivitAI Api key or searching for models when the API takes too long to respond. Retry and timeout behavior has been improved.
+
 ## v2.11.4
 ### Changed
 - Base Python install will now use `setuptools==69.5.1` for compatibility with `torchsde`. Individual Packages can upgrade as required.

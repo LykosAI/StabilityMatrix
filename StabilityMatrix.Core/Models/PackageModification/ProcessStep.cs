@@ -6,7 +6,7 @@ using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
-public class ProcessStep : IPackageStep
+public class ProcessStep : ICancellablePackageStep
 {
     public required string FileName { get; init; }
 
@@ -22,7 +22,10 @@ public class ProcessStep : IPackageStep
     public string ProgressTitle { get; init; } = "Running Process";
 
     /// <inheritdoc />
-    public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
+    public async Task ExecuteAsync(
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
         progress?.Report(
             new ProgressReport
@@ -43,7 +46,11 @@ public class ProcessStep : IPackageStep
                 outputDataReceived: progress.AsProcessOutputHandler()
             );
 
-            await ProcessRunner.WaitForExitConditionAsync(process).ConfigureAwait(false);
+            await ProcessRunner
+                .WaitForExitConditionAsync(process, cancelToken: cancellationToken)
+                .ConfigureAwait(false);
+
+            await process.WaitUntilOutputEOF(cancellationToken).ConfigureAwait(false);
         }
         else
         {

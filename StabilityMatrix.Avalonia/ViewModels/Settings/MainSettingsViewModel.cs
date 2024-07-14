@@ -454,19 +454,21 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         var processPath = new FilePath(PyRunner.PythonExePath);
 
-        var (dialogResult, arguments) = await ConsoleProcessRunner.GetArgumentDialogResultAsync(
-            "Run Python",
-            "Arguments",
-            processPath.Name
-        );
-
-        if (dialogResult != ContentDialogResult.Primary)
+        if (
+            await DialogHelper.GetTextEntryDialogResultAsync(
+                new TextBoxField { Label = "Arguments", InnerLeftText = processPath.Name },
+                title: "Run Python"
+            )
+            is not { IsPrimary: true } dialogResult
+        )
+        {
             return;
+        }
 
         var step = new ProcessStep
         {
             FileName = processPath,
-            Args = arguments ?? "",
+            Args = dialogResult.Value.Text,
             WorkingDirectory = Compat.AppCurrentDir,
             EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary()
         };

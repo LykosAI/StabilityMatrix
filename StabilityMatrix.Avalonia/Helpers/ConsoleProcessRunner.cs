@@ -1,15 +1,15 @@
 ﻿using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.PackageModification;
-using ContentDialogResult = FluentAvalonia.UI.Controls.ContentDialogResult;
 
 namespace StabilityMatrix.Avalonia.Helpers;
 
 public static class ConsoleProcessRunner
 {
-    public static async Task<(ContentDialogResult, string?)> GetArgumentDialogResultAsync(
+    public static async Task<ContentDialogValueResult<string?>> GetArgumentDialogResultAsync(
         string title,
         string fieldLabel,
         [Localizable(false)] string fieldInnerLeftText
@@ -23,7 +23,7 @@ public static class ConsoleProcessRunner
         var dialog = DialogHelper.CreateTextEntryDialog(title, "", fields);
         var result = await dialog.ShowAsync();
 
-        return (result, fields[0].Text);
+        return new ContentDialogValueResult<string?>(result, fields[0].Text);
     }
 
     public static async Task<PackageModificationRunner> RunProcessStepAsync(ProcessStep step)
@@ -38,8 +38,6 @@ public static class ConsoleProcessRunner
         };
 
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
-
-        await Task.Delay(200);
 
         await runner.ExecuteSteps([step]).ConfigureAwait(false);
 

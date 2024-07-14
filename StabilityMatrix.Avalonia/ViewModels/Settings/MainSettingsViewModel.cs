@@ -493,19 +493,21 @@ public partial class MainSettingsViewModel : PageViewModelBase
             processPath = new FilePath(whichGitResult.StandardOutput?.Trim() ?? "git");
         }
 
-        var (dialogResult, arguments) = await ConsoleProcessRunner.GetArgumentDialogResultAsync(
-            "Run Git",
-            "Arguments",
-            "git"
-        );
-
-        if (dialogResult != ContentDialogResult.Primary)
+        if (
+            await DialogHelper.GetTextEntryDialogResultAsync(
+                new TextBoxField { Label = "Arguments", InnerLeftText = "git" },
+                title: "Run Git"
+            )
+            is not { IsPrimary: true } dialogResult
+        )
+        {
             return;
+        }
 
         var step = new ProcessStep
         {
             FileName = processPath,
-            Args = arguments ?? "",
+            Args = dialogResult.Value.Text,
             WorkingDirectory = Compat.AppCurrentDir,
             EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary()
         };

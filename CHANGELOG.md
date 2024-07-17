@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Image viewer context menus now have 2 options: `Copy (Ctrl+C)` which now always copies the image as a file, and `Copy as Bitmap (Shift+Ctrl+C)` (Available on Windows) which copies to the clipboard as native bitmap. This changes the previous single `Copy` button behavior that would first attempt a native bitmap copy on Windows when available, and fall back to a file copy if not.
 - Added "Change Version" option to the package card overflow menu, allowing you to downgrade or upgrade a package to a specific version or commit
 - Added "Disable Update Check" option to the package card overflow menu, allowing you to disable update checks for a specific package
+- Added "Run Command" option in Settings for running a command with the embedded Python or Git executables
 ### Supporters
 #### Visionaries
 - Shoutout to our Visionary-tier Patreon supporters, **Scopp Mcdee**, **Waterclouds**, and our newest Visionary, **Akiro_Senkai**! Many thanks for your generous support!

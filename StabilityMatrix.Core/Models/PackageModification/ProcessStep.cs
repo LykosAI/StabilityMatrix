@@ -74,7 +74,9 @@ public class ProcessStep : ICancellablePackageStep
                     }
             );
 
-            await ProcessRunner.WaitForExitConditionAsync(process).ConfigureAwait(false);
+            await ProcessRunner
+                .WaitForExitConditionAsync(process, cancelToken: cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }

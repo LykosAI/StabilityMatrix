@@ -45,6 +45,7 @@ using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -443,6 +444,75 @@ public partial class MainSettingsViewModel : PageViewModelBase
             IsPrimaryButtonEnabled = true
         };
         await dialog.ShowAsync();
+    }
+
+    [RelayCommand]
+    private async Task RunPythonProcess()
+    {
+        await prerequisiteHelper.UnpackResourcesIfNecessary();
+        await prerequisiteHelper.InstallPythonIfNecessary();
+
+        var processPath = new FilePath(PyRunner.PythonExePath);
+
+        if (
+            await DialogHelper.GetTextEntryDialogResultAsync(
+                new TextBoxField { Label = "Arguments", InnerLeftText = processPath.Name },
+                title: "Run Python"
+            )
+            is not { IsPrimary: true } dialogResult
+        )
+        {
+            return;
+        }
+
+        var step = new ProcessStep
+        {
+            FileName = processPath,
+            Args = dialogResult.Value.Text,
+            WorkingDirectory = Compat.AppCurrentDir,
+            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary()
+        };
+
+        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private async Task RunGitProcess()
+    {
+        await prerequisiteHelper.InstallGitIfNecessary();
+
+        FilePath processPath;
+
+        if (Compat.IsWindows)
+        {
+            processPath = new FilePath(prerequisiteHelper.GitBinPath, "git.exe");
+        }
+        else
+        {
+            var whichGitResult = await ProcessRunner.RunBashCommand(["which", "git"]).EnsureSuccessExitCode();
+            processPath = new FilePath(whichGitResult.StandardOutput?.Trim() ?? "git");
+        }
+
+        if (
+            await DialogHelper.GetTextEntryDialogResultAsync(
+                new TextBoxField { Label = "Arguments", InnerLeftText = "git" },
+                title: "Run Git"
+            )
+            is not { IsPrimary: true } dialogResult
+        )
+        {
+            return;
+        }
+
+        var step = new ProcessStep
+        {
+            FileName = processPath,
+            Args = dialogResult.Value.Text,
+            WorkingDirectory = Compat.AppCurrentDir,
+            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary()
+        };
+
+        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
     }
 
     #endregion

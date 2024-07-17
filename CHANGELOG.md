@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Change Version" option to the package card overflow menu, allowing you to downgrade or upgrade a package to a specific version or commit
 - Added "Disable Update Check" option to the package card overflow menu, allowing you to disable update checks for a specific package
 - Added "Run Command" option in Settings for running a command with the embedded Python or Git executables
+- Added Intel OneAPI XPU backend (IPEX) option for SD.Next
 ### Supporters
 #### Visionaries
 - Shoutout to our Visionary-tier Patreon supporters, **Scopp Mcdee**, **Waterclouds**, and our newest Visionary, **Akiro_Senkai**! Many thanks for your generous support!

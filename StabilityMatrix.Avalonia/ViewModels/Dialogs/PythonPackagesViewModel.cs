@@ -60,14 +60,17 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(100))
             .DistinctUntilChanged()
-            .Select(
-                value =>
-                    (Func<PipPackageInfo, bool>)(
-                        p =>
-                            string.IsNullOrWhiteSpace(value.Value)
-                            || p.Name.Contains(value.Value, StringComparison.OrdinalIgnoreCase)
-                    )
-            );
+            .Select(value =>
+            {
+                if (string.IsNullOrWhiteSpace(value.Value))
+                {
+                    return (static _ => true);
+                }
+
+                return (Func<PipPackageInfo, bool>)(
+                    p => p.Name.Contains(value.Value, StringComparison.OrdinalIgnoreCase)
+                );
+            });
 
         packageSource
             .Connect()

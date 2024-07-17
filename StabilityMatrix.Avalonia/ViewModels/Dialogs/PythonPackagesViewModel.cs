@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AutoCtor;
@@ -79,6 +80,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             .Transform(p => new PythonPackagesItemViewModel(settingsManager) { Package = p })
             .SortBy(vm => vm.Package.Name)
             .Bind(Packages)
+            .ObserveOn(SynchronizationContext.Current!)
             .Subscribe();
     }
 
@@ -104,6 +106,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
                 );
 
                 var packages = await venvRunner.PipList();
+
                 packageSource.EditDiff(packages);
             }
         }

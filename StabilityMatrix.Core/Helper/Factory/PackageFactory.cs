@@ -88,6 +88,7 @@ public class PackageFactory : IPackageFactory
             "sdfx" => new Sdfx(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             "mashb1t-fooocus"
                 => new Mashb1tFooocus(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "reforge" => new Reforge(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage))
         };
     }

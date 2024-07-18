@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.11.5
 ### Fixed
 - Fixed `TaskCanceledException` when adding CivitAI Api key or searching for models when the API takes too long to respond. Retry and timeout behavior has been improved.
+- Fixed `ArgumentOutOfRangeException` with the Python Packages dialog ItemSourceView when interacting too quickly after loading.
 
 ## v2.11.4
 ### Changed

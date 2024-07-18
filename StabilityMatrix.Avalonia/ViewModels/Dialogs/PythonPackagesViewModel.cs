@@ -108,6 +108,9 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
                 var packages = await venvRunner.PipList();
 
                 packageSource.EditDiff(packages);
+
+                // Delay a bit to prevent thread issues with UI list
+                await Task.Delay(100);
             }
         }
         finally

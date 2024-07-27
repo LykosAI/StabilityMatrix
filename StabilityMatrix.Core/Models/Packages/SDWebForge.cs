@@ -163,11 +163,6 @@ public class SDWebForge(
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
         var requirementsContent = await requirements.ReadAllTextAsync().ConfigureAwait(false);
-        if (!requirementsContent.Contains("pydantic"))
-        {
-            requirementsContent += "pydantic==1.10.15";
-            await requirements.WriteAllTextAsync(requirementsContent).ConfigureAwait(false);
-        }
 
         var pipArgs = new PipInstallArgs("setuptools==69.5.1");
         if (torchVersion is TorchVersion.DirectMl)

@@ -22,7 +22,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.11.5
 ### Fixed
 - Fixed `TaskCanceledException` when adding CivitAI Api key or searching for models when the API takes too long to respond. Retry and timeout behavior has been improved.
+- Fixed [#782](https://github.com/LykosAI/StabilityMatrix/issues/782) - conflict error when launching new versions of Forge
+- Fixed incorrect torch versions being installed for InvokeAI
 - Fixed `ArgumentOutOfRangeException` with the Python Packages dialog ItemSourceView when interacting too quickly after loading.
+### Supporters
+#### Visionaries
+- Shoutout to our Visionary-tier Patreon supporters, **Scopp Mcdee**, **Waterclouds**, and our newest Visionary, **Akiro_Senkai**! Many thanks for your generous support!
+#### Pioneers
+- Many thanks to our Pioneer-tier supporters on Patreon, **tankfox**, **tanangular**, and our newest Pioneers, **Mr. Unknown** and **Szir777**! Your support is greatly appreciated!
 
 ## v2.11.4
 ### Changed

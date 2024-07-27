@@ -60,11 +60,10 @@ public class PaintCanvas : TemplatedControl
 
         if (MainCanvas is not null)
         {
-            // If we already have a BackgroundBitmap, scale MainCanvas to match
-            if (DataContext is PaintCanvasViewModel { BackgroundImage: { } backgroundBitmap })
+            if (DataContext is PaintCanvasViewModel { CanvasSize: var canvasSize })
             {
-                MainCanvas.Width = backgroundBitmap.Width;
-                MainCanvas.Height = backgroundBitmap.Height;
+                MainCanvas.Width = canvasSize.Width;
+                MainCanvas.Height = canvasSize.Height;
             }
 
             MainCanvas.RenderSkia += OnRenderSkia;
@@ -108,10 +107,10 @@ public class PaintCanvas : TemplatedControl
 
             viewModelSubscription?.Dispose();
             viewModelSubscription = viewModel
-                .WhenPropertyChanged(vm => vm.BackgroundImage)
+                .WhenPropertyChanged(vm => vm.CanvasSize)
                 .Subscribe(change =>
                 {
-                    if (MainCanvas is not null && change.Value is not null)
+                    if (MainCanvas is not null && !change.Value.IsEmpty)
                     {
                         MainCanvas.Width = change.Value.Width;
                         MainCanvas.Height = change.Value.Height;
@@ -317,22 +316,21 @@ public class PaintCanvas : TemplatedControl
     /// </summary>
     private void UpdateMainCanvasBounds()
     {
-        if (
-            MainCanvas is null
-            || DataContext is not PaintCanvasViewModel { BackgroundImage: { } backgroundBitmap }
-        )
+        if (MainCanvas is null || DataContext is not PaintCanvasViewModel vm)
         {
             return;
         }
 
+        var canvasSize = vm.CanvasSize;
+
         // Set size if mismatch
         if (
-            Math.Abs(MainCanvas.Width - backgroundBitmap.Width) > 0.1
-            || Math.Abs(MainCanvas.Height - backgroundBitmap.Height) > 0.1
+            ((int)Math.Round(MainCanvas.Width) != canvasSize.Width)
+            || ((int)Math.Round(MainCanvas.Height) != canvasSize.Height)
         )
         {
-            MainCanvas.Width = backgroundBitmap.Width;
-            MainCanvas.Height = backgroundBitmap.Height;
+            MainCanvas.Width = vm.CanvasSize.Width;
+            MainCanvas.Height = vm.CanvasSize.Height;
             MainCanvas.InvalidateVisual();
         }
     }

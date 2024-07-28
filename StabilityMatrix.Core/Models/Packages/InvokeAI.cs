@@ -199,9 +199,9 @@ public class InvokeAI : BaseGitPackage
                 await venvRunner
                     .PipInstall(
                         new PipInstallArgs(args.Any() ? args.ToArray() : Array.Empty<Argument>())
-                            .WithTorch("==2.2.1")
-                            .WithTorchVision("==0.17.1")
-                            .WithXFormers("==0.0.25")
+                            .WithTorch("==2.2.2")
+                            .WithTorchVision("==0.17.2")
+                            .WithXFormers("==0.0.25.post1")
                             .WithTorchExtraIndex("cu121"),
                         onConsoleOutput
                     )
@@ -250,7 +250,7 @@ public class InvokeAI : BaseGitPackage
     {
         await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
         await PrerequisiteHelper
-            .RunNpm(["i", "pnpm"], installLocation, envVars: envVars)
+            .RunNpm(["i", "pnpm@8"], installLocation, envVars: envVars)
             .ConfigureAwait(false);
 
         if (Compat.IsMacOS || Compat.IsLinux)

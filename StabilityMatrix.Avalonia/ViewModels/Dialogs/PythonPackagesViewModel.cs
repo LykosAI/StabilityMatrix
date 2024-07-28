@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AutoCtor;
@@ -60,14 +61,17 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(100))
             .DistinctUntilChanged()
-            .Select(
-                value =>
-                    (Func<PipPackageInfo, bool>)(
-                        p =>
-                            string.IsNullOrWhiteSpace(value.Value)
-                            || p.Name.Contains(value.Value, StringComparison.OrdinalIgnoreCase)
-                    )
-            );
+            .Select(value =>
+            {
+                if (string.IsNullOrWhiteSpace(value.Value))
+                {
+                    return (static _ => true);
+                }
+
+                return (Func<PipPackageInfo, bool>)(
+                    p => p.Name.Contains(value.Value, StringComparison.OrdinalIgnoreCase)
+                );
+            });
 
         packageSource
             .Connect()
@@ -76,6 +80,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             .Transform(p => new PythonPackagesItemViewModel(settingsManager) { Package = p })
             .SortBy(vm => vm.Package.Name)
             .Bind(Packages)
+            .ObserveOn(SynchronizationContext.Current!)
             .Subscribe();
     }
 
@@ -101,7 +106,11 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
                 );
 
                 var packages = await venvRunner.PipList();
+
                 packageSource.EditDiff(packages);
+
+                // Delay a bit to prevent thread issues with UI list
+                await Task.Delay(100);
             }
         }
         finally

@@ -290,7 +290,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         // Get Ultralytics model names
         if (
-            await Client.GetNodeOptionNamesAsync("UltralyticsDetectorProvider", "model_name") is
+            await Client.GetOptionalNodeOptionNamesAsync("UltralyticsDetectorProvider", "model_name") is
             { } ultralyticsModelNames
         )
         {
@@ -303,7 +303,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         }
 
         // Get SAM model names
-        if (await Client.GetNodeOptionNamesAsync("SAMLoader", "model_name") is { } samModelNames)
+        if (await Client.GetOptionalNodeOptionNamesAsync("SAMLoader", "model_name") is { } samModelNames)
         {
             IEnumerable<HybridModelFile> models =
             [

@@ -165,6 +165,12 @@ public static class Program
             );
         }
 
+        if (Args.UseVulkanRendering)
+        {
+            app = app.With(new X11PlatformOptions { RenderingMode = [X11RenderingMode.Vulkan] })
+                .With(new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Vulkan] });
+        }
+
         if (Args.DisableGpuRendering)
         {
             app = app.With(new Win32PlatformOptions { RenderingMode = new[] { Win32RenderingMode.Software } })

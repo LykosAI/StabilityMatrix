@@ -64,6 +64,12 @@ public class AppArgs
     public bool UseOpenGlRendering { get; set; }
 
     /// <summary>
+    /// Flag to use Vulkan rendering
+    /// </summary>
+    [Option("vulkan", HelpText = "Prefer Vulkan rendering")]
+    public bool UseVulkanRendering { get; set; }
+
+    /// <summary>
     /// Override global app home directory
     /// Defaults to (%APPDATA%|~/.config)/StabilityMatrix
     /// </summary>

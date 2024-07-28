@@ -25,6 +25,10 @@ public class FaceDetailerModule : ModuleBase, IValidatableModule
     protected override void OnApplyStep(ModuleApplyStepEventArgs e)
     {
         var faceDetailerCard = GetCard<FaceDetailerViewModel>();
+        if (faceDetailerCard is { InheritSeed: false, SeedCardViewModel.IsRandomizeEnabled: true })
+        {
+            faceDetailerCard.SeedCardViewModel.GenerateNewSeed();
+        }
 
         var bboxLoader = new ComfyNodeBuilder.UltralyticsDetectorProvider
         {

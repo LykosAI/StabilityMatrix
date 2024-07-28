@@ -402,8 +402,7 @@ public sealed class App : Application
         services.AddMemoryCache();
         services.AddLazyInstance();
 
-        services.AddMessagePipe();
-        services.AddMessagePipeNamedPipeInterprocess("StabilityMatrix");
+        services.AddMessagePipe().AddNamedPipeInterprocess("StabilityMatrix");
 
         var exportedTypes = AppDomain
             .CurrentDomain.GetAssemblies()

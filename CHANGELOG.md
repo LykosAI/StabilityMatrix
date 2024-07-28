@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added Face Detailer module to Inference
 - Added ultralytics models to HuggingFace model browser
+- Added DoRA category to CivitAI model browser
+- Added macOS support for Fooocus & related forks
+- (Windows, Linux) Added Vulkan rendering support using launch argument `--vulkan`. (On Windows, the default WinUI composition renderer is likely still preferrable. Linux users are encouraged to try the new renderer to see if it improves performance and responsiveness.)
+### Changed
+- (Internal) Updated Avalonia to 11.1.1 - Includes major rendering and performance optimizations, animation refinements, improved IME / text selection, and improvements for window sizing / z-order / multi-monitor DPI scaling. ([avaloniaui.net/blog/avalonia-11-1-a-quantum-leap-in-cross-platform-ui-development](https://avaloniaui.net/blog/avalonia-11-1-a-quantum-leap-in-cross-platform-ui-development))
+- (Internal) Updated SkiaSharp (Rendering Backend) to 3.0.0-preview.4.1, potentially fixes issues with window rendering artifacts on some machines.
+- (Internal) Updated other dependencies for security and bug fixes.
 ### Fixed
 - Fixed some ScrollViewers changing scroll position when focus changes
 - Fixed [#782](https://github.com/LykosAI/StabilityMatrix/issues/782) - conflict error when launching new versions of Forge

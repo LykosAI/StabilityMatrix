@@ -44,7 +44,7 @@
     <Application.Styles>
         <styling:FluentAvaloniaTheme PreferUserAccentColor="True" UseSystemFontOnWindows="True"
                                      TextVerticalAlignmentOverrideBehavior="Disabled"/>
-        <StyleInclude Source="avares://Dock.Avalonia/Themes/DockFluentTheme.axaml" />
+        <StyleInclude Source="avares://Dock.Avalonia/Themes/DockSimpleTheme.axaml" />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <StyleInclude Source="avares://Avalonia.Xaml.Interactions.Draggable/Styles.axaml" />

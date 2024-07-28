@@ -76,6 +76,7 @@
         <StyleInclude Source="Controls/Inference/PromptCard.axaml"/>
         <StyleInclude Source="Controls/Inference/UpscalerCard.axaml"/>
         <StyleInclude Source="Controls/Inference/ModelCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/FaceDetailerCard.axaml"/>
         <StyleInclude Source="Controls/Inference/BatchSizeCard.axaml"/>
         <StyleInclude Source="Controls/Inference/SelectImageCard.axaml"/>
         <StyleInclude Source="Controls/Inference/SharpenCard.axaml"/>
@@ -89,6 +90,9 @@
         
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
+        </Style>
+        <Style Selector="ScrollViewer">
+            <Setter Property="BringIntoViewOnFocusChange" Value="False"/>
         </Style>
     </Application.Styles>
 </Application>

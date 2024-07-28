@@ -92,7 +92,8 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             {
                 typeof(HiresFixModule),
                 typeof(UpscalerModule),
-                typeof(SaveImageModule)
+                typeof(SaveImageModule),
+                typeof(FaceDetailerModule)
             };
             modulesCard.DefaultModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();
@@ -189,6 +190,20 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
         if (!await ModelCardViewModel.ValidateModel())
             return;
+
+        foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
+        {
+            if (!module.IsEnabled)
+                continue;
+
+            if (module is not IValidatableModule validatableModule)
+                continue;
+
+            if (!await validatableModule.Validate())
+            {
+                return;
+            }
+        }
 
         if (!await CheckClientConnectedWithPrompt() || !ClientManager.IsConnected)
             return;

@@ -47,4 +47,12 @@ public enum HuggingFaceModelType
     [Description("T2I Adapters (Diffusers)")]
     [ConvertTo<SharedFolderType>(SharedFolderType.T2IAdapter)]
     DiffusersT2IAdapter,
+
+    [Description("Ultralytics/Segmentation Models")]
+    [ConvertTo<SharedFolderType>(SharedFolderType.Ultralytics)]
+    Ultralytics,
+
+    [Description("SAM Models")]
+    [ConvertTo<SharedFolderType>(SharedFolderType.Sams)]
+    Sams,
 }

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
 
@@ -45,7 +46,13 @@ public record HybridModelFile
         {
             HybridModelType.Local => Local!.RelativePathFromSharedFolder,
             HybridModelType.Remote => RemoteName!,
-            HybridModelType.Downloadable => DownloadableResource!.Value.FileName,
+            HybridModelType.Downloadable
+                => DownloadableResource!.Value.RelativePath == null
+                    ? DownloadableResource!.Value.FileName
+                    : Path.Combine(
+                        DownloadableResource!.Value.RelativePath,
+                        DownloadableResource!.Value.FileName
+                    ),
             HybridModelType.None => throw new InvalidOperationException(),
             _ => throw new ArgumentOutOfRangeException()
         };
@@ -115,7 +122,7 @@ public record HybridModelFile
 
     public string GetId()
     {
-        return $"{RelativePath};{IsNone};{IsDefault}";
+        return $"{RelativePath.NormalizePathSeparators()};{IsNone};{IsDefault}";
     }
 
     private sealed class RemoteNameLocalEqualityComparer : IEqualityComparer<HybridModelFile>
@@ -131,7 +138,7 @@ public record HybridModelFile
             if (x.GetType() != y.GetType())
                 return false;
 
-            if (!Equals(x.RelativePath, y.RelativePath))
+            if (!Equals(x.RelativePath.NormalizePathSeparators(), y.RelativePath.NormalizePathSeparators()))
                 return false;
 
             // This equality affects replacements of remote over local models

@@ -5,6 +5,17 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.12.0-dev.2
+### Added
+- Added Face Detailer module to Inference
+- Added ultralytics models to HuggingFace model browser
+### Fixed
+- Fixed some ScrollViewers changing scroll position when focus changes
+- Fixed [#782](https://github.com/LykosAI/StabilityMatrix/issues/782) - conflict error when launching new versions of Forge
+- Fixed incorrect torch versions being installed for InvokeAI
+### Supporters
+#### Visionaries
+- A huge thank you goes out to our esteemed Visionary-tier Patreon backers: **Scopp Mcdee**, **Waterclouds**, and **Akiro_Senkai**. Your kind support means the world!
 
 ## v2.12.0-dev.1
 ### Added

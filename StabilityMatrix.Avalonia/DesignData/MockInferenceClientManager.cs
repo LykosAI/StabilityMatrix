@@ -47,6 +47,12 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
     public IObservableCollection<ComfyAuxPreprocessor> Preprocessors { get; } =
         new ObservableCollectionExtended<ComfyAuxPreprocessor>(ComfyAuxPreprocessor.Defaults);
 
+    public IObservableCollection<HybridModelFile> UltralyticsModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
+    public IObservableCollection<HybridModelFile> SamModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanUserConnect))]
     private bool isConnected;

@@ -454,6 +454,104 @@ public class ComfyNodeBuilder
         public int SubBatchSize { get; init; } = 16;
     }
 
+    [TypedNodeOptions(
+        Name = "UltralyticsDetectorProvider",
+        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+    )]
+    public record UltralyticsDetectorProvider
+        : ComfyTypedNodeBase<BboxDetectorNodeConnection, SegmDetectorNodeConnection>
+    {
+        public required string ModelName { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "SAMLoader",
+        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+    )]
+    public record SamLoader : ComfyTypedNodeBase<SamModelNodeConnection>
+    {
+        public required string ModelName { get; init; }
+
+        /// <summary>
+        /// options: AUTO, Prefer GPU, CPU
+        /// </summary>
+        public required string DeviceMode { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "FaceDetailer",
+        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+    )]
+    public record FaceDetailer : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required ImageNodeConnection Image { get; init; }
+        public required ModelNodeConnection Model { get; init; }
+        public required ClipNodeConnection Clip { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required BboxDetectorNodeConnection BboxDetector { get; init; }
+        public required double GuideSize { get; init; } = 512.0;
+
+        /// <summary>
+        /// true: 'bbox'
+        /// false: 'crop_region'
+        /// </summary>
+        public required bool GuideSizeFor { get; init; } = true;
+        public required double MaxSize { get; init; } = 1024.0;
+        public required long Seed { get; init; }
+        public required int Steps { get; init; } = 20;
+        public required double Cfg { get; init; } = 8.0d;
+        public required string SamplerName { get; init; }
+        public required string Scheduler { get; init; }
+        public required double Denoise { get; init; } = 0.5d;
+        public required int Feather { get; init; } = 5;
+        public required bool NoiseMask { get; init; } = true;
+        public required bool ForceInpaint { get; init; } = true;
+
+        [Range(0.0, 1.0)]
+        public required double BboxThreshold { get; init; } = 0.5d;
+
+        [Range(-512, 512)]
+        public required int BboxDilation { get; init; } = 10;
+
+        [Range(1.0, 10.0)]
+        public required double BboxCropFactor { get; init; } = 3.0d;
+
+        /// <summary>
+        /// options: ["center-1", "horizontal-2", "vertical-2", "rect-4", "diamond-4", "mask-area", "mask-points", "mask-point-bbox", "none"]
+        /// </summary>
+        public required string SamDetectionHint { get; init; }
+
+        [Range(-512, 512)]
+        public required int SamDilation { get; init; }
+
+        [Range(0.0d, 1.0d)]
+        public required double SamThreshold { get; init; } = 0.93d;
+
+        [Range(0, 1000)]
+        public required int SamBboxExpansion { get; init; }
+
+        [Range(0.0d, 1.0d)]
+        public required double SamMaskHintThreshold { get; init; } = 0.7d;
+
+        /// <summary>
+        /// options: ["False", "Small", "Outter"]
+        /// </summary>
+        public required string SamMaskHintUseNegative { get; init; } = "False";
+
+        public required StringNodeConnection Wildcard { get; init; }
+
+        [Range(1, 32768)]
+        public required int DropSize { get; init; } = 10;
+
+        [Range(1, 10)]
+        public required int Cycle { get; init; } = 1;
+
+        public SamModelNodeConnection? SamModelOpt { get; set; }
+        public SegmDetectorNodeConnection? SegmDetectorOpt { get; set; }
+    }
+
     public ImageNodeConnection Lambda_LatentToImage(LatentNodeConnection latent, VAENodeConnection vae)
     {
         var name = GetUniqueName("VAEDecode");

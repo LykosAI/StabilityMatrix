@@ -219,8 +219,19 @@ public class SharedFolders : ISharedFolders
         var allSharedFolderTypes = Enum.GetValues<SharedFolderType>();
         foreach (var sharedFolder in allSharedFolderTypes)
         {
+            if (sharedFolder == SharedFolderType.Unknown)
+                continue;
+
             var dir = new DirectoryPath(rootModelsDir, sharedFolder.GetStringValue());
             dir.Create();
+
+            if (sharedFolder == SharedFolderType.Ultralytics)
+            {
+                var bboxDir = new DirectoryPath(dir, "bbox");
+                var segmDir = new DirectoryPath(dir, "segm");
+                bboxDir.Create();
+                segmDir.Create();
+            }
         }
     }
 }

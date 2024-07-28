@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added Face Detailer module to Inference
 - Added ultralytics models to HuggingFace model browser
+- Added DoRA category to CivitAI model browser
+- Added macOS support for Fooocus & related forks
+### Changed
+- (Internal) Updated Avalonia to 11.1.1
+- (Internal) Updated various other libraries
 ### Fixed
 - Fixed some ScrollViewers changing scroll position when focus changes
 - Fixed [#782](https://github.com/LykosAI/StabilityMatrix/issues/782) - conflict error when launching new versions of Forge

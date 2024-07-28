@@ -121,10 +121,15 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
     private readonly SourceCache<HybridModelFile, string> ultralyticsModelsSource = new(p => p.GetId());
 
+    private readonly SourceCache<HybridModelFile, string> downloadableUltralyticsModelsSource =
+        new(p => p.GetId());
+
     public IObservableCollection<HybridModelFile> SamModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
     private readonly SourceCache<HybridModelFile, string> samModelsSource = new(p => p.GetId());
+
+    private readonly SourceCache<HybridModelFile, string> downloadableSamModelsSource = new(p => p.GetId());
 
     public InferenceClientManager(
         ILogger<InferenceClientManager> logger,
@@ -188,6 +193,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         ultralyticsModelsSource
             .Connect()
+            .Or(downloadableUltralyticsModelsSource.Connect())
             .Sort(
                 SortExpressionComparer<HybridModelFile>
                     .Ascending(f => f.Type)
@@ -199,6 +205,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         samModelsSource
             .Connect()
+            .Or(downloadableSamModelsSource.Connect())
             .Sort(
                 SortExpressionComparer<HybridModelFile>
                     .Ascending(f => f.Type)
@@ -440,6 +447,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         ];
         ultralyticsModelsSource.EditDiff(ultralyticsModels, HybridModelFile.Comparer);
 
+        var downloadableUltralyticsModels = RemoteModels.UltralyticsModelFiles.Where(
+            u => !ultralyticsModelsSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableUltralyticsModelsSource.EditDiff(downloadableUltralyticsModels, HybridModelFile.Comparer);
+
         // Load SAM models
         IEnumerable<HybridModelFile> samModels =
         [
@@ -449,6 +461,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .Select(HybridModelFile.FromLocal)
         ];
         samModelsSource.EditDiff(samModels, HybridModelFile.Comparer);
+
+        var downloadableSamModels = RemoteModels.SamModelFiles.Where(
+            u => !samModelsSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableSamModelsSource.EditDiff(downloadableSamModels, HybridModelFile.Comparer);
 
         samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
 

@@ -7,7 +7,8 @@
         xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
         xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
         xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-        xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia">
+        xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+        xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia">
     <Design.PreviewWith>
         <controls:FaceDetailerCard Width="300" />
     </Design.PreviewWith>
@@ -17,37 +18,52 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <StackPanel>
-                    <!-- Ultralytics Model -->
+                    <!-- Ultralytics Models -->
                     <TextBlock Text="BBox Model"
                                VerticalAlignment="Center" />
                     <controls:BetterComboBox
+                        Name="PART_BboxModelComboBox"
                         Padding="8,6,4,6"
                         Margin="4,4,4,8"
                         HorizontalAlignment="Stretch"
                         ItemsSource="{Binding ClientManager.UltralyticsModels}"
                         SelectedItem="{Binding BboxModel}"
-                        Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                        Theme="{StaticResource BetterComboBoxHybridModelTheme}" >
+                        <controls:BetterComboBox.Resources>
+                            <input:StandardUICommand x:Key="RemoteDownloadCommand" Command="{Binding RemoteDownloadCommand}" />
+                        </controls:BetterComboBox.Resources>
+                    </controls:BetterComboBox>
 
                     <TextBlock Text="Segmentation Model (Optional)"
                                VerticalAlignment="Center" />
                     <controls:BetterComboBox
+                        Name="PART_SegmModelComboBox"
                         Padding="8,6,4,6"
                         Margin="4,4,4,8"
                         HorizontalAlignment="Stretch"
                         ItemsSource="{Binding ClientManager.UltralyticsModels}"
                         SelectedItem="{Binding SegmModel}"
-                        Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                        Theme="{StaticResource BetterComboBoxHybridModelTheme}">
+                        <controls:BetterComboBox.Resources>
+                            <input:StandardUICommand x:Key="RemoteDownloadCommand" Command="{Binding RemoteDownloadCommand}" />
+                        </controls:BetterComboBox.Resources>
+                    </controls:BetterComboBox>
 
                     <!-- SAM Model -->
                     <TextBlock Text="SAM Model (Optional)"
                                Margin="0,8,0,0" />
                     <controls:BetterComboBox
+                        Name="PART_SamModelComboBox"
                         Padding="8,6,4,6"
                         Margin="4,4,4,8"
                         HorizontalAlignment="Stretch"
                         ItemsSource="{Binding ClientManager.SamModels}"
                         SelectedItem="{Binding SamModel}"
-                        Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                        Theme="{StaticResource BetterComboBoxHybridModelTheme}">
+                        <controls:BetterComboBox.Resources>
+                            <input:StandardUICommand x:Key="RemoteDownloadCommand" Command="{Binding RemoteDownloadCommand}" />
+                        </controls:BetterComboBox.Resources>
+                    </controls:BetterComboBox>
 
                     <avalonia:SpacedGrid ColumnDefinitions="Auto, *"
                                          RowDefinitions="Auto, Auto, Auto, Auto"

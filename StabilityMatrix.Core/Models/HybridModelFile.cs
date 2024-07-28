@@ -46,7 +46,13 @@ public record HybridModelFile
         {
             HybridModelType.Local => Local!.RelativePathFromSharedFolder,
             HybridModelType.Remote => RemoteName!,
-            HybridModelType.Downloadable => DownloadableResource!.Value.FileName,
+            HybridModelType.Downloadable
+                => DownloadableResource!.Value.RelativePath == null
+                    ? DownloadableResource!.Value.FileName
+                    : Path.Combine(
+                        DownloadableResource!.Value.RelativePath,
+                        DownloadableResource!.Value.FileName
+                    ),
             HybridModelType.None => throw new InvalidOperationException(),
             _ => throw new ArgumentOutOfRangeException()
         };

@@ -132,9 +132,15 @@
                     </avalonia:SpacedGrid>
 
                     <!-- Seed -->
+                    <TextBlock Text="Inherit Seed"
+                               Margin="4,8,4,4"
+                               VerticalAlignment="Center"/>
+                    <ToggleSwitch IsChecked="{Binding InheritSeed}"
+                                  Margin="8,0,4,8"/>
                     <controls:SeedCard DataContext="{Binding SeedCardViewModel}"
                                        Background="Gray"
-                                       Margin="4,16,4,8" />
+                                       IsVisible="{Binding !$parent[StackPanel].((vmInference:FaceDetailerViewModel)DataContext).InheritSeed, TargetNullValue=False, FallbackValue=False}"
+                                       Margin="4,0,4,8" />
 
                     <Separator Margin="8, 16" Background="#DDDDDD" />
 

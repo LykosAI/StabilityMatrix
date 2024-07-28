@@ -215,6 +215,17 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             seedCard.GenerateNewSeed();
         }
 
+        var faceDetailerCard = ModulesCardViewModel
+            .GetCard<FaceDetailerModule>()
+            .GetCard<FaceDetailerViewModel>();
+        if (
+            overrides is not { UseCurrentSeed: true }
+            && faceDetailerCard is { InheritSeed: false, SeedCardViewModel.IsRandomizeEnabled: true }
+        )
+        {
+            faceDetailerCard.SeedCardViewModel.GenerateNewSeed();
+        }
+
         var batches = BatchSizeCardViewModel.BatchCount;
 
         var batchArgs = new List<ImageGenerationEventArgs>();

@@ -109,6 +109,9 @@ public partial class FaceDetailerViewModel : LoadableViewModelBase
     [ObservableProperty]
     private string negativePrompt = string.Empty;
 
+    [ObservableProperty]
+    private bool inheritSeed = true;
+
     /// <inheritdoc/>
     public FaceDetailerViewModel(
         IInferenceClientManager clientManager,

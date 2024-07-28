@@ -39,7 +39,9 @@ public class FaceDetailerModule : ModuleBase, IValidatableModule
             GuideSize = faceDetailerCard.GuideSize,
             GuideSizeFor = faceDetailerCard.GuideSizeFor,
             MaxSize = faceDetailerCard.MaxSize,
-            Seed = faceDetailerCard.SeedCardViewModel.Seed,
+            Seed = faceDetailerCard.InheritSeed
+                ? e.Builder.Connections.Seed
+                : Convert.ToUInt64(faceDetailerCard.SeedCardViewModel.Seed),
             Steps = faceDetailerCard.Steps,
             Cfg = faceDetailerCard.Cfg,
             SamplerName =

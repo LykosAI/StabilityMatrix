@@ -499,7 +499,7 @@ public class ComfyNodeBuilder
         /// </summary>
         public required bool GuideSizeFor { get; init; } = true;
         public required double MaxSize { get; init; } = 1024.0;
-        public required long Seed { get; init; }
+        public required ulong Seed { get; init; }
         public required int Steps { get; init; } = 20;
         public required double Cfg { get; init; } = 8.0d;
         public required string SamplerName { get; init; }

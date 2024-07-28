@@ -163,7 +163,7 @@
                                       Value="{Binding GuideSize}"
                                       Margin="4,4,4,4"
                                       Minimum="64"
-                                      SmallChange="128"
+                                      SmallChange="64"
                                       HorizontalAlignment="Stretch"
                                       SpinButtonPlacementMode="Inline" />
 
@@ -178,7 +178,7 @@
                                       Value="{Binding MaxSize}"
                                       Margin="4,4,4,4"
                                       Minimum="64"
-                                      SmallChange="128"
+                                      SmallChange="64"
                                       HorizontalAlignment="Stretch"
                                       SpinButtonPlacementMode="Inline" />
 
@@ -192,6 +192,10 @@
                                       Grid.Column="1"
                                       Value="{Binding BboxThreshold}"
                                       Margin="4,4,4,4"
+                                      Minimum="0"
+                                      Maximum="1"
+                                      SmallChange="0.01"
+                                      SimpleNumberFormat="F2"
                                       HorizontalAlignment="Stretch"
                                       SpinButtonPlacementMode="Inline" />
 
@@ -205,6 +209,9 @@
                                       Grid.Column="1"
                                       Value="{Binding BboxDilation}"
                                       Margin="4,4,4,4"
+                                      Minimum="-512"
+                                      Maximum="512"
+                                      SmallChange="1"
                                       HorizontalAlignment="Stretch"
                                       SpinButtonPlacementMode="Inline" />
 
@@ -218,6 +225,10 @@
                                       Grid.Column="1"
                                       Value="{Binding BboxCropFactor}"
                                       Margin="4,4,4,4"
+                                      SimpleNumberFormat="F2"
+                                      Minimum="1"
+                                      Maximum="10"
+                                      SmallChange="0.1"
                                       HorizontalAlignment="Stretch"
                                       SpinButtonPlacementMode="Inline" />
                     </avalonia:SpacedGrid>
@@ -263,6 +274,10 @@
                                       Grid.Column="1"
                                       Value="{Binding Denoise}"
                                       Margin="4,4,4,4"
+                                      SimpleNumberFormat="F2"
+                                      Minimum="0"
+                                      Maximum="1"
+                                      SmallChange="0.01"
                                       HorizontalAlignment="Stretch"
                                       SpinButtonPlacementMode="Inline" />
 
@@ -270,6 +285,7 @@
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
                                 Margin="4,-12,4,0"
+                                Minimum="0"
                                 Maximum="1"
                                 SmallChange="0.01"
                                 TickFrequency="0.01"
@@ -319,6 +335,9 @@
                     <ui:NumberBox Value="{Binding SamDilation}"
                                   Margin="4,4,4,8"
                                   HorizontalAlignment="Stretch"
+                                  Minimum="-512"
+                                  Maximum="512"
+                                  SmallChange="1"
                                   SpinButtonPlacementMode="Inline" />
 
                     <!-- SAM Threshold -->
@@ -327,6 +346,10 @@
                     <ui:NumberBox Value="{Binding SamThreshold}"
                                   Margin="4,4,4,8"
                                   HorizontalAlignment="Stretch"
+                                  SimpleNumberFormat="F2"
+                                  Minimum="0"
+                                  Maximum="1"
+                                  SmallChange="0.01"
                                   SpinButtonPlacementMode="Inline" />
 
                     <!-- SAM BBox Expansion -->
@@ -335,6 +358,9 @@
                     <ui:NumberBox Value="{Binding SamBboxExpansion}"
                                   Margin="4,4,4,8"
                                   HorizontalAlignment="Stretch"
+                                  Minimum="0"
+                                  Maximum="1000"
+                                  SmallChange="1"
                                   SpinButtonPlacementMode="Inline" />
 
                     <!-- SAM Mask Hint Threshold -->
@@ -343,6 +369,10 @@
                     <ui:NumberBox Value="{Binding SamMaskHintThreshold}"
                                   Margin="4,4,4,8"
                                   HorizontalAlignment="Stretch"
+                                  SimpleNumberFormat="F2"
+                                  Minimum="0"
+                                  Maximum="1"
+                                  SmallChange="0.01"
                                   SpinButtonPlacementMode="Inline" />
 
                     <!-- SAM Mask Hint Use Negative -->
@@ -364,6 +394,9 @@
                                   Value="{Binding DropSize}"
                                   Margin="4,4,4,8"
                                   HorizontalAlignment="Stretch"
+                                  Minimum="1"
+                                  Maximum="65536"
+                                  SmallChange="1"
                                   SpinButtonPlacementMode="Inline" />
 
                     <!-- Cycle -->
@@ -376,6 +409,9 @@
                                   Grid.Column="1"
                                   Value="{Binding Cycle}"
                                   Margin="4,4,4,8"
+                                  Minimum="1"
+                                  Maximum="10"
+                                  SmallChange="1"
                                   HorizontalAlignment="Stretch"
                                   SpinButtonPlacementMode="Inline" />
                     </avalonia:SpacedGrid>

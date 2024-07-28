@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed some ScrollViewers changing scroll position when focus changes
 - Fixed [#782](https://github.com/LykosAI/StabilityMatrix/issues/782) - conflict error when launching new versions of Forge
 - Fixed incorrect torch versions being installed for InvokeAI
+### Supporters
+#### Visionaries
+- A huge thank you goes out to our esteemed Visionary-tier Patreon backers: **Scopp Mcdee**, **Waterclouds**, and **Akiro_Senkai**. Your kind support means the world!
 
 ## v2.12.0-dev.1
 ### Added

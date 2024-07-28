@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Change Version" option to the package card overflow menu, allowing you to downgrade or upgrade a package to a specific version or commit
 - Added "Disable Update Check" option to the package card overflow menu, allowing you to disable update checks for a specific package
 - Added "Run Command" option in Settings for running a command with the embedded Python or Git executables
+- Added Intel OneAPI XPU backend (IPEX) option for SD.Next
 ### Supporters
 #### Visionaries
 - Shoutout to our Visionary-tier Patreon supporters, **Scopp Mcdee**, **Waterclouds**, and our newest Visionary, **Akiro_Senkai**! Many thanks for your generous support!
@@ -23,11 +24,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed `TaskCanceledException` when adding CivitAI Api key or searching for models when the API takes too long to respond. Retry and timeout behavior has been improved.
 - Fixed [#782](https://github.com/LykosAI/StabilityMatrix/issues/782) - conflict error when launching new versions of Forge
 - Fixed incorrect torch versions being installed for InvokeAI
+- Fixed `ArgumentOutOfRangeException` with the Python Packages dialog ItemSourceView when interacting too quickly after loading.
 ### Supporters
 #### Visionaries
 - Shoutout to our Visionary-tier Patreon supporters, **Scopp Mcdee**, **Waterclouds**, and our newest Visionary, **Akiro_Senkai**! Many thanks for your generous support!
 #### Pioneers
 - Many thanks to our Pioneer-tier supporters on Patreon, **tankfox**, **tanangular**, and our newest Pioneers, **Mr. Unknown** and **Szir777**! Your support is greatly appreciated!
+
 ## v2.11.4
 ### Changed
 - Base Python install will now use `setuptools==69.5.1` for compatibility with `torchsde`. Individual Packages can upgrade as required.

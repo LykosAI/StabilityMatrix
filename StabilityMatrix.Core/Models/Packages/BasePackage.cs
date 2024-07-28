@@ -120,6 +120,16 @@ public abstract class BasePackage
             return TorchVersion.Cuda;
         }
 
+        if (HardwareHelper.HasAmdGpu() && AvailableTorchVersions.Contains(TorchVersion.Zluda))
+        {
+            return TorchVersion.Zluda;
+        }
+
+        if (HardwareHelper.HasIntelGpu() && AvailableTorchVersions.Contains(TorchVersion.Ipex))
+        {
+            return TorchVersion.Ipex;
+        }
+
         if (HardwareHelper.PreferRocm() && AvailableTorchVersions.Contains(TorchVersion.Rocm))
         {
             return TorchVersion.Rocm;

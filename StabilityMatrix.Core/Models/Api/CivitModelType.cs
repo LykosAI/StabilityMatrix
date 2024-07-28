@@ -21,6 +21,9 @@ public enum CivitModelType
     Hypernetwork,
 
     [ConvertTo<SharedFolderType>(SharedFolderType.Lora)]
+    DoRA,
+
+    [ConvertTo<SharedFolderType>(SharedFolderType.Lora)]
     LORA,
 
     [ConvertTo<SharedFolderType>(SharedFolderType.ControlNet)]

@@ -5,6 +5,7 @@ using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Python;
 
+[SuppressMessage("ReSharper", "StringLiteralTypo")]
 public record PipInstallArgs : ProcessArgsBuilder
 {
     public PipInstallArgs(params Argument[] arguments)
@@ -15,6 +16,8 @@ public record PipInstallArgs : ProcessArgsBuilder
     public PipInstallArgs WithTorchDirectML(string version = "") => this.AddArg($"torch-directml{version}");
 
     public PipInstallArgs WithTorchVision(string version = "") => this.AddArg($"torchvision{version}");
+
+    public PipInstallArgs WithTorchAudio(string version = "") => this.AddArg($"torchaudio{version}");
 
     public PipInstallArgs WithXFormers(string version = "") => this.AddArg($"xformers{version}");
 

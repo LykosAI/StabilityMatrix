@@ -211,7 +211,7 @@
       "name": "meta.embedded.model"
     },
     "text": {
-      "match": "[^,:\\[\\]\\(\\)\\<\\> \\\\]+",
+      "match": "[^#,:\\[\\]\\(\\)\\<\\> \\\\]+",
       "name": "meta.embedded"
     },
     "invalid_reserved" : {

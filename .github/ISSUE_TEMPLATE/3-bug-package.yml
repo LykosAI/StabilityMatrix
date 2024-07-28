@@ -1,0 +1,78 @@
+﻿name: Package issue
+description: Report an issue with installing, updating, or running a Package
+labels: ["bug", "area: package", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Experiencing an issue while running a Package?**
+        
+        Make sure to also search the GitHub issues of the Package, to see if your issue has already been reported and being worked on by upstream authors.
+  - type: textarea
+    id: package-details
+    attributes:
+      label: Package
+      description: Provide the name of the Package you are experiencing issues with
+      placeholder: ex. `ComfyUI`
+    validations:
+      required: true
+  - type: dropdown
+    id: package-issue-phase
+    attributes:
+      label: When did the issue occur?
+      options:
+        - Installing the Package
+        - Updating the Package
+        - Running the Package
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: What GPU / hardware type are you using?
+      description: Installed dependencies and Package features often depend on the GPU or hardware type you are using.
+      placeholder: ex. Nvidia 2080 Super with CUDA, AMD Radeon VII, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Give a clear and concise description of what happened. Provide screenshots if necessary. Also tell us, what did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: console-output
+    attributes:
+      label: Console output
+      description: Please copy and paste any console output or error messages. For failed install or updates, locate the progress on the bottom left, open the dialog, and click on "More Details" to copy the full console output.
+      placeholder: |
+        ```
+        Unpacking...
+        Successfully built lycoris_lora
+        Installing collected packages: library, tomlkit, onnx, ml-dtypes, onnxruntime-gpu
+          Running setup.py develop for library
+          Attempting uninstall: onnx
+            Found existing installation: onnx 1.14.1
+            ...
+        ```
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of Stability Matrix are you running? (Can be found at the bottom of the settings page)
+      placeholder: ex. v2.11.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os-platform
+    attributes:
+      label: What Operating System are you using?
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true

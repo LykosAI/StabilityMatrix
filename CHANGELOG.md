@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 
+## v2.11.5
+### Added
+- Added DoRA category to CivitAI model browser
+### Fixed
+- Fixed `TaskCanceledException` when adding CivitAI Api key or searching for models when the API takes too long to respond. Retry and timeout behavior has been improved.
+- Fixed [#782](https://github.com/LykosAI/StabilityMatrix/issues/782) - conflict error when launching new versions of Forge
+- Fixed incorrect torch versions being installed for InvokeAI
+- Fixed `ArgumentOutOfRangeException` with the Python Packages dialog ItemSourceView when interacting too quickly after loading.
+### Supporters
+#### Visionaries
+- Shoutout to our Visionary-tier Patreon supporters, **Scopp Mcdee**, **Waterclouds**, and our newest Visionary, **Akiro_Senkai**! Many thanks for your generous support!
+#### Pioneers
+- Many thanks to our Pioneer-tier supporters on Patreon, **tankfox**, **tanangular**, and our newest Pioneers, **Mr. Unknown** and **Szir777**! Your support is greatly appreciated!
+
+## v2.11.4
+### Changed
+- Base Python install will now use `setuptools==69.5.1` for compatibility with `torchsde`. Individual Packages can upgrade as required.
+- Improved formatting of "Copy Details" action on the Unexpected Error dialog
+- (Debug) Logging verbosity for classes can now be configured with environment variables (`Logging__LogLevel__<TypeFullName>`).  
+### Fixed
+- Fixed ComfyUI slower generation speed with new torch versions not including flash attention for windows, pinned `torch==2.1.2` for ComfyUI on Windows CUDA
+- Fixed [#719](https://github.com/LykosAI/StabilityMatrix/issues/719) - Fix comments in Inference prompt not being ignored
+- Fixed TaskCanceledException when Inference prompts finish before the delayed progress handler (250ms)
+### Supporters
+#### Visionaries
+- Huge thanks to our Visionary-tier supporters on Patreon, **Scopp Mcdee** and **Waterclouds**! Your support helps us continue to improve Stability Matrix!
+#### Pioneers
+- Thank you to our Pioneer-tier supporters on Patreon, **tankfox** and **tanangular**! Your support is greatly appreciated!
+
 ## v2.11.3
 ### Changed
 - Base Python install will now use `pip>=23.3.2,<24.1` for compatibility with `torchsde`.Individual Packages can upgrade as required.

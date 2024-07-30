@@ -171,6 +171,11 @@ public static class DialogHelper
                 DataContext = field,
             };
 
+            if (field.MinWidth.HasValue)
+            {
+                textBox.MinWidth = field.MinWidth.Value;
+            }
+
             if (!string.IsNullOrEmpty(field.InnerLeftText))
             {
                 textBox.InnerLeftContent = new TextBlock()
@@ -616,6 +621,8 @@ public sealed class TextBoxField : INotifyPropertyChanged
 
     // Inner left value
     public string? InnerLeftText { get; init; }
+
+    public int? MinWidth { get; init; }
 
     /// <summary>
     /// Validation action on text changes. Throw exception if invalid.

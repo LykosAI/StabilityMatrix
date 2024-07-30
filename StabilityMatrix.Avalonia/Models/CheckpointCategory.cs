@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace StabilityMatrix.Avalonia.Models;
@@ -23,4 +24,6 @@ public partial class CheckpointCategory : TreeViewDirectory
             }
         }
     }
+
+    public string GetId() => $@"{Name};{Flatten().Count()}";
 }

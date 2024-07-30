@@ -85,7 +85,7 @@ public interface ISettingsManager
     /// <summary>
     /// Register an Action to be called on change of the settings property.
     /// </summary>
-    void RegisterPropertyChangedHandler<T>(
+    IDisposable RegisterPropertyChangedHandler<T>(
         Expression<Func<Settings, T>> settingsProperty,
         Action<T> onPropertyChanged
     );

@@ -160,6 +160,8 @@ public class Settings
 
     public bool AutoScrollLaunchConsoleToEnd { get; set; } = true;
 
+    public int ConsoleLogHistorySize { get; set; } = 9001;
+
     public HashSet<int> FavoriteModels { get; set; } = new();
 
     public HashSet<TeachingTip> SeenTeachingTips { get; set; } = new();

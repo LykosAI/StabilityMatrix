@@ -257,6 +257,7 @@
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
 
+            <!--  Console  -->
             <!--  Theme  -->
             <Grid RowDefinitions="Auto,*,*,*,*,*">
                 <TextBlock

@@ -1554,7 +1554,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The number of lines above the ones displayed in the window you can scroll back to.
+        ///   Looks up a localized string similar to The number of lines above the ones displayed in the console you can scroll back to.
         /// </summary>
         public static string Label_HistorySize_Description {
             get {

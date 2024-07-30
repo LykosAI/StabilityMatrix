@@ -1132,6 +1132,6 @@
     <value>History Size</value>
   </data>
   <data name="Label_HistorySize_Description" xml:space="preserve">
-    <value>The number of lines above the ones displayed in the window you can scroll back to</value>
+    <value>The number of lines above the ones displayed in the console you can scroll back to</value>
   </data>
 </root>

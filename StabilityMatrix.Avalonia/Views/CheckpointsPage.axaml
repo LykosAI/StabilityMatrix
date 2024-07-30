@@ -16,6 +16,7 @@
                           xmlns:system="clr-namespace:System;assembly=System.Runtime"
                           xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
                           xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+                          xmlns:models1="clr-namespace:StabilityMatrix.Avalonia.Models"
                           mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="650"
                           x:Class="StabilityMatrix.Avalonia.Views.CheckpointsPage"
                           d:DataContext="{x:Static mocks:DesignData.CheckpointsPageViewModel}"
@@ -287,6 +288,11 @@
                   DragDrop.AllowDrop="True"
                   ItemsSource="{Binding Categories}"
                   SelectedItem="{Binding SelectedCategory}">
+            <TreeView.Styles>
+                <Style Selector="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding $self.((models1:CheckpointCategory)DataContext).IsExpanded, Mode=TwoWay}"/>
+                </Style>
+            </TreeView.Styles>
             <TreeView.ContextFlyout>
                 <ui:FAMenuFlyout>
                     <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_OpenInExplorer}"

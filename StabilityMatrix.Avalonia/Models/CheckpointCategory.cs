@@ -10,6 +10,9 @@ public partial class CheckpointCategory : TreeViewDirectory
     [ObservableProperty]
     private int count;
 
+    [ObservableProperty]
+    private bool isExpanded;
+
     public new ObservableCollection<CheckpointCategory> SubDirectories { get; set; } = new();
 
     public IEnumerable<CheckpointCategory> Flatten()

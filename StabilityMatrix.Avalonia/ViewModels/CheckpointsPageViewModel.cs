@@ -805,6 +805,27 @@ public partial class CheckpointsPageViewModel(
             ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
             ?? Categories.First();
 
+        var dirPath = new DirectoryPath(SelectedCategory.Path);
+
+        while (dirPath.FullPath != settingsManager.ModelsDirectory && dirPath.Parent != null)
+        {
+            var category = Categories
+                .SelectMany(x => x.Flatten())
+                .FirstOrDefault(x => x.Path == dirPath.FullPath);
+            if (category != null)
+            {
+                category.IsExpanded = true;
+            }
+
+            dirPath = dirPath.Parent;
+        }
+
+        // one more time for good measure??
+        SelectedCategory =
+            previouslySelectedCategory
+            ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
+            ?? Categories.First();
+
         foreach (var checkpointCategory in Categories.SelectMany(c => c.Flatten()))
         {
             checkpointCategory.Count = Directory

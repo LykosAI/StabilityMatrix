@@ -109,7 +109,7 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
-
+            
             <!--  Checkpoints Manager Options  -->
             <Grid RowDefinitions="Auto,*,Auto,Auto">
                 <TextBlock
@@ -257,6 +257,35 @@
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
 
+            <!--  Console  -->
+            <sg:SpacedGrid RowDefinitions="Auto,*" RowSpacing="4">
+                <TextBlock
+                    Margin="0,0,0,4"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_Console}" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0,8,4"
+                    Description="{x:Static lang:Resources.Label_HistorySize_Description}"
+                    Header="{x:Static lang:Resources.Label_HistorySize}">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            Symbol="History" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ui:NumberBox 
+                            SpinButtonPlacementMode="Compact" 
+                            SimpleNumberFormat="F0"
+                            PlaceholderText="0"
+                            ValidationMode="InvalidInputOverwritten"
+                            Minimum="-1"
+                            Maximum="10000000"
+                            Value="{Binding ConsoleLogHistorySize}"/>
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+            </sg:SpacedGrid>
+            
             <!--  Theme  -->
             <Grid RowDefinitions="Auto,*,*,*,*,*">
                 <TextBlock

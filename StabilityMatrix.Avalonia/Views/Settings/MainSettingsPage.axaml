@@ -276,7 +276,10 @@
                     <ui:SettingsExpander.Footer>
                         <ui:NumberBox 
                             SpinButtonPlacementMode="Compact" 
-                            Minimum="0"
+                            SimpleNumberFormat="D"
+                            PlaceholderText="0"
+                            ValidationMode="InvalidInputOverwritten"
+                            Minimum="-1"
                             Maximum="10000000"
                             Value="{Binding ConsoleLogHistorySize}"/>
                     </ui:SettingsExpander.Footer>

@@ -7,9 +7,9 @@ using System.Threading.Tasks.Dataflow;
 using Avalonia.Threading;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
-using NLog;
 using Nito.AsyncEx;
 using Nito.AsyncEx.Synchronous;
+using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Processes;
 
@@ -29,6 +29,8 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
 
     // Cancellation token source for updateTask
     private CancellationTokenSource? updateCts;
+
+    public int MaxLines { get; set; } = -1;
 
     public bool IsUpdatesRunning => updateTask?.IsCompleted == false;
 
@@ -54,7 +56,8 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
     /// <summary>
     /// Gets a cancellation token using the cursor lock timeout
     /// </summary>
-    private CancellationToken WriteCursorLockTimeoutToken => new CancellationTokenSource(WriteCursorLockTimeout).Token;
+    private CancellationToken WriteCursorLockTimeoutToken =>
+        new CancellationTokenSource(WriteCursorLockTimeout).Token;
 
     /// <summary>
     /// Event invoked when an ApcMessage of type Input is received.
@@ -143,7 +146,8 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
         Dispatcher.UIThread.VerifyAccess();
 
         // Get cancellation token
-        var ct = updateCts?.Token ?? throw new InvalidOperationException("Update cancellation token must be set");
+        var ct =
+            updateCts?.Token ?? throw new InvalidOperationException("Update cancellation token must be set");
 
         try
         {
@@ -171,7 +175,9 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
                 );
 
                 // Link the cancellation token to the write cursor lock timeout
-                var linkedCt = CancellationTokenSource.CreateLinkedTokenSource(ct, WriteCursorLockTimeoutToken).Token;
+                var linkedCt = CancellationTokenSource
+                    .CreateLinkedTokenSource(ct, WriteCursorLockTimeoutToken)
+                    .Token;
 
                 using (await writeCursorLock.LockAsync(linkedCt))
                 {
@@ -293,7 +299,9 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             var spaces = new string(' ', currentLine.Length);
 
             // Insert the text
-            Logger.ConditionalTrace($"Erasing line {currentLine.LineNumber}: (length = {currentLine.Length})");
+            Logger.ConditionalTrace(
+                $"Erasing line {currentLine.LineNumber}: (length = {currentLine.Length})"
+            );
             using (Document.RunUpdate())
             {
                 Document.Replace(currentLine.Offset, currentLine.Length, spaces);
@@ -360,6 +368,8 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
     /// </summary>
     private void DirectWriteToConsole(string text)
     {
+        CheckMaxLines();
+
         using (Document.RunUpdate())
         {
             // Need to replace text first if cursor lower than document length
@@ -382,11 +392,66 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             if (remainingLength > 0)
             {
                 var textToInsert = text[replaceLength..];
-                Logger.ConditionalTrace($"Inserting: (cursor = {writeCursor}, " + $"text = {textToInsert.ToRepr()})");
+                Logger.ConditionalTrace(
+                    $"Inserting: (cursor = {writeCursor}, " + $"text = {textToInsert.ToRepr()})"
+                );
 
                 Document.Insert(writeCursor, textToInsert);
                 writeCursor += textToInsert.Length;
             }
+        }
+    }
+
+    private void CheckMaxLines()
+    {
+        // Ignore limit if MaxLines is negative
+        if (MaxLines < 0)
+            return;
+
+        if (Document.LineCount <= MaxLines)
+            return;
+
+        // Minimum lines to remove
+        const int removeLinesBatchSize = 1;
+
+        using (Document.RunUpdate())
+        {
+            var currentLines = Document.LineCount;
+            var linesExceeded = currentLines - MaxLines;
+            var linesToRemove = Math.Min(currentLines, Math.Max(linesExceeded, removeLinesBatchSize));
+
+            Logger.ConditionalTrace(
+                "Exceeded max lines ({Current} > {Max}), removing {Remove} lines",
+                currentLines,
+                MaxLines,
+                linesToRemove
+            );
+
+            // Remove lines from the start
+            var firstLine = Document.GetLineByNumber(1);
+            var lastLine = Document.GetLineByNumber(linesToRemove);
+            var removeStart = firstLine.Offset;
+
+            // If a next line exists, use the start offset of that instead in case of weird newlines
+            var removeEnd = lastLine.EndOffset;
+            if (lastLine.NextLine is not null)
+            {
+                removeEnd = lastLine.NextLine.Offset;
+            }
+
+            var removeLength = removeEnd - removeStart;
+
+            Logger.ConditionalTrace(
+                "Removing {LinesExceeded} lines from start: ({RemoveStart} -> {RemoveEnd})",
+                linesExceeded,
+                removeStart,
+                removeEnd
+            );
+
+            Document.Remove(removeStart, removeLength);
+
+            // Update cursor position
+            writeCursor -= removeLength;
         }
     }
 

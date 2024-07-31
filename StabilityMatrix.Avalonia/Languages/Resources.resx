@@ -1128,4 +1128,10 @@
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>PLEASE EXTRACT THE APP FROM THE ZIP FILE BEFORE RUNNING STABILITY MATRIX</value>
   </data>
+  <data name="Label_HistorySize" xml:space="preserve">
+    <value>History Size</value>
+  </data>
+  <data name="Label_HistorySize_Description" xml:space="preserve">
+    <value>The number of lines above the ones displayed in the console you can scroll back to</value>
+  </data>
 </root>

@@ -1545,6 +1545,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to History Size.
+        /// </summary>
+        public static string Label_HistorySize {
+            get {
+                return ResourceManager.GetString("Label_HistorySize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of lines above the ones displayed in the console you can scroll back to.
+        /// </summary>
+        public static string Label_HistorySize_Description {
+            get {
+                return ResourceManager.GetString("Label_HistorySize_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Holiday Mode.
         /// </summary>
         public static string Label_HolidayMode {

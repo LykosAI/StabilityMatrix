@@ -103,6 +103,7 @@
         <PackageReference Include="System.IO.Hashing" Version="8.0.0" />
         <PackageReference Include="TextMateSharp.Grammars" Version="1.0.56" />
         <PackageReference Include="URISchemeTools" Version="1.0.2" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.0.0-preview.4.1" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
     </ItemGroup>
 
 

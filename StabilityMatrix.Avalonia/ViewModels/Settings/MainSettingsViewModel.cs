@@ -118,6 +118,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isDiscordRichPresenceEnabled;
 
+    // Console section
+    [ObservableProperty]
+    private int consoleLogHistorySize;
+
     // Debug section
     [ObservableProperty]
     private string? debugPaths;
@@ -253,6 +257,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.MoveFilesOnImport,
             settings => settings.MoveFilesOnImport,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ConsoleLogHistorySize,
+            settings => settings.ConsoleLogHistorySize,
             true
         );
 

@@ -608,6 +608,8 @@ public partial class CheckpointsPageViewModel(
         );
 
         RefreshCategories();
+
+        SelectedCategory = Categories.SelectMany(c => c.Flatten()).FirstOrDefault(x => x.Path == folderPath);
     }
 
     [RelayCommand]

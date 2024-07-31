@@ -276,7 +276,7 @@
                     <ui:SettingsExpander.Footer>
                         <ui:NumberBox 
                             SpinButtonPlacementMode="Compact" 
-                            SimpleNumberFormat="D"
+                            SimpleNumberFormat="F0"
                             PlaceholderText="0"
                             ValidationMode="InvalidInputOverwritten"
                             Minimum="-1"

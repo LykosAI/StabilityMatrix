@@ -404,8 +404,8 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
 
     private void CheckMaxLines()
     {
-        // Ignore when MaxLines is -1
-        if (MaxLines == -1)
+        // Ignore limit if MaxLines is negative
+        if (MaxLines < 0)
             return;
 
         if (Document.LineCount <= MaxLines)

@@ -149,7 +149,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                     }
 
                     notificationService
-                        .ShowAsync(
+                        .ShowPersistentAsync(
                             NotificationKey.Download_Failed,
                             new Notification
                             {

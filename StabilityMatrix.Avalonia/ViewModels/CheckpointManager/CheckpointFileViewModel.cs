@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.ComponentModel;
 using System.IO;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,6 +14,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.Progress;
@@ -34,6 +36,9 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
 
     [ObservableProperty]
     private bool isLoading;
+
+    [ObservableProperty]
+    private long fileSize;
 
     private readonly ISettingsManager settingsManager;
     private readonly IModelIndexService modelIndexService;
@@ -66,6 +71,11 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                 ?? CheckpointFile.ConnectedModelInfo?.ThumbnailImageUrl
                 ?? Assets.NoImage.ToString()
             : string.Empty;
+
+        if (Design.IsDesignMode)
+            return;
+
+        FileSize = GetFileSize(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
     }
 
     [RelayCommand]
@@ -258,5 +268,14 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                 logger.LogError(e, "Failed to rename checkpoint file");
             }
         }
+    }
+
+    private long GetFileSize(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return 0;
+
+        var fileInfo = new FileInfo(filePath);
+        return fileInfo.Length;
     }
 }

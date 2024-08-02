@@ -126,6 +126,9 @@ public partial class CheckpointsPageViewModel(
     [ObservableProperty]
     private ObservableCollection<string> selectedBaseModels = [];
 
+    [ObservableProperty]
+    private bool dragMovesAllSelected = true;
+
     public string ClearButtonText =>
         SelectedBaseModels.Count == BaseModelOptions.Count
             ? Resources.Action_ClearSelection
@@ -255,6 +258,12 @@ public partial class CheckpointsPageViewModel(
                                 : comparer.ThenByDescending(vm => vm.CheckpointFile.HasUpdate);
                         comparer = comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName);
                         comparer = comparer.ThenByDescending(vm => vm.CheckpointFile.DisplayModelVersion);
+                        break;
+                    case CheckpointSortMode.FileSize:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.FileSize)
+                                : comparer.ThenByDescending(vm => vm.FileSize);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();

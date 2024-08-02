@@ -275,6 +275,11 @@
                         IconSource="Cloud"
                         Label="{x:Static lang:Resources.Label_ImportAsConnected}"
                         IsChecked="{Binding IsImportAsConnectedEnabled, Mode=TwoWay}" />
+                    <ui:CommandBarToggleButton
+                        IconSource="MoveToFolder"
+                        Label="Move All Selected Models"
+                        ToolTip.Tip="When enabled, dragging and dropping a model will also move any selected models to the drop location."
+                        IsChecked="{Binding DragMovesAllSelected, Mode=TwoWay}" />
                 </ui:CommandBar.SecondaryCommands>
             </ui:CommandBar>
         </Grid>

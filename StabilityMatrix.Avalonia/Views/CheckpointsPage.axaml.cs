@@ -198,7 +198,7 @@ public partial class CheckpointsPage : UserControlBase
                 {
                     var allSelectedCheckpoints = checkpointsVm.Models.Where(x => x.IsSelected).ToList();
 
-                    if (allSelectedCheckpoints.Any())
+                    if (allSelectedCheckpoints.Any() && checkpointsVm.DragMovesAllSelected)
                     {
                         if (!allSelectedCheckpoints.Contains(vm))
                         {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -39,8 +38,7 @@ public class UriHandler
     public void SendAndExit(Uri uri)
     {
         var services = new ServiceCollection();
-        services.AddMessagePipe();
-        services.AddMessagePipeNamedPipeInterprocess("StabilityMatrix");
+        services.AddMessagePipe().AddNamedPipeInterprocess("StabilityMatrix");
 
         var provider = services.BuildServiceProvider();
         var publisher = provider.GetRequiredService<IDistributedPublisher<string, Uri>>();

@@ -48,8 +48,9 @@ public class VladAutomatic(
             TorchVersion.Cpu,
             TorchVersion.Cuda,
             TorchVersion.DirectMl,
+            TorchVersion.Ipex,
             TorchVersion.Rocm,
-            TorchVersion.Zluda
+            TorchVersion.Zluda,
         };
 
     // https://github.com/vladmandic/automatic/blob/master/modules/shared.py#L324
@@ -134,7 +135,6 @@ public class VladAutomatic(
             {
                 Name = "Use DirectML if no compatible GPU is detected",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectML(),
                 Options = ["--use-directml"]
             },
             new()
@@ -143,6 +143,13 @@ public class VladAutomatic(
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.HasNvidiaGpu(),
                 Options = ["--use-cuda"]
+            },
+            new()
+            {
+                Name = "Force use of Intel OneAPI XPU backend",
+                Type = LaunchOptionType.Bool,
+                InitialValue = HardwareHelper.HasIntelGpu(),
+                Options = ["--use-ipex"]
             },
             new()
             {
@@ -155,7 +162,7 @@ public class VladAutomatic(
             {
                 Name = "Force use of ZLUDA backend",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferRocm(),
+                InitialValue = HardwareHelper.PreferDirectML(),
                 Options = ["--use-zluda"]
             },
             new()
@@ -217,6 +224,11 @@ public class VladAutomatic(
             case TorchVersion.Zluda:
                 await venvRunner
                     .CustomInstall("launch.py --use-zluda --debug --test", onConsoleOutput)
+                    .ConfigureAwait(false);
+                break;
+            case TorchVersion.Ipex:
+                await venvRunner
+                    .CustomInstall("launch.py --use-ipex --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             default:

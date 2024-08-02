@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -41,7 +42,7 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
 
     /// <inheritdoc />
     public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+        new SymbolIconSource { Symbol = Symbol.Settings, IconVariant = IconVariant.Filled };
 
     [ObservableProperty]
     private bool isPromptCompletionEnabled = true;

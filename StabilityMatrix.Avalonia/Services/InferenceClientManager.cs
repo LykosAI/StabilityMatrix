@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -11,7 +12,6 @@ using DynamicData;
 using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
-using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
@@ -115,6 +115,21 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
     private readonly SourceCache<ComfyAuxPreprocessor, string> preprocessorsSource = new(p => p.Value);
 
+    public IObservableCollection<HybridModelFile> UltralyticsModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
+    private readonly SourceCache<HybridModelFile, string> ultralyticsModelsSource = new(p => p.GetId());
+
+    private readonly SourceCache<HybridModelFile, string> downloadableUltralyticsModelsSource =
+        new(p => p.GetId());
+
+    public IObservableCollection<HybridModelFile> SamModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
+    private readonly SourceCache<HybridModelFile, string> samModelsSource = new(p => p.GetId());
+
+    private readonly SourceCache<HybridModelFile, string> downloadableSamModelsSource = new(p => p.GetId());
+
     public InferenceClientManager(
         ILogger<InferenceClientManager> logger,
         IApiFactory apiFactory,
@@ -173,6 +188,30 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(PromptExpansionModels)
+            .Subscribe();
+
+        ultralyticsModelsSource
+            .Connect()
+            .Or(downloadableUltralyticsModelsSource.Connect())
+            .Sort(
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
+            )
+            .DeferUntilLoaded()
+            .Bind(UltralyticsModels)
+            .Subscribe();
+
+        samModelsSource
+            .Connect()
+            .Or(downloadableSamModelsSource.Connect())
+            .Sort(
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.Type)
+                    .ThenByAscending(f => f.ShortDisplayName)
+            )
+            .DeferUntilLoaded()
+            .Bind(SamModels)
             .Subscribe();
 
         vaeModelsDefaults.AddOrUpdate(HybridModelFile.Default);
@@ -253,6 +292,31 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 loraModelNames.Select(HybridModelFile.FromRemote),
                 HybridModelFile.Comparer
             );
+        }
+
+        // Get Ultralytics model names
+        if (
+            await Client.GetOptionalNodeOptionNamesAsync("UltralyticsDetectorProvider", "model_name") is
+            { } ultralyticsModelNames
+        )
+        {
+            IEnumerable<HybridModelFile> models =
+            [
+                HybridModelFile.None,
+                ..ultralyticsModelNames.Select(HybridModelFile.FromRemote)
+            ];
+            ultralyticsModelsSource.EditDiff(models, HybridModelFile.Comparer);
+        }
+
+        // Get SAM model names
+        if (await Client.GetOptionalNodeOptionNamesAsync("SAMLoader", "model_name") is { } samModelNames)
+        {
+            IEnumerable<HybridModelFile> models =
+            [
+                HybridModelFile.None,
+                ..samModelNames.Select(HybridModelFile.FromRemote)
+            ];
+            samModelsSource.EditDiff(models, HybridModelFile.Comparer);
         }
 
         // Prompt Expansion indexing is local only
@@ -371,6 +435,36 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             modelIndexService.FindByModelType(SharedFolderType.VAE).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
+
+        // Load Ultralytics models
+        IEnumerable<HybridModelFile> ultralyticsModels =
+        [
+            HybridModelFile.None,
+            ..modelIndexService
+            .FindByModelType(SharedFolderType.Ultralytics)
+            .Select(HybridModelFile.FromLocal)
+        ];
+        ultralyticsModelsSource.EditDiff(ultralyticsModels, HybridModelFile.Comparer);
+
+        var downloadableUltralyticsModels = RemoteModels.UltralyticsModelFiles.Where(
+            u => !ultralyticsModelsSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableUltralyticsModelsSource.EditDiff(downloadableUltralyticsModels, HybridModelFile.Comparer);
+
+        // Load SAM models
+        IEnumerable<HybridModelFile> samModels =
+        [
+            HybridModelFile.None,
+            ..modelIndexService
+            .FindByModelType(SharedFolderType.Sams)
+            .Select(HybridModelFile.FromLocal)
+        ];
+        samModelsSource.EditDiff(samModels, HybridModelFile.Comparer);
+
+        var downloadableSamModels = RemoteModels.SamModelFiles.Where(
+            u => !samModelsSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableSamModelsSource.EditDiff(downloadableSamModels, HybridModelFile.Comparer);
 
         samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
 

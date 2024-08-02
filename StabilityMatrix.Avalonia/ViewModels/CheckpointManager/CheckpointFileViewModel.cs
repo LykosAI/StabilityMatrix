@@ -35,6 +35,9 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [ObservableProperty]
     private bool isLoading;
 
+    [ObservableProperty]
+    private long fileSize;
+
     private readonly ISettingsManager settingsManager;
     private readonly IModelIndexService modelIndexService;
     private readonly INotificationService notificationService;
@@ -66,6 +69,11 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                 ?? CheckpointFile.ConnectedModelInfo?.ThumbnailImageUrl
                 ?? Assets.NoImage.ToString()
             : string.Empty;
+
+        if (!settingsManager.IsLibraryDirSet)
+            return;
+
+        FileSize = GetFileSize(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
     }
 
     [RelayCommand]
@@ -258,5 +266,14 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                 logger.LogError(e, "Failed to rename checkpoint file");
             }
         }
+    }
+
+    private long GetFileSize(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return 0;
+
+        var fileInfo = new FileInfo(filePath);
+        return fileInfo.Length;
     }
 }

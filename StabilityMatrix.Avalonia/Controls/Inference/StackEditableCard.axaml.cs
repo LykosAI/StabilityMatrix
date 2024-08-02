@@ -1,17 +1,11 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
-using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
-using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
@@ -26,8 +20,10 @@ public class StackEditableCard : TemplatedControl
     private ListBox? listBoxPart;
 
     // ReSharper disable once MemberCanBePrivate.Global
-    public static readonly StyledProperty<bool> IsListBoxEditEnabledProperty =
-        AvaloniaProperty.Register<StackEditableCard, bool>("IsListBoxEditEnabled");
+    public static readonly StyledProperty<bool> IsListBoxEditEnabledProperty = AvaloniaProperty.Register<
+        StackEditableCard,
+        bool
+    >("IsListBoxEditEnabled");
 
     public bool IsListBoxEditEnabled
     {

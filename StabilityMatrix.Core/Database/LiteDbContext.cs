@@ -163,9 +163,30 @@ public class LiteDbContext : ILiteDbContext
         if (string.IsNullOrEmpty(cacheKey))
             return null;
 
-        if (await GithubCache.FindByIdAsync(cacheKey).ConfigureAwait(false) is { } result)
+        try
         {
-            return result;
+            if (await GithubCache.FindByIdAsync(cacheKey).ConfigureAwait(false) is { } result)
+            {
+                return result;
+            }
+        }
+        catch (Exception e)
+        {
+            if (e is LiteException or LiteAsyncException && e.InnerException is InvalidCastException inner)
+            {
+                logger.LogWarning(
+                    e,
+                    "LiteDb Deserialize error while fetching GithubCacheEntry '{Inner}', cache collections will be cleared",
+                    inner.ToString()
+                );
+
+                var githubCache = Database.GetCollection(nameof(GithubCache));
+                await githubCache.DeleteAllAsync().ConfigureAwait(false);
+            }
+            else
+            {
+                throw;
+            }
         }
 
         return null;

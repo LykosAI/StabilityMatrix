@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using Exceptionless.DateTimeExtensions;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
+using FluentIcons.Common;
 using Semver;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -231,5 +232,5 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
 
     /// <inheritdoc />
     public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+        new SymbolIconSource { Symbol = Symbol.Settings, IconVariant = IconVariant.Filled };
 }

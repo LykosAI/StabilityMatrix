@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Languages;
@@ -44,7 +45,8 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
     private readonly RunningPackageService runningPackageService;
 
     public override string Title => Resources.Label_Packages;
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Box, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Box, IconVariant = IconVariant.Filled };
 
     /// <summary>
     /// List of installed packages

@@ -57,7 +57,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="AppGeneric" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
@@ -93,7 +93,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="Person" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
@@ -109,7 +109,7 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
-
+            
             <!--  Checkpoints Manager Options  -->
             <Grid RowDefinitions="Auto,*,Auto,Auto">
                 <TextBlock
@@ -154,7 +154,7 @@
             </Grid>
 
             <!--  Environment Options  -->
-            <Grid RowDefinitions="Auto, Auto, Auto">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto">
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
@@ -172,7 +172,7 @@
 
                 <ui:SettingsExpander
                     Grid.Row="2"
-                    Margin="8,4"
+                    Margin="8,4,8,0"
                     Header="{x:Static lang:Resources.Label_EmbeddedPython}">
                     <ui:SettingsExpander.IconSource>
                         <controls:FASymbolIconSource Symbol="fa-brands fa-python" />
@@ -184,7 +184,35 @@
                                 IsEnabled="{Binding CheckPythonVersionCommand.IsRunning}"
                                 IsIndeterminate="True"
                                 IsVisible="{Binding CheckPythonVersionCommand.IsRunning}" />
-                            <Button Command="{Binding CheckPythonVersionCommand}" Content="{x:Static lang:Resources.Action_CheckVersion}" />
+                            <DropDownButton Content="Run">
+                                <DropDownButton.Flyout>
+                                    <MenuFlyout Placement="Bottom">
+                                        <MenuItem Header="Command" Command="{Binding RunPythonProcessCommand}"/>
+                                    </MenuFlyout>
+                                </DropDownButton.Flyout>
+                            </DropDownButton>
+                            <Button
+                                Command="{Binding CheckPythonVersionCommand}" Content="{x:Static lang:Resources.Action_CheckVersion}" />
+                        </StackPanel>
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+                
+                <ui:SettingsExpander
+                    Grid.Row="3"
+                    Margin="8,4,8,0"
+                    Header="Git">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-brands fa-git-alt" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <DropDownButton Content="Run">
+                                <DropDownButton.Flyout>
+                                    <MenuFlyout Placement="Bottom">
+                                        <MenuItem Header="Command" Command="{Binding RunGitProcessCommand}"/>
+                                    </MenuFlyout>
+                                </DropDownButton.Flyout>
+                            </DropDownButton>
                         </StackPanel>
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
@@ -229,6 +257,35 @@
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
 
+            <!--  Console  -->
+            <sg:SpacedGrid RowDefinitions="Auto,*" RowSpacing="4">
+                <TextBlock
+                    Margin="0,0,0,4"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_Console}" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0,8,4"
+                    Description="{x:Static lang:Resources.Label_HistorySize_Description}"
+                    Header="{x:Static lang:Resources.Label_HistorySize}">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            Symbol="History" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ui:NumberBox 
+                            SpinButtonPlacementMode="Compact" 
+                            SimpleNumberFormat="F0"
+                            PlaceholderText="0"
+                            ValidationMode="InvalidInputOverwritten"
+                            Minimum="-1"
+                            Maximum="10000000"
+                            Value="{Binding ConsoleLogHistorySize}"/>
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+            </sg:SpacedGrid>
+            
             <!--  Theme  -->
             <Grid RowDefinitions="Auto,*,*,*,*,*">
                 <TextBlock
@@ -268,7 +325,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="DecimalArrowLeft" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
@@ -296,7 +353,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="WeatherSnowflake" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
@@ -334,7 +391,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="ArrowSync" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
@@ -439,7 +496,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="Info" />
                     </ui:SettingsExpander.IconSource>
 

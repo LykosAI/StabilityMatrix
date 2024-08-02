@@ -1116,7 +1116,22 @@
   <data name="Label_AppData" xml:space="preserve">
     <value>App Data</value>
   </data>
+  <data name="TextTemplate_PackageUpdatedToSelected" xml:space="preserve">
+    <value>{0} has been updated to the selected version</value>
+  </data>
+  <data name="Action_CopyAsBitmap" xml:space="preserve">
+    <value>Copy as Bitmap</value>
+  </data>
+  <data name="Label_DisableUpdateCheck" xml:space="preserve">
+    <value>Disable Update Check</value>
+  </data>
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>PLEASE EXTRACT THE APP FROM THE ZIP FILE BEFORE RUNNING STABILITY MATRIX</value>
+  </data>
+  <data name="Label_HistorySize" xml:space="preserve">
+    <value>History Size</value>
+  </data>
+  <data name="Label_HistorySize_Description" xml:space="preserve">
+    <value>The number of lines above the ones displayed in the console you can scroll back to</value>
   </data>
 </root>

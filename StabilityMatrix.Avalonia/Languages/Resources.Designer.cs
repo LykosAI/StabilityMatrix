@@ -168,6 +168,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy as Bitmap.
+        /// </summary>
+        public static string Action_CopyAsBitmap {
+            get {
+                return ResourceManager.GetString("Action_CopyAsBitmap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Copy Details.
         /// </summary>
         public static string Action_CopyDetails {
@@ -1284,6 +1293,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disable Update Check.
+        /// </summary>
+        public static string Label_DisableUpdateCheck {
+            get {
+                return ResourceManager.GetString("Label_DisableUpdateCheck", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Discord Rich Presence.
         /// </summary>
         public static string Label_DiscordRichPresence {
@@ -1523,6 +1541,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Height {
             get {
                 return ResourceManager.GetString("Label_Height", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to History Size.
+        /// </summary>
+        public static string Label_HistorySize {
+            get {
+                return ResourceManager.GetString("Label_HistorySize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of lines above the ones displayed in the console you can scroll back to.
+        /// </summary>
+        public static string Label_HistorySize_Description {
+            get {
+                return ResourceManager.GetString("Label_HistorySize_Description", resourceCulture);
             }
         }
         
@@ -3044,6 +3080,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string TextTemplate_PackageUpdatedToLatest {
             get {
                 return ResourceManager.GetString("TextTemplate_PackageUpdatedToLatest", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} has been updated to the selected version.
+        /// </summary>
+        public static string TextTemplate_PackageUpdatedToSelected {
+            get {
+                return ResourceManager.GetString("TextTemplate_PackageUpdatedToSelected", resourceCulture);
             }
         }
         

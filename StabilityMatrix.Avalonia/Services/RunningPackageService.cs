@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
+using KeyedSemaphores;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -28,12 +30,31 @@ public partial class RunningPackageService(
     IPyRunner pyRunner
 ) : ObservableObject, IDisposable
 {
+    /// <summary>
+    /// Locks for starting or stopping packages.
+    /// </summary>
+    private readonly KeyedSemaphoresDictionary<Guid> packageLocks = new();
+
     // 🤔 what if we put the ConsoleViewModel inside the BasePackage? 🤔
     [ObservableProperty]
     private ObservableDictionary<Guid, RunningPackageViewModel> runningPackages = [];
 
-    public async Task<PackagePair?> StartPackage(InstalledPackage installedPackage, string? command = null)
+    public async Task<PackagePair?> StartPackage(
+        InstalledPackage installedPackage,
+        string? command = null,
+        CancellationToken cancellationToken = default
+    )
     {
+        // Get lock
+        using var @lock = await packageLocks.LockAsync(installedPackage.Id, cancellationToken);
+
+        // Ignore if already running after lock
+        if (RunningPackages.ContainsKey(installedPackage.Id))
+        {
+            logger.LogWarning("Skipping StartPackage, already running: {Id}", installedPackage.Id);
+            return null;
+        }
+
         var activeInstallName = installedPackage.PackageName;
         var basePackage = string.IsNullOrWhiteSpace(activeInstallName)
             ? null
@@ -131,16 +152,24 @@ public partial class RunningPackageService(
         return runningPackage;
     }
 
-    public async Task StopPackage(Guid id)
+    public async Task StopPackage(Guid id, CancellationToken cancellationToken = default)
     {
-        if (RunningPackages.TryGetValue(id, out var vm))
-        {
-            var runningPackage = vm.RunningPackage;
-            await runningPackage.BasePackage.WaitForShutdown();
-            RunningPackages.Remove(id);
+        // Get lock
+        using var @lock = await packageLocks.LockAsync(id, cancellationToken);
 
-            await vm.DisposeAsync();
+        // Ignore if not running after lock
+        if (!RunningPackages.TryGetValue(id, out var vm))
+        {
+            logger.LogWarning("Skipping StopPackage, not running: {Id}", id);
+            return;
         }
+
+        var runningPackage = vm.RunningPackage;
+        await runningPackage.BasePackage.WaitForShutdown();
+
+        await vm.DisposeAsync();
+
+        RunningPackages.Remove(id);
     }
 
     public RunningPackageViewModel? GetRunningPackageViewModel(Guid id) =>

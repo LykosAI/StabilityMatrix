@@ -132,3 +132,54 @@ public abstract record ComfyTypedNodeBase<TOutput1, TOutput2, TOutput3> : ComfyT
         ComfyTypedNodeBase<TOutput1, TOutput2, TOutput3> node
     ) => (NamedComfyNode<TOutput1, TOutput2, TOutput3>)node.ToNamedNode();
 }
+
+public abstract record ComfyTypedNodeBase<TOutput1, TOutput2, TOutput3, TOutput4> : ComfyTypedNodeBase
+    where TOutput1 : NodeConnectionBase, new()
+    where TOutput2 : NodeConnectionBase, new()
+    where TOutput3 : NodeConnectionBase, new()
+    where TOutput4 : NodeConnectionBase, new()
+{
+    [JsonIgnore]
+    public TOutput1 Output1 => new() { Data = new object[] { Name, 0 } };
+
+    [JsonIgnore]
+    public TOutput2 Output2 => new() { Data = new object[] { Name, 1 } };
+
+    [JsonIgnore]
+    public TOutput3 Output3 => new() { Data = new object[] { Name, 2 } };
+
+    [JsonIgnore]
+    public TOutput4 Output4 => new() { Data = new object[] { Name, 3 } };
+
+    public static implicit operator NamedComfyNode<TOutput1, TOutput2, TOutput3, TOutput4>(
+        ComfyTypedNodeBase<TOutput1, TOutput2, TOutput3, TOutput4> node
+    ) => (NamedComfyNode<TOutput1, TOutput2, TOutput3, TOutput4>)node.ToNamedNode();
+}
+
+public abstract record ComfyTypedNodeBase<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>
+    : ComfyTypedNodeBase
+    where TOutput1 : NodeConnectionBase, new()
+    where TOutput2 : NodeConnectionBase, new()
+    where TOutput3 : NodeConnectionBase, new()
+    where TOutput4 : NodeConnectionBase, new()
+    where TOutput5 : NodeConnectionBase, new()
+{
+    [JsonIgnore]
+    public TOutput1 Output1 => new() { Data = new object[] { Name, 0 } };
+
+    [JsonIgnore]
+    public TOutput2 Output2 => new() { Data = new object[] { Name, 1 } };
+
+    [JsonIgnore]
+    public TOutput3 Output3 => new() { Data = new object[] { Name, 2 } };
+
+    [JsonIgnore]
+    public TOutput4 Output4 => new() { Data = new object[] { Name, 3 } };
+
+    [JsonIgnore]
+    public TOutput5 Output5 => new() { Data = new object[] { Name, 4 } };
+
+    public static implicit operator NamedComfyNode<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>(
+        ComfyTypedNodeBase<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5> node
+    ) => (NamedComfyNode<TOutput1, TOutput2, TOutput3, TOutput4, TOutput5>)node.ToNamedNode();
+}

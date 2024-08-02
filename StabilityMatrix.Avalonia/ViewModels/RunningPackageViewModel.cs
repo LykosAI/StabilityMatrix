@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -23,6 +24,8 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
     private readonly RunningPackageService runningPackageService;
+
+    private readonly CompositeDisposable subscriptions = new();
 
     public PackagePair RunningPackage { get; }
     public ConsoleViewModel Console { get; }
@@ -62,9 +65,20 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
 
         RunningPackage = runningPackage;
         Console = console;
+        Console.MaxLines = settingsManager.Settings.ConsoleLogHistorySize;
         Console.Document.LineCountChanged += DocumentOnLineCountChanged;
         RunningPackage.BasePackage.StartupComplete += BasePackageOnStartupComplete;
         RunningPackage.BasePackage.Exited += BasePackageOnExited;
+
+        subscriptions.Add(
+            settingsManager.RegisterPropertyChangedHandler(
+                settings => settings.ConsoleLogHistorySize,
+                newValue =>
+                {
+                    Console.MaxLines = newValue;
+                }
+            )
+        );
 
         settingsManager.RelayPropertyFor(
             this,
@@ -177,6 +191,7 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     {
         RunningPackage.BasePackage.Shutdown();
         Console.Dispose();
+        subscriptions.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -184,6 +199,7 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
     {
         RunningPackage.BasePackage.Shutdown();
         await Console.DisposeAsync();
+        subscriptions.Dispose();
         GC.SuppressFinalize(this);
     }
 }

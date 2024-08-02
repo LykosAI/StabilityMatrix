@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Collections;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
+using FluentIcons.Common;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -43,7 +42,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
 
     public override string Title => "Download Manager";
     public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.ArrowCircleDown, IsFilled = true };
+        new SymbolIconSource { Symbol = Symbol.ArrowCircleDown, IconVariant = IconVariant.Filled };
     public AvaloniaList<ProgressItemViewModelBase> ProgressItems { get; } = new();
 
     [ObservableProperty]
@@ -149,7 +148,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                     }
 
                     notificationService
-                        .ShowAsync(
+                        .ShowPersistentAsync(
                             NotificationKey.Download_Failed,
                             new Notification
                             {

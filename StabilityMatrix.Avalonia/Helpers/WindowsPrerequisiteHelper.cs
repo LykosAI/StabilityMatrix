@@ -7,7 +7,6 @@ using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 using NLog;
-using Octokit;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -169,7 +168,7 @@ public class WindowsPrerequisiteHelper(
         {
             await InstallDotnetIfNecessary(progress);
         }
-        
+
         if (prerequisites.Contains(PackagePrerequisite.Tkinter))
         {
             await InstallTkinterIfNecessary(progress);

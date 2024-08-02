@@ -17,6 +17,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using Microsoft.Extensions.Logging;
 using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Controls;
@@ -57,7 +58,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public override string Title => Resources.Label_OutputsPageTitle;
 
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Grid, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Grid, IconVariant = IconVariant.Filled };
 
     public SourceCache<LocalImageFile, string> OutputsCache { get; } = new(file => file.AbsolutePath);
 

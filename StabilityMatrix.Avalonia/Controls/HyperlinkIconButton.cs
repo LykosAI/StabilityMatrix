@@ -6,7 +6,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Logging;
-using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Core.Processes;
 using Symbol = FluentIcons.Common.Symbol;
 

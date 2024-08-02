@@ -3,7 +3,6 @@ using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
@@ -32,19 +31,17 @@ public class FreeUModule : ModuleBase
 
         foreach (var modelConnections in e.Builder.Connections.Models.Values.Where(m => m.Model is not null))
         {
-            modelConnections.Model = e.Nodes
-                .AddTypedNode(
-                    new ComfyNodeBuilder.FreeU
-                    {
-                        Name = e.Nodes.GetUniqueName($"FreeU_{modelConnections.Name}"),
-                        Model = modelConnections.Model!,
-                        B1 = card.B1,
-                        B2 = card.B2,
-                        S1 = card.S1,
-                        S2 = card.S2
-                    }
-                )
-                .Output;
+            modelConnections.Model = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.FreeU
+                {
+                    Name = e.Nodes.GetUniqueName($"FreeU_{modelConnections.Name}"),
+                    Model = modelConnections.Model!,
+                    B1 = card.B1,
+                    B2 = card.B2,
+                    S1 = card.S1,
+                    S2 = card.S2
+                }
+            ).Output;
         }
     }
 }

@@ -5,7 +5,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -17,9 +16,9 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -64,7 +63,7 @@ public partial class CheckpointsPageViewModel(
     public override string Title => Resources.Label_CheckpointManager;
 
     public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };
+        new SymbolIconSource { Symbol = Symbol.Notebook, IconVariant = IconVariant.Filled };
 
     private SourceCache<CheckpointCategory, string> categoriesCache = new(category => category.GetId());
 

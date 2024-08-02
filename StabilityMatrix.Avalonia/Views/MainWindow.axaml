@@ -104,7 +104,7 @@
                             <fluentIcons:SymbolIconSource
                                 FontSize="18"
                                 Symbol="ArrowDownload"
-                                IsFilled="True"
+                                IconVariant="Filled"
                                 Foreground="LimeGreen"/>
                         </ui:NavigationViewItem.IconSource> 
                     </ui:NavigationViewItem>

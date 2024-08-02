@@ -72,7 +72,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                 ?? Assets.NoImage.ToString()
             : string.Empty;
 
-        if (Design.IsDesignMode)
+        if (!settingsManager.IsLibraryDirSet)
             return;
 
         FileSize = GetFileSize(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));

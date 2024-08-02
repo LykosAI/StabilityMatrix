@@ -141,21 +141,21 @@ public class StarsRating : TemplatedControl
             if (tag <= Math.Floor(RoundToHalf(Value)))
             {
                 star.Symbol = Symbol.Star;
-                star.IsFilled = true;
+                star.IconVariant = IconVariant.Filled;
                 star.Foreground = Foreground;
             }
             // If current is between floor and ceil of value, use half-star
             else if (tag <= Math.Ceiling(RoundToHalf(Value)))
             {
                 star.Symbol = Symbol.StarHalf;
-                star.IsFilled = true;
+                star.IconVariant = IconVariant.Filled;
                 star.Foreground = Foreground;
             }
             // Otherwise no fill and gray disabled color
             else
             {
                 star.Symbol = Symbol.Star;
-                star.IsFilled = false;
+                star.IconVariant = IconVariant.Regular;
                 star.Foreground = new SolidColorBrush(Colors.DarkSlateGray);
             }
         }

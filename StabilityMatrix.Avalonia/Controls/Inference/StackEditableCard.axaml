@@ -47,7 +47,7 @@
                                         VerticalAlignment="Bottom"
                                         CornerRadius="4"
                                         Padding="12,4" >
-                                    <fluentIcons:SymbolIcon Symbol="Add" IsFilled="True" FontSize="14" />
+                                    <fluentIcons:SymbolIcon Symbol="Add" IconVariant="Filled" FontSize="14" />
                                 </Button>
                             </sg:SpacedGrid>
 

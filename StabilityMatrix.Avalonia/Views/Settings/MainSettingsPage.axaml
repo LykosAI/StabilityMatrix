@@ -57,7 +57,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="AppGeneric" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
@@ -93,7 +93,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="Person" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
@@ -325,7 +325,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="DecimalArrowLeft" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
@@ -353,7 +353,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="WeatherSnowflake" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
@@ -391,7 +391,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="ArrowSync" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
@@ -496,7 +496,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="Info" />
                     </ui:SettingsExpander.IconSource>
 

@@ -9,6 +9,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -42,7 +43,8 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     public override string Title => "Accounts";
 
     /// <inheritdoc />
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Person, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Person, IconVariant = IconVariant.Filled };
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ConnectLykosCommand))]

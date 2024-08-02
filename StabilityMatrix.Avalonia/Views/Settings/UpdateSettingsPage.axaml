@@ -35,7 +35,7 @@
                         Width="64"
                         Height="64"
                         FontSize="64"
-                        IsFilled="True"
+                        IconVariant="Filled"
                         Symbol="ArrowSync" />
 
                     <StackPanel VerticalAlignment="Center">

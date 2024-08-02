@@ -16,6 +16,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
@@ -60,7 +61,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
     public override string Title => Resources.Label_Inference;
     public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.AppGeneric, IsFilled = true };
+        new SymbolIconSource { Symbol = Symbol.AppGeneric, IconVariant = IconVariant.Filled };
 
     public RefreshBadgeViewModel ConnectionBadge { get; } =
         new()

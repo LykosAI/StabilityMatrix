@@ -23,6 +23,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Animations;
@@ -78,7 +79,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public override string Title => "Settings";
     public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+        new SymbolIconSource { Symbol = Symbol.Settings, IconVariant = IconVariant.Filled };
 
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public string AppVersion =>

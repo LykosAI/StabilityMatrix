@@ -52,6 +52,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### Visionaries
 - Shoutout to our Visionary-tier Patreon supporters, **Scopp Mcdee**, **Waterclouds**, and our newest Visionary, **Akiro_Senkai**! Many thanks for your generous support!
 
+## v2.11.6
+### Fixed
+- Fixed incorrect IPAdapter download links in the HuggingFace model browser
+
 ## v2.11.5
 ### Added
 - Added DoRA category to CivitAI model browser

@@ -19,6 +19,7 @@ using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -37,6 +38,7 @@ using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using CheckpointSortMode = StabilityMatrix.Core.Models.CheckpointSortMode;
 using Notification = Avalonia.Controls.Notifications.Notification;
@@ -64,7 +66,7 @@ public partial class CheckpointsPageViewModel(
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.Notebook, IsFilled = true };
 
-    private SourceCache<CheckpointCategory, string> categoriesCache = new(category => category.Path);
+    private SourceCache<CheckpointCategory, string> categoriesCache = new(category => category.GetId());
 
     public IObservableCollection<CheckpointCategory> Categories { get; set; } =
         new ObservableCollectionExtended<CheckpointCategory>();
@@ -123,6 +125,9 @@ public partial class CheckpointsPageViewModel(
 
     [ObservableProperty]
     private ObservableCollection<string> selectedBaseModels = [];
+
+    [ObservableProperty]
+    private bool dragMovesAllSelected = true;
 
     public string ClearButtonText =>
         SelectedBaseModels.Count == BaseModelOptions.Count
@@ -254,6 +259,12 @@ public partial class CheckpointsPageViewModel(
                         comparer = comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName);
                         comparer = comparer.ThenByDescending(vm => vm.CheckpointFile.DisplayModelVersion);
                         break;
+                    case CheckpointSortMode.FileSize:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.FileSize)
+                                : comparer.ThenByDescending(vm => vm.FileSize);
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -287,7 +298,17 @@ public partial class CheckpointsPageViewModel(
                 NumItemsSelected = Models.Count(o => o.IsSelected);
             });
 
-        categoriesCache.Connect().DeferUntilLoaded().Bind(Categories).Subscribe();
+        categoriesCache
+            .Connect()
+            .DeferUntilLoaded()
+            .SortAndBind(
+                Categories,
+                SortExpressionComparer<CheckpointCategory>
+                    .Descending(x => x.Name == "All Models")
+                    .ThenByAscending(x => x.Name)
+            )
+            .Subscribe();
+
         settingsManager.RelayPropertyFor(
             this,
             vm => vm.IsImportAsConnectedEnabled,
@@ -331,6 +352,13 @@ public partial class CheckpointsPageViewModel(
             this,
             vm => vm.ShowModelsInSubfolders,
             settings => settings.ShowModelsInSubfolders,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.DragMovesAllSelected,
+            settings => settings.DragMovesAllSelected,
             true
         );
 
@@ -559,6 +587,84 @@ public partial class CheckpointsPageViewModel(
         }
     }
 
+    [RelayCommand]
+    private async Task CreateFolder(object? treeViewItem)
+    {
+        if (treeViewItem is not CheckpointCategory category)
+            return;
+
+        var parentFolder = category.Path;
+
+        if (string.IsNullOrWhiteSpace(parentFolder))
+            return;
+
+        var fields = new TextBoxField[]
+        {
+            new()
+            {
+                Label = "Folder Name",
+                InnerLeftText =
+                    $@"{parentFolder.Replace(settingsManager.ModelsDirectory, string.Empty).TrimStart(Path.DirectorySeparatorChar)}{Path.DirectorySeparatorChar}",
+                MinWidth = 400
+            }
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("Create Folder", string.Empty, fields);
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary)
+            return;
+
+        var folderName = fields[0].Text;
+        var folderPath = Path.Combine(parentFolder, folderName);
+
+        await notificationService.TryAsync(
+            Task.Run(() => Directory.CreateDirectory(folderPath)),
+            message: "Could not create folder"
+        );
+
+        RefreshCategories();
+
+        SelectedCategory = Categories.SelectMany(c => c.Flatten()).FirstOrDefault(x => x.Path == folderPath);
+    }
+
+    [RelayCommand]
+    private Task OpenFolderFromTreeview(object? treeViewItem) =>
+        treeViewItem is CheckpointCategory category && !string.IsNullOrWhiteSpace(category.Path)
+            ? ProcessRunner.OpenFolderBrowser(category.Path)
+            : Task.CompletedTask;
+
+    [RelayCommand]
+    private async Task DeleteFolderAsync(object? treeViewItem)
+    {
+        if (treeViewItem is not CheckpointCategory category)
+            return;
+
+        var folderPath = category.Path;
+        if (string.IsNullOrWhiteSpace(folderPath))
+            return;
+
+        var confirmDeleteVm = dialogFactory.Get<ConfirmDeleteDialogViewModel>();
+        confirmDeleteVm.PathsToDelete = category.Flatten().Select(x => x.Path).ToList();
+
+        if (await confirmDeleteVm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+            return;
+
+        confirmDeleteVm.PathsToDelete = [folderPath];
+
+        try
+        {
+            await confirmDeleteVm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent("Error deleting folder", e.Message, NotificationType.Error);
+            return;
+        }
+
+        RefreshCategories();
+    }
+
     public async Task ImportFilesAsync(IEnumerable<string> files, DirectoryPath destinationFolder)
     {
         if (destinationFolder.FullPath == settingsManager.ModelsDirectory)
@@ -710,11 +816,29 @@ public partial class CheckpointsPageViewModel(
             Count = modelIndexService.ModelIndex.Values.SelectMany(x => x).Count(),
         };
 
-        categoriesCache.EditDiff(
-            [rootCategory, ..modelCategories],
-            (a, b) => a.Path == b.Path && a.SubDirectories.Count == b.SubDirectories.Count
-        );
+        categoriesCache.EditDiff([rootCategory, ..modelCategories], (a, b) => a.GetId() == b.GetId());
 
+        SelectedCategory =
+            previouslySelectedCategory
+            ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
+            ?? Categories.First();
+
+        var dirPath = new DirectoryPath(SelectedCategory.Path);
+
+        while (dirPath.FullPath != settingsManager.ModelsDirectory && dirPath.Parent != null)
+        {
+            var category = Categories
+                .SelectMany(x => x.Flatten())
+                .FirstOrDefault(x => x.Path == dirPath.FullPath);
+            if (category != null)
+            {
+                category.IsExpanded = true;
+            }
+
+            dirPath = dirPath.Parent;
+        }
+
+        // one more time for good measure??
         SelectedCategory =
             previouslySelectedCategory
             ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)

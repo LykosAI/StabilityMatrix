@@ -8,8 +8,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.12.0-dev.3
 ### Added
 - Added Settings option "Console: History Size" to adjust the number of lines stored in the console history when running packages. Defaults to 9001 lines.
+- Added "New Directory" and "Delete" options to the context menu of the tree view on the Checkpoints page.
+- Added new toggle for dragging and dropping models on the Checkpoints page, when enabled, all selected models will now move together with the dragged model
+- Added "File Size" sorting option to the Checkpoints page
+### Changed
+- The "Download Failed" message for model downloads is now persistent until dismissed
 ### Fixed
 - Fixed "The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp." error for Linux users
+- Fixed download links for IPAdapters in the HuggingFace model browser
 
 ## v2.12.0-dev.2
 ### Added

@@ -10,6 +10,9 @@ public enum CheckpointSortMode
     [StringValue("File Name")]
     FileName,
 
+    [StringValue("File Size")]
+    FileSize,
+
     [StringValue("Title")]
     Title,
 

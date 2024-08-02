@@ -355,6 +355,13 @@ public partial class CheckpointsPageViewModel(
             true
         );
 
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.DragMovesAllSelected,
+            settings => settings.DragMovesAllSelected,
+            true
+        );
+
         // make sure a sort happens
         OnPropertyChanged(nameof(SortConnectedModelsFirst));
     }

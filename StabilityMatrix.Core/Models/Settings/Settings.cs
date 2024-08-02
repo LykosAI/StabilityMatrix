@@ -192,6 +192,8 @@ public class Settings
     /// </summary>
     public bool MoveFilesOnImport { get; set; } = true;
 
+    public bool DragMovesAllSelected { get; set; } = true;
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

@@ -2,12 +2,13 @@
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.Primitives;
-using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.Core;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -16,6 +17,9 @@ using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Services;
+using Path = System.IO.Path;
 using Size = StabilityMatrix.Core.Helper.Size;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -23,7 +27,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [View(typeof(ImageViewerDialog))]
 [ManagedService]
 [Transient]
-public partial class ImageViewerViewModel : ContentDialogViewModelBase
+public partial class ImageViewerViewModel(
+    ILogger<ImageViewerViewModel> logger,
+    ISettingsManager settingsManager
+) : ContentDialogViewModelBase
 {
     [ObservableProperty]
     private ImageSource? imageSource;
@@ -81,18 +88,44 @@ public partial class ImageViewerViewModel : ContentDialogViewModelBase
     }
 
     [RelayCommand]
-    private async Task CopyImage(Bitmap? image)
+    private async Task CopyImage(ImageSource? image)
+    {
+        if (image is null)
+            return;
+
+        if (image.LocalFile is { } imagePath)
+        {
+            await App.Clipboard.SetFileDataObjectAsync(imagePath);
+        }
+        else if (await image.GetBitmapAsync() is { } bitmap)
+        {
+            // Write to temp file
+            var tempFile = new FilePath(Path.GetTempFileName() + ".png");
+
+            bitmap.Save(tempFile);
+
+            await App.Clipboard.SetFileDataObjectAsync(tempFile);
+        }
+        else
+        {
+            logger.LogWarning("Failed to copy image, no file path or bitmap: {Image}", image);
+        }
+    }
+
+    [RelayCommand]
+    private async Task CopyImageAsBitmap(ImageSource? image)
     {
         if (image is null || !Compat.IsWindows)
             return;
 
-        await Task.Run(() =>
+        if (await image.GetBitmapAsync() is { } bitmap)
         {
-            if (Compat.IsWindows)
-            {
-                WindowsClipboard.SetBitmap(image);
-            }
-        });
+            await WindowsClipboard.SetBitmapAsync(bitmap);
+        }
+        else
+        {
+            logger.LogWarning("Failed to copy image, no bitmap: {Image}", image);
+        }
     }
 
     public override BetterContentDialog GetDialog()

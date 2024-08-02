@@ -144,6 +144,13 @@ public class Fooocus(
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
                 Options = { "--disable-xformers" }
             },
+            new LaunchOptionDefinition
+            {
+                Name = "Disable Offload from VRAM",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS,
+                Options = { "--disable-offload-from-vram" }
+            },
             LaunchOptionDefinition.Extras
         };
 
@@ -250,7 +257,14 @@ public class Fooocus(
         new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
+        new[]
+        {
+            TorchVersion.Cpu,
+            TorchVersion.Cuda,
+            TorchVersion.DirectMl,
+            TorchVersion.Rocm,
+            TorchVersion.Mps
+        };
 
     public override string MainBranch => "main";
 
@@ -293,6 +307,7 @@ public class Fooocus(
                         TorchVersion.Cpu => "cpu",
                         TorchVersion.Cuda => "cu121",
                         TorchVersion.Rocm => "rocm5.6",
+                        TorchVersion.Mps => "cpu",
                         _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                     }
                 );

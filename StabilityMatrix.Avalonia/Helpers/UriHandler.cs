@@ -39,8 +39,7 @@ public class UriHandler
     public void SendAndExit(Uri uri)
     {
         var services = new ServiceCollection();
-        services.AddMessagePipe();
-        services.AddMessagePipeNamedPipeInterprocess("StabilityMatrix");
+        services.AddMessagePipe().AddNamedPipeInterprocess("StabilityMatrix");
 
         var provider = services.BuildServiceProvider();
         var publisher = provider.GetRequiredService<IDistributedPublisher<string, Uri>>();

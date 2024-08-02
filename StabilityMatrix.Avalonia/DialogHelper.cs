@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Data;
@@ -38,6 +39,38 @@ namespace StabilityMatrix.Avalonia;
 public static class DialogHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    /// <summary>
+    /// Create and show a generic textbox entry content dialog. Returns the result of the dialog.
+    /// </summary>
+    public static async Task<ContentDialogValueResult<TextBoxField>> GetTextEntryDialogResultAsync(
+        TextBoxField field,
+        string title = "",
+        string description = ""
+    )
+    {
+        var dialog = CreateTextEntryDialog(title: title, description: description, textFields: [field]);
+        var result = await dialog.ShowAsync();
+
+        return new ContentDialogValueResult<TextBoxField>(result, field);
+    }
+
+    /// <summary>
+    /// Create and show a generic textbox entry content dialog. Returns the result of the dialog.
+    /// </summary>
+    public static async Task<
+        ContentDialogValueResult<IReadOnlyList<TextBoxField>>
+    > GetTextEntryDialogResultAsync(
+        IReadOnlyList<TextBoxField> fields,
+        string title = "",
+        string description = ""
+    )
+    {
+        var dialog = CreateTextEntryDialog(title: title, description: description, textFields: fields);
+        var result = await dialog.ShowAsync();
+
+        return new ContentDialogValueResult<IReadOnlyList<TextBoxField>>(result, fields);
+    }
 
     /// <summary>
     /// Create a generic textbox entry content dialog.

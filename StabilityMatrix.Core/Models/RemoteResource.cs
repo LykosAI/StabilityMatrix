@@ -37,4 +37,6 @@ public readonly record struct RemoteResource
     /// Optional relative path to extract the archive to, if AutoExtractArchive is true
     /// </summary>
     public string? ExtractRelativePath { get; init; }
+
+    public string? RelativePath { get; init; }
 }

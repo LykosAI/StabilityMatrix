@@ -53,13 +53,18 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
     [ObservableProperty]
     private GitCommit? selectedCommit;
 
+    [ObservableProperty]
+    private bool canSelectBasePackage = true;
+
+    [ObservableProperty]
+    private string? customCommitSha;
+
+    [ObservableProperty]
+    private bool showCustomCommitSha;
+
     // Version types (release or commit)
     [ObservableProperty]
-    [NotifyPropertyChangedFor(
-        nameof(ReleaseLabelText),
-        nameof(IsReleaseMode),
-        nameof(SelectedVersion)
-    )]
+    [NotifyPropertyChangedFor(nameof(ReleaseLabelText), nameof(IsReleaseMode), nameof(SelectedVersion))]
     private PackageVersionType selectedVersionType = PackageVersionType.Commit;
 
     [ObservableProperty]
@@ -70,14 +75,10 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
     public bool IsReleaseMode
     {
         get => SelectedVersionType == PackageVersionType.GithubRelease;
-        set =>
-            SelectedVersionType = value
-                ? PackageVersionType.GithubRelease
-                : PackageVersionType.Commit;
+        set => SelectedVersionType = value ? PackageVersionType.GithubRelease : PackageVersionType.Commit;
     }
 
-    public bool IsReleaseModeAvailable =>
-        AvailableVersionTypes.HasFlag(PackageVersionType.GithubRelease);
+    public bool IsReleaseModeAvailable => AvailableVersionTypes.HasFlag(PackageVersionType.GithubRelease);
 
     public PackageImportViewModel(IPackageFactory packageFactory, ISettingsManager settingsManager)
     {
@@ -138,6 +139,34 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
     partial void OnSelectedVersionTypeChanged(PackageVersionType value) =>
         OnSelectedBasePackageChanged(SelectedBasePackage);
 
+    partial void OnSelectedVersionChanged(PackageVersion? value)
+    {
+        if (value == null || IsReleaseMode)
+            return;
+
+        if (SelectedBasePackage is BaseGitPackage gitPackage)
+        {
+            Dispatcher
+                .UIThread.InvokeAsync(async () =>
+                {
+                    var commits = (await gitPackage.GetAllCommits(value.TagName))?.ToList();
+                    if (commits is null || commits.Count == 0)
+                        return;
+
+                    commits = [..commits, new GitCommit { Sha = "Custom..." }];
+
+                    AvailableCommits = new ObservableCollection<GitCommit>(commits);
+                    SelectedCommit = AvailableCommits[0];
+                })
+                .SafeFireAndForget();
+        }
+    }
+
+    partial void OnSelectedCommitChanged(GitCommit? value)
+    {
+        ShowCustomCommitSha = value is { Sha: "Custom..." };
+    }
+
     partial void OnSelectedBasePackageChanged(BasePackage? value)
     {
         if (value is null || SelectedBasePackage is null)
@@ -155,13 +184,13 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
         if (Design.IsDesignMode)
             return;
 
-        Dispatcher.UIThread
-            .InvokeAsync(async () =>
+        Dispatcher
+            .UIThread.InvokeAsync(async () =>
             {
                 Logger.Debug($"Release mode: {IsReleaseMode}");
                 var versionOptions = await value.GetAllVersionOptions();
 
-                AvailableVersions = IsReleaseModeAvailable
+                AvailableVersions = IsReleaseMode
                     ? new ObservableCollection<PackageVersion>(versionOptions.AvailableVersions)
                     : new ObservableCollection<PackageVersion>(versionOptions.AvailableBranches);
 
@@ -173,6 +202,8 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
                     var commits = (await value.GetAllCommits(SelectedVersion.TagName))?.ToList();
                     if (commits is null || commits.Count == 0)
                         return;
+
+                    commits = [..commits, new GitCommit { Sha = "Custom..." }];
 
                     AvailableCommits = new ObservableCollection<GitCommit>(commits);
                     SelectedCommit = AvailableCommits[0];
@@ -211,14 +242,12 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
         if (IsReleaseMode)
         {
             version.InstalledReleaseVersion =
-                SelectedVersion?.TagName
-                ?? throw new NullReferenceException("Selected version is null");
+                SelectedVersion?.TagName ?? throw new NullReferenceException("Selected version is null");
         }
         else
         {
             version.InstalledBranch =
-                SelectedVersion?.TagName
-                ?? throw new NullReferenceException("Selected version is null");
+                SelectedVersion?.TagName ?? throw new NullReferenceException("Selected version is null");
             version.InstalledCommitSha =
                 SelectedCommit?.Sha ?? throw new NullReferenceException("Selected commit is null");
         }

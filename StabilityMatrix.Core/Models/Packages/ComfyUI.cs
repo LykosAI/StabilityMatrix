@@ -51,27 +51,29 @@ public class ComfyUI(
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = new[] { "models/checkpoints" },
-            [SharedFolderType.Diffusers] = new[] { "models/diffusers" },
-            [SharedFolderType.Lora] = new[] { "models/loras" },
-            [SharedFolderType.CLIP] = new[] { "models/clip" },
-            [SharedFolderType.InvokeClipVision] = new[] { "models/clip_vision" },
-            [SharedFolderType.TextualInversion] = new[] { "models/embeddings" },
-            [SharedFolderType.VAE] = new[] { "models/vae" },
-            [SharedFolderType.ApproxVAE] = new[] { "models/vae_approx" },
-            [SharedFolderType.ControlNet] = new[] { "models/controlnet/ControlNet" },
-            [SharedFolderType.GLIGEN] = new[] { "models/gligen" },
-            [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
-            [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
-            [SharedFolderType.IpAdapter] = new[] { "models/ipadapter/base" },
-            [SharedFolderType.InvokeIpAdapters15] = new[] { "models/ipadapter/sd15" },
-            [SharedFolderType.InvokeIpAdaptersXl] = new[] { "models/ipadapter/sdxl" },
-            [SharedFolderType.T2IAdapter] = new[] { "models/controlnet/T2IAdapter" },
-            [SharedFolderType.PromptExpansion] = new[] { "models/prompt_expansion" }
+            [SharedFolderType.StableDiffusion] = ["models/checkpoints"],
+            [SharedFolderType.Diffusers] = ["models/diffusers"],
+            [SharedFolderType.Lora] = ["models/loras"],
+            [SharedFolderType.CLIP] = ["models/clip"],
+            [SharedFolderType.InvokeClipVision] = ["models/clip_vision"],
+            [SharedFolderType.TextualInversion] = ["models/embeddings"],
+            [SharedFolderType.VAE] = ["models/vae"],
+            [SharedFolderType.ApproxVAE] = ["models/vae_approx"],
+            [SharedFolderType.ControlNet] = ["models/controlnet/ControlNet"],
+            [SharedFolderType.GLIGEN] = ["models/gligen"],
+            [SharedFolderType.ESRGAN] = ["models/upscale_models"],
+            [SharedFolderType.Hypernetwork] = ["models/hypernetworks"],
+            [SharedFolderType.IpAdapter] = ["models/ipadapter/base"],
+            [SharedFolderType.InvokeIpAdapters15] = ["models/ipadapter/sd15"],
+            [SharedFolderType.InvokeIpAdaptersXl] = ["models/ipadapter/sdxl"],
+            [SharedFolderType.T2IAdapter] = ["models/controlnet/T2IAdapter"],
+            [SharedFolderType.PromptExpansion] = ["models/prompt_expansion"],
+            [SharedFolderType.Ultralytics] = ["models/ultralytics"],
+            [SharedFolderType.Sams] = ["models/sams"]
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
-        new() { [SharedOutputType.Text2Img] = new[] { "output" } };
+        new() { [SharedOutputType.Text2Img] = ["output"] };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
@@ -173,14 +175,7 @@ public class ComfyUI(
     public override string MainBranch => "master";
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[]
-        {
-            TorchVersion.Cpu,
-            TorchVersion.Cuda,
-            TorchVersion.DirectMl,
-            TorchVersion.Rocm,
-            TorchVersion.Mps
-        };
+        [TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm, TorchVersion.Mps];
 
     public override async Task InstallPackage(
         string installLocation,
@@ -373,6 +368,10 @@ public class ComfyUI(
                 Path.Combine(modelsDir, "InvokeIpAdaptersXl")
             );
             nodeValue.Children["prompt_expansion"] = Path.Combine(modelsDir, "PromptExpansion");
+            nodeValue.Children["ultralytics"] = Path.Combine(modelsDir, "Ultralytics");
+            nodeValue.Children["ultralytics_bbox"] = Path.Combine(modelsDir, "Ultralytics", "bbox");
+            nodeValue.Children["ultralytics_segm"] = Path.Combine(modelsDir, "Ultralytics", "segm");
+            nodeValue.Children["sams"] = Path.Combine(modelsDir, "Sams");
         }
         else
         {
@@ -411,7 +410,11 @@ public class ComfyUI(
                             Path.Combine(modelsDir, "InvokeIpAdaptersXl")
                         )
                     },
-                    { "prompt_expansion", Path.Combine(modelsDir, "PromptExpansion") }
+                    { "prompt_expansion", Path.Combine(modelsDir, "PromptExpansion") },
+                    { "ultralytics", Path.Combine(modelsDir, "Ultralytics") },
+                    { "ultralytics_bbox", Path.Combine(modelsDir, "Ultralytics", "bbox") },
+                    { "ultralytics_segm", Path.Combine(modelsDir, "Ultralytics", "segm") },
+                    { "sams", Path.Combine(modelsDir, "Sams") }
                 }
             );
         }
@@ -468,9 +471,10 @@ public class ComfyUI(
         await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);
     }
 
-    public override IPackageExtensionManager ExtensionManager => new ComfyExtensionManager(this);
+    public override IPackageExtensionManager ExtensionManager =>
+        new ComfyExtensionManager(this, settingsManager);
 
-    private class ComfyExtensionManager(ComfyUI package)
+    private class ComfyExtensionManager(ComfyUI package, ISettingsManager settingsManager)
         : GitPackageExtensionManager(package.PrerequisiteHelper)
     {
         public override string RelativeInstallDirectory => "custom_nodes";
@@ -631,6 +635,19 @@ public class ComfyUI(
                         .ConfigureAwait(false);
 
                     venvRunner.WorkingDirectory = installScript.Directory;
+                    venvRunner.UpdateEnvironmentVariables(env =>
+                    {
+                        // set env vars for Impact Pack for Face Detailer
+                        env = env.SetItem("COMFYUI_PATH", installedPackage.FullPath!);
+
+                        var modelPath =
+                            installedPackage.PreferredSharedFolderMethod == SharedFolderMethod.None
+                                ? Path.Combine(installedPackage.FullPath!, "models")
+                                : settingsManager.ModelsDirectory;
+
+                        env = env.SetItem("COMFYUI_MODEL_PATH", modelPath);
+                        return env;
+                    });
 
                     venvRunner.RunDetached(["install.py"], progress.AsProcessOutputHandler());
 

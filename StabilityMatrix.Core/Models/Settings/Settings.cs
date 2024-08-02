@@ -194,6 +194,8 @@ public class Settings
 
     public bool DragMovesAllSelected { get; set; } = true;
 
+    public bool HideEmptyRootCategories { get; set; } = false;
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

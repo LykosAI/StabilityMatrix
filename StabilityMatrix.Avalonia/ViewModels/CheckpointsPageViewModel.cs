@@ -129,6 +129,9 @@ public partial class CheckpointsPageViewModel(
     [ObservableProperty]
     private bool dragMovesAllSelected = true;
 
+    [ObservableProperty]
+    private bool hideEmptyRootCategories;
+
     public string ClearButtonText =>
         SelectedBaseModels.Count == BaseModelOptions.Count
             ? Resources.Action_ClearSelection
@@ -289,8 +292,7 @@ public partial class CheckpointsPageViewModel(
                         x
                     )
             )
-            .Sort(comparerObservable)
-            .Bind(Models)
+            .SortAndBind(Models, comparerObservable)
             .WhenPropertyChanged(p => p.IsSelected)
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Subscribe(_ =>
@@ -298,9 +300,17 @@ public partial class CheckpointsPageViewModel(
                 NumItemsSelected = Models.Count(o => o.IsSelected);
             });
 
+        var categoryFilterPredicate = Observable
+            .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
+            .Where(x => x.EventArgs.PropertyName is nameof(HideEmptyRootCategories))
+            .Throttle(TimeSpan.FromMilliseconds(50))
+            .Select(_ => (Func<CheckpointCategory, bool>)FilterCategories)
+            .AsObservable();
+
         categoriesCache
             .Connect()
             .DeferUntilLoaded()
+            .Filter(categoryFilterPredicate)
             .SortAndBind(
                 Categories,
                 SortExpressionComparer<CheckpointCategory>
@@ -359,6 +369,13 @@ public partial class CheckpointsPageViewModel(
             this,
             vm => vm.DragMovesAllSelected,
             settings => settings.DragMovesAllSelected,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.HideEmptyRootCategories,
+            settings => settings.HideEmptyRootCategories,
             true
         );
 
@@ -665,6 +682,12 @@ public partial class CheckpointsPageViewModel(
         RefreshCategories();
     }
 
+    [RelayCommand]
+    private void SelectAll()
+    {
+        Models.ForEach(x => x.IsSelected = true);
+    }
+
     public async Task ImportFilesAsync(IEnumerable<string> files, DirectoryPath destinationFolder)
     {
         if (destinationFolder.FullPath == settingsManager.ModelsDirectory)
@@ -809,6 +832,13 @@ public partial class CheckpointsPageViewModel(
             )
             .ToList();
 
+        foreach (var checkpointCategory in modelCategories.SelectMany(c => c.Flatten()))
+        {
+            checkpointCategory.Count = Directory
+                .EnumerateFileSystemEntries(checkpointCategory.Path, "*", SearchOption.AllDirectories)
+                .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(x)));
+        }
+
         var rootCategory = new CheckpointCategory
         {
             Path = settingsManager.ModelsDirectory,
@@ -843,13 +873,6 @@ public partial class CheckpointsPageViewModel(
             previouslySelectedCategory
             ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
             ?? Categories.First();
-
-        foreach (var checkpointCategory in Categories.SelectMany(c => c.Flatten()))
-        {
-            checkpointCategory.Count = Directory
-                .EnumerateFileSystemEntries(checkpointCategory.Path, "*", SearchOption.AllDirectories)
-                .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(x)));
-        }
     }
 
     private ObservableCollection<CheckpointCategory> GetSubfolders(string strPath)
@@ -952,5 +975,10 @@ public partial class CheckpointsPageViewModel(
         return ShowModelsInSubfolders
             ? folderPath.Contains(categoryRelativePath)
             : categoryRelativePath.Equals(folderPath);
+    }
+
+    private bool FilterCategories(CheckpointCategory category)
+    {
+        return !HideEmptyRootCategories || category is { Count: > 0 };
     }
 }

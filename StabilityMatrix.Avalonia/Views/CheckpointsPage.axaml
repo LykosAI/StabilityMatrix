@@ -280,6 +280,13 @@
                         Label="Move All Selected Models"
                         ToolTip.Tip="When enabled, dragging and dropping a model will also move any selected models to the drop location."
                         IsChecked="{Binding DragMovesAllSelected, Mode=TwoWay}" />
+                    <ui:CommandBarToggleButton
+                        Label="Hide Empty Categories"
+                        IsChecked="{Binding HideEmptyRootCategories}">
+                        <ui:CommandBarToggleButton.IconSource>
+                            <controls:FASymbolIconSource Symbol="fa-regular fa-eye-slash"/>
+                        </ui:CommandBarToggleButton.IconSource>
+                    </ui:CommandBarToggleButton>
                 </ui:CommandBar.SecondaryCommands>
             </ui:CommandBar>
         </Grid>
@@ -619,10 +626,18 @@
                 </MultiBinding>
             </ui:InfoBar.Title>
             <ui:InfoBar.ActionButton>
-                <Button
-                    Classes="danger"
-                    Command="{Binding DeleteCommand}"
-                    Content="{x:Static lang:Resources.Action_Delete}" />
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Button Classes="accent" 
+                            Content="{x:Static lang:Resources.Action_SelectAll}"
+                            Command="{Binding SelectAllCommand}"/>
+                    <Rectangle Width="2"
+                               Margin="4,2"
+                               VerticalAlignment="Stretch" 
+                               Fill="Gray"/>
+                    <Button Classes="danger"
+                            Command="{Binding DeleteCommand}"
+                            Content="{x:Static lang:Resources.Action_Delete}" />
+                </StackPanel>
             </ui:InfoBar.ActionButton>
         </ui:InfoBar>
     </Grid>

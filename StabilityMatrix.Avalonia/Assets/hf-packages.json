@@ -922,5 +922,32 @@
     ],
     "Subfolder": "segm",
     "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Clip",
+    "ModelName": "CLIP L",
+    "RepositoryPath": "comfyanonymous/flux_text_encoders",
+    "Files": [
+      "clip_l.safetensors"
+    ],
+    "LicenseType": "MIT"
+  },
+  {
+    "ModelCategory": "Clip",
+    "ModelName": "T5XXL FP16",
+    "RepositoryPath": "comfyanonymous/flux_text_encoders",
+    "Files": [
+      "t5xxl_fp16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Clip",
+    "ModelName": "T5XXL FP8 E4M3FN",
+    "RepositoryPath": "comfyanonymous/flux_text_encoders",
+    "Files": [
+      "t5xxl_fp8_e4m3fn.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
   }
 ]

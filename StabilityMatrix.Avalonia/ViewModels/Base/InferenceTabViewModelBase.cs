@@ -33,8 +33,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
 public abstract partial class InferenceTabViewModelBase
-    : LoadableViewModelBase,
-        IDisposable,
+    : DisposableLoadableViewModelBase,
         IPersistentViewProvider,
         IDropTarget
 {
@@ -158,19 +157,14 @@ public abstract partial class InferenceTabViewModelBase
         }
     }
 
-    protected virtual void Dispose(bool disposing)
+    protected override void Dispose(bool disposing)
     {
+        base.Dispose(disposing);
+
         if (disposing)
         {
             ((IPersistentViewProvider)this).AttachedPersistentView = null;
         }
-    }
-
-    /// <inheritdoc />
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
     /// <summary>

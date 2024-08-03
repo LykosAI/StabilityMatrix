@@ -8,6 +8,15 @@ public enum CivitBaseModelType
 {
     All,
 
+    [StringValue("AuraFlow")]
+    AuraFlow,
+
+    [StringValue("Flux.1 S")]
+    Flux1S,
+
+    [StringValue("Flux.1 D")]
+    Flux1D,
+
     [StringValue("PixArt a")]
     PixArtA,
 

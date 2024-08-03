@@ -201,7 +201,8 @@ public record LocalModelFile
         ".pt",
         ".ckpt",
         ".pth",
-        ".bin"
+        ".bin",
+        ".sft"
     ];
     public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".webp"];
     public static readonly HashSet<string> SupportedMetadataExtensions = [".json"];

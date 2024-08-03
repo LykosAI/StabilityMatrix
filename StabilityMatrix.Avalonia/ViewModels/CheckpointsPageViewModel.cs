@@ -380,6 +380,8 @@ public partial class CheckpointsPageViewModel(
 
         // make sure a sort happens
         OnPropertyChanged(nameof(SortConnectedModelsFirst));
+        // gotta do this one too i guess
+        OnPropertyChanged(nameof(HideEmptyRootCategories));
     }
 
     public void ClearSearchQuery()

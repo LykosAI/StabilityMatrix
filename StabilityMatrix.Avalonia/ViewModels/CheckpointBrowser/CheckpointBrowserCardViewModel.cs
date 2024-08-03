@@ -253,9 +253,19 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         }
         else
         {
-            var subFolder =
-                viewModel?.SelectedInstallLocation
-                ?? Path.Combine(@"Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
+            var sharedFolder = model.Type.ConvertTo<SharedFolderType>().GetStringValue();
+
+            if (
+                model.BaseModelType == CivitBaseModelType.Flux1D.GetStringValue()
+                || model.BaseModelType == CivitBaseModelType.Flux1S.GetStringValue()
+            )
+            {
+                sharedFolder = SharedFolderType.Unet.GetStringValue();
+            }
+
+            var defaultPath = Path.Combine(@"Models", sharedFolder);
+
+            var subFolder = viewModel?.SelectedInstallLocation ?? defaultPath;
             downloadPath = Path.Combine(settingsManager.LibraryDir, subFolder);
         }
 

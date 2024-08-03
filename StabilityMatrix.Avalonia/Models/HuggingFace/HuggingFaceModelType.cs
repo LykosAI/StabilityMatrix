@@ -12,6 +12,10 @@ public enum HuggingFaceModelType
     [ConvertTo<SharedFolderType>(SharedFolderType.StableDiffusion)]
     BaseModel,
 
+    [Description("CLIP / Text Encoders")]
+    [ConvertTo<SharedFolderType>(SharedFolderType.CLIP)]
+    Clip,
+
     [Description("ControlNets (SD1.5)")]
     [ConvertTo<SharedFolderType>(SharedFolderType.ControlNet)]
     ControlNet,

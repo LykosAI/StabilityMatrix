@@ -1,11 +1,8 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
-<<<<<<< HEAD
-=======
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
->>>>>>> fe741d7c (Merge pull request #750 from ionite34/disposables-improvement)
 using System.Reflection;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
@@ -201,13 +198,8 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
                 propertyName
             );
 
-<<<<<<< HEAD
-            sourceSetter(source, settingsGetter(Settings));
-        };
-=======
             sourceInstanceAccessor.Set(source, settingsAccessor.Get(Settings));
         }
->>>>>>> fe741d7c (Merge pull request #750 from ionite34/disposables-improvement)
 
         // Set and Save settings when source changes
         void OnSourcePropertyChanged(object? sender, PropertyChangedEventArgs args)
@@ -250,15 +242,6 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
                 sender,
                 new RelayPropertyChangedEventArgs(targetPropertyName, true)
             );
-<<<<<<< HEAD
-        };
-
-        // Set initial value if requested
-        if (setInitial)
-        {
-            sourceSetter(source, settingsGetter(Settings));
-=======
->>>>>>> fe741d7c (Merge pull request #750 from ionite34/disposables-improvement)
         }
 
         var subscription = Disposable.Create(() =>

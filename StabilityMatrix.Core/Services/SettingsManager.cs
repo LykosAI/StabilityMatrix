@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
+using CompiledExpressions;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
@@ -170,49 +171,48 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
     )
         where T : INotifyPropertyChanged
     {
-        var sourceGetter = sourceProperty.Compile();
-        var (propertyName, assigner) = Expressions.GetAssigner(sourceProperty);
-        var sourceSetter = assigner.Compile();
+        var sourceInstanceAccessor = CompiledExpression.CreateAccessor(sourceProperty).WithInstance(source);
+        var settingsAccessor = CompiledExpression.CreateAccessor(settingsProperty);
 
-        var settingsGetter = settingsProperty.Compile();
-        var (targetPropertyName, settingsAssigner) = Expressions.GetAssigner(settingsProperty);
-        var settingsSetter = settingsAssigner.Compile();
+        var sourcePropertyPath = sourceInstanceAccessor.FullName;
+        var settingsPropertyPath = settingsAccessor.FullName;
 
         var sourceTypeName = source.GetType().Name;
 
         // Update source when settings change
         SettingsPropertyChanged += (sender, args) =>
         {
-            if (args.PropertyName != targetPropertyName)
+            if (args.PropertyName != settingsPropertyPath)
                 return;
 
             // Skip if event is relay and the sender is the source, to prevent duplicate
             if (args.IsRelay && ReferenceEquals(sender, source))
                 return;
+
             logger.LogTrace(
-                "[RelayPropertyFor] " + "Settings.{TargetProperty:l} -> {SourceType:l}.{SourceProperty:l}",
-                targetPropertyName,
+                "[RelayPropertyFor] " + "Settings.{SettingsProperty:l} -> {SourceType:l}.{SourceProperty:l}",
+                settingsPropertyPath,
                 sourceTypeName,
-                propertyName
+                sourcePropertyPath
             );
 
-            sourceSetter(source, settingsGetter(Settings));
+            sourceInstanceAccessor.Set(source, settingsAccessor.Get(Settings));
         };
 
         // Set and Save settings when source changes
         source.PropertyChanged += (sender, args) =>
         {
-            if (args.PropertyName != propertyName)
+            if (args.PropertyName != sourcePropertyPath)
                 return;
 
             logger.LogTrace(
-                "[RelayPropertyFor] " + "{SourceType:l}.{SourceProperty:l} -> Settings.{TargetProperty:l}",
+                "[RelayPropertyFor] {SourceType:l}.{SourceProperty:l} -> Settings.{SettingsProperty:l}",
                 sourceTypeName,
-                propertyName,
-                targetPropertyName
+                sourcePropertyPath,
+                settingsPropertyPath
             );
 
-            settingsSetter(Settings, sourceGetter(source));
+            settingsAccessor.Set(Settings, sourceInstanceAccessor.Get());
 
             if (IsLibraryDirSet)
             {
@@ -228,24 +228,24 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             else
             {
                 logger.LogWarning(
-                    "[RelayPropertyFor] LibraryDir not set when saving ({SourceType:l}.{SourceProperty:l} -> Settings.{TargetProperty:l})",
+                    "[RelayPropertyFor] LibraryDir not set when saving ({SourceType:l}.{SourceProperty:l} -> Settings.{SettingsProperty:l})",
                     sourceTypeName,
-                    propertyName,
-                    targetPropertyName
+                    sourcePropertyPath,
+                    settingsPropertyPath
                 );
             }
 
             // Invoke property changed event, passing along sender
             SettingsPropertyChanged?.Invoke(
                 sender,
-                new RelayPropertyChangedEventArgs(targetPropertyName, true)
+                new RelayPropertyChangedEventArgs(settingsPropertyPath, true)
             );
         };
 
         // Set initial value if requested
         if (setInitial)
         {
-            sourceSetter(source, settingsGetter(Settings));
+            sourceInstanceAccessor.Set(settingsAccessor.Get(Settings));
         }
     }
 
@@ -255,16 +255,15 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
         Action<T> onPropertyChanged
     )
     {
-        var settingsGetter = settingsProperty.Compile();
-        var (propertyName, _) = Expressions.GetAssigner(settingsProperty);
+        var settingsAccessor = CompiledExpression.CreateAccessor(settingsProperty);
 
         // Invoke handler when settings change
         SettingsPropertyChanged += (_, args) =>
         {
-            if (args.PropertyName != propertyName)
+            if (args.PropertyName != settingsAccessor.FullName)
                 return;
 
-            onPropertyChanged(settingsGetter(Settings));
+            onPropertyChanged(settingsAccessor.Get(Settings));
         };
     }
 

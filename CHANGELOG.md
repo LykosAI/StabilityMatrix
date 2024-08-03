@@ -5,9 +5,64 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
+=======
+## v2.12.0-dev.3
+### Added
+- Added Settings option "Console: History Size" to adjust the number of lines stored in the console history when running packages. Defaults to 9001 lines.
+#### Model Browser
+- Added AuraFlow & Flux base model types to the CivitAI model browser
+#### Checkpoint Manager
+- Added "New Directory" and "Delete" options to the context menu of the tree view.
+- Added new toggle for drag & drop - when enabled, all selected models will now move together with the dragged model
+- Added "File Size" sorting option
+- Added "Hide Empty Categories" toggle
+- Added "Select All" button to the InfoBar (shown when at least one model is selected)
+- Added "unet" shared model folder for ComfyUI
+### Changed
+- The "Download Failed" message for model downloads is now persistent until dismissed
+### Fixed
+- Fixed "The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp." error for Linux users
+- Fixed download links for IPAdapters in the HuggingFace model browser
+- Fixed potential memory leak of transient controls (Inference Prompt and Output Image Viewer) not being garbage collected due to event subscriptions
+
+## v2.12.0-dev.2
+### Added
+- Added Face Detailer module to Inference
+- Added ultralytics models to HuggingFace model browser
+- Added DoRA category to CivitAI model browser
+- Added macOS support for Fooocus & related forks
+- (Windows, Linux) Added Vulkan rendering support using launch argument `--vulkan`. (On Windows, the default WinUI composition renderer is likely still preferrable. Linux users are encouraged to try the new renderer to see if it improves performance and responsiveness.)
+### Changed
+- (Internal) Updated Avalonia to 11.1.1 - Includes major rendering and performance optimizations, animation refinements, improved IME / text selection, and improvements for window sizing / z-order / multi-monitor DPI scaling. ([avaloniaui.net/blog/avalonia-11-1-a-quantum-leap-in-cross-platform-ui-development](https://avaloniaui.net/blog/avalonia-11-1-a-quantum-leap-in-cross-platform-ui-development))
+- (Internal) Updated SkiaSharp (Rendering Backend) to 3.0.0-preview.4.1, potentially fixes issues with window rendering artifacts on some machines.
+- (Internal) Updated other dependencies for security and bug fixes.
+### Fixed
+- Fixed some ScrollViewers changing scroll position when focus changes
+- Fixed [#782](https://github.com/LykosAI/StabilityMatrix/issues/782) - conflict error when launching new versions of Forge
+- Fixed incorrect torch versions being installed for InvokeAI
+### Supporters
+#### Visionaries
+- A huge thank you goes out to our esteemed Visionary-tier Patreon backers: **Scopp Mcdee**, **Waterclouds**, and **Akiro_Senkai**. Your kind support means the world!
+
+## v2.12.0-dev.1
+### Added
+- Added new package: [Fooocus - mashb1t's 1-Up Edition](https://github.com/mashb1t/Fooocus) by mashb1t
+- Added new package: [Stable Diffusion WebUI reForge](https://github.com/Panchovix/stable-diffusion-webui-reForge/) by Panchovix
+- Image viewer context menus now have 2 options: `Copy (Ctrl+C)` which now always copies the image as a file, and `Copy as Bitmap (Shift+Ctrl+C)` (Available on Windows) which copies to the clipboard as native bitmap. This changes the previous single `Copy` button behavior that would first attempt a native bitmap copy on Windows when available, and fall back to a file copy if not.
+- Added "Change Version" option to the package card overflow menu, allowing you to downgrade or upgrade a package to a specific version or commit
+- Added "Disable Update Check" option to the package card overflow menu, allowing you to disable update checks for a specific package
+- Added "Run Command" option in Settings for running a command with the embedded Python or Git executables
+- Added Intel OneAPI XPU backend (IPEX) option for SD.Next
+### Supporters
+#### Visionaries
+- Shoutout to our Visionary-tier Patreon supporters, **Scopp Mcdee**, **Waterclouds**, and our newest Visionary, **Akiro_Senkai**! Many thanks for your generous support!
+
+>>>>>>> fe741d7c (Merge pull request #750 from ionite34/disposables-improvement)
 ## v2.11.6
 ### Fixed
 - Fixed incorrect IPAdapter download links in the HuggingFace model browser
+- Fixed potential memory leak of transient controls (Inference Prompt and Output Image Viewer) not being garbage collected due to event subscriptions
 
 ## v2.11.5
 ### Added

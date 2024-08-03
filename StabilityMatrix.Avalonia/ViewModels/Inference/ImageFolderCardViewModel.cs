@@ -36,7 +36,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(ImageFolderCard))]
 [ManagedService]
 [Transient]
-public partial class ImageFolderCardViewModel : ViewModelBase
+public partial class ImageFolderCardViewModel : DisposableViewModelBase
 {
     private readonly ILogger<ImageFolderCardViewModel> logger;
     private readonly IImageIndexService imageIndexService;
@@ -83,11 +83,13 @@ public partial class ImageFolderCardViewModel : ViewModelBase
             .Bind(LocalImages)
             .Subscribe();
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.ImageSize,
-            settings => settings.InferenceImageSize,
-            delay: TimeSpan.FromMilliseconds(250)
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.ImageSize,
+                settings => settings.InferenceImageSize,
+                delay: TimeSpan.FromMilliseconds(250)
+            )
         );
     }
 

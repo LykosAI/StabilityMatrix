@@ -69,7 +69,8 @@ public class ComfyUI(
             [SharedFolderType.T2IAdapter] = ["models/controlnet/T2IAdapter"],
             [SharedFolderType.PromptExpansion] = ["models/prompt_expansion"],
             [SharedFolderType.Ultralytics] = ["models/ultralytics"],
-            [SharedFolderType.Sams] = ["models/sams"]
+            [SharedFolderType.Sams] = ["models/sams"],
+            [SharedFolderType.Unet] = ["models/unet"]
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -372,6 +373,7 @@ public class ComfyUI(
             nodeValue.Children["ultralytics_bbox"] = Path.Combine(modelsDir, "Ultralytics", "bbox");
             nodeValue.Children["ultralytics_segm"] = Path.Combine(modelsDir, "Ultralytics", "segm");
             nodeValue.Children["sams"] = Path.Combine(modelsDir, "Sams");
+            nodeValue.Children["unet"] = Path.Combine(modelsDir, "unet");
         }
         else
         {
@@ -414,7 +416,8 @@ public class ComfyUI(
                     { "ultralytics", Path.Combine(modelsDir, "Ultralytics") },
                     { "ultralytics_bbox", Path.Combine(modelsDir, "Ultralytics", "bbox") },
                     { "ultralytics_segm", Path.Combine(modelsDir, "Ultralytics", "segm") },
-                    { "sams", Path.Combine(modelsDir, "Sams") }
+                    { "sams", Path.Combine(modelsDir, "Sams") },
+                    { "unet", Path.Combine(modelsDir, "unet") }
                 }
             );
         }

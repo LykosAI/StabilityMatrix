@@ -43,6 +43,6 @@ public enum SharedFolderType : ulong
     SVD = 1 << 27,
     Ultralytics = 1 << 28,
     Sams = 1 << 29,
-
-    PromptExpansion = 1 << 30
+    PromptExpansion = 1 << 30,
+    Unet = 1ul << 31,
 }

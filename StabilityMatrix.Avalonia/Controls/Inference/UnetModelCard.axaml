@@ -67,15 +67,15 @@
                             Text="{x:Static lang:Resources.Label_VAE}"
                             TextAlignment="Left" />
 
-                        <ui:FAComboBox
+                        <controls:BetterComboBox
                             Grid.Row="2"
                             Grid.Column="1"
                             Margin="4"
                             HorizontalAlignment="Stretch"
-                            DisplayMemberBinding="{Binding ShortDisplayName}"
                             IsTextSearchEnabled="True"
                             ItemsSource="{Binding ClientManager.VaeModels}"
-                            SelectedItem="{Binding SelectedVae}" />
+                            SelectedItem="{Binding SelectedVae}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
 
                         <!--  CLIP Selection 1  -->
                         <TextBlock
@@ -86,15 +86,16 @@
                             Text="CLIP 1"
                             TextAlignment="Left" />
 
-                        <ui:FAComboBox
+                        <controls:BetterComboBox
                             Grid.Row="3"
                             Grid.Column="1"
+                            Name="Clip1ComboBox"
                             Margin="4"
                             HorizontalAlignment="Stretch"
-                            DisplayMemberBinding="{Binding ShortDisplayName}"
                             IsTextSearchEnabled="True"
                             ItemsSource="{Binding ClientManager.ClipModels}"
-                            SelectedItem="{Binding SelectedClip1}" />
+                            SelectedItem="{Binding SelectedClip1}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
 
                         <!--  CLIP Selection 2  -->
                         <TextBlock
@@ -105,15 +106,16 @@
                             Text="CLIP 2"
                             TextAlignment="Left" />
 
-                        <ui:FAComboBox
+                        <controls:BetterComboBox
                             Grid.Row="4"
                             Grid.Column="1"
+                            Name="Clip2ComboBox"
                             Margin="4"
                             HorizontalAlignment="Stretch"
-                            DisplayMemberBinding="{Binding ShortDisplayName}"
                             IsTextSearchEnabled="True"
                             ItemsSource="{Binding ClientManager.ClipModels}"
-                            SelectedItem="{Binding SelectedClip2}" />
+                            SelectedItem="{Binding SelectedClip2}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
                     </Grid>
                 </controls:Card>
             </ControlTemplate>

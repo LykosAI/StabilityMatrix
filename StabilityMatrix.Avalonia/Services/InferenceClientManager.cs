@@ -136,6 +136,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         new ObservableCollectionExtended<HybridModelFile>();
 
     private readonly SourceCache<HybridModelFile, string> clipModelsSource = new(p => p.GetId());
+    private readonly SourceCache<HybridModelFile, string> downloadableClipModelsSource = new(p => p.GetId());
 
     public IObservableCollection<HybridModelFile> ClipModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
@@ -237,6 +238,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         clipModelsSource
             .Connect()
+            .Or(downloadableClipModelsSource.Connect())
             .SortBy(
                 f => f.ShortDisplayName,
                 SortDirection.Ascending,
@@ -525,6 +527,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             modelIndexService.FindByModelType(SharedFolderType.CLIP).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
+
+        var downloadableClipModels = RemoteModels.ClipModelFiles.Where(
+            u => !clipModelsSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableClipModelsSource.EditDiff(downloadableClipModels, HybridModelFile.Comparer);
 
         samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
 

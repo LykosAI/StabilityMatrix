@@ -93,7 +93,7 @@ public abstract partial class InferenceGenerationViewModelBase
         ClientManager = inferenceClientManager;
 
         ImageGalleryCardViewModel = vmFactory.Get<ImageGalleryCardViewModel>();
-        ImageFolderCardViewModel = vmFactory.Get<ImageFolderCardViewModel>();
+        ImageFolderCardViewModel = AddDisposable(vmFactory.Get<ImageFolderCardViewModel>());
 
         GenerateImageCommand.WithConditionalNotificationErrorHandler(notificationService);
     }

@@ -27,6 +27,9 @@ public readonly record struct ProgressReport
     public bool PrintToConsole { get; init; } = true;
     public double SpeedInMBps { get; init; } = 0f;
 
+    public static ProgressReport ForProcessOutput(ProcessOutput output) =>
+        new(-1f, isIndeterminate: true) { ProcessOutput = output };
+
     public ProgressReport(
         double progress,
         string? title = null,

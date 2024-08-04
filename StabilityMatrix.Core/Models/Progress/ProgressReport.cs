@@ -2,7 +2,7 @@
 
 namespace StabilityMatrix.Core.Models.Progress;
 
-public record struct ProgressReport
+public readonly record struct ProgressReport
 {
     /// <summary>
     /// Progress value as percentage between 0 and 1.

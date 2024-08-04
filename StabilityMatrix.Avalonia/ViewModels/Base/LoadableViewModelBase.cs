@@ -24,6 +24,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(FaceDetailerViewModel), FaceDetailerViewModel.ModuleKey)]
 [JsonDerivedType(typeof(FreeUModule))]
 [JsonDerivedType(typeof(HiresFixModule))]
+[JsonDerivedType(typeof(FluxHiresFixModule))]
 [JsonDerivedType(typeof(UpscalerModule))]
 [JsonDerivedType(typeof(ControlNetModule))]
 [JsonDerivedType(typeof(SaveImageModule))]

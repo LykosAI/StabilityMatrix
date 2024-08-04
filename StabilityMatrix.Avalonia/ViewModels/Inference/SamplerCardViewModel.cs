@@ -17,6 +17,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 using Size = System.Drawing.Size;
 
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
@@ -92,6 +93,9 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     [property: DisplayName("Inherit Primary Sampler Addons")]
     private bool inheritPrimarySamplerAddons = true;
 
+    [ObservableProperty]
+    private bool enableAddons = true;
+
     [JsonPropertyName("Modules")]
     public StackEditableCardViewModel ModulesCardViewModel { get; }
 
@@ -162,6 +166,105 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 "Sampler ApplyStep was called when Sampler node already exists"
             );
         }
+    }
+
+    public void ApplyStepsInitialFluxSampler(ModuleApplyStepEventArgs e)
+    {
+        // Provide temp values
+        e.Temp = e.CreateTempFromBuilder();
+
+        // Get primary as latent using vae
+        var primaryLatent = e.Builder.GetPrimaryAsLatent(
+            e.Temp.Primary!.Unwrap(),
+            e.Builder.Connections.GetDefaultVAE()
+        );
+
+        // Set primary sampler and scheduler
+        var primarySampler = SelectedSampler ?? throw new ValidationException("Sampler not selected");
+        e.Builder.Connections.PrimarySampler = primarySampler;
+
+        var primaryScheduler = SelectedScheduler ?? throw new ValidationException("Scheduler not selected");
+        e.Builder.Connections.PrimaryScheduler = primaryScheduler;
+
+        // KSamplerSelect
+        var kSamplerSelect = e.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.KSamplerSelect
+            {
+                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.KSamplerSelect)),
+                SamplerName = e.Builder.Connections.PrimarySampler?.Name!
+            }
+        );
+
+        e.Builder.Connections.PrimarySamplerNode = kSamplerSelect.Output;
+
+        // Scheduler/Sigmas
+        var basicScheduler = e.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.BasicScheduler
+            {
+                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.BasicScheduler)),
+                Model = e.Builder.Connections.Base.Model.Unwrap(),
+                Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
+                Denoise = IsDenoiseStrengthEnabled ? DenoiseStrength : 1.0d,
+                Steps = Steps
+            }
+        );
+
+        e.Builder.Connections.PrimarySigmas = basicScheduler.Output;
+
+        // Noise
+        var randomNoise = e.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.RandomNoise
+            {
+                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.RandomNoise)),
+                NoiseSeed = e.Builder.Connections.Seed
+            }
+        );
+
+        e.Builder.Connections.PrimaryNoise = randomNoise.Output;
+
+        // Guidance
+        var fluxGuidance = e.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.FluxGuidance
+            {
+                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.FluxGuidance)),
+                Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning().Positive,
+                Guidance = CfgScale
+            }
+        );
+
+        e.Builder.Connections.Base.Conditioning = new ConditioningConnections(
+            fluxGuidance.Output,
+            e.Builder.Connections.GetRefinerOrBaseConditioning().Negative
+        );
+
+        // Guider
+        var basicGuider = e.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.BasicGuider
+            {
+                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.BasicGuider)),
+                Model = e.Builder.Connections.Base.Model.Unwrap(),
+                Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning().Positive
+            }
+        );
+
+        e.Builder.Connections.PrimaryGuider = basicGuider.Output;
+
+        // SamplerCustomAdvanced
+        var sampler = e.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.SamplerCustomAdvanced
+            {
+                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.SamplerCustomAdvanced)),
+                Guider = e.Builder.Connections.PrimaryGuider,
+                Noise = e.Builder.Connections.PrimaryNoise,
+                Sampler = e.Builder.Connections.PrimarySamplerNode,
+                Sigmas = e.Builder.Connections.PrimarySigmas,
+                LatentImage = primaryLatent
+            }
+        );
+
+        e.Builder.Connections.Primary = sampler.Output1;
+
+        e.Builder.Connections.BaseSamplerTemporaryArgs = e.Temp;
     }
 
     private void ApplyStepsInitialSampler(ModuleApplyStepEventArgs e)

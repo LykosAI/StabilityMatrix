@@ -75,13 +75,14 @@
                                 Opacity="1"
                                 x:CompileBindings="False"
                                 DataContext="{Binding ElementName=Dock, Path=DataContext}"
-                                RowDefinitions="*,Auto,Auto">
+                                RowDefinitions="*,Auto">
                                 <!--  Prompt card  -->
                                 <controls:PromptCard
+                                    VerticalAlignment="Top"
                                     DataContext="{Binding PromptCardViewModel}" />
                                 
                                 <!--  Generate Buttons  -->
-                                <StackPanel Grid.Row="2" Margin="0,6,0,0">
+                                <StackPanel Grid.Row="1" Margin="0,6,0,0">
                                     <controls:Card Padding="8">
                                         <Grid
                                             HorizontalAlignment="Center"

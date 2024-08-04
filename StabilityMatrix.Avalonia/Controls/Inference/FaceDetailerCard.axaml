@@ -395,7 +395,7 @@
                                   Margin="4,4,4,8"
                                   HorizontalAlignment="Stretch"
                                   Minimum="1"
-                                  Maximum="65536"
+                                  Maximum="16384"
                                   SmallChange="1"
                                   SpinButtonPlacementMode="Inline" />
 

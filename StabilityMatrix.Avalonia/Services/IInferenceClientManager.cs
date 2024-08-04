@@ -48,6 +48,8 @@ public interface IInferenceClientManager : IDisposable, INotifyPropertyChanged, 
     IObservableCollection<ComfyAuxPreprocessor> Preprocessors { get; }
     IObservableCollection<HybridModelFile> UltralyticsModels { get; }
     IObservableCollection<HybridModelFile> SamModels { get; }
+    IObservableCollection<HybridModelFile> UnetModels { get; }
+    IObservableCollection<HybridModelFile> ClipModels { get; }
 
     Task CopyImageToInputAsync(FilePath imageFile, CancellationToken cancellationToken = default);
 

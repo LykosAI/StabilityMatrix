@@ -73,7 +73,7 @@ public interface ISettingsManager
     /// <summary>
     /// Register a source observable object and property to be relayed to Settings
     /// </summary>
-    void RelayPropertyFor<T, TValue>(
+    IDisposable RelayPropertyFor<T, TValue>(
         T source,
         Expression<Func<T, TValue>> sourceProperty,
         Expression<Func<Settings, TValue>> settingsProperty,

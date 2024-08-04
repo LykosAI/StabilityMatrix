@@ -28,7 +28,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(PromptCard))]
 [ManagedService]
 [Transient]
-public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoadableState, IComfyStep
+public partial class PromptCardViewModel
+    : DisposableLoadableViewModelBase,
+        IParametersLoadableState,
+        IComfyStep
 {
     private readonly IModelIndexService modelIndexService;
     private readonly ISettingsManager settingsManager;
@@ -78,11 +81,13 @@ public partial class PromptCardViewModel : LoadableViewModelBase, IParametersLoa
             vm.AvailableModules = [typeof(PromptExpansionModule)];
         });
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.IsAutoCompletionEnabled,
-            settings => settings.IsPromptCompletionEnabled,
-            true
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.IsAutoCompletionEnabled,
+                settings => settings.IsPromptCompletionEnabled,
+                true
+            )
         );
     }
 

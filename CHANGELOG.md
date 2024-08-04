@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed "The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp." error for Linux users
 - Fixed download links for IPAdapters in the HuggingFace model browser
+- Fixed potential memory leak of transient controls (Inference Prompt and Output Image Viewer) not being garbage collected due to event subscriptions
 
 ## v2.12.0-dev.2
 ### Added
@@ -58,6 +59,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.11.6
 ### Fixed
 - Fixed incorrect IPAdapter download links in the HuggingFace model browser
+- Fixed potential memory leak of transient controls (Inference Prompt and Output Image Viewer) not being garbage collected due to event subscriptions
 
 ## v2.11.5
 ### Added

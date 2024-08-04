@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -163,7 +164,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
     }
 
     /// <inheritdoc />
-    public void RelayPropertyFor<T, TValue>(
+    public IDisposable RelayPropertyFor<T, TValue>(
         T source,
         Expression<Func<T, TValue>> sourceProperty,
         Expression<Func<Settings, TValue>> settingsProperty,
@@ -181,7 +182,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
         var sourceTypeName = source.GetType().Name;
 
         // Update source when settings change
-        SettingsPropertyChanged += (sender, args) =>
+        void OnSettingsPropertyChanged(object? sender, RelayPropertyChangedEventArgs args)
         {
             if (args.PropertyName != settingsPropertyPath)
                 return;
@@ -198,10 +199,10 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             );
 
             sourceInstanceAccessor.Set(source, settingsAccessor.Get(Settings));
-        };
+        }
 
         // Set and Save settings when source changes
-        source.PropertyChanged += (sender, args) =>
+        void OnSourcePropertyChanged(object? sender, PropertyChangedEventArgs args)
         {
             if (args.PropertyName != sourcePropertyPath)
                 return;
@@ -241,13 +242,32 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
                 sender,
                 new RelayPropertyChangedEventArgs(settingsPropertyPath, true)
             );
-        };
-
-        // Set initial value if requested
-        if (setInitial)
-        {
-            sourceInstanceAccessor.Set(settingsAccessor.Get(Settings));
         }
+
+        var subscription = Disposable.Create(() =>
+        {
+            source.PropertyChanged -= OnSourcePropertyChanged;
+            SettingsPropertyChanged -= OnSettingsPropertyChanged;
+        });
+
+        try
+        {
+            SettingsPropertyChanged += OnSettingsPropertyChanged;
+            source.PropertyChanged += OnSourcePropertyChanged;
+
+            // Set initial value if requested
+            if (setInitial)
+            {
+                sourceInstanceAccessor.Set(settingsAccessor.Get(Settings));
+            }
+        }
+        catch
+        {
+            subscription.Dispose();
+            throw;
+        }
+
+        return subscription;
     }
 
     /// <inheritdoc />

@@ -83,7 +83,8 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             samplerCard.DenoiseStrength = 1.0d;
         });
 
-        PromptCardViewModel = vmFactory.Get<PromptCardViewModel>();
+        PromptCardViewModel = AddDisposable(vmFactory.Get<PromptCardViewModel>());
+
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
 
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
@@ -109,13 +110,15 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         );
 
         // When refiner is provided in model card, enable for sampler
-        ModelCardViewModel
-            .WhenPropertyChanged(x => x.IsRefinerSelectionEnabled)
-            .Subscribe(e =>
-            {
-                SamplerCardViewModel.IsRefinerStepsEnabled =
-                    e.Sender is { IsRefinerSelectionEnabled: true, SelectedRefiner: not null };
-            });
+        AddDisposable(
+            ModelCardViewModel
+                .WhenPropertyChanged(x => x.IsRefinerSelectionEnabled)
+                .Subscribe(e =>
+                {
+                    SamplerCardViewModel.IsRefinerStepsEnabled =
+                        e.Sender is { IsRefinerSelectionEnabled: true, SelectedRefiner: not null };
+                })
+        );
     }
 
     /// <inheritdoc />

@@ -231,6 +231,11 @@
                         IconSource="Filter"
                         VerticalAlignment="Center"
                         Label="Filter">
+                        <ui:CommandBarButton.Styles>
+                            <Style Selector="FlyoutPresenter">
+                                <Setter Property="MaxHeight" Value="1000"/>
+                            </Style>
+                        </ui:CommandBarButton.Styles>
                         <ui:CommandBarButton.Flyout>
                             <Flyout>
                                 <StackPanel Orientation="Vertical">

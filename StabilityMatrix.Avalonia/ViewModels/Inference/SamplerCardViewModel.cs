@@ -117,7 +117,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             [
                 typeof(FreeUModule),
                 typeof(ControlNetModule),
-                typeof(LayerDiffuseModule)
+                typeof(LayerDiffuseModule),
+                typeof(FluxGuidanceModule)
             ];
         });
     }
@@ -286,6 +287,23 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         var conditioning = e.Temp.Base.Conditioning.Unwrap();
         var refinerConditioning = e.Temp.Refiner.Conditioning;
 
+        var useFluxGuidance = ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>();
+
+        if (useFluxGuidance)
+        {
+            // Flux guidance
+            var fluxGuidance = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.FluxGuidance
+                {
+                    Name = e.Nodes.GetUniqueName("FluxGuidance"),
+                    Conditioning = conditioning.Positive,
+                    Guidance = CfgScale
+                }
+            );
+
+            conditioning = conditioning with { Positive = fluxGuidance.Output };
+        }
+
         // Use custom sampler if SDTurbo scheduler is selected
         if (e.Builder.Connections.PrimaryScheduler == ComfyScheduler.SDTurbo)
         {
@@ -320,7 +338,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     Model = e.Builder.Connections.Base.Model,
                     AddNoise = true,
                     NoiseSeed = e.Builder.Connections.Seed,
-                    Cfg = CfgScale,
+                    Cfg = useFluxGuidance ? 1.0d : CfgScale,
                     Positive = conditioning.Positive,
                     Negative = conditioning.Negative,
                     Sampler = kSamplerSelect.Output,
@@ -344,7 +362,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     SamplerName = primarySampler.Name,
                     Scheduler = primaryScheduler.Name,
                     Steps = Steps,
-                    Cfg = CfgScale,
+                    Cfg = useFluxGuidance ? 1.0d : CfgScale,
                     Positive = conditioning.Positive,
                     Negative = conditioning.Negative,
                     LatentImage = primaryLatent,
@@ -365,7 +383,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                     AddNoise = true,
                     NoiseSeed = e.Builder.Connections.Seed,
                     Steps = TotalSteps,
-                    Cfg = CfgScale,
+                    Cfg = useFluxGuidance ? 1.0d : CfgScale,
                     SamplerName = primarySampler.Name,
                     Scheduler = primaryScheduler.Name,
                     Positive = conditioning.Positive,

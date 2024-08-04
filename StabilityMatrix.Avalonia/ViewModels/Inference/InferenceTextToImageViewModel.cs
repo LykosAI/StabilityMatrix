@@ -142,13 +142,26 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Load models
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        // Setup empty latent
-        builder.SetupEmptyLatentSource(
-            SamplerCardViewModel.Width,
-            SamplerCardViewModel.Height,
-            BatchSizeCardViewModel.BatchSize,
-            BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
-        );
+        if (SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>())
+        {
+            // need SD3Latent
+            builder.SetupEmptySd3LatentSource(
+                SamplerCardViewModel.Width,
+                SamplerCardViewModel.Height,
+                BatchSizeCardViewModel.BatchSize,
+                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
+            );
+        }
+        else
+        {
+            // Setup empty latent
+            builder.SetupEmptyLatentSource(
+                SamplerCardViewModel.Width,
+                SamplerCardViewModel.Height,
+                BatchSizeCardViewModel.BatchSize,
+                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
+            );
+        }
 
         // Prompts and loras
         PromptCardViewModel.ApplyStep(applyArgs);

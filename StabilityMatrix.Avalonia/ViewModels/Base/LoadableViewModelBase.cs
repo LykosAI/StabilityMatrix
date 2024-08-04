@@ -32,6 +32,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(LoraModule))]
 [JsonDerivedType(typeof(LayerDiffuseModule))]
 [JsonDerivedType(typeof(FaceDetailerModule))]
+[JsonDerivedType(typeof(FluxGuidanceModule))]
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

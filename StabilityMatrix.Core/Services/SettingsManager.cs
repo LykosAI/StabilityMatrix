@@ -276,16 +276,15 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
         Action<T> onPropertyChanged
     )
     {
-        var settingsGetter = settingsProperty.Compile();
-        var (propertyName, _) = Expressions.GetAssigner(settingsProperty);
+        var settingsAccessor = CompiledExpression.CreateAccessor(settingsProperty);
 
         // Invoke handler when settings change
         SettingsPropertyChanged += (_, args) =>
         {
-            if (args.PropertyName != propertyName)
+            if (args.PropertyName != settingsAccessor.FullName)
                 return;
 
-            onPropertyChanged(settingsGetter(Settings));
+            onPropertyChanged(settingsAccessor.Get(Settings));
         };
     }
 

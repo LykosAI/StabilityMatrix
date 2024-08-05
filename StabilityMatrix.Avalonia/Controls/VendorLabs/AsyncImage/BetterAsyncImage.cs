@@ -40,9 +40,11 @@ public partial class BetterAsyncImage : TemplatedControl
         ImagePart = e.NameScope.Get<Image>("PART_Image");
         PlaceholderPart = e.NameScope.Get<Image>("PART_PlaceholderImage");
 
-        // _setSourceCts = new CancellationTokenSource();
-
         _isInitialized = true;
+
+        // Skip loading the image if we're disabled
+        if (!IsEffectivelyEnabled)
+            return;
 
         // In case property change didn't trigger the initial load, do it now
         if (State == AsyncImageState.Unloaded && Source is not null)
@@ -233,9 +235,21 @@ public partial class BetterAsyncImage : TemplatedControl
     {
         base.OnPropertyChanged(change);
 
+        // If we're disabled, don't load the image
+        if (!IsEffectivelyEnabled)
+            return;
+
         if (change.Property == SourceProperty)
         {
             SetSource(Source);
+        }
+        else if (change.Property == IsEffectivelyEnabledProperty)
+        {
+            // When we become enabled, reload the image since it was skipped at apply template
+            if (change.GetNewValue<bool>() && State == AsyncImageState.Unloaded)
+            {
+                SetSource(Source);
+            }
         }
     }
 

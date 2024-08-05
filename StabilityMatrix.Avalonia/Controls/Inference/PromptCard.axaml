@@ -21,7 +21,9 @@
         <!--  Set Defaults  -->
         <Setter Property="Template">
             <ControlTemplate>
-                <controls:Card Padding="12" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
+                <controls:Card Padding="12" HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                               VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                               VerticalContentAlignment="Stretch">
                     <controls:Card.Styles>
                         <Style Selector="avaloniaEdit|TextEditor">
                             <Setter Property="Margin" Value="0,8,0,8" />
@@ -93,6 +95,7 @@
 
                                 <avaloniaEdit:TextEditor
                                     x:Name="PromptEditor"
+                                    VerticalAlignment="Stretch"
                                     Document="{Binding PromptDocument}"
                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace">
                                     <i:Interaction.Behaviors>
@@ -134,6 +137,7 @@
 
                                 <avaloniaEdit:TextEditor
                                     x:Name="NegativePromptEditor"
+                                    VerticalAlignment="Stretch"
                                     Document="{Binding NegativePromptDocument}"
                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace">
                                     <i:Interaction.Behaviors>

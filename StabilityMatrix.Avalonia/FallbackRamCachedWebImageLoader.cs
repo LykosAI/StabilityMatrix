@@ -80,6 +80,44 @@ public class FallbackRamCachedWebImageLoader : RamCachedWebImageLoader
         }
     }
 
+    public async Task<Bitmap?> LoadExternalNoCacheAsync(string url)
+    {
+        if (await LoadDataFromExternalAsync(url).ConfigureAwait(false) is not { } externalBytes)
+        {
+            return null;
+        }
+
+        using var memoryStream = new MemoryStream(externalBytes);
+        var bitmap = new Bitmap(memoryStream);
+        return bitmap;
+    }
+
+    public async Task<Bitmap?> LoadExternalAsync(string url)
+    {
+        var internalOrCachedBitmap =
+            await LoadFromInternalAsync(url).ConfigureAwait(false)
+            ?? await LoadFromGlobalCache(url).ConfigureAwait(false);
+
+        if (internalOrCachedBitmap != null)
+            return internalOrCachedBitmap;
+
+        try
+        {
+            var externalBytes = await LoadDataFromExternalAsync(url).ConfigureAwait(false);
+            if (externalBytes == null)
+                return null;
+
+            using var memoryStream = new MemoryStream(externalBytes);
+            var bitmap = new Bitmap(memoryStream);
+            await SaveToGlobalCache(url, externalBytes).ConfigureAwait(false);
+            return bitmap;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
     public void RemovePathFromCache(string filePath)
     {
         var cache =

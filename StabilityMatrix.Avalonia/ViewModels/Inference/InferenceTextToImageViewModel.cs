@@ -214,13 +214,23 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             var buildPromptArgs = new BuildPromptEventArgs { Overrides = overrides, SeedOverride = seed };
             BuildPrompt(buildPromptArgs);
 
+            // update seed in project for batches
+            var inferenceProject = InferenceProjectDocument.FromLoadable(this);
+            if (inferenceProject.State?["Seed"]?["Seed"] is not null)
+            {
+                inferenceProject = inferenceProject.WithState(x => x["Seed"]["Seed"] = seed);
+            }
+
             var generationArgs = new ImageGenerationEventArgs
             {
                 Client = ClientManager.Client,
                 Nodes = buildPromptArgs.Builder.ToNodeDictionary(),
                 OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
-                Parameters = SaveStateToParameters(new GenerationParameters()),
-                Project = InferenceProjectDocument.FromLoadable(this),
+                Parameters = SaveStateToParameters(new GenerationParameters()) with
+                {
+                    Seed = Convert.ToUInt64(seed)
+                },
+                Project = inferenceProject,
                 FilesToTransfer = buildPromptArgs.FilesToTransfer,
                 BatchIndex = i,
                 // Only clear output images on the first batch

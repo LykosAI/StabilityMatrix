@@ -254,7 +254,10 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 Client = ClientManager.Client,
                 Nodes = buildPromptArgs.Builder.ToNodeDictionary(),
                 OutputNodeNames = buildPromptArgs.Builder.Connections.OutputNodeNames.ToArray(),
-                Parameters = SaveStateToParameters(new GenerationParameters(), Convert.ToUInt64(seed)),
+                Parameters = SaveStateToParameters(new GenerationParameters()) with
+                {
+                    Seed = Convert.ToUInt64(seed)
+                },
                 Project = inferenceProject,
                 FilesToTransfer = buildPromptArgs.FilesToTransfer,
                 BatchIndex = i,
@@ -288,16 +291,13 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
     }
 
     /// <inheritdoc />
-    public GenerationParameters SaveStateToParameters(GenerationParameters parameters) =>
-        SaveStateToParameters(parameters, null);
-
-    private GenerationParameters SaveStateToParameters(GenerationParameters parameters, ulong? seedOverride)
+    public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
     {
         parameters = PromptCardViewModel.SaveStateToParameters(parameters);
         parameters = SamplerCardViewModel.SaveStateToParameters(parameters);
         parameters = ModelCardViewModel.SaveStateToParameters(parameters);
 
-        parameters.Seed = seedOverride ?? (ulong)SeedCardViewModel.Seed;
+        parameters.Seed = (ulong)SeedCardViewModel.Seed;
 
         return parameters;
     }

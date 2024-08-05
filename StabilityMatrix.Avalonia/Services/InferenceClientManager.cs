@@ -130,6 +130,17 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
     private readonly SourceCache<HybridModelFile, string> downloadableSamModelsSource = new(p => p.GetId());
 
+    private readonly SourceCache<HybridModelFile, string> unetModelsSource = new(p => p.GetId());
+
+    public IObservableCollection<HybridModelFile> UnetModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
+    private readonly SourceCache<HybridModelFile, string> clipModelsSource = new(p => p.GetId());
+    private readonly SourceCache<HybridModelFile, string> downloadableClipModelsSource = new(p => p.GetId());
+
+    public IObservableCollection<HybridModelFile> ClipModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     public InferenceClientManager(
         ILogger<InferenceClientManager> logger,
         IApiFactory apiFactory,
@@ -169,13 +180,13 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         loraModelsSource
             .Connect()
-            .Sort(
-                SortExpressionComparer<HybridModelFile>
-                    .Ascending(f => f.Type)
-                    .ThenByAscending(f => f.ShortDisplayName)
-            )
             .DeferUntilLoaded()
-            .Bind(LoraModels)
+            .SortAndBind(
+                LoraModels,
+                SortExpressionComparer<HybridModelFile>
+                    .Ascending(f => f.ShortDisplayName)
+                    .ThenByAscending(f => f.Type)
+            )
             .Subscribe();
 
         promptExpansionModelsSource
@@ -212,6 +223,29 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(SamModels)
+            .Subscribe();
+
+        unetModelsSource
+            .Connect()
+            .SortBy(
+                f => f.ShortDisplayName,
+                SortDirection.Ascending,
+                SortOptimisations.ComparesImmutableValuesOnly
+            )
+            .DeferUntilLoaded()
+            .Bind(UnetModels)
+            .Subscribe();
+
+        clipModelsSource
+            .Connect()
+            .Or(downloadableClipModelsSource.Connect())
+            .SortBy(
+                f => f.ShortDisplayName,
+                SortDirection.Ascending,
+                SortOptimisations.ComparesImmutableValuesOnly
+            )
+            .DeferUntilLoaded()
+            .Bind(ClipModels)
             .Subscribe();
 
         vaeModelsDefaults.AddOrUpdate(HybridModelFile.Default);
@@ -379,6 +413,24 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         {
             preprocessorsSource.EditDiff(preprocessorNames.Select(n => new ComfyAuxPreprocessor(n)));
         }
+
+        // Get Unet model names from UNETLoader node
+        if (await Client.GetNodeOptionNamesAsync("UNETLoader", "unet_name") is { } unetModelNames)
+        {
+            unetModelsSource.EditDiff(
+                unetModelNames.Select(HybridModelFile.FromRemote),
+                HybridModelFile.Comparer
+            );
+        }
+
+        // Get CLIP model names from DualCLIPLoader node
+        if (await Client.GetNodeOptionNamesAsync("DualCLIPLoader", "clip_name1") is { } clipModelNames)
+        {
+            clipModelsSource.EditDiff(
+                clipModelNames.Select(HybridModelFile.FromRemote),
+                HybridModelFile.Comparer
+            );
+        }
     }
 
     /// <summary>
@@ -456,8 +508,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         [
             HybridModelFile.None,
             ..modelIndexService
-            .FindByModelType(SharedFolderType.Sams)
-            .Select(HybridModelFile.FromLocal)
+                .FindByModelType(SharedFolderType.Sams)
+                .Select(HybridModelFile.FromLocal)
         ];
         samModelsSource.EditDiff(samModels, HybridModelFile.Comparer);
 
@@ -465,6 +517,21 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             u => !samModelsSource.Lookup(u.GetId()).HasValue
         );
         downloadableSamModelsSource.EditDiff(downloadableSamModels, HybridModelFile.Comparer);
+
+        unetModelsSource.EditDiff(
+            modelIndexService.FindByModelType(SharedFolderType.Unet).Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
+
+        clipModelsSource.EditDiff(
+            modelIndexService.FindByModelType(SharedFolderType.CLIP).Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
+
+        var downloadableClipModels = RemoteModels.ClipModelFiles.Where(
+            u => !clipModelsSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableClipModelsSource.EditDiff(downloadableClipModels, HybridModelFile.Comparer);
 
         samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
 

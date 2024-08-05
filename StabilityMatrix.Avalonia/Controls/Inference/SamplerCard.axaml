@@ -194,7 +194,7 @@
                             
                             <!-- Conditioning Modules -->
                             <Grid 
-                                IsVisible="{Binding IsDimensionsEnabled}"
+                                IsVisible="{Binding EnableAddons}"
                                 Margin="0,8,0,0"
                                 ColumnDefinitions="*" 
                                 RowDefinitions="*">

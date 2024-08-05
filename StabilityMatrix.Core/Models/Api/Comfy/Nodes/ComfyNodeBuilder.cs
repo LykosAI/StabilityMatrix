@@ -22,6 +22,8 @@ public class ComfyNodeBuilder
 
     private static string GetRandomPrefix() => Guid.NewGuid().ToString()[..8];
 
+    private const int MaxResolution = 16384;
+
     private string GetUniqueName(string nameBase)
     {
         var name = $"{nameBase}_1";
@@ -373,6 +375,80 @@ public class ComfyNodeBuilder
         public required bool Lossless { get; init; }
         public required int Quality { get; init; }
         public required string Method { get; init; }
+    }
+
+    public record UNETLoader : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required string UnetName { get; init; }
+
+        /// <summary>
+        /// possible values: "default", "fp8_e4m3fn", "fp8_e5m2"
+        /// </summary>
+        public required string WeightDtype { get; init; }
+    }
+
+    public record DualCLIPLoader : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required string ClipName1 { get; init; }
+        public required string ClipName2 { get; init; }
+
+        /// <summary>
+        /// possible values: "sdxl", "sd3", "flux"
+        /// </summary>
+        public required string Type { get; init; }
+    }
+
+    public record FluxGuidance : ComfyTypedNodeBase<ConditioningNodeConnection>
+    {
+        public required ConditioningNodeConnection Conditioning { get; init; }
+
+        [Range(0.0d, 100.0d)]
+        public required double Guidance { get; init; }
+    }
+
+    public record BasicGuider : ComfyTypedNodeBase<GuiderNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required ConditioningNodeConnection Conditioning { get; init; }
+    }
+
+    public record EmptySD3LatentImage : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        [Range(16, MaxResolution)]
+        public int Width { get; init; } = 1024;
+
+        [Range(16, MaxResolution)]
+        public int Height { get; init; } = 1024;
+
+        [Range(1, 4096)]
+        public int BatchSize { get; init; } = 1;
+    }
+
+    public record RandomNoise : ComfyTypedNodeBase<NoiseNodeConnection>
+    {
+        [Range(0, int.MaxValue)]
+        public ulong NoiseSeed { get; init; }
+    }
+
+    public record BasicScheduler : ComfyTypedNodeBase<SigmasNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required string Scheduler { get; init; }
+
+        [Range(1, 10000)]
+        public int Steps { get; init; } = 20;
+
+        [Range(0.0d, 1.0d)]
+        public double Denoise { get; init; } = 1.0;
+    }
+
+    public record SamplerCustomAdvanced : ComfyTypedNodeBase<LatentNodeConnection, LatentNodeConnection>
+    {
+        public required NoiseNodeConnection Noise { get; init; }
+        public required GuiderNodeConnection Guider { get; init; }
+        public required SamplerNodeConnection Sampler { get; init; }
+        public required SigmasNodeConnection Sigmas { get; init; }
+        public required LatentNodeConnection LatentImage { get; init; }
     }
 
     [TypedNodeOptions(
@@ -1061,6 +1137,11 @@ public class ComfyNodeBuilder
 
         public ComfySampler? PrimarySampler { get; set; }
         public ComfyScheduler? PrimaryScheduler { get; set; }
+
+        public GuiderNodeConnection PrimaryGuider { get; set; }
+        public NoiseNodeConnection PrimaryNoise { get; set; }
+        public SigmasNodeConnection PrimarySigmas { get; set; }
+        public SamplerNodeConnection PrimarySamplerNode { get; set; }
 
         public List<NamedComfyNode> OutputNodes { get; } = new();
 

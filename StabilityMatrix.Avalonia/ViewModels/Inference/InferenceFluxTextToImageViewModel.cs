@@ -5,31 +5,26 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using DynamicData.Binding;
-using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
+using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Services;
-using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView;
-
-#pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), IsPersistent = true)]
 [ManagedService]
 [Transient]
-public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
+public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
     private readonly INotificationService notificationService;
     private readonly IModelIndexService modelIndexService;
 
@@ -40,7 +35,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
     public StackEditableCardViewModel ModulesCardViewModel { get; }
 
     [JsonPropertyName("Model")]
-    public ModelCardViewModel ModelCardViewModel { get; }
+    public UnetModelCardViewModel ModelCardViewModel { get; }
 
     [JsonPropertyName("Sampler")]
     public SamplerCardViewModel SamplerCardViewModel { get; }
@@ -54,12 +49,11 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
     [JsonPropertyName("Seed")]
     public SeedCardViewModel SeedCardViewModel { get; }
 
-    public InferenceTextToImageViewModel(
-        INotificationService notificationService,
-        IInferenceClientManager inferenceClientManager,
-        ISettingsManager settingsManager,
+    public InferenceFluxTextToImageViewModel(
         ServiceManager<ViewModelBase> vmFactory,
-        IModelIndexService modelIndexService,
+        IInferenceClientManager inferenceClientManager,
+        INotificationService notificationService,
+        ISettingsManager settingsManager,
         RunningPackageService runningPackageService
     )
         : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
@@ -67,12 +61,10 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;
 
-        // Get sub view models from service manager
-
         SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
         SeedCardViewModel.GenerateNewSeed();
 
-        ModelCardViewModel = vmFactory.Get<ModelCardViewModel>();
+        ModelCardViewModel = vmFactory.Get<UnetModelCardViewModel>();
 
         SamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>(samplerCard =>
         {
@@ -81,9 +73,18 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             samplerCard.IsSamplerSelectionEnabled = true;
             samplerCard.IsSchedulerSelectionEnabled = true;
             samplerCard.DenoiseStrength = 1.0d;
+            samplerCard.EnableAddons = false;
+            samplerCard.SelectedSampler = ComfySampler.Euler;
+            samplerCard.SelectedScheduler = ComfyScheduler.Simple;
+            samplerCard.CfgScale = 3.5d;
+            samplerCard.Width = 1024;
+            samplerCard.Height = 1024;
         });
 
-        PromptCardViewModel = AddDisposable(vmFactory.Get<PromptCardViewModel>());
+        PromptCardViewModel = vmFactory.Get<PromptCardViewModel>(promptCard =>
+        {
+            promptCard.IsNegativePromptEnabled = false;
+        });
 
         BatchSizeCardViewModel = vmFactory.Get<BatchSizeCardViewModel>();
 
@@ -91,12 +92,12 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         {
             modulesCard.AvailableModules = new[]
             {
-                typeof(HiresFixModule),
+                typeof(FluxHiresFixModule),
                 typeof(UpscalerModule),
                 typeof(SaveImageModule),
                 typeof(FaceDetailerModule)
             };
-            modulesCard.DefaultModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
+            modulesCard.DefaultModules = new[] { typeof(FluxHiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();
         });
 
@@ -108,27 +109,14 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             SeedCardViewModel,
             BatchSizeCardViewModel
         );
-
-        // When refiner is provided in model card, enable for sampler
-        AddDisposable(
-            ModelCardViewModel
-                .WhenPropertyChanged(x => x.IsRefinerSelectionEnabled)
-                .Subscribe(e =>
-                {
-                    SamplerCardViewModel.IsRefinerStepsEnabled =
-                        e.Sender is { IsRefinerSelectionEnabled: true, SelectedRefiner: not null };
-                })
-        );
     }
 
-    /// <inheritdoc />
     protected override void BuildPrompt(BuildPromptEventArgs args)
     {
         base.BuildPrompt(args);
 
         var builder = args.Builder;
 
-        // Load constants
         builder.Connections.Seed = args.SeedOverride switch
         {
             { } seed => Convert.ToUInt64(seed),
@@ -136,41 +124,23 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         };
 
         var applyArgs = args.ToModuleApplyStepEventArgs();
-
         BatchSizeCardViewModel.ApplyStep(applyArgs);
-
-        // Load models
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        if (SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>())
-        {
-            // need SD3Latent
-            builder.SetupEmptySd3LatentSource(
-                SamplerCardViewModel.Width,
-                SamplerCardViewModel.Height,
-                BatchSizeCardViewModel.BatchSize,
-                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
-            );
-        }
-        else
-        {
-            // Setup empty latent
-            builder.SetupEmptyLatentSource(
-                SamplerCardViewModel.Width,
-                SamplerCardViewModel.Height,
-                BatchSizeCardViewModel.BatchSize,
-                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
-            );
-        }
+        builder.SetupEmptySd3LatentSource(
+            SamplerCardViewModel.Width,
+            SamplerCardViewModel.Height,
+            BatchSizeCardViewModel.BatchSize,
+            BatchSizeCardViewModel.BatchIndex
+        );
 
-        // Prompts and loras
         PromptCardViewModel.ApplyStep(applyArgs);
 
-        // Setup Sampler and Refiner if enabled
-        SamplerCardViewModel.ApplyStep(applyArgs);
+        // Do custom Sampler setup
+        SamplerCardViewModel.ApplyStepsInitialFluxSampler(applyArgs);
 
-        // Hires fix if enabled
-        foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
+        // Apply steps from our modules
+        foreach (var module in ModulesCardViewModel.Cards.Cast<ModuleBase>())
         {
             module.ApplyStep(applyArgs);
         }
@@ -178,20 +148,6 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         applyArgs.InvokeAllPreOutputActions();
 
         builder.SetupOutputImage();
-    }
-
-    /// <inheritdoc />
-    protected override IEnumerable<ImageSource> GetInputImages()
-    {
-        var samplerImages = SamplerCardViewModel
-            .ModulesCardViewModel.Cards.OfType<IInputImageProvider>()
-            .SelectMany(m => m.GetInputImages());
-
-        var moduleImages = ModulesCardViewModel
-            .Cards.OfType<IInputImageProvider>()
-            .SelectMany(m => m.GetInputImages());
-
-        return samplerImages.Concat(moduleImages);
     }
 
     /// <inheritdoc />
@@ -265,7 +221,6 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         }
     }
 
-    /// <inheritdoc />
     public void LoadStateFromParameters(GenerationParameters parameters)
     {
         PromptCardViewModel.LoadStateFromParameters(parameters);

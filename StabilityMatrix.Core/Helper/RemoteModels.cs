@@ -293,4 +293,44 @@ public static class RemoteModels
 
     public static IEnumerable<HybridModelFile> SamModelFiles =>
         SamModels.Select(HybridModelFile.FromDownloadable);
+
+    private static IEnumerable<RemoteResource> ClipModels =>
+        [
+            new RemoteResource
+            {
+                Url = new Uri(
+                    "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/comfyanonymous/flux_text_encoders"),
+                HashSha256 = "660c6f5b1abae9dc498ac2d21e1347d2abdb0cf6c0c0c8576cd796491d9a6cdd",
+                Author = "OpenAI",
+                LicenseType = "MIT",
+                ContextType = SharedFolderType.CLIP,
+            },
+            new RemoteResource
+            {
+                Url = new Uri(
+                    "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/comfyanonymous/flux_text_encoders"),
+                HashSha256 = "6e480b09fae049a72d2a8c5fbccb8d3e92febeb233bbe9dfe7256958a9167635",
+                Author = "Google",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.CLIP,
+            },
+            new RemoteResource
+            {
+                Url = new Uri(
+                    "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/comfyanonymous/flux_text_encoders"),
+                HashSha256 = "7d330da4816157540d6bb7838bf63a0f02f573fc48ca4d8de34bb0cbfd514f09",
+                Author = "Google",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.CLIP,
+            }
+        ];
+
+    public static IEnumerable<HybridModelFile> ClipModelFiles =>
+        ClipModels.Select(HybridModelFile.FromDownloadable);
 }

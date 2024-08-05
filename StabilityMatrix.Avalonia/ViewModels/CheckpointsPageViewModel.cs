@@ -318,6 +318,9 @@ public partial class CheckpointsPageViewModel(
             )
             .Subscribe();
 
+        // make filter go
+        OnPropertyChanged(nameof(HideEmptyRootCategories));
+
         settingsManager.RelayPropertyFor(
             this,
             vm => vm.IsImportAsConnectedEnabled,
@@ -380,8 +383,6 @@ public partial class CheckpointsPageViewModel(
 
         // make sure a sort happens
         OnPropertyChanged(nameof(SortConnectedModelsFirst));
-        // gotta do this one too i guess
-        OnPropertyChanged(nameof(HideEmptyRootCategories));
     }
 
     public void ClearSearchQuery()
@@ -852,7 +853,8 @@ public partial class CheckpointsPageViewModel(
         SelectedCategory =
             previouslySelectedCategory
             ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
-            ?? Categories.First();
+            ?? Categories.FirstOrDefault()
+            ?? categoriesCache.Items[0];
 
         var dirPath = new DirectoryPath(SelectedCategory.Path);
 
@@ -868,12 +870,6 @@ public partial class CheckpointsPageViewModel(
 
             dirPath = dirPath.Parent;
         }
-
-        // one more time for good measure??
-        SelectedCategory =
-            previouslySelectedCategory
-            ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
-            ?? Categories.First();
     }
 
     private ObservableCollection<CheckpointCategory> GetSubfolders(string strPath)

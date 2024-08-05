@@ -31,3 +31,7 @@ public class BboxDetectorNodeConnection : NodeConnectionBase;
 public class SegmDetectorNodeConnection : NodeConnectionBase;
 
 public class SamModelNodeConnection : NodeConnectionBase;
+
+public class GuiderNodeConnection : NodeConnectionBase;
+
+public class NoiseNodeConnection : NodeConnectionBase;

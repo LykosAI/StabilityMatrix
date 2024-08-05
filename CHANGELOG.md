@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "unet" shared model folder for ComfyUI
 ### Changed
 - The "Download Failed" message for model downloads is now persistent until dismissed
+- Separated the Generate button from the prompt control in Inference so it can be moved like other controls
 ### Fixed
 - Fixed "The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp." error for Linux users
 - Fixed download links for IPAdapters in the HuggingFace model browser

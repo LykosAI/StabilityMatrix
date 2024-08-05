@@ -37,7 +37,8 @@
                         </Style>
                     </controls:Card.Styles>
 
-                    <Grid RowDefinitions="*,16,*,16,Auto">
+                    <Grid RowDefinitions="*,16,*,16,Auto"
+                          Name="PART_RootGrid">
                         <!--  Prompt  -->
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,*">
                             <StackPanel

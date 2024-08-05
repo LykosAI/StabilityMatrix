@@ -8,8 +8,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.12.0-dev.3
 ### Added
 - Added Settings option "Console: History Size" to adjust the number of lines stored in the console history when running packages. Defaults to 9001 lines.
+#### Inference
+- Added new project type, "Flux Text to Image", a Flux-native workflow for text-to-image projects
+- Added support for the FP8 version of Flux in the regular Text to Image and Image to Image workflows via the "Use Flux Guidance" Sampler Addon
 #### Model Browser
 - Added AuraFlow & Flux base model types to the CivitAI model browser
+- Added CLIP/Text Encoders section to HuggingFace model browser
 #### Checkpoint Manager
 - Added "New Directory" and "Delete" options to the context menu of the tree view.
 - Added new toggle for drag & drop - when enabled, all selected models will now move together with the dragged model

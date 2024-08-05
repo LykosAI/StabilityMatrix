@@ -57,99 +57,119 @@
 
                     <ProportionalDockSplitter x:Name="Splitter1" Id="Splitter1" />
 
-                    <!--  Prompt Pane  -->
-                    <ToolDock
-                        x:Name="PromptPane"
-                        Alignment="Left"
-                        Id="PromptPane"
-                        Proportion="0.25">
-                        <Tool
-                            x:Name="PromptTool"
-                            Title="Prompt"
-                            x:DataType="Tool"
-                            Id="PromptTool"
-                            CanClose="False">
+                    <ProportionalDock x:Name="PromptLayout"
+                                      Id="PromptLayout"
+                                      Orientation="Vertical">
+                        <!--  Prompt Pane  -->
+                        <ToolDock
+                            x:Name="PromptPane"
+                            Alignment="Left"
+                            Id="PromptPane"
+                            Proportion="0.9">
+                            <Tool
+                                x:Name="PromptTool"
+                                Title="Prompt"
+                                x:DataType="Tool"
+                                Id="PromptTool"
+                                CanClose="False">
+
+                                <!--  Prompt and buttons  -->
+                                <Grid
+                                    Opacity="1"
+                                    x:CompileBindings="False"
+                                    DataContext="{Binding ElementName=Dock, Path=DataContext}"
+                                    RowDefinitions="*,Auto">
+                                    <!--  Prompt card  -->
+                                    <controls:PromptCard
+                                        VerticalAlignment="Stretch"
+                                        DataContext="{Binding PromptCardViewModel}" />
+                                </Grid>
+                            </Tool>
+                        </ToolDock>
+                        
+                        <!--  Generate Dock -->
+                        <ToolDock
+                            x:Name="GeneratePane"
+                            Alignment="Left"
+                            Id="PromptPane"
+                            Proportion="0.1">
+                            <Tool x:Name="GenerateTool"
+                              Title="Generate"
+                              x:DataType="Tool"
+                              Id="GenerateTool"
+                              CanClose="False">
+                            <!--  Generate Buttons  -->
                             
-                            <!--  Prompt and buttons  -->
-                            <Grid
-                                Opacity="1"
-                                x:CompileBindings="False"
-                                DataContext="{Binding ElementName=Dock, Path=DataContext}"
-                                RowDefinitions="*,Auto,Auto">
-                                <!--  Prompt card  -->
-                                <controls:PromptCard
-                                    DataContext="{Binding PromptCardViewModel}" />
-                                
-                                <!--  Generate Buttons  -->
-                                <StackPanel Grid.Row="2" Margin="0,6,0,0">
-                                    <controls:Card Padding="8">
-                                        <Grid
-                                            HorizontalAlignment="Center"
-                                            ColumnDefinitions="Auto,*,Auto"
-                                            RowDefinitions="Auto,*">
-                                            <Grid.Styles>
-                                                <Style Selector="Button">
-                                                    <Setter Property="MinHeight" Value="32"/>
-                                                </Style>
-                                            </Grid.Styles>
-                                            <Button
-                                                Grid.Row="1"
-                                                Margin="4,0"
-                                                Padding="12,8"
-                                                HorizontalAlignment="Left"
-                                                icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
-                                                Classes="transparent"
-                                                Command="{Binding GenerateImageCommand}"
-                                                CommandParameter="{x:Static modelsInference:GenerateFlags.HiresFixAndUseCurrentSeed}"
-                                                ToolTip.Tip="Generate with Hires Scaling" />
+                            <controls:Card DataContext="{Binding ElementName=Dock, Path=DataContext}"
+                                           x:CompileBindings="False"
+                                           Margin="0,6,0,0" Padding="8">
+                                <Grid
+                                    HorizontalAlignment="Center"
+                                    ColumnDefinitions="Auto,*,Auto"
+                                    RowDefinitions="Auto,*">
+                                    <Grid.Styles>
+                                        <Style Selector="Button">
+                                            <Setter Property="MinHeight" Value="32" />
+                                        </Style>
+                                    </Grid.Styles>
+                                    <Button
+                                        Grid.Row="1"
+                                        Margin="4,0"
+                                        Padding="12,8"
+                                        HorizontalAlignment="Left"
+                                        icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
+                                        Classes="transparent"
+                                        Command="{Binding GenerateImageCommand}"
+                                        CommandParameter="{x:Static modelsInference:GenerateFlags.HiresFixAndUseCurrentSeed}"
+                                        ToolTip.Tip="Generate with Hires Scaling" />
 
-                                            <!--  Main Generate Button  -->
-                                            <Button
-                                                x:Name="GenerateButton"
-                                                Grid.Row="1"
-                                                Grid.Column="1"
-                                                Width="130"
-                                                HorizontalAlignment="Stretch"
-                                                Classes="accent"
-                                                Command="{Binding GenerateImageCommand}"
-                                                ToolTip.Tip="{Binding $self.HotKey}"
-                                                HotKey="Ctrl+Enter"
-                                                CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
-                                                IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}">
-                                                <Panel>
-                                                    <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
-                                                    <controls:ProgressRing IsIndeterminate="True" IsVisible="{Binding !#GenerateButton.IsEnabled}" />
-                                                </Panel>
-                                            </Button>
-                                            <!--  Cancel Button  -->
-                                            <Button
-                                                x:Name="CancelButton"
-                                                Grid.Row="1"
-                                                Grid.Column="1"
-                                                Width="130"
-                                                HorizontalAlignment="Stretch"
-                                                icons:Attached.Icon="fa-solid fa-stop"
-                                                Command="{Binding GenerateImageCancelCommand}"
-                                                IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
+                                    <!--  Main Generate Button  -->
+                                    <Button
+                                        x:Name="GenerateButton"
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        Width="130"
+                                        HorizontalAlignment="Stretch"
+                                        Classes="accent"
+                                        Command="{Binding GenerateImageCommand}"
+                                        ToolTip.Tip="{Binding $self.HotKey}"
+                                        HotKey="Ctrl+Enter"
+                                        CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
+                                        IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}">
+                                        <Panel>
+                                            <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}"
+                                                       Text="Generate Image" />
+                                            <controls:ProgressRing IsIndeterminate="True"
+                                                                   IsVisible="{Binding !#GenerateButton.IsEnabled}" />
+                                        </Panel>
+                                    </Button>
+                                    <!--  Cancel Button  -->
+                                    <Button
+                                        x:Name="CancelButton"
+                                        Grid.Row="1"
+                                        Grid.Column="1"
+                                        Width="130"
+                                        HorizontalAlignment="Stretch"
+                                        icons:Attached.Icon="fa-solid fa-stop"
+                                        Command="{Binding GenerateImageCancelCommand}"
+                                        IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
 
-                                            <Button
-                                                Grid.Row="1"
-                                                Grid.Column="2"
-                                                Margin="4,0"
-                                                Padding="12,8"
-                                                HorizontalAlignment="Left"
-                                                icons:Attached.Icon="fa-solid fa-repeat"
-                                                Classes="transparent"
-                                                Command="{Binding GenerateImageCommand}"
-                                                CommandParameter="{x:Static modelsInference:GenerateFlags.UseCurrentSeed}"
-                                                ToolTip.Tip="Generate with current seed" />
-                                        </Grid>
-                                    </controls:Card>
-                                </StackPanel>
-                            </Grid>
-
+                                    <Button
+                                        Grid.Row="1"
+                                        Grid.Column="2"
+                                        Margin="4,0"
+                                        Padding="12,8"
+                                        HorizontalAlignment="Left"
+                                        icons:Attached.Icon="fa-solid fa-repeat"
+                                        Classes="transparent"
+                                        Command="{Binding GenerateImageCommand}"
+                                        CommandParameter="{x:Static modelsInference:GenerateFlags.UseCurrentSeed}"
+                                        ToolTip.Tip="Generate with current seed" />
+                                </Grid>
+                            </controls:Card>
                         </Tool>
-                    </ToolDock>
+                        </ToolDock>
+                    </ProportionalDock>
 
                     <ProportionalDockSplitter x:Name="Splitter2" Id="Splitter2" />
 

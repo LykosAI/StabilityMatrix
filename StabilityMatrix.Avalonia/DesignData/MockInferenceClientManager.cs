@@ -53,6 +53,12 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
     public IObservableCollection<HybridModelFile> SamModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    public IObservableCollection<HybridModelFile> UnetModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
+    public IObservableCollection<HybridModelFile> ClipModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanUserConnect))]
     private bool isConnected;

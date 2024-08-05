@@ -658,6 +658,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             InferenceProjectType.ImageToImage => vmFactory.Get<InferenceImageToImageViewModel>(),
             InferenceProjectType.ImageToVideo => vmFactory.Get<InferenceImageToVideoViewModel>(),
             InferenceProjectType.Upscale => vmFactory.Get<InferenceImageUpscaleViewModel>(),
+            InferenceProjectType.FluxTextToImage => vmFactory.Get<InferenceFluxTextToImageViewModel>(),
         };
 
         switch (vm)
@@ -675,6 +676,9 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
                 break;
             case InferenceImageToVideoViewModel imgToVidVm:
                 imgToVidVm.SelectImageCardViewModel.ImageSource = new ImageSource(imageFile.AbsolutePath);
+                break;
+            case InferenceFluxTextToImageViewModel _:
+                vm.LoadImageMetadata(imageFile.AbsolutePath);
                 break;
         }
 

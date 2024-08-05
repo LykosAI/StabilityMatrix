@@ -47,6 +47,45 @@ public static class ComfyNodeBuilderExtensions
         }
     }
 
+    public static void SetupEmptySd3LatentSource(
+        this ComfyNodeBuilder builder,
+        int width,
+        int height,
+        int batchSize = 1,
+        int? batchIndex = null
+    )
+    {
+        var emptyLatent = builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.EmptySD3LatentImage
+            {
+                Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.EmptySD3LatentImage)),
+                BatchSize = batchSize,
+                Height = height,
+                Width = width
+            }
+        );
+
+        builder.Connections.Primary = emptyLatent.Output;
+        builder.Connections.PrimarySize = new Size(width, height);
+
+        // If batch index is selected, add a LatentFromBatch
+        if (batchIndex is not null)
+        {
+            builder.Connections.Primary = builder
+                .Nodes.AddTypedNode(
+                    new ComfyNodeBuilder.LatentFromBatch
+                    {
+                        Name = "LatentFromBatch",
+                        Samples = builder.GetPrimaryAsLatent(),
+                        // remote expects a 0-based index, vm is 1-based
+                        BatchIndex = batchIndex.Value - 1,
+                        Length = 1
+                    }
+                )
+                .Output;
+        }
+    }
+
     /// <summary>
     /// Setup an image as the <see cref="ComfyNodeBuilder.NodeBuilderConnections.Primary"/> connection
     /// </summary>

@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Select All" button to the InfoBar (shown when at least one model is selected)
 - Added "unet" shared model folder for ComfyUI
 ### Changed
+- Improved memory efficiency and speed of image rendering and animation fluidity (e.g. in Model and Output browsers)
 - The "Download Failed" message for model downloads is now persistent until dismissed
 - Separated the Generate button from the prompt control in Inference so it can be moved like other controls
 ### Fixed

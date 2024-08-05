@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
@@ -28,7 +29,8 @@ public partial class BetterAsyncImage : TemplatedControl
     protected Image? PlaceholderPart { get; private set; }
 
     private bool _isInitialized;
-    private CancellationTokenSource? _tokenSource;
+    private CancellationTokenSource? _setSourceCts;
+    private CancellationTokenSource? _attachSourceAnimationCts;
     private AsyncImageState _state;
 
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
@@ -38,14 +40,38 @@ public partial class BetterAsyncImage : TemplatedControl
         ImagePart = e.NameScope.Get<Image>("PART_Image");
         PlaceholderPart = e.NameScope.Get<Image>("PART_PlaceholderImage");
 
-        _tokenSource = new CancellationTokenSource();
+        // _setSourceCts = new CancellationTokenSource();
 
         _isInitialized = true;
 
-        if (Source != null)
+        // In case property change didn't trigger the initial load, do it now
+        if (State == AsyncImageState.Unloaded && Source is not null)
         {
             SetSource(Source);
         }
+    }
+
+    /// <summary>
+    /// Cancels the current <see cref="_setSourceCts"/> and sets and returns a new <see cref="CancellationTokenSource"/>.
+    /// </summary>
+    private CancellationTokenSource CancelAndSetNewTokenSource(
+        ref CancellationTokenSource? cancellationTokenSource
+    )
+    {
+        var newTokenSource = new CancellationTokenSource();
+
+        var oldTokenSource = Interlocked.Exchange(ref cancellationTokenSource, newTokenSource);
+
+        if (oldTokenSource is not null)
+        {
+            try
+            {
+                oldTokenSource.Cancel();
+            }
+            catch (ObjectDisposedException) { }
+        }
+
+        return newTokenSource;
     }
 
     private async void SetSource(object? source)
@@ -55,11 +81,9 @@ public partial class BetterAsyncImage : TemplatedControl
             return;
         }
 
-        _tokenSource?.Cancel();
+        var newTokenSource = CancelAndSetNewTokenSource(ref _setSourceCts);
 
-        _tokenSource = new CancellationTokenSource();
-
-        AttachSource(null);
+        // AttachSource(null, newTokenSource.Token);
 
         if (source == null)
         {
@@ -70,7 +94,7 @@ public partial class BetterAsyncImage : TemplatedControl
 
         if (Source is IImage image)
         {
-            AttachSource(image);
+            AttachSource(image, newTokenSource.Token);
 
             return;
         }
@@ -82,147 +106,127 @@ public partial class BetterAsyncImage : TemplatedControl
 
         var uri = Source;
 
-        if (uri != null && uri.IsAbsoluteUri)
+        if (!uri.IsAbsoluteUri)
         {
-            if (uri.Scheme == "http" || uri.Scheme == "https")
-            {
-                Bitmap? bitmap = null;
-                // Android doesn't allow network requests on the main thread, even though we are using async apis.
-#if NET6_0_OR_GREATER
-                if (OperatingSystem.IsAndroid())
-                {
-                    await Task.Run(async () =>
-                    {
-                        try
-                        {
-                            bitmap = await LoadImageAsync(uri, _tokenSource.Token);
-                        }
-                        catch (Exception ex)
-                        {
-                            await Dispatcher.UIThread.InvokeAsync(() =>
-                            {
-                                State = AsyncImageState.Failed;
+            State = AsyncImageState.Failed;
 
-                                RaiseEvent(new AsyncImageFailedEventArgs(ex));
-                            });
-                        }
-                    });
-                }
-                else
-#endif
-                {
-                    try
-                    {
-                        bitmap = await LoadImageAsync(uri, _tokenSource.Token);
-                    }
-                    catch (Exception ex)
-                    {
-                        await Dispatcher.UIThread.InvokeAsync(() =>
-                        {
-                            State = AsyncImageState.Failed;
-
-                            RaiseEvent(new AsyncImageFailedEventArgs(ex));
-                        });
-                    }
-                }
-
-                AttachSource(bitmap);
-            }
-            else if (uri.Scheme == "avares")
-            {
-                try
-                {
-                    AttachSource(new Bitmap(AssetLoader.Open(uri)));
-                }
-                catch (Exception ex)
-                {
-                    State = AsyncImageState.Failed;
-
-                    RaiseEvent(new AsyncImageFailedEventArgs(ex));
-                }
-            }
-            else if (uri.Scheme == "file" && File.Exists(uri.LocalPath))
-            {
-                // Added error handling here for local files
-                try
-                {
-                    AttachSource(new Bitmap(uri.LocalPath));
-                }
-                catch (Exception ex)
-                {
-                    State = AsyncImageState.Failed;
-
-                    RaiseEvent(new AsyncImageFailedEventArgs(ex));
-                }
-            }
-            else
-            {
-                RaiseEvent(
-                    new AsyncImageFailedEventArgs(
-                        new UriFormatException($"Uri has unsupported scheme. Uri:{source}")
-                    )
-                );
-            }
-        }
-        else
-        {
             RaiseEvent(
                 new AsyncImageFailedEventArgs(
                     new UriFormatException($"Relative paths aren't supported. Uri:{source}")
                 )
             );
+
+            return;
+        }
+
+        try
+        {
+            var bitmap = await Task.Run(
+                async () =>
+                {
+                    // A small delay allows to cancel early if the image goes out of screen too fast (e.g. scrolling)
+                    // The Bitmap constructor is expensive and cannot be cancelled
+                    await Task.Delay(10, newTokenSource.Token);
+
+                    if (uri.Scheme is "http" or "https")
+                    {
+                        return await LoadImageAsync(uri, newTokenSource.Token);
+                    }
+
+                    if (uri.Scheme == "avares")
+                    {
+                        return new Bitmap(AssetLoader.Open(uri));
+                    }
+
+                    if (uri.Scheme == "file" && File.Exists(uri.LocalPath))
+                    {
+                        return new Bitmap(uri.LocalPath);
+                    }
+
+                    throw new UriFormatException($"Uri has unsupported scheme. Uri:{source}");
+                },
+                CancellationToken.None
+            );
+
+            if (newTokenSource.IsCancellationRequested)
+            {
+                return;
+            }
+
+            AttachSource(bitmap, newTokenSource.Token);
+        }
+        catch (TaskCanceledException) { }
+        catch (Exception ex)
+        {
+            State = AsyncImageState.Failed;
+
+            RaiseEvent(new AsyncImageFailedEventArgs(ex));
+        }
+        finally
+        {
+            newTokenSource.Dispose();
         }
     }
 
-    private void AttachSource(IImage? image)
+    private void AttachSource(IImage? image, CancellationToken cancellationToken)
     {
         if (ImagePart != null)
         {
             ImagePart.Source = image;
         }
 
-        _tokenSource?.Cancel();
-        _tokenSource = new CancellationTokenSource();
+        // Get new animation token source, cancel previous ones
+        var newAnimationCts = CancelAndSetNewTokenSource(ref _attachSourceAnimationCts);
 
         if (image == null)
         {
             State = AsyncImageState.Unloaded;
 
-            ImageTransition?.Start(ImagePart, PlaceholderPart, true, _tokenSource.Token);
+            ImageTransition
+                ?.Start(ImagePart, PlaceholderPart, true, newAnimationCts.Token)
+                .ContinueWith(_ => newAnimationCts.Dispose(), CancellationToken.None);
         }
         else if (image.Size != default)
         {
             State = AsyncImageState.Loaded;
 
-            ImageTransition?.Start(PlaceholderPart, ImagePart, true, _tokenSource.Token);
+            ImageTransition
+                ?.Start(PlaceholderPart, ImagePart, true, newAnimationCts.Token)
+                .ContinueWith(_ => newAnimationCts.Dispose(), CancellationToken.None);
 
             RaiseEvent(new RoutedEventArgs(OpenedEvent));
         }
     }
 
-    private async Task<Bitmap> LoadImageAsync(Uri? url, CancellationToken token)
+    private async Task<Bitmap?> LoadImageAsync(Uri url, CancellationToken token)
     {
-        if (await ProvideCachedResourceAsync(url, token) is { } bitmap)
+        /*if (await ProvideCachedResourceAsync(url, token) is { } bitmap)
         {
             return bitmap;
+        }*/
+
+        if (ImageLoader.AsyncImageLoader is not FallbackRamCachedWebImageLoader loader)
+        {
+            throw new InvalidOperationException(
+                "ImageLoader must be an instance of FallbackRamCachedWebImageLoader"
+            );
         }
-#if NET6_0_OR_GREATER
-        using var client = new HttpClient();
+
+        if (IsCacheEnabled)
+        {
+            return await loader.LoadExternalAsync(url.ToString());
+        }
+
+        return await loader.LoadExternalNoCacheAsync(url.ToString());
+
+        /*using var client = new HttpClient();
         var stream = await client.GetStreamAsync(url, token).ConfigureAwait(false);
 
         await using var memoryStream = new MemoryStream();
         await stream.CopyToAsync(memoryStream, token).ConfigureAwait(false);
-#elif NETSTANDARD2_0
-        using var client = new HttpClient();
-        var response = await client.GetAsync(url, token).ConfigureAwait(false);
-        var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-
-        using var memoryStream = new MemoryStream();
-        await stream.CopyToAsync(memoryStream).ConfigureAwait(false);
-#endif
 
         memoryStream.Position = 0;
-        return new Bitmap(memoryStream);
+        return new Bitmap(memoryStream);*/
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)

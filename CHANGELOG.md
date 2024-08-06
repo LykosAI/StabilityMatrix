@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed "The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp." error for Linux users
 - Fixed download links for IPAdapters in the HuggingFace model browser
 - Fixed potential memory leak of transient controls (Inference Prompt and Output Image Viewer) not being garbage collected due to event subscriptions
+- Fixed Batch Count seeds not being recorded properly in Inference projects and image metadata
 
 ## v2.12.0-dev.2
 ### Added

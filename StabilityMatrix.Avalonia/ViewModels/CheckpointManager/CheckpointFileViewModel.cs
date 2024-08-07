@@ -99,7 +99,9 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         if (CheckpointFile.ConnectedModelInfo?.ModelId == null)
             return;
 
-        EventManager.Instance.OnNavigateAndFindCivitModelRequested(CheckpointFile.ConnectedModelInfo.ModelId);
+        EventManager.Instance.OnNavigateAndFindCivitModelRequested(
+            CheckpointFile.ConnectedModelInfo.ModelId.Value
+        );
     }
 
     [RelayCommand]
@@ -340,12 +342,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
                         })
                     )
                 };
-                cmInfo.Stats = new CivitModelStats();
-                cmInfo.FileMetadata = new CivitFileMetadata();
                 cmInfo.ImportedAt = DateTimeOffset.Now;
-                cmInfo.ModelId = -1;
-                cmInfo.VersionDescription = string.Empty;
-                cmInfo.VersionId = -1;
             }
 
             var modelFileName = modelFilePath.NameWithoutExtension;

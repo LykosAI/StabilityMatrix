@@ -151,7 +151,7 @@ public record LocalModelFile
     public bool HasConnectedModel => ConnectedModelInfo != null;
 
     [BsonIgnore]
-    public bool HasCustomMetadata => HasConnectedModel && ConnectedModelInfo.ModelId == -1;
+    public bool HasCustomMetadata => HasConnectedModel && ConnectedModelInfo.ModelId == null;
 
     public string GetFullPath(string rootModelDirectory)
     {

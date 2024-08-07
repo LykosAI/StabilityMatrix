@@ -9,21 +9,21 @@ public class ConnectedModelInfo
     [JsonIgnore]
     public const string FileExtension = ".cm-info.json";
 
-    public int ModelId { get; set; }
+    public int? ModelId { get; set; }
     public string ModelName { get; set; }
     public string ModelDescription { get; set; }
     public bool Nsfw { get; set; }
     public string[] Tags { get; set; }
     public CivitModelType ModelType { get; set; }
-    public int VersionId { get; set; }
+    public int? VersionId { get; set; }
     public string VersionName { get; set; }
-    public string VersionDescription { get; set; }
+    public string? VersionDescription { get; set; }
     public string? BaseModel { get; set; }
-    public CivitFileMetadata FileMetadata { get; set; }
+    public CivitFileMetadata? FileMetadata { get; set; }
     public DateTimeOffset ImportedAt { get; set; }
     public CivitFileHashes Hashes { get; set; }
     public string[]? TrainedWords { get; set; }
-    public CivitModelStats Stats { get; set; }
+    public CivitModelStats? Stats { get; set; }
 
     // User settings
     public string? UserTitle { get; set; }

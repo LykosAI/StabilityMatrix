@@ -612,8 +612,8 @@ public partial class ModelIndexService : IModelIndexService
         ).ToList();
 
         var ids = dbModels
-            .Where(x => x.ConnectedModelInfo != null)
-            .Select(x => x.ConnectedModelInfo!.ModelId)
+            .Where(x => x.ConnectedModelInfo?.ModelId != null)
+            .Select(x => x.ConnectedModelInfo!.ModelId.Value)
             .Distinct();
 
         var remoteModels = (await modelFinder.FindRemoteModelsById(ids).ConfigureAwait(false)).ToList();

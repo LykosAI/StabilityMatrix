@@ -491,31 +491,10 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
         }
 
         // See if query is cached
-        CivitModelQueryCacheEntry? cachedQuery = null;
-
-        try
-        {
-            cachedQuery = await liteDbContext
-                .CivitModelQueryCache.IncludeAll()
-                .FindByIdAsync(ObjectHash.GetMd5Guid(modelRequest));
-        }
-        catch (Exception e)
-        {
-            // Suppress 'Training_Data' enum not found exceptions
-            // Caused by enum name change
-            // Ignore to do a new search to overwrite the cache
-            if (
-                !(
-                    e is LiteException or LiteAsyncException
-                    && e.InnerException is ArgumentException inner
-                    && inner.Message.Contains("Training_Data")
-                )
-            )
-            {
-                // Otherwise log error
-                Logger.Error(e, "Error while querying CivitModelQueryCache");
-            }
-        }
+        var cachedQuery = await liteDbContext.TryQueryWithClearOnExceptionAsync(
+            liteDbContext.CivitModelQueryCache,
+            liteDbContext.CivitModelQueryCache.IncludeAll().FindByIdAsync(ObjectHash.GetMd5Guid(modelRequest))
+        );
 
         // If cached, update model cards
         if (cachedQuery is not null)

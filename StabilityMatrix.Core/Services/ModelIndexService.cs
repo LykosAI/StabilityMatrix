@@ -105,36 +105,22 @@ public partial class ModelIndexService : IModelIndexService
 
         logger.LogInformation("Loading models from database...");
 
-        ImmutableArray<LocalModelFile> allModels = [];
-        try
-        {
-            allModels =
-            [
-                ..(
-                    await liteDbContext.LocalModelFiles.IncludeAll().FindAllAsync().ConfigureAwait(false)
-                )
-            ];
-        }
-        catch (Exception e)
-        {
-            // Handle enum deserialize exceptions from changes
-            if (e is LiteException or LiteAsyncException && e.InnerException is ArgumentException inner)
-            {
-                logger.LogWarning(
-                    e,
-                    "LiteDb Deserialize error while fetching LocalModelFiles '{Inner}', cache collections will be cleared",
-                    inner.ToString()
-                );
+        // Handle enum deserialize exceptions from changes
+        var allModels = await liteDbContext
+            .TryQueryWithClearOnExceptionAsync(
+                liteDbContext.LocalModelFiles,
+                liteDbContext.LocalModelFiles.IncludeAll().FindAllAsync()
+            )
+            .ConfigureAwait(false);
 
-                await liteDbContext.ClearAllCacheCollectionsAsync().ConfigureAwait(false);
-            }
-            else
-            {
-                throw;
-            }
+        if (allModels is not null)
+        {
+            ModelIndex = allModels.GroupBy(m => m.SharedFolderType).ToDictionary(g => g.Key, g => g.ToList());
         }
-
-        ModelIndex = allModels.GroupBy(m => m.SharedFolderType).ToDictionary(g => g.Key, g => g.ToList());
+        else
+        {
+            ModelIndex.Clear();
+        }
 
         IsDbLoaded = true;
         EventManager.Instance.OnModelIndexChanged();
@@ -142,7 +128,7 @@ public partial class ModelIndexService : IModelIndexService
         timer.Stop();
         logger.LogInformation(
             "Loaded {Count} models from database in {Time:F2}ms",
-            allModels.Length,
+            ModelIndex.Count,
             timer.Elapsed.TotalMilliseconds
         );
     }
@@ -506,33 +492,20 @@ public partial class ModelIndexService : IModelIndexService
 
             if (model.LatestModelInfo == null && model.HasConnectedModel)
             {
-                try
+                // Handle enum deserialize exceptions from changes
+                if (
+                    await liteDbContext
+                        .TryQueryWithClearOnExceptionAsync(
+                            liteDbContext.CivitModels,
+                            liteDbContext
+                                .CivitModels.Include(m => m.ModelVersions)
+                                .FindByIdAsync(model.ConnectedModelInfo.ModelId)
+                        )
+                        .ConfigureAwait(false) is
+                    { } latestModel
+                )
                 {
-                    model.LatestModelInfo = await liteDbContext
-                        .CivitModels.Include(m => m.ModelVersions)
-                        .FindByIdAsync(model.ConnectedModelInfo.ModelId)
-                        .ConfigureAwait(false);
-                }
-                catch (Exception e)
-                {
-                    // Handle enum deserialize exceptions from changes
-                    if (
-                        e is LiteException or LiteAsyncException
-                        && e.InnerException is ArgumentException inner
-                    )
-                    {
-                        logger.LogWarning(
-                            e,
-                            "LiteDb Deserialize error while fetching CivitModels '{Inner}', cache collections will be cleared",
-                            inner.ToString()
-                        );
-
-                        await liteDbContext.ClearAllCacheCollectionsAsync().ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    model.LatestModelInfo = latestModel;
                 }
             }
             var list = newIndex.GetOrAdd(model.SharedFolderType);

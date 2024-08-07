@@ -286,6 +286,7 @@ public partial class CheckpointsPageViewModel(
                         settingsManager,
                         modelIndexService,
                         notificationService,
+                        downloadService,
                         dialogFactory,
                         logger,
                         x
@@ -510,6 +511,16 @@ public partial class CheckpointsPageViewModel(
     [RelayCommand]
     private async Task ShowVersionDialog(CheckpointFileViewModel item)
     {
+        if (item.CheckpointFile.HasCustomMetadata)
+        {
+            notificationService.Show(
+                "Cannot show version dialog",
+                "This model has custom metadata.",
+                NotificationType.Error
+            );
+            return;
+        }
+
         var model = item.CheckpointFile.LatestModelInfo;
         if (model is null)
         {

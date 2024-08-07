@@ -326,6 +326,7 @@ public static class DesignData
                 settingsManager,
                 new MockModelIndexService(),
                 notificationService,
+                downloadService,
                 dialogFactory,
                 null,
                 new LocalModelFile
@@ -356,6 +357,7 @@ public static class DesignData
                 settingsManager,
                 new MockModelIndexService(),
                 notificationService,
+                downloadService,
                 dialogFactory,
                 null,
                 new LocalModelFile

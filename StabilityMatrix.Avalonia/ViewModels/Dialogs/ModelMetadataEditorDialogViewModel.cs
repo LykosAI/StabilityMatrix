@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Input;
@@ -7,7 +6,6 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Extensions;
-using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -15,13 +13,16 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(ModelMetadataEditorDialog))]
 [ManagedService]
 [Transient]
-public partial class ModelMetadataEditorDialogViewModel : ContentDialogViewModelBase, IDropTarget
+public partial class ModelMetadataEditorDialogViewModel(ISettingsManager settingsManager)
+    : ContentDialogViewModelBase,
+        IDropTarget
 {
     [ObservableProperty]
     private List<CheckpointFileViewModel> checkpointFiles = [];
@@ -55,34 +56,6 @@ public partial class ModelMetadataEditorDialogViewModel : ContentDialogViewModel
 
     public bool IsEditingMultipleCheckpoints => CheckpointFiles.Count > 1;
 
-    public ModelMetadataEditorDialogViewModel()
-    {
-        if (IsEditingMultipleCheckpoints)
-            return;
-
-        var firstCheckpoint = CheckpointFiles.FirstOrDefault();
-        if (firstCheckpoint == null || firstCheckpoint.CheckpointFile.HasConnectedModel is false)
-            return;
-
-        if (
-            Enum.TryParse(
-                firstCheckpoint.CheckpointFile.ConnectedModelInfo.BaseModel,
-                out CivitBaseModelType baseModel
-            )
-        )
-            BaseModelType = baseModel;
-
-        ModelName = firstCheckpoint.CheckpointFile.ConnectedModelInfo.ModelName;
-        ModelDescription = firstCheckpoint.CheckpointFile.ConnectedModelInfo.ModelDescription;
-        IsNsfw = firstCheckpoint.CheckpointFile.ConnectedModelInfo.Nsfw;
-        Tags = string.Join(", ", firstCheckpoint.CheckpointFile.ConnectedModelInfo.Tags);
-        ModelType = firstCheckpoint.CheckpointFile.ConnectedModelInfo.ModelType;
-        VersionName = firstCheckpoint.CheckpointFile.ConnectedModelInfo.VersionName;
-        TrainedWords = string.Join(", ", firstCheckpoint.CheckpointFile.ConnectedModelInfo.TrainedWords);
-        ThumbnailFilePath =
-            firstCheckpoint.CheckpointFile.ConnectedModelInfo.ThumbnailImageUrl ?? Assets.NoImage.ToString();
-    }
-
     [RelayCommand]
     private async Task OpenFilePickerDialog()
     {
@@ -100,6 +73,56 @@ public partial class ModelMetadataEditorDialogViewModel : ContentDialogViewModel
         var sourceFile = new FilePath(files[0].TryGetLocalPath()!);
 
         ThumbnailFilePath = sourceFile.FullPath;
+    }
+
+    partial void OnCheckpointFilesChanged(List<CheckpointFileViewModel> value)
+    {
+        if (IsEditingMultipleCheckpoints)
+            return;
+
+        var firstCheckpoint = CheckpointFiles.FirstOrDefault();
+        if (firstCheckpoint == null)
+            return;
+
+        if (!firstCheckpoint.CheckpointFile.HasConnectedModel)
+        {
+            ModelName = firstCheckpoint.CheckpointFile.DisplayModelName;
+            ThumbnailFilePath = GetImagePath(firstCheckpoint.CheckpointFile);
+            return;
+        }
+
+        if (
+            EnumExtensions.TryParseEnumStringValue(
+                firstCheckpoint.CheckpointFile.ConnectedModelInfo.BaseModel,
+                CivitBaseModelType.Other,
+                out var baseModel
+            )
+        )
+        {
+            BaseModelType = baseModel;
+        }
+
+        ModelName = firstCheckpoint.CheckpointFile.ConnectedModelInfo.ModelName;
+        ModelDescription = firstCheckpoint.CheckpointFile.ConnectedModelInfo.ModelDescription;
+        IsNsfw = firstCheckpoint.CheckpointFile.ConnectedModelInfo.Nsfw;
+        Tags = string.Join(", ", firstCheckpoint.CheckpointFile.ConnectedModelInfo.Tags);
+        ModelType = firstCheckpoint.CheckpointFile.ConnectedModelInfo.ModelType;
+        VersionName = firstCheckpoint.CheckpointFile.ConnectedModelInfo.VersionName;
+        TrainedWords =
+            firstCheckpoint.CheckpointFile.ConnectedModelInfo.TrainedWords == null
+                ? string.Empty
+                : string.Join(", ", firstCheckpoint.CheckpointFile.ConnectedModelInfo.TrainedWords);
+        ThumbnailFilePath = GetImagePath(firstCheckpoint.CheckpointFile);
+    }
+
+    private string GetImagePath(LocalModelFile checkpointFile)
+    {
+        return checkpointFile.HasConnectedModel
+            ? checkpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
+                ?? checkpointFile.ConnectedModelInfo?.ThumbnailImageUrl
+                ?? Assets.NoImage.ToString()
+            : checkpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
+                ?? Assets.NoImage.ToString();
     }
 
     public void DragOver(object? sender, DragEventArgs e)

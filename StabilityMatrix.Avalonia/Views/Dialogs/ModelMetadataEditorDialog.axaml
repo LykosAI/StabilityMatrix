@@ -21,7 +21,7 @@
     </UserControl.Resources>
 
     <ScrollViewer Padding="8">
-        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,100,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
               VerticalAlignment="Top">
             <TextBlock Grid.Row="0"
                        Grid.ColumnSpan="2"
@@ -38,30 +38,40 @@
             <TextBlock Grid.Row="2" Grid.Column="0" Text="{x:Static lang:Resources.Label_ModelDescription}"
                        VerticalAlignment="Top" Margin="0,10,10,0" />
             <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ModelDescription}" AcceptsReturn="True"
-                     TextWrapping="Wrap" Height="100" Margin="0,10,0,0" />
+                     TextWrapping="Wrap" Margin="0,10,0,0" />
+            
+            <GridSplitter Grid.Row="3"
+                          Grid.Column="1"
+                          MaxWidth="50"
+                          Margin="0,8,0,0"
+                          VerticalAlignment="Center"
+                          BorderThickness="1"
+                          CornerRadius="4"
+                          Background="White"
+                          Opacity="0.5"/>
 
-            <TextBlock Grid.Row="3" Grid.Column="0" Text="NSFW" VerticalAlignment="Center" Margin="0,10,10,0" />
-            <ToggleSwitch Grid.Row="3" Grid.Column="1" IsChecked="{Binding IsNsfw}"
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="NSFW" VerticalAlignment="Center" Margin="0,10,10,0" />
+            <ToggleSwitch Grid.Row="4" Grid.Column="1" IsChecked="{Binding IsNsfw}"
                           OnContent="{x:Static lang:Resources.Action_Yes}"
                           OffContent="{x:Static lang:Resources.Label_No}" Margin="0,10,0,0" />
 
-            <TextBlock Grid.Row="4" Grid.Column="0" Text="Tags" VerticalAlignment="Top" Margin="0,10,10,0" />
-            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Tags}" AcceptsReturn="True" TextWrapping="Wrap"
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="Tags" VerticalAlignment="Top" Margin="0,10,10,0" />
+            <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Tags}" AcceptsReturn="True" TextWrapping="Wrap"
                      Height="100" Margin="0,10,0,0" />
 
-            <TextBlock Grid.Row="5" Grid.Column="0" Text="{x:Static lang:Resources.Label_ModelType}"
+            <TextBlock Grid.Row="6" Grid.Column="0" Text="{x:Static lang:Resources.Label_ModelType}"
                        VerticalAlignment="Center" Margin="0,10,10,0" />
-            <controls:BetterComboBox Grid.Row="5" Grid.Column="1"
+            <controls:BetterComboBox Grid.Row="6" Grid.Column="1"
                       ItemsSource="{x:Static helpers:EnumHelpers.AllCivitModelTypes}"
                       SelectedItem="{Binding ModelType}" Margin="0,10,0,0" />
 
-            <TextBlock Grid.Row="6" Grid.Column="0" Text="Version Name" VerticalAlignment="Center"
+            <TextBlock Grid.Row="7" Grid.Column="0" Text="Version Name" VerticalAlignment="Center"
                        Margin="0,10,10,0" />
-            <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding VersionName}" Margin="0,10,0,0" />
+            <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding VersionName}" Margin="0,10,0,0" />
 
-            <TextBlock Grid.Row="7" Grid.Column="0" Text="{x:Static lang:Resources.Label_BaseModel}"
+            <TextBlock Grid.Row="8" Grid.Column="0" Text="{x:Static lang:Resources.Label_BaseModel}"
                        VerticalAlignment="Center" Margin="0,10,10,0" />
-            <controls:BetterComboBox Grid.Row="7" Grid.Column="1"
+            <controls:BetterComboBox Grid.Row="8" Grid.Column="1"
                       ItemsSource="{x:Static helpers:EnumHelpers.AllCivitBaseModelTypes}"
                       SelectedItem="{Binding BaseModelType}" Margin="0,10,0,0">
                 <controls:BetterComboBox.ItemTemplate>
@@ -71,12 +81,15 @@
                 </controls:BetterComboBox.ItemTemplate>
             </controls:BetterComboBox>
 
-            <TextBlock Grid.Row="8" Grid.Column="0" Text="Trained Words" VerticalAlignment="Top" Margin="0,10,10,0" />
-            <TextBox Grid.Row="8" Grid.Column="1" Text="{Binding TrainedWords}" AcceptsReturn="True"
+            <TextBlock Grid.Row="9" Grid.Column="0" Text="Trained Words" VerticalAlignment="Top" Margin="0,10,10,0" />
+            <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding TrainedWords}" AcceptsReturn="True"
                      TextWrapping="Wrap" Height="100" Margin="0,10,0,0" />
 
-            <TextBlock Grid.Row="9" Grid.Column="0" Text="Preview Image" VerticalAlignment="Top" Margin="0,10,10,0" />
-            <StackPanel Grid.Row="9" Grid.Column="1" Orientation="Vertical" Spacing="10" Margin="0,10,0,0">
+            <TextBlock Grid.Row="10" Grid.Column="0" 
+                       Text="Preview Image" 
+                       VerticalAlignment="Top"
+                       Margin="0,10,10,0" />
+            <StackPanel Grid.Row="10" Grid.Column="1" Orientation="Vertical" Spacing="10" Margin="0,10,0,0">
                 <controls:BetterAdvancedImage Source="{Binding ThumbnailFilePath}"
                                               DragDrop.AllowDrop="True"
                                               Height="200" 

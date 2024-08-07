@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added AuraFlow & Flux base model types to the CivitAI model browser
 - Added CLIP/Text Encoders section to HuggingFace model browser
 #### Checkpoint Manager
+- Added new Metadata Editor (accessible via the right-click menu), allowing you to create or edit metadata for models 
 - Added "New Directory" and "Delete" options to the context menu of the tree view.
 - Added new toggle for drag & drop - when enabled, all selected models will now move together with the dragged model
 - Added "File Size" sorting option

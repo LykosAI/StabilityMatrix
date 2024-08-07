@@ -382,9 +382,15 @@
                                                        Text="{x:Static lang:Resources.Action_CopyTriggerWords}"
                                                        IconSource="Copy" />
                                     <ui:MenuFlyoutItem Command="{Binding FindOnModelBrowserCommand}"
-                                                       IsVisible="{Binding CheckpointFile.HasConnectedModel}"
                                                        Text="{x:Static lang:Resources.Label_FindInModelBrowser}"
-                                                       IconSource="Find" />
+                                                       IconSource="Find">
+                                        <ui:MenuFlyoutItem.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                <CompiledBinding Path="CheckpointFile.HasConnectedModel" />
+                                                <CompiledBinding Path="CheckpointFile.HasCivitMetadata" />
+                                            </MultiBinding>
+                                        </ui:MenuFlyoutItem.IsVisible>
+                                    </ui:MenuFlyoutItem>
                                     <ui:MenuFlyoutSeparator IsVisible="{Binding CanShowTriggerWords}" />
                                     <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
                                                        Text="{x:Static lang:Resources.Action_OpenOnCivitAi}"
@@ -408,7 +414,7 @@
                                         <ui:MenuFlyoutItem.IsVisible>
                                             <MultiBinding Converter="{x:Static BoolConverters.And}">
                                                 <CompiledBinding Path="CheckpointFile.HasConnectedModel" />
-                                                <CompiledBinding Path="!CheckpointFile.HasCustomMetadata" />
+                                                <CompiledBinding Path="CheckpointFile.HasCivitMetadata" />
                                             </MultiBinding>
                                         </ui:MenuFlyoutItem.IsVisible>
                                     </ui:MenuFlyoutItem>

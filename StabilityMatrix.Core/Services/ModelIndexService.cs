@@ -490,7 +490,7 @@ public partial class ModelIndexService : IModelIndexService
                 model.LatestModelInfo = dbModel.LatestModelInfo;
             }
 
-            if (model.LatestModelInfo == null && model.HasConnectedModel)
+            if (model.LatestModelInfo == null && model.HasCivitMetadata)
             {
                 // Handle enum deserialize exceptions from changes
                 if (

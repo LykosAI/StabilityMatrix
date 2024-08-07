@@ -511,7 +511,7 @@ public partial class CheckpointsPageViewModel(
     [RelayCommand]
     private async Task ShowVersionDialog(CheckpointFileViewModel item)
     {
-        if (item.CheckpointFile.HasCustomMetadata)
+        if (!item.CheckpointFile.HasCivitMetadata)
         {
             notificationService.Show(
                 "Cannot show version dialog",

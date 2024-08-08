@@ -21,6 +21,8 @@ using FluentIcons.Common;
 using Microsoft.Extensions.Logging;
 using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Controls.VendorLabs;
+using StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
@@ -195,6 +197,18 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 ? Path.Combine(SelectedCategory.Path, SelectedOutputType.ToString())
                 : SelectedCategory.Path;
         GetOutputs(path);
+    }
+
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+
+        logger.LogTrace("OutputsPageViewModel Unloaded");
+
+        logger.LogTrace("Clearing memory cache");
+        var items = ImageLoaders.OutputsPageImageCache.ClearMemoryCache();
+
+        logger.LogTrace("Cleared {Items} items from memory cache", items);
     }
 
     partial void OnSelectedCategoryChanged(TreeViewDirectory? oldValue, TreeViewDirectory? newValue)

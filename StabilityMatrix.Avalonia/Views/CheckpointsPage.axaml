@@ -382,14 +382,26 @@
                                                        Text="{x:Static lang:Resources.Action_CopyTriggerWords}"
                                                        IconSource="Copy" />
                                     <ui:MenuFlyoutItem Command="{Binding FindOnModelBrowserCommand}"
-                                                       IsVisible="{Binding CheckpointFile.HasConnectedModel}"
                                                        Text="{x:Static lang:Resources.Label_FindInModelBrowser}"
-                                                       IconSource="Find" />
+                                                       IconSource="Find">
+                                        <ui:MenuFlyoutItem.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                <CompiledBinding Path="CheckpointFile.HasConnectedModel" />
+                                                <CompiledBinding Path="CheckpointFile.HasCivitMetadata" />
+                                            </MultiBinding>
+                                        </ui:MenuFlyoutItem.IsVisible>
+                                    </ui:MenuFlyoutItem>
                                     <ui:MenuFlyoutSeparator IsVisible="{Binding CanShowTriggerWords}" />
                                     <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
                                                        Text="{x:Static lang:Resources.Action_OpenOnCivitAi}"
-                                                       IconSource="Link"
-                                                       IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
+                                                       IconSource="Link">
+                                        <ui:MenuFlyoutItem.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                <CompiledBinding Path="CheckpointFile.HasConnectedModel" />
+                                                <CompiledBinding Path="CheckpointFile.HasCivitMetadata" />
+                                            </MultiBinding>
+                                        </ui:MenuFlyoutItem.IsVisible>
+                                    </ui:MenuFlyoutItem>
                                     <ui:MenuFlyoutItem
                                         Command="{Binding CopyModelUrlCommand}"
                                         Text="Copy Link to Clipboard"
@@ -404,8 +416,19 @@
                                         Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}"
                                         IconSource="Sync"
                                         Command="{Binding FindConnectedMetadataCommand}"
-                                        CommandParameter="{StaticResource True}"
-                                        IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
+                                        CommandParameter="{StaticResource True}">
+                                        <ui:MenuFlyoutItem.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                <CompiledBinding Path="CheckpointFile.HasConnectedModel" />
+                                                <CompiledBinding Path="CheckpointFile.HasCivitMetadata" />
+                                            </MultiBinding>
+                                        </ui:MenuFlyoutItem.IsVisible>
+                                    </ui:MenuFlyoutItem>
+                                    
+                                    <ui:MenuFlyoutItem
+                                        Text="Edit Metadata"
+                                        IconSource="Edit"
+                                        Command="{Binding OpenMetadataEditorCommand}"/>
 
                                     <ui:MenuFlyoutSeparator />
                                     <ui:MenuFlyoutItem Command="{Binding RenameCommand}"
@@ -557,7 +580,7 @@
                                 <TextBlock Grid.Row="0"
                                            Grid.RowSpan="2"
                                            x:CompileBindings="False"
-                                           Margin="0,64,0,0"
+                                           Margin="0,48,0,0"
                                            Text="{Binding Progress.Title}"
                                            TextWrapping="Wrap"
                                            TextAlignment="Center"
@@ -568,14 +591,17 @@
                                 <controls:ProgressRing
                                     Grid.Row="0"
                                     Grid.RowSpan="2"
+                                    x:CompileBindings="False"
                                     Height="64"
                                     Width="64"
+                                    Margin="0,0,0,48"
                                     Foreground="{DynamicResource ThemeRedColor}"
                                     BorderThickness="4"
                                     HorizontalAlignment="Center"
-                                    IsIndeterminate="True"
+                                    IsIndeterminate="{Binding Progress.IsIndeterminate}"
                                     Padding="0"
                                     VerticalAlignment="Center"
+                                    Value="{Binding Progress.Percentage}"
                                     IsEnabled="{Binding IsLoading}"
                                     IsVisible="{Binding IsLoading}" />
                             </Grid>

@@ -44,6 +44,7 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -934,7 +935,32 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugShowImageMaskEditorCommand),
             new CommandItem(DebugExtractImagePromptsToTxtCommand),
             new CommandItem(DebugShowConfirmDeleteDialogCommand),
+            new CommandItem(DebugShowModelMetadataEditorDialogCommand),
         ];
+
+    [RelayCommand]
+    private async Task DebugShowModelMetadataEditorDialog()
+    {
+        var vm = dialogFactory.Get<ModelMetadataEditorDialogViewModel>();
+        vm.ThumbnailFilePath = Assets.NoImage.ToString();
+        vm.Tags = "tag1, tag2, tag3";
+        vm.ModelDescription = "This is a description";
+        vm.ModelName = "Model Name";
+        vm.VersionName = "1.0.0";
+        vm.TrainedWords = "word1, word2, word3";
+        vm.ModelType = CivitModelType.Checkpoint;
+        vm.BaseModelType = CivitBaseModelType.Pony;
+
+        var dialog = vm.GetDialog();
+        dialog.MinDialogHeight = 800;
+        dialog.IsPrimaryButtonEnabled = true;
+        dialog.IsFooterVisible = true;
+        dialog.PrimaryButtonText = "Save";
+        dialog.DefaultButton = ContentDialogButton.Primary;
+        dialog.CloseButtonText = "Cancel";
+
+        await dialog.ShowAsync();
+    }
 
     [RelayCommand]
     private async Task DebugShowConfirmDeleteDialog()

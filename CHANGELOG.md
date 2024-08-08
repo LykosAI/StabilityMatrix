@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added AuraFlow & Flux base model types to the CivitAI model browser
 - Added CLIP/Text Encoders section to HuggingFace model browser
 #### Checkpoint Manager
+- Added new Metadata Editor (accessible via the right-click menu), allowing you to create or edit metadata for models 
 - Added "New Directory" and "Delete" options to the context menu of the tree view.
 - Added new toggle for drag & drop - when enabled, all selected models will now move together with the dragged model
 - Added "File Size" sorting option
@@ -28,6 +29,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed "The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp." error for Linux users
 - Fixed download links for IPAdapters in the HuggingFace model browser
 - Fixed potential memory leak of transient controls (Inference Prompt and Output Image Viewer) not being garbage collected due to event subscriptions
+- Fixed Batch Count seeds not being recorded properly in Inference projects and image metadata
 
 ## v2.12.0-dev.2
 ### Added

@@ -40,13 +40,13 @@ public partial class ModelMetadataEditorDialogViewModel(ISettingsManager setting
     private string tags = string.Empty;
 
     [ObservableProperty]
-    private CivitModelType modelType;
+    private CivitModelType modelType = CivitModelType.Other;
 
     [ObservableProperty]
     private string versionName = string.Empty;
 
     [ObservableProperty]
-    private CivitBaseModelType baseModelType;
+    private CivitBaseModelType baseModelType = CivitBaseModelType.Other;
 
     [ObservableProperty]
     private string trainedWords = string.Empty;
@@ -88,6 +88,8 @@ public partial class ModelMetadataEditorDialogViewModel(ISettingsManager setting
         {
             ModelName = firstCheckpoint.CheckpointFile.DisplayModelName;
             ThumbnailFilePath = GetImagePath(firstCheckpoint.CheckpointFile);
+            BaseModelType = CivitBaseModelType.Other;
+            ModelType = CivitModelType.Other;
             return;
         }
 

@@ -357,6 +357,15 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
 
             if (File.Exists(cmInfo.ThumbnailImageUrl) && hasThumbnailChanged)
             {
+                // delete existing preview image
+                var existingPreviewPath = CheckpointFile.GetPreviewImageFullPath(
+                    settingsManager.ModelsDirectory
+                );
+                if (existingPreviewPath != null && File.Exists(existingPreviewPath))
+                {
+                    File.Delete(existingPreviewPath);
+                }
+
                 var filePath = new FilePath(cmInfo.ThumbnailImageUrl);
                 var previewPath = new FilePath(
                     modelFolder,

@@ -22,7 +22,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Select All" button to the InfoBar (shown when at least one model is selected)
 - Added "unet" shared model folder for ComfyUI
 ### Changed
-- Improved memory efficiency and speed of image rendering and animation fluidity (e.g. in Model and Output browsers)
+- Optimized image loading across the app, with loading speed now up to 4x faster for local images, and up to 17x faster for remote images
+- Image loading in the Outputs page now uses native memory management for ~2x less peak memory usage, and will release memory more quickly when switching away from the Outputs page or scrolling images out of view
+- Improved animation fluidity of image rendering while scrolling quickly across large collections (e.g. Outputs, Model Browser)
 - The "Download Failed" message for model downloads is now persistent until dismissed
 - Separated the Generate button from the prompt control in Inference so it can be moved like other controls
 ### Fixed

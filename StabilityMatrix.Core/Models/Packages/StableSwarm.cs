@@ -280,7 +280,9 @@ public class StableSwarm(
 
         dotnetProcess = await prerequisiteHelper
             .RunDotnet(
-                args: $"\"{Path.Combine(releaseFolder, dllName)}\" {arguments.TrimEnd()}",
+                args: new ProcessArgs(new[] { Path.Combine(releaseFolder, dllName) }).Concat(
+                    arguments.TrimEnd()
+                ),
                 workingDirectory: installedPackagePath,
                 envVars: aspEnvVars,
                 onProcessOutput: HandleConsoleOutput,

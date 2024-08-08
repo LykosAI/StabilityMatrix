@@ -394,8 +394,14 @@
                                     <ui:MenuFlyoutSeparator IsVisible="{Binding CanShowTriggerWords}" />
                                     <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
                                                        Text="{x:Static lang:Resources.Action_OpenOnCivitAi}"
-                                                       IconSource="Link"
-                                                       IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
+                                                       IconSource="Link">
+                                        <ui:MenuFlyoutItem.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                <CompiledBinding Path="CheckpointFile.HasConnectedModel" />
+                                                <CompiledBinding Path="CheckpointFile.HasCivitMetadata" />
+                                            </MultiBinding>
+                                        </ui:MenuFlyoutItem.IsVisible>
+                                    </ui:MenuFlyoutItem>
                                     <ui:MenuFlyoutItem
                                         Command="{Binding CopyModelUrlCommand}"
                                         Text="Copy Link to Clipboard"

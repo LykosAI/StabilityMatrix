@@ -20,6 +20,8 @@ using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 using Semver;
 using Sentry;
+using StabilityMatrix.Avalonia.Controls.VendorLabs;
+using StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -143,9 +145,20 @@ public static class Program
     internal static void SetupAvaloniaApp()
     {
         IconProvider.Current.Register<FontAwesomeIconProvider>();
+
         // Use our custom image loader for custom local load error handling
         ImageLoader.AsyncImageLoader.Dispose();
         ImageLoader.AsyncImageLoader = new FallbackRamCachedWebImageLoader();
+
+        // Setup BetterAsyncImage cache provider
+        BetterAsyncImageCacheProvider.DefaultCache = new ImageCache(
+            new CacheOptions
+            {
+                BaseCachePath = Path.Combine(Path.GetTempPath(), "StabilityMatrix", "Cache"),
+                CacheDuration = TimeSpan.FromDays(1),
+                MaxMemoryCacheCount = 100
+            }
+        );
     }
 
     // Avalonia configuration, don't remove; also used by visual designer.

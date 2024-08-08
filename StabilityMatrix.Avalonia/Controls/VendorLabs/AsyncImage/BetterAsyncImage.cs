@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncImageLoader;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Metadata;
@@ -25,6 +23,8 @@ namespace StabilityMatrix.Avalonia.Controls.VendorLabs;
 [TemplatePart("PART_PlaceholderImage", typeof(Image))]
 public partial class BetterAsyncImage : TemplatedControl
 {
+    private static NLog.Logger Logger { get; } = NLog.LogManager.GetCurrentClassLogger();
+
     protected Image? ImagePart { get; private set; }
     protected Image? PlaceholderPart { get; private set; }
 
@@ -32,6 +32,17 @@ public partial class BetterAsyncImage : TemplatedControl
     private CancellationTokenSource? _setSourceCts;
     private CancellationTokenSource? _attachSourceAnimationCts;
     private AsyncImageState _state;
+
+    private readonly Lazy<IImageCache?> _instanceImageCache;
+    public IImageCache? InstanceImageCache => _instanceImageCache.Value;
+
+    public BetterAsyncImage()
+    {
+        // Need to run on UI thread to get our attached property, so we cache the result
+        _instanceImageCache = new Lazy<IImageCache?>(
+            () => Dispatcher.UIThread.Invoke(() => GetImageCache(this))
+        );
+    }
 
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
@@ -135,14 +146,19 @@ public partial class BetterAsyncImage : TemplatedControl
                         return await LoadImageAsync(uri, newTokenSource.Token);
                     }
 
+                    if (uri.Scheme == "file" && File.Exists(uri.LocalPath))
+                    {
+                        if (!IsCacheEnabled)
+                        {
+                            return new Bitmap(uri.LocalPath);
+                        }
+
+                        return await LoadImageAsync(uri, newTokenSource.Token);
+                    }
+
                     if (uri.Scheme == "avares")
                     {
                         return new Bitmap(AssetLoader.Open(uri));
-                    }
-
-                    if (uri.Scheme == "file" && File.Exists(uri.LocalPath))
-                    {
-                        return new Bitmap(uri.LocalPath);
                     }
 
                     throw new UriFormatException($"Uri has unsupported scheme. Uri:{source}");
@@ -150,17 +166,21 @@ public partial class BetterAsyncImage : TemplatedControl
                 CancellationToken.None
             );
 
-            if (newTokenSource.IsCancellationRequested)
-            {
-                return;
-            }
+            newTokenSource.Token.ThrowIfCancellationRequested();
 
             AttachSource(bitmap, newTokenSource.Token);
         }
-        catch (TaskCanceledException) { }
+        catch (OperationCanceledException ex)
+        {
+            State = AsyncImageState.Unloaded;
+
+            // Logger.Info(ex, "Canceled loading image from {Uri}", uri);
+        }
         catch (Exception ex)
         {
             State = AsyncImageState.Failed;
+
+            // Logger.Warn(ex, "Failed to load image from {Uri} ({Ex})", uri, ex.ToString());
 
             RaiseEvent(new AsyncImageFailedEventArgs(ex));
         }
@@ -200,35 +220,21 @@ public partial class BetterAsyncImage : TemplatedControl
         }
     }
 
-    private async Task<Bitmap?> LoadImageAsync(Uri url, CancellationToken token)
+    private async Task<IImage?> LoadImageAsync(Uri url, CancellationToken cancellationToken)
     {
-        /*if (await ProvideCachedResourceAsync(url, token) is { } bitmap)
-        {
-            return bitmap;
-        }*/
+        // Get specific cache for this control or use the default one
+        var cache = InstanceImageCache;
 
-        if (ImageLoader.AsyncImageLoader is not FallbackRamCachedWebImageLoader loader)
-        {
-            throw new InvalidOperationException(
-                "ImageLoader must be an instance of FallbackRamCachedWebImageLoader"
-            );
-        }
+        cache ??= BetterAsyncImageCacheProvider.DefaultCache;
+
+        // Logger.Trace("Using ImageCache: <{Type}:{Id}>", cache.GetType().Name, cache.GetHashCode());
 
         if (IsCacheEnabled)
         {
-            return await loader.LoadExternalAsync(url.ToString());
+            return await cache.GetWithCacheAsync(url, cancellationToken);
         }
 
-        return await loader.LoadExternalNoCacheAsync(url.ToString());
-
-        /*using var client = new HttpClient();
-        var stream = await client.GetStreamAsync(url, token).ConfigureAwait(false);
-
-        await using var memoryStream = new MemoryStream();
-        await stream.CopyToAsync(memoryStream, token).ConfigureAwait(false);
-
-        memoryStream.Position = 0;
-        return new Bitmap(memoryStream);*/
+        return await cache.GetAsync(url, cancellationToken);
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -251,16 +257,5 @@ public partial class BetterAsyncImage : TemplatedControl
                 SetSource(Source);
             }
         }
-    }
-
-    protected virtual async Task<Bitmap?> ProvideCachedResourceAsync(Uri? imageUri, CancellationToken token)
-    {
-        if (IsCacheEnabled && imageUri != null)
-        {
-            return await ImageCache
-                .Instance.GetFromCacheAsync(imageUri, cancellationToken: token)
-                .ConfigureAwait(false);
-        }
-        return null;
     }
 }

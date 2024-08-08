@@ -5,7 +5,7 @@ namespace StabilityMatrix.Core.Models.PackageModification;
 
 public class PackageModificationRunner : IPackageModificationRunner
 {
-    public async Task ExecuteSteps(IReadOnlyList<IPackageStep> steps)
+    public async Task ExecuteSteps(IEnumerable<IPackageStep> steps)
     {
         IProgress<ProgressReport> progress = new Progress<ProgressReport>(report =>
         {

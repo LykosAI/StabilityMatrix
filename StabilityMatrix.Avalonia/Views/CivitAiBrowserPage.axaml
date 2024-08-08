@@ -110,6 +110,7 @@
                                                       HorizontalAlignment="Center"
                                                       Height="75"
                                                       ZIndex="10"
+                                                      IsEnabled="{Binding ShowSantaHats, FallbackValue=False}"
                                                       IsVisible="{Binding ShowSantaHats, FallbackValue=False}"
                                                       Margin="0,8,0,0"
                                                       Source="avares://StabilityMatrix.Avalonia/Assets/santahat.png">
@@ -123,6 +124,7 @@
                             CornerRadius="8"
                             Width="330"
                             Height="400"
+                            IsCacheEnabled="True"
                             Source="{Binding CardImage}"
                             Stretch="UniformToFill"/>
 
@@ -188,7 +190,7 @@
                                         Height="22"
                                         Effect="{StaticResource ImageDropShadowEffect}"
                                         CornerRadius="11"
-                                        RenderOptions.BitmapInterpolationMode="HighQuality"
+                                        IsCacheEnabled="True"
                                         IsVisible="{Binding CivitModel.Creator.Image, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                         Source="{Binding CivitModel.Creator.Image}"/>
                                     <TextBlock 

@@ -14,6 +14,7 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
     d:DataContext="{x:Static mocks:DesignData.OutputsPageViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="800"
@@ -178,6 +179,7 @@
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type outputsPage:OutputImageViewModel}">
                         <selectableImageCard:SelectableImageButton
+                            vendorLabs:BetterAsyncImage.ImageCache="{x:Static controls:ImageLoaders.OutputsPageImageCache}"
                             Command="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).OnImageClick}"
                             CommandParameter="{Binding}"
                             ImageHeight="{Binding $parent[ItemsRepeater].((vm:OutputsPageViewModel)DataContext).ImageSize.Height}"

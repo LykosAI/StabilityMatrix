@@ -30,7 +30,7 @@ internal abstract class CacheBase<T>
     private string? _cacheFolderName = null;
 
     private string? _cacheFolder = null;
-    private InMemoryStorage<T>? _inMemoryFileStorage = null;
+    protected InMemoryStorage<T>? InMemoryFileStorage = new();
 
     private ConcurrentDictionary<string, ConcurrentRequest> _concurrentTasks =
         new ConcurrentDictionary<string, ConcurrentRequest>();
@@ -40,12 +40,13 @@ internal abstract class CacheBase<T>
     /// <summary>
     /// Initializes a new instance of the <see cref="CacheBase{T}"/> class.
     /// </summary>
-    protected CacheBase()
+    protected CacheBase(CacheOptions? options = null)
     {
-        var options = CacheOptions.Default;
-        CacheDuration = options?.CacheDuration ?? TimeSpan.FromDays(1);
-        _baseFolder = options?.BaseCachePath ?? null;
-        _inMemoryFileStorage = new InMemoryStorage<T>();
+        options ??= CacheOptions.Default;
+        _baseFolder = options.BaseCachePath ?? null;
+
+        CacheDuration = options.CacheDuration ?? TimeSpan.FromDays(1);
+        MaxMemoryCacheCount = options.MaxMemoryCacheCount ?? 0;
         RetryCount = 1;
     }
 
@@ -64,11 +65,11 @@ internal abstract class CacheBase<T>
     /// </summary>
     public int MaxMemoryCacheCount
     {
-        get { return _inMemoryFileStorage?.MaxItemCount ?? 0; }
+        get { return InMemoryFileStorage?.MaxItemCount ?? 0; }
         set
         {
-            if (_inMemoryFileStorage != null)
-                _inMemoryFileStorage.MaxItemCount = value;
+            if (InMemoryFileStorage != null)
+                InMemoryFileStorage.MaxItemCount = value;
         }
     }
 
@@ -125,7 +126,7 @@ internal abstract class CacheBase<T>
 
         await InternalClearAsync(files.Select(x => x as string)).ConfigureAwait(false);
 
-        _inMemoryFileStorage?.Clear();
+        InMemoryFileStorage?.Clear();
     }
 
     /// <summary>
@@ -145,7 +146,7 @@ internal abstract class CacheBase<T>
     /// <returns>awaitable task</returns>
     public async Task RemoveExpiredAsync(TimeSpan? duration = null)
     {
-        TimeSpan expiryDuration = duration ?? CacheDuration;
+        var expiryDuration = duration ?? CacheDuration;
 
         var folder = await GetCacheFolderAsync().ConfigureAwait(false);
         var files = Directory.EnumerateFiles(folder!);
@@ -167,7 +168,7 @@ internal abstract class CacheBase<T>
 
         await InternalClearAsync(filesToDelete).ConfigureAwait(false);
 
-        _inMemoryFileStorage?.Clear(expiryDuration);
+        InMemoryFileStorage?.Clear(expiryDuration);
     }
 
     /// <summary>
@@ -187,7 +188,7 @@ internal abstract class CacheBase<T>
         var filesToDelete = new List<string>();
         var keys = new List<string>();
 
-        Dictionary<string, string> hashDictionary = new Dictionary<string, string>();
+        var hashDictionary = new Dictionary<string, string>();
 
         foreach (var file in files)
         {
@@ -196,7 +197,7 @@ internal abstract class CacheBase<T>
 
         foreach (var uri in uriForCachedItems)
         {
-            string fileName = GetCacheFileName(uri);
+            var fileName = GetCacheFileName(uri);
             if (hashDictionary.TryGetValue(fileName, out var file))
             {
                 filesToDelete.Add(file);
@@ -206,7 +207,7 @@ internal abstract class CacheBase<T>
 
         await InternalClearAsync(filesToDelete).ConfigureAwait(false);
 
-        _inMemoryFileStorage?.Remove(keys);
+        InMemoryFileStorage?.Remove(keys);
     }
 
     /// <summary>
@@ -221,7 +222,7 @@ internal abstract class CacheBase<T>
         Uri uri,
         bool throwOnError = false,
         bool storeToMemoryCache = false,
-        CancellationToken cancellationToken = default(CancellationToken)
+        CancellationToken cancellationToken = default
     )
     {
         return GetItemAsync(uri, throwOnError, !storeToMemoryCache, cancellationToken);
@@ -237,7 +238,7 @@ internal abstract class CacheBase<T>
     public Task<T?> GetFromCacheAsync(
         Uri uri,
         bool throwOnError = false,
-        CancellationToken cancellationToken = default(CancellationToken)
+        CancellationToken cancellationToken = default
     )
     {
         return GetItemAsync(uri, throwOnError, false, cancellationToken);
@@ -262,13 +263,13 @@ internal abstract class CacheBase<T>
     /// <returns>an instance of Generic type</returns>
     public T? GetFromMemoryCache(Uri uri)
     {
-        T? instance = default(T);
+        var instance = default(T);
 
-        string fileName = GetCacheFileName(uri);
+        var fileName = GetCacheFileName(uri);
 
-        if (_inMemoryFileStorage?.MaxItemCount > 0)
+        if (InMemoryFileStorage?.MaxItemCount > 0)
         {
-            var msi = _inMemoryFileStorage?.GetItem(fileName, CacheDuration);
+            var msi = InMemoryFileStorage?.GetItem(fileName, CacheDuration);
             if (msi != null)
             {
                 instance = msi.Item;
@@ -322,10 +323,10 @@ internal abstract class CacheBase<T>
 
     private static ulong CreateHash64(string str)
     {
-        byte[] utf8 = System.Text.Encoding.UTF8.GetBytes(str);
+        var utf8 = System.Text.Encoding.UTF8.GetBytes(str);
 
-        ulong value = (ulong)utf8.Length;
-        for (int n = 0; n < utf8.Length; n++)
+        var value = (ulong)utf8.Length;
+        for (var n = 0; n < utf8.Length; n++)
         {
             value += (ulong)utf8[n] << ((n * 5) % 56);
         }
@@ -340,9 +341,9 @@ internal abstract class CacheBase<T>
         CancellationToken cancellationToken
     )
     {
-        T? instance = default(T);
+        var instance = default(T);
 
-        string fileName = GetCacheFileName(uri);
+        var fileName = GetCacheFileName(uri);
         _concurrentTasks.TryGetValue(fileName, out var request);
 
         // if similar request exists check if it was preCacheOnly and validate that current request isn't preCacheOnly
@@ -392,11 +393,11 @@ internal abstract class CacheBase<T>
         CancellationToken cancellationToken
     )
     {
-        T? instance = default(T);
+        var instance = default(T);
 
-        if (_inMemoryFileStorage?.MaxItemCount > 0)
+        if (InMemoryFileStorage?.MaxItemCount > 0)
         {
-            var msi = _inMemoryFileStorage?.GetItem(fileName, CacheDuration);
+            var msi = InMemoryFileStorage?.GetItem(fileName, CacheDuration);
             if (msi != null)
             {
                 instance = msi.Item;
@@ -408,59 +409,97 @@ internal abstract class CacheBase<T>
             return instance;
         }
 
-        var folder = await GetCacheFolderAsync().ConfigureAwait(false);
-        var baseFile = Path.Combine(folder!, fileName);
+        var isLocal = File.Exists(uri.LocalPath);
+        var isRemote = uri.Scheme is "http" or "https";
 
-        bool downloadDataFile =
-            !File.Exists(baseFile)
-            || await IsFileOutOfDateAsync(baseFile, CacheDuration).ConfigureAwait(false);
-
-        if (!File.Exists(baseFile))
+        // Only cache to file for remote
+        if (isRemote)
         {
-            File.Create(baseFile).Dispose();
-        }
+            var folder = await GetCacheFolderAsync().ConfigureAwait(false);
+            var baseFile = Path.Combine(folder!, fileName);
 
-        if (downloadDataFile)
-        {
-            uint retries = 0;
-            try
+            var downloadDataFile =
+                !File.Exists(baseFile)
+                || await IsFileOutOfDateAsync(baseFile, CacheDuration).ConfigureAwait(false);
+
+            if (!File.Exists(baseFile))
             {
-                while (retries < RetryCount)
+                File.Create(baseFile).Dispose();
+            }
+
+            if (downloadDataFile)
+            {
+                uint retries = 0;
+                try
                 {
-                    try
+                    while (retries < RetryCount)
                     {
-                        instance = await DownloadFileAsync(uri, baseFile, preCacheOnly, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        if (instance != null)
+                        try
                         {
-                            break;
-                        }
-                    }
-                    catch (FileNotFoundException) { }
+                            instance = await DownloadFileAsync(uri, baseFile, preCacheOnly, cancellationToken)
+                                .ConfigureAwait(false);
 
-                    retries++;
+                            if (instance != null)
+                            {
+                                break;
+                            }
+                        }
+                        catch (FileNotFoundException) { }
+
+                        retries++;
+                    }
+                }
+                catch (Exception)
+                {
+                    File.Delete(baseFile);
+                    throw; // re-throwing the exception changes the stack trace. just throw
                 }
             }
-            catch (Exception ex)
+
+            // Cache
+            if (EqualityComparer<T>.Default.Equals(instance, default) && !preCacheOnly)
             {
-                File.Delete(baseFile);
-                throw; // re-throwing the exception changes the stack trace. just throw
+                instance = await ConvertFromAsync(baseFile).ConfigureAwait(false);
+
+                if (InMemoryFileStorage?.MaxItemCount > 0)
+                {
+                    var properties = new FileInfo(baseFile);
+
+                    var msi = new InMemoryStorageItem<T>(fileName, properties.LastWriteTime, instance);
+                    InMemoryFileStorage?.SetItem(msi);
+                }
             }
         }
-
-        if (EqualityComparer<T>.Default.Equals(instance, default(T)) && !preCacheOnly)
+        else if (isLocal)
         {
-            instance = await ConvertFromAsync(baseFile).ConfigureAwait(false);
-
-            if (_inMemoryFileStorage?.MaxItemCount > 0)
+            for (var i = 0; i < RetryCount; i++)
             {
-                var properties = new FileInfo(baseFile);
+                cancellationToken.ThrowIfCancellationRequested();
 
-                var msi = new InMemoryStorageItem<T>(fileName, properties.LastWriteTime, instance);
-                _inMemoryFileStorage?.SetItem(msi);
+                try
+                {
+                    instance = await LoadLocalFileAsync(uri, cancellationToken).ConfigureAwait(false);
+
+                    if (instance != null)
+                    {
+                        break;
+                    }
+                }
+                catch (FileNotFoundException) { }
+            }
+
+            // Cache
+            if (instance != null && InMemoryFileStorage?.MaxItemCount > 0)
+            {
+                var msi = new InMemoryStorageItem<T>(fileName, DateTime.Now, instance);
+                InMemoryFileStorage?.SetItem(msi);
             }
         }
+        else
+        {
+            throw new ArgumentException("Uri scheme is not supported", nameof(uri));
+        }
+
         return instance;
     }
 
@@ -471,35 +510,48 @@ internal abstract class CacheBase<T>
         CancellationToken cancellationToken
     )
     {
-        T? instance = default(T);
+        var instance = default(T);
 
-        using (MemoryStream ms = new MemoryStream())
+        using var ms = new MemoryStream();
+        await using (var stream = await HttpClient.GetStreamAsync(uri, cancellationToken))
         {
-            using (var stream = await HttpClient.GetStreamAsync(uri))
+            await stream.CopyToAsync(ms, cancellationToken);
+            await ms.FlushAsync(cancellationToken);
+
+            ms.Position = 0;
+
+            await using (var fs = File.Open(baseFile, FileMode.OpenOrCreate, FileAccess.Write))
             {
-                stream.CopyTo(ms);
-                ms.Flush();
+                await ms.CopyToAsync(fs, cancellationToken);
+
+                await fs.FlushAsync(cancellationToken);
 
                 ms.Position = 0;
-
-                using (var fs = File.Open(baseFile, FileMode.OpenOrCreate, FileAccess.Write))
-                {
-                    ms.CopyTo(fs);
-
-                    fs.Flush();
-
-                    ms.Position = 0;
-                }
-            }
-
-            // if its pre-cache we aren't looking to load items in memory
-            if (!preCacheOnly)
-            {
-                instance = await ConvertFromAsync(ms).ConfigureAwait(false);
             }
         }
 
+        // if its pre-cache we aren't looking to load items in memory
+        if (!preCacheOnly)
+        {
+            instance = await ConvertFromAsync(ms).ConfigureAwait(false);
+        }
+
         return instance;
+    }
+
+    private async Task<T?> LoadLocalFileAsync(Uri uri, CancellationToken cancellationToken)
+    {
+        using var ms = new MemoryStream();
+
+        await using (var stream = File.Open(uri.LocalPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+        {
+            await stream.CopyToAsync(ms, cancellationToken);
+            await ms.FlushAsync(cancellationToken);
+        }
+
+        ms.Position = 0;
+
+        return await ConvertFromAsync(ms).ConfigureAwait(false);
     }
 
     private async Task InternalClearAsync(IEnumerable<string?> files)
@@ -530,7 +582,9 @@ internal abstract class CacheBase<T>
 
         await _cacheFolderSemaphore.WaitAsync().ConfigureAwait(false);
 
-        _inMemoryFileStorage = new InMemoryStorage<T>();
+        var currentMaxItemCount = InMemoryFileStorage?.MaxItemCount ?? 0;
+
+        InMemoryFileStorage = new InMemoryStorage<T> { MaxItemCount = currentMaxItemCount };
 
         if (_baseFolder == null)
         {

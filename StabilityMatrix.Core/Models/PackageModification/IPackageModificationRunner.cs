@@ -5,7 +5,7 @@ namespace StabilityMatrix.Core.Models.PackageModification;
 
 public interface IPackageModificationRunner
 {
-    Task ExecuteSteps(IReadOnlyList<IPackageStep> steps);
+    Task ExecuteSteps(IEnumerable<IPackageStep> steps);
 
     bool IsRunning { get; }
 

@@ -15,4 +15,5 @@ public class CacheOptions
 
     public string? BaseCachePath { get; set; }
     public TimeSpan? CacheDuration { get; set; }
+    public int? MaxMemoryCacheCount { get; set; }
 }

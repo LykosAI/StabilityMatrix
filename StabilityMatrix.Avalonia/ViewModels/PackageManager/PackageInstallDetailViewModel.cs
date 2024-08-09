@@ -179,17 +179,12 @@ public partial class PackageInstallDetailViewModel(
 
         InstallName = InstallName.Trim();
 
-        var setPackageInstallingStep = new SetPackageInstallingStep(settingsManager, InstallName);
-
         var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
         if (Directory.Exists(installLocation))
         {
             var installPath = new DirectoryPath(installLocation);
             await installPath.DeleteVerboseAsync(logger);
         }
-
-        var prereqStep = new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, SelectedPackage);
-        var unpackSiteCustomizeStep = new UnpackSiteCustomizeStep(Path.Combine(installLocation, "venv"));
 
         var downloadOptions = new DownloadPackageVersionOptions();
         var installedVersion = new InstalledPackageVersion();
@@ -216,23 +211,6 @@ public partial class PackageInstallDetailViewModel(
             installedVersion.InstalledCommitSha = downloadOptions.CommitHash;
         }
 
-        var downloadStep = new DownloadPackageVersionStep(SelectedPackage, installLocation, downloadOptions);
-        var installStep = new InstallPackageStep(
-            SelectedPackage,
-            SelectedTorchVersion,
-            SelectedSharedFolderMethod,
-            downloadOptions,
-            installLocation
-        );
-
-        var setupModelFoldersStep = new SetupModelFoldersStep(
-            SelectedPackage,
-            SelectedSharedFolderMethod,
-            installLocation
-        );
-
-        var setupOutputSharingStep = new SetupOutputSharingStep(SelectedPackage, installLocation);
-
         var package = new InstalledPackage
         {
             DisplayName = InstallName,
@@ -247,23 +225,36 @@ public partial class PackageInstallDetailViewModel(
             UseSharedOutputFolder = IsOutputSharingEnabled
         };
 
-        var addInstalledPackageStep = new AddInstalledPackageStep(settingsManager, package);
-
         var steps = new List<IPackageStep>
         {
-            setPackageInstallingStep,
-            prereqStep,
-            downloadStep,
-            unpackSiteCustomizeStep,
-            installStep,
-            setupModelFoldersStep,
-            addInstalledPackageStep
+            new SetPackageInstallingStep(settingsManager, InstallName),
+            new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, SelectedPackage),
+            new DownloadPackageVersionStep(
+                SelectedPackage,
+                installLocation,
+                new DownloadPackageOptions { VersionOptions = downloadOptions }
+            ),
+            new UnpackSiteCustomizeStep(Path.Combine(installLocation, "venv")),
+            new InstallPackageStep(
+                SelectedPackage,
+                installLocation,
+                package,
+                new InstallPackageOptions
+                {
+                    SharedFolderMethod = SelectedSharedFolderMethod,
+                    VersionOptions = downloadOptions,
+                    PythonOptions = { TorchVersion = SelectedTorchVersion }
+                }
+            ),
+            new SetupModelFoldersStep(SelectedPackage, SelectedSharedFolderMethod, installLocation)
         };
 
         if (IsOutputSharingEnabled)
         {
-            steps.Insert(steps.IndexOf(addInstalledPackageStep), setupOutputSharingStep);
+            steps.Add(new SetupOutputSharingStep(SelectedPackage, installLocation));
         }
+
+        steps.Add(new AddInstalledPackageStep(settingsManager, package));
 
         var packageName = SelectedPackage.Name;
 
@@ -279,7 +270,7 @@ public partial class PackageInstallDetailViewModel(
         };
 
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
-        await runner.ExecuteSteps(steps.ToList());
+        await runner.ExecuteSteps(steps);
 
         if (!runner.Failed)
         {

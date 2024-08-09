@@ -186,23 +186,22 @@ public class VladAutomatic(
             LaunchOptionDefinition.Extras
         ];
 
-    public override string ExtraLaunchArguments => "";
-
     public override string MainBranch => "master";
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1f, "Installing package...", isIndeterminate: true));
         // Setup venv
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
+        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
         switch (torchVersion)
         {
             // Run initial install
@@ -244,8 +243,9 @@ public class VladAutomatic(
 
     public override async Task DownloadPackage(
         string installLocation,
-        DownloadPackageVersionOptions downloadOptions,
-        IProgress<ProgressReport>? progress = null
+        DownloadPackageOptions options,
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(
@@ -260,9 +260,11 @@ public class VladAutomatic(
         var installDir = new DirectoryPath(installLocation);
         installDir.Create();
 
-        if (string.IsNullOrWhiteSpace(downloadOptions.BranchName))
+        var versionOptions = options.VersionOptions;
+
+        if (string.IsNullOrWhiteSpace(versionOptions.BranchName))
         {
-            throw new ArgumentNullException(nameof(downloadOptions));
+            throw new InvalidOperationException("Branch name is required for VladAutomatic");
         }
 
         await PrerequisiteHelper
@@ -271,29 +273,30 @@ public class VladAutomatic(
                 {
                     "clone",
                     "-b",
-                    downloadOptions.BranchName,
+                    versionOptions.BranchName,
                     "https://github.com/vladmandic/automatic",
                     installDir.Name
                 },
                 installDir.Parent?.FullPath ?? ""
             )
             .ConfigureAwait(false);
-        if (!string.IsNullOrWhiteSpace(downloadOptions.CommitHash) && !downloadOptions.IsLatest)
+        if (!string.IsNullOrWhiteSpace(versionOptions.CommitHash) && !versionOptions.IsLatest)
         {
             await PrerequisiteHelper
-                .RunGit(new[] { "checkout", downloadOptions.CommitHash }, installLocation)
+                .RunGit(new[] { "checkout", versionOptions.CommitHash }, installLocation)
                 .ConfigureAwait(false);
         }
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
+        await SetupVenv(installLocation).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -310,33 +313,29 @@ public class VladAutomatic(
             }
         }
 
-        void HandleExit(int i)
-        {
-            Debug.WriteLine($"Venv process exited with code {i}");
-            OnExit(i);
-        }
-
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
-
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+        VenvRunner.RunDetached(
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            HandleConsoleOutput,
+            OnExit
+        );
     }
 
     public override async Task<InstalledPackageVersion> Update(
+        string installLocation,
         InstalledPackage installedPackage,
-        TorchVersion torchVersion,
-        DownloadPackageVersionOptions versionOptions,
+        UpdatePackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         var baseUpdateResult = await base.Update(
+            installLocation,
             installedPackage,
-            torchVersion,
-            versionOptions,
+            options,
             progress,
-            includePrerelease,
-            onConsoleOutput
+            onConsoleOutput,
+            cancellationToken
         )
             .ConfigureAwait(false);
 
@@ -354,7 +353,7 @@ public class VladAutomatic(
 
             return new InstalledPackageVersion
             {
-                InstalledBranch = versionOptions.BranchName,
+                InstalledBranch = options.VersionOptions.BranchName,
                 InstalledCommitSha = result
                     .StandardOutput?.Replace(Environment.NewLine, "")
                     .Replace("\n", ""),

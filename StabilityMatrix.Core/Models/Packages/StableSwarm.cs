@@ -124,11 +124,11 @@ public class StableSwarm(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1f, "Installing SwarmUI...", isIndeterminate: true));
@@ -182,7 +182,7 @@ public class StableSwarm(
         // set default settings
         var settings = new StableSwarmSettings { IsInstalled = true };
 
-        if (selectedSharedFolderMethod is SharedFolderMethod.Configuration)
+        if (options.SharedFolderMethod is SharedFolderMethod.Configuration)
         {
             settings.Paths = new StableSwarmSettings.PathsData
             {
@@ -243,10 +243,11 @@ public class StableSwarm(
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         var aspEnvVars = new Dictionary<string, string>
@@ -271,7 +272,7 @@ public class StableSwarm(
             }
         }
 
-        var releaseFolder = Path.Combine(installedPackagePath, "src", "bin", "live_release");
+        var releaseFolder = Path.Combine(installLocation, "src", "bin", "live_release");
         var dllName = "StableSwarmUI.dll";
         if (File.Exists(Path.Combine(releaseFolder, "SwarmUI.dll")))
         {
@@ -280,10 +281,8 @@ public class StableSwarm(
 
         dotnetProcess = await prerequisiteHelper
             .RunDotnet(
-                args: new ProcessArgs(new[] { Path.Combine(releaseFolder, dllName) }).Concat(
-                    arguments.TrimEnd()
-                ),
-                workingDirectory: installedPackagePath,
+                args: [Path.Combine(releaseFolder, dllName), ..options.Arguments],
+                workingDirectory: installLocation,
                 envVars: aspEnvVars,
                 onProcessOutput: HandleConsoleOutput,
                 waitForExit: false

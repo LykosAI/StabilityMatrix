@@ -7,21 +7,28 @@ namespace StabilityMatrix.Core.Extensions;
 public static class ProgressExtensions
 {
     [return: NotNullIfNotNull(nameof(progress))]
-    public static Action<ProcessOutput>? AsProcessOutputHandler(this IProgress<ProgressReport>? progress)
+    public static Action<ProcessOutput>? AsProcessOutputHandler(
+        this IProgress<ProgressReport>? progress,
+        bool setMessageAsOutput = true
+    )
     {
-        return progress == null
-            ? null
-            : output =>
-            {
-                progress.Report(
-                    new ProgressReport
-                    {
-                        IsIndeterminate = true,
-                        Message = output.Text,
-                        ProcessOutput = output,
-                        PrintToConsole = true
-                    }
-                );
-            };
+        if (progress is null)
+        {
+            return null;
+        }
+
+        return output =>
+        {
+            progress.Report(
+                new ProgressReport
+                {
+                    Progress = -1f,
+                    IsIndeterminate = true,
+                    Message = setMessageAsOutput ? output.Text : null,
+                    ProcessOutput = output,
+                    PrintToConsole = true
+                }
+            );
+        };
     }
 }

@@ -1,54 +1,31 @@
-﻿using StabilityMatrix.Core.Models.Packages;
+﻿using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
-using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
-public class UpdatePackageStep : IPackageStep
+public class UpdatePackageStep(
+    ISettingsManager settingsManager,
+    BasePackage basePackage,
+    string installLocation,
+    InstalledPackage installedPackage,
+    UpdatePackageOptions options
+) : ICancellablePackageStep
 {
-    private readonly ISettingsManager settingsManager;
-    private readonly InstalledPackage installedPackage;
-    private readonly DownloadPackageVersionOptions versionOptions;
-    private readonly BasePackage basePackage;
-
-    public UpdatePackageStep(
-        ISettingsManager settingsManager,
-        InstalledPackage installedPackage,
-        DownloadPackageVersionOptions versionOptions,
-        BasePackage basePackage
+    public async Task ExecuteAsync(
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
     )
     {
-        this.settingsManager = settingsManager;
-        this.installedPackage = installedPackage;
-        this.versionOptions = versionOptions;
-        this.basePackage = basePackage;
-    }
-
-    public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
-    {
-        var torchVersion = installedPackage.PreferredTorchVersion ?? basePackage.GetRecommendedTorchVersion();
-
-        void OnConsoleOutput(ProcessOutput output)
-        {
-            progress?.Report(
-                new ProgressReport
-                {
-                    IsIndeterminate = true,
-                    Message = output.Text,
-                    ProcessOutput = output,
-                    PrintToConsole = true
-                }
-            );
-        }
-
         var updateResult = await basePackage
             .Update(
+                installLocation,
                 installedPackage,
-                torchVersion,
-                versionOptions,
+                options,
                 progress,
-                onConsoleOutput: OnConsoleOutput
+                progress.AsProcessOutputHandler(),
+                cancellationToken
             )
             .ConfigureAwait(false);
 

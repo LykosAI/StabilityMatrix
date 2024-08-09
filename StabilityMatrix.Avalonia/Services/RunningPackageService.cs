@@ -8,6 +8,7 @@ using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using KeyedSemaphores;
 using Microsoft.Extensions.Logging;
+using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Attributes;
@@ -127,17 +128,21 @@ public partial class RunningPackageService(
             await basePackage.SetupOutputFolderLinks(installedPackage.FullPath!);
         }
 
-        // Load user launch args from settings and convert to string
-        var userArgs = installedPackage.LaunchArgs ?? [];
-        var userArgsString = string.Join(" ", userArgs.Select(opt => opt.ToArgString()));
+        // Load user launch args from settings
+        var launchArgs =
+            installedPackage.LaunchArgs?.Select(option => option.ToArgString()).WhereNotNull().ToList() ?? [];
 
         // Join with extras, if any
-        userArgsString = string.Join(" ", userArgsString, basePackage.ExtraLaunchArguments);
+        launchArgs.AddRange(basePackage.ExtraLaunchArguments);
 
-        // Use input command if provided, otherwise use package launch command
-        command ??= basePackage.LaunchCommand;
+        await basePackage.RunPackage(
+            packagePath,
+            installedPackage,
+            new RunPackageOptions { Command = command, Arguments = launchArgs },
+            console.Post,
+            cancellationToken
+        );
 
-        await basePackage.RunPackage(packagePath, command, userArgsString, o => console.Post(o));
         var runningPackage = new PackagePair(installedPackage, basePackage);
 
         var viewModel = new RunningPackageViewModel(

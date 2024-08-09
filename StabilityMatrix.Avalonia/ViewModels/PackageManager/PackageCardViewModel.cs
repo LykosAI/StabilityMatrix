@@ -439,9 +439,10 @@ public partial class PackageCardViewModel(
 
             var updatePackageStep = new UpdatePackageStep(
                 settingsManager,
+                basePackage,
+                Package.FullPath!.Unwrap(),
                 Package,
-                versionOptions,
-                basePackage
+                new UpdatePackageOptions { VersionOptions = versionOptions }
             );
             var steps = new List<IPackageStep> { updatePackageStep };
 
@@ -607,9 +608,10 @@ public partial class PackageCardViewModel(
 
             var updatePackageStep = new UpdatePackageStep(
                 settingsManager,
+                basePackage,
+                Package.FullPath!.Unwrap(),
                 Package,
-                versionOptions,
-                basePackage
+                new UpdatePackageOptions { VersionOptions = versionOptions }
             );
             var steps = new List<IPackageStep> { updatePackageStep };
 

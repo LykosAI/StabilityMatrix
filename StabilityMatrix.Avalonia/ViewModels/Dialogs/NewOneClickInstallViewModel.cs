@@ -143,34 +143,6 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                 var torchVersion = selectedPackage.GetRecommendedTorchVersion();
                 var recommendedSharedFolderMethod = selectedPackage.RecommendedSharedFolderMethod;
 
-                var downloadStep = new DownloadPackageVersionStep(
-                    selectedPackage,
-                    installLocation,
-                    downloadVersion
-                );
-                steps.Add(downloadStep);
-
-                var unpackSiteCustomizeStep = new UnpackSiteCustomizeStep(
-                    Path.Combine(installLocation, "venv")
-                );
-                steps.Add(unpackSiteCustomizeStep);
-
-                var installStep = new InstallPackageStep(
-                    selectedPackage,
-                    torchVersion,
-                    recommendedSharedFolderMethod,
-                    downloadVersion,
-                    installLocation
-                );
-                steps.Add(installStep);
-
-                var setupModelFoldersStep = new SetupModelFoldersStep(
-                    selectedPackage,
-                    recommendedSharedFolderMethod,
-                    installLocation
-                );
-                steps.Add(setupModelFoldersStep);
-
                 var installedPackage = new InstalledPackage
                 {
                     DisplayName = selectedPackage.DisplayName,
@@ -183,6 +155,38 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                     PreferredTorchVersion = torchVersion,
                     PreferredSharedFolderMethod = recommendedSharedFolderMethod
                 };
+
+                var downloadStep = new DownloadPackageVersionStep(
+                    selectedPackage,
+                    installLocation,
+                    new DownloadPackageOptions { VersionOptions = downloadVersion }
+                );
+                steps.Add(downloadStep);
+
+                var unpackSiteCustomizeStep = new UnpackSiteCustomizeStep(
+                    Path.Combine(installLocation, "venv")
+                );
+                steps.Add(unpackSiteCustomizeStep);
+
+                var installStep = new InstallPackageStep(
+                    selectedPackage,
+                    installLocation,
+                    installedPackage,
+                    new InstallPackageOptions
+                    {
+                        SharedFolderMethod = recommendedSharedFolderMethod,
+                        VersionOptions = downloadVersion,
+                        PythonOptions = { TorchVersion = torchVersion }
+                    }
+                );
+                steps.Add(installStep);
+
+                var setupModelFoldersStep = new SetupModelFoldersStep(
+                    selectedPackage,
+                    recommendedSharedFolderMethod,
+                    installLocation
+                );
+                steps.Add(setupModelFoldersStep);
 
                 var addInstalledPackageStep = new AddInstalledPackageStep(settingsManager, installedPackage);
                 steps.Add(addInstalledPackageStep);

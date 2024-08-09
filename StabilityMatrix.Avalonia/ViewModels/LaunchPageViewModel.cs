@@ -333,7 +333,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         // Use input command if provided, otherwise use package launch command
         command ??= basePackage.LaunchCommand;
 
-        await basePackage.RunPackage(packagePath, command, userArgsString, OnProcessOutputReceived);
+        // await basePackage.RunPackage(packagePath, command, userArgsString, OnProcessOutputReceived);
         RunningPackage = new PackagePair(activeInstall, basePackage);
 
         EventManager.Instance.OnRunningPackageStatusChanged(RunningPackage);

@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using FreneticUtilities.FreneticDataSyntax;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FDS;
@@ -255,6 +256,7 @@ public class StableSwarm(
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
             ["ASPNETCORE_URLS"] = "http://*:7801"
         };
+        aspEnvVars.Update(settingsManager.Settings.EnvironmentVariables);
 
         void HandleConsoleOutput(ProcessOutput s)
         {

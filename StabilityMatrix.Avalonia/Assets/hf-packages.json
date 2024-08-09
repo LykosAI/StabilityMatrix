@@ -390,10 +390,8 @@
     "ModelName": "SD 1.5 Adapter",
     "RepositoryPath": "InvokeAI/ip_adapter_sd15",
     "Files": [
-      "image_encoder.txt",
-      "ip_adapter.bin"
+      "ip-adapter_sd15.safetensors"
     ],
-    "Subfolder": "ip_adapter_sd15",
     "LicenseType": "Apache 2.0"
   },
   {
@@ -401,8 +399,7 @@
     "ModelName": "SD 1.5 Light Adapter",
     "RepositoryPath": "InvokeAI/ip_adapter_sd15_light",
     "Files": [
-      "image_encoder.txt",
-      "ip_adapter.bin"
+      "ip-adapter_sd15_light.safetensors"
     ],
     "Subfolder": "ip_adapter_sd15_light",
     "LicenseType": "Apache 2.0"
@@ -412,10 +409,8 @@
     "ModelName": "SD 1.5 Plus Adapter",
     "RepositoryPath": "InvokeAI/ip_adapter_plus_sd15",
     "Files": [
-      "image_encoder.txt",
-      "ip_adapter.bin"
+      "ip-adapter-plus_sd15.safetensors"
     ],
-    "Subfolder": "ip_adapter_plus_sd15",
     "LicenseType": "Apache 2.0"
   },
   {
@@ -423,10 +418,8 @@
     "ModelName": "SD 1.5 Face Plus Adapter",
     "RepositoryPath": "InvokeAI/ip_adapter_plus_face_sd15",
     "Files": [
-      "image_encoder.txt",
-      "ip_adapter.bin"
+      "ip-adapter-plus-face_sd15.safetensors"
     ],
-    "Subfolder": "ip_adapter_plus_face_sd15",
     "LicenseType": "Apache 2.0"
   },
   {
@@ -434,10 +427,8 @@
     "ModelName": "SDXL Adapter",
     "RepositoryPath": "InvokeAI/ip_adapter_sdxl",
     "Files": [
-      "image_encoder.txt",
-      "ip_adapter.bin"
+      "ip-adapter_sdxl.safetensors"
     ],
-    "Subfolder": "ip_adapter_sdxl",
     "LicenseType": "Apache 2.0"
   },
   {
@@ -445,10 +436,8 @@
     "ModelName": "SDXL Plus Adapter",
     "RepositoryPath": "InvokeAI/ip-adapter-plus_sdxl_vit-h",
     "Files": [
-      "image_encoder.txt",
-      "ip_adapter.bin"
+      "ip-adapter-plus_sdxl_vit-h.safetensors"
     ],
-    "Subfolder": "ip_adapter_plus_sdxl_vit-h",
     "LicenseType": "Apache 2.0"
   },
   {
@@ -456,10 +445,8 @@
     "ModelName": "SDXL Face Plus Adapter",
     "RepositoryPath": "InvokeAI/ip-adapter-plus-face_sdxl_vit-h",
     "Files": [
-      "image_encoder.txt",
-      "ip_adapter.bin"
+      "ip-adapter-plus-face_sdxl_vit-h.safetensors"
     ],
-    "Subfolder": "ip_adapter_plus_face_sdxl_vit-h",
     "LicenseType": "CreativeML Open RAIL-M"
   },
   {

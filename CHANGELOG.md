@@ -5,6 +5,18 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.11.6
+### Fixed
+- Fixed incorrect IPAdapter download links in the HuggingFace model browser
+- Fixed potential memory leak of transient controls (Inference Prompt and Output Image Viewer) not being garbage collected due to event subscriptions
+- Fixed Batch Count seeds not being recorded properly in Inference projects and image metadata
+- Fixed [#795](https://github.com/LykosAI/StabilityMatrix/issues/795) - SwarmUI launch args not working properly
+- Fixed [#745](https://github.com/LykosAI/StabilityMatrix/issues/745) - not passing Environment Variables to SwarmUI
+### Supporters
+#### Visionaries
+- Shoutout to our Visionary-tier Patreon supporter, **Scopp Mcdee**! Huge thanks for your continued support!
+#### Pioneers
+- Many thanks to our Pioneer-tier supporters on Patreon: **tankfox**, **tanangular**, **Mr. Unknown**, and **Szir777**! Your continued support is greatly appreciated!
 
 ## v2.11.5
 ### Added

@@ -156,24 +156,12 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
         var torchVersion = SelectedPackage.GetRecommendedTorchVersion();
         var recommendedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
 
-        var downloadStep = new DownloadPackageVersionStep(SelectedPackage, installLocation, downloadVersion);
+        var downloadStep = new DownloadPackageVersionStep(
+            SelectedPackage,
+            installLocation,
+            new DownloadPackageOptions() { VersionOptions = downloadVersion }
+        );
         steps.Add(downloadStep);
-
-        var installStep = new InstallPackageStep(
-            SelectedPackage,
-            torchVersion,
-            recommendedSharedFolderMethod,
-            downloadVersion,
-            installLocation
-        );
-        steps.Add(installStep);
-
-        var setupModelFoldersStep = new SetupModelFoldersStep(
-            SelectedPackage,
-            recommendedSharedFolderMethod,
-            installLocation
-        );
-        steps.Add(setupModelFoldersStep);
 
         var installedPackage = new InstalledPackage
         {
@@ -187,6 +175,26 @@ public partial class OneClickInstallViewModel : ContentDialogViewModelBase
             PreferredTorchVersion = torchVersion,
             PreferredSharedFolderMethod = recommendedSharedFolderMethod
         };
+
+        var installStep = new InstallPackageStep(
+            SelectedPackage,
+            installLocation,
+            installedPackage,
+            new InstallPackageOptions
+            {
+                SharedFolderMethod = recommendedSharedFolderMethod,
+                VersionOptions = downloadVersion,
+                PythonOptions = { TorchVersion = torchVersion }
+            }
+        );
+        steps.Add(installStep);
+
+        var setupModelFoldersStep = new SetupModelFoldersStep(
+            SelectedPackage,
+            recommendedSharedFolderMethod,
+            installLocation
+        );
+        steps.Add(setupModelFoldersStep);
 
         var addInstalledPackageStep = new AddInstalledPackageStep(settingsManager, installedPackage);
         steps.Add(addInstalledPackageStep);

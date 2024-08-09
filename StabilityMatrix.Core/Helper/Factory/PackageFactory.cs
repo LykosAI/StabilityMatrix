@@ -86,6 +86,8 @@ public class PackageFactory : IPackageFactory
             "voltaML-fast-stable-diffusion"
                 => new VoltaML(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             "sdfx" => new Sdfx(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "Fooocus-API"
+                => new FooocusAPI(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage))
         };
     }

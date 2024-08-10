@@ -17,6 +17,7 @@ using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
@@ -129,16 +130,18 @@ public partial class RunningPackageService(
         }
 
         // Load user launch args from settings
-        var launchArgs =
-            installedPackage.LaunchArgs?.Select(option => option.ToArgString()).WhereNotNull().ToList() ?? [];
+        var launchArgStrings = (installedPackage.LaunchArgs ?? [])
+            .Select(option => option.ToArgString())
+            .WhereNotNull()
+            .ToArray();
+
+        var launchProcessArgs = ProcessArgs.FromQuoted(launchArgStrings);
 
         // Join with extras, if any
-        launchArgs.AddRange(basePackage.ExtraLaunchArguments);
-
         await basePackage.RunPackage(
             packagePath,
             installedPackage,
-            new RunPackageOptions { Command = command, Arguments = launchArgs },
+            new RunPackageOptions { Command = command, Arguments = launchProcessArgs.ToArray() },
             console.Post,
             cancellationToken
         );

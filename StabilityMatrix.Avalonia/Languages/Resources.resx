@@ -1134,4 +1134,7 @@
   <data name="Label_HistorySize_Description" xml:space="preserve">
     <value>The number of lines above the ones displayed in the console you can scroll back to</value>
   </data>
+  <data name="Label_ConnectAccountFailed" xml:space="preserve">
+    <value>We had some trouble connecting your account</value>
+  </data>
 </root>

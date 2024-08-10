@@ -1,6 +1,3 @@
-using System;
-using System.Runtime.Serialization;
-
 namespace Avalonia.Gif
 {
     [Serializable]
@@ -13,8 +10,5 @@ namespace Avalonia.Gif
 
         public InvalidGifStreamException(string message, Exception innerException)
             : base(message, innerException) { }
-
-        protected InvalidGifStreamException(SerializationInfo info, StreamingContext context)
-            : base(info, context) { }
     }
 }

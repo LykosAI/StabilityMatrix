@@ -7,14 +7,10 @@
     </PropertyGroup>
     
     <PropertyGroup>
-        <CFBundleName>Stability Matrix</CFBundleName>
-        <CFBundleIconFile>Assets/AppIcon.icns</CFBundleIconFile>
-        <CFBundlePackageType>APPL</CFBundlePackageType>
         <OutputType>WinExe</OutputType>
         <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
         <Version>2.12.0-dev.999</Version>
@@ -22,13 +18,59 @@
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
-   
-    <ItemGroup>
-        <CFBundleURLTypes Include="dummy">
-            <CFBundleURLName>StabilityMatrix.URL</CFBundleURLName>
-            <CFBundleURLSchemes>stabilitymatrix;stabilitymatrix://</CFBundleURLSchemes>
-        </CFBundleURLTypes>
-    </ItemGroup>
+    
+    <PropertyGroup Condition=" '$(RuntimeIdentifier)' == 'win-x64' ">
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition=" '$(RuntimeIdentifier)' == 'osx-arm64' ">
+        <CFBundleName>Stability Matrix</CFBundleName>
+        <CFBundleIdentifier>ai.lykos.stabilitymatrix</CFBundleIdentifier>
+        <CFBundleIconFile>Assets/AppIcon.icns</CFBundleIconFile>
+        <CFBundlePackageType>APPL</CFBundlePackageType>
+    </PropertyGroup>
+
+    <Target Name="EditInfoPlist" AfterTargets="BundleApp" Condition=" '$(RuntimeIdentifier)' == 'osx-arm64' ">
+        <XmlPeek 
+                XmlInputPath="$(PublishDir)/Stability Matrix.app/Contents/Info.plist"
+                Query="//plist/dict">
+            <Output TaskParameter="Result" PropertyName="PlistDictOriginal"/>
+        </XmlPeek>
+        <PropertyGroup>
+            <!-- Trim the dict tags -->
+            <PlistDictOriginalInner>
+                $(PlistDictOriginal.Substring(6,
+                    $([MSBuild]::Subtract(
+                        $(PlistDictOriginal.Length),
+                        13
+                    ))
+                ))
+            </PlistDictOriginalInner>
+            <PlistDictAppend>
+                <![CDATA[
+                    <key>CFBundleURLTypes</key>
+                    <array>
+                        <dict>
+                            <key>CFBundleTypeRole</key>
+                            <string>Viewer</string>
+                            <key>CFBundleURLName</key>
+                            <string>ai.lykos.stabilitymatrix</string>
+                            <key>CFBundleURLIconFile</key>
+                            <string>AppIcon.icns</string>
+                            <key>CFBundleURLSchemes</key>
+                            <array>
+                                <string>stabilitymatrix</string>
+                            </array>
+                        </dict>
+                    </array>
+                ]]>
+            </PlistDictAppend>
+        </PropertyGroup>
+        <XmlPoke
+                XmlInputPath="$(PublishDir)/Stability Matrix.app/Contents/Info.plist"
+                Query="//plist/dict" 
+                Value="$(PlistDictOriginalInner)$(PlistDictAppend)"/>
+    </Target>
     
     <ItemGroup>
         <InternalsVisibleTo Include="StabilityMatrix.Tests" />

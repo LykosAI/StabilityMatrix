@@ -86,24 +86,17 @@ public static class Program
             GlobalConfig.HomeDir = homeDir;
         }
 
-        // Launched for custom URI scheme, handle and exit
-        if (Args.Uri is { } uriArg)
+        // Launched for custom URI scheme, handle and
+        // on macOS we use activation events so ignore this
+        if (!Compat.IsMacOS && Args.Uri is { } uriArg)
         {
-            try
+            if (Uri.TryCreate(uriArg, UriKind.Absolute, out var uri))
             {
-                if (
-                    Uri.TryCreate(uriArg, UriKind.Absolute, out var uri)
-                    && string.Equals(uri.Scheme, UriHandler.Scheme, StringComparison.OrdinalIgnoreCase)
-                )
-                {
-                    UriHandler.SendAndExit(uri);
-                }
-
-                Environment.Exit(0);
+                HandleUriScheme(uri);
             }
-            catch (Exception e)
+            else
             {
-                Console.Error.WriteLine($"Uri handler encountered an error: {e.Message}");
+                Console.Error.WriteLine($"Invalid URI argument: {uriArg}");
                 Environment.Exit(1);
             }
         }
@@ -137,6 +130,29 @@ public static class Program
         }
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
+    }
+
+    [DoesNotReturn]
+    private static void HandleUriScheme(Uri uri)
+    {
+        Console.Error.WriteLine($"Handling URI: {uri}");
+
+        if (!string.Equals(uri.Scheme, UriHandler.Scheme, StringComparison.OrdinalIgnoreCase))
+        {
+            Console.Error.WriteLine($"Unknown URI scheme: {uri.Scheme}");
+            Environment.Exit(1);
+        }
+
+        try
+        {
+            UriHandler.SendAndExit(uri);
+            Environment.Exit(0);
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine($"Uri handler encountered an error: {e.Message}");
+            Environment.Exit(1);
+        }
     }
 
     /// <summary>

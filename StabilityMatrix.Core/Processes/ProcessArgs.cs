@@ -13,6 +13,26 @@ namespace StabilityMatrix.Core.Processes;
 [CollectionBuilder(typeof(ProcessArgsCollectionBuilder), "Create")]
 public partial class ProcessArgs : OneOfBase<string, string[]>, IEnumerable<string>
 {
+    /// <summary>
+    /// Create a new <see cref="ProcessArgs"/> from pre-quoted argument parts,
+    /// which may contain spaces or multiple arguments.
+    /// </summary>
+    /// <param name="inputs">Quoted string arguments</param>
+    /// <returns>A new <see cref="ProcessArgs"/> instance</returns>
+    public static ProcessArgs FromQuoted(IEnumerable<string> inputs)
+    {
+        ProcessArgs? result = null;
+
+        foreach (var input in inputs)
+        {
+            result =
+                result?.Concat(new ProcessArgs(OneOf<string, string[]>.FromT0(input)))
+                ?? new ProcessArgs(OneOf<string, string[]>.FromT0(input));
+        }
+
+        return result ?? new ProcessArgs(OneOf<string, string[]>.FromT1([]));
+    }
+
     /// <inheritdoc />
     public ProcessArgs(OneOf<string, string[]> input)
         : base(input) { }

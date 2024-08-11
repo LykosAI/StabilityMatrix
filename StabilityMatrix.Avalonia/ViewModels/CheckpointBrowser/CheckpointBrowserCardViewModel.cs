@@ -31,7 +31,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [ManagedService]
 [Transient]
-public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
+public partial class CheckpointBrowserCardViewModel : ProgressViewModel
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly IDownloadService downloadService;
@@ -96,9 +96,11 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         this.modelIndexService = modelIndexService;
 
         // Update image when nsfw setting changes
-        settingsManager.RegisterPropertyChangedHandler(
-            s => s.ModelBrowserNsfwEnabled,
-            _ => Dispatcher.UIThread.Post(UpdateImage)
+        AddDisposable(
+            settingsManager.RegisterPropertyChangedHandler(
+                s => s.ModelBrowserNsfwEnabled,
+                _ => Dispatcher.UIThread.Post(UpdateImage)
+            )
         );
 
         ShowSantaHats = settingsManager.Settings.IsHolidayModeActive;

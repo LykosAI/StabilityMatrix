@@ -172,6 +172,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             })
             .Filter(filterPredicate)
             .Bind(ModelCards)
+            .DisposeMany()
             .Subscribe();
 
         settingsManager.RelayPropertyFor(

@@ -255,6 +255,13 @@ public sealed class App : Application
 
         // Setup uri handler for `stabilitymatrix://` protocol
         Program.UriHandler.RegisterUriScheme();
+
+        // Setup activation protocol handlers (uri handler on macOS)
+        if (Compat.IsMacOS && this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
+        {
+            Logger.Debug("ActivatableLifetime available, setting up activation protocol handlers");
+            activatableLifetime.Activated += OnActivated;
+        }
     }
 
     private void ShowMainWindow()
@@ -402,7 +409,16 @@ public sealed class App : Application
         services.AddMemoryCache();
         services.AddLazyInstance();
 
-        services.AddMessagePipe().AddNamedPipeInterprocess("StabilityMatrix");
+        // Named pipe interprocess communication on Windows and Linux for uri handling
+        if (Compat.IsWindows || Compat.IsLinux)
+        {
+            services.AddMessagePipe().AddNamedPipeInterprocess("StabilityMatrix");
+        }
+        else
+        {
+            // Use activation events on macOS, so just in-memory message pipe
+            services.AddMessagePipe().AddInMemoryDistributedMessageBroker();
+        }
 
         var exportedTypes = AppDomain
             .CurrentDomain.GetAssemblies()
@@ -949,6 +965,33 @@ public sealed class App : Application
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to show Unobserved Task Exception notification");
+        }
+    }
+
+    private static async void OnActivated(object? sender, ActivatedEventArgs args)
+    {
+        if (args is not ProtocolActivatedEventArgs protocolArgs)
+        {
+            Logger.Warn("Activated with unknown args: {Args}", args);
+            return;
+        }
+
+        if (protocolArgs.Kind is ActivationKind.OpenUri)
+        {
+            Logger.Info("Activated with Protocol OpenUri: {Uri}", protocolArgs.Uri);
+
+            // Ensure the uri scheme is our custom scheme
+            if (
+                !protocolArgs.Uri.Scheme.Equals(Program.UriHandler.Scheme, StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                Logger.Warn("Unknown scheme for OpenUri: {Uri}", protocolArgs.Uri);
+                return;
+            }
+
+            var publisher = Services.GetRequiredService<IDistributedPublisher<string, Uri>>();
+
+            await publisher.PublishAsync(UriHandler.IpcKeySend, protocolArgs.Uri);
         }
     }
 

@@ -72,7 +72,7 @@
                         <TextBlock
                             Margin="4,0,4,8"
                             VerticalAlignment="Center"
-                            Text="Sampler" />
+                            Text="{x:Static lang:Resources.Label_Sampler}" />
                         <ui:FAComboBox
                             Grid.Row="0"
                             Grid.Column="1"
@@ -88,7 +88,7 @@
                             Grid.Column="0"
                             Margin="4,0,4,8"
                             VerticalAlignment="Center"
-                            Text="Scheduler" />
+                            Text="{x:Static lang:Resources.Label_Scheduler}" />
                         <ui:FAComboBox
                             Grid.Row="1"
                             Grid.Column="1"
@@ -102,7 +102,7 @@
                         <TextBlock Grid.Row="2"
                                    Grid.Column="0"
                                    Margin="4,0,4,8"
-                                   Text="Steps"
+                                   Text="{x:Static lang:Resources.Label_Steps}"
                                    VerticalAlignment="Center" />
                         <ui:NumberBox Grid.Row="2"
                                       Grid.Column="1"
@@ -118,7 +118,7 @@
                                    Grid.Column="0"
                                    Margin="4,0,4,8"
                                    VerticalAlignment="Center"
-                                   Text="CFG Scale" />
+                                   Text="{x:Static lang:Resources.Label_CFGScale}" />
                         <ui:NumberBox Grid.Row="3"
                                       Grid.Column="1"
                                       Value="{Binding Cfg}"
@@ -172,7 +172,7 @@
                                    Grid.Column="0"
                                    Margin="4,0,4,2"
                                    VerticalAlignment="Center"
-                                   Text="Max Size" />
+                                   Text="{x:Static lang:Resources.Label_MaxSize}" />
                         <ui:NumberBox Grid.Row="1"
                                       Grid.Column="1"
                                       Value="{Binding MaxSize}"
@@ -419,7 +419,7 @@
                     <Separator Margin="8, 16" Background="#DDDDDD" />
 
                     <!-- Use Separate Prompt -->
-                    <TextBlock Text="Use Separate Prompt" 
+                    <TextBlock Text="{x:Static lang:Resources.Label_UseSeparatePrompt}" 
                                Margin="4,0,4,4"/>
                     <ToggleSwitch IsChecked="{Binding UseSeparatePrompt}"
                                   Margin="8,0,4,8"

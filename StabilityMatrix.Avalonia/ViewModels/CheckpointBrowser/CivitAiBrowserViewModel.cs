@@ -173,6 +173,20 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             .Filter(filterPredicate)
             .Bind(ModelCards)
             .Subscribe();
+
+        settingsManager.RelayPropertyFor(
+            this,
+            model => model.ShowNsfw,
+            settings => settings.ModelBrowserNsfwEnabled,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            model => model.HideInstalledModels,
+            settings => settings.HideInstalledModelsInModelBrowser,
+            true
+        );
     }
 
     private void OnNavigateAndFindCivitModelRequested(object? sender, int e)
@@ -210,21 +224,6 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
         SortMode = searchOptions?.SortMode ?? CivitSortMode.HighestRated;
         SelectedModelType = searchOptions?.SelectedModelType ?? CivitModelType.Checkpoint;
         SelectedBaseModelType = searchOptions?.SelectedBaseModelType ?? "All";
-
-        ShowNsfw = settingsManager.Settings.ModelBrowserNsfwEnabled;
-
-        settingsManager.RelayPropertyFor(
-            this,
-            model => model.ShowNsfw,
-            settings => settings.ModelBrowserNsfwEnabled
-        );
-
-        settingsManager.RelayPropertyFor(
-            this,
-            model => model.HideInstalledModels,
-            settings => settings.HideInstalledModelsInModelBrowser,
-            true
-        );
 
         if (settingsManager.Settings.AutoLoadCivitModels)
         {

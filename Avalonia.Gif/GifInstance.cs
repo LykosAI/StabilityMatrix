@@ -55,16 +55,23 @@ namespace Avalonia.Gif
             CurrentCts = new CancellationTokenSource();
 
             _gifDecoder = new GifDecoder(currentStream, CurrentCts.Token);
-            var pixSize = new PixelSize(_gifDecoder.Header.Dimensions.Width, _gifDecoder.Header.Dimensions.Height);
+            var pixSize = new PixelSize(
+                _gifDecoder.Header.Dimensions.Width,
+                _gifDecoder.Header.Dimensions.Height
+            );
 
-            _targetBitmap = new WriteableBitmap(pixSize, new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Opaque);
+            _targetBitmap = new WriteableBitmap(
+                pixSize,
+                new Vector(96, 96),
+                PixelFormat.Bgra8888,
+                AlphaFormat.Opaque
+            );
             GifPixelSize = pixSize;
 
             _totalTime = TimeSpan.Zero;
 
             _frameTimes = _gifDecoder
-                .Frames
-                .Select(frame =>
+                .Frames.Select(frame =>
                 {
                     _totalTime = _totalTime.Add(frame.FrameDelay);
                     return _totalTime;
@@ -138,10 +145,10 @@ namespace Avalonia.Gif
 
         internal WriteableBitmap ProcessFrameIndex(int frameIndex)
         {
-            _gifDecoder.RenderFrame(frameIndex, _targetBitmap);
+            _gifDecoder.RenderFrame(frameIndex, _targetBitmap!);
             _currentFrameIndex = frameIndex;
 
-            return _targetBitmap;
+            return _targetBitmap!;
         }
     }
 }

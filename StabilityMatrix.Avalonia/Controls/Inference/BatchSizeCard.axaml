@@ -37,7 +37,7 @@
                                 <TextBlock 
                                     VerticalAlignment="Center"
                                     Margin="0,0,4,0"
-                                    Text="Batch Size"/>
+                                    Text="{x:Static lang:Resources.Label_BatchSize}"/>
                                 <icons:Icon
                                     FontSize="12"
                                     Value="fa-solid fa-table-cells-large"/>
@@ -60,7 +60,7 @@
                                 <TextBlock 
                                     VerticalAlignment="Center"
                                     Margin="4,0,8,0"
-                                    Text="Batches"/>
+                                    Text="{x:Static lang:Resources.Label_Batches}"/>
                                 <icons:Icon
                                     FontSize="14"
                                     Value="fa-regular fa-images"/>

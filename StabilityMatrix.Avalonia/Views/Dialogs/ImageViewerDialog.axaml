@@ -139,35 +139,35 @@
             Target="{Binding #InfoButton}">
             <StackPanel Spacing="8" Margin="4,0" DataContext="{Binding LocalImageFile.GenerationParameters}">
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="Prompt" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_Prompt}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding PositivePrompt}" />
                 </Grid>
                 
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="Negative Prompt" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_NegativePrompt}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding NegativePrompt}" />
                 </Grid>
                 
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="Model" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_Model}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding ModelName}" />
                 </Grid>
                 
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="Sampler" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_Sampler}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding Sampler}" />
                 </Grid>
                 
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="Steps" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_Steps}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding Steps}" />
@@ -181,7 +181,7 @@
                 </Grid>
                 
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="Seed" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_Seed}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding Seed}" />

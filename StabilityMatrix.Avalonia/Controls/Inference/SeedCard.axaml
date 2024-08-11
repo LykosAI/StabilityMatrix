@@ -4,7 +4,8 @@
         xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
         xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
         x:DataType="vmInference:SeedCardViewModel"
-        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData">
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages">
     <Design.PreviewWith>
         <Grid MinWidth="400">
             <controls:SeedCard DataContext="{x:Static mocks:DesignData.SeedCardViewModel}"/>
@@ -23,7 +24,7 @@
                                 Grid.Column="0"
                                 Margin="0,0,8,0"
                                 VerticalAlignment="Center"
-                                Text="Seed" />
+                                Text="{x:Static lang:Resources.Label_Seed}" />
                             <NumericUpDown
                                 Grid.Column="1"
                                 Name="SeedNumberBox"

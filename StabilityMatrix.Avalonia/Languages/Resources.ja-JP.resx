@@ -146,7 +146,8 @@
     <value>再起動が必要です</value>
   </data>
   <data name="Label_UnknownPackage" xml:space="preserve">
-    <value>Unknown Package</value>
+    <value>不明なパッケージ
+</value>
   </data>
   <data name="Action_Import" xml:space="preserve">
     <value>インポート</value>
@@ -164,7 +165,8 @@
     <value>Releases</value>
   </data>
   <data name="Label_Branches" xml:space="preserve">
-    <value>Branches</value>
+    <value>ブランチ
+</value>
   </data>
   <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
     <value>インポートしたいcheckpointをここにドラッグ＆ドロップ</value>
@@ -650,8 +652,14 @@
     <value>Branch</value>
     <comment>For Japanese engineers who use git on a daily basis, it is easier to understand terms used in git as they are in English.</comment>
   </data>
+  <data name="Label_AutoScrollToEnd" xml:space="preserve">
+    <value>コンソール画面の最後まで自動スクロールする</value>
+  </data>
   <data name="Label_License" xml:space="preserve">
     <value>ライセンス</value>
+  </data>
+  <data name="Label_SharedModelStrategyShort" xml:space="preserve">
+    <value>モデルの共有</value>
   </data>
   <data name="Label_PleaseSelectDataDirectory" xml:space="preserve">
     <value>データフォルダを選択してください</value>
@@ -686,11 +694,26 @@
   <data name="Label_UseSharedOutputFolder" xml:space="preserve">
     <value>共有画像フォルダ</value>
   </data>
+  <data name="Label_BatchIndex" xml:space="preserve">
+    <value>Batch Index</value>
+  </data>
+  <data name="Action_Copy" xml:space="preserve">
+    <value>コピー</value>
+  </data>
   <data name="Action_OpenInViewer" xml:space="preserve">
     <value>Image Viewerで開く</value>
   </data>
+  <data name="Label_NumImagesSelected" xml:space="preserve">
+    <value>{0}枚の画像を選択</value>
+  </data>
   <data name="Label_OutputFolder" xml:space="preserve">
     <value>Outputフォルダ</value>
+  </data>
+  <data name="Label_OutputType" xml:space="preserve">
+    <value>アウトプットタイプ</value>
+  </data>
+  <data name="Action_ClearSelection" xml:space="preserve">
+    <value>Clear Selection</value>
   </data>
   <data name="Action_SelectAll" xml:space="preserve">
     <value>全て選択</value>
@@ -698,8 +721,32 @@
   <data name="Action_SendToInference" xml:space="preserve">
     <value>Inferenceに送る</value>
   </data>
+  <data name="Label_TextToImage" xml:space="preserve">
+    <value>Text to Image</value>
+  </data>
+  <data name="Label_ImageToImage" xml:space="preserve">
+    <value>Image to Image</value>
+  </data>
+  <data name="Label_Inpainting" xml:space="preserve">
+    <value>Inpainting</value>
+  </data>
+  <data name="Label_Upscale" xml:space="preserve">
+    <value>アップスケール</value>
+  </data>
+  <data name="Label_OutputsPageTitle" xml:space="preserve">
+    <value>アウトプットブラウザ</value>
+  </data>
+  <data name="Label_OneImageSelected" xml:space="preserve">
+    <value>1枚の画像を選択</value>
+  </data>
   <data name="Label_PythonPackages" xml:space="preserve">
     <value>Pythonパッケージ</value>
+  </data>
+  <data name="Action_Consolidate" xml:space="preserve">
+    <value>Consolidate</value>
+  </data>
+  <data name="Label_AreYouSure" xml:space="preserve">
+    <value>よろしいですか？</value>
   </data>
   <data name="Label_ConsolidateExplanation" xml:space="preserve">
     <value>これにより、選択したパッケージから生成されたすべてのイメージが、共有出力フォルダの Consolidated ディレクトリに移動します。この操作は元に戻せません。</value>
@@ -707,8 +754,23 @@
   <data name="Action_Refresh" xml:space="preserve">
     <value>更新</value>
   </data>
+  <data name="Action_Upgrade" xml:space="preserve">
+    <value>アップグレード</value>
+  </data>
+  <data name="Action_Downgrade" xml:space="preserve">
+    <value>ダウングレード</value>
+  </data>
   <data name="Action_OpenGithub" xml:space="preserve">
     <value>GitHubで開く</value>
+  </data>
+  <data name="Label_Connected" xml:space="preserve">
+    <value>接続しました</value>
+  </data>
+  <data name="Action_Disconnect" xml:space="preserve">
+    <value>切断しました</value>
+  </data>
+  <data name="Label_Email" xml:space="preserve">
+    <value>Email</value>
   </data>
   <data name="Label_Username" xml:space="preserve">
     <value>ユーザ名</value>
@@ -725,14 +787,53 @@
   <data name="Label_ConfirmPassword" xml:space="preserve">
     <value>パスワード再確認</value>
   </data>
+  <data name="Label_ApiKey" xml:space="preserve">
+    <value>API Key</value>
+  </data>
+  <data name="Label_Accounts" xml:space="preserve">
+    <value>アカウント</value>
+  </data>
+  <data name="Label_Preprocessor" xml:space="preserve">
+    <value>プリプロセッサ</value>
+  </data>
+  <data name="Label_Strength" xml:space="preserve">
+    <value>強度</value>
+  </data>
+  <data name="Label_ControlWeight" xml:space="preserve">
+    <value>Control Weight</value>
+  </data>
+  <data name="Label_ControlSteps" xml:space="preserve">
+    <value>Control Steps</value>
+  </data>
   <data name="Label_CivitAiLoginRequired" xml:space="preserve">
     <value>ダウンロードにはCivitAIのログインが必要です。SettingからAPIキーを入力してください。</value>
+  </data>
+  <data name="Label_DownloadFailed" xml:space="preserve">
+    <value>ダウンロード失敗</value>
+  </data>
+  <data name="Label_AutoUpdates" xml:space="preserve">
+    <value>自動アップデート</value>
   </data>
   <data name="Label_UpdatesPreviewChannelDescription" xml:space="preserve">
     <value>Previewビルドはアーリーアダプター向けです。Devビルドよりも信頼性が高く、安定版に近い状態で利用できます。ぜひ意見や感想を送ってください。問題とデザインの改善に大いに役立ちます。</value>
   </data>
   <data name="Label_UpdatesDevChannelDescription" xml:space="preserve">
     <value>Devビルドはテクニカルなユーザ向けです。新機能をいち早く利用できます。荒削りな部分やバグがあるかもしれません。</value>
+  </data>
+  <data name="Label_Updates" xml:space="preserve">
+    <value>アップデート</value>
+  </data>
+  <data name="Label_YouAreUpToDate" xml:space="preserve">
+    <value>最新版です</value>
+  </data>
+  <data name="TextTemplate_LastChecked" xml:space="preserve">
+    <value>Last checked: {0}</value>
+  </data>
+  <data name="Action_CopyTriggerWords" xml:space="preserve">
+    <value>トリガーワードをコピー</value>
+  </data>
+  <data name="Label_TriggerWords" xml:space="preserve">
+    <value>トリガーワード:</value>
   </data>
   <data name="TeachingTip_MoreCheckpointCategories" xml:space="preserve">
     <value>IPAdaptersやTextualInversions(embeddings)などのフォルダは、ここで有効にできます。</value>
@@ -743,18 +844,126 @@
   <data name="Action_UpdateExistingMetadata" xml:space="preserve">
     <value>Metadataをアップデートする</value>
   </data>
+  <data name="Label_General" xml:space="preserve">
+    <value>General</value>
+    <comment>A general settings category</comment>
+  </data>
+  <data name="Label_Inference" xml:space="preserve">
+    <value>Inference</value>
+    <comment>The Inference feature page</comment>
+  </data>
+  <data name="Label_Prompt" xml:space="preserve">
+    <value>プロンプト</value>
+    <comment>A settings category for Inference generation prompts</comment>
+  </data>
+  <data name="Label_OutputImageFiles" xml:space="preserve">
+    <value>アウトプット画像</value>
+  </data>
+  <data name="Label_ImageViewer" xml:space="preserve">
+    <value>イメージビューア</value>
+  </data>
+  <data name="Label_AutoCompletion" xml:space="preserve">
+    <value>自動補完</value>
+  </data>
   <data name="Label_CompletionReplaceUnderscoresWithSpaces" xml:space="preserve">
     <value>入力補完でアンダースコアをスペースに置き換える</value>
   </data>
+  <data name="Label_PromptTags" xml:space="preserve">
+    <value>Prompt Tags</value>
+    <comment>Tags for image generation prompts</comment>
+  </data>
+  <data name="Label_PromptTagsImport" xml:space="preserve">
+    <value>Import Prompt tags</value>
+  </data>
   <data name="Label_PromptTagsDescription" xml:space="preserve">
     <value>入力補完に使用するタグリスト(拡張機能a1111-sd-webui-tagcomplete内にあるcsvファイルが使えます)</value>
+  </data>
+  <data name="Label_SystemInformation" xml:space="preserve">
+    <value>システム情報</value>
+  </data>
+  <data name="Label_CivitAi" xml:space="preserve">
+    <value>CivitAI</value>
+  </data>
+  <data name="Label_HuggingFace" xml:space="preserve">
+    <value>Hugging Face</value>
+  </data>
+  <data name="Label_Addons" xml:space="preserve">
+    <value>Addons</value>
+    <comment>Inference Sampler Addons</comment>
+  </data>
+  <data name="Label_SaveIntermediateImage" xml:space="preserve">
+    <value>中間画像を保存</value>
+    <comment>Inference module step to save an intermediate image</comment>
+  </data>
+  <data name="Label_Settings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Action_SelectFile" xml:space="preserve">
+    <value>ファイルを選択</value>
+  </data>
+  <data name="Action_ReplaceContents" xml:space="preserve">
+    <value>Replace Contents</value>
+  </data>
+  <data name="Label_WipFeature" xml:space="preserve">
+    <value>まだです</value>
+  </data>
+  <data name="Label_WipFeatureDescription" xml:space="preserve">
+    <value>今後のアップデートにご期待ください</value>
+  </data>
+  <data name="Label_MissingImageFile" xml:space="preserve">
+    <value>画像ファイルを見失ってます</value>
+  </data>
+  <data name="Label_HolidayMode" xml:space="preserve">
+    <value>ホリデーモード</value>
+  </data>
+  <data name="Label_CLIPSkip" xml:space="preserve">
+    <value>CLIP Skip</value>
+  </data>
+  <data name="Label_ImageToVideo" xml:space="preserve">
+    <value>Image to Video</value>
   </data>
   <data name="Label_Fps" xml:space="preserve">
     <value>フレームレート(FPS)</value>
     <comment>for jp, &quot;frame rate&quot; is easier to understand, and its better to append FPS. no one can mistake it for a genre of games except nerds</comment>
   </data>
+  <data name="Label_MinCfg" xml:space="preserve">
+    <value>Min CFG</value>
+  </data>
   <data name="Label_Lossless" xml:space="preserve">
     <value>非圧縮</value>
+  </data>
+  <data name="Label_Frames" xml:space="preserve">
+    <value>Frames</value>
+  </data>
+  <data name="Label_MotionBucketId" xml:space="preserve">
+    <value>Motion Bucket ID</value>
+  </data>
+  <data name="Label_AugmentationLevel" xml:space="preserve">
+    <value>Augmentation Level</value>
+  </data>
+  <data name="Label_VideoOutputMethod" xml:space="preserve">
+    <value>Method</value>
+  </data>
+  <data name="Label_VideoQuality" xml:space="preserve">
+    <value>Quality</value>
+  </data>
+  <data name="Label_FindInModelBrowser" xml:space="preserve">
+    <value>モデルブラウザで探す</value>
+  </data>
+  <data name="Label_Installed" xml:space="preserve">
+    <value>Installed</value>
+  </data>
+  <data name="Label_NoExtensionsFound" xml:space="preserve">
+    <value>拡張機能はありません</value>
+  </data>
+  <data name="Action_Hide" xml:space="preserve">
+    <value>隠す</value>
+  </data>
+  <data name="Action_CopyDetails" xml:space="preserve">
+    <value>Copy Details</value>
+  </data>
+  <data name="Action_Download" xml:space="preserve">
+    <value>ダウンロード</value>
   </data>
   <data name="TeachingTip_DownloadsExplanation" xml:space="preserve">
     <value>Packageのインストール・Modelのダウンロードの進捗状況はこちらで確認できます。</value>
@@ -764,5 +973,179 @@
   </data>
   <data name="Label_RecommendedModelsSubText" xml:space="preserve">
     <value>Packageのインストール中に、推奨Modelをいくつかご紹介しましょう。</value>
+  </data>
+  <data name="Label_Notifications" xml:space="preserve">
+    <value>通知</value>
+  </data>
+  <data name="Label_NotificationOption_None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Label_ComfyRequiredTitle" xml:space="preserve">
+    <value>ComfyUIが必要です</value>
+  </data>
+  <data name="Label_ComfyRequiredDetail" xml:space="preserve">
+    <value>ComfyUIのインストールが必要です。インストールしますか？</value>
+  </data>
+  <data name="Error_PleaseSelectDownloadLocation" xml:space="preserve">
+    <value>ダウンロード先を選んでください。</value>
+  </data>
+  <data name="Label_SelectDownloadLocation" xml:space="preserve">
+    <value>ダウンロード先を選んでください:</value>
+  </data>
+  <data name="Label_Config" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="Label_ToggleAutoScrolling" xml:space="preserve">
+    <value>最後まで自動スクロール</value>
+  </data>
+  <data name="Label_ConfirmExit" xml:space="preserve">
+    <value>終了を確認</value>
+  </data>
+  <data name="Label_ConfirmExitDetail" xml:space="preserve">
+    <value>本当に終了してもいいですか？現在実行中のパッケージも終了します。</value>
+  </data>
+  <data name="Label_Console" xml:space="preserve">
+    <value>コンソール</value>
+  </data>
+  <data name="Label_WebUi" xml:space="preserve">
+    <value>Web UI</value>
+  </data>
+  <data name="Label_Packages" xml:space="preserve">
+    <value>パッケージ</value>
+  </data>
+  <data name="Label_ActionCannotBeUndone" xml:space="preserve">
+    <value>このアクションは元に戻せません。</value>
+  </data>
+  <data name="Label_AreYouSureDeleteImages" xml:space="preserve">
+    <value>{0}枚の画像を削除してもいいですか？</value>
+  </data>
+  <data name="Label_CheckingHardware" xml:space="preserve">
+    <value>ハードウェアの仕様から互換性を判断しています。</value>
+  </data>
+  <data name="Label_EverythingLooksGood" xml:space="preserve">
+    <value>いい感じ！</value>
+  </data>
+  <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
+    <value>快適な利用にはCUDA対応GPUを推奨します。それ以外だと一部のパッケージが動作しなかったり、動くけど遅い場合があります。</value>
+  </data>
+  <data name="Label_Checkpoints" xml:space="preserve">
+    <value>Checkpoints</value>
+  </data>
+  <data name="Label_ModelBrowser" xml:space="preserve">
+    <value>Model Brouser</value>
+  </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>ワークフロー</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>無限スクロール</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>ワークフローブラウザ</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>OpenArtで開く</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>ノード詳細</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>ワークフロー概要</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>OpenArtブラウザ</value>
+  </data>
+  <data name="Action_PreviewPreprocessor" xml:space="preserve">
+    <value>プリプロセッサをプレビュー</value>
+  </data>
+  <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
+    <value>&apos;Web UIを開く&apos;ボタンがコマンドバーに移動しました</value>
+  </data>
+  <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrixは既に立ち上がってます。それを終了させてから、もう一度起動してください。</value>
+  </data>
+  <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrixは既に立ち上がってます</value>
+  </data>
+  <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
+    <value>{0} 個削除しました</value>
+  </data>
+  <data name="Label_WorkflowDeleted" xml:space="preserve">
+    <value>ワークフローを削除しました</value>
+  </data>
+  <data name="Label_ErrorRetrievingWorkflows" xml:space="preserve">
+    <value>ワークフローの取得中にエラーが発生しました</value>
+  </data>
+  <data name="TabLabel_InstalledWorkflows" xml:space="preserve">
+    <value>インストールされたワークフロー</value>
+  </data>
+  <data name="Label_WorkflowImported" xml:space="preserve">
+    <value>ワークフローをインポートしました</value>
+  </data>
+  <data name="Label_FinishedImportingWorkflow" xml:space="preserve">
+    <value>ワークフローとカスタムノードをインポートしました</value>
+  </data>
+  <data name="Label_WorkflowImportComplete" xml:space="preserve">
+    <value>ワークフローとカスタムノードをインポートしました。</value>
+  </data>
+  <data name="TeachingTip_InferencePromptHelpButton" xml:space="preserve">
+    <value>ここをクリックしてプロンプトの構文を確認し、LoRAやEmbeddingsの使い方を確認してください。</value>
+  </data>
+  <data name="Label_ExtraNetworks" xml:space="preserve">
+    <value>Extra Networks (Lora / LyCORIS)</value>
+  </data>
+  <data name="Label_CLIPStrength" xml:space="preserve">
+    <value>CLIP Strength</value>
+  </data>
+  <data name="Label_NumberFormat" xml:space="preserve">
+    <value>Number Format</value>
+  </data>
+  <data name="Text_DeleteFollowingItems" xml:space="preserve">
+    <value>以下のアイテムを削除しようとしています:</value>
+  </data>
+  <data name="TextTemplate_DeleteFollowingCountItems" xml:space="preserve">
+    <value>{0}個のアイテムを削除しようとしています:</value>
+  </data>
+  <data name="Label_DeletePermanently" xml:space="preserve">
+    <value>完全に削除する</value>
+  </data>
+  <data name="Action_MoveToTrash" xml:space="preserve">
+    <value>ゴミ箱に送る</value>
+  </data>
+  <data name="Label_AreYouSureDeleteModels" xml:space="preserve">
+    <value>{0}個のモデルを削除しますか？</value>
+  </data>
+  <data name="Label_AutoSearchOnLoad" xml:space="preserve">
+    <value>Auto-Search on Load</value>
+  </data>
+  <data name="Label_AutoSearchOnLoad_Description" xml:space="preserve">
+    <value>model browserページが読み込まれたら、自動的に検索を開始する</value>
+  </data>
+  <data name="Action_ToggleVisibility" xml:space="preserve">
+    <value>表示の切り替え</value>
+  </data>
+  <data name="Label_ClippingMask" xml:space="preserve">
+    <value>Clipping Mask</value>
+  </data>
+  <data name="Label_AppFolders" xml:space="preserve">
+    <value>App Folders</value>
+  </data>
+  <data name="Label_Logs" xml:space="preserve">
+    <value>Logs</value>
+  </data>
+  <data name="Label_AppData" xml:space="preserve">
+    <value>App Data</value>
+  </data>
+  <data name="TextTemplate_PackageUpdatedToSelected" xml:space="preserve">
+    <value>{0}のバージョンが更新されました。</value>
+  </data>
+  <data name="Action_CopyAsBitmap" xml:space="preserve">
+    <value>bitmapにコピー</value>
+  </data>
+  <data name="Label_DisableUpdateCheck" xml:space="preserve">
+    <value>アップデートチェックを無効にする</value>
+  </data>
+  <data name="Warning_PleaseExtractFirst" xml:space="preserve">
+    <value>Stability Matrixを実行する前に、ZIPファイルからアプリを抽出してください</value>
   </data>
 </root>

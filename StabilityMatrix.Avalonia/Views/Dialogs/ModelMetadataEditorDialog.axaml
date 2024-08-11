@@ -25,7 +25,7 @@
               VerticalAlignment="Top">
             <TextBlock Grid.Row="0"
                        Grid.ColumnSpan="2"
-                       Text="Edit Model Metadata"
+                       Text="{x:Static lang:Resources.Label_EditModelMetadata}"
                        FontSize="24"
                        Margin="0,16"
                        FontWeight="SemiBold"
@@ -50,12 +50,12 @@
                           Background="White"
                           Opacity="0.5"/>
 
-            <TextBlock Grid.Row="4" Grid.Column="0" Text="NSFW" VerticalAlignment="Center" Margin="0,10,10,0" />
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="{x:Static lang:Resources.Label_NSFW}" VerticalAlignment="Center" Margin="0,10,10,0" />
             <ToggleSwitch Grid.Row="4" Grid.Column="1" IsChecked="{Binding IsNsfw}"
                           OnContent="{x:Static lang:Resources.Action_Yes}"
                           OffContent="{x:Static lang:Resources.Label_No}" Margin="0,10,0,0" />
 
-            <TextBlock Grid.Row="5" Grid.Column="0" Text="Tags" VerticalAlignment="Top" Margin="0,10,10,0" />
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="{x:Static lang:Resources.Label_Tags}" VerticalAlignment="Top" Margin="0,10,10,0" />
             <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Tags}" AcceptsReturn="True" TextWrapping="Wrap"
                      Height="100" Margin="0,10,0,0" />
 
@@ -65,7 +65,7 @@
                       ItemsSource="{x:Static helpers:EnumHelpers.MetadataEditorCivitModelTypes}"
                       SelectedItem="{Binding ModelType}" Margin="0,10,0,0" />
 
-            <TextBlock Grid.Row="7" Grid.Column="0" Text="Version Name" VerticalAlignment="Center"
+            <TextBlock Grid.Row="7" Grid.Column="0" Text="{x:Static lang:Resources.Label_VersionName}" VerticalAlignment="Center"
                        Margin="0,10,10,0" />
             <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding VersionName}" Margin="0,10,0,0" />
 
@@ -81,12 +81,12 @@
                 </controls:BetterComboBox.ItemTemplate>
             </controls:BetterComboBox>
 
-            <TextBlock Grid.Row="9" Grid.Column="0" Text="Trained Words" VerticalAlignment="Top" Margin="0,10,10,0" />
+            <TextBlock Grid.Row="9" Grid.Column="0" Text="{x:Static lang:Resources.Label_TrainedWords}" VerticalAlignment="Top" Margin="0,10,10,0" />
             <TextBox Grid.Row="9" Grid.Column="1" Text="{Binding TrainedWords}" AcceptsReturn="True"
                      TextWrapping="Wrap" Height="100" Margin="0,10,0,0" />
 
             <TextBlock Grid.Row="10" Grid.Column="0" 
-                       Text="Preview Image" 
+                       Text="{x:Static lang:Resources.Label_PreviewImage}" 
                        VerticalAlignment="Top"
                        Margin="0,10,10,0" />
             <StackPanel Grid.Row="10" Grid.Column="1" Orientation="Vertical" Spacing="10" Margin="0,10,0,0">

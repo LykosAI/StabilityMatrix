@@ -949,7 +949,7 @@
     <value>Sélectionner un dossier de téléchargement:</value>
   </data>
   <data name="Label_ToggleAutoScrolling" xml:space="preserve">
-    <value>Défiler automatiquement à la fin</value>
+    <value>Défilement automatique</value>
   </data>
   <data name="Label_ConfirmExit" xml:space="preserve">
     <value>Confirmer la sortie</value>

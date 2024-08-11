@@ -319,7 +319,7 @@
                             <ui:SymbolIconSource Symbol="OpenFolder" />
                         </ui:MenuFlyoutItem.IconSource>
                     </ui:MenuFlyoutItem>
-                    <ui:MenuFlyoutItem Text="New Folder"
+                    <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_NewFolder}"
                                        Command="{Binding CreateFolderCommand}"
                                        CommandParameter="{Binding $parent[TreeView].SelectedItem}">
                         <ui:MenuFlyoutItem.IconSource>

@@ -1149,6 +1149,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to We had some trouble connecting your account.
+        /// </summary>
+        public static string Label_ConnectAccountFailed {
+            get {
+                return ResourceManager.GetString("Label_ConnectAccountFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Connected.
         /// </summary>
         public static string Label_Connected {

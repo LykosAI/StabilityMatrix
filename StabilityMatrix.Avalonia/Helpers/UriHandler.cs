@@ -5,6 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform;
 using MessagePipe;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
@@ -56,8 +58,6 @@ public class UriHandler
 
     public void RegisterUriScheme()
     {
-        // Not supported on macos
-
         if (Compat.IsWindows)
         {
             RegisterUriSchemeWin();

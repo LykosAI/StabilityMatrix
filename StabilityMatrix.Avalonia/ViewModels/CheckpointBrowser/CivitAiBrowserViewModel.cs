@@ -26,7 +26,6 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Settings;
@@ -44,12 +43,6 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
     private readonly ISettingsManager settingsManager;
     private readonly ILiteDbContext liteDbContext;
     private readonly INotificationService notificationService;
-
-    private LRUCache<
-        int /* model id */
-        ,
-        CheckpointBrowserCardViewModel
-    > cache = new(150);
 
     private SourceCache<CivitModel, int> modelCache = new(m => m.Id);
 
@@ -136,6 +129,10 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             .Select(_ => (Func<CheckpointBrowserCardViewModel, bool>)FilterModelCardsPredicate)
             .AsObservable();
 
+        var sortPredicate = SortExpressionComparer<CheckpointBrowserCardViewModel>.Ascending(
+            x => x.CivitModel.Order
+        );
+
         // make the filter go
         OnPropertyChanged(nameof(HideInstalledModels));
 
@@ -144,34 +141,16 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             .DeferUntilLoaded()
             .Transform(model =>
             {
-                var cachedViewModel = cache.Get(model.Id);
-                if (cachedViewModel != null)
-                {
-                    if (!cachedViewModel.IsImporting)
-                    {
-                        cache.Remove(model.Id);
-                    }
-
-                    return cachedViewModel;
-                }
-
                 var newCard = dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
                 {
                     vm.CivitModel = model;
-                    vm.OnDownloadStart = viewModel =>
-                    {
-                        if (cache.Get(viewModel.CivitModel.Id) != null)
-                            return;
-                        cache.Add(viewModel.CivitModel.Id, viewModel);
-                    };
-
                     return vm;
                 });
 
                 return newCard;
             })
             .Filter(filterPredicate)
-            .Bind(ModelCards)
+            .SortAndBind(ModelCards, sortPredicate)
             .DisposeMany()
             .Subscribe();
 
@@ -387,21 +366,23 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
         {
             var modelsToAdd = models;
 
+            for (var i = 0; i < modelsToAdd.Count; i++)
+            {
+                var model = modelsToAdd[i];
+                model.Order = i;
+
+                if (!addCards)
+                    continue;
+
+                if (modelCache.Items.Contains(model, new PropertyComparer<CivitModel>(x => x.Id)))
+                    continue;
+
+                modelCache.AddOrUpdate(model);
+            }
+
             if (!addCards)
             {
                 modelCache.EditDiff(modelsToAdd, (a, b) => a.Id == b.Id);
-            }
-            else
-            {
-                foreach (var model in modelsToAdd)
-                {
-                    if (modelCache.Items.Contains(model, new PropertyComparer<CivitModel>(x => x.Id)))
-                    {
-                        continue;
-                    }
-
-                    modelCache.AddOrUpdate(model);
-                }
             }
         }
 

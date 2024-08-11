@@ -36,6 +36,8 @@ public class CivitModel
     [JsonPropertyName("modelVersions")]
     public List<CivitModelVersion>? ModelVersions { get; set; }
 
+    public int Order { get; set; }
+
     private FileSizeType? fullFilesSize;
     public FileSizeType FullFilesSize
     {

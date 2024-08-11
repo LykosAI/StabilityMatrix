@@ -198,14 +198,6 @@ public class ComfyUI(
         pipArgs = torchVersion switch
         {
             TorchVersion.DirectMl => pipArgs.WithTorchDirectML(),
-            TorchVersion.Mps => pipArgs.WithTorch().WithTorchVision().WithTorchExtraIndex("cpu"),
-            TorchVersion.Cuda when Compat.IsWindows
-                => pipArgs
-                    .AddArg("--upgrade")
-                    .WithTorch("==2.1.2")
-                    .WithTorchVision("==0.16.2")
-                    .WithTorchAudio("==2.1.2")
-                    .WithTorchExtraIndex("cu121"),
             _
                 => pipArgs
                     .AddArg("--upgrade")
@@ -216,7 +208,8 @@ public class ComfyUI(
                         {
                             TorchVersion.Cpu => "cpu",
                             TorchVersion.Cuda => "cu121",
-                            TorchVersion.Rocm => "rocm5.7",
+                            TorchVersion.Rocm => "rocm6.0",
+                            TorchVersion.Mps => "cpu",
                             _
                                 => throw new ArgumentOutOfRangeException(
                                     nameof(torchVersion),
@@ -227,12 +220,10 @@ public class ComfyUI(
                     )
         };
 
-        pipArgs = pipArgs.AddArg("numpy==1.26.4").AddArg("mpmath==1.3.0");
-
         var requirements = new FilePath(installLocation, "requirements.txt");
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(
-            await requirements.ReadAllTextAsync().ConfigureAwait(false),
+            await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
             excludePattern: "torch"
         );
 

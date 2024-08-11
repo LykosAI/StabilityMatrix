@@ -65,6 +65,9 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     private bool isImporting;
 
     [ObservableProperty]
+    private bool isLoading;
+
+    [ObservableProperty]
     private string updateCardText = string.Empty;
 
     [ObservableProperty]
@@ -271,6 +274,10 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
         await Task.Delay(100);
         await DoImport(model, downloadPath, selectedVersion, selectedFile);
+
+        Text = "Import started. Check the downloads tab for progress.";
+        Value = 100;
+        DelayedClearProgress(TimeSpan.FromMilliseconds(1000));
     }
 
     private static async Task<FilePath> SaveCmInfo(
@@ -331,6 +338,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     )
     {
         IsImporting = true;
+        IsLoading = true;
         Text = "Downloading...";
 
         OnDownloadStart?.Invoke(this);
@@ -389,19 +397,6 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         }
 
         // Attach for progress updates
-        download.ProgressUpdate += (s, e) =>
-        {
-            Value = e.Percentage;
-            if (e.Type == ProgressType.Hashing)
-            {
-                Text = $"Validating... {e.Percentage}%";
-            }
-            else
-            {
-                Text = $"Downloading... {e.Percentage}%";
-            }
-        };
-
         download.ProgressStateChanged += (s, e) =>
         {
             if (e == ProgressState.Success)
@@ -439,6 +434,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
                 Text = string.Empty;
                 Value = 0;
                 IsImporting = false;
+                IsLoading = false;
             });
     }
 

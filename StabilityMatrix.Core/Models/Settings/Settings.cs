@@ -194,7 +194,9 @@ public class Settings
 
     public bool DragMovesAllSelected { get; set; } = true;
 
-    public bool HideEmptyRootCategories { get; set; } = false;
+    public bool HideEmptyRootCategories { get; set; }
+
+    public bool HideInstalledModelsInModelBrowser { get; set; }
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

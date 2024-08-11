@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
-using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using LiteDB;
-using LiteDB.Async;
+using DynamicData;
+using DynamicData.Binding;
 using NLog;
 using Refit;
 using StabilityMatrix.Avalonia.Languages;
@@ -41,10 +42,8 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ICivitApi civitApi;
     private readonly ISettingsManager settingsManager;
-    private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly ILiteDbContext liteDbContext;
     private readonly INotificationService notificationService;
-    private const int MaxModelsPerPage = 20;
 
     private LRUCache<
         int /* model id */
@@ -52,11 +51,11 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
         CheckpointBrowserCardViewModel
     > cache = new(150);
 
-    [ObservableProperty]
-    private ObservableCollection<CheckpointBrowserCardViewModel> modelCards = new();
+    private SourceCache<CivitModel, int> modelCache = new(m => m.Id);
 
     [ObservableProperty]
-    private DataGridCollectionView? modelCardsView;
+    private IObservableCollection<CheckpointBrowserCardViewModel> modelCards =
+        new ObservableCollectionExtended<CheckpointBrowserCardViewModel>();
 
     [ObservableProperty]
     private string searchQuery = string.Empty;
@@ -97,6 +96,9 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
     [ObservableProperty]
     private string? nextPageCursor;
 
+    [ObservableProperty]
+    private bool hideInstalledModels;
+
     public IEnumerable<CivitPeriod> AllCivitPeriods =>
         Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
     public IEnumerable<CivitSortMode> AllSortModes =>
@@ -122,11 +124,55 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
     {
         this.civitApi = civitApi;
         this.settingsManager = settingsManager;
-        this.dialogFactory = dialogFactory;
         this.liteDbContext = liteDbContext;
         this.notificationService = notificationService;
 
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
+
+        var filterPredicate = Observable
+            .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
+            .Where(x => x.EventArgs.PropertyName is nameof(HideInstalledModels) or nameof(ShowNsfw))
+            .Throttle(TimeSpan.FromMilliseconds(50))
+            .Select(_ => (Func<CheckpointBrowserCardViewModel, bool>)FilterModelCardsPredicate)
+            .AsObservable();
+
+        // make the filter go
+        OnPropertyChanged(nameof(HideInstalledModels));
+
+        modelCache
+            .Connect()
+            .DeferUntilLoaded()
+            .Transform(model =>
+            {
+                var cachedViewModel = cache.Get(model.Id);
+                if (cachedViewModel != null)
+                {
+                    if (!cachedViewModel.IsImporting)
+                    {
+                        cache.Remove(model.Id);
+                    }
+
+                    return cachedViewModel;
+                }
+
+                var newCard = dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
+                {
+                    vm.CivitModel = model;
+                    vm.OnDownloadStart = viewModel =>
+                    {
+                        if (cache.Get(viewModel.CivitModel.Id) != null)
+                            return;
+                        cache.Add(viewModel.CivitModel.Id, viewModel);
+                    };
+
+                    return vm;
+                });
+
+                return newCard;
+            })
+            .Filter(filterPredicate)
+            .Bind(ModelCards)
+            .Subscribe();
     }
 
     private void OnNavigateAndFindCivitModelRequested(object? sender, int e)
@@ -173,6 +219,13 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             settings => settings.ModelBrowserNsfwEnabled
         );
 
+        settingsManager.RelayPropertyFor(
+            this,
+            model => model.HideInstalledModels,
+            settings => settings.HideInstalledModelsInModelBrowser,
+            true
+        );
+
         if (settingsManager.Settings.AutoLoadCivitModels)
         {
             SearchModelsCommand.ExecuteAsync(false);
@@ -182,10 +235,14 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
     /// <summary>
     /// Filter predicate for model cards
     /// </summary>
-    private bool FilterModelCardsPredicate(object? item)
+    private bool FilterModelCardsPredicate(CheckpointBrowserCardViewModel? card)
     {
-        if (item is not CheckpointBrowserCardViewModel card)
+        if (card == null)
             return false;
+
+        if (HideInstalledModels && card.UpdateCardText == "Installed")
+            return false;
+
         return !card.CivitModel.Nsfw || ShowNsfw;
     }
 
@@ -324,63 +381,26 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
     {
         if (models is null)
         {
-            ModelCards?.Clear();
+            modelCache.Clear();
         }
         else
         {
-            var modelsToAdd = models
-                .Select(model =>
-                {
-                    var cachedViewModel = cache.Get(model.Id);
-                    if (cachedViewModel != null)
-                    {
-                        if (!cachedViewModel.IsImporting)
-                        {
-                            cache.Remove(model.Id);
-                        }
-
-                        return cachedViewModel;
-                    }
-
-                    var newCard = dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
-                    {
-                        vm.CivitModel = model;
-                        vm.OnDownloadStart = viewModel =>
-                        {
-                            if (cache.Get(viewModel.CivitModel.Id) != null)
-                                return;
-                            cache.Add(viewModel.CivitModel.Id, viewModel);
-                        };
-
-                        return vm;
-                    });
-
-                    return newCard;
-                })
-                .Where(FilterModelCardsPredicate);
-
-            if (SortMode == CivitSortMode.Installed)
-            {
-                modelsToAdd = modelsToAdd.OrderByDescending(x => x.UpdateCardText == "Update Available");
-            }
+            var modelsToAdd = models;
 
             if (!addCards)
             {
-                ModelCards = new ObservableCollection<CheckpointBrowserCardViewModel>(modelsToAdd);
+                modelCache.EditDiff(modelsToAdd, (a, b) => a.Id == b.Id);
             }
             else
             {
                 foreach (var model in modelsToAdd)
                 {
-                    if (
-                        ModelCards.Contains(
-                            model,
-                            new PropertyComparer<CheckpointBrowserCardViewModel>(x => x.CivitModel.Id)
-                        )
-                    )
+                    if (modelCache.Items.Contains(model, new PropertyComparer<CivitModel>(x => x.Id)))
+                    {
                         continue;
+                    }
 
-                    ModelCards.Add(model);
+                    modelCache.AddOrUpdate(model);
                 }
             }
         }
@@ -459,6 +479,8 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             var connectedModels = await liteDbContext.LocalModelFiles.FindAsync(
                 m => m.ConnectedModelInfo != null
             );
+
+            connectedModels = connectedModels.Where(x => x.HasCivitMetadata);
 
             modelRequest.CommaSeparatedModelIds = string.Join(
                 ",",
@@ -608,7 +630,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
     {
         if (!HasSearched)
             return;
-        ModelCards?.Clear();
+        modelCache.Clear();
 
         if (shouldUpdatePageNumber)
         {

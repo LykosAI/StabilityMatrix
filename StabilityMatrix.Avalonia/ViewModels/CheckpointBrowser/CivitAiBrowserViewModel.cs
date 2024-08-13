@@ -36,7 +36,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [View(typeof(CivitAiBrowserPage))]
 [Singleton]
-public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScroll
+public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScroll
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ICivitApi civitApi;
@@ -44,7 +44,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
     private readonly ILiteDbContext liteDbContext;
     private readonly INotificationService notificationService;
 
-    private SourceCache<CivitModel, int> modelCache = new(m => m.Id);
+    private readonly SourceCache<OrderedValue<CivitModel>, int> modelCache = new(static ov => ov.Value.Id);
 
     [ObservableProperty]
     private IObservableCollection<CheckpointBrowserCardViewModel> modelCards =
@@ -130,7 +130,7 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
             .AsObservable();
 
         var sortPredicate = SortExpressionComparer<CheckpointBrowserCardViewModel>.Ascending(
-            x => x.CivitModel.Order
+            static x => x.Order
         );
 
         // make the filter go
@@ -139,19 +139,18 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
         modelCache
             .Connect()
             .DeferUntilLoaded()
-            .Transform(model =>
-            {
-                var newCard = dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
-                {
-                    vm.CivitModel = model;
-                    return vm;
-                });
-
-                return newCard;
-            })
-            .Filter(filterPredicate)
-            .SortAndBind(ModelCards, sortPredicate)
+            .Transform(
+                ov =>
+                    dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
+                    {
+                        vm.CivitModel = ov.Value;
+                        vm.Order = ov.Order;
+                        return vm;
+                    })
+            )
             .DisposeMany()
+            .Filter(filterPredicate)
+            .SortAndBind(ModelCards, sortPredicate, new SortAndBindOptions { UseBinarySearch = true })
             .Subscribe();
 
         settingsManager.RelayPropertyFor(
@@ -214,11 +213,8 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
     /// <summary>
     /// Filter predicate for model cards
     /// </summary>
-    private bool FilterModelCardsPredicate(CheckpointBrowserCardViewModel? card)
+    private bool FilterModelCardsPredicate(CheckpointBrowserCardViewModel card)
     {
-        if (card == null)
-            return false;
-
         if (HideInstalledModels && card.UpdateCardText == "Installed")
             return false;
 
@@ -361,29 +357,19 @@ public partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScro
         if (models is null)
         {
             modelCache.Clear();
+            return;
+        }
+
+        var modelsToAdd = models.Select((m, i) => new OrderedValue<CivitModel>(i, m));
+
+        if (addCards)
+        {
+            var newModels = modelsToAdd.Where(x => !modelCache.Keys.Contains(x.Value.Id));
+            modelCache.AddOrUpdate(newModels);
         }
         else
         {
-            var modelsToAdd = models;
-
-            for (var i = 0; i < modelsToAdd.Count; i++)
-            {
-                var model = modelsToAdd[i];
-                model.Order = i;
-
-                if (!addCards)
-                    continue;
-
-                if (modelCache.Items.Contains(model, new PropertyComparer<CivitModel>(x => x.Id)))
-                    continue;
-
-                modelCache.AddOrUpdate(model);
-            }
-
-            if (!addCards)
-            {
-                modelCache.EditDiff(modelsToAdd, (a, b) => a.Id == b.Id);
-            }
+            modelCache.EditDiff(modelsToAdd, static (a, b) => a.Order == b.Order && a.Value.Id == b.Value.Id);
         }
 
         // Status update

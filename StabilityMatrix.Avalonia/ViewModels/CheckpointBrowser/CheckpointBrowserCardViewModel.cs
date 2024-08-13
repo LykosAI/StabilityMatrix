@@ -56,6 +56,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     }
     private CivitModel civitModel;
 
+    public int Order { get; set; }
+
     public override bool IsTextVisible => Value > 0;
 
     [ObservableProperty]

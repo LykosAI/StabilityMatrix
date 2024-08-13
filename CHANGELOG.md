@@ -5,8 +5,14 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-## v2.12.0-dev.4
+## v2.12.0-pre.1
+### Added
+- Added "Hide Installed Models" toggle to the CivitAI Model Browser
 ### Changed
+- ComfyUI will no longer be pinned to torch 2.1.2 for nvidia users on Windows
+- Model browser download progress no longer covers the entire card for the entire duration of the download
+- Updated torch index to `rocm6.0` for AMD users of ComfyUI
+- (Internal) Updated to Avalonia 11.1.2
 - OAuth-type connection errors in Account Settings now show a more detailed error message
 ### Fixed
 - (macOS) Fixed OAuth connection prompts in Account Settings not automatically updating status after connection. Custom URL schemes are now also supported on macOS builds.

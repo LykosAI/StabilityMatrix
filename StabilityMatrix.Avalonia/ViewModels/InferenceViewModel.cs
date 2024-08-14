@@ -463,10 +463,15 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         if (RunningPackage is not null)
         {
-            await notificationService.TryAsync(
+            var result = await notificationService.TryAsync(
                 ClientManager.ConnectAsync(RunningPackage, cancellationToken),
                 "Could not connect to backend"
             );
+
+            if (result.Exception is { } exception)
+            {
+                Logger.Error(exception, "Failed to connect to Inference backend");
+            }
         }
     }
 

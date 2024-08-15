@@ -87,7 +87,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Inference not connecting with "Could not connect to backend - JSON value could not be converted" error with API changes from newer ComfyUI versions
 ### Supporters
 #### Pioneers
-- Many thanks to our Pioneer-tier supporters on Patreon: **tankfox**, **tanangular**, **Mr. Unknown**, and **Szir777**! Thanks for all of your continued support!
+- Shoutout to our Pioneer-tier supporters on Patreon: **tankfox**, **tanangular**, **Mr. Unknown**, and **Szir777**! Thanks for all of your continued support!
 
 ## v2.11.6
 ### Fixed

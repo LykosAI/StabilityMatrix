@@ -198,6 +198,8 @@ public class Settings
 
     public bool HideInstalledModelsInModelBrowser { get; set; }
 
+    public bool ShowNsfwInCheckpointsPage { get; set; }
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

@@ -218,15 +218,15 @@ public class InvokeAI : BaseGitPackage
                 await venvRunner
                     .PipInstall(
                         new PipInstallArgs()
-                            .WithTorch("==2.0.1")
-                            .WithTorchVision()
-                            .WithExtraIndex("rocm5.4.2"),
+                            .WithTorch("==2.2.2")
+                            .WithTorchVision("==0.17.2")
+                            .WithExtraIndex("rocm5.6"),
                         onConsoleOutput
                     )
                     .ConfigureAwait(false);
                 Logger.Info("Starting InvokeAI install (ROCm)...");
                 pipCommandArgs =
-                    "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.4.2";
+                    "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.6";
                 break;
             case TorchVersion.Mps:
                 // For Apple silicon, use MPS

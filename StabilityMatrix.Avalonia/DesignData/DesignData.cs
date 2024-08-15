@@ -346,8 +346,8 @@ public static class DesignData
                         FileMetadata = new CivitFileMetadata
                         {
                             Format = CivitModelFormat.SafeTensor,
-                            Fp = CivitModelFpType.fp16,
-                            Size = CivitModelSize.pruned,
+                            Fp = "fp16",
+                            Size = "pruned",
                         },
                         TrainedWords = ["aurora", "lightning"]
                     }
@@ -636,8 +636,8 @@ The gallery images are often inpainted, but you will get something very similar 
                             Metadata = new CivitFileMetadata
                             {
                                 Format = CivitModelFormat.SafeTensor,
-                                Fp = CivitModelFpType.fp16,
-                                Size = CivitModelSize.pruned
+                                Fp = "fp16",
+                                Size = "pruned"
                             }
                         },
                         new()
@@ -647,8 +647,8 @@ The gallery images are often inpainted, but you will get something very similar 
                             Metadata = new CivitFileMetadata
                             {
                                 Format = CivitModelFormat.SafeTensor,
-                                Fp = CivitModelFpType.fp32,
-                                Size = CivitModelSize.full
+                                Fp = "fp32",
+                                Size = "full"
                             },
                             Hashes = new CivitFileHashes { BLAKE3 = "ABCD" }
                         }

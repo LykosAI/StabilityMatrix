@@ -88,6 +88,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### Visionaries
 - Shoutout to our Visionary-tier Patreon supporters, **Scopp Mcdee**, **Waterclouds**, and our newest Visionary, **Akiro_Senkai**! Many thanks for your generous support!
 
+## v2.11.8
+### Fixed
+- Fixed CivitAI model browser not loading search results
+
 ## v2.11.7
 ### Changed
 - Forge will use the recommended pytorch version 2.3.1 the next time it is updated

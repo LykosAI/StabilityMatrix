@@ -67,7 +67,8 @@ public class ComfyUI(
             [SharedFolderType.InvokeIpAdapters15] = new[] { "models/ipadapter/sd15" },
             [SharedFolderType.InvokeIpAdaptersXl] = new[] { "models/ipadapter/sdxl" },
             [SharedFolderType.T2IAdapter] = new[] { "models/controlnet/T2IAdapter" },
-            [SharedFolderType.PromptExpansion] = new[] { "models/prompt_expansion" }
+            [SharedFolderType.PromptExpansion] = new[] { "models/prompt_expansion" },
+            [SharedFolderType.Unet] = new[] { "models/unet" }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>

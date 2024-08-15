@@ -16,17 +16,35 @@ public class ComfyInputInfo
     {
         var value = Required?[key];
 
-        var nested = value?.Deserialize<List<List<string>>>();
+        // value usually is a [["a", "b"]] array
+        // but can also be [["a", "b"], {"x": "y"}] array
 
-        return nested?.SelectMany(x => x).ToList();
+        var outerArray = value?.Deserialize<JsonArray>();
+
+        if (outerArray?.FirstOrDefault() is not { } innerNode)
+        {
+            return null;
+        }
+
+        var innerList = innerNode.Deserialize<List<string>>();
+        return innerList;
     }
 
     public List<string>? GetOptionalValueAsNestedList(string key)
     {
         var value = Optional?[key];
 
-        var nested = value?.Deserialize<JsonArray>()?[0].Deserialize<List<string>>();
+        // value usually is a [["a", "b"]] array
+        // but can also be [["a", "b"], {"x": "y"}] array
 
-        return nested;
+        var outerArray = value?.Deserialize<JsonArray>();
+
+        if (outerArray?.FirstOrDefault() is not { } innerNode)
+        {
+            return null;
+        }
+
+        var innerList = innerNode.Deserialize<List<string>>();
+        return innerList;
     }
 }

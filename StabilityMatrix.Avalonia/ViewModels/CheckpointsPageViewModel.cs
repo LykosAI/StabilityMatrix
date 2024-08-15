@@ -308,6 +308,7 @@ public partial class CheckpointsPageViewModel(
             .Where(x => x.EventArgs.PropertyName is nameof(HideEmptyRootCategories))
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<CheckpointCategory, bool>)FilterCategories)
+            .StartWith(FilterCategories)
             .AsObservable();
 
         categoriesCache
@@ -321,9 +322,6 @@ public partial class CheckpointsPageViewModel(
                     .ThenByAscending(x => x.Name)
             )
             .Subscribe();
-
-        // make filter go
-        OnPropertyChanged(nameof(HideEmptyRootCategories));
 
         settingsManager.RelayPropertyFor(
             this,

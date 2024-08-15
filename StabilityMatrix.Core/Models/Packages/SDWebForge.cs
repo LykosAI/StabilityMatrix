@@ -172,8 +172,8 @@ public class SDWebForge(
         else
         {
             pipArgs = pipArgs
-                .WithTorch("==2.1.2")
-                .WithTorchVision("==0.16.2")
+                .WithTorch("==2.3.1")
+                .WithTorchVision("==0.18.1")
                 .WithTorchExtraIndex(
                     torchVersion switch
                     {

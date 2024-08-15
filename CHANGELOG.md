@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.11.7
+### Changed
+- Forge will use the recommended pytorch version 2.3.1 the next time it is updated
+- InvokeAI users with AMD GPUs on Linux will be upgraded to the rocm5.6 version of pytorch the next time it is updated
 ### Fixed
 - Fixed Inference not connecting with "Could not connect to backend - JSON value could not be converted" error with API changes from newer ComfyUI versions
 ### Supporters

@@ -131,6 +131,9 @@ public partial class CheckpointsPageViewModel(
     [ObservableProperty]
     private bool hideEmptyRootCategories;
 
+    [ObservableProperty]
+    private bool showNsfwImages;
+
     public string ClearButtonText =>
         SelectedBaseModels.Count == BaseModelOptions.Count
             ? Resources.Action_ClearSelection
@@ -379,6 +382,13 @@ public partial class CheckpointsPageViewModel(
             this,
             vm => vm.HideEmptyRootCategories,
             settings => settings.HideEmptyRootCategories,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ShowNsfwImages,
+            settings => settings.ShowNsfwInCheckpointsPage,
             true
         );
 
@@ -859,7 +869,10 @@ public partial class CheckpointsPageViewModel(
             Count = modelIndexService.ModelIndex.Values.SelectMany(x => x).Count(),
         };
 
-        categoriesCache.EditDiff([rootCategory, ..modelCategories], (a, b) => a.GetId() == b.GetId());
+        categoriesCache.Edit(updater =>
+        {
+            updater.Load([rootCategory, ..modelCategories]);
+        });
 
         SelectedCategory =
             previouslySelectedCategory
@@ -881,6 +894,15 @@ public partial class CheckpointsPageViewModel(
 
             dirPath = dirPath.Parent;
         }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            SelectedCategory =
+                previouslySelectedCategory
+                ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
+                ?? Categories.FirstOrDefault()
+                ?? categoriesCache.Items[0];
+        });
     }
 
     private ObservableCollection<CheckpointCategory> GetSubfolders(string strPath)

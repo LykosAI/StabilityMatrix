@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
-public partial class SelectableViewModelBase : ViewModelBase
+public partial class SelectableViewModelBase : DisposableViewModelBase
 {
     [ObservableProperty]
     private bool isSelected;

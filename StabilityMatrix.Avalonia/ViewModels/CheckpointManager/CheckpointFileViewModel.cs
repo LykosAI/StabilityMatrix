@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Data;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -71,14 +72,18 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         this.vmFactory = vmFactory;
         this.logger = logger;
         CheckpointFile = checkpointFile;
-        ThumbnailUri = settingsManager.IsLibraryDirSet
-            ? CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
-                ?? CheckpointFile.ConnectedModelInfo?.ThumbnailImageUrl
-                ?? Assets.NoImage.ToString()
-            : string.Empty;
+
+        UpdateImage();
 
         if (!settingsManager.IsLibraryDirSet)
             return;
+
+        AddDisposable(
+            settingsManager.RegisterPropertyChangedHandler(
+                s => s.ShowNsfwInCheckpointsPage,
+                _ => Dispatcher.UIThread.Post(UpdateImage)
+            )
+        );
 
         FileSize = GetFileSize(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
     }
@@ -420,5 +425,24 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
 
         var fileInfo = new FileInfo(filePath);
         return fileInfo.Length;
+    }
+
+    private void UpdateImage()
+    {
+        if (
+            !settingsManager.Settings.ShowNsfwInCheckpointsPage
+            && CheckpointFile.ConnectedModelInfo?.Nsfw == true
+        )
+        {
+            ThumbnailUri = Assets.NoImage.ToString();
+        }
+        else
+        {
+            ThumbnailUri = settingsManager.IsLibraryDirSet
+                ? CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
+                    ?? CheckpointFile.ConnectedModelInfo?.ThumbnailImageUrl
+                    ?? Assets.NoImage.ToString()
+                : string.Empty;
+        }
     }
 }

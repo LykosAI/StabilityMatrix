@@ -292,6 +292,13 @@
                             <controls:FASymbolIconSource Symbol="fa-regular fa-eye-slash"/>
                         </ui:CommandBarToggleButton.IconSource>
                     </ui:CommandBarToggleButton>
+                    <ui:CommandBarToggleButton
+                        Label="Show NSFW Images"
+                        IsChecked="{Binding ShowNsfwImages}">
+                        <ui:CommandBarToggleButton.IconSource>
+                            <controls:FASymbolIconSource Symbol="fa-solid fa-exclamation"/>
+                        </ui:CommandBarToggleButton.IconSource>
+                    </ui:CommandBarToggleButton>
                 </ui:CommandBar.SecondaryCommands>
             </ui:CommandBar>
         </Grid>

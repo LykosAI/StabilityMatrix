@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added "Show NSFW Images" toggle to the Checkpoints page
 ### Fixed
+- Fixed CivitAI Model Browser sometimes incorrectly showing "No models found" before toggling "Show NSFW" or "Hide Installed" filters
 - Fixed Automatic1111 & related packages not including the gradio-allowed-path argument for the shared output folder
 
 ## v2.12.0-pre.1

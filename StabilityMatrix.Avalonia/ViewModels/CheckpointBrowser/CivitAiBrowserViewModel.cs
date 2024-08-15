@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -127,14 +126,12 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             .Where(x => x.EventArgs.PropertyName is nameof(HideInstalledModels) or nameof(ShowNsfw))
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<CheckpointBrowserCardViewModel, bool>)FilterModelCardsPredicate)
+            .StartWith(FilterModelCardsPredicate)
             .AsObservable();
 
         var sortPredicate = SortExpressionComparer<CheckpointBrowserCardViewModel>.Ascending(
             static x => x.Order
         );
-
-        // make the filter go
-        OnPropertyChanged(nameof(HideInstalledModels));
 
         modelCache
             .Connect()

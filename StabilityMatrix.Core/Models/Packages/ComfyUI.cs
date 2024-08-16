@@ -412,7 +412,8 @@ public class ComfyUI(
                             Path.Combine(modelsDir, "InvokeIpAdaptersXl")
                         )
                     },
-                    { "prompt_expansion", Path.Combine(modelsDir, "PromptExpansion") }
+                    { "prompt_expansion", Path.Combine(modelsDir, "PromptExpansion") },
+                    { "unet", Path.Combine(modelsDir, "unet") },
                 }
             );
         }

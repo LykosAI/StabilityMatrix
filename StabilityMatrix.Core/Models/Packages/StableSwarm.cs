@@ -376,7 +376,35 @@ public class StableSwarm(
         if (settingsExists)
         {
             var section = FDSUtility.ReadFile(settingsPath);
-            existingSettings.Load(section);
+            var paths = section.GetSection("Paths");
+            paths.Set("ModelRoot", settingsManager.ModelsDirectory);
+            paths.Set(
+                "SDModelFolder",
+                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.StableDiffusion.ToString())
+            );
+            paths.Set(
+                "SDLoraFolder",
+                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.Lora.ToString())
+            );
+            paths.Set(
+                "SDVAEFolder",
+                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.VAE.ToString())
+            );
+            paths.Set(
+                "SDEmbeddingFolder",
+                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.TextualInversion.ToString())
+            );
+            paths.Set(
+                "SDControlNetsFolder",
+                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.ControlNet.ToString())
+            );
+            paths.Set(
+                "SDClipVisionFolder",
+                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.InvokeClipVision.ToString())
+            );
+            section.Set("Paths", paths);
+            section.SaveToFile(settingsPath);
+            return Task.CompletedTask;
         }
 
         existingSettings.Paths = new StableSwarmSettings.PathsData

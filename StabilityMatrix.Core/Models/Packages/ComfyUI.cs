@@ -224,8 +224,12 @@ public class ComfyUI(
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(
             await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-            excludePattern: "torch"
+            excludePattern: "torch|numpy"
         );
+
+        // https://github.com/comfyanonymous/ComfyUI/pull/4121
+        // https://github.com/comfyanonymous/ComfyUI/commit/e6829e7ac5bef5db8099005b5b038c49e173e87c
+        pipArgs = pipArgs.AddArg("numpy<2");
 
         progress?.Report(
             new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)

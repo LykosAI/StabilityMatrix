@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed CivitAI Model Browser sometimes incorrectly showing "No models found" before toggling "Show NSFW" or "Hide Installed" filters
 - Fixed Automatic1111 & related packages not including the gradio-allowed-path argument for the shared output folder
 - Fixed SwarmUI settings being overwritten on launch
+- Fixed Forge output folder links pointing to the incorrect folder
 
 ## v2.12.0-pre.1
 ### Added
@@ -96,6 +97,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed CivitAI model browser not loading search results
 - Fixed SwarmUI settings being overwritten on launch
+- Fixed Forge output folder links pointing to the incorrect folder
 
 ## v2.11.7
 ### Changed

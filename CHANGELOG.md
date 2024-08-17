@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed CivitAI Model Browser sometimes incorrectly showing "No models found" before toggling "Show NSFW" or "Hide Installed" filters
 - Fixed Automatic1111 & related packages not including the gradio-allowed-path argument for the shared output folder
+- Fixed SwarmUI settings being overwritten on launch
 
 ## v2.12.0-pre.1
 ### Added
@@ -90,6 +91,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Shoutout to our Visionary-tier Patreon supporters, **Scopp Mcdee**, **Waterclouds**, and our newest Visionary, **Akiro_Senkai**! Many thanks for your generous support!
 
 ## v2.11.8
+### Added
+- Added Flux & AuraFlow types to CivitAI Browser
 ### Fixed
 - Fixed CivitAI model browser not loading search results
 - Fixed SwarmUI settings being overwritten on launch

@@ -37,6 +37,7 @@ public class SDWebForge(
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
     public override IPackageExtensionManager ExtensionManager => null;
+<<<<<<< HEAD
     public override string OutputFolderName => "output";
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -50,6 +51,9 @@ public class SDWebForge(
             [SharedOutputType.Text2ImgGrids] = new[] { "output/txt2img-grids" },
             [SharedOutputType.SVD] = new[] { "output/svd" }
         };
+=======
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
+>>>>>>> db05d8b9 (Merge pull request #784 from ionite34/fix-forge-output-sharing)
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [

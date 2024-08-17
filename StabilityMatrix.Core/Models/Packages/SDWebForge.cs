@@ -37,23 +37,7 @@ public class SDWebForge(
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
     public override IPackageExtensionManager ExtensionManager => null;
-<<<<<<< HEAD
-    public override string OutputFolderName => "output";
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
-    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
-        new()
-        {
-            [SharedOutputType.Extras] = new[] { "output/extras-images" },
-            [SharedOutputType.Saved] = new[] { "log/images" },
-            [SharedOutputType.Img2Img] = new[] { "output/img2img-images" },
-            [SharedOutputType.Text2Img] = new[] { "output/txt2img-images" },
-            [SharedOutputType.Img2ImgGrids] = new[] { "output/img2img-grids" },
-            [SharedOutputType.Text2ImgGrids] = new[] { "output/txt2img-grids" },
-            [SharedOutputType.SVD] = new[] { "output/svd" }
-        };
-=======
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
->>>>>>> db05d8b9 (Merge pull request #784 from ionite34/fix-forge-output-sharing)
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [

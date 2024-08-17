@@ -92,6 +92,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.11.8
 ### Fixed
 - Fixed CivitAI model browser not loading search results
+- Fixed SwarmUI settings being overwritten on launch
 
 ## v2.11.7
 ### Changed

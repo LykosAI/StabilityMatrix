@@ -326,6 +326,7 @@ public static class DesignData
                 settingsManager,
                 new MockModelIndexService(),
                 notificationService,
+                downloadService,
                 dialogFactory,
                 null,
                 new LocalModelFile
@@ -356,6 +357,7 @@ public static class DesignData
                 settingsManager,
                 new MockModelIndexService(),
                 notificationService,
+                downloadService,
                 dialogFactory,
                 null,
                 new LocalModelFile
@@ -1097,6 +1099,19 @@ The gallery images are often inpainted, but you will get something very similar 
                 ]
             }
         };
+
+    public static ModelMetadataEditorDialogViewModel MetadataEditorDialogViewModel =>
+        DialogFactory.Get<ModelMetadataEditorDialogViewModel>(vm =>
+        {
+            vm.ThumbnailFilePath = Assets.NoImage.ToString();
+            vm.Tags = "tag1, tag2, tag3";
+            vm.ModelDescription = "This is a description";
+            vm.ModelName = "Model Name";
+            vm.VersionName = "1.0.0";
+            vm.TrainedWords = "word1, word2, word3";
+            vm.ModelType = CivitModelType.Checkpoint;
+            vm.BaseModelType = CivitBaseModelType.Pony;
+        });
 
     public static string CurrentDirectory => Directory.GetCurrentDirectory();
 

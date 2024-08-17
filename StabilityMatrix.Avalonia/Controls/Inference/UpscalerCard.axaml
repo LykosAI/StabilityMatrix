@@ -65,7 +65,7 @@
                                                         VerticalAlignment="Center"
                                                         FontSize="18"
                                                         Foreground="{DynamicResource ThemeGreyColor}"
-                                                        IsFilled="True"
+                                                        IconVariant="Filled"
                                                         Symbol="CloudArrowDown" />
                                                 </Button>
                                             </Grid>

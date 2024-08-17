@@ -22,6 +22,8 @@ public class ComfyNodeBuilder
 
     private static string GetRandomPrefix() => Guid.NewGuid().ToString()[..8];
 
+    private const int MaxResolution = 16384;
+
     private string GetUniqueName(string nameBase)
     {
         var name = $"{nameBase}_1";
@@ -375,6 +377,80 @@ public class ComfyNodeBuilder
         public required string Method { get; init; }
     }
 
+    public record UNETLoader : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required string UnetName { get; init; }
+
+        /// <summary>
+        /// possible values: "default", "fp8_e4m3fn", "fp8_e5m2"
+        /// </summary>
+        public required string WeightDtype { get; init; }
+    }
+
+    public record DualCLIPLoader : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required string ClipName1 { get; init; }
+        public required string ClipName2 { get; init; }
+
+        /// <summary>
+        /// possible values: "sdxl", "sd3", "flux"
+        /// </summary>
+        public required string Type { get; init; }
+    }
+
+    public record FluxGuidance : ComfyTypedNodeBase<ConditioningNodeConnection>
+    {
+        public required ConditioningNodeConnection Conditioning { get; init; }
+
+        [Range(0.0d, 100.0d)]
+        public required double Guidance { get; init; }
+    }
+
+    public record BasicGuider : ComfyTypedNodeBase<GuiderNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required ConditioningNodeConnection Conditioning { get; init; }
+    }
+
+    public record EmptySD3LatentImage : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        [Range(16, MaxResolution)]
+        public int Width { get; init; } = 1024;
+
+        [Range(16, MaxResolution)]
+        public int Height { get; init; } = 1024;
+
+        [Range(1, 4096)]
+        public int BatchSize { get; init; } = 1;
+    }
+
+    public record RandomNoise : ComfyTypedNodeBase<NoiseNodeConnection>
+    {
+        [Range(0, int.MaxValue)]
+        public ulong NoiseSeed { get; init; }
+    }
+
+    public record BasicScheduler : ComfyTypedNodeBase<SigmasNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required string Scheduler { get; init; }
+
+        [Range(1, 10000)]
+        public int Steps { get; init; } = 20;
+
+        [Range(0.0d, 1.0d)]
+        public double Denoise { get; init; } = 1.0;
+    }
+
+    public record SamplerCustomAdvanced : ComfyTypedNodeBase<LatentNodeConnection, LatentNodeConnection>
+    {
+        public required NoiseNodeConnection Noise { get; init; }
+        public required GuiderNodeConnection Guider { get; init; }
+        public required SamplerNodeConnection Sampler { get; init; }
+        public required SigmasNodeConnection Sigmas { get; init; }
+        public required LatentNodeConnection LatentImage { get; init; }
+    }
+
     [TypedNodeOptions(
         Name = "Inference_Core_PromptExpansion",
         RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.2.0"]
@@ -452,6 +528,104 @@ public class ComfyNodeBuilder
 
         [Range(1, 4096)]
         public int SubBatchSize { get; init; } = 16;
+    }
+
+    [TypedNodeOptions(
+        Name = "UltralyticsDetectorProvider",
+        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+    )]
+    public record UltralyticsDetectorProvider
+        : ComfyTypedNodeBase<BboxDetectorNodeConnection, SegmDetectorNodeConnection>
+    {
+        public required string ModelName { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "SAMLoader",
+        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+    )]
+    public record SamLoader : ComfyTypedNodeBase<SamModelNodeConnection>
+    {
+        public required string ModelName { get; init; }
+
+        /// <summary>
+        /// options: AUTO, Prefer GPU, CPU
+        /// </summary>
+        public required string DeviceMode { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "FaceDetailer",
+        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+    )]
+    public record FaceDetailer : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        public required ImageNodeConnection Image { get; init; }
+        public required ModelNodeConnection Model { get; init; }
+        public required ClipNodeConnection Clip { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required BboxDetectorNodeConnection BboxDetector { get; init; }
+        public required double GuideSize { get; init; } = 512.0;
+
+        /// <summary>
+        /// true: 'bbox'
+        /// false: 'crop_region'
+        /// </summary>
+        public required bool GuideSizeFor { get; init; } = true;
+        public required double MaxSize { get; init; } = 1024.0;
+        public required ulong Seed { get; init; }
+        public required int Steps { get; init; } = 20;
+        public required double Cfg { get; init; } = 8.0d;
+        public required string SamplerName { get; init; }
+        public required string Scheduler { get; init; }
+        public required double Denoise { get; init; } = 0.5d;
+        public required int Feather { get; init; } = 5;
+        public required bool NoiseMask { get; init; } = true;
+        public required bool ForceInpaint { get; init; } = true;
+
+        [Range(0.0, 1.0)]
+        public required double BboxThreshold { get; init; } = 0.5d;
+
+        [Range(-512, 512)]
+        public required int BboxDilation { get; init; } = 10;
+
+        [Range(1.0, 10.0)]
+        public required double BboxCropFactor { get; init; } = 3.0d;
+
+        /// <summary>
+        /// options: ["center-1", "horizontal-2", "vertical-2", "rect-4", "diamond-4", "mask-area", "mask-points", "mask-point-bbox", "none"]
+        /// </summary>
+        public required string SamDetectionHint { get; init; }
+
+        [Range(-512, 512)]
+        public required int SamDilation { get; init; }
+
+        [Range(0.0d, 1.0d)]
+        public required double SamThreshold { get; init; } = 0.93d;
+
+        [Range(0, 1000)]
+        public required int SamBboxExpansion { get; init; }
+
+        [Range(0.0d, 1.0d)]
+        public required double SamMaskHintThreshold { get; init; } = 0.7d;
+
+        /// <summary>
+        /// options: ["False", "Small", "Outter"]
+        /// </summary>
+        public required string SamMaskHintUseNegative { get; init; } = "False";
+
+        public required StringNodeConnection Wildcard { get; init; }
+
+        [Range(1, 32768)]
+        public required int DropSize { get; init; } = 10;
+
+        [Range(1, 10)]
+        public required int Cycle { get; init; } = 1;
+
+        public SamModelNodeConnection? SamModelOpt { get; set; }
+        public SegmDetectorNodeConnection? SegmDetectorOpt { get; set; }
     }
 
     public ImageNodeConnection Lambda_LatentToImage(LatentNodeConnection latent, VAENodeConnection vae)
@@ -963,6 +1137,11 @@ public class ComfyNodeBuilder
 
         public ComfySampler? PrimarySampler { get; set; }
         public ComfyScheduler? PrimaryScheduler { get; set; }
+
+        public GuiderNodeConnection PrimaryGuider { get; set; }
+        public NoiseNodeConnection PrimaryNoise { get; set; }
+        public SigmasNodeConnection PrimarySigmas { get; set; }
+        public SamplerNodeConnection PrimarySamplerNode { get; set; }
 
         public List<NamedComfyNode> OutputNodes { get; } = new();
 

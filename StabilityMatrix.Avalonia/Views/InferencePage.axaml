@@ -81,6 +81,16 @@
                             Symbol="Video"/>
                     </ui:CommandBarButton.IconSource>
                 </ui:CommandBarButton>
+                <ui:CommandBarButton
+                    Click="AddTabMenu_FluxTextToImg_OnClick"
+                    Label="Flux Text to Image"
+                    ToolTip.Tip="Flux Text to Image">
+                    <ui:CommandBarButton.IconSource>
+                        <fluentIcons:SymbolIconSource
+                            FontSize="10"
+                            Symbol="FullScreenMaximize"/>
+                    </ui:CommandBarButton.IconSource>
+                </ui:CommandBarButton>
             </ui:CommandBarFlyout.SecondaryCommands>
         </ui:CommandBarFlyout>
     </controls:UserControlBase.Resources>
@@ -190,7 +200,7 @@
                             VerticalAlignment="Center"
                             FontSize="18"
                             Foreground="{DynamicResource ThemeGreyColor}"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="PlugConnected" />
 
                         <Button.Flyout>

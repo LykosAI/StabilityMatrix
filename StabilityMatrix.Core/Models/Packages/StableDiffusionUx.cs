@@ -179,17 +179,18 @@ public class StableDiffusionUx(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
+        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
         switch (torchVersion)
         {
             case TorchVersion.Cpu:
@@ -233,13 +234,14 @@ public class StableDiffusionUx(
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
+        await SetupVenv(installLocation).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -257,9 +259,11 @@ public class StableDiffusionUx(
             OnStartupComplete(WebUrl);
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
-
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+        VenvRunner.RunDetached(
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            HandleConsoleOutput,
+            OnExit
+        );
     }
 
     private async Task InstallRocmTorch(

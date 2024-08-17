@@ -1,8 +1,10 @@
 ﻿using System;
 using Avalonia;
 using Avalonia.Animation;
+using Avalonia.Controls;
 using Avalonia.Labs.Controls;
 using Avalonia.Media;
+using StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 
 namespace StabilityMatrix.Avalonia.Controls.VendorLabs;
 
@@ -131,5 +133,24 @@ public partial class BetterAsyncImage
     {
         get => _isCacheEnabled;
         set => SetAndRaise(IsCacheEnabledProperty, ref _isCacheEnabled, value);
+    }
+
+    public static readonly AttachedProperty<IImageCache?> ImageCacheProperty =
+        AvaloniaProperty.RegisterAttached<BetterAsyncImage, Control, IImageCache?>("ImageCache", null, true);
+
+    public IImageCache? ImageCache
+    {
+        get => GetValue(ImageCacheProperty);
+        set => SetValue(ImageCacheProperty, value);
+    }
+
+    public static void SetImageCache(Control control, IImageCache? value)
+    {
+        control.SetValue(ImageCacheProperty, value);
+    }
+
+    public static IImageCache? GetImageCache(Control control)
+    {
+        return control.GetValue(ImageCacheProperty);
     }
 }

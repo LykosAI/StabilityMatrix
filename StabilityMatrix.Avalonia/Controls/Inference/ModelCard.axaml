@@ -24,15 +24,15 @@
     <Styles.Resources>
         <fluent:SymbolIconSource
             x:Key="IconCube"
-            IsFilled="False"
+            IconVariant="Filled"
             Symbol="Cube" />
         <fluent:SymbolIconSource
             x:Key="IconQuestionCircle"
-            IsFilled="True"
+            IconVariant="Filled"
             Symbol="QuestionCircle" />
         <fluent:SymbolIconSource
             x:Key="IconTableCellEdit"
-            IsFilled="True"
+            IconVariant="Filled"
             Symbol="TableCellEdit" />
     </Styles.Resources>
 

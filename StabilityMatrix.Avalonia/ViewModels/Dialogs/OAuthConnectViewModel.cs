@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
+using System.Web;
+using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MessagePipe;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -53,10 +56,49 @@ public partial class OAuthConnectViewModel : ContentDialogViewModelBase
             UriHandler.IpcKeySend,
             receivedUri =>
             {
-                logger.LogDebug("UriHandler Received URI: {Uri}", receivedUri.PathAndQuery);
-                if (receivedUri.PathAndQuery.StartsWith("/oauth/patreon/callback"))
+                logger.LogDebug("UriHandler Received URI: {Uri}", receivedUri.ToString());
+
+                // Ignore if path not matching
+                if (
+                    !receivedUri.PathAndQuery.StartsWith(
+                        "/oauth/patreon/callback",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
                 {
+                    return;
+                }
+
+                var queryCollection = HttpUtility.ParseQueryString(receivedUri.Query);
+                var status = queryCollection.Get("status");
+                var error = queryCollection.Get("error");
+
+                if (status == "success")
+                {
+                    logger.LogInformation("OAuth connection successful");
                     OnPrimaryButtonClick();
+                }
+                else if (status == "failure")
+                {
+                    logger.LogError("OAuth connection failed ({Status}): {Error}", status, error);
+
+                    var dialog = DialogHelper.CreateMarkdownDialog(
+                        $"- {error}",
+                        Resources.Label_ConnectAccountFailed
+                    );
+
+                    dialog.ShowAsync().ContinueWith(_ => OnCloseButtonClick()).SafeFireAndForget();
+                }
+                else
+                {
+                    logger.LogError("OAuth connection unknown status ({Status}): {Error}", status, error);
+
+                    var dialog = DialogHelper.CreateMarkdownDialog(
+                        $"- {error}",
+                        Resources.Label_ConnectAccountFailed
+                    );
+
+                    dialog.ShowAsync().ContinueWith(_ => OnCloseButtonClick()).SafeFireAndForget();
                 }
             }
         );

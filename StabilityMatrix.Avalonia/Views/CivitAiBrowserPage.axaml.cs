@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Input;

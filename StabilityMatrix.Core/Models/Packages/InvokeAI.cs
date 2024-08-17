@@ -148,11 +148,11 @@ public class InvokeAI : BaseGitPackage
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         // Setup venv
@@ -175,6 +175,8 @@ public class InvokeAI : BaseGitPackage
             .ConfigureAwait(false);
 
         var pipCommandArgs = "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
+
+        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
 
         switch (torchVersion)
         {
@@ -298,11 +300,19 @@ public class InvokeAI : BaseGitPackage
     }
 
     public override Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
-    ) => RunInvokeCommand(installedPackagePath, command, arguments, true, onConsoleOutput);
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
+    ) =>
+        RunInvokeCommand(
+            installLocation,
+            options.Command ?? LaunchCommand,
+            new ProcessArgs(options.Arguments.ToArray()),
+            true,
+            onConsoleOutput
+        );
 
     private async Task RunInvokeCommand(
         string installedPackagePath,

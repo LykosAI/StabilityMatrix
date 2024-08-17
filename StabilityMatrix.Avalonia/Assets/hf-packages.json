@@ -812,5 +812,142 @@
       "thibaud_xl_openpose.safetensors"
     ],
     "LicenseType": "Unknown"
+  },
+  {
+    "ModelCategory": "Ultralytics",
+    "ModelName": "YOLOv8m (Face)",
+    "RepositoryPath": "Bingsu/adetailer",
+    "Files": [
+      "face_yolov8m.pt"
+    ],
+    "Subfolder": "bbox",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Ultralytics",
+    "ModelName": "YOLOv8n (Face)",
+    "RepositoryPath": "Bingsu/adetailer",
+    "Files": [
+      "face_yolov8n.pt"
+    ],
+    "Subfolder": "bbox",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Ultralytics",
+    "ModelName": "YOLOv8n v2 (Face)",
+    "RepositoryPath": "Bingsu/adetailer",
+    "Files": [
+      "face_yolov8n_v2.pt"
+    ],
+    "Subfolder": "bbox",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Ultralytics",
+    "ModelName": "YOLOv8s (Face)",
+    "RepositoryPath": "Bingsu/adetailer",
+    "Files": [
+      "face_yolov8s.pt"
+    ],
+    "Subfolder": "bbox",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Ultralytics",
+    "ModelName": "YOLOv9c (Face)",
+    "RepositoryPath": "Bingsu/adetailer",
+    "Files": [
+      "face_yolov9c.pt"
+    ],
+    "Subfolder": "bbox",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Ultralytics",
+    "ModelName": "YOLOv8n (Hand)",
+    "RepositoryPath": "Bingsu/adetailer",
+    "Files": [
+      "hand_yolov8n.pt"
+    ],
+    "Subfolder": "bbox",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Ultralytics",
+    "ModelName": "YOLOv8s (Hand)",
+    "RepositoryPath": "Bingsu/adetailer",
+    "Files": [
+      "hand_yolov8s.pt"
+    ],
+    "Subfolder": "bbox",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Ultralytics",
+    "ModelName": "YOLOv9c (Hand)",
+    "RepositoryPath": "Bingsu/adetailer",
+    "Files": [
+      "hand_yolov9c.pt"
+    ],
+    "Subfolder": "bbox",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Ultralytics",
+    "ModelName": "YOLOv8m-seg (Person)",
+    "RepositoryPath": "Bingsu/adetailer",
+    "Files": [
+      "person_yolov8m-seg.pt"
+    ],
+    "Subfolder": "segm",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Ultralytics",
+    "ModelName": "YOLOv8n-seg (Person)",
+    "RepositoryPath": "Bingsu/adetailer",
+    "Files": [
+      "person_yolov8n-seg.pt"
+    ],
+    "Subfolder": "segm",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Ultralytics",
+    "ModelName": "YOLOv8s-seg (Person)",
+    "RepositoryPath": "Bingsu/adetailer",
+    "Files": [
+      "person_yolov8s-seg.pt"
+    ],
+    "Subfolder": "segm",
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Clip",
+    "ModelName": "CLIP L",
+    "RepositoryPath": "comfyanonymous/flux_text_encoders",
+    "Files": [
+      "clip_l.safetensors"
+    ],
+    "LicenseType": "MIT"
+  },
+  {
+    "ModelCategory": "Clip",
+    "ModelName": "T5XXL FP16",
+    "RepositoryPath": "comfyanonymous/flux_text_encoders",
+    "Files": [
+      "t5xxl_fp16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Clip",
+    "ModelName": "T5XXL FP8 E4M3FN",
+    "RepositoryPath": "comfyanonymous/flux_text_encoders",
+    "Files": [
+      "t5xxl_fp8_e4m3fn.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
   }
 ]

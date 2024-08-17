@@ -31,7 +31,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [ManagedService]
 [Transient]
-public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
+public partial class CheckpointBrowserCardViewModel : ProgressViewModel
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly IDownloadService downloadService;
@@ -56,6 +56,8 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     }
     private CivitModel civitModel;
 
+    public int Order { get; set; }
+
     public override bool IsTextVisible => Value > 0;
 
     [ObservableProperty]
@@ -63,6 +65,9 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
     [ObservableProperty]
     private bool isImporting;
+
+    [ObservableProperty]
+    private bool isLoading;
 
     [ObservableProperty]
     private string updateCardText = string.Empty;
@@ -93,9 +98,11 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         this.modelIndexService = modelIndexService;
 
         // Update image when nsfw setting changes
-        settingsManager.RegisterPropertyChangedHandler(
-            s => s.ModelBrowserNsfwEnabled,
-            _ => Dispatcher.UIThread.Post(UpdateImage)
+        AddDisposable(
+            settingsManager.RegisterPropertyChangedHandler(
+                s => s.ModelBrowserNsfwEnabled,
+                _ => Dispatcher.UIThread.Post(UpdateImage)
+            )
         );
 
         ShowSantaHats = settingsManager.Settings.IsHolidayModeActive;
@@ -253,14 +260,28 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         }
         else
         {
-            var subFolder =
-                viewModel?.SelectedInstallLocation
-                ?? Path.Combine(@"Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
+            var sharedFolder = model.Type.ConvertTo<SharedFolderType>().GetStringValue();
+
+            if (
+                model.BaseModelType == CivitBaseModelType.Flux1D.GetStringValue()
+                || model.BaseModelType == CivitBaseModelType.Flux1S.GetStringValue()
+            )
+            {
+                sharedFolder = SharedFolderType.Unet.GetStringValue();
+            }
+
+            var defaultPath = Path.Combine(@"Models", sharedFolder);
+
+            var subFolder = viewModel?.SelectedInstallLocation ?? defaultPath;
             downloadPath = Path.Combine(settingsManager.LibraryDir, subFolder);
         }
 
         await Task.Delay(100);
         await DoImport(model, downloadPath, selectedVersion, selectedFile);
+
+        Text = "Import started. Check the downloads tab for progress.";
+        Value = 100;
+        DelayedClearProgress(TimeSpan.FromMilliseconds(1000));
     }
 
     private static async Task<FilePath> SaveCmInfo(
@@ -321,6 +342,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     )
     {
         IsImporting = true;
+        IsLoading = true;
         Text = "Downloading...";
 
         OnDownloadStart?.Invoke(this);
@@ -379,19 +401,6 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         }
 
         // Attach for progress updates
-        download.ProgressUpdate += (s, e) =>
-        {
-            Value = e.Percentage;
-            if (e.Type == ProgressType.Hashing)
-            {
-                Text = $"Validating... {e.Percentage}%";
-            }
-            else
-            {
-                Text = $"Downloading... {e.Percentage}%";
-            }
-        };
-
         download.ProgressStateChanged += (s, e) =>
         {
             if (e == ProgressState.Success)
@@ -429,6 +438,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
                 Text = string.Empty;
                 Value = 0;
                 IsImporting = false;
+                IsLoading = false;
             });
     }
 

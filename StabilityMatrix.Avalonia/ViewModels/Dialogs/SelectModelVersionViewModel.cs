@@ -306,10 +306,12 @@ public partial class SelectModelVersionViewModel(
         var installLocations = new ObservableCollection<string>();
 
         var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
-        var downloadDirectory = rootModelsDirectory.JoinDir(
-            SelectedFile?.CivitFile.Type == CivitFileType.VAE
-                ? SharedFolderType.VAE.GetStringValue()
-                : CivitModel.Type.ConvertTo<SharedFolderType>().GetStringValue()
+
+        var downloadDirectory = GetSharedFolderPath(
+            rootModelsDirectory,
+            SelectedFile?.CivitFile.Type,
+            CivitModel.Type,
+            CivitModel.BaseModelType
         );
 
         if (!downloadDirectory.ToString().EndsWith("Unknown"))
@@ -329,5 +331,28 @@ public partial class SelectModelVersionViewModel(
 
         AvailableInstallLocations = installLocations;
         SelectedInstallLocation = installLocations.FirstOrDefault();
+    }
+
+    private static DirectoryPath GetSharedFolderPath(
+        DirectoryPath rootModelsDirectory,
+        CivitFileType? fileType,
+        CivitModelType modelType,
+        string? baseModelType
+    )
+    {
+        if (fileType is CivitFileType.VAE)
+        {
+            return rootModelsDirectory.JoinDir(SharedFolderType.VAE.GetStringValue());
+        }
+
+        if (
+            baseModelType == CivitBaseModelType.Flux1D.GetStringValue()
+            || baseModelType == CivitBaseModelType.Flux1S.GetStringValue()
+        )
+        {
+            return rootModelsDirectory.JoinDir(SharedFolderType.Unet.GetStringValue());
+        }
+
+        return rootModelsDirectory.JoinDir(modelType.ConvertTo<SharedFolderType>().GetStringValue());
     }
 }

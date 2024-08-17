@@ -93,7 +93,8 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             {
                 typeof(HiresFixModule),
                 typeof(UpscalerModule),
-                typeof(SaveImageModule)
+                typeof(SaveImageModule),
+                typeof(FaceDetailerModule)
             };
             modulesCard.DefaultModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();
@@ -141,13 +142,26 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Load models
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        // Setup empty latent
-        builder.SetupEmptyLatentSource(
-            SamplerCardViewModel.Width,
-            SamplerCardViewModel.Height,
-            BatchSizeCardViewModel.BatchSize,
-            BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
-        );
+        if (SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>())
+        {
+            // need SD3Latent
+            builder.SetupEmptySd3LatentSource(
+                SamplerCardViewModel.Width,
+                SamplerCardViewModel.Height,
+                BatchSizeCardViewModel.BatchSize,
+                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
+            );
+        }
+        else
+        {
+            // Setup empty latent
+            builder.SetupEmptyLatentSource(
+                SamplerCardViewModel.Width,
+                SamplerCardViewModel.Height,
+                BatchSizeCardViewModel.BatchSize,
+                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
+            );
+        }
 
         // Prompts and loras
         PromptCardViewModel.ApplyStep(applyArgs);
@@ -192,6 +206,20 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
         if (!await ModelCardViewModel.ValidateModel())
             return;
+
+        foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
+        {
+            if (!module.IsEnabled)
+                continue;
+
+            if (module is not IValidatableModule validatableModule)
+                continue;
+
+            if (!await validatableModule.Validate())
+            {
+                return;
+            }
+        }
 
         if (!await CheckClientConnectedWithPrompt() || !ClientManager.IsConnected)
             return;

@@ -15,6 +15,8 @@ public static class SkiaExtensions
     {
         public Rect Bounds { get; set; }
 
+        public Rect SourceBounds { get; set; }
+
         public SKBitmap? Bitmap { get; init; }
 
         public void Dispose()
@@ -29,23 +31,22 @@ public static class SkiaExtensions
         public void Render(ImmediateDrawingContext context)
         {
             if (
-                Bitmap is { } bitmap
+                Bitmap != null
                 && context.PlatformImpl.GetFeature<ISkiaSharpApiLeaseFeature>() is { } leaseFeature
             )
             {
-                var lease = leaseFeature.Lease();
-                using (lease)
-                {
-                    lease.SkCanvas.DrawBitmap(
-                        bitmap,
-                        SKRect.Create(
-                            (float)Bounds.X,
-                            (float)Bounds.Y,
-                            (float)Bounds.Width,
-                            (float)Bounds.Height
-                        )
-                    );
-                }
+                using var apiLease = leaseFeature.Lease();
+
+                apiLease.SkCanvas.DrawBitmap(
+                    Bitmap,
+                    SKRect.Create(
+                        (float)SourceBounds.X,
+                        (float)SourceBounds.Y,
+                        (float)SourceBounds.Width,
+                        (float)SourceBounds.Height
+                    ),
+                    SKRect.Create((float)Bounds.X, (float)Bounds.Y, (float)Bounds.Width, (float)Bounds.Height)
+                );
             }
         }
     }
@@ -72,10 +73,11 @@ public static class SkiaExtensions
         {
             if (_drawImageOperation is null)
             {
-                _drawImageOperation = new SKBitmapDrawOperation { Bitmap = _source, };
+                _drawImageOperation = new SKBitmapDrawOperation { Bitmap = _source };
             }
 
-            _drawImageOperation.Bounds = sourceRect;
+            _drawImageOperation.SourceBounds = sourceRect;
+            _drawImageOperation.Bounds = destRect;
             context.Custom(_drawImageOperation);
         }
     }

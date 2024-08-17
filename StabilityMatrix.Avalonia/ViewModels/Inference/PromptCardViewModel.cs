@@ -56,6 +56,9 @@ public partial class PromptCardViewModel
     [ObservableProperty]
     private bool isHelpButtonTeachingTipOpen;
 
+    [ObservableProperty]
+    private bool isNegativePromptEnabled = true;
+
     /// <inheritdoc />
     public PromptCardViewModel(
         ICompletionProvider completionProvider,

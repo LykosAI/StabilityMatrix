@@ -38,7 +38,7 @@ public class SDWebForge(
     public override bool ShouldIgnoreReleases => true;
     public override IPackageExtensionManager ExtensionManager => null;
     public override string OutputFolderName => "output";
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new()
         {
@@ -146,11 +146,11 @@ public class SDWebForge(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
@@ -162,9 +162,13 @@ public class SDWebForge(
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        var requirementsContent = await requirements.ReadAllTextAsync().ConfigureAwait(false);
+        var requirementsContent = await requirements
+            .ReadAllTextAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         var pipArgs = new PipInstallArgs("setuptools==69.5.1");
+
+        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
         if (torchVersion is TorchVersion.DirectMl)
         {
             pipArgs = pipArgs.WithTorchDirectML();

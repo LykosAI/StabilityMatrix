@@ -8,6 +8,7 @@ public readonly record struct ComfyScheduler(string Name)
     public static ComfyScheduler Karras { get; } = new("karras");
     public static ComfyScheduler Exponential { get; } = new("exponential");
     public static ComfyScheduler SDTurbo { get; } = new("sd_turbo");
+    public static ComfyScheduler Simple { get; } = new("simple");
 
     private static Dictionary<string, string> ConvertDict { get; } =
         new()
@@ -16,7 +17,7 @@ public readonly record struct ComfyScheduler(string Name)
             [Karras.Name] = "Karras",
             [Exponential.Name] = "Exponential",
             ["sgm_uniform"] = "SGM Uniform",
-            ["simple"] = "Simple",
+            [Simple.Name] = "Simple",
             ["ddim_uniform"] = "DDIM Uniform",
             [SDTurbo.Name] = "SD Turbo"
         };

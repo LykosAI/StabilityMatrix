@@ -54,6 +54,9 @@
             <input:StandardUICommand 
                 x:Key="CopyImageCommand" 
                 Command="{Binding CopyImageCommand}"/>
+            <input:StandardUICommand 
+                x:Key="CopyImageAsBitmapCommand" 
+                Command="{Binding CopyImageAsBitmapCommand}"/>
         </Grid.Resources>
 
         <!-- Tag is not used but sets TemplateKey which is used to select the DataTemplate later -->
@@ -81,11 +84,17 @@
                                     <ui:MenuFlyoutItem
                                         x:Name="CopyMenuItem"
                                         Command="{StaticResource CopyImageCommand}"
-                                        CommandParameter="{Binding $parent[controls:AdvancedImageBox].Image}"
+                                        CommandParameter="{Binding}"
                                         HotKey="Ctrl+C"
                                         IconSource="Copy"
-                                        IsEnabled="{OnPlatform Windows=True, Default=False}"
-                                        Text="Copy" />
+                                        Text="{x:Static lang:Resources.Action_Copy}" />
+                                    <ui:MenuFlyoutItem
+                                        x:Name="CopyAsBitmapMenuItem"
+                                        Command="{StaticResource CopyImageAsBitmapCommand}"
+                                        CommandParameter="{Binding}"
+                                        HotKey="Shift+Ctrl+C"
+                                        IsVisible="{OnPlatform Windows=True, Default=False}"
+                                        Text="{x:Static lang:Resources.Action_CopyAsBitmap}" />
                                 </ui:FAMenuFlyout>
                             </controls:AdvancedImageBox.ContextFlyout>
                         </controls:AdvancedImageBox>
@@ -130,35 +139,35 @@
             Target="{Binding #InfoButton}">
             <StackPanel Spacing="8" Margin="4,0" DataContext="{Binding LocalImageFile.GenerationParameters}">
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="Prompt" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_Prompt}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding PositivePrompt}" />
                 </Grid>
                 
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="Negative Prompt" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_NegativePrompt}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding NegativePrompt}" />
                 </Grid>
                 
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="Model" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_Model}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding ModelName}" />
                 </Grid>
                 
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="Sampler" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_Sampler}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding Sampler}" />
                 </Grid>
                 
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="Steps" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_Steps}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding Steps}" />
@@ -172,7 +181,7 @@
                 </Grid>
                 
                 <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="Seed" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Static lang:Resources.Label_Seed}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                     <SelectableTextBlock
                         Grid.Row="1"
                         Text="{Binding Seed}" />

@@ -79,7 +79,7 @@
                         IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNullOrEmpty}}"
                         Width="64"
                         Height="64"
-                        IsFilled="True"
+                        IconVariant="Filled"
                         FontSize="64"
                         Symbol="Person" />
                     <ui:HyperlinkButton

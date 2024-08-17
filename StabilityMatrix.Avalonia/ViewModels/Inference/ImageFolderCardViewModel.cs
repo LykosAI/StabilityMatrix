@@ -42,6 +42,7 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
     private readonly IImageIndexService imageIndexService;
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
+    private readonly ServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
     private string? searchQuery;
@@ -59,13 +60,15 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
         ILogger<ImageFolderCardViewModel> logger,
         IImageIndexService imageIndexService,
         ISettingsManager settingsManager,
-        INotificationService notificationService
+        INotificationService notificationService,
+        ServiceManager<ViewModelBase> vmFactory
     )
     {
         this.logger = logger;
         this.imageIndexService = imageIndexService;
         this.settingsManager = settingsManager;
         this.notificationService = notificationService;
+        this.vmFactory = vmFactory;
 
         var searcher = new ImageSearcher();
 
@@ -179,7 +182,9 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
         // Preload
         await image.GetBitmapAsync();
 
-        var vm = new ImageViewerViewModel { ImageSource = image, LocalImageFile = item };
+        var vm = vmFactory.Get<ImageViewerViewModel>();
+        vm.ImageSource = image;
+        vm.LocalImageFile = item;
 
         using var onNext = Observable
             .FromEventPattern<DirectionalNavigationEventArgs>(

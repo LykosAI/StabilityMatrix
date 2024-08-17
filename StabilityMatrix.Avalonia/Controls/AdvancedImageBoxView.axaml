@@ -41,6 +41,12 @@
                                         HotKey="Ctrl+C"
                                         IconSource="Copy"
                                         Text="{x:Static lang:Resources.Action_Copy}" />
+                                    <ui:MenuFlyoutItem
+                                        Command="{x:Static controls:AdvancedImageBoxView.FlyoutCopyAsBitmapCommand}"
+                                        CommandParameter="{Binding}"
+                                        HotKey="Shift+Ctrl+C"
+                                        IsVisible="{OnPlatform Windows=True, Default=False}"
+                                        Text="{x:Static lang:Resources.Action_CopyAsBitmap}" />
                                 </ui:FAMenuFlyout>
                             </controls:AdvancedImageBox.ContextFlyout>
                         </controls:AdvancedImageBox>

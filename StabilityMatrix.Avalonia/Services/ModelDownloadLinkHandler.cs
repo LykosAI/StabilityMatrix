@@ -127,14 +127,16 @@ public class ModelDownloadLinkHandler(
             x => x.Type == civitFileType && x.Metadata.Format == civitFormat
         );
 
-        if (!string.IsNullOrWhiteSpace(fp) && Enum.TryParse<CivitModelFpType>(fp, out var fpType))
+        if (!string.IsNullOrWhiteSpace(fp))
         {
-            possibleFiles = possibleFiles?.Where(x => x.Metadata.Fp == fpType);
+            possibleFiles = possibleFiles?.Where(
+                x => x.Metadata.Fp != null && x.Metadata.Fp.Equals(fp, StringComparison.OrdinalIgnoreCase)
+            );
         }
 
-        if (!string.IsNullOrWhiteSpace(size) && Enum.TryParse<CivitModelSize>(size, out var modelSize))
+        if (!string.IsNullOrWhiteSpace(size))
         {
-            possibleFiles = possibleFiles?.Where(x => x.Metadata.Size == modelSize);
+            possibleFiles = possibleFiles?.Where(x => x.Metadata.Size != null && x.Metadata.Size == size);
         }
 
         possibleFiles = possibleFiles?.ToList();

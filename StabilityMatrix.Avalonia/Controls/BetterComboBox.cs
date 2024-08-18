@@ -35,14 +35,16 @@ public class BetterComboBox : ComboBox
     private readonly IDisposable subscription;
     private readonly Popup inputPopup;
     private readonly TextBlock inputTextBlock;
+    private string currentInput = string.Empty;
 
     public BetterComboBox()
     {
         // Create an observable that buffers input over a short period
         var inputObservable = inputSubject
-            .Buffer(TimeSpan.FromSeconds(1))
-            .Select(buffered => string.Concat(buffered)) // Combine buffered input into a single string
-            .Where(input => !string.IsNullOrEmpty(input)); // Only proceed if there's input
+            .Do(text => currentInput += text)
+            .Throttle(TimeSpan.FromMilliseconds(500))
+            .Where(_ => !string.IsNullOrEmpty(currentInput))
+            .Select(_ => currentInput);
 
         // Subscribe to the observable to filter the ComboBox items
         subscription = inputObservable.Subscribe(OnInputReceived, _ => ResetPopupText());
@@ -147,6 +149,7 @@ public class BetterComboBox : ComboBox
 
     private void ResetPopupText()
     {
+        currentInput = string.Empty;
         inputTextBlock.Text = string.Empty;
         inputPopup.IsOpen = false;
     }

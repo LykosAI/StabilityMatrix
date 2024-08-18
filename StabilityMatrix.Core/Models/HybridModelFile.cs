@@ -106,7 +106,10 @@ public record HybridModelFile : ISearchText
     }
 
     [JsonIgnore]
-    public string SortKey => Local?.ConnectedModelInfo?.ModelName ?? ShortDisplayName;
+    public string SortKey =>
+        Local?.ConnectedModelInfo != null
+            ? $"{Local.ConnectedModelInfo.ModelName}{Local.ConnectedModelInfo.VersionName}"
+            : ShortDisplayName;
 
     public static HybridModelFile FromLocal(LocalModelFile local)
     {

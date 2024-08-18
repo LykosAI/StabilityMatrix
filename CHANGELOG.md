@@ -8,11 +8,16 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.12.0-pre.2
 ### Added
 - Added "Show NSFW Images" toggle to the Checkpoints page
+- Added "Model Loader" option to Inference, for loading UNet/GGUF/NF4 models (e.g. Flux)
+- Added type-to-search for the Inference model selectors. Start typing while the dropdown is open to navigate the list.
+### Changed
+- Merged the "Flux Text to Image" workflow back into the main Text to Image workflow
 ### Fixed
 - Fixed CivitAI Model Browser sometimes incorrectly showing "No models found" before toggling "Show NSFW" or "Hide Installed" filters
 - Fixed Automatic1111 & related packages not including the gradio-allowed-path argument for the shared output folder
 - Fixed SwarmUI settings being overwritten on launch
 - Fixed Forge output folder links pointing to the incorrect folder
+- LORAs are now sorted by model name properly in the Extra Networks dropdown
 
 ## v2.12.0-pre.1
 ### Added

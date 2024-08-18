@@ -346,8 +346,11 @@ public partial class SelectModelVersionViewModel(
         }
 
         if (
-            baseModelType == CivitBaseModelType.Flux1D.GetStringValue()
-            || baseModelType == CivitBaseModelType.Flux1S.GetStringValue()
+            modelType is CivitModelType.Checkpoint
+            && (
+                baseModelType == CivitBaseModelType.Flux1D.GetStringValue()
+                || baseModelType == CivitBaseModelType.Flux1S.GetStringValue()
+            )
         )
         {
             return rootModelsDirectory.JoinDir(SharedFolderType.Unet.GetStringValue());

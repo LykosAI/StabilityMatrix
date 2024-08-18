@@ -16,6 +16,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Services;
 using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView;
 
@@ -142,9 +143,12 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Load models
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        if (SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>())
+        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Gguf or ModelLoader.Unet;
+        var useSd3Latent =
+            SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>() || isUnetLoader;
+
+        if (useSd3Latent)
         {
-            // need SD3Latent
             builder.SetupEmptySd3LatentSource(
                 SamplerCardViewModel.Width,
                 SamplerCardViewModel.Height,
@@ -167,7 +171,14 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         PromptCardViewModel.ApplyStep(applyArgs);
 
         // Setup Sampler and Refiner if enabled
-        SamplerCardViewModel.ApplyStep(applyArgs);
+        if (isUnetLoader)
+        {
+            SamplerCardViewModel.ApplyStepsInitialFluxSampler(applyArgs);
+        }
+        else
+        {
+            SamplerCardViewModel.ApplyStep(applyArgs);
+        }
 
         // Hires fix if enabled
         foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())

@@ -10,7 +10,7 @@ namespace StabilityMatrix.Core.Models;
 /// Model file union that may be remote or local.
 /// </summary>
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-public record HybridModelFile
+public record HybridModelFile : ISearchText
 {
     /// <summary>
     /// Singleton instance of <see cref="HybridModelFile"/> that represents use of a default model.
@@ -78,6 +78,11 @@ public record HybridModelFile
             if (ReferenceEquals(this, RemoteModels.ControlNetReferenceOnlyModel))
             {
                 return "Reference Only";
+            }
+
+            if (Local?.HasConnectedModel is true)
+            {
+                return Local.ConnectedModelInfo.ModelName;
             }
 
             var fileName = Path.GetFileNameWithoutExtension(RelativePath);
@@ -166,4 +171,6 @@ public record HybridModelFile
 
     public static IEqualityComparer<HybridModelFile> Comparer { get; } =
         new RemoteNameLocalEqualityComparer();
+
+    public string SearchText => ShortDisplayName;
 }

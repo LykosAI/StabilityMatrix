@@ -417,10 +417,17 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Get Unet model names from UNETLoader node
         if (await Client.GetNodeOptionNamesAsync("UNETLoader", "unet_name") is { } unetModelNames)
         {
-            unetModelsSource.EditDiff(
-                unetModelNames.Select(HybridModelFile.FromRemote),
-                HybridModelFile.Comparer
-            );
+            var unetModels = unetModelNames.Select(HybridModelFile.FromRemote);
+
+            if (
+                await Client.GetRequiredNodeOptionNamesFromOptionalNodeAsync("UnetLoaderGGUF", "unet_name") is
+                { } ggufModelNames
+            )
+            {
+                unetModels = unetModels.Concat(ggufModelNames.Select(HybridModelFile.FromRemote));
+            }
+
+            unetModelsSource.EditDiff(unetModels, HybridModelFile.Comparer);
         }
 
         // Get CLIP model names from DualCLIPLoader node

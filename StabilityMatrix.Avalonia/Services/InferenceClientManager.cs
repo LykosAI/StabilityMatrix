@@ -183,9 +183,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .DeferUntilLoaded()
             .SortAndBind(
                 LoraModels,
-                SortExpressionComparer<HybridModelFile>
-                    .Ascending(f => f.ShortDisplayName)
-                    .ThenByAscending(f => f.Type)
+                SortExpressionComparer<HybridModelFile>.Ascending(f => f.Type).ThenByAscending(f => f.SortKey)
             )
             .Subscribe();
 

@@ -80,11 +80,6 @@ public record HybridModelFile : ISearchText
                 return "Reference Only";
             }
 
-            if (Local?.HasConnectedModel is true)
-            {
-                return Local.ConnectedModelInfo.ModelName;
-            }
-
             var fileName = Path.GetFileNameWithoutExtension(RelativePath);
 
             if (
@@ -109,6 +104,9 @@ public record HybridModelFile : ISearchText
             return $"{fileName} ({parentDirectoryName})";
         }
     }
+
+    [JsonIgnore]
+    public string SortKey => Local?.ConnectedModelInfo?.ModelName ?? ShortDisplayName;
 
     public static HybridModelFile FromLocal(LocalModelFile local)
     {
@@ -172,5 +170,6 @@ public record HybridModelFile : ISearchText
     public static IEqualityComparer<HybridModelFile> Comparer { get; } =
         new RemoteNameLocalEqualityComparer();
 
-    public string SearchText => ShortDisplayName;
+    [JsonIgnore]
+    public string SearchText => SortKey;
 }

@@ -44,7 +44,7 @@
                     <sg:SpacedGrid
                         ColumnDefinitions="Auto,*,Auto"
                         ColumnSpacing="8"
-                        RowDefinitions="*,*,*,*,*"
+                        RowDefinitions="*,*,*,*,*,*,*,*,*"
                         RowSpacing="0">
                         <!--  Model  -->
                         <TextBlock
@@ -56,6 +56,7 @@
                         <controls:BetterComboBox
                             Grid.Row="0"
                             Grid.Column="1"
+                            Name="PART_ModelComboBox"
                             Padding="8,6,4,6"
                             HorizontalAlignment="Stretch"
                             ItemsSource="{Binding ClientManager.Models}"
@@ -87,6 +88,11 @@
                                         IconSource="{StaticResource IconTableCellEdit}"
                                         IsChecked="{Binding IsClipSkipEnabled}"
                                         Text="{x:Static lang:Resources.Label_CLIPSkip}" />
+                                    <ui:ToggleMenuFlyoutItem
+                                        IconSource="{StaticResource IconCube}"
+                                        IsVisible="{Binding EnableModelLoaderSelection}"
+                                        IsChecked="{Binding IsModelLoaderSelectionEnabled}"
+                                        Text="Change Model Loader" />
                                     <ui:MenuFlyoutSeparator />
                                     <ui:MenuFlyoutItem
                                         Command="{Binding ConfigClickCommand}"
@@ -117,10 +123,31 @@
                             ItemsSource="{Binding ClientManager.Models}"
                             SelectedItem="{Binding SelectedRefiner}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                        
+                        <!--  model precision  -->
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding ShowPrecisionSelection}"
+                            Text="Precision"
+                            TextAlignment="Left" />
+
+                        <ui:FAComboBox
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsTextSearchEnabled="True"
+                            IsVisible="{Binding ShowPrecisionSelection}"
+                            ItemsSource="{Binding WeightDTypes}"
+                            SelectedItem="{Binding SelectedDType}" />
 
                         <!--  VAE  -->
                         <TextBlock
-                            Grid.Row="2"
+                            Grid.Row="3"
                             Grid.Column="0"
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
@@ -129,7 +156,7 @@
                             TextAlignment="Left" />
 
                         <ui:FAComboBox
-                            Grid.Row="2"
+                            Grid.Row="3"
                             Grid.Column="1"
                             Grid.ColumnSpan="2"
                             Margin="0,8,0,0"
@@ -142,7 +169,7 @@
 
                         <!--  CLIP Skip  -->
                         <TextBlock
-                            Grid.Row="3"
+                            Grid.Row="4"
                             Grid.Column="0"
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
@@ -151,7 +178,7 @@
                             TextAlignment="Left" />
 
                         <NumericUpDown
-                            Grid.Row="3"
+                            Grid.Row="4"
                             Grid.Column="1"
                             Grid.ColumnSpan="2"
                             Margin="0,8,0,0"
@@ -164,11 +191,91 @@
                             ParsingNumberStyle="Integer"
                             Watermark="1"
                             Value="{Binding ClipSkip, Converter={x:Static converters:NullableDefaultNumericConverters.IntToDecimal}}" />
+                        
+                        <!-- Model Loader Selection -->
+                        <TextBlock
+                            Grid.Row="5"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsModelLoaderSelectionEnabled}"
+                            Text="Model Loader"
+                            TextAlignment="Left" />
+
+                        <controls:BetterComboBox
+                            Grid.Row="5"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            Padding="8,6,4,6"
+                            Name="PART_ModelLoaderComboBox"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsModelLoaderSelectionEnabled}"
+                            ItemsSource="{Binding ModelLoaders}"
+                            SelectedItem="{Binding SelectedModelLoader}">
+                            <controls:BetterComboBox.Resources>
+                                <converters:EnumStringConverter x:Key="EnumStringConverter"/>
+                            </controls:BetterComboBox.Resources>
+                            <controls:BetterComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                </DataTemplate>
+                            </controls:BetterComboBox.ItemTemplate>
+                            <controls:BetterComboBox.SelectionBoxItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding ., Converter={StaticResource EnumStringConverter}}" />
+                                </DataTemplate>
+                            </controls:BetterComboBox.SelectionBoxItemTemplate>
+                        </controls:BetterComboBox>
+                        
+                        <!--  CLIP 1  -->
+                        <TextBlock
+                            Grid.Row="6"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding ShowClipSelection}"
+                            Text="CLIP 1"
+                            TextAlignment="Left" />
+
+                        <controls:BetterComboBox
+                            Grid.Row="6"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            Padding="8,6,4,6"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding ShowClipSelection}"
+                            ItemsSource="{Binding ClientManager.ClipModels}"
+                            SelectedItem="{Binding SelectedClip1}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                        
+                        <!--  CLIP 2  -->
+                        <TextBlock
+                            Grid.Row="7"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding ShowClipSelection}"
+                            Text="CLIP 2"
+                            TextAlignment="Left" />
+
+                        <controls:BetterComboBox
+                            Grid.Row="7"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            Padding="8,6,4,6"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding ShowClipSelection}"
+                            ItemsSource="{Binding ClientManager.ClipModels}"
+                            SelectedItem="{Binding SelectedClip2}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
 
                         <!-- Extra Networks  -->
                         <Panel
                             IsVisible="{Binding IsExtraNetworksEnabled}"
-                            Grid.Row="4"
+                            Grid.Row="8"
                             Grid.Column="0"
                             Grid.ColumnSpan="3">
                             <controls:StackEditableCard

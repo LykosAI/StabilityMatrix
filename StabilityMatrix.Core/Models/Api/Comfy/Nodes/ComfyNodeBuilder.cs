@@ -452,6 +452,25 @@ public class ComfyNodeBuilder
     }
 
     [TypedNodeOptions(
+        Name = "CheckpointLoaderNF4",
+        RequiredExtensions = ["https://github.com/comfyanonymous/ComfyUI_bitsandbytes_NF4"]
+    )]
+    public record CheckpointLoaderNF4
+        : ComfyTypedNodeBase<ModelNodeConnection, ClipNodeConnection, VAENodeConnection>
+    {
+        public required string CkptName { get; init; }
+    }
+
+    [TypedNodeOptions(
+        Name = "UnetLoaderGGUF",
+        RequiredExtensions = ["https://github.com/city96/ComfyUI-GGUF"]
+    )]
+    public record UnetLoaderGGUF : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required string UnetName { get; init; }
+    }
+
+    [TypedNodeOptions(
         Name = "Inference_Core_PromptExpansion",
         RequiredExtensions = ["https://github.com/LykosAI/ComfyUI-Inference-Core-Nodes >= 0.2.0"]
     )]

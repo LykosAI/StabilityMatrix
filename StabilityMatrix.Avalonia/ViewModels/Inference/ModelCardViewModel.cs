@@ -76,6 +76,9 @@ public partial class ModelCardViewModel(
     [ObservableProperty]
     private string? selectedDType;
 
+    [ObservableProperty]
+    private bool enableModelLoaderSelection = true;
+
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e5m2"];
 
     public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =

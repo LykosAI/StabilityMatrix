@@ -90,6 +90,7 @@
                                         Text="{x:Static lang:Resources.Label_CLIPSkip}" />
                                     <ui:ToggleMenuFlyoutItem
                                         IconSource="{StaticResource IconCube}"
+                                        IsVisible="{Binding EnableModelLoaderSelection}"
                                         IsChecked="{Binding IsModelLoaderSelectionEnabled}"
                                         Text="Change Model Loader" />
                                     <ui:MenuFlyoutSeparator />

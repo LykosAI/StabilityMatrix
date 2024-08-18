@@ -374,6 +374,7 @@ public class ComfyUI(
                 Path.Combine(modelsDir, "InvokeIpAdaptersXl")
             );
             nodeValue.Children["prompt_expansion"] = Path.Combine(modelsDir, "PromptExpansion");
+            nodeValue.Children["unet"] = Path.Combine(modelsDir, "unet");
         }
         else
         {

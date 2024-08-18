@@ -103,7 +103,7 @@ public class BetterComboBox : ComboBox
 
     private void OnInputReceived(string input)
     {
-        if (Items.OfType<Enum>().ToList() is { } enumItems)
+        if (Items.OfType<Enum>().ToList() is { Count: > 0 } enumItems)
         {
             var foundEnum = enumItems.FirstOrDefault(
                 x => x.GetStringValue().StartsWith(input, StringComparison.OrdinalIgnoreCase)

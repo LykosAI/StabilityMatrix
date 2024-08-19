@@ -60,6 +60,19 @@ public class AccountsService : IAccountsService
         await RefreshLykosAsync(secrets);
     }
 
+    public async Task LykosLoginViaGoogleOAuthAsync(string code, string state, string codeVerifier)
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+
+        var tokens = await lykosAuthApi.GetOAuthGoogleCallback(code, state, codeVerifier);
+
+        secrets = secrets with { LykosAccount = tokens };
+
+        await secretsManager.SaveAsync(secrets);
+
+        await RefreshLykosAsync(secrets);
+    }
+
     public async Task LykosSignupAsync(string email, string password, string username)
     {
         var secrets = await secretsManager.SafeLoadAsync();

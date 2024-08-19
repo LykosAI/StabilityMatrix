@@ -3129,6 +3129,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please allow your browser to open this app when prompted to continue..
+        /// </summary>
+        public static string Text_AllowBrowserOpenAppLink {
+            get {
+                return ResourceManager.GetString("Text_AllowBrowserOpenAppLink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The app will relaunch after updating.
         /// </summary>
         public static string Text_AppWillRelaunchAfterUpdate {
@@ -3143,6 +3152,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Text_DeleteFollowingItems {
             get {
                 return ResourceManager.GetString("Text_DeleteFollowingItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open the link in your browser and follow the instructions to connect your account..
+        /// </summary>
+        public static string Text_OAuthLoginDescription {
+            get {
+                return ResourceManager.GetString("Text_OAuthLoginDescription", resourceCulture);
             }
         }
         
@@ -3224,6 +3242,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string TextTemplate_LastChecked {
             get {
                 return ResourceManager.GetString("TextTemplate_LastChecked", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sign in with {0}.
+        /// </summary>
+        public static string TextTemplate_OAuthLoginTitle {
+            get {
+                return ResourceManager.GetString("TextTemplate_OAuthLoginTitle", resourceCulture);
             }
         }
         

@@ -23,6 +23,7 @@ public interface IModelImportService
         CivitFile? selectedFile = null,
         IProgress<ProgressReport>? progress = null,
         Func<Task>? onImportComplete = null,
+        Func<Task>? onImportCanceled = null,
         Func<Task>? onImportFailed = null
     );
 }

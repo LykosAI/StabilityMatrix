@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed SwarmUI settings being overwritten on launch
 - Fixed Forge output folder links pointing to the incorrect folder
 - LORAs are now sorted by model name properly in the Extra Networks dropdown
+- Fixed errors when downloading models with invalid characters in the file name
 
 ## v2.12.0-pre.1
 ### Added

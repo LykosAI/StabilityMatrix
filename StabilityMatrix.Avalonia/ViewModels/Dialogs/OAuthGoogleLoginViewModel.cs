@@ -32,6 +32,7 @@ public class OAuthGoogleLoginViewModel(
 {
     private string? challenge;
     private string? verifier;
+    private string? state;
 
     // ReSharper disable once LocalizableElement
     public override string ServiceName { get; set; } = "Google";
@@ -55,8 +56,15 @@ public class OAuthGoogleLoginViewModel(
 
             if (string.IsNullOrEmpty(response.Code) || string.IsNullOrEmpty(response.State))
             {
-                logger.LogWarning("Invalid response: {Response}", response);
+                logger.LogWarning("Response missing code or state: {Uri}", uri.RedactQueryValues());
                 OnLoginFailed([("Invalid Response", "code and state are required")]);
+                return;
+            }
+
+            if (response.State != state)
+            {
+                logger.LogWarning("Response state mismatch: {Uri}", uri.RedactQueryValues());
+                OnLoginFailed([("Invalid Response", "state mismatch")]);
                 return;
             }
 
@@ -122,6 +130,10 @@ public class OAuthGoogleLoginViewModel(
             codeChallengeMethod: "S256"
         );
 
+        var queryCollection = HttpUtility.ParseQueryString(link.Query);
+        // ReSharper disable once LocalizableElement
+        state = queryCollection.Get("state");
+
         Url = link.ToString();
 
         logger.LogInformation("Generated Google OAuth URL: {Url}", Url);
@@ -129,7 +141,8 @@ public class OAuthGoogleLoginViewModel(
 
     private static (string Challenge, string Verifier) GeneratePkceSha256ChallengePair()
     {
-        var verifier = Guid.NewGuid().ToString("N");
+        var verifier = RandomNumberGenerator.GetHexString(128, true);
+
         var hash = SHA256.HashData(Encoding.ASCII.GetBytes(verifier));
 
         // Convert to base64url

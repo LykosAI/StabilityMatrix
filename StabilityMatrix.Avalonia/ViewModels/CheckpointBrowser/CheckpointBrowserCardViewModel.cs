@@ -309,54 +309,12 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             return;
         }
 
-<<<<<<< HEAD
-        // Folders might be missing if user didn't install any packages yet
-        downloadFolder.Create();
-
-        var downloadPath = downloadFolder.JoinFile(modelFile.Name);
-
-        // Download model info and preview first
-        var cmInfoPath = await SaveCmInfo(model, modelVersion, modelFile, downloadFolder);
-        var previewImagePath = await SavePreviewImage(modelVersion, downloadPath);
-
-        // Create tracked download
-        var download = trackedDownloadService.NewDownload(modelFile.DownloadUrl, downloadPath);
-
-        // Add hash info
-        download.ExpectedHashSha256 = modelFile.Hashes.SHA256;
-
-        // Add files to cleanup list
-        download.ExtraCleanupFileNames.Add(cmInfoPath);
-        if (previewImagePath is not null)
-        {
-            download.ExtraCleanupFileNames.Add(previewImagePath);
-        }
-
-        // Attach for progress updates
-        download.ProgressUpdate += (s, e) =>
-        {
-            Value = e.Percentage;
-            if (e.Type == ProgressType.Hashing)
-            {
-                Text = $"Validating... {e.Percentage}%";
-            }
-            else
-            {
-                Text = $"Downloading... {e.Percentage}%";
-            }
-        };
-
-        download.ProgressStateChanged += (s, e) =>
-        {
-            if (e == ProgressState.Success)
-=======
         await modelImportService.DoImport(
             model,
             downloadFolder,
             modelVersion,
             modelFile,
             onImportComplete: () =>
->>>>>>> b47b8f65 (Merge pull request #787 from ionite34/fix-invalid-filenames)
             {
                 Text = "Import Complete";
 

@@ -77,6 +77,7 @@ public class ModelImportService(
         CivitFile? selectedFile = null,
         IProgress<ProgressReport>? progress = null,
         Func<Task>? onImportComplete = null,
+        Func<Task>? onImportCanceled = null,
         Func<Task>? onImportFailed = null
     )
     {
@@ -112,6 +113,10 @@ public class ModelImportService(
         // Folders might be missing if user didn't install any packages yet
         downloadFolder.Create();
 
+        // Fix invalid chars in FileName
+        modelFile.Name = Path.GetInvalidFileNameChars()
+            .Aggregate(modelFile.Name, (current, c) => current.Replace(c, '_'));
+
         var downloadPath = downloadFolder.JoinFile(modelFile.Name);
 
         // Download model info and preview first
@@ -145,7 +150,7 @@ public class ModelImportService(
             }
             else if (e == ProgressState.Cancelled)
             {
-                // todo?
+                onImportCanceled?.Invoke().SafeFireAndForget();
             }
             else if (e == ProgressState.Failed)
             {

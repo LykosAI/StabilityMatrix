@@ -40,6 +40,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     private readonly ServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
     private readonly IModelIndexService modelIndexService;
+    private readonly IModelImportService modelImportService;
 
     public Action<CheckpointBrowserCardViewModel>? OnDownloadStart { get; set; }
 
@@ -82,7 +83,8 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
         INotificationService notificationService,
-        IModelIndexService modelIndexService
+        IModelIndexService modelIndexService,
+        IModelImportService modelImportService
     )
     {
         this.downloadService = downloadService;
@@ -91,6 +93,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         this.dialogFactory = dialogFactory;
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;
+        this.modelImportService = modelImportService;
 
         // Update image when nsfw setting changes
         settingsManager.RegisterPropertyChangedHandler(
@@ -263,56 +266,6 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         await DoImport(model, downloadPath, selectedVersion, selectedFile);
     }
 
-    private static async Task<FilePath> SaveCmInfo(
-        CivitModel model,
-        CivitModelVersion modelVersion,
-        CivitFile modelFile,
-        DirectoryPath downloadDirectory
-    )
-    {
-        var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Name);
-        var modelInfo = new ConnectedModelInfo(model, modelVersion, modelFile, DateTime.UtcNow);
-
-        await modelInfo.SaveJsonToDirectory(downloadDirectory, modelFileName);
-
-        var jsonName = $"{modelFileName}.cm-info.json";
-        return downloadDirectory.JoinFile(jsonName);
-    }
-
-    /// <summary>
-    /// Saves the preview image to the same directory as the model file
-    /// </summary>
-    /// <param name="modelVersion"></param>
-    /// <param name="modelFilePath"></param>
-    /// <returns>The file path of the saved preview image</returns>
-    private async Task<FilePath?> SavePreviewImage(CivitModelVersion modelVersion, FilePath modelFilePath)
-    {
-        // Skip if model has no images
-        if (modelVersion.Images == null || modelVersion.Images.Count == 0)
-        {
-            return null;
-        }
-
-        var image = modelVersion.Images.FirstOrDefault(x => x.Type == "image");
-        if (image is null)
-            return null;
-
-        var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
-        if (imageExtension is "jpg" or "jpeg" or "png")
-        {
-            var imageDownloadPath = modelFilePath.Directory!.JoinFile(
-                $"{modelFilePath.NameWithoutExtension}.preview.{imageExtension}"
-            );
-
-            var imageTask = downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
-            await notificationService.TryAsync(imageTask, "Could not download preview image");
-
-            return imageDownloadPath;
-        }
-
-        return null;
-    }
-
     private async Task DoImport(
         CivitModel model,
         DirectoryPath downloadFolder,
@@ -356,6 +309,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
             return;
         }
 
+<<<<<<< HEAD
         // Folders might be missing if user didn't install any packages yet
         downloadFolder.Create();
 
@@ -395,6 +349,14 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         download.ProgressStateChanged += (s, e) =>
         {
             if (e == ProgressState.Success)
+=======
+        await modelImportService.DoImport(
+            model,
+            downloadFolder,
+            modelVersion,
+            modelFile,
+            onImportComplete: () =>
+>>>>>>> b47b8f65 (Merge pull request #787 from ionite34/fix-invalid-filenames)
             {
                 Text = "Import Complete";
 
@@ -402,23 +364,24 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
                 Value = 100;
                 CheckIfInstalled();
                 DelayedClearProgress(TimeSpan.FromMilliseconds(800));
-            }
-            else if (e == ProgressState.Cancelled)
+
+                return Task.CompletedTask;
+            },
+            onImportCanceled: () =>
             {
                 Text = "Cancelled";
                 DelayedClearProgress(TimeSpan.FromMilliseconds(500));
-            }
-            else if (e == ProgressState.Failed)
+
+                return Task.CompletedTask;
+            },
+            onImportFailed: () =>
             {
                 Text = "Download Failed";
                 DelayedClearProgress(TimeSpan.FromMilliseconds(800));
+
+                return Task.CompletedTask;
             }
-        };
-
-        // Add hash context action
-        download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
-
-        download.Start();
+        );
     }
 
     private void DelayedClearProgress(TimeSpan delay)

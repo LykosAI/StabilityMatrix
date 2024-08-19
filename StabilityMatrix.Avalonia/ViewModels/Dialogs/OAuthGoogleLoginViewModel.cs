@@ -106,6 +106,8 @@ public class OAuthGoogleLoginViewModel(
             logger.LogError(e, "Failed to generate url");
 
             OnLoginFailed([(e.GetType().Name, e.Message)]);
+
+            return;
         }
         finally
         {

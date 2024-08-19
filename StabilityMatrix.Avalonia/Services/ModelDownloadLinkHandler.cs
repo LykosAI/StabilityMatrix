@@ -25,8 +25,7 @@ public class ModelDownloadLinkHandler(
     ICivitApi civitApi,
     INotificationService notificationService,
     ISettingsManager settingsManager,
-    IDownloadService downloadService,
-    ITrackedDownloadService trackedDownloadService
+    IModelImportService modelImportService
 ) : IAsyncDisposable, IModelDownloadLinkHandler
 {
     private IAsyncDisposable? uriHandlerSubscription;
@@ -161,93 +160,21 @@ public class ModelDownloadLinkHandler(
 
         var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
         var downloadDirectory = rootModelsDirectory.JoinDir(
-            selectedFile.Type == CivitFileType.VAE
+            selectedFile?.Type == CivitFileType.VAE
                 ? SharedFolderType.VAE.GetStringValue()
                 : model.Type.ConvertTo<SharedFolderType>().GetStringValue()
         );
 
-        downloadDirectory.Create();
-        var downloadPath = downloadDirectory.JoinFile(selectedFile.Name);
-
-        // Create tracked download
-        var download = trackedDownloadService.NewDownload(selectedFile.DownloadUrl, downloadPath);
-
-        // Download model info and preview first
-        var saveCmInfoTask = SaveCmInfo(model, modelVersion, selectedFile, downloadDirectory);
-        var savePreviewImageTask = SavePreviewImage(modelVersion, downloadPath);
-
-        Task.WaitAll([saveCmInfoTask, savePreviewImageTask]);
-
-        var cmInfoPath = saveCmInfoTask.Result;
-        var previewImagePath = savePreviewImageTask.Result;
-
-        // Add hash info
-        download.ExpectedHashSha256 = selectedFile.Hashes.SHA256;
-
-        // Add files to cleanup list
-        download.ExtraCleanupFileNames.Add(cmInfoPath);
-        if (previewImagePath is not null)
-        {
-            download.ExtraCleanupFileNames.Add(previewImagePath);
-        }
-
-        // Add hash context action
-        download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(selectedFile);
-
-        download.Start();
+        var importTask = modelImportService.DoImport(
+            model,
+            downloadDirectory,
+            selectedVersion: modelVersion,
+            selectedFile: selectedFile
+        );
+        importTask.Wait();
 
         Dispatcher.UIThread.Post(
             () => notificationService.Show("Download Started", $"Downloading {selectedFile.Name}")
         );
-    }
-
-    private static async Task<FilePath> SaveCmInfo(
-        CivitModel model,
-        CivitModelVersion modelVersion,
-        CivitFile modelFile,
-        DirectoryPath downloadDirectory
-    )
-    {
-        var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Name);
-        var modelInfo = new ConnectedModelInfo(model, modelVersion, modelFile, DateTime.UtcNow);
-
-        await modelInfo.SaveJsonToDirectory(downloadDirectory, modelFileName);
-
-        var jsonName = $"{modelFileName}.cm-info.json";
-        return downloadDirectory.JoinFile(jsonName);
-    }
-
-    /// <summary>
-    /// Saves the preview image to the same directory as the model file
-    /// </summary>
-    /// <param name="modelVersion"></param>
-    /// <param name="modelFilePath"></param>
-    /// <returns>The file path of the saved preview image</returns>
-    private async Task<FilePath?> SavePreviewImage(CivitModelVersion modelVersion, FilePath modelFilePath)
-    {
-        // Skip if model has no images
-        if (modelVersion.Images == null || modelVersion.Images.Count == 0)
-        {
-            return null;
-        }
-
-        var image = modelVersion.Images.FirstOrDefault(x => x.Type == "image");
-        if (image is null)
-            return null;
-
-        var imageExtension = Path.GetExtension(image.Url).TrimStart('.');
-        if (imageExtension is "jpg" or "jpeg" or "png")
-        {
-            var imageDownloadPath = modelFilePath.Directory!.JoinFile(
-                $"{modelFilePath.NameWithoutExtension}.preview.{imageExtension}"
-            );
-
-            var imageTask = downloadService.DownloadToFileAsync(image.Url, imageDownloadPath);
-            await notificationService.TryAsync(imageTask, "Could not download preview image");
-
-            return imageDownloadPath;
-        }
-
-        return null;
     }
 }

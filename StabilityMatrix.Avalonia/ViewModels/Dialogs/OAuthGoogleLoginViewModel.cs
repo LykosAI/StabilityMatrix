@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using Avalonia.Controls;
 using DeviceId.Encoders;
 using MessagePipe;
 using Microsoft.Extensions.Logging;
@@ -46,6 +47,9 @@ public class OAuthGoogleLoginViewModel(
 
         try
         {
+            // Bring the app to the front
+            (App.TopLevel as Window)?.Activate();
+
             if (string.IsNullOrEmpty(verifier))
             {
                 // ReSharper disable once LocalizableElement

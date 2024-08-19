@@ -75,7 +75,9 @@ public partial class InferenceImageToVideoViewModel
         SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
         SeedCardViewModel.GenerateNewSeed();
 
-        ModelCardViewModel = vmFactory.Get<ImgToVidModelCardViewModel>();
+        ModelCardViewModel = vmFactory.Get<ImgToVidModelCardViewModel>(
+            vm => vm.EnableModelLoaderSelection = false
+        );
 
         SamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>(samplerCard =>
         {

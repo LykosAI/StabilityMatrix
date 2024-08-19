@@ -10,6 +10,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Avalonia.Views.Inference;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -73,7 +74,15 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         PromptCardViewModel.ApplyStep(applyArgs);
 
         // Setup Sampler and Refiner if enabled
-        SamplerCardViewModel.ApplyStep(applyArgs);
+        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Gguf or ModelLoader.Unet;
+        if (isUnetLoader)
+        {
+            SamplerCardViewModel.ApplyStepsInitialFluxSampler(applyArgs);
+        }
+        else
+        {
+            SamplerCardViewModel.ApplyStep(applyArgs);
+        }
 
         // Apply module steps
         foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())

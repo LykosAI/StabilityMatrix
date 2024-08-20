@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Show NSFW Images" toggle to the Checkpoints page
 - Added "Model Loader" option to Inference, for loading UNet/GGUF/NF4 models (e.g. Flux)
 - Added type-to-search for the Inference model selectors. Start typing while the dropdown is open to navigate the list.
+- Added "Sign in with Google" option for connecting your Lykos Account on the Account Settings page
 ### Changed
 - Merged the "Flux Text to Image" workflow back into the main Text to Image workflow
 ### Fixed

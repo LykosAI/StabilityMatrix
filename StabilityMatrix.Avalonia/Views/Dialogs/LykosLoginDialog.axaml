@@ -30,7 +30,7 @@
                 
                 <sg:SpacedGrid
                     Margin="-4,32,-4,8"
-                    RowDefinitions="Auto,Auto,Auto,*"
+                    RowDefinitions="Auto,Auto,Auto,*,*"
                     RowSpacing="8">
                     <!--  Username  -->
                     <TextBox
@@ -57,6 +57,12 @@
                         Content="Forgot Password?"
                         NavigateUri="{x:Static sm:Assets.LykosForgotPasswordUrl}"
                         Grid.Row="3"/>
+                    
+                    <controls:HyperlinkIconButton
+                        VerticalAlignment="Bottom"
+                        Content="Sign in with Google"
+                        Command="{Binding GoogleOAuthButtonClickCommand}"
+                        Grid.Row="4"/>
                 </sg:SpacedGrid>
                 
             </TabItem>

@@ -101,6 +101,14 @@ public sealed class App : Application
     [NotNull]
     public static IConfiguration? Config { get; private set; }
 
+#if DEBUG
+    // ReSharper disable twice LocalizableElement
+    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+    public static string LykosAuthApiBaseUrl => Config?["LykosAuthApiBaseUrl"] ?? "https://auth.lykos.ai";
+#else
+    public const string LykosAuthApiBaseUrl = "https://auth.lykos.ai";
+#endif
+
     // ReSharper disable once MemberCanBePrivate.Global
     public IClassicDesktopStyleApplicationLifetime? DesktopLifetime =>
         ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
@@ -682,7 +690,7 @@ public sealed class App : Application
             .AddRefitClient<ILykosAuthApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {
-                c.BaseAddress = new Uri("https://auth.lykos.ai");
+                c.BaseAddress = new Uri(LykosAuthApiBaseUrl);
                 c.Timeout = TimeSpan.FromHours(1);
             })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })

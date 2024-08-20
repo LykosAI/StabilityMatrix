@@ -78,8 +78,7 @@
 
 
                             <!--  ControlNet Model  -->
-                            <ui:FAComboBox
-                                x:Name="PART_ModelComboBox"
+                            <controls:FADownloadableComboBox
                                 Grid.Row="1"
                                 Grid.Column="1"
                                 HorizontalAlignment="Stretch"
@@ -87,10 +86,6 @@
                                 ItemContainerTheme="{StaticResource FAComboBoxItemHybridModelTheme}"
                                 ItemsSource="{Binding ClientManager.ControlNetModels}"
                                 SelectedItem="{Binding SelectedModel}">
-
-                                <ui:FAComboBox.Resources>
-                                    <input:StandardUICommand x:Key="RemoteDownloadCommand" Command="{Binding RemoteDownloadCommand}" />
-                                </ui:FAComboBox.Resources>
 
                                 <ui:FAComboBox.DataTemplates>
                                     <controls:HybridModelTemplateSelector>
@@ -117,7 +112,7 @@
                                     </controls:HybridModelTemplateSelector>
                                 </ui:FAComboBox.DataTemplates>
 
-                            </ui:FAComboBox>
+                            </controls:FADownloadableComboBox>
                             
                             <!-- Dimensions -->
                             <Grid

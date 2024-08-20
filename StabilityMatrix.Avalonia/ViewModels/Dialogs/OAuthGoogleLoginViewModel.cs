@@ -58,6 +58,13 @@ public class OAuthGoogleLoginViewModel(
 
             var response = GoogleOAuthResponse.ParseFromQueryString(uri.Query);
 
+            if (!string.IsNullOrEmpty(response.Error))
+            {
+                logger.LogWarning("Response has error: {Error}", response.Error);
+                OnLoginFailed([("Error", response.Error)]);
+                return;
+            }
+
             if (string.IsNullOrEmpty(response.Code) || string.IsNullOrEmpty(response.State))
             {
                 logger.LogWarning("Response missing code or state: {Uri}", uri.RedactQueryValues());

@@ -724,6 +724,17 @@ The gallery images are often inpainted, but you will get something very similar 
                 + "redirect_uri=http://localhost:5022/api/oauth/patreon/callback";
         });
 
+    public static OAuthLoginViewModel OAuthLoginViewModel =>
+        DialogFactory.Get<OAuthLoginViewModel>(vm =>
+        {
+            vm.Url =
+                "https://www.example.org/oauth2/authorize?"
+                + "client_id=66ad566552679cb6e650be01ed6f8d2ae9a0f803c0369850a5c9ee82a2396062&"
+                + "scope=identity%20identity.memberships&"
+                + "response_type=code&state=test%40example.org&"
+                + "redirect_uri=http://localhost:5022/api/oauth/patreon/callback";
+        });
+
     public static MaskEditorViewModel MaskEditorViewModel => DialogFactory.Get<MaskEditorViewModel>();
 
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>

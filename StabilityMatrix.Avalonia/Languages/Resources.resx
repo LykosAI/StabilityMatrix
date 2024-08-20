@@ -1185,4 +1185,13 @@
   <data name="Label_CopyLinkToClipboard" xml:space="preserve">
     <value />
   </data>
+  <data name="TextTemplate_OAuthLoginTitle" xml:space="preserve">
+    <value>Sign in with {0}</value><comment>e.g. 'Sign in with Google'</comment>
+  </data>
+  <data name="Text_AllowBrowserOpenAppLink" xml:space="preserve">
+    <value>Please allow your browser to open this app when prompted to continue.</value>
+  </data>
+  <data name="Text_OAuthLoginDescription" xml:space="preserve">
+    <value>Open the link in your browser and follow the instructions to connect your account.</value>
+  </data>
 </root>

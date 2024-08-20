@@ -1,10 +1,12 @@
-﻿using System.Net;
+﻿using System.ComponentModel;
+using System.Net;
 using Refit;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Lykos;
 
 namespace StabilityMatrix.Core.Api;
 
+[Localizable(false)]
 [Headers("User-Agent: StabilityMatrix")]
 public interface ILykosAuthApi
 {
@@ -32,6 +34,22 @@ public interface ILykosAuthApi
     [Post("/api/Login/Refresh")]
     Task<LykosAccountTokens> PostLoginRefresh(
         [Body] PostLoginRefreshRequest request,
+        CancellationToken cancellationToken = default
+    );
+
+    [Get("/api/oauth/google/callback")]
+    Task<LykosAccountTokens> GetOAuthGoogleCallback(
+        [Query] string code,
+        [Query] string state,
+        [Query] string codeVerifier,
+        CancellationToken cancellationToken = default
+    );
+
+    [Get("/api/oauth/google/links/login-or-signup")]
+    Task<Uri> GetOAuthGoogleLoginOrSignupLink(
+        string redirectUri,
+        string codeChallenge,
+        string codeChallengeMethod,
         CancellationToken cancellationToken = default
     );
 

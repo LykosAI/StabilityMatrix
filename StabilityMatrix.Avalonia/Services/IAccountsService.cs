@@ -17,6 +17,8 @@ public interface IAccountsService
 
     Task LykosLoginAsync(string email, string password);
 
+    Task LykosLoginViaGoogleOAuthAsync(string code, string state, string codeVerifier);
+
     Task LykosLogoutAsync();
 
     Task LykosPatreonOAuthLogoutAsync();

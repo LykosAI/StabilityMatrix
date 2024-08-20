@@ -1,0 +1,81 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.OAuthLoginDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
+    d:DataContext="{x:Static mocks:DesignData.OAuthLoginViewModel}"
+    d:DesignHeight="400"
+    d:DesignWidth="500"
+    x:DataType="vmDialogs:OAuthLoginViewModel"
+    mc:Ignorable="d">
+
+    <Grid Margin="8,4" RowDefinitions="Auto,Auto">
+        <Grid.Styles>
+            <Style Selector="ui|HyperlinkButton &gt; TextBlock">
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+        </Grid.Styles>
+
+        <!-- Content  -->
+        <StackPanel 
+            Grid.Row="0" 
+            Spacing="16"
+            IsEnabled="{Binding !IsLoading}"
+            IsVisible="{Binding !IsLoading}"
+            >
+            <ui:HyperlinkButton
+                Padding="6,0"
+                Content="{Binding Url}"
+                NavigateUri="{Binding Url}" />
+
+            <TextBlock
+                Margin="6,0"
+                Text="{Binding Description}"
+                TextWrapping="WrapWithOverflow" />
+        
+            <TextBlock
+                Margin="6,0"
+                Text="{Binding AppLinkInstructions}"
+                TextWrapping="WrapWithOverflow" />
+        </StackPanel>
+        
+        <!--  Loading  -->
+        <StackPanel
+            Grid.Row="0"
+            Spacing="16"
+            Margin="16,64"
+            IsEnabled="{Binding IsLoading}"
+            IsVisible="{Binding IsLoading}">
+            <Border
+                Background="#131314"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                CornerRadius="24">
+                <Svg
+                    VerticalAlignment="Center"
+                    Margin="12,12"
+                    Height="24"
+                    Width="24"
+                    Path="/Assets/brands-google-oauth-icon.svg"/>
+            </Border>
+        </StackPanel>
+        
+        <ProgressBar 
+            Grid.Row="1" 
+            Margin="0,16,0,0" 
+            IsIndeterminate="True"
+            IsEnabled="{Binding IsLoading}"
+            IsVisible="{Binding IsLoading}"
+            />
+    </Grid>
+</controls:UserControlBase>

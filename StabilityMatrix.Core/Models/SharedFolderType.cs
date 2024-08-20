@@ -43,5 +43,6 @@ public enum SharedFolderType
     InvokeClipVision = 1 << 26,
     SVD = 1 << 27,
 
-    PromptExpansion = 1 << 30
+    PromptExpansion = 1 << 30,
+    Unet = 1 << 31
 }

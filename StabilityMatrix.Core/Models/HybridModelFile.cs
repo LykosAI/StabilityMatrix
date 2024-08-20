@@ -10,7 +10,7 @@ namespace StabilityMatrix.Core.Models;
 /// Model file union that may be remote or local.
 /// </summary>
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-public record HybridModelFile : ISearchText
+public record HybridModelFile : ISearchText, IDownloadableResource
 {
     /// <summary>
     /// Singleton instance of <see cref="HybridModelFile"/> that represents use of a default model.

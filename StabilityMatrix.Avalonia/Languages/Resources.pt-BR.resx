@@ -184,7 +184,7 @@
     <value>Comentários</value>
   </data>
   <data name="Label_ShowPixelGridAtHighZoomLevels" xml:space="preserve">
-    <value>Exibir grade de pixels com altos níveis de zoom</value>
+    <value>Exibir grade de pixels em altos níveis de zoom</value>
   </data>
   <data name="Label_Steps" xml:space="preserve">
     <value>Etapas</value>
@@ -235,7 +235,7 @@
     <value>Seja um apoiador</value>
   </data>
   <data name="Label_JoinDiscord" xml:space="preserve">
-    <value>Junte-se ao servidor do Discord</value>
+    <value>Junte-se ao nosso servidor do Discord</value>
   </data>
   <data name="Label_Downloads" xml:space="preserve">
     <value>Downloads</value>
@@ -254,7 +254,6 @@
   </data>
   <data name="Label_DisplayName" xml:space="preserve">
     <value>Nome de Exibição</value>
-    <comment>Can I get some context on this?</comment>
   </data>
   <data name="Label_InstallationWithThisNameExists" xml:space="preserve">
     <value>Já existe uma instalação do Stability Matrix com este nome.</value>
@@ -270,7 +269,6 @@
   </data>
   <data name="Label_SharedModelFolderStrategy" xml:space="preserve">
     <value>Uso Compartilhado da Pasta de Modelos</value>
-    <comment>Please, Can I get some context?</comment>
   </data>
   <data name="Label_PyTorchVersion" xml:space="preserve">
     <value>Versão do PyTorch</value>
@@ -420,7 +418,7 @@
     <value>Gerenciador de checkpoints</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown" xml:space="preserve">
-    <value>Remover os links simbólicos da pasta de checkpoints compartilhados ao fechar o programa</value>
+    <value>Remover links simbólicos da pasta de checkpoints compartilhados ao fechar o programa</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
     <value>Selecione esta opção se houver problemas ao mover o Stability Matrix para outra unidade</value>
@@ -580,7 +578,6 @@
   </data>
   <data name="Label_Callstack" xml:space="preserve">
     <value>Callstack</value>
-    <comment>Referring to the term in the programming, no translation is necessary, as the word Callstack is widely known</comment>
   </data>
   <data name="Label_InnerException" xml:space="preserve">
     <value>Exceção interna</value>
@@ -610,7 +607,7 @@
     <value>Desinstalando o pacote...</value>
   </data>
   <data name="Label_PackageUninstalled" xml:space="preserve">
-    <value>Pacote desinstalado com sucesso</value>
+    <value>Pacote desinstalado com sucesso!</value>
   </data>
   <data name="Text_SomeFilesCouldNotBeDeleted" xml:space="preserve">
     <value>Não foi possível excluir alguns arquivos. Feche qualquer arquivo aberto na pasta do pacote e tente novamente.</value>
@@ -643,7 +640,7 @@
     <value>Ramificação</value>
   </data>
   <data name="Label_AutoScrollToEnd" xml:space="preserve">
-    <value>Ir automaticamente para o fim do console</value>
+    <value>Ir automaticamente para o final do terminal</value>
   </data>
   <data name="Label_License" xml:space="preserve">
     <value>Licença</value>
@@ -686,7 +683,6 @@
   </data>
   <data name="Label_BatchIndex" xml:space="preserve">
     <value>Número do lote</value>
-    <comment>Batch is also a word useded in PT-BR tech community</comment>
   </data>
   <data name="Action_Copy" xml:space="preserve">
     <value>Copiar</value>
@@ -720,17 +716,27 @@
   </data>
   <data name="Label_Inpainting" xml:space="preserve">
     <value>Inpainting</value>
-    <comment>There is no word that directly translates &apos;Inpainting&apos; into PT-BR, the closest would be &apos;image reconstruction&apos;. So I decided to keep the original term.</comment>
   </data>
   <data name="Label_Upscale" xml:space="preserve">
     <value>Ampliar</value>
-    <comment>There is no word that directly translates &apos;upscale&apos; into PT-BR, the closest would be &apos;Enhance Image&apos;. So I decided to keep the original term</comment>
   </data>
   <data name="Label_OutputsPageTitle" xml:space="preserve">
     <value>Gerenciador de Resultados</value>
   </data>
   <data name="Label_OneImageSelected" xml:space="preserve">
     <value>1 imagem selecionada</value>
+  </data>
+  <data name="Label_Preprocessor" xml:space="preserve">
+    <value>Pré-processador</value>
+  </data>
+  <data name="Label_Strength" xml:space="preserve">
+    <value>Intensidade</value>
+  </data>
+  <data name="Label_ControlWeight" xml:space="preserve">
+    <value>Influência do Controle</value>
+  </data>
+  <data name="Label_ControlSteps" xml:space="preserve">
+    <value>Nível de Controle</value>
   </data>
   <data name="Label_PythonPackages" xml:space="preserve">
     <value>Pacotes do Python</value>
@@ -838,12 +844,10 @@
     <value>Atualizar Metadados</value>
   </data>
   <data name="Label_General" xml:space="preserve">
-    <value>Geral</value>
-    <comment>A general settings category</comment>
+    <value>Geral</value><comment>A general settings category</comment>
   </data>
   <data name="Label_Inference" xml:space="preserve">
-    <value>Inferência</value>
-    <comment>The Inference feature page</comment>
+    <value>Inferência</value><comment>The Inference feature page</comment>
   </data>
   <data name="Label_Prompt" xml:space="preserve">
     <value>Prompt</value>
@@ -907,8 +911,7 @@
     <value>Arquivo de imagem não encontrado</value>
   </data>
   <data name="Label_HolidayMode" xml:space="preserve">
-    <value>Modo Feriado</value>
-    <comment>Do we have some context?</comment>
+    <value>Modo Festivo</value>
   </data>
   <data name="Label_CLIPSkip" xml:space="preserve">
     <value>Ignorar CLIP</value>
@@ -924,7 +927,6 @@
   </data>
   <data name="Label_Lossless" xml:space="preserve">
     <value>Sem perdas</value>
-    <comment>There is no term that translates directly into PT-BR. The word &apos;lossless&apos; is widely used.</comment>
   </data>
   <data name="Label_Frames" xml:space="preserve">
     <value>Quadros</value>
@@ -955,6 +957,12 @@
   </data>
   <data name="Action_CopyDetails" xml:space="preserve">
     <value>Copiar Detalhes</value>
+  </data>
+  <data name="Label_Notifications" xml:space="preserve">
+    <value>Notificações</value>
+  </data>
+  <data name="Label_NotificationOption_None" xml:space="preserve">
+    <value>Nenhum</value>
   </data>
   <data name="Action_Download" xml:space="preserve">
     <value>Baixar</value>
@@ -1130,6 +1138,9 @@
   <data name="Label_AppData" xml:space="preserve">
     <value>Dados do programa</value>
   </data>
+  <data name="Warning_PleaseExtractFirst" xml:space="preserve">
+    <value>EXTRAIA O PROGRAMA DO ARQUIVO ZIP ANTES DE EXECUTAR O STABILITY MATRIX</value>
+  </data>
   <data name="TextTemplate_PackageUpdatedToSelected" xml:space="preserve">
     <value>{0} atualizado para a versão escolhida</value>
   </data>
@@ -1138,8 +1149,5 @@
   </data>
   <data name="Label_DisableUpdateCheck" xml:space="preserve">
     <value>Desativar atualização automática</value>
-  </data>
-  <data name="Warning_PleaseExtractFirst" xml:space="preserve">
-    <value>EXTRAIA O PROGRAMA DO ARQUIVO ZIP ANTES DE EXECUTAR O STABILITY MATRIX</value>
   </data>
 </root>

@@ -37,7 +37,7 @@ public class SDWebForge(
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
     public override IPackageExtensionManager ExtensionManager => null;
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [

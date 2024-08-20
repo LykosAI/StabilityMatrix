@@ -1,13 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
@@ -147,20 +143,4 @@ public partial class FaceDetailerViewModel : LoadableViewModelBase
     public ObservableCollection<string> SamMaskHintUseNegatives { get; set; } = ["False", "Small", "Outter"];
 
     public IInferenceClientManager ClientManager { get; }
-
-    [RelayCommand]
-    private async Task RemoteDownload(HybridModelFile? modelFile)
-    {
-        if (modelFile?.DownloadableResource is not { } resource)
-            return;
-
-        var confirmDialog = vmFactory.Get<DownloadResourceViewModel>();
-        confirmDialog.Resource = resource;
-        confirmDialog.FileName = modelFile.FileName;
-
-        if (await confirmDialog.GetDialog().ShowAsync() == ContentDialogResult.Primary)
-        {
-            confirmDialog.StartDownload();
-        }
-    }
 }

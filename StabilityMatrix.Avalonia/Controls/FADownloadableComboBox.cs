@@ -15,7 +15,7 @@ namespace StabilityMatrix.Avalonia.Controls;
 // ReSharper disable once InconsistentNaming
 public partial class FADownloadableComboBox : FAComboBox
 {
-    protected override Type StyleKeyOverride => typeof(FADownloadableComboBox);
+    protected override Type StyleKeyOverride => typeof(FAComboBox);
 
     static FADownloadableComboBox()
     {

@@ -39,19 +39,13 @@
                             Text="{x:Static lang:Resources.Label_Model}"
                             TextAlignment="Left" />
 
-                        <ui:FAComboBox
-                            x:Name="PART_ModelComboBox"
+                        <controls:FADownloadableComboBox
                             Grid.Row="0"
                             Grid.Column="1"
                                 HorizontalAlignment="Stretch"
                                 ItemContainerTheme="{StaticResource FAComboBoxItemHybridModelTheme}"
                                 ItemsSource="{Binding ClientManager.PromptExpansionModels}"
                                 SelectedItem="{Binding SelectedModel}">
-
-                                <ui:FAComboBox.Resources>
-                                    <input:StandardUICommand x:Key="RemoteDownloadCommand" 
-                                                             Command="{Binding RemoteDownloadCommand}" />
-                                </ui:FAComboBox.Resources>
 
                                 <ui:FAComboBox.DataTemplates>
                                     <controls:HybridModelTemplateSelector>
@@ -78,7 +72,7 @@
                                     </controls:HybridModelTemplateSelector>
                                 </ui:FAComboBox.DataTemplates>
 
-                            </ui:FAComboBox>
+                            </controls:FADownloadableComboBox>
                         
                         <!--<controls:BetterComboBox
                             Grid.Row="0"

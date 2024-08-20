@@ -20,8 +20,6 @@ public partial class BetterDownloadableComboBox : BetterComboBox
         );
     }
 
-    public BetterDownloadableComboBox() { }
-
     protected virtual void OnSelectionChanged(SelectionChangedEventArgs e)
     {
         // On downloadable added

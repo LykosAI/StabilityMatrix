@@ -22,48 +22,33 @@
                     <TextBlock Text="BBox Model"
                                VerticalAlignment="Center" />
                     <controls:BetterComboBox
-                        Name="PART_BboxModelComboBox"
                         Padding="8,6,4,6"
                         Margin="4,4,4,8"
                         HorizontalAlignment="Stretch"
                         ItemsSource="{Binding ClientManager.UltralyticsModels}"
                         SelectedItem="{Binding BboxModel}"
-                        Theme="{StaticResource BetterComboBoxHybridModelTheme}" >
-                        <controls:BetterComboBox.Resources>
-                            <input:StandardUICommand x:Key="RemoteDownloadCommand" Command="{Binding RemoteDownloadCommand}" />
-                        </controls:BetterComboBox.Resources>
-                    </controls:BetterComboBox>
+                        Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
 
                     <TextBlock Text="Segmentation Model (Optional)"
                                VerticalAlignment="Center" />
-                    <controls:BetterComboBox
-                        Name="PART_SegmModelComboBox"
+                    <controls:BetterDownloadableComboBox
                         Padding="8,6,4,6"
                         Margin="4,4,4,8"
                         HorizontalAlignment="Stretch"
                         ItemsSource="{Binding ClientManager.UltralyticsModels}"
                         SelectedItem="{Binding SegmModel}"
-                        Theme="{StaticResource BetterComboBoxHybridModelTheme}">
-                        <controls:BetterComboBox.Resources>
-                            <input:StandardUICommand x:Key="RemoteDownloadCommand" Command="{Binding RemoteDownloadCommand}" />
-                        </controls:BetterComboBox.Resources>
-                    </controls:BetterComboBox>
+                        Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
 
                     <!-- SAM Model -->
                     <TextBlock Text="SAM Model (Optional)"
                                Margin="0,8,0,0" />
-                    <controls:BetterComboBox
-                        Name="PART_SamModelComboBox"
+                    <controls:BetterDownloadableComboBox
                         Padding="8,6,4,6"
                         Margin="4,4,4,8"
                         HorizontalAlignment="Stretch"
                         ItemsSource="{Binding ClientManager.SamModels}"
                         SelectedItem="{Binding SamModel}"
-                        Theme="{StaticResource BetterComboBoxHybridModelTheme}">
-                        <controls:BetterComboBox.Resources>
-                            <input:StandardUICommand x:Key="RemoteDownloadCommand" Command="{Binding RemoteDownloadCommand}" />
-                        </controls:BetterComboBox.Resources>
-                    </controls:BetterComboBox>
+                        Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
 
                     <avalonia:SpacedGrid ColumnDefinitions="Auto, *"
                                          RowDefinitions="Auto, Auto, Auto, Auto"

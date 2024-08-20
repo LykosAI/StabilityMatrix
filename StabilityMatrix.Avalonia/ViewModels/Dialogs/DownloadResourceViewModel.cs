@@ -75,9 +75,9 @@ public partial class DownloadResourceViewModel(
             sharedFolderType.GetStringValue()
         );
 
-        if (Resource.RelativePath is not null)
+        if (Resource.RelativeDirectory is not null)
         {
-            modelsDir = modelsDir.JoinDir(Resource.RelativePath);
+            modelsDir = modelsDir.JoinDir(Resource.RelativeDirectory);
         }
 
         var download = trackedDownloadService.NewDownload(

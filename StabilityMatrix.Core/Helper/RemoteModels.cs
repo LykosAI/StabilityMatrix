@@ -208,7 +208,7 @@ public static class RemoteModels
                     "https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md"
                 ),
                 ContextType = SharedFolderType.Ultralytics,
-                RelativePath = "bbox"
+                RelativeDirectory = "bbox"
             },
             new RemoteResource
             {
@@ -221,7 +221,7 @@ public static class RemoteModels
                     "https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md"
                 ),
                 ContextType = SharedFolderType.Ultralytics,
-                RelativePath = "bbox"
+                RelativeDirectory = "bbox"
             },
             new RemoteResource
             {
@@ -234,7 +234,7 @@ public static class RemoteModels
                     "https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md"
                 ),
                 ContextType = SharedFolderType.Ultralytics,
-                RelativePath = "segm"
+                RelativeDirectory = "segm"
             },
             new RemoteResource
             {
@@ -247,7 +247,7 @@ public static class RemoteModels
                     "https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md"
                 ),
                 ContextType = SharedFolderType.Ultralytics,
-                RelativePath = "segm"
+                RelativeDirectory = "segm"
             }
         ];
 

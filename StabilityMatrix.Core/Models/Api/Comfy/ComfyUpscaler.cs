@@ -6,7 +6,7 @@ using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Core.Models.Api.Comfy;
 
-public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type)
+public readonly record struct ComfyUpscaler(string Name, ComfyUpscalerType Type) : IDownloadableResource
 {
     public static ComfyUpscaler NearestExact { get; } = new("nearest-exact", ComfyUpscalerType.Latent);
 

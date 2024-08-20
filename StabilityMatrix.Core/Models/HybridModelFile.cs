@@ -10,7 +10,7 @@ namespace StabilityMatrix.Core.Models;
 /// Model file union that may be remote or local.
 /// </summary>
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-public record HybridModelFile : ISearchText
+public record HybridModelFile : ISearchText, IDownloadableResource
 {
     /// <summary>
     /// Singleton instance of <see cref="HybridModelFile"/> that represents use of a default model.
@@ -47,10 +47,10 @@ public record HybridModelFile : ISearchText
             HybridModelType.Local => Local!.RelativePathFromSharedFolder,
             HybridModelType.Remote => RemoteName!,
             HybridModelType.Downloadable
-                => DownloadableResource!.Value.RelativePath == null
+                => DownloadableResource!.Value.RelativeDirectory == null
                     ? DownloadableResource!.Value.FileName
                     : Path.Combine(
-                        DownloadableResource!.Value.RelativePath,
+                        DownloadableResource!.Value.RelativeDirectory,
                         DownloadableResource!.Value.FileName
                     ),
             HybridModelType.None => throw new InvalidOperationException(),

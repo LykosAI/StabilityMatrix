@@ -47,10 +47,10 @@ public record HybridModelFile : ISearchText
             HybridModelType.Local => Local!.RelativePathFromSharedFolder,
             HybridModelType.Remote => RemoteName!,
             HybridModelType.Downloadable
-                => DownloadableResource!.Value.RelativePath == null
+                => DownloadableResource!.Value.RelativeDirectory == null
                     ? DownloadableResource!.Value.FileName
                     : Path.Combine(
-                        DownloadableResource!.Value.RelativePath,
+                        DownloadableResource!.Value.RelativeDirectory,
                         DownloadableResource!.Value.FileName
                     ),
             HybridModelType.None => throw new InvalidOperationException(),

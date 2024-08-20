@@ -238,7 +238,7 @@
                             Text="CLIP 1"
                             TextAlignment="Left" />
 
-                        <controls:BetterComboBox
+                        <controls:BetterDownloadableComboBox
                             Grid.Row="6"
                             Grid.Column="1"
                             Grid.ColumnSpan="2"
@@ -260,7 +260,7 @@
                             Text="CLIP 2"
                             TextAlignment="Left" />
 
-                        <controls:BetterComboBox
+                        <controls:BetterDownloadableComboBox
                             Grid.Row="7"
                             Grid.Column="1"
                             Grid.ColumnSpan="2"

@@ -20,10 +20,6 @@ public class InstalledPackage : IJsonOnDeserialized
     // Package version
     public InstalledPackageVersion? Version { get; set; }
 
-    // Old type absolute path
-    [Obsolete("Use LibraryPath instead. (Kept for migration)")]
-    public string? Path { get; set; }
-
     /// <summary>
     /// Relative path from the library root.
     /// </summary>
@@ -121,6 +117,11 @@ public class InstalledPackage : IJsonOnDeserialized
 
     #region Migration / Obsolete
 
+    // Old type absolute path
+    [Obsolete("Use LibraryPath instead. (Kept for migration)")]
+    public string? Path { get; set; }
+
+    // Old type versions
     [Obsolete("Use Version instead. (Kept for migration)")]
     public string? PackageVersion { get; set; }
 

@@ -14,12 +14,4 @@ public interface IDownloadableResource
 
     [MemberNotNullWhen(true, nameof(DownloadableResource))]
     bool IsDownloadable => DownloadableResource is not null;
-
-    string DownloadFileName =>
-        DownloadableResource?.Value.RelativePath == null
-            ? DownloadableResource!.Value.FileName
-            : Path.Combine(
-                DownloadableResource!.Value.RelativeDirectory,
-                DownloadableResource!.Value.FileName
-            );
 }

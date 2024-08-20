@@ -71,7 +71,7 @@
                                     <fluentIcons:SymbolIcon
                                         VerticalAlignment="Center"
                                         FontSize="15"
-                                        IsFilled="True"
+                                        IconVariant="Filled"
                                         Symbol="Play" />
                                 </Button>
                             </sg:SpacedGrid>
@@ -106,7 +106,7 @@
                                                         VerticalAlignment="Center"
                                                         FontSize="18"
                                                         Foreground="{DynamicResource ThemeGreyColor}"
-                                                        IsFilled="True"
+                                                        IconVariant="Filled"
                                                         Symbol="CloudArrowDown" />
                                                 </Button>
                                             </Grid>

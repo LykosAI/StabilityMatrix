@@ -6,7 +6,7 @@ namespace StabilityMatrix.Core.Models;
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 [SuppressMessage("ReSharper", "IdentifierTypo")]
 [Flags]
-public enum SharedFolderType
+public enum SharedFolderType : ulong
 {
     Unknown = 0,
 
@@ -37,12 +37,12 @@ public enum SharedFolderType
     AfterDetailer = 1 << 21,
     IpAdapter = 1 << 22,
     T2IAdapter = 1 << 23,
-
     InvokeIpAdapters15 = 1 << 24,
     InvokeIpAdaptersXl = 1 << 25,
     InvokeClipVision = 1 << 26,
     SVD = 1 << 27,
-
+    Ultralytics = 1 << 28,
+    Sams = 1 << 29,
     PromptExpansion = 1 << 30,
-    Unet = 1 << 31
+    Unet = 1ul << 31,
 }

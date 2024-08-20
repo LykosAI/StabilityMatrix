@@ -45,11 +45,11 @@ public class OneTrainer(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
@@ -63,28 +63,20 @@ public class OneTrainer(
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
+        await SetupVenv(installLocation).ConfigureAwait(false);
 
-        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
-        return;
-
-        void HandleExit(int i)
-        {
-            Debug.WriteLine($"Venv process exited with code {i}");
-            OnExit(i);
-        }
-
-        void HandleConsoleOutput(ProcessOutput s)
-        {
-            onConsoleOutput?.Invoke(s);
-        }
+        VenvRunner.RunDetached(
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            onConsoleOutput,
+            OnExit
+        );
     }
 
     public override List<LaunchOptionDefinition> LaunchOptions => [LaunchOptionDefinition.Extras];

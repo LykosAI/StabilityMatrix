@@ -80,7 +80,7 @@
 
                                     <fluentIcons:SymbolIcon
                                         FontSize="28"
-                                        IsFilled="True"
+                                        IconVariant="Filled"
                                         Symbol="DocumentQuestionMark" />
                                     <TextBlock
                                         Grid.Row="1"
@@ -138,7 +138,7 @@
                                         <fluentIcons:SymbolIcon
                                             Effect="{StaticResource ImageDropShadowEffect}"
                                             FontSize="28"
-                                            IsFilled="True"
+                                            IconVariant="Filled"
                                             Symbol="Eye" />
                                     </ToggleButton>
                                 </Border>
@@ -174,7 +174,7 @@
                                         <fluentIcons:SymbolIcon
                                             Effect="{StaticResource ImageDropShadowEffect}"
                                             FontSize="28"
-                                            IsFilled="True"
+                                            IconVariant="Filled"
                                             Symbol="Layer" />
                                     </Button>
                                 </Border>
@@ -204,7 +204,7 @@
                                         <fluentIcons:SymbolIcon
                                             Effect="{StaticResource ImageDropShadowEffect}"
                                             FontSize="28"
-                                            IsFilled="True"
+                                            IconVariant="Filled"
                                             Symbol="ImageArrowCounterclockwise" />
                                     </Button>
                                 </Border>
@@ -228,7 +228,7 @@
 
                                     <fluentIcons:SymbolIcon
                                         FontSize="28"
-                                        IsFilled="True"
+                                        IconVariant="Filled"
                                         Symbol="ImageCopy" />
                                     <TextBlock
                                         Grid.Row="1"

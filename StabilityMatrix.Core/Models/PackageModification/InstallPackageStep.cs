@@ -1,35 +1,32 @@
-﻿using StabilityMatrix.Core.Models.Packages;
+﻿using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
-using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
 public class InstallPackageStep(
-    BasePackage package,
-    TorchVersion torchVersion,
-    SharedFolderMethod selectedSharedFolderMethod,
-    DownloadPackageVersionOptions versionOptions,
-    string installPath
-) : IPackageStep
+    BasePackage basePackage,
+    string installLocation,
+    InstalledPackage installedPackage,
+    InstallPackageOptions options
+) : ICancellablePackageStep
 {
-    public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
+    public async Task ExecuteAsync(
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
+    )
     {
-        void OnConsoleOutput(ProcessOutput output)
-        {
-            progress?.Report(new ProgressReport(-1f, isIndeterminate: true) { ProcessOutput = output });
-        }
-
-        await package
+        await basePackage
             .InstallPackage(
-                installPath,
-                torchVersion,
-                selectedSharedFolderMethod,
-                versionOptions,
+                installLocation,
+                installedPackage,
+                options,
                 progress,
-                OnConsoleOutput
+                progress.AsProcessOutputHandler(setMessageAsOutput: false),
+                cancellationToken
             )
             .ConfigureAwait(false);
     }
 
-    public string ProgressTitle => $"Installing {package.DisplayName}...";
+    public string ProgressTitle => $"Installing {basePackage.DisplayName}...";
 }

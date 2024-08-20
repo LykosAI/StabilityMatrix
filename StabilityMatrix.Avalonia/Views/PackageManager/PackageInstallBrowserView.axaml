@@ -181,6 +181,28 @@
                                                         </Template>
                                                     </Setter>
                                                 </Style>
+                                                <Style Selector="controls|Card[Tag=Ipex]">
+                                                    <Setter Property="Background"
+                                                            Value="{DynamicResource ThemeLightBlueColor}" />
+                                                    <Setter Property="BorderBrush"
+                                                            Value="{DynamicResource ThemeLightBlueColor}" />
+                                                    <Style
+                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground"
+                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    </Style>
+                                                    <Setter Property="Content">
+                                                        <Template>
+                                                            <TextBlock
+                                                                FontWeight="Medium"
+                                                                HorizontalAlignment="Center"
+                                                                Text="IPEX"
+                                                                TextAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                ToolTip.Tip="For Intel Arc GPUs" />
+                                                        </Template>
+                                                    </Setter>
+                                                </Style>
                                                 <Style Selector="controls|Card[Tag=Cpu]">
                                                     <Setter Property="Background"
                                                             Value="{DynamicResource ThemeBlueGreyColor}" />

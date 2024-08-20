@@ -9,9 +9,15 @@
 		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
 		<EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
+	
+	<PropertyGroup>
+		<!-- Ignore nullable / unused warnings since this was vendored -->
+		<NoWarn>$(NoWarn);CS8765;CS8618;CS8625;CS0169</NoWarn>
+	</PropertyGroup>
+	
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="SkiaSharp" Version="2.88.7" />
+    <PackageReference Include="SkiaSharp" Version="3.0.0-preview.4.1" />
 	<PackageReference Include="DotNet.Bundle" Version="0.9.13" />
   </ItemGroup>
 

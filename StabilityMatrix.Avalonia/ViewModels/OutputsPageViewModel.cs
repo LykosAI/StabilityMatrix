@@ -17,9 +17,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using Microsoft.Extensions.Logging;
 using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Controls.VendorLabs;
+using StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
@@ -57,7 +60,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public override string Title => Resources.Label_OutputsPageTitle;
 
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Grid, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Grid, IconVariant = IconVariant.Filled };
 
     public SourceCache<LocalImageFile, string> OutputsCache { get; } = new(file => file.AbsolutePath);
 
@@ -195,6 +199,18 @@ public partial class OutputsPageViewModel : PageViewModelBase
         GetOutputs(path);
     }
 
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+
+        logger.LogTrace("OutputsPageViewModel Unloaded");
+
+        logger.LogTrace("Clearing memory cache");
+        var items = ImageLoaders.OutputsPageImageCache.ClearMemoryCache();
+
+        logger.LogTrace("Cleared {Items} items from memory cache", items);
+    }
+
     partial void OnSelectedCategoryChanged(TreeViewDirectory? oldValue, TreeViewDirectory? newValue)
     {
         if (oldValue == newValue || oldValue == null || newValue == null)
@@ -244,7 +260,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
         // Preload
         await image.GetBitmapAsync();
 
-        var vm = new ImageViewerViewModel { ImageSource = image, LocalImageFile = item.ImageFile };
+        var vm = vmFactory.Get<ImageViewerViewModel>();
+        vm.ImageSource = image;
+        vm.LocalImageFile = item.ImageFile;
 
         using var onNext = Observable
             .FromEventPattern<DirectionalNavigationEventArgs>(

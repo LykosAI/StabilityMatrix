@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -144,6 +143,13 @@ public class Fooocus(
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
                 Options = { "--disable-xformers" }
             },
+            new LaunchOptionDefinition
+            {
+                Name = "Disable Offload from VRAM",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS,
+                Options = { "--disable-offload-from-vram" }
+            },
             LaunchOptionDefinition.Extras
         };
 
@@ -250,7 +256,14 @@ public class Fooocus(
         new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
 
     public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm };
+        new[]
+        {
+            TorchVersion.Cpu,
+            TorchVersion.Cuda,
+            TorchVersion.DirectMl,
+            TorchVersion.Rocm,
+            TorchVersion.Mps
+        };
 
     public override string MainBranch => "main";
 
@@ -262,11 +275,11 @@ public class Fooocus(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
@@ -275,6 +288,8 @@ public class Fooocus(
 
         // Pip version 24.1 deprecated numpy requirement spec used by torchsde 0.2.5
         await venvRunner.PipInstall(["pip==23.3.2"], onConsoleOutput).ConfigureAwait(false);
+
+        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
 
         var pipArgs = new PipInstallArgs();
 
@@ -293,6 +308,7 @@ public class Fooocus(
                         TorchVersion.Cpu => "cpu",
                         TorchVersion.Cuda => "cu121",
                         TorchVersion.Rocm => "rocm5.6",
+                        TorchVersion.Mps => "cpu",
                         _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                     }
                 );
@@ -309,13 +325,14 @@ public class Fooocus(
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
+        await SetupVenv(installLocation).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -333,15 +350,11 @@ public class Fooocus(
             }
         }
 
-        void HandleExit(int i)
-        {
-            Debug.WriteLine($"Venv process exited with code {i}");
-            OnExit(i);
-        }
-
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
-
-        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+        VenvRunner.RunDetached(
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            HandleConsoleOutput,
+            OnExit
+        );
     }
 
     public override Task SetupModelFolders(

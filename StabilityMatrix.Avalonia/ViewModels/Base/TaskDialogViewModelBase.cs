@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
-using AvaloniaEdit.Rendering;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Languages;
 

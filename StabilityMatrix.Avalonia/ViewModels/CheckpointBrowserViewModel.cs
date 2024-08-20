@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
-using FluentAvalonia.Core;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
@@ -23,7 +21,7 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
 {
     public override string Title => Resources.Label_ModelBrowser;
     public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.BrainCircuit, IsFilled = true };
+        new SymbolIconSource { Symbol = Symbol.BrainCircuit, IconVariant = IconVariant.Filled };
 
     public IReadOnlyList<TabItem> Pages { get; }
 

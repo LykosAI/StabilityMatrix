@@ -26,4 +26,19 @@ public interface ILiteDbContext : IDisposable
     /// Clear all Collections that store re-fetchable cache type data.
     /// </summary>
     Task ClearAllCacheCollectionsAsync();
+
+    /// <summary>
+    /// Executes a query with exception logging and collection clearing.
+    /// This will handle unique exceptions once keyed by string representation for each collection,
+    /// and throws if repeated.
+    /// </summary>
+    /// <typeparam name="T">The type of collection to query.</typeparam>
+    /// <typeparam name="TResult">The type of result to return.</typeparam>
+    /// <param name="collection">The collection to query.</param>
+    /// <param name="task">The task representing the query to execute.</param>
+    /// <returns>The result of the query, or default value on handled exception.</returns>
+    Task<TResult?> TryQueryWithClearOnExceptionAsync<T, TResult>(
+        ILiteCollectionAsync<T> collection,
+        Task<TResult> task
+    );
 }

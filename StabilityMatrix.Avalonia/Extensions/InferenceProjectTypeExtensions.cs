@@ -3,6 +3,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.Extensions;
+
 public static class InferenceProjectTypeExtensions
 {
     public static Type? ToViewModelType(this InferenceProjectType type)
@@ -14,6 +15,7 @@ public static class InferenceProjectTypeExtensions
             InferenceProjectType.Inpainting => null,
             InferenceProjectType.Upscale => typeof(InferenceImageUpscaleViewModel),
             InferenceProjectType.ImageToVideo => typeof(InferenceImageToVideoViewModel),
+            InferenceProjectType.FluxTextToImage => typeof(InferenceFluxTextToImageViewModel),
             InferenceProjectType.Unknown => null,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };

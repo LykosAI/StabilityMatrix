@@ -16,6 +16,7 @@
                           xmlns:system="clr-namespace:System;assembly=System.Runtime"
                           xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
                           xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+                          xmlns:models1="clr-namespace:StabilityMatrix.Avalonia.Models"
                           mc:Ignorable="d" d:DesignWidth="850" d:DesignHeight="650"
                           x:Class="StabilityMatrix.Avalonia.Views.CheckpointsPage"
                           d:DataContext="{x:Static mocks:DesignData.CheckpointsPageViewModel}"
@@ -29,6 +30,8 @@
         <system:Boolean x:Key="True">True</system:Boolean>
         <input:StandardUICommand x:Key="ItemClickCommand"
                                  Command="{Binding ItemClickCommand}"/>
+        <input:StandardUICommand x:Key="NewFolderCommand"
+                                 Command="{Binding CreateFolderCommand}"/>
     </controls:UserControlBase.Resources>
 
     <controls:UserControlBase.Styles>
@@ -228,6 +231,11 @@
                         IconSource="Filter"
                         VerticalAlignment="Center"
                         Label="Filter">
+                        <ui:CommandBarButton.Styles>
+                            <Style Selector="FlyoutPresenter">
+                                <Setter Property="MaxHeight" Value="1000"/>
+                            </Style>
+                        </ui:CommandBarButton.Styles>
                         <ui:CommandBarButton.Flyout>
                             <Flyout>
                                 <StackPanel Orientation="Vertical">
@@ -272,6 +280,25 @@
                         IconSource="Cloud"
                         Label="{x:Static lang:Resources.Label_ImportAsConnected}"
                         IsChecked="{Binding IsImportAsConnectedEnabled, Mode=TwoWay}" />
+                    <ui:CommandBarToggleButton
+                        IconSource="MoveToFolder"
+                        Label="Move All Selected Models"
+                        ToolTip.Tip="When enabled, dragging and dropping a model will also move any selected models to the drop location."
+                        IsChecked="{Binding DragMovesAllSelected, Mode=TwoWay}" />
+                    <ui:CommandBarToggleButton
+                        Label="Hide Empty Categories"
+                        IsChecked="{Binding HideEmptyRootCategories}">
+                        <ui:CommandBarToggleButton.IconSource>
+                            <controls:FASymbolIconSource Symbol="fa-regular fa-eye-slash"/>
+                        </ui:CommandBarToggleButton.IconSource>
+                    </ui:CommandBarToggleButton>
+                    <ui:CommandBarToggleButton
+                        Label="Show NSFW Images"
+                        IsChecked="{Binding ShowNsfwImages}">
+                        <ui:CommandBarToggleButton.IconSource>
+                            <controls:FASymbolIconSource Symbol="fa-solid fa-exclamation"/>
+                        </ui:CommandBarToggleButton.IconSource>
+                    </ui:CommandBarToggleButton>
                 </ui:CommandBar.SecondaryCommands>
             </ui:CommandBar>
         </Grid>
@@ -285,6 +312,39 @@
                   DragDrop.AllowDrop="True"
                   ItemsSource="{Binding Categories}"
                   SelectedItem="{Binding SelectedCategory}">
+            <TreeView.Styles>
+                <Style Selector="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding $self.((models1:CheckpointCategory)DataContext).IsExpanded, Mode=TwoWay}"/>
+                </Style>
+            </TreeView.Styles>
+            <TreeView.ContextFlyout>
+                <ui:FAMenuFlyout>
+                    <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_OpenInExplorer}"
+                                       Command="{Binding OpenFolderFromTreeviewCommand}"
+                                       CommandParameter="{Binding $parent[TreeView].SelectedItem}">
+                        <ui:MenuFlyoutItem.IconSource>
+                            <ui:SymbolIconSource Symbol="OpenFolder" />
+                        </ui:MenuFlyoutItem.IconSource>
+                    </ui:MenuFlyoutItem>
+                    <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Label_NewFolder}"
+                                       Command="{Binding CreateFolderCommand}"
+                                       CommandParameter="{Binding $parent[TreeView].SelectedItem}">
+                        <ui:MenuFlyoutItem.IconSource>
+                            <ui:SymbolIconSource Symbol="NewFolder" />
+                        </ui:MenuFlyoutItem.IconSource>
+                    </ui:MenuFlyoutItem>
+                    
+                    <ui:MenuFlyoutSeparator />
+                    
+                    <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_Delete}"
+                                       Command="{Binding DeleteFolderCommand}"
+                                       CommandParameter="{Binding $parent[TreeView].SelectedItem}">
+                        <ui:MenuFlyoutItem.IconSource>
+                            <ui:SymbolIconSource Symbol="Delete" />
+                        </ui:MenuFlyoutItem.IconSource>
+                    </ui:MenuFlyoutItem>
+                </ui:FAMenuFlyout>
+            </TreeView.ContextFlyout>
             <TreeView.ItemTemplate>
                 <TreeDataTemplate ItemsSource="{Binding SubDirectories}">
                     <TextBlock MaxWidth="250"
@@ -294,18 +354,6 @@
                                ToolTip.Tip="{Binding Name}">
                         <Run Text="{Binding Name}" />
                         <Run Text=" (" /><Run Text="{Binding Count}" /><Run Text=")" />
-
-                        <TextBlock.ContextFlyout>
-                            <ui:FAMenuFlyout>
-                                <ui:MenuFlyoutItem Text="{x:Static lang:Resources.Action_OpenInExplorer}"
-                                                   Command="{x:Static helpers:IOCommands.OpenFolderBrowserCommand}"
-                                                   CommandParameter="{Binding Path}">
-                                    <ui:MenuFlyoutItem.IconSource>
-                                        <ui:SymbolIconSource Symbol="OpenFolder" />
-                                    </ui:MenuFlyoutItem.IconSource>
-                                </ui:MenuFlyoutItem>
-                            </ui:FAMenuFlyout>
-                        </TextBlock.ContextFlyout>
                     </TextBlock>
                 </TreeDataTemplate>
             </TreeView.ItemTemplate>
@@ -341,14 +389,26 @@
                                                        Text="{x:Static lang:Resources.Action_CopyTriggerWords}"
                                                        IconSource="Copy" />
                                     <ui:MenuFlyoutItem Command="{Binding FindOnModelBrowserCommand}"
-                                                       IsVisible="{Binding CheckpointFile.HasConnectedModel}"
                                                        Text="{x:Static lang:Resources.Label_FindInModelBrowser}"
-                                                       IconSource="Find" />
+                                                       IconSource="Find">
+                                        <ui:MenuFlyoutItem.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                <CompiledBinding Path="CheckpointFile.HasConnectedModel" />
+                                                <CompiledBinding Path="CheckpointFile.HasCivitMetadata" />
+                                            </MultiBinding>
+                                        </ui:MenuFlyoutItem.IsVisible>
+                                    </ui:MenuFlyoutItem>
                                     <ui:MenuFlyoutSeparator IsVisible="{Binding CanShowTriggerWords}" />
                                     <ui:MenuFlyoutItem Command="{Binding OpenOnCivitAiCommand}"
                                                        Text="{x:Static lang:Resources.Action_OpenOnCivitAi}"
-                                                       IconSource="Link"
-                                                       IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
+                                                       IconSource="Link">
+                                        <ui:MenuFlyoutItem.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                <CompiledBinding Path="CheckpointFile.HasConnectedModel" />
+                                                <CompiledBinding Path="CheckpointFile.HasCivitMetadata" />
+                                            </MultiBinding>
+                                        </ui:MenuFlyoutItem.IsVisible>
+                                    </ui:MenuFlyoutItem>
                                     <ui:MenuFlyoutItem
                                         Command="{Binding CopyModelUrlCommand}"
                                         Text="Copy Link to Clipboard"
@@ -363,8 +423,19 @@
                                         Text="{x:Static lang:Resources.Action_UpdateExistingMetadata}"
                                         IconSource="Sync"
                                         Command="{Binding FindConnectedMetadataCommand}"
-                                        CommandParameter="{StaticResource True}"
-                                        IsVisible="{Binding CheckpointFile.HasConnectedModel}" />
+                                        CommandParameter="{StaticResource True}">
+                                        <ui:MenuFlyoutItem.IsVisible>
+                                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                <CompiledBinding Path="CheckpointFile.HasConnectedModel" />
+                                                <CompiledBinding Path="CheckpointFile.HasCivitMetadata" />
+                                            </MultiBinding>
+                                        </ui:MenuFlyoutItem.IsVisible>
+                                    </ui:MenuFlyoutItem>
+                                    
+                                    <ui:MenuFlyoutItem
+                                        Text="Edit Metadata"
+                                        IconSource="Edit"
+                                        Command="{Binding OpenMetadataEditorCommand}"/>
 
                                     <ui:MenuFlyoutSeparator />
                                     <ui:MenuFlyoutItem Command="{Binding RenameCommand}"
@@ -516,7 +587,7 @@
                                 <TextBlock Grid.Row="0"
                                            Grid.RowSpan="2"
                                            x:CompileBindings="False"
-                                           Margin="0,64,0,0"
+                                           Margin="0,48,0,0"
                                            Text="{Binding Progress.Title}"
                                            TextWrapping="Wrap"
                                            TextAlignment="Center"
@@ -527,14 +598,17 @@
                                 <controls:ProgressRing
                                     Grid.Row="0"
                                     Grid.RowSpan="2"
+                                    x:CompileBindings="False"
                                     Height="64"
                                     Width="64"
+                                    Margin="0,0,0,48"
                                     Foreground="{DynamicResource ThemeRedColor}"
                                     BorderThickness="4"
                                     HorizontalAlignment="Center"
-                                    IsIndeterminate="True"
+                                    IsIndeterminate="{Binding Progress.IsIndeterminate}"
                                     Padding="0"
                                     VerticalAlignment="Center"
+                                    Value="{Binding Progress.Percentage}"
                                     IsEnabled="{Binding IsLoading}"
                                     IsVisible="{Binding IsLoading}" />
                             </Grid>
@@ -590,10 +664,18 @@
                 </MultiBinding>
             </ui:InfoBar.Title>
             <ui:InfoBar.ActionButton>
-                <Button
-                    Classes="danger"
-                    Command="{Binding DeleteCommand}"
-                    Content="{x:Static lang:Resources.Action_Delete}" />
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Button Classes="accent" 
+                            Content="{x:Static lang:Resources.Action_SelectAll}"
+                            Command="{Binding SelectAllCommand}"/>
+                    <Rectangle Width="2"
+                               Margin="4,2"
+                               VerticalAlignment="Stretch" 
+                               Fill="Gray"/>
+                    <Button Classes="danger"
+                            Command="{Binding DeleteCommand}"
+                            Content="{x:Static lang:Resources.Action_Delete}" />
+                </StackPanel>
             </ui:InfoBar.ActionButton>
         </ui:InfoBar>
     </Grid>

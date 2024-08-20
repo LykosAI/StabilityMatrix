@@ -8,5 +8,6 @@ public enum TorchVersion
     Cpu,
     Mps,
     Zluda,
+    Ipex,
     None
 }

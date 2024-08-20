@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly name="System.Runtime">
+    <!-- Mark all members of Path as non-localizable -->
+    <member name="T:System.IO.Path">
+        <attribute ctor="M:System.ComponentModel.LocalizableAttribute.#ctor(System.Boolean)">
+            <argument>false</argument>
+        </attribute>
+        <attribute ctor="M:JetBrains.Annotations.LocalizationRequiredAttribute.#ctor(System.Boolean)">
+            <argument>false</argument>
+        </attribute>
+    </member>
+</assembly>

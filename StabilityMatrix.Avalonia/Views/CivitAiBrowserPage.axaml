@@ -29,41 +29,41 @@
         <Style Selector="Border#HoverBorder">
             <Setter Property="Transitions">
                 <Transitions>
-                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.237"/>
+                    <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.237" />
                 </Transitions>
             </Setter>
-            
+
             <Style Selector="^ vendorLabs|BetterAsyncImage">
                 <Setter Property="Transitions">
                     <Transitions>
                         <TransformOperationsTransition Property="RenderTransform"
                                                        Duration="0:0:0.237">
                             <TransformOperationsTransition.Easing>
-                                <QuadraticEaseInOut/>
+                                <QuadraticEaseInOut />
                             </TransformOperationsTransition.Easing>
                         </TransformOperationsTransition>
                     </Transitions>
                 </Setter>
             </Style>
-            
+
             <Style Selector="^:pointerover">
-                <Setter Property="BoxShadow" Value="0 0 40 0 #60000000"/>
+                <Setter Property="BoxShadow" Value="0 0 40 0 #60000000" />
                 <Setter Property="Cursor" Value="Hand" />
                 <Style Selector="^ vendorLabs|BetterAsyncImage">
-                    <Setter Property="CornerRadius" Value="12"/>
-                    <Setter Property="RenderTransform" Value="scale(1.03, 1.03)"/>
+                    <Setter Property="CornerRadius" Value="12" />
+                    <Setter Property="RenderTransform" Value="scale(1.03, 1.03)" />
                 </Style>
                 <Style Selector="^ Border#ModelCardBottom">
                     <Setter Property="Background" Value="#CC000000" />
                 </Style>
             </Style>
-            
+
             <Style Selector="^:not(:pointerover)">
-                <Setter Property="BoxShadow" Value="0 0 20 0 #60000000"/>
+                <Setter Property="BoxShadow" Value="0 0 20 0 #60000000" />
                 <Setter Property="Cursor" Value="Arrow" />
                 <Style Selector="^ vendorLabs|BetterAsyncImage">
-                    <Setter Property="CornerRadius" Value="8"/>
-                    <Setter Property="RenderTransform" Value="scale(1, 1)"/>
+                    <Setter Property="CornerRadius" Value="8" />
+                    <Setter Property="RenderTransform" Value="scale(1, 1)" />
                 </Style>
                 <Style Selector="^ Border#ModelCardBottom">
                     <Setter Property="Background" Value="#99000000" />
@@ -74,7 +74,7 @@
 
     <UserControl.Resources>
         <system:Boolean x:Key="False">False</system:Boolean>
-        <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter"/>
+        <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter" />
         <DataTemplate x:Key="CivitModelTemplate" DataType="{x:Type checkpointBrowser:CheckpointBrowserCardViewModel}">
             <Border
                 Name="HoverBorder"
@@ -102,17 +102,18 @@
                     CornerRadius="8"
                     Command="{Binding ShowVersionDialogCommand}"
                     CommandParameter="{Binding CivitModel}"
-                    IsEnabled="{Binding !IsImporting}">
+                    IsEnabled="{Binding !IsLoading}">
                     <Grid RowDefinitions="*, Auto">
                         <vendorLabs:BetterAsyncImage Grid.Row="0"
-                                                      CornerRadius="8"
-                                                      VerticalAlignment="Top"
-                                                      HorizontalAlignment="Center"
-                                                      Height="75"
-                                                      ZIndex="10"
-                                                      IsVisible="{Binding ShowSantaHats, FallbackValue=False}"
-                                                      Margin="0,8,0,0"
-                                                      Source="avares://StabilityMatrix.Avalonia/Assets/santahat.png">
+                                                     CornerRadius="8"
+                                                     VerticalAlignment="Top"
+                                                     HorizontalAlignment="Center"
+                                                     Height="75"
+                                                     ZIndex="10"
+                                                     IsEnabled="{Binding ShowSantaHats, FallbackValue=False}"
+                                                     IsVisible="{Binding ShowSantaHats, FallbackValue=False}"
+                                                     Margin="0,8,0,0"
+                                                     Source="avares://StabilityMatrix.Avalonia/Assets/santahat.png">
                             <!-- <controls:BetterAdvancedImage.RenderTransform> -->
                             <!--     <RotateTransform Angle="315"></RotateTransform> -->
                             <!-- </controls:BetterAdvancedImage.RenderTransform> -->
@@ -123,8 +124,9 @@
                             CornerRadius="8"
                             Width="330"
                             Height="400"
+                            IsCacheEnabled="True"
                             Source="{Binding CardImage}"
-                            Stretch="UniformToFill"/>
+                            Stretch="UniformToFill" />
 
                         <StackPanel
                             Grid.Row="0"
@@ -155,13 +157,13 @@
                                 </Grid>
                             </Button>
                         </StackPanel>
-                        
+
                         <!-- Username pill card -->
                         <Border
                             BoxShadow="inset 1.2 0 80 1.8 #66000000"
                             CornerRadius="16"
                             Margin="4"
-                            Grid.Row="0" 
+                            Grid.Row="0"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Bottom">
                             <Border.Resources>
@@ -169,12 +171,12 @@
                                     x:Key="TextDropShadowEffect"
                                     BlurRadius="12"
                                     Color="#FF000000"
-                                    Opacity="0.9"/>
+                                    Opacity="0.9" />
                                 <DropShadowEffect
                                     x:Key="ImageDropShadowEffect"
                                     BlurRadius="12"
                                     Color="#FF000000"
-                                    Opacity="0.2"/>
+                                    Opacity="0.2" />
                             </Border.Resources>
                             <Button
                                 Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
@@ -188,13 +190,13 @@
                                         Height="22"
                                         Effect="{StaticResource ImageDropShadowEffect}"
                                         CornerRadius="11"
-                                        RenderOptions.BitmapInterpolationMode="HighQuality"
+                                        IsCacheEnabled="True"
                                         IsVisible="{Binding CivitModel.Creator.Image, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                        Source="{Binding CivitModel.Creator.Image}"/>
-                                    <TextBlock 
+                                        Source="{Binding CivitModel.Creator.Image}" />
+                                    <TextBlock
                                         VerticalAlignment="Center"
                                         Effect="{StaticResource TextDropShadowEffect}"
-                                        Text="{Binding CivitModel.Creator.Username}"/>
+                                        Text="{Binding CivitModel.Creator.Username}" />
                                 </StackPanel>
                             </Button>
                         </Border>
@@ -255,16 +257,15 @@
                             VerticalAlignment="Stretch"
                             Background="#DD000000"
                             CornerRadius="8"
-                            IsVisible="{Binding IsImporting}"
-                            ZIndex="1" />
+                            IsVisible="{Binding IsLoading}" />
                         <StackPanel
                             Grid.Row="0"
                             Grid.RowSpan="2"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Center"
-                            IsVisible="{Binding IsImporting}"
+                            IsVisible="{Binding IsLoading}"
                             Orientation="Vertical"
-                            ZIndex="2">
+                            ZIndex="10">
                             <controls:ProgressRing
                                 Width="120"
                                 Height="120"
@@ -278,6 +279,9 @@
                                 Margin="0,8,0,0"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
+                                TextWrapping="Wrap"
+                                MaxWidth="200"
+                                ZIndex="100"
                                 Text="{Binding Text, TargetNullValue=Importing...}" />
                         </StackPanel>
 
@@ -361,7 +365,8 @@
                                     <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
                                     <Button.Flyout>
                                         <MenuFlyout>
-                                            <MenuItem Command="{Binding OpenModelCommand}" Header="{x:Static lang:Resources.Action_OpenOnCivitAi}">
+                                            <MenuItem Command="{Binding OpenModelCommand}"
+                                                      Header="{x:Static lang:Resources.Action_OpenOnCivitAi}">
                                                 <MenuItem.Icon>
                                                     <ui:SymbolIcon Symbol="Open" />
                                                 </MenuItem.Icon>
@@ -422,46 +427,55 @@
                     </Grid>
                 </Button>
             </Grid>
-            <DockPanel>
-                <StackPanel Margin="0,8,4,8" Orientation="Vertical">
-                    <Label Content="{x:Static lang:Resources.Label_Sort}" />
-                    <ComboBox
-                        MinWidth="100"
-                        ItemsSource="{Binding AllSortModes}"
-                        SelectedItem="{Binding SortMode}" />
-                </StackPanel>
+            <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,*" 
+                  RowDefinitions="Auto,Auto,Auto">
 
-                <StackPanel Margin="4,8" Orientation="Vertical">
-                    <Label Content="{x:Static lang:Resources.Label_TimePeriod}" />
-                    <ComboBox
-                        MinWidth="100"
-                        ItemsSource="{Binding AllCivitPeriods}"
-                        SelectedItem="{Binding SelectedPeriod}" />
-                </StackPanel>
+                <Label Grid.Column="0" Grid.Row="0" Margin="0,8,4,0" Content="{x:Static lang:Resources.Label_Sort}" />
+                <ComboBox Grid.Column="0" Grid.Row="1" Margin="0,0,4,8" MinWidth="100"
+                          ItemsSource="{Binding AllSortModes}"
+                          SelectedItem="{Binding SortMode}" />
 
-                <StackPanel Margin="4,8" Orientation="Vertical">
-                    <Label Content="{x:Static lang:Resources.Label_ModelType}" />
-                    <ComboBox
-                        MinWidth="100"
-                        ItemsSource="{Binding AllModelTypes}"
-                        SelectedItem="{Binding SelectedModelType}" />
-                </StackPanel>
+                <Label Grid.Column="1" Grid.Row="0" Margin="4,8,4,0"
+                       Content="{x:Static lang:Resources.Label_TimePeriod}" />
+                <ComboBox Grid.Column="1" Grid.Row="1" Margin="4,0,4,8" MinWidth="100"
+                          ItemsSource="{Binding AllCivitPeriods}"
+                          SelectedItem="{Binding SelectedPeriod}" />
 
-                <StackPanel Margin="4,8" Orientation="Vertical">
-                    <Label Content="{x:Static lang:Resources.Label_BaseModel}" />
-                    <ComboBox
-                        MinWidth="100"
-                        ItemsSource="{Binding BaseModelOptions}"
-                        SelectedItem="{Binding SelectedBaseModelType}" />
-                </StackPanel>
+                <Label Grid.Column="2" Grid.Row="0" Margin="4,8,4,0"
+                       Content="{x:Static lang:Resources.Label_ModelType}" />
+                <ComboBox Grid.Column="2" Grid.Row="1" Margin="4,0,4,8" MinWidth="100"
+                          ItemsSource="{Binding AllModelTypes}"
+                          SelectedItem="{Binding SelectedModelType}" />
 
+                <Label Grid.Column="3" Grid.Row="0" Margin="4,8,4,0"
+                       Content="{x:Static lang:Resources.Label_BaseModel}" />
+                <ComboBox Grid.Column="3" Grid.Row="1" Margin="4,0,4,8" MinWidth="100"
+                          ItemsSource="{Binding BaseModelOptions}"
+                          SelectedItem="{Binding SelectedBaseModelType}" />
 
-                <CheckBox
-                    Margin="8,8,0,0"
-                    HorizontalAlignment="Right"
-                    Content="{x:Static lang:Resources.Label_ShowNsfwContent}"
-                    IsChecked="{Binding ShowNsfw, Mode=TwoWay}" />
-            </DockPanel>
+                <ui:CommandBar Grid.Column="4" Grid.Row="0" Grid.RowSpan="2"
+                               Margin="8,0,0,0"
+                               VerticalAlignment="Bottom"
+                               HorizontalAlignment="Right"
+                               DefaultLabelPosition="Right">
+                    <ui:CommandBar.PrimaryCommands>
+                        <ui:CommandBarToggleButton
+                            Label="Hide Installed Models"
+                            IsChecked="{Binding HideInstalledModels, Mode=TwoWay}">
+                            <ui:CommandBarToggleButton.IconSource>
+                                <controls:FASymbolIconSource Symbol="fa-regular fa-eye-slash"/>
+                            </ui:CommandBarToggleButton.IconSource>
+                        </ui:CommandBarToggleButton>
+                        <ui:CommandBarToggleButton
+                            Label="{x:Static lang:Resources.Label_ShowNsfwContent}"
+                            IsChecked="{Binding ShowNsfw, Mode=TwoWay}">
+                            <ui:CommandBarToggleButton.IconSource>
+                                <ui:SymbolIconSource Symbol="Important"/>
+                            </ui:CommandBarToggleButton.IconSource>
+                        </ui:CommandBarToggleButton>
+                    </ui:CommandBar.PrimaryCommands>
+                </ui:CommandBar>
+            </Grid>
 
         </StackPanel>
 
@@ -476,15 +490,15 @@
                 </ItemsRepeater.Layout>
             </ItemsRepeater>
         </ScrollViewer>
-        
+
         <TextBlock Grid.Row="2" Text="End of results"
                    TextAlignment="Center"
                    Margin="0,0,0,8">
             <TextBlock.IsVisible>
                 <MultiBinding Converter="{x:Static BoolConverters.And}">
-                    <Binding Path="HasSearched"/>
+                    <Binding Path="HasSearched" />
                     <Binding Path="NextPageCursor"
-                             Converter="{x:Static StringConverters.IsNullOrEmpty}"/>
+                             Converter="{x:Static StringConverters.IsNullOrEmpty}" />
                 </MultiBinding>
             </TextBlock.IsVisible>
         </TextBlock>

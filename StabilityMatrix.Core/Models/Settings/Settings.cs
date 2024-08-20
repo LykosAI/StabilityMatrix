@@ -160,6 +160,8 @@ public class Settings
 
     public bool AutoScrollLaunchConsoleToEnd { get; set; } = true;
 
+    public int ConsoleLogHistorySize { get; set; } = 9001;
+
     public HashSet<int> FavoriteModels { get; set; } = new();
 
     public HashSet<TeachingTip> SeenTeachingTips { get; set; } = new();
@@ -189,6 +191,14 @@ public class Settings
     /// Otherwise, it will move, as it states
     /// </summary>
     public bool MoveFilesOnImport { get; set; } = true;
+
+    public bool DragMovesAllSelected { get; set; } = true;
+
+    public bool HideEmptyRootCategories { get; set; }
+
+    public bool HideInstalledModelsInModelBrowser { get; set; }
+
+    public bool ShowNsfwInCheckpointsPage { get; set; }
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>
@@ -222,6 +232,15 @@ public class Settings
         else if (InstalledPackages.All(x => x.Id != ActiveInstalledPackageId))
         {
             ActiveInstalledPackageId = InstalledPackages[0].Id;
+        }
+    }
+
+    public void SetUpdateCheckDisabledForPackage(InstalledPackage package, bool disabled)
+    {
+        var installedPackage = InstalledPackages.FirstOrDefault(p => p.Id == package.Id);
+        if (installedPackage != null)
+        {
+            installedPackage.DontCheckForUpdates = disabled;
         }
     }
 

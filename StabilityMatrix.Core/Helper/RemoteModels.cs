@@ -194,4 +194,143 @@ public static class RemoteModels
 
     public static IEnumerable<HybridModelFile> PromptExpansionModels =>
         PromptExpansions.Select(HybridModelFile.FromDownloadable);
+
+    private static IEnumerable<RemoteResource> UltralyticsModels =>
+        [
+            new RemoteResource
+            {
+                Url = new Uri("https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8m.pt"),
+                HashSha256 = "f02b8a23e6f12bd2c1b1f6714f66f984c728fa41ed749d033e7d6dea511ef70c",
+                InfoUrl = new Uri("https://huggingface.co/Bingsu/adetailer"),
+                Author = "Bingsu",
+                LicenseType = "Apache 2.0",
+                LicenseUrl = new Uri(
+                    "https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md"
+                ),
+                ContextType = SharedFolderType.Ultralytics,
+                RelativePath = "bbox"
+            },
+            new RemoteResource
+            {
+                Url = new Uri("https://huggingface.co/Bingsu/adetailer/resolve/main/hand_yolov8s.pt"),
+                HashSha256 = "5c4faf8d17286ace2c3d3346c6d0d4a0c8d62404955263a7ae95c1dd7eb877af",
+                InfoUrl = new Uri("https://huggingface.co/Bingsu/adetailer"),
+                Author = "Bingsu",
+                LicenseType = "Apache 2.0",
+                LicenseUrl = new Uri(
+                    "https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md"
+                ),
+                ContextType = SharedFolderType.Ultralytics,
+                RelativePath = "bbox"
+            },
+            new RemoteResource
+            {
+                Url = new Uri("https://huggingface.co/Bingsu/adetailer/resolve/main/person_yolov8m-seg.pt"),
+                HashSha256 = "9d881ec50b831f546e37977081b18f4e3bf65664aec163f97a311b0955499795",
+                InfoUrl = new Uri("https://huggingface.co/Bingsu/adetailer"),
+                Author = "Bingsu",
+                LicenseType = "Apache 2.0",
+                LicenseUrl = new Uri(
+                    "https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md"
+                ),
+                ContextType = SharedFolderType.Ultralytics,
+                RelativePath = "segm"
+            },
+            new RemoteResource
+            {
+                Url = new Uri("https://huggingface.co/Bingsu/adetailer/resolve/main/person_yolov8s-seg.pt"),
+                HashSha256 = "b5684835e79fd8b805459e0f7a0f9daa437e421cb4a214fff45ec4ac61767ef9",
+                InfoUrl = new Uri("https://huggingface.co/Bingsu/adetailer"),
+                Author = "Bingsu",
+                LicenseType = "Apache 2.0",
+                LicenseUrl = new Uri(
+                    "https://huggingface.co/datasets/choosealicense/licenses/blob/main/markdown/apache-2.0.md"
+                ),
+                ContextType = SharedFolderType.Ultralytics,
+                RelativePath = "segm"
+            }
+        ];
+
+    public static IEnumerable<HybridModelFile> UltralyticsModelFiles =>
+        UltralyticsModels.Select(HybridModelFile.FromDownloadable);
+
+    private static IEnumerable<RemoteResource> SamModels =>
+        [
+            new RemoteResource
+            {
+                Url = new Uri("https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth"),
+                InfoUrl = new Uri("https://github.com/facebookresearch/segment-anything"),
+                Author = "Facebook Research",
+                LicenseType = "Apache 2.0",
+                LicenseUrl = new Uri(
+                    "https://github.com/facebookresearch/segment-anything/blob/main/LICENSE"
+                ),
+                ContextType = SharedFolderType.Sams
+            },
+            new RemoteResource
+            {
+                Url = new Uri("https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth"),
+                InfoUrl = new Uri("https://github.com/facebookresearch/segment-anything"),
+                Author = "Facebook Research",
+                LicenseType = "Apache 2.0",
+                LicenseUrl = new Uri(
+                    "https://github.com/facebookresearch/segment-anything/blob/main/LICENSE"
+                ),
+                ContextType = SharedFolderType.Sams
+            },
+            new RemoteResource
+            {
+                Url = new Uri("https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth"),
+                InfoUrl = new Uri("https://github.com/facebookresearch/segment-anything"),
+                Author = "Facebook Research",
+                LicenseType = "Apache 2.0",
+                LicenseUrl = new Uri(
+                    "https://github.com/facebookresearch/segment-anything/blob/main/LICENSE"
+                ),
+                ContextType = SharedFolderType.Sams
+            }
+        ];
+
+    public static IEnumerable<HybridModelFile> SamModelFiles =>
+        SamModels.Select(HybridModelFile.FromDownloadable);
+
+    private static IEnumerable<RemoteResource> ClipModels =>
+        [
+            new RemoteResource
+            {
+                Url = new Uri(
+                    "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/comfyanonymous/flux_text_encoders"),
+                HashSha256 = "660c6f5b1abae9dc498ac2d21e1347d2abdb0cf6c0c0c8576cd796491d9a6cdd",
+                Author = "OpenAI",
+                LicenseType = "MIT",
+                ContextType = SharedFolderType.CLIP,
+            },
+            new RemoteResource
+            {
+                Url = new Uri(
+                    "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/comfyanonymous/flux_text_encoders"),
+                HashSha256 = "6e480b09fae049a72d2a8c5fbccb8d3e92febeb233bbe9dfe7256958a9167635",
+                Author = "Google",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.CLIP,
+            },
+            new RemoteResource
+            {
+                Url = new Uri(
+                    "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/comfyanonymous/flux_text_encoders"),
+                HashSha256 = "7d330da4816157540d6bb7838bf63a0f02f573fc48ca4d8de34bb0cbfd514f09",
+                Author = "Google",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.CLIP,
+            }
+        ];
+
+    public static IEnumerable<HybridModelFile> ClipModelFiles =>
+        ClipModels.Select(HybridModelFile.FromDownloadable);
 }

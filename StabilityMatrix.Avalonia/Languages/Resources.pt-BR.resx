@@ -792,6 +792,18 @@
   <data name="Label_Accounts" xml:space="preserve">
     <value>Contas</value>
   </data>
+  <data name="Label_Preprocessor" xml:space="preserve">
+    <value>Pré-processador</value>
+  </data>
+  <data name="Label_Strength" xml:space="preserve">
+    <value>Intensidade</value>
+  </data>
+  <data name="Label_ControlWeight" xml:space="preserve">
+    <value>Influência do Controle</value>
+  </data>
+  <data name="Label_ControlSteps" xml:space="preserve">
+    <value>Nível de Controle</value>
+  </data>
   <data name="Label_CivitAiLoginRequired" xml:space="preserve">
     <value>É necessário estar logado para baixar este checkpoint. Insira uma chave de API do CivitAI nas configurações.</value>
   </data>
@@ -964,6 +976,12 @@
   <data name="Label_RecommendedModelsSubText" xml:space="preserve">
     <value>Enquanto o pacote é instalado, veja alguns modelos para você começar.</value>
   </data>
+  <data name="Label_Notifications" xml:space="preserve">
+    <value>Notificações</value>
+  </data>
+  <data name="Label_NotificationOption_None" xml:space="preserve">
+    <value>Nenhum</value>
+  </data>
   <data name="Label_ComfyRequiredTitle" xml:space="preserve">
     <value>ComfyUI Obrigatório</value>
   </data>
@@ -976,32 +994,8 @@
   <data name="Label_SelectDownloadLocation" xml:space="preserve">
     <value>Local para salvar:</value>
   </data>
-  <data name="Label_Workflows" xml:space="preserve">
-    <value>Fluxos de Trabalho</value>
-  </data>
-  <data name="Label_InfiniteScrolling" xml:space="preserve">
-    <value>Rolagem infinita</value>
-  </data>
-  <data name="Label_WorkflowBrowser" xml:space="preserve">
-    <value>Gerenciador de Fluxos de Trabalho</value>
-  </data>
   <data name="Label_Config" xml:space="preserve">
     <value>Configuração</value>
-  </data>
-  <data name="Action_OpenOnOpenArt" xml:space="preserve">
-    <value>Abrir no OpenArt</value>
-  </data>
-  <data name="Label_NodeDetails" xml:space="preserve">
-    <value>Detalhes do nó</value>
-  </data>
-  <data name="Label_WorkflowDescription" xml:space="preserve">
-    <value>Descrição do fluxo de trabalho</value>
-  </data>
-  <data name="Label_OpenArtBrowser" xml:space="preserve">
-    <value>Explorar OpenArt</value>
-  </data>
-  <data name="Action_PreviewPreprocessor" xml:space="preserve">
-    <value>Visualizar Pré-processador</value>
   </data>
   <data name="Label_ToggleAutoScrolling" xml:space="preserve">
     <value>Ir para o fim automaticamente</value>
@@ -1013,7 +1007,7 @@
     <value>Tem certeza que quer sair? Todos os pacotes em execução serão fechados.</value>
   </data>
   <data name="Label_Console" xml:space="preserve">
-    <value>Terminal</value>
+    <value>Console</value>
   </data>
   <data name="Label_WebUi" xml:space="preserve">
     <value>Interface Web</value>
@@ -1042,8 +1036,32 @@
   <data name="Label_ModelBrowser" xml:space="preserve">
     <value>Gerenciador de Modelos</value>
   </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>Fluxos de Trabalho</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>Rolagem infinita</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>Gerenciador de Fluxos de Trabalho</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>Abrir no OpenArt</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>Detalhes do nó</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>Descrição do fluxo de trabalho</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>Explorar OpenArt</value>
+  </data>
+  <data name="Action_PreviewPreprocessor" xml:space="preserve">
+    <value>Visualizar Pré-processador</value>
+  </data>
   <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
-    <value>O botão 'Abrir Interface Web' agora está na barra de comandos</value>
+    <value>O botão &apos;Abrir Interface Web&apos; agora está na barra de comandos</value>
   </data>
   <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
     <value>Outra instância do Stability Matrix está aberta. Feche-a antes de abrir uma nova.</value>

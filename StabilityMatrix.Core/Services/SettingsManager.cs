@@ -271,21 +271,30 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
     }
 
     /// <inheritdoc />
-    public void RegisterPropertyChangedHandler<T>(
+    public IDisposable RegisterPropertyChangedHandler<T>(
         Expression<Func<Settings, T>> settingsProperty,
         Action<T> onPropertyChanged
     )
     {
+        var handlerName = onPropertyChanged.Method.Name;
         var settingsAccessor = CompiledExpression.CreateAccessor(settingsProperty);
 
-        // Invoke handler when settings change
-        SettingsPropertyChanged += (_, args) =>
-        {
-            if (args.PropertyName != settingsAccessor.FullName)
-                return;
+        return Observable
+            .FromEventPattern<EventHandler<RelayPropertyChangedEventArgs>, RelayPropertyChangedEventArgs>(
+                h => SettingsPropertyChanged += h,
+                h => SettingsPropertyChanged -= h
+            )
+            .Where(args => args.EventArgs.PropertyName == settingsAccessor.FullName)
+            .Subscribe(_ =>
+            {
+                logger.LogTrace(
+                    "[RegisterPropertyChangedHandler] Settings.{SettingsProperty:l} -> Handler ({Action})",
+                    settingsAccessor.FullName,
+                    handlerName
+                );
 
-            onPropertyChanged(settingsAccessor.Get(Settings));
-        };
+                onPropertyChanged(settingsAccessor.Get(Settings));
+            });
     }
 
     /// <summary>

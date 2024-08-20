@@ -2,9 +2,11 @@
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Data;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -12,9 +14,12 @@ using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -35,9 +40,13 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [ObservableProperty]
     private bool isLoading;
 
+    [ObservableProperty]
+    private long fileSize;
+
     private readonly ISettingsManager settingsManager;
     private readonly IModelIndexService modelIndexService;
     private readonly INotificationService notificationService;
+    private readonly IDownloadService downloadService;
     private readonly ServiceManager<ViewModelBase> vmFactory;
     private readonly ILogger logger;
 
@@ -50,6 +59,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
         INotificationService notificationService,
+        IDownloadService downloadService,
         ServiceManager<ViewModelBase> vmFactory,
         ILogger logger,
         LocalModelFile checkpointFile
@@ -58,14 +68,24 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         this.settingsManager = settingsManager;
         this.modelIndexService = modelIndexService;
         this.notificationService = notificationService;
+        this.downloadService = downloadService;
         this.vmFactory = vmFactory;
         this.logger = logger;
         CheckpointFile = checkpointFile;
-        ThumbnailUri = settingsManager.IsLibraryDirSet
-            ? CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
-                ?? CheckpointFile.ConnectedModelInfo?.ThumbnailImageUrl
-                ?? Assets.NoImage.ToString()
-            : string.Empty;
+
+        UpdateImage();
+
+        if (!settingsManager.IsLibraryDirSet)
+            return;
+
+        AddDisposable(
+            settingsManager.RegisterPropertyChangedHandler(
+                s => s.ShowNsfwInCheckpointsPage,
+                _ => Dispatcher.UIThread.Post(UpdateImage)
+            )
+        );
+
+        FileSize = GetFileSize(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
     }
 
     [RelayCommand]
@@ -84,7 +104,9 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         if (CheckpointFile.ConnectedModelInfo?.ModelId == null)
             return;
 
-        EventManager.Instance.OnNavigateAndFindCivitModelRequested(CheckpointFile.ConnectedModelInfo.ModelId);
+        EventManager.Instance.OnNavigateAndFindCivitModelRequested(
+            CheckpointFile.ConnectedModelInfo.ModelId.Value
+        );
     }
 
     [RelayCommand]
@@ -257,6 +279,170 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             {
                 logger.LogError(e, "Failed to rename checkpoint file");
             }
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenMetadataEditor()
+    {
+        var vm = vmFactory.Get<ModelMetadataEditorDialogViewModel>(vm =>
+        {
+            vm.CheckpointFiles = [this];
+        });
+
+        var dialog = vm.GetDialog();
+        dialog.MinDialogHeight = 800;
+        dialog.MinDialogWidth = 700;
+        dialog.IsPrimaryButtonEnabled = true;
+        dialog.IsFooterVisible = true;
+        dialog.PrimaryButtonText = "Save";
+        dialog.DefaultButton = ContentDialogButton.Primary;
+        dialog.CloseButtonText = "Cancel";
+
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary)
+            return;
+
+        // not supported yet
+        if (vm.IsEditingMultipleCheckpoints)
+            return;
+
+        try
+        {
+            var hasCmInfoAlready = CheckpointFile.HasConnectedModel;
+            var cmInfo = CheckpointFile.ConnectedModelInfo ?? new ConnectedModelInfo();
+            var hasThumbnailChanged =
+                vm.ThumbnailFilePath
+                != CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory);
+
+            cmInfo.ModelName = vm.ModelName;
+            cmInfo.ModelDescription = vm.ModelDescription;
+            cmInfo.Nsfw = vm.IsNsfw;
+            cmInfo.Tags = vm.Tags.Split(',').Select(x => x.Trim()).ToArray();
+            cmInfo.BaseModel = vm.BaseModelType.GetStringValue();
+            cmInfo.TrainedWords = string.IsNullOrWhiteSpace(vm.TrainedWords)
+                ? null
+                : vm.TrainedWords.Split(',').Select(x => x.Trim()).ToArray();
+            cmInfo.ThumbnailImageUrl = vm.ThumbnailFilePath;
+            cmInfo.ModelType = vm.ModelType;
+            cmInfo.VersionName = vm.VersionName;
+
+            var modelFilePath = new FilePath(
+                Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.RelativePath)
+            );
+
+            IsLoading = true;
+            Progress = new ProgressReport(0f, "Saving metadata...", isIndeterminate: true);
+
+            if (!hasCmInfoAlready)
+            {
+                cmInfo.Hashes = new CivitFileHashes
+                {
+                    BLAKE3 = await FileHash.GetBlake3Async(
+                        modelFilePath,
+                        new Progress<ProgressReport>(report =>
+                        {
+                            Progress = report with { Title = "Calculating hash..." };
+                        })
+                    )
+                };
+                cmInfo.ImportedAt = DateTimeOffset.Now;
+            }
+
+            var modelFileName = modelFilePath.NameWithoutExtension;
+            var modelFolder =
+                modelFilePath.Directory
+                ?? Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.SharedFolderType.ToString());
+
+            await cmInfo.SaveJsonToDirectory(modelFolder, modelFileName);
+
+            if (string.IsNullOrWhiteSpace(cmInfo.ThumbnailImageUrl))
+                return;
+
+            if (File.Exists(cmInfo.ThumbnailImageUrl) && hasThumbnailChanged)
+            {
+                // delete existing preview image
+                var existingPreviewPath = CheckpointFile.GetPreviewImageFullPath(
+                    settingsManager.ModelsDirectory
+                );
+                if (existingPreviewPath != null && File.Exists(existingPreviewPath))
+                {
+                    File.Delete(existingPreviewPath);
+                }
+
+                var filePath = new FilePath(cmInfo.ThumbnailImageUrl);
+                var previewPath = new FilePath(
+                    modelFolder,
+                    @$"{modelFileName}.preview{Path.GetExtension(cmInfo.ThumbnailImageUrl)}"
+                );
+                await filePath.CopyToAsync(previewPath);
+            }
+            else if (cmInfo.ThumbnailImageUrl.StartsWith("http"))
+            {
+                var imageExtension = Path.GetExtension(cmInfo.ThumbnailImageUrl).TrimStart('.');
+                if (imageExtension is "jpg" or "jpeg" or "png" or "webp")
+                {
+                    var imageDownloadPath = modelFilePath.Directory!.JoinFile(
+                        $"{modelFilePath.NameWithoutExtension}.preview.{imageExtension}"
+                    );
+
+                    var imageTask = downloadService.DownloadToFileAsync(
+                        cmInfo.ThumbnailImageUrl,
+                        imageDownloadPath,
+                        new Progress<ProgressReport>(report =>
+                        {
+                            Progress = report with { Title = "Downloading image" };
+                        })
+                    );
+
+                    await notificationService.TryAsync(imageTask, "Could not download preview image");
+                }
+            }
+
+            await modelIndexService.RefreshIndex();
+            notificationService.Show(
+                "Metadata saved",
+                "Metadata has been saved successfully",
+                NotificationType.Success
+            );
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to save metadata");
+            notificationService.Show("Failed to save metadata", e.Message, NotificationType.Error);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private long GetFileSize(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return 0;
+
+        var fileInfo = new FileInfo(filePath);
+        return fileInfo.Length;
+    }
+
+    private void UpdateImage()
+    {
+        if (
+            !settingsManager.Settings.ShowNsfwInCheckpointsPage
+            && CheckpointFile.ConnectedModelInfo?.Nsfw == true
+        )
+        {
+            ThumbnailUri = Assets.NoImage.ToString();
+        }
+        else
+        {
+            ThumbnailUri = settingsManager.IsLibraryDirSet
+                ? CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
+                    ?? CheckpointFile.ConnectedModelInfo?.ThumbnailImageUrl
+                    ?? Assets.NoImage.ToString()
+                : string.Empty;
         }
     }
 }

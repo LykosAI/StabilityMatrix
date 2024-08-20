@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using DynamicData;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
@@ -14,10 +13,7 @@ public class MockImageIndexService : IImageIndexService
 
     public MockImageIndexService()
     {
-        InferenceImages = new IndexCollection<LocalImageFile, string>(
-            this,
-            file => file.AbsolutePath
-        )
+        InferenceImages = new IndexCollection<LocalImageFile, string>(this, file => file.AbsolutePath)
         {
             RelativePath = "Inference"
         };

@@ -23,6 +23,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Animations;
@@ -43,8 +44,10 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -77,7 +80,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public override string Title => "Settings";
     public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+        new SymbolIconSource { Symbol = Symbol.Settings, IconVariant = IconVariant.Filled };
 
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public string AppVersion =>
@@ -116,6 +119,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
     // Integrations section
     [ObservableProperty]
     private bool isDiscordRichPresenceEnabled;
+
+    // Console section
+    [ObservableProperty]
+    private int consoleLogHistorySize;
 
     // Debug section
     [ObservableProperty]
@@ -252,6 +259,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.MoveFilesOnImport,
             settings => settings.MoveFilesOnImport,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ConsoleLogHistorySize,
+            settings => settings.ConsoleLogHistorySize,
             true
         );
 
@@ -443,6 +457,75 @@ public partial class MainSettingsViewModel : PageViewModelBase
             IsPrimaryButtonEnabled = true
         };
         await dialog.ShowAsync();
+    }
+
+    [RelayCommand]
+    private async Task RunPythonProcess()
+    {
+        await prerequisiteHelper.UnpackResourcesIfNecessary();
+        await prerequisiteHelper.InstallPythonIfNecessary();
+
+        var processPath = new FilePath(PyRunner.PythonExePath);
+
+        if (
+            await DialogHelper.GetTextEntryDialogResultAsync(
+                new TextBoxField { Label = "Arguments", InnerLeftText = processPath.Name },
+                title: "Run Python"
+            )
+            is not { IsPrimary: true } dialogResult
+        )
+        {
+            return;
+        }
+
+        var step = new ProcessStep
+        {
+            FileName = processPath,
+            Args = dialogResult.Value.Text,
+            WorkingDirectory = Compat.AppCurrentDir,
+            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary()
+        };
+
+        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private async Task RunGitProcess()
+    {
+        await prerequisiteHelper.InstallGitIfNecessary();
+
+        FilePath processPath;
+
+        if (Compat.IsWindows)
+        {
+            processPath = new FilePath(prerequisiteHelper.GitBinPath, "git.exe");
+        }
+        else
+        {
+            var whichGitResult = await ProcessRunner.RunBashCommand(["which", "git"]).EnsureSuccessExitCode();
+            processPath = new FilePath(whichGitResult.StandardOutput?.Trim() ?? "git");
+        }
+
+        if (
+            await DialogHelper.GetTextEntryDialogResultAsync(
+                new TextBoxField { Label = "Arguments", InnerLeftText = "git" },
+                title: "Run Git"
+            )
+            is not { IsPrimary: true } dialogResult
+        )
+        {
+            return;
+        }
+
+        var step = new ProcessStep
+        {
+            FileName = processPath,
+            Args = dialogResult.Value.Text,
+            WorkingDirectory = Compat.AppCurrentDir,
+            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary()
+        };
+
+        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
     }
 
     #endregion
@@ -852,7 +935,32 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugShowImageMaskEditorCommand),
             new CommandItem(DebugExtractImagePromptsToTxtCommand),
             new CommandItem(DebugShowConfirmDeleteDialogCommand),
+            new CommandItem(DebugShowModelMetadataEditorDialogCommand),
         ];
+
+    [RelayCommand]
+    private async Task DebugShowModelMetadataEditorDialog()
+    {
+        var vm = dialogFactory.Get<ModelMetadataEditorDialogViewModel>();
+        vm.ThumbnailFilePath = Assets.NoImage.ToString();
+        vm.Tags = "tag1, tag2, tag3";
+        vm.ModelDescription = "This is a description";
+        vm.ModelName = "Model Name";
+        vm.VersionName = "1.0.0";
+        vm.TrainedWords = "word1, word2, word3";
+        vm.ModelType = CivitModelType.Checkpoint;
+        vm.BaseModelType = CivitBaseModelType.Pony;
+
+        var dialog = vm.GetDialog();
+        dialog.MinDialogHeight = 800;
+        dialog.IsPrimaryButtonEnabled = true;
+        dialog.IsFooterVisible = true;
+        dialog.PrimaryButtonText = "Save";
+        dialog.DefaultButton = ContentDialogButton.Primary;
+        dialog.CloseButtonText = "Cancel";
+
+        await dialog.ShowAsync();
+    }
 
     [RelayCommand]
     private async Task DebugShowConfirmDeleteDialog()

@@ -8,11 +8,17 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.11.8
 ### Added
 - Added Flux & AuraFlow types to CivitAI Browser
+- Added unet folder links for ComfyUI thanks to jeremydk
+### Changed
+- Updated Brazilian Portuguese translations thanks to thiagojramos
 ### Fixed
 - Fixed CivitAI model browser not loading search results
 - Fixed SwarmUI settings being overwritten on launch
 - Fixed Forge output folder links pointing to the incorrect folder
 - Fixed errors when downloading models with invalid characters in the file name
+### Supporters
+#### Pioneers
+- A big shoutout to our Pioneer-tier patrons: **tankfox**, **tanangular**, **Mr. Unknown**, and **Szir777**! We deeply appreciate your ongoing support!
 
 ## v2.11.7
 ### Changed

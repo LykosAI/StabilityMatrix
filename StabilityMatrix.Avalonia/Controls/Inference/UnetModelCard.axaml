@@ -86,10 +86,9 @@
                             Text="CLIP 1"
                             TextAlignment="Left" />
 
-                        <controls:BetterComboBox
+                        <controls:BetterDownloadableComboBox
                             Grid.Row="3"
                             Grid.Column="1"
-                            Name="Clip1ComboBox"
                             Margin="4"
                             HorizontalAlignment="Stretch"
                             IsTextSearchEnabled="True"
@@ -106,10 +105,9 @@
                             Text="CLIP 2"
                             TextAlignment="Left" />
 
-                        <controls:BetterComboBox
+                        <controls:BetterDownloadableComboBox
                             Grid.Row="4"
                             Grid.Column="1"
-                            Name="Clip2ComboBox"
                             Margin="4"
                             HorizontalAlignment="Stretch"
                             IsTextSearchEnabled="True"

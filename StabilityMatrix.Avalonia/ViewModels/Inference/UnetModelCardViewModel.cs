@@ -5,14 +5,11 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -23,10 +20,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(UnetModelCard))]
 [ManagedService]
 [Transient]
-public partial class UnetModelCardViewModel(
-    IInferenceClientManager clientManager,
-    ServiceManager<ViewModelBase> vmFactory
-) : LoadableViewModelBase, IParametersLoadableState, IComfyStep
+public partial class UnetModelCardViewModel(IInferenceClientManager clientManager)
+    : LoadableViewModelBase,
+        IParametersLoadableState,
+        IComfyStep
 {
     [ObservableProperty]
     private HybridModelFile? selectedModel;
@@ -46,22 +43,6 @@ public partial class UnetModelCardViewModel(
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e5m2"];
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
-
-    [RelayCommand]
-    private async Task RemoteDownload(HybridModelFile? modelFile)
-    {
-        if (modelFile?.DownloadableResource is not { } resource)
-            return;
-
-        var confirmDialog = vmFactory.Get<DownloadResourceViewModel>();
-        confirmDialog.Resource = resource;
-        confirmDialog.FileName = modelFile.FileName;
-
-        if (await confirmDialog.GetDialog().ShowAsync() == ContentDialogResult.Primary)
-        {
-            confirmDialog.StartDownload();
-        }
-    }
 
     public async Task<bool> ValidateModel()
     {

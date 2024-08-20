@@ -11,7 +11,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Model Loader" option to Inference, for loading UNet/GGUF/NF4 models (e.g. Flux)
 - Added type-to-search for the Inference model selectors. Start typing while the dropdown is open to navigate the list.
 - Added "Sign in with Google" option for connecting your Lykos Account on the Account Settings page
+- Added unet folder links for ComfyUI thanks to jeremydk
 ### Changed
+- Updated Brazilian Portuguese translations thanks to thiagojramos
 - Merged the "Flux Text to Image" workflow back into the main Text to Image workflow
 ### Fixed
 - Fixed CivitAI Model Browser sometimes incorrectly showing "No models found" before toggling "Show NSFW" or "Hide Installed" filters
@@ -101,6 +103,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.11.8
 ### Added
 - Added Flux & AuraFlow types to CivitAI Browser
+- Added unet folder links for ComfyUI thanks to jeremydk
 ### Changed
 - Updated Brazilian Portuguese translations thanks to thiagojramos
 ### Fixed
@@ -108,6 +111,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed SwarmUI settings being overwritten on launch
 - Fixed Forge output folder links pointing to the incorrect folder
 - Fixed errors when downloading models with invalid characters in the file name
+### Supporters
+#### Pioneers
+- A big shoutout to our Pioneer-tier patrons: **tankfox**, **tanangular**, **Mr. Unknown**, and **Szir777**! We deeply appreciate your ongoing support!
 
 ## v2.11.7
 ### Changed

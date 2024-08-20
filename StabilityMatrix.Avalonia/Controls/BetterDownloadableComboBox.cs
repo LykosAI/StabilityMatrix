@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
@@ -13,6 +14,8 @@ namespace StabilityMatrix.Avalonia.Controls;
 
 public partial class BetterDownloadableComboBox : BetterComboBox
 {
+    protected override Type StyleKeyOverride => typeof(BetterComboBox);
+
     static BetterDownloadableComboBox()
     {
         SelectionChangedEvent.AddClassHandler<BetterDownloadableComboBox>(

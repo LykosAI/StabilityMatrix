@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
@@ -14,6 +15,8 @@ namespace StabilityMatrix.Avalonia.Controls;
 // ReSharper disable once InconsistentNaming
 public partial class FADownloadableComboBox : FAComboBox
 {
+    protected override Type StyleKeyOverride => typeof(FADownloadableComboBox);
+
     static FADownloadableComboBox()
     {
         SelectionChangedEvent.AddClassHandler<FADownloadableComboBox>(

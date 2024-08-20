@@ -18,14 +18,6 @@ public class InstalledPackage : IJsonOnDeserialized
     public string? PackageName { get; set; }
 
     // Package version
-    [Obsolete("Use Version instead. (Kept for migration)")]
-    public string? PackageVersion { get; set; }
-
-    [Obsolete("Use Version instead. (Kept for migration)")]
-    public string? InstalledBranch { get; set; }
-
-    [Obsolete("Use Version instead. (Kept for migration)")]
-    public string? DisplayVersion { get; set; }
     public InstalledPackageVersion? Version { get; set; }
 
     // Old type absolute path
@@ -104,6 +96,39 @@ public class InstalledPackage : IJsonOnDeserialized
             && !System.IO.Path.IsPathRooted(relativePath);
         return isSubPath ? relativePath : null;
     }
+
+    public static IEqualityComparer<InstalledPackage> Comparer { get; } =
+        new PropertyComparer<InstalledPackage>(p => p.Id);
+
+    protected bool Equals(InstalledPackage other)
+    {
+        return Id.Equals(other.Id);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj))
+            return false;
+        if (ReferenceEquals(this, obj))
+            return true;
+        return obj.GetType() == this.GetType() && Equals((InstalledPackage)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return Id.GetHashCode();
+    }
+
+    #region Migration / Obsolete
+
+    [Obsolete("Use Version instead. (Kept for migration)")]
+    public string? PackageVersion { get; set; }
+
+    [Obsolete("Use Version instead. (Kept for migration)")]
+    public string? InstalledBranch { get; set; }
+
+    [Obsolete("Use Version instead. (Kept for migration)")]
+    public string? DisplayVersion { get; set; }
 
     /// <summary>
     /// Migrates the old Path to the new LibraryPath.
@@ -210,35 +235,13 @@ public class InstalledPackage : IJsonOnDeserialized
         LibraryPath = System.IO.Path.Combine("Packages", packageFolderName);
     }
 
-    public static IEqualityComparer<InstalledPackage> Comparer { get; } =
-        new PropertyComparer<InstalledPackage>(p => p.Id);
-
-    protected bool Equals(InstalledPackage other)
-    {
-        return Id.Equals(other.Id);
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(null, obj))
-            return false;
-        if (ReferenceEquals(this, obj))
-            return true;
-        return obj.GetType() == this.GetType() && Equals((InstalledPackage)obj);
-    }
-
-    public override int GetHashCode()
-    {
-        return Id.GetHashCode();
-    }
-
-#pragma warning disable CS0618 // Type or member is obsolete
     public void OnDeserialized()
     {
         // Handle version migration
         if (Version != null)
             return;
 
+#pragma warning disable CS0618 // Type or member is obsolete
         if (string.IsNullOrWhiteSpace(InstalledBranch) && !string.IsNullOrWhiteSpace(PackageVersion))
         {
             // release mode
@@ -257,6 +260,8 @@ public class InstalledPackage : IJsonOnDeserialized
                 IsPrerelease = false
             };
         }
-    }
 #pragma warning restore CS0618 // Type or member is obsolete
+    }
+
+    #endregion
 }

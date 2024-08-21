@@ -5,6 +5,23 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.11.8
+### Added
+- Added Flux & AuraFlow types to CivitAI Browser
+- Added unet folder links for ComfyUI thanks to jeremydk
+- Added CLIP folder links for Forge
+### Changed
+- Updated Brazilian Portuguese translations thanks to thiagojramos
+### Fixed
+- Fixed [#840](https://github.com/LykosAI/StabilityMatrix/issues/840) - CivitAI model browser not loading search results
+- Fixed SwarmUI settings being overwritten on launch
+- Fixed [#832](https://github.com/LykosAI/StabilityMatrix/issues/832) [#847](https://github.com/LykosAI/StabilityMatrix/issues/847) - Forge output folder links pointing to the incorrect folder
+- Fixed errors when downloading models with invalid characters in the file name
+- Fixed error when installing RuinedFooocus on nvidia GPUs
+### Supporters
+#### Pioneers
+- A big shoutout to our Pioneer-tier patrons: **tankfox**, **tanangular**, **Mr. Unknown**, and **Szir777**! We deeply appreciate your ongoing support!
+
 ## v2.11.7
 ### Changed
 - Forge will use the recommended pytorch version 2.3.1 the next time it is updated

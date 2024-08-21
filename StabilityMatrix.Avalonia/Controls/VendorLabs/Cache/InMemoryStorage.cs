@@ -5,8 +5,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using Avalonia.Labs.Controls.Cache;
+using System.Runtime.CompilerServices;
+using KGySoft.CoreLibraries;
+using StabilityMatrix.Core.Helper.Cache;
 
 namespace StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 
@@ -16,17 +19,18 @@ namespace StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 /// <typeparam name="T">T defines the type of item stored</typeparam>
 public class InMemoryStorage<T>
 {
+    private readonly Dictionary<string, LinkedListNode<InMemoryStorageItem<T>>> _inMemoryStorage = new();
+    private readonly LinkedList<InMemoryStorageItem<T>> _lruList = [];
+
     private int _maxItemCount;
-    private ConcurrentDictionary<string, InMemoryStorageItem<T>> _inMemoryStorage =
-        new ConcurrentDictionary<string, InMemoryStorageItem<T>>();
-    private object _settingMaxItemCountLocker = new object();
+    private object _settingMaxItemCountLocker = new();
 
     /// <summary>
     /// Gets or sets the maximum count of Items that can be stored in this InMemoryStorage instance.
     /// </summary>
     public int MaxItemCount
     {
-        get { return _maxItemCount; }
+        get => _maxItemCount;
         set
         {
             if (_maxItemCount == value)
@@ -43,29 +47,48 @@ public class InMemoryStorage<T>
         }
     }
 
+    public int Count => _inMemoryStorage.Count;
+
     /// <summary>
     /// Clears all items stored in memory
     /// </summary>
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void Clear()
     {
         _inMemoryStorage.Clear();
+        _lruList.Clear();
     }
 
     /// <summary>
     /// Clears items stored in memory based on duration passed
     /// </summary>
     /// <param name="duration">TimeSpan to identify expired items</param>
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void Clear(TimeSpan duration)
     {
-        var expirationDate = DateTime.Now.Subtract(duration);
+        Clear(DateTime.Now.Subtract(duration));
+    }
 
-        var itemsToRemove = _inMemoryStorage
-            .Where(kvp => kvp.Value.LastUpdated <= expirationDate)
-            .Select(kvp => kvp.Key);
-
-        if (itemsToRemove.Any())
+    /// <summary>
+    /// Clears items stored in memory based on duration passed
+    /// </summary>
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public void Clear(DateTime expirationDate)
+    {
+        foreach (var (key, node) in _inMemoryStorage)
         {
-            Remove(itemsToRemove);
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                continue;
+            }
+
+            var item = node.Value;
+            if (item.LastUpdated > expirationDate)
+            {
+                continue;
+            }
+
+            Remove(key);
         }
     }
 
@@ -73,6 +96,7 @@ public class InMemoryStorage<T>
     /// Remove items based on provided keys
     /// </summary>
     /// <param name="keys">identified of the in-memory storage item</param>
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void Remove(IEnumerable<string> keys)
     {
         foreach (var key in keys)
@@ -82,14 +106,25 @@ public class InMemoryStorage<T>
                 continue;
             }
 
-            _inMemoryStorage.TryRemove(key, out _);
+            Remove(key);
         }
+    }
+
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public void Remove(string key)
+    {
+        if (!_inMemoryStorage.TryGetValue(key, out var node))
+            return;
+
+        _lruList.Remove(node);
+        _inMemoryStorage.Remove(key);
     }
 
     /// <summary>
     /// Add new item to in-memory storage
     /// </summary>
     /// <param name="item">item to be stored</param>
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public void SetItem(InMemoryStorageItem<T> item)
     {
         if (MaxItemCount == 0)
@@ -97,9 +132,20 @@ public class InMemoryStorage<T>
             return;
         }
 
-        _inMemoryStorage[item.Id] = item;
+        if (_inMemoryStorage.TryGetValue(item.Id, out var node))
+        {
+            _lruList.Remove(node);
+        }
+        else if (_inMemoryStorage.Count >= MaxItemCount)
+        {
+            RemoveFirst();
+        }
 
-        // ensure max limit is maintained. trim older entries first
+        var newNode = new LinkedListNode<InMemoryStorageItem<T>>(item);
+        _lruList.AddLast(newNode);
+        _inMemoryStorage[item.Id] = newNode;
+
+        /*// ensure max limit is maintained. trim older entries first
         if (_inMemoryStorage.Count > MaxItemCount)
         {
             var itemsToRemove = _inMemoryStorage
@@ -107,7 +153,7 @@ public class InMemoryStorage<T>
                 .Take(_inMemoryStorage.Count - MaxItemCount)
                 .Select(kvp => kvp.Key);
             Remove(itemsToRemove);
-        }
+        }*/
     }
 
     /// <summary>
@@ -116,23 +162,55 @@ public class InMemoryStorage<T>
     /// <param name="id">id of the in-memory storage item</param>
     /// <param name="duration">timespan denoting expiration</param>
     /// <returns>Valid item if not out of date or return null if out of date or item does not exist</returns>
+    [MethodImpl(MethodImplOptions.Synchronized)]
     public InMemoryStorageItem<T>? GetItem(string id, TimeSpan duration)
     {
-        if (!_inMemoryStorage.TryGetValue(id, out var tempItem))
+        if (!_inMemoryStorage.TryGetValue(id, out var node))
         {
             return null;
         }
 
         var expirationDate = DateTime.Now.Subtract(duration);
 
-        if (tempItem.LastUpdated > expirationDate)
+        if (node.Value.LastUpdated <= expirationDate)
         {
-            return tempItem;
+            Remove(id);
+            return null;
         }
 
-        _inMemoryStorage.TryRemove(id, out _);
+        _lruList.Remove(node);
+        _lruList.AddLast(node);
 
-        return null;
+        return node.Value;
+    }
+
+    [MethodImpl(MethodImplOptions.Synchronized)]
+    public InMemoryStorageItem<T>? GetItem(string id)
+    {
+        if (!_inMemoryStorage.TryGetValue(id, out var node))
+        {
+            return null;
+        }
+
+        var value = node.Value;
+
+        _lruList.Remove(node);
+        _lruList.AddLast(node);
+
+        return value;
+    }
+
+    private void RemoveFirst()
+    {
+        // Remove from LRUPriority
+        var node = _lruList.First;
+        _lruList.RemoveFirst();
+
+        if (node == null)
+            return;
+
+        // Remove from cache
+        _inMemoryStorage.Remove(node.Value.Id);
     }
 
     private void EnsureStorageBounds(int maxCount)

@@ -19,10 +19,11 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(LykosLoginDialog))]
 [Transient, ManagedService]
-public partial class LykosLoginViewModel : TaskDialogViewModelBase
+public partial class LykosLoginViewModel(
+    IAccountsService accountsService,
+    ServiceManager<ViewModelBase> vmFactory
+) : TaskDialogViewModelBase
 {
-    private readonly IAccountsService accountsService;
-
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ContinueButtonClickCommand))]
     private bool isSignupMode;
@@ -60,11 +61,6 @@ public partial class LykosLoginViewModel : TaskDialogViewModelBase
                                                   [Terms](https://lykos.ai/terms-and-conditions) and
                                                   [Privacy Policy](https://lykos.ai/privacy)
                                                   """;
-
-    public LykosLoginViewModel(IAccountsService accountsService)
-    {
-        this.accountsService = accountsService;
-    }
 
     private bool CanExecuteContinueButtonClick()
     {
@@ -118,6 +114,17 @@ public partial class LykosLoginViewModel : TaskDialogViewModelBase
         catch (ApiException e)
         {
             SignupError = new AppException("Failed to signup", $"{e.StatusCode} - {e.Message}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task OnGoogleOAuthButtonClick()
+    {
+        var vm = vmFactory.Get<OAuthGoogleLoginViewModel>();
+
+        if (await vm.GetDialog().ShowAsync() is ContentDialogResult.Primary)
+        {
+            CloseDialog(TaskDialogStandardResult.OK);
         }
     }
 

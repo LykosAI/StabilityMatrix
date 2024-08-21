@@ -338,6 +338,13 @@ public class BetterContentDialog : ContentDialog
         {
             faBorder!.MinWidth = MinDialogWidth;
         }
+
+        // This kind of bork for some reason
+        /*if (MinDialogHeight > 0)
+        {
+            faBorder!.MinHeight = MinDialogHeight;
+        }*/
+
         if (MaxDialogHeight > 0)
         {
             faBorder!.MaxHeight = MaxDialogHeight;

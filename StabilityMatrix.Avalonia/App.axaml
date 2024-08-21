@@ -44,7 +44,7 @@
     <Application.Styles>
         <styling:FluentAvaloniaTheme PreferUserAccentColor="True" UseSystemFontOnWindows="True"
                                      TextVerticalAlignmentOverrideBehavior="Disabled"/>
-        <StyleInclude Source="avares://Dock.Avalonia/Themes/DockFluentTheme.axaml" />
+        <StyleInclude Source="avares://Dock.Avalonia/Themes/DockSimpleTheme.axaml" />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <StyleInclude Source="avares://Avalonia.Xaml.Interactions.Draggable/Styles.axaml" />
@@ -76,6 +76,7 @@
         <StyleInclude Source="Controls/Inference/PromptCard.axaml"/>
         <StyleInclude Source="Controls/Inference/UpscalerCard.axaml"/>
         <StyleInclude Source="Controls/Inference/ModelCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/FaceDetailerCard.axaml"/>
         <StyleInclude Source="Controls/Inference/BatchSizeCard.axaml"/>
         <StyleInclude Source="Controls/Inference/SelectImageCard.axaml"/>
         <StyleInclude Source="Controls/Inference/SharpenCard.axaml"/>
@@ -84,11 +85,15 @@
         <StyleInclude Source="Controls/Inference/PromptExpansionCard.axaml"/>
         <StyleInclude Source="Controls/Inference/ExtraNetworkCard.axaml"/>
         <StyleInclude Source="Controls/Inference/LayerDiffuseCard.axaml"/>
+        <StyleInclude Source="Controls/Inference/UnetModelCard.axaml"/>
         <StyleInclude Source="Controls/Painting/PaintCanvas.axaml"/>
         <labs:ControlThemes/>
         
         <Style Selector="DockControl">
             <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
+        </Style>
+        <Style Selector="ScrollViewer">
+            <Setter Property="BringIntoViewOnFocusChange" Value="False"/>
         </Style>
     </Application.Styles>
 </Application>

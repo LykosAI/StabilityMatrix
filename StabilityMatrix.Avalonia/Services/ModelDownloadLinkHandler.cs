@@ -50,9 +50,10 @@ public class ModelDownloadLinkHandler(
 
     private void UriReceivedHandler(Uri receivedUri)
     {
-        logger.LogDebug("ModelDownloadLinkHandler Received URI: {Uri}", receivedUri.PathAndQuery);
         if (!receivedUri.Host.Equals(DownloadCivitModel, StringComparison.OrdinalIgnoreCase))
             return;
+
+        logger.LogDebug("ModelDownloadLinkHandler Received URI: {Uri}", receivedUri.PathAndQuery);
 
         var queryDict = HttpUtility.ParseQueryString(receivedUri.Query);
         var modelIdStr = queryDict["modelId"];

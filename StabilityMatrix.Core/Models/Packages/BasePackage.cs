@@ -53,35 +53,37 @@ public abstract class BasePackage
 
     public abstract Task DownloadPackage(
         string installLocation,
-        DownloadPackageVersionOptions versionOptions,
-        IProgress<ProgressReport>? progress1
+        DownloadPackageOptions options,
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
     );
 
     public abstract Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    );
-
-    public abstract Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     );
 
     public abstract Task<bool> CheckForUpdates(InstalledPackage package);
 
     public abstract Task<InstalledPackageVersion> Update(
+        string installLocation,
         InstalledPackage installedPackage,
-        TorchVersion torchVersion,
-        DownloadPackageVersionOptions versionOptions,
+        UpdatePackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
+    );
+
+    public abstract Task RunPackage(
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     );
 
     public virtual IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
@@ -120,6 +122,16 @@ public abstract class BasePackage
             return TorchVersion.Cuda;
         }
 
+        if (HardwareHelper.HasAmdGpu() && AvailableTorchVersions.Contains(TorchVersion.Zluda))
+        {
+            return TorchVersion.Zluda;
+        }
+
+        if (HardwareHelper.HasIntelGpu() && AvailableTorchVersions.Contains(TorchVersion.Ipex))
+        {
+            return TorchVersion.Ipex;
+        }
+
         if (HardwareHelper.PreferRocm() && AvailableTorchVersions.Contains(TorchVersion.Rocm))
         {
             return TorchVersion.Rocm;
@@ -150,7 +162,7 @@ public abstract class BasePackage
     public abstract Task<IEnumerable<Release>> GetReleaseTags();
 
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
-    public virtual string? ExtraLaunchArguments { get; set; } = null;
+    public virtual IReadOnlyList<string> ExtraLaunchArguments { get; } = Array.Empty<string>();
 
     /// <summary>
     /// The shared folders that this package supports.

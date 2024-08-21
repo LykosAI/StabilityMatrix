@@ -32,7 +32,7 @@
             Margin="8,0"
             VerticalAlignment="Center"
             Symbol="Star" 
-            IsFilled="True"/>
+            IconVariant="Filled"/>
     </Styles.Resources>-->
 
     <Style Selector="controls|StarsRating">

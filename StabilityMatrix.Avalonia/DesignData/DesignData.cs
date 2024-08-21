@@ -326,6 +326,7 @@ public static class DesignData
                 settingsManager,
                 new MockModelIndexService(),
                 notificationService,
+                downloadService,
                 dialogFactory,
                 null,
                 new LocalModelFile
@@ -356,6 +357,7 @@ public static class DesignData
                 settingsManager,
                 new MockModelIndexService(),
                 notificationService,
+                downloadService,
                 dialogFactory,
                 null,
                 new LocalModelFile
@@ -713,6 +715,17 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static OAuthConnectViewModel OAuthConnectViewModel =>
         DialogFactory.Get<OAuthConnectViewModel>(vm =>
+        {
+            vm.Url =
+                "https://www.example.org/oauth2/authorize?"
+                + "client_id=66ad566552679cb6e650be01ed6f8d2ae9a0f803c0369850a5c9ee82a2396062&"
+                + "scope=identity%20identity.memberships&"
+                + "response_type=code&state=test%40example.org&"
+                + "redirect_uri=http://localhost:5022/api/oauth/patreon/callback";
+        });
+
+    public static OAuthLoginViewModel OAuthLoginViewModel =>
+        DialogFactory.Get<OAuthLoginViewModel>(vm =>
         {
             vm.Url =
                 "https://www.example.org/oauth2/authorize?"
@@ -1097,6 +1110,19 @@ The gallery images are often inpainted, but you will get something very similar 
                 ]
             }
         };
+
+    public static ModelMetadataEditorDialogViewModel MetadataEditorDialogViewModel =>
+        DialogFactory.Get<ModelMetadataEditorDialogViewModel>(vm =>
+        {
+            vm.ThumbnailFilePath = Assets.NoImage.ToString();
+            vm.Tags = "tag1, tag2, tag3";
+            vm.ModelDescription = "This is a description";
+            vm.ModelName = "Model Name";
+            vm.VersionName = "1.0.0";
+            vm.TrainedWords = "word1, word2, word3";
+            vm.ModelType = CivitModelType.Checkpoint;
+            vm.BaseModelType = CivitBaseModelType.Pony;
+        });
 
     public static string CurrentDirectory => Directory.GetCurrentDirectory();
 

@@ -20,7 +20,7 @@
                     <controls:BetterPropertyGrid
                         AllowFilter="False"
                         AllowQuickFilter="False"
-                        SelectedObject="{Binding Mode=OneTime}"
+                        DataContext="{Binding Mode=OneTime}"
                         IncludedCategories="{Binding $parent[ItemsControl].((vmDialogs:PropertyGridViewModel)DataContext).IncludeCategories, Mode=OneTime, FallbackValue=''}"
                         ExcludedCategories="{Binding $parent[ItemsControl].((vmDialogs:PropertyGridViewModel)DataContext).ExcludeCategories, Mode=OneTime, FallbackValue=''}"
                         ShowStyle="{Binding $parent[ItemsControl].((vmDialogs:PropertyGridViewModel)DataContext).ShowStyle, Mode=OneTime, FallbackValue=Alphabetic}"

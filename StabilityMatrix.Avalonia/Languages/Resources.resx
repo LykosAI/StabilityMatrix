@@ -1116,7 +1116,82 @@
   <data name="Label_AppData" xml:space="preserve">
     <value>App Data</value>
   </data>
+  <data name="TextTemplate_PackageUpdatedToSelected" xml:space="preserve">
+    <value>{0} has been updated to the selected version</value>
+  </data>
+  <data name="Action_CopyAsBitmap" xml:space="preserve">
+    <value>Copy as Bitmap</value>
+  </data>
+  <data name="Label_DisableUpdateCheck" xml:space="preserve">
+    <value>Disable Update Check</value>
+  </data>
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>PLEASE EXTRACT THE APP FROM THE ZIP FILE BEFORE RUNNING STABILITY MATRIX</value>
+  </data>
+  <data name="Label_HistorySize" xml:space="preserve">
+    <value>History Size</value>
+  </data>
+  <data name="Label_HistorySize_Description" xml:space="preserve">
+    <value>The number of lines above the ones displayed in the console you can scroll back to</value>
+  </data>
+  <data name="Label_ConnectAccountFailed" xml:space="preserve">
+    <value>We had some trouble connecting your account</value>
+  </data>
+  <data name="Label_EditModelMetadata" xml:space="preserve">
+    <value>Edit Model Metadata</value>
+  </data>
+  <data name="Label_NSFW" xml:space="preserve">
+    <value>NSFW</value>
+  </data>
+  <data name="Label_Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Label_VersionName" xml:space="preserve">
+    <value>Version Name</value>
+  </data>
+  <data name="Label_TrainedWords" xml:space="preserve">
+    <value>Trained Words</value>
+  </data>
+  <data name="Label_PreviewImage" xml:space="preserve">
+    <value>Preview Image</value>
+  </data>
+  <data name="Label_BatchSize" xml:space="preserve">
+    <value>Batch Size</value>
+  </data>
+  <data name="Label_Batches" xml:space="preserve">
+    <value>Batches</value>
+  </data>
+  <data name="Label_Sampler" xml:space="preserve">
+    <value>Sampler</value>
+  </data>
+  <data name="Label_Scheduler" xml:space="preserve">
+    <value>Scheduler</value>
+  </data>
+  <data name="Label_MaxSize" xml:space="preserve">
+    <value>Max Size</value>
+  </data>
+  <data name="Label_UseSeparatePrompt" xml:space="preserve">
+    <value>Use Separate Prompt</value>
+  </data>
+  <data name="Label_Seed" xml:space="preserve">
+    <value>Seed</value>
+  </data>
+  <data name="Label_NegativePrompt" xml:space="preserve">
+    <value>Negative Prompt</value>
+  </data>
+  <data name="Label_NewFolder" xml:space="preserve">
+    <value>New Folder</value>
+  </data>
+  <data name="Label_CopyLinkToClipboard" xml:space="preserve">
+    <value />
+  </data>
+  <data name="TextTemplate_OAuthLoginTitle" xml:space="preserve">
+    <value>Sign in with {0}</value><comment>e.g. 'Sign in with Google'</comment>
+  </data>
+  <data name="Text_AllowBrowserOpenAppLink" xml:space="preserve">
+    <value>Please allow your browser to open this app when prompted to continue.</value>
+  </data>
+  <data name="Text_OAuthLoginDescription" xml:space="preserve">
+    <value>Open the link in your browser and follow the instructions to connect your account.</value>
   </data>
 </root>

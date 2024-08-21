@@ -20,6 +20,7 @@
 
     <ControlTheme x:Key="{x:Type scroll:BetterScrollViewer}" TargetType="scroll:BetterScrollViewer">
         <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BringIntoViewOnFocusChange" Value="False"/>
         <Setter Property="Template">
             <ControlTemplate>
                 <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">

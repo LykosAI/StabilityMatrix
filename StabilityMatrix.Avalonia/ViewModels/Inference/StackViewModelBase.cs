@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
-using Avalonia.Collections;
 using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -98,10 +96,7 @@ public abstract class StackViewModelBase : LoadableViewModelBase
 
         var derivedTypes = ViewModelSerializer.GetDerivedTypes(typeof(LoadableViewModelBase));
 
-        if (
-            !state.TryGetPropertyValue("$values", out var values)
-            || values is not JsonArray nodesArray
-        )
+        if (!state.TryGetPropertyValue("$values", out var values) || values is not JsonArray nodesArray)
         {
             return;
         }

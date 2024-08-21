@@ -2,7 +2,7 @@
 
 namespace StabilityMatrix.Core.Models.Progress;
 
-public record struct ProgressReport
+public readonly record struct ProgressReport
 {
     /// <summary>
     /// Progress value as percentage between 0 and 1.
@@ -26,6 +26,9 @@ public record struct ProgressReport
     public ProgressType Type { get; init; } = ProgressType.Generic;
     public bool PrintToConsole { get; init; } = true;
     public double SpeedInMBps { get; init; } = 0f;
+
+    public static ProgressReport ForProcessOutput(ProcessOutput output) =>
+        new(-1f, isIndeterminate: true) { ProcessOutput = output };
 
     public ProgressReport(
         double progress,

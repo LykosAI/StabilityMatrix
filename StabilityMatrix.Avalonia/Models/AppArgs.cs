@@ -1,5 +1,4 @@
-﻿using System;
-using CommandLine;
+﻿using CommandLine;
 
 namespace StabilityMatrix.Avalonia.Models;
 
@@ -62,6 +61,12 @@ public class AppArgs
     /// </summary>
     [Option("opengl", HelpText = "Prefer OpenGL rendering")]
     public bool UseOpenGlRendering { get; set; }
+
+    /// <summary>
+    /// Flag to use Vulkan rendering
+    /// </summary>
+    [Option("vulkan", HelpText = "Prefer Vulkan rendering")]
+    public bool UseVulkanRendering { get; set; }
 
     /// <summary>
     /// Override global app home directory

@@ -16,6 +16,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Services;
 using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView;
 
@@ -93,7 +94,8 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
             {
                 typeof(HiresFixModule),
                 typeof(UpscalerModule),
-                typeof(SaveImageModule)
+                typeof(SaveImageModule),
+                typeof(FaceDetailerModule)
             };
             modulesCard.DefaultModules = new[] { typeof(HiresFixModule), typeof(UpscalerModule) };
             modulesCard.InitializeDefaults();
@@ -141,19 +143,42 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Load models
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        // Setup empty latent
-        builder.SetupEmptyLatentSource(
-            SamplerCardViewModel.Width,
-            SamplerCardViewModel.Height,
-            BatchSizeCardViewModel.BatchSize,
-            BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
-        );
+        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Gguf or ModelLoader.Unet;
+        var useSd3Latent =
+            SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>() || isUnetLoader;
+
+        if (useSd3Latent)
+        {
+            builder.SetupEmptySd3LatentSource(
+                SamplerCardViewModel.Width,
+                SamplerCardViewModel.Height,
+                BatchSizeCardViewModel.BatchSize,
+                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
+            );
+        }
+        else
+        {
+            // Setup empty latent
+            builder.SetupEmptyLatentSource(
+                SamplerCardViewModel.Width,
+                SamplerCardViewModel.Height,
+                BatchSizeCardViewModel.BatchSize,
+                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
+            );
+        }
 
         // Prompts and loras
         PromptCardViewModel.ApplyStep(applyArgs);
 
         // Setup Sampler and Refiner if enabled
-        SamplerCardViewModel.ApplyStep(applyArgs);
+        if (isUnetLoader)
+        {
+            SamplerCardViewModel.ApplyStepsInitialFluxSampler(applyArgs);
+        }
+        else
+        {
+            SamplerCardViewModel.ApplyStep(applyArgs);
+        }
 
         // Hires fix if enabled
         foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
@@ -192,6 +217,20 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
         if (!await ModelCardViewModel.ValidateModel())
             return;
+
+        foreach (var module in ModulesCardViewModel.Cards.OfType<ModuleBase>())
+        {
+            if (!module.IsEnabled)
+                continue;
+
+            if (module is not IValidatableModule validatableModule)
+                continue;
+
+            if (!await validatableModule.Validate())
+            {
+                return;
+            }
+        }
 
         if (!await CheckClientConnectedWithPrompt() || !ClientManager.IsConnected)
             return;

@@ -103,11 +103,17 @@ public static class StringExtensions
     /// </summary>
     [Pure]
     // ReSharper disable once ReturnTypeCanBeEnumerable.Global
-    public static string[] SplitLines(
-        this string str,
-        StringSplitOptions options = StringSplitOptions.None
-    )
+    public static string[] SplitLines(this string str, StringSplitOptions options = StringSplitOptions.None)
     {
         return str.Split(new[] { "\r\n", "\n" }, options);
+    }
+
+    /// <summary>
+    /// Normalizes directory separator characters in a given path
+    /// </summary>
+    [Pure]
+    public static string NormalizePathSeparators(this string path)
+    {
+        return path.Replace('\\', '/');
     }
 }

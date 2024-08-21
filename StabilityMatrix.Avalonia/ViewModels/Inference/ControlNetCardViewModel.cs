@@ -5,11 +5,9 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
-using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -85,22 +83,6 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
                     Height = propertyValue.Value.Height;
                 }
             });
-    }
-
-    [RelayCommand]
-    private async Task RemoteDownload(HybridModelFile? modelFile)
-    {
-        if (modelFile?.DownloadableResource is not { } resource)
-            return;
-
-        var confirmDialog = vmFactory.Get<DownloadResourceViewModel>();
-        confirmDialog.Resource = resource;
-        confirmDialog.FileName = modelFile.FileName;
-
-        if (await confirmDialog.GetDialog().ShowAsync() == ContentDialogResult.Primary)
-        {
-            confirmDialog.StartDownload();
-        }
     }
 
     [RelayCommand]

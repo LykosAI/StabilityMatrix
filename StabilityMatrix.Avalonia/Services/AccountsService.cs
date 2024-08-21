@@ -2,7 +2,6 @@
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Octokit;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
@@ -61,6 +60,19 @@ public class AccountsService : IAccountsService
         await RefreshLykosAsync(secrets);
     }
 
+    public async Task LykosLoginViaGoogleOAuthAsync(string code, string state, string codeVerifier)
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+
+        var tokens = await lykosAuthApi.GetOAuthGoogleCallback(code, state, codeVerifier);
+
+        secrets = secrets with { LykosAccount = tokens };
+
+        await secretsManager.SaveAsync(secrets);
+
+        await RefreshLykosAsync(secrets);
+    }
+
     public async Task LykosSignupAsync(string email, string password, string username)
     {
         var secrets = await secretsManager.SafeLoadAsync();
@@ -109,10 +121,7 @@ public class AccountsService : IAccountsService
         var id = userAccount.Result.Data.Json.Id;
 
         // Then get the username using the id
-        var account = await civitTRPCApi.GetUserById(
-            new CivitGetUserByIdRequest { Id = id },
-            apiToken
-        );
+        var account = await civitTRPCApi.GetUserById(new CivitGetUserByIdRequest { Id = id }, apiToken);
         var username = account.Result.Data.Json.Username;
 
         secrets = secrets with { CivitApi = new CivitApiTokens(apiToken, username) };

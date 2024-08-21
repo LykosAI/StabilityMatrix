@@ -13,6 +13,19 @@ public readonly record struct RemoteResource
 
     public string FileName => FileNameOverride ?? Path.GetFileName(Url.ToString());
 
+    /// <summary>
+    /// Optional relative subdirectory to download the file to.
+    /// </summary>
+    public string? RelativeDirectory { get; init; }
+
+    /// <summary>
+    /// Relative path to download the file to.
+    /// This is <see cref="RelativeDirectory"/> combined with <see cref="FileName"/> if <see cref="RelativeDirectory"/> is not null.
+    /// Otherwise, it is just <see cref="FileName"/>.
+    /// </summary>
+    public string RelativePath =>
+        !string.IsNullOrEmpty(RelativeDirectory) ? Path.Combine(RelativeDirectory, FileName) : FileName;
+
     public string? HashSha256 { get; init; }
 
     /// <summary>

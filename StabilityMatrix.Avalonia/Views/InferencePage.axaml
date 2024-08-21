@@ -190,7 +190,7 @@
                             VerticalAlignment="Center"
                             FontSize="18"
                             Foreground="{DynamicResource ThemeGreyColor}"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="PlugConnected" />
 
                         <Button.Flyout>

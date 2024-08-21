@@ -106,13 +106,15 @@ public class RuinedFooocus(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
+        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
+
         if (torchVersion == TorchVersion.Cuda)
         {
             await using var venvRunner = await SetupVenvPure(installLocation, forceRecreate: true)
@@ -135,11 +137,11 @@ public class RuinedFooocus(
         {
             await base.InstallPackage(
                 installLocation,
-                torchVersion,
-                selectedSharedFolderMethod,
-                versionOptions,
+                installedPackage,
+                options,
                 progress,
-                onConsoleOutput
+                onConsoleOutput,
+                cancellationToken
             )
                 .ConfigureAwait(false);
         }

@@ -1025,9 +1025,6 @@
   <data name="Label_ModelBrowser" xml:space="preserve">
     <value>Navegador de Modelos</value>
   </data>
-  <data name="Label_CLIPStrength" xml:space="preserve">
-    <value>CLIP Fortaleza</value>
-  </data>
   <data name="Label_Workflows" xml:space="preserve">
     <value>Workflows</value>
   </data>

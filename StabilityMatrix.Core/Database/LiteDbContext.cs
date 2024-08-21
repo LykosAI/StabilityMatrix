@@ -1,4 +1,5 @@
-﻿using LiteDB;
+﻿using System.Collections.Immutable;
+using LiteDB;
 using LiteDB.Async;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -15,6 +16,9 @@ public class LiteDbContext : ILiteDbContext
     private readonly ILogger<LiteDbContext> logger;
     private readonly ISettingsManager settingsManager;
     private readonly DebugOptions debugOptions;
+
+    // Tracks handled exceptions
+    private readonly HashSet<HandledExceptionInfo> handledExceptions = [];
 
     private readonly Lazy<LiteDatabaseAsync> lazyDatabase;
     public LiteDatabaseAsync Database => lazyDatabase.Value;
@@ -163,12 +167,8 @@ public class LiteDbContext : ILiteDbContext
         if (string.IsNullOrEmpty(cacheKey))
             return null;
 
-        if (await GithubCache.FindByIdAsync(cacheKey).ConfigureAwait(false) is { } result)
-        {
-            return result;
-        }
-
-        return null;
+        return await TryQueryWithClearOnExceptionAsync(GithubCache, GithubCache.FindByIdAsync(cacheKey))
+            .ConfigureAwait(false);
     }
 
     public Task<bool> UpsertGithubCacheEntry(GithubCacheEntry cacheEntry) =>
@@ -198,6 +198,104 @@ public class LiteDbContext : ILiteDbContext
         }
     }
 
+    /// <summary>
+    /// Executes a query with exception logging and collection clearing.
+    /// This will handle unique exceptions once keyed by string representation for each collection,
+    /// and throws if repeated.
+    /// </summary>
+    /// <typeparam name="T">The type of collection to query.</typeparam>
+    /// <typeparam name="TResult">The type of result to return.</typeparam>
+    /// <param name="collection">The collection to query.</param>
+    /// <param name="task">The task representing the query to execute.</param>
+    /// <returns>The result of the query, or default value on handled exception.</returns>
+    public async Task<TResult?> TryQueryWithClearOnExceptionAsync<T, TResult>(
+        ILiteCollectionAsync<T> collection,
+        Task<TResult> task
+    )
+    {
+        try
+        {
+            return await task.ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            var exceptionInfo = new HandledExceptionInfo(
+                collection.Name,
+                ex.ToString(),
+                ex.InnerException?.ToString()
+            );
+
+            lock (handledExceptions)
+            {
+                var exceptionString = ex.InnerException is null
+                    ? $"{ex.GetType()}"
+                    : $"{ex.GetType()} ({ex.InnerException.GetType()})";
+
+                // Throw if exception was already handled previously this session
+                // then it's probably not a migration issue
+                if (handledExceptions.Contains(exceptionInfo))
+                {
+                    throw new AggregateException(
+                        $"Repeated LiteDb error '{exceptionString}' while fetching from '{exceptionInfo.CollectionName}', previously handled",
+                        ex
+                    );
+                }
+
+                // Log warning for known exception types, otherwise log error
+                if (
+                    ex is LiteException or LiteAsyncException
+                    && ex.InnerException
+                        is InvalidCastException // GitHub cache int type changes
+                            or ArgumentException // Unknown enum values
+                )
+                {
+                    logger.LogWarning(
+                        ex,
+                        "LiteDb error while fetching from {Name}, collection will be cleared: {Exception}",
+                        collection.Name,
+                        exceptionString
+                    );
+                }
+                else
+                {
+#if DEBUG
+                    throw;
+#else
+                    logger.LogError(
+                        ex,
+                        "LiteDb unknown error while fetching from {Name}, collection will be cleared: {Exception}",
+                        collection.Name,
+                        exceptionString
+                    );
+#endif
+                }
+
+                // Add to handled exceptions
+                handledExceptions.Add(exceptionInfo);
+            }
+
+            // Clear collection
+            await collection.DeleteAllAsync().ConfigureAwait(false);
+
+            // Get referenced collections
+            var referencedCollections = FindReferencedCollections(collection).ToArray();
+            if (referencedCollections.Length > 0)
+            {
+                logger.LogWarning(
+                    "Clearing referenced collections: [{@Names}]",
+                    referencedCollections.Select(c => c.Name)
+                );
+
+                foreach (var referencedCollection in referencedCollections)
+                {
+                    await referencedCollection.DeleteAllAsync().ConfigureAwait(false);
+                }
+            }
+        }
+
+        return default;
+    }
+
     public void Dispose()
     {
         if (lazyDatabase.IsValueCreated)
@@ -216,4 +314,66 @@ public class LiteDbContext : ILiteDbContext
 
         GC.SuppressFinalize(this);
     }
+
+    /// <summary>
+    /// Recursively find all referenced collections in the entity mapper of a collection.
+    /// </summary>
+    private IEnumerable<ILiteCollectionAsync<BsonDocument>> FindReferencedCollections<T>(
+        ILiteCollectionAsync<T> collection
+    )
+    {
+        var collectionNames = Database.UnderlyingDatabase.GetCollectionNames().ToArray();
+
+        foreach (
+            var referencedCollectionName in FindReferencedCollectionNamesRecursive(
+                collection.EntityMapper,
+                [collection.Name]
+            )
+        )
+        {
+            yield return Database.GetCollection(referencedCollectionName);
+        }
+
+        yield break;
+
+        IEnumerable<string> FindReferencedCollectionNamesRecursive(
+            EntityMapper entityMapper,
+            ImmutableHashSet<string> seenCollectionNames
+        )
+        {
+            foreach (var member in entityMapper.Members)
+            {
+                // Only look for members that are DBRef
+                if (!member.IsDbRef || member.UnderlyingType is not { } dbRefType)
+                    continue;
+
+                // Skip if not a collection or already seen
+                if (!collectionNames.Contains(dbRefType.Name) || seenCollectionNames.Contains(dbRefType.Name))
+                    continue;
+
+                var memberCollection = Database.GetCollection(dbRefType.Name);
+
+                seenCollectionNames = seenCollectionNames.Add(memberCollection.Name);
+                yield return memberCollection.Name;
+
+                // Also recursively find references in the referenced collection
+                foreach (
+                    var subCollectionName in FindReferencedCollectionNamesRecursive(
+                        memberCollection.EntityMapper,
+                        seenCollectionNames
+                    )
+                )
+                {
+                    seenCollectionNames = seenCollectionNames.Add(subCollectionName);
+                    yield return subCollectionName;
+                }
+            }
+        }
+    }
+
+    private readonly record struct HandledExceptionInfo(
+        string CollectionName,
+        string Exception,
+        string? InnerException
+    );
 }

@@ -67,7 +67,8 @@ public class A3WebUI(
             [SharedFolderType.IpAdapter] = new[] { "models/controlnet/IpAdapter" },
             [SharedFolderType.InvokeIpAdapters15] = new[] { "models/controlnet/DiffusersIpAdapters" },
             [SharedFolderType.InvokeIpAdaptersXl] = new[] { "models/controlnet/DiffusersIpAdaptersXL" },
-            [SharedFolderType.SVD] = new[] { "models/svd" }
+            [SharedFolderType.SVD] = new[] { "models/svd" },
+            [SharedFolderType.CLIP] = new[] { "models/text_encoder" }
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>

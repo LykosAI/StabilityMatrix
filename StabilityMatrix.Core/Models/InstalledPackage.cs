@@ -54,6 +54,10 @@ public class InstalledPackage : IJsonOnDeserialized
     [JsonConverter(typeof(JsonStringEnumConverter<TorchIndex>))]
     public TorchIndex? PreferredTorchIndex { get; set; }
 
+    [JsonConverter(typeof(JsonStringEnumConverter<TorchIndex>))]
+    [Obsolete("Use PreferredTorchIndex instead. (Kept for migration)")]
+    public TorchIndex? PreferredTorchVersion { get; set; }
+
     [JsonConverter(typeof(JsonStringEnumConverter<SharedFolderMethod>))]
     public SharedFolderMethod? PreferredSharedFolderMethod { get; set; }
 
@@ -238,6 +242,9 @@ public class InstalledPackage : IJsonOnDeserialized
 #pragma warning disable CS0618 // Type or member is obsolete
     public void OnDeserialized()
     {
+        // handle TorchIndex migration
+        PreferredTorchIndex ??= PreferredTorchVersion;
+
         // Handle version migration
         if (Version != null)
             return;

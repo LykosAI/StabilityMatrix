@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.12.0-pre.3
+### Fixed
+- Fixed CivitAI Browser page scroll refresh not ordering models correctly
+
 ## v2.12.0-pre.2
 ### Added
 - Added "Show NSFW Images" toggle to the Checkpoints page

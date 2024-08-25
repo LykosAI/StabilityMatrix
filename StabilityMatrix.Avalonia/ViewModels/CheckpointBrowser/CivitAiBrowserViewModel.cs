@@ -357,7 +357,9 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             return;
         }
 
-        var modelsToAdd = models.Select((m, i) => new OrderedValue<CivitModel>(i, m));
+        var startIndex = modelCache.Count;
+
+        var modelsToAdd = models.Select((m, i) => new OrderedValue<CivitModel>(startIndex + i, m));
 
         if (addCards)
         {

@@ -162,24 +162,24 @@ public partial class MainWindowViewModel : ViewModelBase
 
         if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Count == 0)
         {
-            var viewModel = dialogFactory.Get<NewOneClickInstallViewModel>();
-            var dialog = new BetterContentDialog
-            {
-                IsPrimaryButtonEnabled = false,
-                IsSecondaryButtonEnabled = false,
-                IsFooterVisible = false,
-                FullSizeDesired = true,
-                MinDialogHeight = 775,
-                Content = new NewOneClickInstallDialog { DataContext = viewModel },
-            };
-
-            var firstDialogResult = await dialog.ShowAsync(App.TopLevel);
-
-            if (firstDialogResult != ContentDialogResult.Primary)
-                return;
+            // var viewModel = dialogFactory.Get<NewOneClickInstallViewModel>();
+            // var dialog = new BetterContentDialog
+            // {
+            //     IsPrimaryButtonEnabled = false,
+            //     IsSecondaryButtonEnabled = false,
+            //     IsFooterVisible = false,
+            //     FullSizeDesired = true,
+            //     MinDialogHeight = 775,
+            //     Content = new NewOneClickInstallDialog { DataContext = viewModel },
+            // };
+            //
+            // var firstDialogResult = await dialog.ShowAsync(App.TopLevel);
+            //
+            // if (firstDialogResult != ContentDialogResult.Primary)
+            //     return;
 
             var recommendedModelsViewModel = dialogFactory.Get<RecommendedModelsViewModel>();
-            dialog = new BetterContentDialog
+            var dialog = new BetterContentDialog
             {
                 IsPrimaryButtonEnabled = true,
                 FullSizeDesired = true,

@@ -122,15 +122,8 @@ public class SDWebForge(
             LaunchOptionDefinition.Extras
         ];
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[]
-        {
-            TorchVersion.Cpu,
-            TorchVersion.Cuda,
-            TorchVersion.DirectMl,
-            TorchVersion.Rocm,
-            TorchVersion.Mps
-        };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        new[] { TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps };
 
     public override async Task InstallPackage(
         string installLocation,
@@ -156,8 +149,8 @@ public class SDWebForge(
 
         var pipArgs = new PipInstallArgs("setuptools==69.5.1");
 
-        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
-        if (torchVersion is TorchVersion.DirectMl)
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        if (torchVersion is TorchIndex.DirectMl)
         {
             pipArgs = pipArgs.WithTorchDirectML();
         }
@@ -169,16 +162,21 @@ public class SDWebForge(
                 .WithTorchExtraIndex(
                     torchVersion switch
                     {
-                        TorchVersion.Cpu => "cpu",
-                        TorchVersion.Cuda => "cu121",
-                        TorchVersion.Rocm => "rocm5.6",
-                        TorchVersion.Mps => "cpu",
+                        TorchIndex.Cpu => "cpu",
+                        TorchIndex.Cuda => "cu121",
+                        TorchIndex.Rocm => "rocm5.6",
+                        TorchIndex.Mps => "cpu",
                         _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                     }
                 );
         }
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
+
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
 
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));

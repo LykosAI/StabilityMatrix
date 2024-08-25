@@ -100,8 +100,8 @@ public class UnknownPackage : BasePackage
         throw new NotImplementedException();
     }
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cuda, TorchVersion.Cpu, TorchVersion.Rocm, TorchVersion.DirectMl };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        new[] { TorchIndex.Cuda, TorchIndex.Cpu, TorchIndex.Rocm, TorchIndex.DirectMl };
 
     /// <inheritdoc />
     public override void Shutdown()

@@ -153,7 +153,9 @@ public static class DesignData
             .AddSingleton<ICivitApi>(_ => null!)
             .AddSingleton<IGithubApiCache>(_ => null!)
             .AddSingleton<ITokenizerProvider>(_ => null!)
-            .AddSingleton<IPrerequisiteHelper>(_ => null!);
+            .AddSingleton<IPrerequisiteHelper>(_ => null!)
+            .AddSingleton<IPyPiApi>(_ => null!)
+            .AddSingleton<IPyPiCache>(_ => null!);
 
         // Override Launch page with mock
         services.Remove(ServiceDescriptor.Singleton<LaunchPageViewModel, LaunchPageViewModel>());

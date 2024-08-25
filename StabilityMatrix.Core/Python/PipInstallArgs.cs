@@ -47,6 +47,33 @@ public record PipInstallArgs : ProcessArgsBuilder
         return this.AddArgs(requirementsEntries.Select(s => (Argument)s).ToArray());
     }
 
+    public PipInstallArgs WithUserOverrides(List<PipPackageSpecifier> overrides)
+    {
+        var newArgs = this;
+
+        foreach (var pipOverride in overrides)
+        {
+            if (string.IsNullOrWhiteSpace(pipOverride.Name))
+                continue;
+
+            newArgs = newArgs.RemovePipArgKey(pipOverride.Name);
+
+            // if version is -1, just remove and continue
+            if (pipOverride.Version?.Equals("-1") ?? false)
+            {
+                continue;
+            }
+
+            var argument = string.IsNullOrWhiteSpace(pipOverride.Version)
+                ? pipOverride.Name
+                : $"{pipOverride.Name}{pipOverride.Constraint}{pipOverride.Version}";
+
+            newArgs = newArgs.AddArg(argument);
+        }
+
+        return newArgs;
+    }
+
     /// <inheritdoc />
     public override string ToString()
     {

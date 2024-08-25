@@ -65,9 +65,9 @@ public static class ProcessArgBuilderExtensions
     public static T UpdateArg<T>(this T builder, string key, Argument argument)
         where T : ProcessArgsBuilder
     {
-        var oldArg = builder
-            .Arguments
-            .FirstOrDefault(x => x.Match(stringArg => stringArg == key, tupleArg => tupleArg.Item1 == key));
+        var oldArg = builder.Arguments.FirstOrDefault(
+            x => x.Match(stringArg => stringArg == key, tupleArg => tupleArg.Item1 == key)
+        );
 
         if (oldArg is null)
         {
@@ -87,8 +87,33 @@ public static class ProcessArgBuilderExtensions
         return builder with
         {
             Arguments = builder
-                .Arguments
-                .Where(x => x.Match(stringArg => stringArg != argumentKey, tupleArg => tupleArg.Item1 != argumentKey))
+                .Arguments.Where(
+                    x =>
+                        x.Match(
+                            stringArg => stringArg != argumentKey,
+                            tupleArg => tupleArg.Item1 != argumentKey
+                        )
+                )
+                .ToImmutableArray()
+        };
+    }
+
+    [Pure]
+    public static T RemovePipArgKey<T>(this T builder, string argumentKey)
+        where T : ProcessArgsBuilder
+    {
+        return builder with
+        {
+            Arguments = builder
+                .Arguments.Where(
+                    x =>
+                        x.Match(
+                            stringArg =>
+                                !stringArg.Contains($"{argumentKey}==") && !stringArg.Equals(argumentKey),
+                            tupleArg =>
+                                !tupleArg.Item1.Contains($"{argumentKey}==") && tupleArg.Item1 != argumentKey
+                        )
+                )
                 .ToImmutableArray()
         };
     }

@@ -7,13 +7,13 @@ namespace StabilityMatrix.Core.Python;
 
 public partial record PipPackageSpecifier
 {
-    public required string Name { get; init; }
+    public string? Name { get; set; }
 
-    public string? Constraint { get; init; }
+    public string? Constraint { get; set; }
 
-    public string? Version { get; init; }
+    public string? Version { get; set; }
 
-    public string? VersionConstraint => Constraint is null || Version is null ? null : Constraint + Name;
+    public string? VersionConstraint => Constraint is null || Version is null ? null : Constraint + Version;
 
     public static PipPackageSpecifier Parse(string value)
     {

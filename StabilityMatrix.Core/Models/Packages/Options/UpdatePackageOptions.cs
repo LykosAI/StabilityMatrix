@@ -8,6 +8,11 @@ public class UpdatePackageOptions
 
     public InstallPackageOptions AsInstallOptions()
     {
-        return new InstallPackageOptions { VersionOptions = VersionOptions, PythonOptions = PythonOptions };
+        return new InstallPackageOptions
+        {
+            VersionOptions = VersionOptions,
+            PythonOptions = PythonOptions,
+            IsUpdate = true
+        };
     }
 }

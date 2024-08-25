@@ -80,7 +80,7 @@ public class DankDiffusion : BaseGitPackage
         throw new NotImplementedException();
     }
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions { get; }
+    public override IEnumerable<TorchIndex> AvailableTorchIndices { get; }
 
     public override List<LaunchOptionDefinition> LaunchOptions { get; }
 

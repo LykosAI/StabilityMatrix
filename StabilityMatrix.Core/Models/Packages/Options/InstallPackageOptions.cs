@@ -7,4 +7,6 @@ public class InstallPackageOptions
     public PythonPackageOptions PythonOptions { get; init; } = new();
 
     public SharedFolderMethod SharedFolderMethod { get; init; } = SharedFolderMethod.None;
+
+    public bool IsUpdate { get; init; }
 }

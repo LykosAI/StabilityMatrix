@@ -3,6 +3,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -32,7 +33,7 @@ public class OneTrainer(
 
     public override string OutputFolderName => string.Empty;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
-    public override IEnumerable<TorchVersion> AvailableTorchVersions => [TorchVersion.Cuda];
+    public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda, TorchIndex.Rocm];
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
     public override PackageType PackageType => PackageType.SdTraining;
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
@@ -53,13 +54,24 @@ public class OneTrainer(
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));
+        var requirementsFileName = options.PythonOptions.TorchIndex switch
+        {
+            TorchIndex.Cuda => "requirements-cuda.txt",
+            TorchIndex.Rocm => "requirements-rocm.txt",
+            _ => "requirements-default.txt"
+        };
 
-        var pipArgs = new PipInstallArgs("-r", "requirements.txt");
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall(["-r", requirementsFileName], onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall(["-r", "requirements-global.txt"], onConsoleOutput).ConfigureAwait(false);
+
+        if (installedPackage.PipOverrides != null)
+        {
+            var pipArgs = new PipInstallArgs().WithUserOverrides(installedPackage.PipOverrides);
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        }
     }
 
     public override async Task RunPackage(

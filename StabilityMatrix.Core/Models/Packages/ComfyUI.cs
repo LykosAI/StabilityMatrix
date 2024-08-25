@@ -69,7 +69,7 @@ public class ComfyUI(
             [SharedFolderType.PromptExpansion] = ["models/prompt_expansion"],
             [SharedFolderType.Ultralytics] = ["models/ultralytics"],
             [SharedFolderType.Sams] = ["models/sams"],
-            [SharedFolderType.Unet] = ["models/unet"]
+            [SharedFolderType.Unet] = ["models/diffusion_models"]
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -174,8 +174,8 @@ public class ComfyUI(
 
     public override string MainBranch => "master";
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        [TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm, TorchVersion.Mps];
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
 
     public override async Task InstallPackage(
         string installLocation,
@@ -191,13 +191,13 @@ public class ComfyUI(
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
-        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
         var pipArgs = new PipInstallArgs();
 
         pipArgs = torchVersion switch
         {
-            TorchVersion.DirectMl => pipArgs.WithTorchDirectML(),
+            TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
             _
                 => pipArgs
                     .AddArg("--upgrade")
@@ -206,10 +206,10 @@ public class ComfyUI(
                     .WithTorchExtraIndex(
                         torchVersion switch
                         {
-                            TorchVersion.Cpu => "cpu",
-                            TorchVersion.Cuda => "cu121",
-                            TorchVersion.Rocm => "rocm6.0",
-                            TorchVersion.Mps => "cpu",
+                            TorchIndex.Cpu => "cpu",
+                            TorchIndex.Cuda => "cu121",
+                            TorchIndex.Rocm => "rocm6.0",
+                            TorchIndex.Mps => "cpu",
                             _
                                 => throw new ArgumentOutOfRangeException(
                                     nameof(torchVersion),
@@ -230,6 +230,11 @@ public class ComfyUI(
         // https://github.com/comfyanonymous/ComfyUI/pull/4121
         // https://github.com/comfyanonymous/ComfyUI/commit/e6829e7ac5bef5db8099005b5b038c49e173e87c
         pipArgs = pipArgs.AddArg("numpy<2");
+
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
 
         progress?.Report(
             new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
@@ -368,7 +373,7 @@ public class ComfyUI(
             nodeValue.Children["ultralytics_bbox"] = Path.Combine(modelsDir, "Ultralytics", "bbox");
             nodeValue.Children["ultralytics_segm"] = Path.Combine(modelsDir, "Ultralytics", "segm");
             nodeValue.Children["sams"] = Path.Combine(modelsDir, "Sams");
-            nodeValue.Children["unet"] = Path.Combine(modelsDir, "unet");
+            nodeValue.Children["diffusion_models"] = Path.Combine(modelsDir, "unet");
         }
         else
         {
@@ -412,7 +417,7 @@ public class ComfyUI(
                     { "ultralytics_bbox", Path.Combine(modelsDir, "Ultralytics", "bbox") },
                     { "ultralytics_segm", Path.Combine(modelsDir, "Ultralytics", "segm") },
                     { "sams", Path.Combine(modelsDir, "Sams") },
-                    { "unet", Path.Combine(modelsDir, "unet") }
+                    { "diffusion_models", Path.Combine(modelsDir, "unet") }
                 }
             );
         }

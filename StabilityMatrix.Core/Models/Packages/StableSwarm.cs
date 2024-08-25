@@ -106,8 +106,8 @@ public class StableSwarm(
         new() { [SharedOutputType.Text2Img] = [OutputFolderName] };
     public override string MainBranch => "master";
     public override bool ShouldIgnoreReleases => true;
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        [TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm, TorchVersion.Mps];
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         [
@@ -180,67 +180,73 @@ public class StableSwarm(
             )
             .ConfigureAwait(false);
 
-        // set default settings
-        var settings = new StableSwarmSettings { IsInstalled = true };
-
-        if (options.SharedFolderMethod is SharedFolderMethod.Configuration)
+        if (!options.IsUpdate)
         {
-            settings.Paths = new StableSwarmSettings.PathsData
+            // set default settings
+            var settings = new StableSwarmSettings { IsInstalled = true };
+
+            if (options.SharedFolderMethod is SharedFolderMethod.Configuration)
             {
-                ModelRoot = settingsManager.ModelsDirectory,
-                SDModelFolder = Path.Combine(
-                    settingsManager.ModelsDirectory,
-                    SharedFolderType.StableDiffusion.ToString()
-                ),
-                SDLoraFolder = Path.Combine(
-                    settingsManager.ModelsDirectory,
-                    SharedFolderType.Lora.ToString()
-                ),
-                SDVAEFolder = Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.VAE.ToString()),
-                SDEmbeddingFolder = Path.Combine(
-                    settingsManager.ModelsDirectory,
-                    SharedFolderType.TextualInversion.ToString()
-                ),
-                SDControlNetsFolder = Path.Combine(
-                    settingsManager.ModelsDirectory,
-                    SharedFolderType.ControlNet.ToString()
-                ),
-                SDClipVisionFolder = Path.Combine(
-                    settingsManager.ModelsDirectory,
-                    SharedFolderType.InvokeClipVision.ToString()
-                )
-            };
+                settings.Paths = new StableSwarmSettings.PathsData
+                {
+                    ModelRoot = settingsManager.ModelsDirectory,
+                    SDModelFolder = Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        SharedFolderType.StableDiffusion.ToString()
+                    ),
+                    SDLoraFolder = Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        SharedFolderType.Lora.ToString()
+                    ),
+                    SDVAEFolder = Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        SharedFolderType.VAE.ToString()
+                    ),
+                    SDEmbeddingFolder = Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        SharedFolderType.TextualInversion.ToString()
+                    ),
+                    SDControlNetsFolder = Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        SharedFolderType.ControlNet.ToString()
+                    ),
+                    SDClipVisionFolder = Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        SharedFolderType.InvokeClipVision.ToString()
+                    )
+                };
+            }
+
+            settings.Save(true).SaveToFile(GetSettingsPath(installLocation));
+
+            var backendsFile = new FDSSection();
+            var dataSection = new FDSSection();
+            dataSection.Set("type", "comfyui_selfstart");
+            dataSection.Set("title", "StabilityMatrix ComfyUI Self-Start");
+            dataSection.Set("enabled", true);
+
+            var launchArgs = comfy.LaunchArgs ?? [];
+            var comfyArgs = string.Join(
+                ' ',
+                launchArgs
+                    .Select(arg => arg.ToArgString()?.TrimEnd())
+                    .Where(arg => !string.IsNullOrWhiteSpace(arg))
+            );
+
+            dataSection.Set(
+                "settings",
+                new ComfyUiSelfStartSettings
+                {
+                    StartScript = $"../{comfy.DisplayName}/main.py",
+                    DisableInternalArgs = false,
+                    AutoUpdate = false,
+                    ExtraArgs = comfyArgs
+                }.Save(true)
+            );
+
+            backendsFile.Set("0", dataSection);
+            backendsFile.SaveToFile(GetBackendsPath(installLocation));
         }
-
-        settings.Save(true).SaveToFile(GetSettingsPath(installLocation));
-
-        var backendsFile = new FDSSection();
-        var dataSection = new FDSSection();
-        dataSection.Set("type", "comfyui_selfstart");
-        dataSection.Set("title", "StabilityMatrix ComfyUI Self-Start");
-        dataSection.Set("enabled", true);
-
-        var launchArgs = comfy.LaunchArgs ?? [];
-        var comfyArgs = string.Join(
-            ' ',
-            launchArgs
-                .Select(arg => arg.ToArgString()?.TrimEnd())
-                .Where(arg => !string.IsNullOrWhiteSpace(arg))
-        );
-
-        dataSection.Set(
-            "settings",
-            new ComfyUiSelfStartSettings
-            {
-                StartScript = $"../{comfy.DisplayName}/main.py",
-                DisableInternalArgs = false,
-                AutoUpdate = false,
-                ExtraArgs = comfyArgs
-            }.Save(true)
-        );
-
-        backendsFile.Set("0", dataSection);
-        backendsFile.SaveToFile(GetBackendsPath(installLocation));
     }
 
     public override async Task RunPackage(

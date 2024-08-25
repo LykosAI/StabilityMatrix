@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Models;
 
@@ -50,8 +51,8 @@ public class InstalledPackage : IJsonOnDeserialized
     public bool UpdateAvailable { get; set; }
     public bool DontCheckForUpdates { get; set; }
 
-    [JsonConverter(typeof(JsonStringEnumConverter<TorchVersion>))]
-    public TorchVersion? PreferredTorchVersion { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter<TorchIndex>))]
+    public TorchIndex? PreferredTorchIndex { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter<SharedFolderMethod>))]
     public SharedFolderMethod? PreferredSharedFolderMethod { get; set; }
@@ -59,6 +60,8 @@ public class InstalledPackage : IJsonOnDeserialized
     public bool UseSharedOutputFolder { get; set; }
 
     public List<string>? ExtraExtensionManifestUrls { get; set; }
+
+    public List<PipPackageSpecifier>? PipOverrides { get; set; }
 
     /// <summary>
     /// Get the launch args host option value.

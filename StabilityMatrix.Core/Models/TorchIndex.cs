@@ -1,6 +1,6 @@
 ﻿namespace StabilityMatrix.Core.Models;
 
-public enum TorchVersion
+public enum TorchIndex
 {
     Cuda,
     Rocm,

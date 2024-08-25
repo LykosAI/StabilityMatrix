@@ -263,7 +263,7 @@ public partial class PackageImportViewModel : ContentDialogViewModelBase
             Version = version,
             LaunchCommand = SelectedBasePackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now,
-            PreferredTorchVersion = torchVersion,
+            PreferredTorchIndex = torchVersion,
             PreferredSharedFolderMethod = sharedFolderRecommendation
         };
 

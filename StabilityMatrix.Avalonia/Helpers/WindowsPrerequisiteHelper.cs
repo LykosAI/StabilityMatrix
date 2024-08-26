@@ -80,7 +80,7 @@ public class WindowsPrerequisiteHelper(
     {
         var process = ProcessRunner.StartAnsiProcess(
             GitExePath,
-            args.ToArray(),
+            args,
             workingDirectory,
             onProcessOutput,
             environmentVariables: new Dictionary<string, string>

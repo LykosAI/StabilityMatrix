@@ -292,7 +292,7 @@ public class InvokeAI : BaseGitPackage
         RunInvokeCommand(
             installLocation,
             options.Command ?? LaunchCommand,
-            new ProcessArgs(options.Arguments.ToArray()),
+            options.Arguments,
             true,
             onConsoleOutput
         );

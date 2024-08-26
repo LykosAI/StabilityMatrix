@@ -34,10 +34,7 @@ public class PipStep : IPackageStep
             environmentVariables: EnvironmentVariables
         );
 
-        var args = new List<string> { "-m", "pip" };
-        args.AddRange(Args.ToArray());
-
-        venvRunner.RunDetached(args.ToArray(), progress.AsProcessOutputHandler());
+        venvRunner.RunDetached(Args.Prepend(["-m", "pip"]), progress.AsProcessOutputHandler());
 
         await ProcessRunner.WaitForExitConditionAsync(venvRunner.Process).ConfigureAwait(false);
     }

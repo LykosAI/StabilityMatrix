@@ -214,7 +214,7 @@ public class UnixPrerequisiteHelper(
     {
         var command = args.Prepend("git");
 
-        var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "");
+        var result = await ProcessRunner.RunBashCommand(command, workingDirectory ?? "");
         if (result.ExitCode != 0)
         {
             Logger.Error(
@@ -308,7 +308,7 @@ public class UnixPrerequisiteHelper(
 
     public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
     {
-        return ProcessRunner.RunBashCommand(args.Prepend("git").ToArray(), workingDirectory ?? "");
+        return ProcessRunner.RunBashCommand(args.Prepend("git"), workingDirectory ?? "");
     }
 
     [Localizable(false)]

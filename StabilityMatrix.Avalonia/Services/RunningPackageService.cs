@@ -141,7 +141,7 @@ public partial class RunningPackageService(
         await basePackage.RunPackage(
             packagePath,
             installedPackage,
-            new RunPackageOptions { Command = command, Arguments = launchProcessArgs.ToArray() },
+            new RunPackageOptions { Command = command, Arguments = launchProcessArgs },
             console.Post,
             cancellationToken
         );

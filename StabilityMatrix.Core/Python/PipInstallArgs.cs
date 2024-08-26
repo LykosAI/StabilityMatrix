@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Processes;
@@ -11,20 +13,26 @@ public record PipInstallArgs : ProcessArgsBuilder
     public PipInstallArgs(params Argument[] arguments)
         : base(arguments) { }
 
-    public PipInstallArgs WithTorch(string version = "") => this.AddArg($"torch{version}");
+    public PipInstallArgs WithTorch(string version = "") =>
+        this.AddArg(new Argument("torch", $"torch{version}"));
 
-    public PipInstallArgs WithTorchDirectML(string version = "") => this.AddArg($"torch-directml{version}");
+    public PipInstallArgs WithTorchDirectML(string version = "") =>
+        this.AddArg(new Argument("torch-directml", $"torch-directml{version}"));
 
-    public PipInstallArgs WithTorchVision(string version = "") => this.AddArg($"torchvision{version}");
+    public PipInstallArgs WithTorchVision(string version = "") =>
+        this.AddArg(new Argument("torchvision", $"torchvision{version}"));
 
-    public PipInstallArgs WithTorchAudio(string version = "") => this.AddArg($"torchaudio{version}");
+    public PipInstallArgs WithTorchAudio(string version = "") =>
+        this.AddArg(new Argument("torchaudio", $"torchaudio{version}"));
 
-    public PipInstallArgs WithXFormers(string version = "") => this.AddArg($"xformers{version}");
+    public PipInstallArgs WithXFormers(string version = "") =>
+        this.AddArg(new Argument("xformers", $"xformers{version}"));
 
-    public PipInstallArgs WithExtraIndex(string indexUrl) => this.AddArg(("--extra-index-url", indexUrl));
+    public PipInstallArgs WithExtraIndex(string indexUrl) =>
+        this.AddKeyedArgs("--extra-index-url", ["--extra-index-url", indexUrl]);
 
     public PipInstallArgs WithTorchExtraIndex(string index) =>
-        this.AddArg(("--extra-index-url", $"https://download.pytorch.org/whl/{index}"));
+        WithExtraIndex($"https://download.pytorch.org/whl/{index}");
 
     public PipInstallArgs WithParsedFromRequirementsTxt(
         string requirements,
@@ -72,6 +80,22 @@ public record PipInstallArgs : ProcessArgsBuilder
         }
 
         return newArgs;
+    }
+
+    [Pure]
+    public PipInstallArgs RemovePipArgKey(string argumentKey)
+    {
+        return this with
+        {
+            Arguments = Arguments
+                .Where(
+                    arg =>
+                        arg.HasKey
+                            ? (arg.Key != argumentKey)
+                            : (arg.Value != argumentKey && !arg.Value.Contains($"{argumentKey}=="))
+                )
+                .ToImmutableList()
+        };
     }
 
     /// <inheritdoc />

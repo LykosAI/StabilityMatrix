@@ -63,11 +63,20 @@ public partial record PipPackageSpecifier
         return Name + VersionConstraint;
     }
 
+    public Argument ToArgument()
+    {
+        if (VersionConstraint is not null && Name is not null)
+        {
+            // Use Name as key
+            return new Argument(key: Name, value: ToString());
+        }
+
+        return new Argument(ToString());
+    }
+
     public static implicit operator Argument(PipPackageSpecifier specifier)
     {
-        return specifier.VersionConstraint is null
-            ? new Argument(specifier.Name)
-            : new Argument((specifier.Name, specifier.VersionConstraint));
+        return specifier.ToArgument();
     }
 
     public static implicit operator PipPackageSpecifier(string specifier)

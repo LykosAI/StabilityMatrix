@@ -65,14 +65,16 @@ public record PipInstallArgs : ProcessArgsBuilder
             if (string.IsNullOrWhiteSpace(pipOverride.Name))
                 continue;
 
+            var pipOverrideArg = pipOverride.ToArgument();
+
             if (pipOverride.Action is PipPackageSpecifierOverrideAction.Update)
             {
-                newArgs = newArgs.RemovePipArgKey(pipOverride.Name);
-                newArgs = newArgs.AddArg(pipOverride);
+                newArgs = newArgs.RemovePipArgKey(pipOverrideArg.Key ?? pipOverrideArg.Value);
+                newArgs = newArgs.AddArg(pipOverrideArg);
             }
             else if (pipOverride.Action is PipPackageSpecifierOverrideAction.Remove)
             {
-                newArgs = newArgs.RemovePipArgKey(pipOverride.Name);
+                newArgs = newArgs.RemovePipArgKey(pipOverrideArg.Key ?? pipOverrideArg.Value);
             }
         }
 

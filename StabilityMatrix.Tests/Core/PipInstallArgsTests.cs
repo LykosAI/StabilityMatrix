@@ -80,4 +80,44 @@ public class PipInstallArgsTests
 
         Assert.AreEqual("torch~=2.0.0 torchvision --extra-index-url https://example.org", args.ToString());
     }
+
+    [TestMethod]
+    public void TestWithUserOverrides()
+    {
+        // Arrange
+        var args = new PipInstallArgs()
+            .AddArg("numpy")
+            .WithTorch("==1.0.0")
+            .WithExtraIndex("https://download.pytorch.org/whl/cu121");
+
+        var overrides = new List<PipPackageSpecifierOverride>
+        {
+            new()
+            {
+                Name = "torch",
+                Constraint = ">=",
+                Version = "2.0.0",
+                Action = PipPackageSpecifierOverrideAction.Update
+            },
+            new()
+            {
+                Name = "--extra-index-url https://download.pytorch.org/whl/nightly/cpu",
+                Action = PipPackageSpecifierOverrideAction.Update
+            }
+        };
+
+        // Act
+        var resultArgs = args.WithUserOverrides(overrides);
+
+        // Assert
+        Assert.AreEqual(
+            "numpy torch==1.0.0 --extra-index-url https://download.pytorch.org/whl/cu121",
+            args.ToString()
+        );
+
+        Assert.AreEqual(
+            "numpy torch>=2.0.0 --extra-index-url https://download.pytorch.org/whl/nightly/cpu",
+            resultArgs.ToString()
+        );
+    }
 }

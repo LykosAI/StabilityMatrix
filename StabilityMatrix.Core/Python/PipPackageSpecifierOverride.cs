@@ -8,4 +8,10 @@ public record PipPackageSpecifierOverride : PipPackageSpecifier
 
     [JsonIgnore]
     public bool IsUpdate => Action is PipPackageSpecifierOverrideAction.Update;
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return base.ToString();
+    }
 }

@@ -29,9 +29,12 @@ public class WindowsPrerequisiteHelper(
 
     private const string PortableGitDownloadUrl =
         "https://github.com/git-for-windows/git/releases/download/v2.41.0.windows.1/PortableGit-2.41.0-64-bit.7z.exe";
+
     private const string VcRedistDownloadUrl = "https://aka.ms/vs/16/release/vc_redist.x64.exe";
+
     private const string TkinterDownloadUrl =
         "https://cdn.lykos.ai/tkinter-cpython-embedded-3.10.11-win-x64.zip";
+
     private const string NodeDownloadUrl = "https://nodejs.org/dist/v20.11.0/node-v20.11.0-win-x64.zip";
 
     private const string Dotnet7DownloadUrl =
@@ -39,6 +42,8 @@ public class WindowsPrerequisiteHelper(
 
     private const string Dotnet8DownloadUrl =
         "https://download.visualstudio.microsoft.com/download/pr/6902745c-34bd-4d66-8e84-d5b61a17dfb7/e61732b00f7e144e162d7e6914291f16/dotnet-sdk-8.0.101-win-x64.zip";
+
+    private const string CppBuildToolsUrl = "https://aka.ms/vs/17/release/vs_BuildTools.exe";
 
     private string HomeDir => settingsManager.LibraryDir;
 
@@ -68,6 +73,7 @@ public class WindowsPrerequisiteHelper(
     private string Dotnet8DownloadPath => Path.Combine(AssetsDir, "dotnet-sdk-8.0.101-win-x64.zip");
     private string DotnetExtractPath => Path.Combine(AssetsDir, "dotnet");
     private string DotnetExistsPath => Path.Combine(DotnetExtractPath, "dotnet.exe");
+    private string VcBuildToolsDownloadPath => Path.Combine(AssetsDir, "vs_BuildTools.exe");
 
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
@@ -173,6 +179,11 @@ public class WindowsPrerequisiteHelper(
         {
             await InstallTkinterIfNecessary(progress);
         }
+
+        if (prerequisites.Contains(PackagePrerequisite.VcBuildTools))
+        {
+            await InstallVcBuildToolsIfNecessary(progress);
+        }
     }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -182,6 +193,7 @@ public class WindowsPrerequisiteHelper(
         await InstallPythonIfNecessary(progress);
         await InstallGitIfNecessary(progress);
         await InstallNodeIfNecessary(progress);
+        await InstallVcBuildToolsIfNecessary(progress);
     }
 
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -328,6 +340,7 @@ public class WindowsPrerequisiteHelper(
             {
                 await pyRunner.SetupPip().ConfigureAwait(false);
             }
+
             if (!PyRunner.VenvInstalled)
             {
                 await pyRunner.InstallPackage("virtualenv").ConfigureAwait(false);
@@ -468,6 +481,41 @@ public class WindowsPrerequisiteHelper(
             Dotnet8DownloadPath,
             DotnetExtractPath
         );
+    }
+
+    [SupportedOSPlatform("windows")]
+    public async Task InstallVcBuildToolsIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        await downloadService.DownloadToFileAsync(
+            CppBuildToolsUrl,
+            VcBuildToolsDownloadPath,
+            progress: progress
+        );
+
+        Logger.Info("Installing VC Build Tools");
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing prerequisites..."
+            )
+        );
+
+        var process = ProcessRunner.StartAnsiProcess(
+            VcBuildToolsDownloadPath,
+            "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended",
+            outputDataReceived: output =>
+                progress?.Report(
+                    new ProgressReport(
+                        progress: 0.5f,
+                        isIndeterminate: true,
+                        type: ProgressType.Generic,
+                        message: output.ApcMessage?.Data ?? output.Text
+                    )
+                )
+        );
+        await process.WaitForExitAsync();
     }
 
     public async Task<Process> RunDotnet(

@@ -198,6 +198,12 @@ public class ComfyUI(
         pipArgs = torchVersion switch
         {
             TorchVersion.DirectMl => pipArgs.WithTorchDirectML(),
+            TorchVersion.Mps
+                => pipArgs
+                    .AddArg("--upgrade")
+                    .WithTorch("==2.3.1")
+                    .WithTorchVision("==0.18.1")
+                    .WithTorchExtraIndex("cpu"),
             _
                 => pipArgs
                     .AddArg("--upgrade")
@@ -209,7 +215,6 @@ public class ComfyUI(
                             TorchVersion.Cpu => "cpu",
                             TorchVersion.Cuda => "cu121",
                             TorchVersion.Rocm => "rocm6.0",
-                            TorchVersion.Mps => "cpu",
                             _
                                 => throw new ArgumentOutOfRangeException(
                                     nameof(torchVersion),

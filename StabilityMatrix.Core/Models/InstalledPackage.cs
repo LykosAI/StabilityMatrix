@@ -65,7 +65,7 @@ public class InstalledPackage : IJsonOnDeserialized
 
     public List<string>? ExtraExtensionManifestUrls { get; set; }
 
-    public List<PipPackageSpecifier>? PipOverrides { get; set; }
+    public List<PipPackageSpecifierOverride>? PipOverrides { get; set; }
 
     /// <summary>
     /// Get the launch args host option value.

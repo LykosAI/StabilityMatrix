@@ -55,7 +55,7 @@ public record PipInstallArgs : ProcessArgsBuilder
         return this.AddArgs(requirementsEntries.Select(s => (Argument)s).ToArray());
     }
 
-    public PipInstallArgs WithUserOverrides(List<PipPackageSpecifier> overrides)
+    public PipInstallArgs WithUserOverrides(List<PipPackageSpecifierOverride> overrides)
     {
         var newArgs = this;
 
@@ -64,19 +64,15 @@ public record PipInstallArgs : ProcessArgsBuilder
             if (string.IsNullOrWhiteSpace(pipOverride.Name))
                 continue;
 
-            newArgs = newArgs.RemovePipArgKey(pipOverride.Name);
-
-            // if version is -1, just remove and continue
-            if (pipOverride.Version?.Equals("-1") ?? false)
+            if (pipOverride.Action is PipPackageSpecifierOverrideAction.Update)
             {
-                continue;
+                newArgs = newArgs.RemovePipArgKey(pipOverride.Name);
+                newArgs = newArgs.AddArg(pipOverride);
             }
-
-            var argument = string.IsNullOrWhiteSpace(pipOverride.Version)
-                ? pipOverride.Name
-                : $"{pipOverride.Name}{pipOverride.Constraint}{pipOverride.Version}";
-
-            newArgs = newArgs.AddArg(argument);
+            else if (pipOverride.Action is PipPackageSpecifierOverrideAction.Remove)
+            {
+                newArgs = newArgs.RemovePipArgKey(pipOverride.Name);
+            }
         }
 
         return newArgs;

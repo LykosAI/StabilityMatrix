@@ -96,10 +96,12 @@ public partial class PackageInstallDetailViewModel(
     private bool canInstall;
 
     [ObservableProperty, NotifyPropertyChangedFor(nameof(PipOverridesView))]
-    private ObservableCollection<PipPackageSpecifier> pipOverrides = new();
+    private ObservableCollection<PipPackageSpecifierOverride> pipOverrides = new();
 
     public DataGridCollectionView PipOverridesView => new(PipOverrides);
-    public List<string> ConstraintOptions => ["==", ">=", "<=", ">", "<"];
+    public List<string> ConstraintOptions => ["", "==", "~=", ">=", "<=", ">", "<"];
+    public List<PipPackageSpecifierOverrideAction> OverrideActionOptions =>
+        Enum.GetValues<PipPackageSpecifierOverrideAction>().Where(x => x > 0).ToList();
 
     private PackageVersionOptions? allOptions;
 
@@ -298,7 +300,7 @@ public partial class PackageInstallDetailViewModel(
     [RelayCommand]
     private void AddRow()
     {
-        PipOverrides.Add(new PipPackageSpecifier { Constraint = "==" });
+        PipOverrides.Add(new PipPackageSpecifierOverride { Constraint = "==" });
     }
 
     [RelayCommand]

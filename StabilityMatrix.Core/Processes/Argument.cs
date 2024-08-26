@@ -40,6 +40,11 @@ public readonly record struct Argument
     /// </summary>
     public static Argument Quoted(string value) => new(value) { IsQuoted = true };
 
+    /// <summary>
+    /// Create a new keyed argument with the given pre-quoted value.
+    /// </summary>
+    public static Argument Quoted(string key, string value) => new(key, value) { IsQuoted = true };
+
     public Argument() { }
 
     public Argument(string value)

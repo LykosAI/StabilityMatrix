@@ -65,10 +65,28 @@ public partial record PipPackageSpecifier
 
     public Argument ToArgument()
     {
-        if (VersionConstraint is not null && Name is not null)
+        if (Name is null)
+        {
+            return new Argument("");
+        }
+
+        // Normal package specifier with version constraint
+        if (VersionConstraint is not null)
         {
             // Use Name as key
             return new Argument(key: Name, value: ToString());
+        }
+
+        // Possible multi arg (e.g. '--extra-index-url ...')
+        if (Name.Trim().StartsWith('-'))
+        {
+            var parts = Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length > 1)
+            {
+                var key = parts[0];
+                var quotedParts = string.Join(' ', parts.Select(ProcessRunner.Quote));
+                return Argument.Quoted(key, quotedParts);
+            }
         }
 
         return new Argument(ToString());

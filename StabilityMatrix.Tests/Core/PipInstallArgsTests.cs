@@ -58,4 +58,26 @@ public class PipInstallArgsTests
             args
         );
     }
+
+    [TestMethod]
+    public void TestParsedFromRequirementsTxt()
+    {
+        // Arrange
+        const string requirements = """
+                                    torch~=2.0.0
+                                    torchvision # comment
+                                    --extra-index-url https://example.org
+                                    """;
+
+        // Act
+        var args = new PipInstallArgs().WithParsedFromRequirementsTxt(requirements);
+
+        // Assert
+        CollectionAssert.AreEqual(
+            new[] { "torch~=2.0.0", "torchvision", "--extra-index-url https://example.org" },
+            args.ToProcessArgs().Select(arg => arg.GetQuotedValue()).ToArray()
+        );
+
+        Assert.AreEqual("torch~=2.0.0 torchvision --extra-index-url https://example.org", args.ToString());
+    }
 }

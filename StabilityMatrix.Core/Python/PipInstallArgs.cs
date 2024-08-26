@@ -43,6 +43,7 @@ public record PipInstallArgs : ProcessArgsBuilder
             .SplitLines(StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
             .Where(s => !s.StartsWith('#'))
             .Select(s => s.Contains('#') ? s.Substring(0, s.IndexOf('#')) : s)
+            .Select(s => s.Trim())
             .Where(s => !string.IsNullOrWhiteSpace(s));
 
         if (excludePattern is not null)
@@ -52,7 +53,7 @@ public record PipInstallArgs : ProcessArgsBuilder
             requirementsEntries = requirementsEntries.Where(s => !excludeRegex.IsMatch(s));
         }
 
-        return this.AddArgs(requirementsEntries.Select(s => (Argument)s).ToArray());
+        return this.AddArgs(requirementsEntries.Select(Argument.Quoted).ToArray());
     }
 
     public PipInstallArgs WithUserOverrides(List<PipPackageSpecifierOverride> overrides)

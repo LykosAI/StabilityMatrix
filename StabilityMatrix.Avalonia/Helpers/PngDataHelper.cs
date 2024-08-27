@@ -130,42 +130,4 @@ public static class PngDataHelper
 
         return textDataLength.Concat(textDataBytes).Concat(crc).ToArray();
     }
-
-    private static int SearchBytes(byte[] haystack, byte[] needle)
-    {
-        var limit = haystack.Length - needle.Length;
-        for (var i = 0; i <= limit; i++)
-        {
-            var k = 0;
-            for (; k < needle.Length; k++)
-            {
-                if (needle[k] != haystack[i + k])
-                    break;
-            }
-
-            if (k == needle.Length)
-                return i;
-        }
-
-        return -1;
-    }
-
-    private static int SearchLastBytes(byte[] haystack, byte[] needle)
-    {
-        var limit = haystack.Length - needle.Length;
-        for (var i = limit; i >= 0; i--)
-        {
-            var k = 0;
-            for (; k < needle.Length; k++)
-            {
-                if (needle[k] != haystack[i + k])
-                    break;
-            }
-
-            if (k == needle.Length)
-                return i;
-        }
-
-        return -1;
-    }
 }

@@ -35,6 +35,9 @@ public partial class ModelCardViewModel(
     private HybridModelFile? selectedModel;
 
     [ObservableProperty]
+    private HybridModelFile? selectedUnetModel;
+
+    [ObservableProperty]
     private bool isRefinerSelectionEnabled;
 
     [ObservableProperty]
@@ -64,7 +67,7 @@ public partial class ModelCardViewModel(
     private bool isModelLoaderSelectionEnabled;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowClipSelection), nameof(ShowPrecisionSelection))]
+    [NotifyPropertyChangedFor(nameof(IsStandaloneModelLoader), nameof(ShowPrecisionSelection))]
     private ModelLoader selectedModelLoader;
 
     [ObservableProperty]
@@ -88,7 +91,7 @@ public partial class ModelCardViewModel(
 
     public List<ModelLoader> ModelLoaders { get; } = Enum.GetValues<ModelLoader>().ToList();
 
-    public bool ShowClipSelection => SelectedModelLoader is ModelLoader.Unet or ModelLoader.Gguf;
+    public bool IsStandaloneModelLoader => SelectedModelLoader is ModelLoader.Unet or ModelLoader.Gguf;
     public bool ShowPrecisionSelection => SelectedModelLoader is ModelLoader.Unet;
 
     [RelayCommand]
@@ -97,16 +100,16 @@ public partial class ModelCardViewModel(
         await DialogHelper
             .CreateMarkdownDialog(
                 """
-                                                 You can use a config (.yaml) file to load a model with specific settings.
-                                                 
-                                                 Place the config file next to the model file with the same name:
-                                                 ```md
-                                                 Models/
-                                                     StableDiffusion/
-                                                         my_model.safetensors
-                                                         my_model.yaml <-
-                                                 ```
-                                                 """,
+                You can use a config (.yaml) file to load a model with specific settings.
+
+                Place the config file next to the model file with the same name:
+                ```md
+                Models/
+                    StableDiffusion/
+                        my_model.safetensors
+                        my_model.yaml <-
+                ```
+                """,
                 "Using Model Configs",
                 TextEditorPreset.Console
             )
@@ -115,7 +118,10 @@ public partial class ModelCardViewModel(
 
     public async Task<bool> ValidateModel()
     {
-        if (SelectedModel != null)
+        if (IsStandaloneModelLoader && SelectedUnetModel != null)
+            return true;
+
+        if (!IsStandaloneModelLoader && SelectedModel != null)
             return true;
 
         var dialog = DialogHelper.CreateMarkdownDialog(
@@ -160,55 +166,7 @@ public partial class ModelCardViewModel(
         }
         else // UNET/GGUF UNET workflow
         {
-            if (SelectedModelLoader is ModelLoader.Gguf)
-            {
-                var checkpointLoader = e.Nodes.AddTypedNode(
-                    new ComfyNodeBuilder.UnetLoaderGGUF
-                    {
-                        Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
-                        UnetName =
-                            SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected")
-                    }
-                );
-                e.Builder.Connections.Base.Model = checkpointLoader.Output;
-            }
-            else
-            {
-                var checkpointLoader = e.Nodes.AddTypedNode(
-                    new ComfyNodeBuilder.UNETLoader
-                    {
-                        Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
-                        UnetName =
-                            SelectedModel?.RelativePath
-                            ?? throw new ValidationException("Model not selected"),
-                        WeightDtype = SelectedDType ?? "default"
-                    }
-                );
-                e.Builder.Connections.Base.Model = checkpointLoader.Output;
-            }
-
-            var vaeLoader = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.VAELoader
-                {
-                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.VAELoader)),
-                    VaeName = SelectedVae?.RelativePath ?? throw new ValidationException("No VAE Selected")
-                }
-            );
-            e.Builder.Connections.Base.VAE = vaeLoader.Output;
-
-            // DualCLIPLoader
-            var clipLoader = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.DualCLIPLoader
-                {
-                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoader)),
-                    ClipName1 =
-                        SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
-                    ClipName2 =
-                        SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
-                    Type = "flux"
-                }
-            );
-            e.Builder.Connections.Base.Clip = clipLoader.Output;
+            SetupStandaloneModelLoader(e);
         }
 
         // Clip skip all models if enabled
@@ -246,7 +204,9 @@ public partial class ModelCardViewModel(
         return SerializeModel(
             new ModelCardModel
             {
-                SelectedModelName = SelectedModel?.RelativePath,
+                SelectedModelName = IsStandaloneModelLoader
+                    ? SelectedUnetModel?.RelativePath
+                    : SelectedModel?.RelativePath,
                 SelectedVaeName = SelectedVae?.RelativePath,
                 SelectedRefinerName = SelectedRefiner?.RelativePath,
                 ClipSkip = ClipSkip,
@@ -270,11 +230,18 @@ public partial class ModelCardViewModel(
 
         SelectedModelLoader = model.ModelLoader;
 
-        SelectedModel = model.SelectedModelName is null
-            ? null
-            : model.ModelLoader is ModelLoader.Unet or ModelLoader.Gguf
-                ? ClientManager.UnetModels.FirstOrDefault(x => x.RelativePath == model.SelectedModelName)
+        if (model.ModelLoader is ModelLoader.Unet or ModelLoader.Gguf)
+        {
+            SelectedUnetModel = model.SelectedModelName is null
+                ? null
+                : ClientManager.UnetModels.FirstOrDefault(x => x.RelativePath == model.SelectedModelName);
+        }
+        else
+        {
+            SelectedModel = model.SelectedModelName is null
+                ? null
                 : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedModelName);
+        }
 
         SelectedVae = model.SelectedVaeName is null
             ? HybridModelFile.Default
@@ -312,7 +279,7 @@ public partial class ModelCardViewModel(
         if (parameters.ModelName is not { } paramsModelName)
             return;
 
-        var currentModels = ClientManager.Models;
+        var currentModels = ClientManager.Models.Concat(ClientManager.UnetModels).ToList();
 
         HybridModelFile? model;
 
@@ -332,7 +299,14 @@ public partial class ModelCardViewModel(
             model ??= currentModels.FirstOrDefault(m => m.ShortDisplayName.StartsWith(paramsModelName));
         }
 
-        if (model is not null)
+        if (model is null)
+            return;
+
+        if (model.Local?.SharedFolderType is SharedFolderType.Unet)
+        {
+            SelectedUnetModel = model;
+        }
+        else
         {
             SelectedModel = model;
         }
@@ -341,6 +315,15 @@ public partial class ModelCardViewModel(
     /// <inheritdoc />
     public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
     {
+        if (IsStandaloneModelLoader)
+        {
+            return parameters with
+            {
+                ModelName = SelectedUnetModel?.FileName,
+                ModelHash = SelectedUnetModel?.Local?.ConnectedModelInfo?.Hashes.SHA256
+            };
+        }
+
         return parameters with
         {
             ModelName = SelectedModel?.FileName,
@@ -354,6 +337,57 @@ public partial class ModelCardViewModel(
         {
             IsVaeSelectionEnabled = true;
         }
+    }
+
+    private void SetupStandaloneModelLoader(ModuleApplyStepEventArgs e)
+    {
+        if (SelectedModelLoader is ModelLoader.Gguf)
+        {
+            var checkpointLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.UnetLoaderGGUF
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
+                    UnetName =
+                        SelectedUnetModel?.RelativePath ?? throw new ValidationException("Model not selected")
+                }
+            );
+            e.Builder.Connections.Base.Model = checkpointLoader.Output;
+        }
+        else
+        {
+            var checkpointLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.UNETLoader
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
+                    UnetName =
+                        SelectedUnetModel?.RelativePath
+                        ?? throw new ValidationException("Model not selected"),
+                    WeightDtype = SelectedDType ?? "default"
+                }
+            );
+            e.Builder.Connections.Base.Model = checkpointLoader.Output;
+        }
+
+        var vaeLoader = e.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.VAELoader
+            {
+                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.VAELoader)),
+                VaeName = SelectedVae?.RelativePath ?? throw new ValidationException("No VAE Selected")
+            }
+        );
+        e.Builder.Connections.Base.VAE = vaeLoader.Output;
+
+        // DualCLIPLoader
+        var clipLoader = e.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.DualCLIPLoader
+            {
+                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoader)),
+                ClipName1 = SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
+                ClipName2 = SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
+                Type = "flux"
+            }
+        );
+        e.Builder.Connections.Base.Clip = clipLoader.Output;
     }
 
     private void SetupDefaultModelLoader(ModuleApplyStepEventArgs e)

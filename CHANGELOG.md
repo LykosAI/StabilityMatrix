@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added Pip Overrides section to the package install view, allowing you to override the default pip packages for a package
 ### Fixed
+- Fixed issue where some Inference-generated images would be saved with the bottom missing
 - Fixed CivitAI Browser page scroll refresh not ordering models correctly
 - Pinned torch to 2.3.1 for ComfyUI users on macOS due to issues with the latest
 - Fixed missing fbgemm.dll errors when using latest torch with certain packages

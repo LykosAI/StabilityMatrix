@@ -59,8 +59,19 @@
                             Name="PART_ModelComboBox"
                             Padding="8,6,4,6"
                             HorizontalAlignment="Stretch"
+                            IsVisible="{Binding !IsStandaloneModelLoader}"
                             ItemsSource="{Binding ClientManager.Models}"
                             SelectedItem="{Binding SelectedModel}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+                        
+                        <controls:BetterComboBox
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Padding="8,6,4,6"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsStandaloneModelLoader}"
+                            ItemsSource="{Binding ClientManager.UnetModels}"
+                            SelectedItem="{Binding SelectedUnetModel}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
 
                         <Button
@@ -234,7 +245,7 @@
                             Grid.Column="0"
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
-                            IsVisible="{Binding ShowClipSelection}"
+                            IsVisible="{Binding IsStandaloneModelLoader}"
                             Text="CLIP 1"
                             TextAlignment="Left" />
 
@@ -245,7 +256,7 @@
                             Margin="0,8,0,0"
                             Padding="8,6,4,6"
                             HorizontalAlignment="Stretch"
-                            IsVisible="{Binding ShowClipSelection}"
+                            IsVisible="{Binding IsStandaloneModelLoader}"
                             ItemsSource="{Binding ClientManager.ClipModels}"
                             SelectedItem="{Binding SelectedClip1}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
@@ -256,7 +267,7 @@
                             Grid.Column="0"
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
-                            IsVisible="{Binding ShowClipSelection}"
+                            IsVisible="{Binding IsStandaloneModelLoader}"
                             Text="CLIP 2"
                             TextAlignment="Left" />
 
@@ -267,7 +278,7 @@
                             Margin="0,8,0,0"
                             Padding="8,6,4,6"
                             HorizontalAlignment="Stretch"
-                            IsVisible="{Binding ShowClipSelection}"
+                            IsVisible="{Binding IsStandaloneModelLoader}"
                             ItemsSource="{Binding ClientManager.ClipModels}"
                             SelectedItem="{Binding SelectedClip2}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />

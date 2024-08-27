@@ -33,8 +33,6 @@ public static class PngDataHelper
         InferenceProjectDocument projectDocument
     )
     {
-        var sw = Stopwatch.StartNew();
-
         using var memoryStream = new MemoryStream();
         var position = 8; // Skip the PNG signature
         memoryStream.Write(inputImage, 0, position);
@@ -91,9 +89,6 @@ public static class PngDataHelper
             memoryStream.Write(inputImage, position, chunkLength + 12); // Write the length, type, data, and CRC
             position += chunkLength + 12;
         }
-
-        sw.Stop();
-        Console.WriteLine($"{sw.Elapsed.TotalMilliseconds}ms to add metadata");
 
         return memoryStream.ToArray();
     }

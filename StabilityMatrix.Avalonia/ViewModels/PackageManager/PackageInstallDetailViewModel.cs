@@ -19,6 +19,7 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.PackageSteps;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -95,13 +96,8 @@ public partial class PackageInstallDetailViewModel(
     [ObservableProperty]
     private bool canInstall;
 
-    [ObservableProperty, NotifyPropertyChangedFor(nameof(PipOverridesView))]
-    private ObservableCollection<PipPackageSpecifierOverride> pipOverrides = new();
-
-    public DataGridCollectionView PipOverridesView => new(PipOverrides);
-    public List<string> ConstraintOptions => ["", "==", "~=", ">=", "<=", ">", "<"];
-    public List<PipPackageSpecifierOverrideAction> OverrideActionOptions =>
-        Enum.GetValues<PipPackageSpecifierOverrideAction>().Where(x => x > 0).ToList();
+    public PythonPackageSpecifiersViewModel PythonPackageSpecifiersViewModel { get; } =
+        new() { Title = null };
 
     private PackageVersionOptions? allOptions;
 
@@ -222,6 +218,8 @@ public partial class PackageInstallDetailViewModel(
             installedVersion.InstalledCommitSha = downloadOptions.CommitHash;
         }
 
+        var pipOverrides = PythonPackageSpecifiersViewModel.GetSpecifiers().ToList();
+
         var package = new InstalledPackage
         {
             DisplayName = InstallName,
@@ -234,7 +232,7 @@ public partial class PackageInstallDetailViewModel(
             PreferredTorchIndex = SelectedTorchIndex,
             PreferredSharedFolderMethod = SelectedSharedFolderMethod,
             UseSharedOutputFolder = IsOutputSharingEnabled,
-            PipOverrides = PipOverrides.Count > 0 ? PipOverrides.ToList() : null
+            PipOverrides = pipOverrides.Count > 0 ? pipOverrides : null
         };
 
         var steps = new List<IPackageStep>
@@ -294,25 +292,6 @@ public partial class PackageInstallDetailViewModel(
             }
 
             EventManager.Instance.OnInstalledPackagesChanged();
-        }
-    }
-
-    [RelayCommand]
-    private void AddRow()
-    {
-        PipOverrides.Add(new PipPackageSpecifierOverride { Constraint = "==" });
-    }
-
-    [RelayCommand]
-    private void RemoveSelectedRow(int selectedIndex)
-    {
-        try
-        {
-            PipOverrides.RemoveAt(selectedIndex);
-        }
-        catch (ArgumentOutOfRangeException)
-        {
-            Debug.WriteLine($"RemoveSelectedRow: Index {selectedIndex} out of range");
         }
     }
 

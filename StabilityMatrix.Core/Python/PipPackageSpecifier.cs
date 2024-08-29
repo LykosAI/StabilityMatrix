@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Processes;
 
@@ -7,6 +8,9 @@ namespace StabilityMatrix.Core.Python;
 
 public partial record PipPackageSpecifier
 {
+    [JsonIgnore]
+    public static IReadOnlyList<string> ConstraintOptions => ["", "==", "~=", ">=", "<=", ">", "<"];
+
     public string? Name { get; set; }
 
     public string? Constraint { get; set; }

@@ -13,6 +13,7 @@
                           xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
                           xmlns:system="clr-namespace:System;assembly=System.Runtime"
                           xmlns:python="clr-namespace:StabilityMatrix.Core.Python;assembly=StabilityMatrix.Core"
+                          xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.Views.Dialogs"
                           Focusable="True"
                           mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="850"
                           x:DataType="packageManager:PackageInstallDetailViewModel"
@@ -174,89 +175,8 @@
                       FontSize="16"
                       HorizontalAlignment="Stretch"
                       Margin="8">
-                <Expander.Styles>
-                    <Style Selector="DataGridRow:not(:selected) /template/ Rectangle#BackgroundRectangle">
-                        <Setter Property="Fill" Value="{DynamicResource ComboBoxItemBackgroundSelected}" />
-                    </Style>
-                    <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
-                        <Setter Property="Fill" Value="{DynamicResource ComboBoxItemBackgroundPointerOver}" />
-                    </Style>
-                </Expander.Styles>
-
-                <Expander.Resources>
-                    <DataTemplate x:Key="DataGridCellDividerTemplate">
-                        <Rectangle VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Fill="#08ffffff" />
-                    </DataTemplate>
-                </Expander.Resources>
-
-                <Grid RowDefinitions="Auto, *" Focusable="True">
-                    <controls1:CommandBar>
-                        <controls1:CommandBar.PrimaryCommands>
-                            <controls1:CommandBarButton Width="45" Height="50"
-                                                        IconSource="Add"
-                                                        Label="{x:Static lang:Resources.Action_Save}"
-                                                        Command="{Binding AddRowCommand}" />
-                            <controls1:CommandBarButton Width="45" Height="50"
-                                                        IconSource="Remove"
-                                                        Label="{x:Static lang:Resources.Action_Remove}"
-                                                        CommandParameter="{Binding #PipOverridesGrid.SelectedIndex}"
-                                                        Command="{Binding RemoveSelectedRowCommand}">
-                                <controls1:CommandBarButton.IsEnabled>
-                                    <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                        <Binding Path="!PipOverridesView.IsEmpty" />
-                                        <Binding ElementName="PipOverridesGrid" Path="SelectedItem"
-                                                 Converter="{x:Static ObjectConverters.IsNotNull}" />
-                                    </MultiBinding>
-                                </controls1:CommandBarButton.IsEnabled>
-                            </controls1:CommandBarButton>
-                            <controls1:CommandBarSeparator />
-                            <controls1:CommandBarButton Width="45" Height="50" FontSize="5" IconSource="Copy"
-                                                        Label="Bold" />
-                        </controls1:CommandBar.PrimaryCommands>
-                    </controls1:CommandBar>
-                    <DataGrid Grid.Row="1"
-                              x:Name="PipOverridesGrid"
-                              MinHeight="200"
-                              MaxWidth="800"
-                              HorizontalAlignment="Left"
-                              ItemsSource="{Binding PipOverridesView}">
-                        <DataGrid.Columns>
-                            <DataGridTemplateColumn Header="Action"
-                                                    x:DataType="python:PipPackageSpecifierOverride"
-                                                    Width="5*">
-                                <DataTemplate x:DataType="python:PipPackageSpecifierOverride">
-                                    <ComboBox SelectedItem="{Binding Action}"
-                                              ItemsSource="{Binding #PipOverridesGrid.((packageManager:PackageInstallDetailViewModel)DataContext).OverrideActionOptions}"
-                                              HorizontalAlignment="Stretch"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn MinWidth="0" Width="1"
-                                                    CellTemplate="{StaticResource DataGridCellDividerTemplate}" />
-                            <DataGridTextColumn x:DataType="python:PipPackageSpecifierOverride"
-                                                Width="5*"
-                                                Header="{x:Static lang:Resources.Label_EnvVarsTable_Name}"
-                                                Binding="{Binding Name}" />
-                            <DataGridTemplateColumn MinWidth="0" Width="1"
-                                                    CellTemplate="{StaticResource DataGridCellDividerTemplate}" />
-                            <DataGridTemplateColumn Header="Constraint"
-                                                    x:DataType="python:PipPackageSpecifierOverride"
-                                                    Width="5*">
-                                <DataTemplate x:DataType="python:PipPackageSpecifierOverride">
-                                    <ComboBox 
-                                        SelectedItem="{Binding Constraint}"
-                                        ItemsSource="{Binding #PipOverridesGrid.((packageManager:PackageInstallDetailViewModel)DataContext).ConstraintOptions}"
-                                        HorizontalAlignment="Stretch"/>
-                                </DataTemplate>
-                            </DataGridTemplateColumn>
-                            <DataGridTemplateColumn MinWidth="0" Width="1"
-                                                    CellTemplate="{StaticResource DataGridCellDividerTemplate}" />
-                            <DataGridTextColumn x:DataType="python:PipPackageSpecifierOverride"
-                                                Width="5*"
-                                                Header="{x:Static lang:Resources.Label_Version}"
-                                                Binding="{Binding Version}" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </Grid>
+                <dialogs:PythonPackageSpecifiersDialog 
+                    DataContext="{Binding PythonPackageSpecifiersViewModel, Mode=OneTime}"/>
             </Expander>
 
             <Button Classes="success"

@@ -1194,4 +1194,13 @@
   <data name="Text_OAuthLoginDescription" xml:space="preserve">
     <value>Open the link in your browser and follow the instructions to connect your account.</value>
   </data>
+  <data name="Label_PythonDependenciesOverride_Title" xml:space="preserve">
+    <value>Python Dependencies Override</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Description" xml:space="preserve">
+    <value>Add, replace, or remove dependencies for install and update</value>
+  </data>
+  <data name="Label_DependencySpecifiers" xml:space="preserve">
+    <value>Dependency Specifiers</value>
+  </data>
 </root>

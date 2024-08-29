@@ -737,6 +737,9 @@ The gallery images are often inpainted, but you will get something very similar 
                 + "redirect_uri=http://localhost:5022/api/oauth/patreon/callback";
         });
 
+    public static PythonPackageSpecifiersViewModel PythonPackageSpecifiersViewModel =>
+        DialogFactory.Get<PythonPackageSpecifiersViewModel>();
+
     public static MaskEditorViewModel MaskEditorViewModel => DialogFactory.Get<MaskEditorViewModel>();
 
     public static InferenceTextToImageViewModel InferenceTextToImageViewModel =>

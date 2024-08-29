@@ -1320,6 +1320,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dependency Specifiers.
+        /// </summary>
+        public static string Label_DependencySpecifiers {
+            get {
+                return ResourceManager.GetString("Label_DependencySpecifiers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Details.
         /// </summary>
         public static string Label_Details {
@@ -2324,6 +2333,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_PromptTagsImport {
             get {
                 return ResourceManager.GetString("Label_PromptTagsImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add, replace, or remove dependencies for install and update.
+        /// </summary>
+        public static string Label_PythonDependenciesOverride_Description {
+            get {
+                return ResourceManager.GetString("Label_PythonDependenciesOverride_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Dependencies Override.
+        /// </summary>
+        public static string Label_PythonDependenciesOverride_Title {
+            get {
+                return ResourceManager.GetString("Label_PythonDependenciesOverride_Title", resourceCulture);
             }
         }
         

@@ -8,6 +8,8 @@ using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
+using FluentAvalonia.UI.Controls;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -54,6 +56,17 @@ public partial class PythonPackageSpecifiersViewModel : ContentDialogViewModelBa
     public IEnumerable<PipPackageSpecifierOverride> GetSpecifiers()
     {
         return Specifiers.Select(row => row.ToSpecifier());
+    }
+
+    public override BetterContentDialog GetDialog()
+    {
+        var dialog = base.GetDialog();
+        dialog.PrimaryButtonText = Resources.Action_Save;
+        dialog.DefaultButton = ContentDialogButton.Primary;
+        dialog.CloseButtonText = Resources.Action_Cancel;
+        dialog.MaxDialogWidth = 800;
+        dialog.FullSizeDesired = true;
+        return dialog;
     }
 
     [RelayCommand]

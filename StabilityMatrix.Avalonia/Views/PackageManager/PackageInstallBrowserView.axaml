@@ -65,12 +65,12 @@
                                        FontSize="14" />
 
                             <ItemsRepeater Margin="16, 8, 0, 0"
-                                           ItemsSource="{Binding AvailableTorchVersions}">
+                                           ItemsSource="{Binding AvailableTorchIndices}">
                                 <ItemsRepeater.Layout>
                                     <StackLayout Orientation="Horizontal" />
                                 </ItemsRepeater.Layout>
                                 <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type models:TorchVersion}">
+                                    <DataTemplate DataType="{x:Type models:TorchIndex}">
                                         <controls:Card
                                             Tag="{Binding }"
                                             HorizontalAlignment="Left"

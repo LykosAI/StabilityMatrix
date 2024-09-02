@@ -41,4 +41,7 @@ public interface ILiteDbContext : IDisposable
         ILiteCollectionAsync<T> collection,
         Task<TResult> task
     );
+
+    Task<PyPiCacheEntry?> GetPyPiCacheEntry(string? cacheKey);
+    Task<bool> UpsertPyPiCacheEntry(PyPiCacheEntry cacheEntry);
 }

@@ -160,6 +160,15 @@
                                                     </MenuItem.Icon>
                                                 </MenuItem>
                                                 <MenuItem
+                                                    Header="{x:Static lang:Resources.Label_PythonDependenciesOverride_Title}"
+                                                    IsVisible="{Binding !IsUnknownPackage}"
+                                                    Command="{Binding OpenPythonDependenciesOverrideDialogCommand}">
+                                                    <MenuItem.Icon>
+                                                        <icons:Icon
+                                                            Value="fa-solid fa-bandage" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem
                                                     Header="Extensions"
                                                     IsVisible="{Binding CanUseExtensions}"
                                                     Command="{Binding OpenExtensionsDialogCommand}">

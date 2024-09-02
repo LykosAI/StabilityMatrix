@@ -671,6 +671,23 @@ public partial class PackageCardViewModel(
     }
 
     [RelayCommand]
+    public async Task OpenPythonDependenciesOverrideDialog()
+    {
+        if (Package is not { FullPath: not null })
+            return;
+
+        var vm = vmFactory.Get<PythonPackageSpecifiersViewModel>();
+
+        vm.LoadSpecifiers(Package.PipOverrides ?? []);
+
+        if (await vm.GetDialog().ShowAsync() is ContentDialogResult.Primary)
+        {
+            await using var st = settingsManager.BeginTransaction();
+            Package.PipOverrides = vm.GetSpecifiers().ToList();
+        }
+    }
+
+    [RelayCommand]
     public async Task OpenExtensionsDialog()
     {
         if (

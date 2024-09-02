@@ -43,9 +43,9 @@ public abstract class BasePackage
 
     public abstract string OutputFolderName { get; }
 
-    public abstract IEnumerable<TorchVersion> AvailableTorchVersions { get; }
+    public abstract IEnumerable<TorchIndex> AvailableTorchIndices { get; }
 
-    public virtual bool IsCompatible => GetRecommendedTorchVersion() != TorchVersion.Cpu;
+    public virtual bool IsCompatible => GetRecommendedTorchVersion() != TorchIndex.Cpu;
 
     public abstract PackageDifficulty InstallerSortOrder { get; }
 
@@ -109,45 +109,45 @@ public abstract class BasePackage
     public abstract Task SetupOutputFolderLinks(DirectoryPath installDirectory);
     public abstract Task RemoveOutputFolderLinks(DirectoryPath installDirectory);
 
-    public virtual TorchVersion GetRecommendedTorchVersion()
+    public virtual TorchIndex GetRecommendedTorchVersion()
     {
         // if there's only one AvailableTorchVersion, return that
-        if (AvailableTorchVersions.Count() == 1)
+        if (AvailableTorchIndices.Count() == 1)
         {
-            return AvailableTorchVersions.First();
+            return AvailableTorchIndices.First();
         }
 
-        if (HardwareHelper.HasNvidiaGpu() && AvailableTorchVersions.Contains(TorchVersion.Cuda))
+        if (HardwareHelper.HasNvidiaGpu() && AvailableTorchIndices.Contains(TorchIndex.Cuda))
         {
-            return TorchVersion.Cuda;
+            return TorchIndex.Cuda;
         }
 
-        if (HardwareHelper.HasAmdGpu() && AvailableTorchVersions.Contains(TorchVersion.Zluda))
+        if (HardwareHelper.HasAmdGpu() && AvailableTorchIndices.Contains(TorchIndex.Zluda))
         {
-            return TorchVersion.Zluda;
+            return TorchIndex.Zluda;
         }
 
-        if (HardwareHelper.HasIntelGpu() && AvailableTorchVersions.Contains(TorchVersion.Ipex))
+        if (HardwareHelper.HasIntelGpu() && AvailableTorchIndices.Contains(TorchIndex.Ipex))
         {
-            return TorchVersion.Ipex;
+            return TorchIndex.Ipex;
         }
 
-        if (HardwareHelper.PreferRocm() && AvailableTorchVersions.Contains(TorchVersion.Rocm))
+        if (HardwareHelper.PreferRocm() && AvailableTorchIndices.Contains(TorchIndex.Rocm))
         {
-            return TorchVersion.Rocm;
+            return TorchIndex.Rocm;
         }
 
-        if (HardwareHelper.PreferDirectML() && AvailableTorchVersions.Contains(TorchVersion.DirectMl))
+        if (HardwareHelper.PreferDirectML() && AvailableTorchIndices.Contains(TorchIndex.DirectMl))
         {
-            return TorchVersion.DirectMl;
+            return TorchIndex.DirectMl;
         }
 
-        if (Compat.IsMacOS && Compat.IsArm && AvailableTorchVersions.Contains(TorchVersion.Mps))
+        if (Compat.IsMacOS && Compat.IsArm && AvailableTorchIndices.Contains(TorchIndex.Mps))
         {
-            return TorchVersion.Mps;
+            return TorchIndex.Mps;
         }
 
-        return TorchVersion.Cpu;
+        return TorchIndex.Cpu;
     }
 
     /// <summary>

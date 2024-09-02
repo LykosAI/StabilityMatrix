@@ -125,14 +125,14 @@ public class InvokeAI : BaseGitPackage
             LaunchOptionDefinition.Extras
         ];
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm, TorchVersion.Mps };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        new[] { TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps };
 
-    public override TorchVersion GetRecommendedTorchVersion()
+    public override TorchIndex GetRecommendedTorchVersion()
     {
         if (Compat.IsMacOS && Compat.IsArm)
         {
-            return TorchVersion.Mps;
+            return TorchIndex.Mps;
         }
 
         return base.GetRecommendedTorchVersion();
@@ -176,64 +176,47 @@ public class InvokeAI : BaseGitPackage
 
         var pipCommandArgs = "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
 
-        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var torchInstallArgs = new PipInstallArgs();
 
         switch (torchVersion)
         {
-            // If has Nvidia Gpu, install CUDA version
-            case TorchVersion.Cuda:
-                progress?.Report(
-                    new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true)
-                );
-
-                var args = new List<Argument>();
-                if (exists)
-                {
-                    var pipPackages = await venvRunner.PipList().ConfigureAwait(false);
-                    var hasCuda121 = pipPackages.Any(p => p.Name == "torch" && p.Version.Contains("cu121"));
-                    if (!hasCuda121)
-                    {
-                        args.Add("--upgrade");
-                        args.Add("--force-reinstall");
-                    }
-                }
-
-                await venvRunner
-                    .PipInstall(
-                        new PipInstallArgs(args.Any() ? args.ToArray() : Array.Empty<Argument>())
-                            .WithTorch("==2.2.2")
-                            .WithTorchVision("==0.17.2")
-                            .WithXFormers("==0.0.25.post1")
-                            .WithTorchExtraIndex("cu121"),
-                        onConsoleOutput
-                    )
-                    .ConfigureAwait(false);
+            case TorchIndex.Cuda:
+                torchInstallArgs = torchInstallArgs
+                    .WithTorch("==2.2.2")
+                    .WithTorchVision("==0.17.2")
+                    .WithXFormers("==0.0.25.post1")
+                    .WithTorchExtraIndex("cu121");
 
                 Logger.Info("Starting InvokeAI install (CUDA)...");
                 pipCommandArgs =
                     "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu121";
                 break;
-            // For AMD, Install ROCm version
-            case TorchVersion.Rocm:
-                await venvRunner
-                    .PipInstall(
-                        new PipInstallArgs()
-                            .WithTorch("==2.2.2")
-                            .WithTorchVision("==0.17.2")
-                            .WithExtraIndex("rocm5.6"),
-                        onConsoleOutput
-                    )
-                    .ConfigureAwait(false);
+
+            case TorchIndex.Rocm:
+                torchInstallArgs = torchInstallArgs
+                    .WithTorch("==2.2.2")
+                    .WithTorchVision("==0.17.2")
+                    .WithExtraIndex("rocm5.6");
+
                 Logger.Info("Starting InvokeAI install (ROCm)...");
                 pipCommandArgs =
                     "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.6";
                 break;
-            case TorchVersion.Mps:
+
+            case TorchIndex.Mps:
                 // For Apple silicon, use MPS
                 Logger.Info("Starting InvokeAI install (MPS)...");
                 pipCommandArgs = "-e . --use-pep517";
                 break;
         }
+
+        if (installedPackage.PipOverrides != null)
+        {
+            torchInstallArgs = torchInstallArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        await venvRunner.PipInstall(torchInstallArgs, onConsoleOutput).ConfigureAwait(false);
 
         await venvRunner
             .PipInstall($"{pipCommandArgs}{(exists ? " --upgrade" : "")}", onConsoleOutput)
@@ -309,7 +292,7 @@ public class InvokeAI : BaseGitPackage
         RunInvokeCommand(
             installLocation,
             options.Command ?? LaunchCommand,
-            new ProcessArgs(options.Arguments.ToArray()),
+            options.Arguments,
             true,
             onConsoleOutput
         );

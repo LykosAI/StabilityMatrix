@@ -153,7 +153,9 @@ public static class DesignData
             .AddSingleton<ICivitApi>(_ => null!)
             .AddSingleton<IGithubApiCache>(_ => null!)
             .AddSingleton<ITokenizerProvider>(_ => null!)
-            .AddSingleton<IPrerequisiteHelper>(_ => null!);
+            .AddSingleton<IPrerequisiteHelper>(_ => null!)
+            .AddSingleton<IPyPiApi>(_ => null!)
+            .AddSingleton<IPyPiCache>(_ => null!);
 
         // Override Launch page with mock
         services.Remove(ServiceDescriptor.Singleton<LaunchPageViewModel, LaunchPageViewModel>());
@@ -734,6 +736,9 @@ The gallery images are often inpainted, but you will get something very similar 
                 + "response_type=code&state=test%40example.org&"
                 + "redirect_uri=http://localhost:5022/api/oauth/patreon/callback";
         });
+
+    public static PythonPackageSpecifiersViewModel PythonPackageSpecifiersViewModel =>
+        DialogFactory.Get<PythonPackageSpecifiersViewModel>();
 
     public static MaskEditorViewModel MaskEditorViewModel => DialogFactory.Get<MaskEditorViewModel>();
 

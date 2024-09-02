@@ -152,7 +152,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                     Version = installedVersion,
                     LaunchCommand = selectedPackage.LaunchCommand,
                     LastUpdateCheck = DateTimeOffset.Now,
-                    PreferredTorchVersion = torchVersion,
+                    PreferredTorchIndex = torchVersion,
                     PreferredSharedFolderMethod = recommendedSharedFolderMethod
                 };
 
@@ -176,7 +176,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                     {
                         SharedFolderMethod = recommendedSharedFolderMethod,
                         VersionOptions = downloadVersion,
-                        PythonOptions = { TorchVersion = torchVersion }
+                        PythonOptions = { TorchIndex = torchVersion }
                     }
                 );
                 steps.Add(installStep);

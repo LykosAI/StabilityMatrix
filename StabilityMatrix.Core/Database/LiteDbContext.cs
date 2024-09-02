@@ -40,6 +40,8 @@ public class LiteDbContext : ILiteDbContext
         Database.GetCollection<InferenceProjectEntry>("InferenceProjects");
     public ILiteCollectionAsync<LocalImageFile> LocalImageFiles =>
         Database.GetCollection<LocalImageFile>("LocalImageFiles");
+    public ILiteCollectionAsync<PyPiCacheEntry> PyPiCache =>
+        Database.GetCollection<PyPiCacheEntry>("PyPiCache");
 
     public LiteDbContext(
         ILogger<LiteDbContext> logger,
@@ -173,6 +175,17 @@ public class LiteDbContext : ILiteDbContext
 
     public Task<bool> UpsertGithubCacheEntry(GithubCacheEntry cacheEntry) =>
         GithubCache.UpsertAsync(cacheEntry);
+
+    public async Task<PyPiCacheEntry?> GetPyPiCacheEntry(string? cacheKey)
+    {
+        if (string.IsNullOrEmpty(cacheKey))
+            return null;
+
+        return await TryQueryWithClearOnExceptionAsync(PyPiCache, PyPiCache.FindByIdAsync(cacheKey))
+            .ConfigureAwait(false);
+    }
+
+    public Task<bool> UpsertPyPiCacheEntry(PyPiCacheEntry cacheEntry) => PyPiCache.UpsertAsync(cacheEntry);
 
     /// <summary>
     /// Clear all Collections that store re-fetchable cache type data.

@@ -35,7 +35,7 @@ public class KohyaSs(
 
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
 
-    public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.Cuda;
+    public override TorchIndex GetRecommendedTorchVersion() => TorchIndex.Cuda;
 
     public override string Disclaimer =>
         "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
@@ -44,7 +44,7 @@ public class KohyaSs(
     public override PackageType PackageType => PackageType.SdTraining;
     public override bool OfferInOneClickInstaller => false;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
-    public override IEnumerable<TorchVersion> AvailableTorchVersions => [TorchVersion.Cuda];
+    public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda];
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.None };
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
@@ -128,7 +128,13 @@ public class KohyaSs(
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         // Extra dep needed before running setup since v23.0.x
-        await venvRunner.PipInstall(["rich", "packaging"]).ConfigureAwait(false);
+        var pipArgs = new PipInstallArgs("rich", "packaging");
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        await venvRunner.PipInstall(pipArgs).ConfigureAwait(false);
 
         if (Compat.IsWindows)
         {

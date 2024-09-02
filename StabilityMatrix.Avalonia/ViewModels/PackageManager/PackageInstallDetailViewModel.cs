@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -17,9 +19,11 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.PackageSteps;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
@@ -54,7 +58,7 @@ public partial class PackageInstallDetailViewModel(
 
     public string ReleaseLabelText => IsReleaseMode ? Resources.Label_Version : Resources.Label_Branch;
 
-    public bool ShowTorchVersionOptions => SelectedTorchVersion != TorchVersion.None;
+    public bool ShowTorchIndexOptions => SelectedTorchIndex != TorchIndex.None;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FullInstallPath))]
@@ -77,8 +81,8 @@ public partial class PackageInstallDetailViewModel(
     private SharedFolderMethod selectedSharedFolderMethod;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowTorchVersionOptions))]
-    private TorchVersion selectedTorchVersion;
+    [NotifyPropertyChangedFor(nameof(ShowTorchIndexOptions))]
+    private TorchIndex selectedTorchIndex;
 
     [ObservableProperty]
     private ObservableCollection<GitCommit>? availableCommits;
@@ -92,6 +96,9 @@ public partial class PackageInstallDetailViewModel(
     [ObservableProperty]
     private bool canInstall;
 
+    public PythonPackageSpecifiersViewModel PythonPackageSpecifiersViewModel { get; } =
+        new() { Title = null };
+
     private PackageVersionOptions? allOptions;
 
     public override async Task OnLoadedAsync()
@@ -103,7 +110,7 @@ public partial class PackageInstallDetailViewModel(
 
         CanInstall = false;
 
-        SelectedTorchVersion = SelectedPackage.GetRecommendedTorchVersion();
+        SelectedTorchIndex = SelectedPackage.GetRecommendedTorchVersion();
         SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
 
         allOptions = await SelectedPackage.GetAllVersionOptions();
@@ -211,6 +218,8 @@ public partial class PackageInstallDetailViewModel(
             installedVersion.InstalledCommitSha = downloadOptions.CommitHash;
         }
 
+        var pipOverrides = PythonPackageSpecifiersViewModel.GetSpecifiers().ToList();
+
         var package = new InstalledPackage
         {
             DisplayName = InstallName,
@@ -220,9 +229,10 @@ public partial class PackageInstallDetailViewModel(
             Version = installedVersion,
             LaunchCommand = SelectedPackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now,
-            PreferredTorchVersion = SelectedTorchVersion,
+            PreferredTorchIndex = SelectedTorchIndex,
             PreferredSharedFolderMethod = SelectedSharedFolderMethod,
-            UseSharedOutputFolder = IsOutputSharingEnabled
+            UseSharedOutputFolder = IsOutputSharingEnabled,
+            PipOverrides = pipOverrides.Count > 0 ? pipOverrides : null
         };
 
         var steps = new List<IPackageStep>
@@ -243,7 +253,7 @@ public partial class PackageInstallDetailViewModel(
                 {
                     SharedFolderMethod = SelectedSharedFolderMethod,
                     VersionOptions = downloadOptions,
-                    PythonOptions = { TorchVersion = SelectedTorchVersion }
+                    PythonOptions = { TorchIndex = SelectedTorchIndex }
                 }
             ),
             new SetupModelFoldersStep(SelectedPackage, SelectedSharedFolderMethod, installLocation)

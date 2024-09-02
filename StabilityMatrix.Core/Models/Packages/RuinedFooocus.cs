@@ -113,9 +113,9 @@ public class RuinedFooocus(
         CancellationToken cancellationToken = default
     )
     {
-        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
-        if (torchVersion == TorchVersion.Cuda)
+        if (torchVersion == TorchIndex.Cuda)
         {
             await using var venvRunner = await SetupVenvPure(installLocation, forceRecreate: true)
                 .ConfigureAwait(false);
@@ -123,15 +123,19 @@ public class RuinedFooocus(
             progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
             var requirements = new FilePath(installLocation, "requirements_versions.txt");
+            var pipArgs = new PipInstallArgs()
+                .WithTorchExtraIndex("cu121")
+                .WithParsedFromRequirementsTxt(
+                    await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+                    "--extra-index-url.*|--index-url.*"
+                );
 
-            await venvRunner
-                .PipInstall(
-                    new PipInstallArgs().WithParsedFromRequirementsTxt(
-                        await requirements.ReadAllTextAsync().ConfigureAwait(false)
-                    ),
-                    onConsoleOutput
-                )
-                .ConfigureAwait(false);
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         }
         else
         {

@@ -183,8 +183,8 @@ public class A3WebUI(
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm, TorchVersion.Mps };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        new[] { TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps };
 
     public override string MainBranch => "master";
 
@@ -203,28 +203,24 @@ public class A3WebUI(
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        var venvPath = Path.Combine(installLocation, "venv");
-        var exists = Directory.Exists(venvPath);
-
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
-
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
-        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
         var pipArgs = new PipInstallArgs()
             .WithTorch("==2.1.2")
             .WithTorchVision("==0.16.2")
             .WithTorchExtraIndex(
-                options.PythonOptions.TorchVersion switch
+                options.PythonOptions.TorchIndex switch
                 {
-                    TorchVersion.Cpu => "cpu",
-                    TorchVersion.Cuda => "cu121",
-                    TorchVersion.Rocm => "rocm5.6",
-                    TorchVersion.Mps => "cpu",
+                    TorchIndex.Cpu => "cpu",
+                    TorchIndex.Cuda => "cu121",
+                    TorchIndex.Rocm => "rocm5.6",
+                    TorchIndex.Mps => "cpu",
                     _ => throw new NotSupportedException($"Unsupported torch version: {torchVersion}")
                 }
             )
@@ -233,15 +229,14 @@ public class A3WebUI(
                 excludePattern: "torch"
             );
 
-        if (torchVersion == TorchVersion.Cuda)
+        if (torchVersion == TorchIndex.Cuda)
         {
             pipArgs = pipArgs.WithXFormers("==0.0.23.post1");
         }
 
-        if (exists)
+        if (installedPackage.PipOverrides != null)
         {
-            pipArgs = pipArgs.AddArg("--upgrade");
-            pipArgs = pipArgs.AddArg("--force-reinstall");
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
         }
 
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
@@ -254,7 +249,8 @@ public class A3WebUI(
         if (!File.Exists(configPath))
         {
             var config = new JsonObject { { "show_progress_type", "TAESD" } };
-            await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
+            await File.WriteAllTextAsync(configPath, config.ToString(), cancellationToken)
+                .ConfigureAwait(false);
         }
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));

@@ -386,8 +386,9 @@ public static partial class ArchiveHelper
 
         // Mount the dmg
         await ProcessRunner
-            .GetProcessResultAsync("hdiutil", ["attach", archivePath, "-mountpoint", mountPoint])
-            .EnsureSuccessExitCode();
+            .GetProcessResultAsync("hdiutil", ["attach", archivePath, "-mountpoint", mountPoint.FullPath])
+            .EnsureSuccessExitCode()
+            .ConfigureAwait(false);
 
         try
         {
@@ -397,7 +398,7 @@ public static partial class ArchiveHelper
                 var destDir = extractDir.JoinDir(sourceDir.RelativeTo(mountPoint));
 
                 await ProcessRunner
-                    .GetProcessResultAsync("cp", ["-R", sourceDir, destDir])
+                    .GetProcessResultAsync("cp", ["-R", sourceDir.FullPath, destDir.FullPath])
                     .EnsureSuccessExitCode()
                     .ConfigureAwait(false);
             }
@@ -406,7 +407,7 @@ public static partial class ArchiveHelper
         {
             // Unmount the dmg
             await ProcessRunner
-                .GetProcessResultAsync("hdiutil", ["detach", mountPoint])
+                .GetProcessResultAsync("hdiutil", ["detach", mountPoint.FullPath])
                 .ConfigureAwait(false);
         }
     }

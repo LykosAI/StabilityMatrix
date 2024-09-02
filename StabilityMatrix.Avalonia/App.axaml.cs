@@ -687,6 +687,15 @@ public sealed class App : Application
             .AddPolicyHandler(retryPolicyLonger);
 
         services
+            .AddRefitClient<IPyPiApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://pypi.org");
+                c.Timeout = TimeSpan.FromHours(1);
+            })
+            .AddPolicyHandler(retryPolicyLonger);
+
+        services
             .AddRefitClient<ILykosAuthApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {

@@ -13,6 +13,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -42,15 +43,15 @@ public class VladAutomatic(
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         new[]
         {
-            TorchVersion.Cpu,
-            TorchVersion.Cuda,
-            TorchVersion.DirectMl,
-            TorchVersion.Ipex,
-            TorchVersion.Rocm,
-            TorchVersion.Zluda,
+            TorchIndex.Cpu,
+            TorchIndex.Cuda,
+            TorchIndex.DirectMl,
+            TorchIndex.Ipex,
+            TorchIndex.Rocm,
+            TorchIndex.Zluda,
         };
 
     // https://github.com/vladmandic/automatic/blob/master/modules/shared.py#L324
@@ -201,31 +202,37 @@ public class VladAutomatic(
         // Setup venv
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
-        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
+        if (installedPackage.PipOverrides != null)
+        {
+            var pipArgs = new PipInstallArgs().WithUserOverrides(installedPackage.PipOverrides);
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        }
+
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         switch (torchVersion)
         {
             // Run initial install
-            case TorchVersion.Cuda:
+            case TorchIndex.Cuda:
                 await venvRunner
                     .CustomInstall("launch.py --use-cuda --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
-            case TorchVersion.Rocm:
+            case TorchIndex.Rocm:
                 await venvRunner
                     .CustomInstall("launch.py --use-rocm --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
-            case TorchVersion.DirectMl:
+            case TorchIndex.DirectMl:
                 await venvRunner
                     .CustomInstall("launch.py --use-directml --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
-            case TorchVersion.Zluda:
+            case TorchIndex.Zluda:
                 await venvRunner
                     .CustomInstall("launch.py --use-zluda --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
-            case TorchVersion.Ipex:
+            case TorchIndex.Ipex:
                 await venvRunner
                     .CustomInstall("launch.py --use-ipex --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);

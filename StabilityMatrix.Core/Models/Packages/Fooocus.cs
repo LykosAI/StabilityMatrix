@@ -255,15 +255,8 @@ public class Fooocus(
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[]
-        {
-            TorchVersion.Cpu,
-            TorchVersion.Cuda,
-            TorchVersion.DirectMl,
-            TorchVersion.Rocm,
-            TorchVersion.Mps
-        };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        new[] { TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps };
 
     public override string MainBranch => "main";
 
@@ -289,11 +282,11 @@ public class Fooocus(
         // Pip version 24.1 deprecated numpy requirement spec used by torchsde 0.2.5
         await venvRunner.PipInstall(["pip==23.3.2"], onConsoleOutput).ConfigureAwait(false);
 
-        var torchVersion = options.PythonOptions.TorchVersion ?? GetRecommendedTorchVersion();
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
         var pipArgs = new PipInstallArgs();
 
-        if (torchVersion == TorchVersion.DirectMl)
+        if (torchVersion == TorchIndex.DirectMl)
         {
             pipArgs = pipArgs.WithTorchDirectML();
         }
@@ -305,10 +298,10 @@ public class Fooocus(
                 .WithTorchExtraIndex(
                     torchVersion switch
                     {
-                        TorchVersion.Cpu => "cpu",
-                        TorchVersion.Cuda => "cu121",
-                        TorchVersion.Rocm => "rocm5.6",
-                        TorchVersion.Mps => "cpu",
+                        TorchIndex.Cpu => "cpu",
+                        TorchIndex.Cuda => "cu121",
+                        TorchIndex.Rocm => "rocm5.6",
+                        TorchIndex.Mps => "cpu",
                         _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                     }
                 );
@@ -320,6 +313,11 @@ public class Fooocus(
             await requirements.ReadAllTextAsync().ConfigureAwait(false),
             excludePattern: "torch"
         );
+
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
 
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
     }

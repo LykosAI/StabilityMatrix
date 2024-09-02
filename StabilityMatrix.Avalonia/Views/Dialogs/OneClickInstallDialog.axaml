@@ -79,12 +79,12 @@
                        Foreground="OrangeRed"
                        IsVisible="{Binding SelectedPackage.Disclaimer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
             <ItemsRepeater Margin="16, 0, 0, 0"
-                           ItemsSource="{Binding SelectedPackage.AvailableTorchVersions}">
+                           ItemsSource="{Binding SelectedPackage.AvailableTorchIndices}">
                 <ItemsRepeater.Layout>
                     <StackLayout Orientation="Horizontal" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="{x:Type models:TorchVersion}">
+                    <DataTemplate DataType="{x:Type models:TorchIndex}">
                         <controls:Card
                             Tag="{Binding }"
                             HorizontalAlignment="Left"

@@ -1,4 +1,4 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
+<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
     <Design.PreviewWith>
@@ -19,7 +19,7 @@
 
     <!-- Success -->
     <Style Selector="SplitButton.success">
-        <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+        <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource ThemeGreenColor}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeGreenColor}" />
         </Style>
@@ -35,7 +35,7 @@
         
         <!-- Pseudo-classes -->
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkGreenColor}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkGreenColor}" />
             </Style>
@@ -45,7 +45,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkGreenColor}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkGreenColor}" />
             </Style>
@@ -55,7 +55,7 @@
         </Style>
 
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkDarkGreenColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkDarkGreenColor}" />
             </Style>
@@ -65,7 +65,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkDarkGreenColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkDarkGreenColor}" />
             </Style>
@@ -75,7 +75,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>
@@ -87,7 +87,7 @@
     
     <!-- Danger -->
     <Style Selector="SplitButton.danger">
-        <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+        <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource ThemeRedColor}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeRedColor}" />
         </Style>
@@ -103,7 +103,7 @@
     
         <!-- Pseudo-classes -->
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkRedColor}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkRedColor}" />
             </Style>
@@ -113,7 +113,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkRedColor}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkRedColor}" />
             </Style>
@@ -123,7 +123,7 @@
         </Style>
 
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkDarkRedColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkDarkRedColor}" />
             </Style>
@@ -133,7 +133,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkDarkRedColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkDarkRedColor}" />
             </Style>
@@ -143,7 +143,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>
@@ -155,7 +155,7 @@
     
     <!-- Info -->
     <Style Selector="SplitButton.info">
-        <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+        <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource ThemeLightBlueColor}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeLightBlueColor}" />
         </Style>
@@ -171,7 +171,7 @@
 
         <!-- Pseudo-classes -->
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeBlueColor}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeBlueColor}" />
             </Style>
@@ -181,7 +181,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeBlueColor}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeBlueColor}" />
             </Style>
@@ -191,7 +191,7 @@
         </Style>
 
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkBlueColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkBlueColor}" />
             </Style>
@@ -201,7 +201,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkBlueColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkBlueColor}" />
             </Style>
@@ -211,7 +211,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>
@@ -223,7 +223,7 @@
     
     <!--Accent Button-->
     <Style Selector="SplitButton.accent">
-        <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+        <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
             <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrush}" />
         </Style>
@@ -238,7 +238,7 @@
 
         <!-- Pseudo-classes -->
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundPointerOver}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrushPointerOver}" />
             </Style>
@@ -248,7 +248,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundPointerOver}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrushPointerOver}" />
             </Style>
@@ -258,7 +258,7 @@
         </Style>
 
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundPressed}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrushPressed}" />
             </Style>
@@ -268,7 +268,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundPressed}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrushPressed}" />
             </Style>
@@ -278,7 +278,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrushDisabled}" />
             </Style>
@@ -290,7 +290,7 @@
     
     <!-- SystemAccent -->
     <Style Selector="SplitButton.systemaccent">
-        <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+        <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
             <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
         </Style>
@@ -306,7 +306,7 @@
 
         <!-- Pseudo-classes -->
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource SystemAccentColorDark1}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark1}" />
             </Style>
@@ -316,7 +316,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource SystemAccentColorDark1}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark1}" />
             </Style>
@@ -326,7 +326,7 @@
         </Style>
 
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource SystemAccentColorDark2}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark2}" />
             </Style>
@@ -336,7 +336,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource SystemAccentColorDark2}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark2}" />
             </Style>
@@ -346,7 +346,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>
@@ -358,7 +358,7 @@
     
     <!-- Transparent -->
     <Style Selector="SplitButton.transparent">
-        <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+        <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
         </Style>
@@ -368,7 +368,7 @@
 
         <!-- Pseudo-classes -->
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundDisabled}" />
             </Style>
@@ -378,7 +378,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundDisabled}" />
             </Style>
@@ -388,7 +388,7 @@
         </Style>
 
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundPressed}" />
             </Style>
@@ -398,7 +398,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundPressed}" />
             </Style>
@@ -408,7 +408,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>
@@ -420,7 +420,7 @@
     
     <!-- Transparent-Full -->
     <Style Selector="SplitButton.transparent-full">
-        <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+        <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource SystemControlTransparentBrush}" />
         </Style>
@@ -430,7 +430,7 @@
 
         <!-- Pseudo-classes -->
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundDisabled}" />
             </Style>
@@ -440,7 +440,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundDisabled}" />
             </Style>
@@ -450,7 +450,7 @@
         </Style>
 
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundPressed}" />
             </Style>
@@ -460,7 +460,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundPressed}" />
             </Style>
@@ -470,7 +470,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>
@@ -482,7 +482,7 @@
     
     <!-- Semi-Transparent Info -->
     <Style Selector="SplitButton.transparent-info">
-        <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+        <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource ThemeLightBlueColorTransparent}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeLightBlueColorTransparent}" />
         </Style>
@@ -498,7 +498,7 @@
 
         <!-- Pseudo-classes -->
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeBlueColorTransparent}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeBlueColorTransparent}" />
             </Style>
@@ -508,7 +508,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeBlueColorTransparent}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeBlueColorTransparent}" />
             </Style>
@@ -518,7 +518,7 @@
         </Style>
 
         <Style Selector="^ /template/ Button#PART_PrimaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkBlueColorTransparent}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkBlueColorTransparent}" />
             </Style>
@@ -528,7 +528,7 @@
         </Style>
         
         <Style Selector="^ /template/ Button#PART_SecondaryButton:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkBlueColorTransparent}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkBlueColorTransparent}" />
             </Style>
@@ -538,7 +538,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ Button /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ Button /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>
@@ -548,3 +548,9 @@
         </Style>
     </Style>
 </Styles>
+
+
+
+
+
+

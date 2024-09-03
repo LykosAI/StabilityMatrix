@@ -107,7 +107,7 @@
         <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
         <PackageReference Include="Exceptionless.DateTimeExtensions" Version="3.4.3" />
         <PackageReference Include="FluentAvalonia.BreadcrumbBar" Version="2.0.2" />
-        <PackageReference Include="FluentAvaloniaUI" Version="2.0.5" />
+        <PackageReference Include="FluentAvaloniaUI" Version="2.1.0" />
         <PackageReference Include="FluentIcons.Avalonia" Version="1.1.249" />
         <PackageReference Include="FluentIcons.Avalonia.Fluent" Version="1.1.249" />
         <PackageReference Include="FuzzySharp" Version="2.0.2" />

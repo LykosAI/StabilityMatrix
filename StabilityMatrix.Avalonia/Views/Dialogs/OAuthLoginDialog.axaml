@@ -21,7 +21,7 @@
 
     <Grid Margin="8,4" RowDefinitions="Auto,Auto">
         <Grid.Styles>
-            <Style Selector="ui|HyperlinkButton &gt; TextBlock">
+            <Style Selector="HyperlinkButton &gt; TextBlock">
                 <Setter Property="TextWrapping" Value="Wrap" />
             </Style>
         </Grid.Styles>
@@ -33,7 +33,7 @@
             IsEnabled="{Binding !IsLoading}"
             IsVisible="{Binding !IsLoading}"
             >
-            <ui:HyperlinkButton
+            <HyperlinkButton
                 Padding="6,0"
                 Content="{Binding Url}"
                 NavigateUri="{Binding Url}" />

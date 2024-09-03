@@ -82,7 +82,7 @@
                                 FontSize="14"
                                 Text="{x:Static lang:Resources.Label_ReadAndAgree}"/>
                             
-                            <ui:HyperlinkButton
+                            <HyperlinkButton
                                 VerticalAlignment="Top"
                                 Padding="0"
                                 Margin="1,0,0,0"

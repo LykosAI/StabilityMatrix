@@ -3,7 +3,6 @@
                           xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                           xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                           xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-                          xmlns:ui="using:FluentAvalonia.UI.Controls"
                           xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
                           xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
                           xmlns:system="clr-namespace:System;assembly=System.Runtime"
@@ -34,7 +33,7 @@
                         TextAlignment="Center"
                         Margin="4"/>
         
-        <ui:HyperlinkButton Grid.Row="3" 
+        <HyperlinkButton Grid.Row="3" 
                             Content="Privacy Policy"
                             VerticalAlignment="Bottom"
                             HorizontalAlignment="Center"

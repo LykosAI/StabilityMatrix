@@ -55,6 +55,7 @@ using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -373,7 +374,8 @@ public sealed class App : Application
                     provider.GetRequiredService<ITrackedDownloadService>(),
                     provider.GetRequiredService<IModelIndexService>(),
                     provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
-                    provider.GetRequiredService<INotificationService>()
+                    provider.GetRequiredService<INotificationService>(),
+                    provider.GetRequiredService<IAnalyticsHelper>()
                 )
                 {
                     Pages =

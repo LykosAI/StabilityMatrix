@@ -17,12 +17,12 @@
     
     <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto" Margin="8,4" RowSpacing="12">
         <sg:SpacedGrid.Styles>
-            <Style Selector="ui|HyperlinkButton > TextBlock">
+            <Style Selector="HyperlinkButton > TextBlock">
                 <Setter Property="TextWrapping" Value="WrapWithOverflow"/>
             </Style>
         </sg:SpacedGrid.Styles>
         
-        <ui:HyperlinkButton 
+        <HyperlinkButton 
             Padding="6,0"
             Content="{Binding Url}"
             NavigateUri="{Binding Url}"/>

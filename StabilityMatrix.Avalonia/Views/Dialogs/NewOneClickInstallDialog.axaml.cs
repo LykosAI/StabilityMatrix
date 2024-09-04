@@ -6,6 +6,7 @@ using FluentAvalonia.UI.Controls;
 using KGySoft.CoreLibraries;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Core.Models.Packages;
+using ItemsRepeater = Avalonia.Controls.ItemsRepeater;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 

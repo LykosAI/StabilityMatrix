@@ -41,6 +41,7 @@ using Polly.Extensions.Http;
 using Polly.Timeout;
 using Refit;
 using Sentry;
+using StabilityMatrix.Avalonia.Behaviors;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -1044,7 +1045,12 @@ public sealed class App : Application
             builder.ForLogger("Microsoft.Extensions.Http.*").WriteToNil(NLog.LogLevel.Warn);
 
             // Disable some trace logging by default, unless overriden by app settings
-            var typesToDisableTrace = new[] { typeof(ConsoleViewModel), typeof(LoadableViewModelBase) };
+            var typesToDisableTrace = new[]
+            {
+                typeof(ConsoleViewModel),
+                typeof(LoadableViewModelBase),
+                typeof(TextEditorCompletionBehavior)
+            };
 
             foreach (var type in typesToDisableTrace)
             {

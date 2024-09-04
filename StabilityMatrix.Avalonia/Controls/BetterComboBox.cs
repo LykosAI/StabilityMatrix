@@ -4,6 +4,7 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Controls.Templates;
@@ -78,7 +79,7 @@ public class BetterComboBox : ComboBox
         // Set the Popup's anchor to the ComboBox itself
         inputPopup.PlacementTarget = this;
 
-        if (e.NameScope.Find<ContentControl>("ContentPresenter") is { } contentPresenter)
+        if (e.NameScope.Find<ContentPresenter>("ContentPresenter") is { } contentPresenter)
         {
             if (SelectionBoxItemTemplate is { } template)
             {

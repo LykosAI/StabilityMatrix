@@ -200,6 +200,8 @@ public class Settings
 
     public bool ShowNsfwInCheckpointsPage { get; set; }
 
+    public bool OptedInToInstallTelemetry { get; set; }
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

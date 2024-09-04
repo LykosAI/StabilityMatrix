@@ -374,7 +374,7 @@
             </Grid>
 
             <!--  System Options  -->
-            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -395,9 +395,22 @@
                             Symbol="ArrowSync" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
-
+                
+                <!--  Updates page  -->
                 <ui:SettingsExpander
                     Grid.Row="2"
+                    ActionIconSource="ChevronRight"
+                    Command="{Binding NavigateToSubPageCommand}"
+                    CommandParameter="{x:Type vmSettings:AnalyticsSettingsViewModel}"
+                    Header="{x:Static lang:Resources.Label_Analytics}"
+                    IsClickEnabled="True">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-chart-simple"/>
+                    </ui:SettingsExpander.IconSource>
+                </ui:SettingsExpander>
+
+                <ui:SettingsExpander
+                    Grid.Row="3"
                     Description="{x:Static lang:Resources.Label_AddToStartMenu_Details}"
                     Header="{x:Static lang:Resources.Label_AddToStartMenu}"
                     IconSource="StarAdd"
@@ -436,7 +449,7 @@
                 </ui:SettingsExpander>
 
                 <ui:SettingsExpander
-                    Grid.Row="3"
+                    Grid.Row="4"
                     Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
                     IconSource="MoveToFolder">
                     <ui:SettingsExpander.Header>
@@ -467,7 +480,7 @@
 
                 <!-- App Folders -->
                 <ui:SettingsExpander 
-                    Grid.Row="4" 
+                    Grid.Row="5" 
                     IconSource="FolderLink"
                     Header="{x:Static lang:Resources.Label_AppFolders}">
 
@@ -492,7 +505,7 @@
                 </ui:SettingsExpander>
 
                 <!-- System Information -->
-                <ui:SettingsExpander Grid.Row="5" Header="{x:Static lang:Resources.Label_SystemInformation}">
+                <ui:SettingsExpander Grid.Row="6" Header="{x:Static lang:Resources.Label_SystemInformation}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"

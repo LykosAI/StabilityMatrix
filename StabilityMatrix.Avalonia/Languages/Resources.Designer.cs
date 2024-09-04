@@ -690,6 +690,21 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {
+        ///  &quot;packageName&quot;: &quot;stable-diffusion-webui&quot;,
+        ///  &quot;packageVersion&quot;: &quot;v1.10.0&quot;,
+        ///  &quot;isSuccess&quot;: true,
+        ///  &quot;type&quot;: &quot;install&quot;,
+        ///  &quot;timestamp&quot;: &quot;2024-09-04T02:14:04.1967404+00:00&quot;
+        ///}.
+        /// </summary>
+        public static string AnalyticsExample_InstallData {
+            get {
+                return ResourceManager.GetString("AnalyticsExample_InstallData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please select a download location..
         /// </summary>
         public static string Error_PleaseSelectDownloadLocation {
@@ -767,6 +782,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_AllVersions {
             get {
                 return ResourceManager.GetString("Label_AllVersions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Analytics.
+        /// </summary>
+        public static string Label_Analytics {
+            get {
+                return ResourceManager.GetString("Label_Analytics", resourceCulture);
             }
         }
         

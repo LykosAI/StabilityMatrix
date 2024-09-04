@@ -1203,4 +1203,16 @@
   <data name="Label_DependencySpecifiers" xml:space="preserve">
     <value>Dependency Specifiers</value>
   </data>
+  <data name="AnalyticsExample_InstallData" xml:space="preserve">
+    <value>{
+  "packageName": "stable-diffusion-webui",
+  "packageVersion": "v1.10.0",
+  "isSuccess": true,
+  "type": "install",
+  "timestamp": "2024-09-04T02:14:04.1967404+00:00"
+}</value>
+  </data>
+  <data name="Label_Analytics" xml:space="preserve">
+    <value>Analytics</value>
+  </data>
 </root>

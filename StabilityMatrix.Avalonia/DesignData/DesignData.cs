@@ -211,7 +211,8 @@ public static class DesignData
             null,
             null,
             null,
-            packageFactory
+            packageFactory,
+            null
         );
 
         /*ObservableCacheEx.AddOrUpdate(

@@ -23,6 +23,7 @@ using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
 
@@ -40,6 +41,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IModelIndexService modelIndexService;
     private readonly Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler;
     private readonly INotificationService notificationService;
+    private readonly IAnalyticsHelper analyticsHelper;
     public string Greeting => "Welcome to Avalonia!";
 
     [ObservableProperty]
@@ -78,7 +80,8 @@ public partial class MainWindowViewModel : ViewModelBase
         ITrackedDownloadService trackedDownloadService,
         IModelIndexService modelIndexService,
         Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler,
-        INotificationService notificationService
+        INotificationService notificationService,
+        IAnalyticsHelper analyticsHelper
     )
     {
         this.settingsManager = settingsManager;
@@ -88,6 +91,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.modelIndexService = modelIndexService;
         this.modelDownloadLinkHandler = modelDownloadLinkHandler;
         this.notificationService = notificationService;
+        this.analyticsHelper = analyticsHelper;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
     }
@@ -160,6 +164,26 @@ public partial class MainWindowViewModel : ViewModelBase
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
         Logger.Info($"App started ({startupTime})");
 
+        // Show analytics notice if not seen
+        if (
+            !settingsManager.Settings.SeenTeachingTips.Contains(
+                Core.Models.Settings.TeachingTip.PackageInstallAnalyticsOptIn
+            )
+        )
+        {
+            var vm = dialogFactory.Get<AnalyticsOptInViewModel>();
+            var result = await vm.GetDialog().ShowAsync();
+
+            if (result == ContentDialogResult.Secondary)
+            {
+                settingsManager.Transaction(s => s.OptedInToInstallTelemetry = true);
+            }
+
+            settingsManager.Transaction(
+                s => s.SeenTeachingTips.Add(Core.Models.Settings.TeachingTip.PackageInstallAnalyticsOptIn)
+            );
+        }
+
         if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Count == 0)
         {
             var viewModel = dialogFactory.Get<NewOneClickInstallViewModel>();
@@ -195,6 +219,22 @@ public partial class MainWindowViewModel : ViewModelBase
 
             EventManager.Instance.OnRecommendedModelsDialogClosed();
             EventManager.Instance.OnDownloadsTeachingTipRequested();
+
+            var installedPackageNameMaybe =
+                settingsManager.PackageInstallsInProgress.FirstOrDefault()
+                ?? settingsManager.Settings.InstalledPackages.FirstOrDefault()?.PackageName;
+
+            analyticsHelper
+                .TrackFirstTimeInstallAsync(
+                    installedPackageNameMaybe,
+                    recommendedModelsViewModel
+                        .Sd15Models.Concat(recommendedModelsViewModel.SdxlModels)
+                        .Select(x => x.CivitModel.Name)
+                        .ToList(),
+                    false,
+                    Compat.Platform.ToString()
+                )
+                .SafeFireAndForget();
         }
 
         // Show what's new for updates

@@ -1,0 +1,51 @@
+﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
+                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+                          xmlns:settings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
+                          xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+                          xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+                          xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+                          xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+                          x:DataType="settings:AnalyticsSettingsViewModel"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          x:Class="StabilityMatrix.Avalonia.Views.Settings.AnalyticsSettingsPage">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4"
+                       Margin="8,8">
+            <ui:SettingsExpander
+                Grid.Row="1"
+                Margin="8,0,8,4"
+                Header="Anonymous Usage Data"
+                IsExpanded="True">
+                <ui:SettingsExpander.IconSource>
+                    <fluent:SymbolIconSource Symbol="Box" IconVariant="Filled"/>
+                </ui:SettingsExpander.IconSource>
+                <ui:SettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding IsPackageInstallAnalyticsEnabled, Mode=TwoWay}" />
+                </ui:SettingsExpander.Footer>
+                <ui:SettingsExpanderItem Padding="8">
+                    <StackPanel>
+                    <TextBlock Text="Example Telemetry"
+                               HorizontalAlignment="Center"
+                               Margin="8"/>
+                    <avaloniaEdit:TextEditor Text="{x:Static lang:Resources.AnalyticsExample_InstallData}"
+                                             FontSize="14"
+                                             Margin="16,0,16,16"
+                                             IsReadOnly="True"
+                                             Background="#33000000"
+                                             CornerRadius="8"
+                                             Padding="8"
+                                             MaxWidth="500"
+                                             FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
+                                             SyntaxHighlighting="JavaScript"
+                                             BorderThickness="0"/>
+                    </StackPanel>
+                </ui:SettingsExpanderItem>
+            </ui:SettingsExpander>
+        </sg:SpacedGrid>
+    </ScrollViewer>
+</controls:UserControlBase>

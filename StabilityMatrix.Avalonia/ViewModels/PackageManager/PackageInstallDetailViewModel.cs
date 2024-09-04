@@ -23,6 +23,7 @@ using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -46,7 +47,8 @@ public partial class PackageInstallDetailViewModel(
     IPyRunner pyRunner,
     IPrerequisiteHelper prerequisiteHelper,
     INavigationService<PackageManagerViewModel> packageNavigationService,
-    IPackageFactory packageFactory
+    IPackageFactory packageFactory,
+    IAnalyticsHelper analyticsHelper
 ) : PageViewModelBase
 {
     public BasePackage SelectedPackage { get; } = package;
@@ -177,7 +179,8 @@ public partial class PackageInstallDetailViewModel(
                     pyRunner,
                     prerequisiteHelper,
                     packageNavigationService,
-                    packageFactory
+                    packageFactory,
+                    analyticsHelper
                 );
                 packageNavigationService.NavigateTo(vm);
                 return;
@@ -293,6 +296,15 @@ public partial class PackageInstallDetailViewModel(
 
             EventManager.Instance.OnInstalledPackagesChanged();
         }
+
+        analyticsHelper
+            .TrackInstallAsync(
+                packageName,
+                installedVersion.DisplayVersion,
+                !runner.Failed,
+                runner.Exception?.Message
+            )
+            .SafeFireAndForget();
     }
 
     private void UpdateVersions()

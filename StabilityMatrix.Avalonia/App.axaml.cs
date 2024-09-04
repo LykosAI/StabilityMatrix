@@ -108,6 +108,14 @@ public sealed class App : Application
 #else
     public const string LykosAuthApiBaseUrl = "https://auth.lykos.ai";
 #endif
+#if DEBUG
+    // ReSharper disable twice LocalizableElement
+    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+    public static string LykosAnalyticsApiBaseUrl =>
+        Config?["LykosAnalyticsApiBaseUrl"] ?? "https://analytics.lykos.ai";
+#else
+    public const string LykosAnalyticsApiBaseUrl = "https://analytics.lykos.ai";
+#endif
 
     // ReSharper disable once MemberCanBePrivate.Global
     public IClassicDesktopStyleApplicationLifetime? DesktopLifetime =>
@@ -708,6 +716,16 @@ public sealed class App : Application
                 serviceProvider =>
                     new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
             );
+
+        services
+            .AddRefitClient<ILykosAnalyticsApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri(LykosAnalyticsApiBaseUrl);
+                c.Timeout = TimeSpan.FromMinutes(5);
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddPolicyHandler(retryPolicy);
 
         services
             .AddRefitClient<IOpenArtApi>(defaultRefitSettings)

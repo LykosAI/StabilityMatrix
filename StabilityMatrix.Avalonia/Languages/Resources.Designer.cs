@@ -3189,6 +3189,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The data sent is never associated with you or your account and will not include personal data or any sensitive information..
+        /// </summary>
+        public static string Text_AnalyticsDataPrivacyInfo {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsDataPrivacyInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Help us improve Stability Matrix by sending anonymous data about features used, operating system versions, types of packages installed, etc. The data sent is never associated with you or your account and will not include personal data or any sensitive information..
         /// </summary>
         public static string Text_AnalyticsDescription {

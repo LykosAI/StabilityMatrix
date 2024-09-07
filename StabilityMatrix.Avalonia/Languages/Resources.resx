@@ -1224,4 +1224,7 @@
   <data name="Text_AnalyticsDescriptionShort" xml:space="preserve">
     <value>Help us improve Stability Matrix by sending anonymous data about features used, operating system versions, types of packages installed, etc.</value>
   </data>
+  <data name="Text_AnalyticsDataPrivacyInfo" xml:space="preserve">
+    <value>The data sent is never associated with you or your account and will not include personal data or any sensitive information.</value>
+  </data>
 </root>

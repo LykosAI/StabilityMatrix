@@ -58,14 +58,19 @@
                                                TextTrimming="CharacterEllipsis"/>
                                     
                                     <!--  non-indeterminate progress  -->
-                                    <TextBlock Grid.Row="1"
-                                        Margin="0,0"
-                                        IsVisible="{Binding !Progress.IsIndeterminate}">
-                                        <Run Text="{Binding Progress.Text, Mode=OneWay}" />
-                                        <Run Text="{Binding Progress.Value, Mode=OneWay}" /><Run Text="%" />
-                                        <Run Text=" - "/>
-                                        <Run Text="{Binding Progress.FormattedDownloadSpeed}" Foreground="Lime"/>
-                                    </TextBlock>
+                                    <StackPanel Grid.Row="1" Orientation="Horizontal"
+                                                IsVisible="{Binding !Progress.IsIndeterminate}">
+                                        <TextBlock Margin="0,0"
+                                                   Text="{Binding Progress.Text, Mode=OneWay}"/>
+                                        <TextBlock Margin="0,0"
+                                                   IsVisible="{Binding !IsCompleted}">
+                                            <Run Text="{Binding Progress.Value, Mode=OneWay}" /><Run Text="%" />
+                                            <Run Text=" - "/>
+                                            <Run Text="{Binding Progress.FormattedDownloadSpeed}" 
+                                                 Foreground="Lime"/>
+                                        </TextBlock>
+                                        
+                                    </StackPanel>
 
                                     <!--  indeterminate progress  -->
                                     <TextBlock Grid.Row="1"

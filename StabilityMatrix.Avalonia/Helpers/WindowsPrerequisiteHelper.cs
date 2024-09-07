@@ -75,6 +75,14 @@ public class WindowsPrerequisiteHelper(
     private string DotnetExistsPath => Path.Combine(DotnetExtractPath, "dotnet.exe");
     private string VcBuildToolsDownloadPath => Path.Combine(AssetsDir, "vs_BuildTools.exe");
 
+    private string VcBuildToolsExistsPath =>
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            "Microsoft Visual Studio",
+            "2022",
+            "BuildTools"
+        );
+
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
 
@@ -486,6 +494,12 @@ public class WindowsPrerequisiteHelper(
     [SupportedOSPlatform("windows")]
     public async Task InstallVcBuildToolsIfNecessary(IProgress<ProgressReport>? progress = null)
     {
+        if (
+            Directory.Exists(VcBuildToolsExistsPath)
+            && Directory.EnumerateDirectories(VcBuildToolsExistsPath).Any()
+        )
+            return;
+
         await downloadService.DownloadToFileAsync(
             CppBuildToolsUrl,
             VcBuildToolsDownloadPath,

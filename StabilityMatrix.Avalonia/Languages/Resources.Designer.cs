@@ -3189,6 +3189,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Help us improve Stability Matrix by sending anonymous data about features used, operating system versions, types of packages installed, etc. The data sent is never associated with you or your account and will not include personal data or any sensitive information..
+        /// </summary>
+        public static string Text_AnalyticsDescription {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Help us improve Stability Matrix by sending anonymous data about features used, operating system versions, types of packages installed, etc..
+        /// </summary>
+        public static string Text_AnalyticsDescriptionShort {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsDescriptionShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The app will relaunch after updating.
         /// </summary>
         public static string Text_AppWillRelaunchAfterUpdate {
@@ -3329,6 +3347,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string TextTemplate_UpdatingPackage {
             get {
                 return ResourceManager.GetString("TextTemplate_UpdatingPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can always change this behavior in {0}..
+        /// </summary>
+        public static string TextTemplate_YouCanChangeThisBehavior {
+            get {
+                return ResourceManager.GetString("TextTemplate_YouCanChangeThisBehavior", resourceCulture);
             }
         }
         

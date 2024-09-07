@@ -1,69 +1,87 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
-                          xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
-                          xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
-                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                          xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
-                          x:DataType="dialogs:AnalyticsOptInViewModel"
-                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.AnalyticsOptInDialog">
-    <!-- d:DataContext="{x:Static mocks:DesignData.AnalyticsOptInDialogViewModel}" -->
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.AnalyticsOptInDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    d:DataContext="{Binding [AnalyticsOptInViewModel], Source={x:Static mocks:DesignData.Types}}"
+    d:DesignHeight="550"
+    d:DesignWidth="600"
+    x:DataType="dialogs:AnalyticsOptInViewModel"
+    mc:Ignorable="d">
     <Grid RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
-        <avalonia:Icon Grid.Row="0" 
-                       Value="fa-solid fa-chart-simple"
-                       FontSize="48"
-                       Margin="16, 32, 16, 0"/>
-        <TextBlock Grid.Row="1"
-                     Text="Stability Matrix Analytics"
-                     FontSize="28"
-                     FontWeight="SemiBold"
-                     TextAlignment="Center"
-                     Margin="4, 4, 4, 16"/>
-        <TextBlock Grid.Row="2"
-                        Text="Help us improve Stability Matrix by sending anonymous usage data. You can change your decision later in Settings. Data is never associated with you or your account and is never shared."
-                        TextWrapping="Wrap"
-                        FontSize="16"
-                        FontWeight="Light"
-                        TextAlignment="Center"
-                        Margin="4"/>
-        
-        <HyperlinkButton Grid.Row="3" 
-                            Content="Privacy Policy"
-                            VerticalAlignment="Bottom"
-                            HorizontalAlignment="Center"
-                            Margin="0,16"
-                            NavigateUri="https://lykos.ai/privacy"/>
-        
-        <TextBlock Grid.Row="4"
-                   Text="Example Telemetry"
-                   FontWeight="Light"
-                   TextAlignment="Center"
-                   Margin="0,16,0,4"/>
-        
-        <avaloniaEdit:TextEditor Grid.Row="5"
-                                 Text="{x:Static lang:Resources.AnalyticsExample_InstallData}"
-                                 FontSize="14"
-                                 Margin="16,0,16,16"
-                                 IsReadOnly="True"
-                                 Background="#33000000"
-                                 CornerRadius="8"
-                                 Padding="8"
-                                 MaxWidth="500"
-                                 FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
-                                 SyntaxHighlighting="JavaScript"
-                                 BorderThickness="0"/>
-        <StackPanel Grid.Row="6" Orientation="Horizontal"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Bottom"
-                    Spacing="8"
-                    Margin="0,48,0,0">
-        </StackPanel>
+        <avalonia:Icon
+            Grid.Row="0"
+            Margin="16,16,16,0"
+            FontSize="48"
+            Value="fa-solid fa-chart-simple" />
+        <TextBlock
+            Grid.Row="1"
+            Margin="4,4,4,16"
+            Text="Analytics"
+            TextAlignment="Center"
+            Theme="{DynamicResource TitleTextBlockStyle}" />
+        <TextBlock
+            Grid.Row="2"
+            Margin="4"
+            FontSize="16"
+            FontWeight="Light"
+            Text="{x:Static lang:Resources.Text_AnalyticsDescription}"
+            TextAlignment="Center"
+            TextWrapping="Wrap"
+            Theme="{DynamicResource BodyTextBlockStyle}" />
+
+        <controls:HyperlinkIconButton
+            Grid.Row="3"
+            Margin="0,16"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            Content="Privacy Policy"
+            NavigateUri="https://lykos.ai/privacy" />
+
+        <TextBlock
+            Grid.Row="4"
+            Margin="4"
+            Foreground="{DynamicResource TextFillColorTertiary}"
+            Text="{Binding ChangeThisBehaviorInSettings}"
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
+
+        <TextBlock
+            Grid.Row="5"
+            Margin="0,16,0,4"
+            FontWeight="Light"
+            Text="Example Telemetry"
+            TextAlignment="Center" />
+
+        <avaloniaEdit:TextEditor
+            Grid.Row="6"
+            MaxWidth="500"
+            Margin="16,0,16,16"
+            Padding="8"
+            Background="#33000000"
+            BorderThickness="0"
+            CornerRadius="8"
+            FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
+            FontSize="14"
+            IsReadOnly="True"
+            SyntaxHighlighting="JavaScript"
+            Text="{x:Static lang:Resources.AnalyticsExample_InstallData}" />
+        <StackPanel
+            Grid.Row="6"
+            Margin="0,48,0,0"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            Orientation="Horizontal"
+            Spacing="8" />
 
     </Grid>
 </controls:UserControlBase>

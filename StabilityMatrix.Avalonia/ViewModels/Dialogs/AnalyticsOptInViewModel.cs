@@ -1,5 +1,6 @@
 ﻿using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -11,10 +12,13 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [Transient]
 public class AnalyticsOptInViewModel : ContentDialogViewModelBase
 {
+    public string ChangeThisBehaviorInSettings =>
+        string.Format(Resources.TextTemplate_YouCanChangeThisBehavior, "Settings | System | Analytics")
+            .Trim();
+
     public override BetterContentDialog GetDialog()
     {
         var dialog = base.GetDialog();
-        dialog.IsFooterVisible = true;
         dialog.IsPrimaryButtonEnabled = true;
         dialog.PrimaryButtonText = "Don't Share Analytics";
         dialog.SecondaryButtonText = "Share Analytics";

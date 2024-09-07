@@ -37,6 +37,7 @@
                             Content="Privacy Policy"
                             VerticalAlignment="Bottom"
                             HorizontalAlignment="Center"
+                            Margin="0,16"
                             NavigateUri="https://lykos.ai/privacy"/>
         
         <TextBlock Grid.Row="4"

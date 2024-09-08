@@ -2,13 +2,20 @@
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
+using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Helper.Analytics;
 
 [Singleton(typeof(IAnalyticsHelper))]
-public class AnalyticsHelper(ILogger<AnalyticsHelper> logger, ILykosAnalyticsApi analyticsApi)
-    : IAnalyticsHelper
+public class AnalyticsHelper(
+    ILogger<AnalyticsHelper> logger,
+    ILykosAnalyticsApi analyticsApi,
+    ISettingsManager settingsManager
+) : IAnalyticsHelper
 {
+    public AnalyticsSettings Settings => settingsManager.Settings.Analytics;
+
     public async Task TrackInstallAsync(
         string packageName,
         string packageVersion,
@@ -16,6 +23,11 @@ public class AnalyticsHelper(ILogger<AnalyticsHelper> logger, ILykosAnalyticsApi
         string? reason = null
     )
     {
+        if (!Settings.IsUsageDataEnabled)
+        {
+            return;
+        }
+
         var data = new PackageInstallAnalyticsRequest
         {
             PackageName = packageName,
@@ -42,6 +54,11 @@ public class AnalyticsHelper(ILogger<AnalyticsHelper> logger, ILykosAnalyticsApi
         string platform
     )
     {
+        if (!Settings.IsUsageDataEnabled)
+        {
+            return;
+        }
+
         var data = new FirstTimeInstallAnalytics
         {
             SelectedPackageName = selectedPackageName,

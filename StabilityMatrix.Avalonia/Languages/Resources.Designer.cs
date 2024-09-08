@@ -2325,6 +2325,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Privacy Policy.
+        /// </summary>
+        public static string Label_PrivacyPolicy {
+            get {
+                return ResourceManager.GetString("Label_PrivacyPolicy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prompt.
         /// </summary>
         public static string Label_Prompt {
@@ -2843,6 +2852,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Upscale {
             get {
                 return ResourceManager.GetString("Label_Upscale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Usage data.
+        /// </summary>
+        public static string Label_UsageData {
+            get {
+                return ResourceManager.GetString("Label_UsageData", resourceCulture);
             }
         }
         

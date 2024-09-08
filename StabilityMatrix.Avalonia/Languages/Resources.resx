@@ -1227,4 +1227,10 @@
   <data name="Text_AnalyticsDataPrivacyInfo" xml:space="preserve">
     <value>The data sent is never associated with you or your account and will not include personal data or any sensitive information.</value>
   </data>
+  <data name="Label_UsageData" xml:space="preserve">
+    <value>Usage data</value>
+  </data>
+  <data name="Label_PrivacyPolicy" xml:space="preserve">
+    <value>Privacy Policy</value>
+  </data>
 </root>

@@ -63,20 +63,10 @@
                 </ui:InfoBar.IconSource>
             </ui:InfoBar>
 
-            <!--<ui:SettingsExpander
-                Grid.Row="1"
-                Margin="8,0,8,4"
-                TextBlock.TextWrapping="WrapWithOverflow"
-                Footer="The data sent is never associated with you or your account and will not include personal data or any sensitive information.">
-                <ui:SettingsExpander.IconSource>
-                    <fluent:SymbolIconSource IconVariant="Filled" Symbol="Shield" />
-                </ui:SettingsExpander.IconSource>
-            </ui:SettingsExpander>-->
-
             <controls:HyperlinkIconButton
                 Grid.Row="2"
                 Margin="0,16"
-                Content="Privacy Policy"
+                Content="{x:Static lang:Resources.Label_PrivacyPolicy}"
                 NavigateUri="https://lykos.ai/privacy" />
         </sg:SpacedGrid>
     </ScrollViewer>

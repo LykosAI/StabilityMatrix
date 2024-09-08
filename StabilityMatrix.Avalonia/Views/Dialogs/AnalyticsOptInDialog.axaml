@@ -26,7 +26,7 @@
         <TextBlock
             Grid.Row="1"
             Margin="4,4,4,16"
-            Text="Analytics"
+            Text="{x:Static lang:Resources.Label_Analytics}"
             TextAlignment="Center"
             Theme="{DynamicResource TitleTextBlockStyle}" />
         <TextBlock
@@ -44,7 +44,7 @@
             Margin="0,16"
             HorizontalAlignment="Center"
             VerticalAlignment="Bottom"
-            Content="Privacy Policy"
+            Content="{x:Static lang:Resources.Label_PrivacyPolicy}"
             NavigateUri="https://lykos.ai/privacy" />
 
         <TextBlock

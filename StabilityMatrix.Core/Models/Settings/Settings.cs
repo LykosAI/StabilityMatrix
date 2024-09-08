@@ -200,7 +200,9 @@ public class Settings
 
     public bool ShowNsfwInCheckpointsPage { get; set; }
 
-    public bool OptedInToInstallTelemetry { get; set; }
+    // public bool OptedInToInstallTelemetry { get; set; }
+
+    public AnalyticsSettings Analytics { get; set; } = new();
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

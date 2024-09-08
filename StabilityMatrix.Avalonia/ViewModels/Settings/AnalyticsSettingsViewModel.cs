@@ -26,7 +26,7 @@ public partial class AnalyticsSettingsViewModel : PageViewModelBase
         settingsManager.RelayPropertyFor(
             this,
             vm => vm.IsPackageInstallAnalyticsEnabled,
-            s => s.OptedInToInstallTelemetry,
+            s => s.Analytics.IsUsageDataEnabled,
             true
         );
     }

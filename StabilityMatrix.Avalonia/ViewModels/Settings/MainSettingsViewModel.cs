@@ -146,9 +146,6 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool moveFilesOnImport;
 
-    [ObservableProperty]
-    private bool isPackageInstallAnalyticsEnabled;
-
     #region System Info
 
     private static Lazy<IReadOnlyList<GpuInfo>> GpuInfosLazy { get; } =
@@ -269,13 +266,6 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.ConsoleLogHistorySize,
             settings => settings.ConsoleLogHistorySize,
-            true
-        );
-
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.IsPackageInstallAnalyticsEnabled,
-            s => s.OptedInToInstallTelemetry,
             true
         );
 

@@ -12,6 +12,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using Sentry;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -166,22 +167,28 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Show analytics notice if not seen
         if (
-            !settingsManager.Settings.SeenTeachingTips.Contains(
-                Core.Models.Settings.TeachingTip.PackageInstallAnalyticsOptIn
-            )
+            true
+            || settingsManager.Settings.Analytics.LastSeenConsentVersion is null
+            || settingsManager.Settings.Analytics.LastSeenConsentAccepted is null
         )
         {
             var vm = dialogFactory.Get<AnalyticsOptInViewModel>();
             var result = await vm.GetDialog().ShowAsync();
 
+            settingsManager.Transaction(s =>
+            {
+                s.Analytics.LastSeenConsentVersion = Compat.AppVersion;
+                s.Analytics.LastSeenConsentAccepted = result == ContentDialogResult.Secondary;
+            });
+
             if (result == ContentDialogResult.Secondary)
             {
-                settingsManager.Transaction(s => s.OptedInToInstallTelemetry = true);
+                settingsManager.Transaction(s => s.Analytics.IsUsageDataEnabled, true);
             }
-
-            settingsManager.Transaction(
-                s => s.SeenTeachingTips.Add(Core.Models.Settings.TeachingTip.PackageInstallAnalyticsOptIn)
-            );
+            else if (result is ContentDialogResult.Primary)
+            {
+                settingsManager.Transaction(s => s.Analytics.IsUsageDataEnabled, false);
+            }
         }
 
         if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Count == 0)

@@ -209,7 +209,10 @@ public partial class MainWindowViewModel : ViewModelBase
             var firstDialogResult = await dialog.ShowAsync(App.TopLevel);
 
             if (firstDialogResult != ContentDialogResult.Primary)
+            {
+                analyticsHelper.TrackFirstTimeInstallAsync(null, null, true).SafeFireAndForget();
                 return;
+            }
 
             var recommendedModelsViewModel = dialogFactory.Get<RecommendedModelsViewModel>();
             dialog = new BetterContentDialog

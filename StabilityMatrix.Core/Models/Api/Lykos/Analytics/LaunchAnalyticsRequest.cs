@@ -9,4 +9,6 @@ public class LaunchAnalyticsRequest : AnalyticsRequest
     public string? OsName { get; set; }
 
     public string? OsVersion { get; set; }
+
+    public override string Type { get; set; } = "launch";
 }

@@ -298,7 +298,17 @@ public partial class MainSettingsViewModel : PageViewModelBase
         await notificationService.TryAsync(completionProvider.Setup());
 
         // Start accounts update
-        accountsService.RefreshAsync().SafeFireAndForget();
+        accountsService
+            .RefreshAsync()
+            .SafeFireAndForget(ex =>
+            {
+                Logger.Error(ex, "Failed to refresh accounts");
+                notificationService.ShowPersistent(
+                    "Failed to update account status",
+                    ex.ToString(),
+                    NotificationType.Error
+                );
+            });
     }
 
     private void OnHardwareInfoUpdateTimerTick(object? sender, EventArgs e)

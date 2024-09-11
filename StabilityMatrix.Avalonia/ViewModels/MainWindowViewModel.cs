@@ -278,8 +278,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     {
                         Version = Compat.AppVersion.ToString(),
                         RuntimeIdentifier = RuntimeInformation.RuntimeIdentifier,
-                        OsName = RuntimeInformation.OSDescription,
-                        OsVersion = Environment.OSVersion.VersionString
+                        OsDescription = RuntimeInformation.OSDescription
                     }
                 )
                 .ContinueWith(task =>

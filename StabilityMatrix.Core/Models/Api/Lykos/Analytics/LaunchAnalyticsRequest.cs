@@ -6,9 +6,7 @@ public class LaunchAnalyticsRequest : AnalyticsRequest
 
     public string? RuntimeIdentifier { get; set; }
 
-    public string? OsName { get; set; }
-
-    public string? OsVersion { get; set; }
+    public string? OsDescription { get; set; }
 
     public override string Type { get; set; } = "launch";
 }

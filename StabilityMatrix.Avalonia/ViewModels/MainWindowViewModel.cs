@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -25,6 +26,8 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Analytics;
+using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
 
@@ -255,6 +258,29 @@ public partial class MainWindowViewModel : ViewModelBase
             );
 
             settingsManager.Transaction(s => s.UpdatingFromVersion = null);
+        }
+
+        // Periodic launch stats
+        if (
+            settingsManager.Settings.Analytics.IsUsageDataEnabled
+            && (
+                settingsManager.Settings.Analytics.LaunchDataLastSentAt is null
+                || (DateTimeOffset.UtcNow - settingsManager.Settings.Analytics.LaunchDataLastSentAt)
+                    > AnalyticsSettings.DefaultLaunchDataSendInterval
+            )
+        )
+        {
+            analyticsHelper
+                .TrackAsync(
+                    new LaunchAnalyticsRequest
+                    {
+                        Version = Compat.AppVersion.ToString(),
+                        RuntimeIdentifier = RuntimeInformation.RuntimeIdentifier,
+                        OsName = RuntimeInformation.OSDescription,
+                        OsVersion = Environment.OSVersion.VersionString
+                    }
+                )
+                .SafeFireAndForget();
         }
     }
 

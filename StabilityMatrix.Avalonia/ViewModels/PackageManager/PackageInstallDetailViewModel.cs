@@ -298,12 +298,7 @@ public partial class PackageInstallDetailViewModel(
         }
 
         analyticsHelper
-            .TrackInstallAsync(
-                packageName,
-                installedVersion.DisplayVersion,
-                !runner.Failed,
-                runner.Exception?.Message
-            )
+            .TrackInstallAsync(packageName, installedVersion.DisplayVersion, !runner.Failed)
             .SafeFireAndForget();
     }
 

@@ -236,6 +236,7 @@ public partial class MainWindowViewModel : ViewModelBase
                     installedPackageNameMaybe,
                     recommendedModelsViewModel
                         .Sd15Models.Concat(recommendedModelsViewModel.SdxlModels)
+                        .Where(x => x.IsSelected)
                         .Select(x => x.CivitModel.Name)
                         .ToList(),
                     false,

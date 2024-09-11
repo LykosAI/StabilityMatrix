@@ -1,8 +1,10 @@
+using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
+
 namespace StabilityMatrix.Core.Helper.Analytics;
 
 public interface IAnalyticsHelper
 {
-    Task TrackInstallAsync(string packageName, string packageVersion, bool isSuccess, string? reason = null);
+    Task TrackPackageInstallAsync(string packageName, string packageVersion, bool isSuccess);
 
     Task TrackFirstTimeInstallAsync(
         string? selectedPackageName,
@@ -10,4 +12,6 @@ public interface IAnalyticsHelper
         bool firstTimeSetupSkipped,
         string platform
     );
+
+    Task TrackAsync(AnalyticsRequest data);
 }

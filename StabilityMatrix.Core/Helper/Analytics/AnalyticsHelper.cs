@@ -16,12 +16,7 @@ public class AnalyticsHelper(
 {
     public AnalyticsSettings Settings => settingsManager.Settings.Analytics;
 
-    public async Task TrackInstallAsync(
-        string packageName,
-        string packageVersion,
-        bool isSuccess,
-        string? reason = null
-    )
+    public async Task TrackPackageInstallAsync(string packageName, string packageVersion, bool isSuccess)
     {
         if (!Settings.IsUsageDataEnabled)
         {
@@ -33,8 +28,7 @@ public class AnalyticsHelper(
             PackageName = packageName,
             PackageVersion = packageVersion,
             IsSuccess = isSuccess,
-            Timestamp = DateTimeOffset.UtcNow,
-            Reason = reason
+            Timestamp = DateTimeOffset.UtcNow
         };
 
         try
@@ -75,6 +69,23 @@ public class AnalyticsHelper(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error sending first time install data");
+        }
+    }
+
+    public async Task TrackAsync(AnalyticsRequest data)
+    {
+        if (!Settings.IsUsageDataEnabled)
+        {
+            return;
+        }
+
+        try
+        {
+            await analyticsApi.PostInstallData(data).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error sending analytics data");
         }
     }
 }

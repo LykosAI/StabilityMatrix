@@ -10,8 +10,6 @@ public class PackageInstallAnalyticsRequest : AnalyticsRequest
 
     public bool IsSuccess { get; set; }
 
-    public string? Reason { get; set; }
-
     [JsonPropertyName("type")]
     public override string Type { get; set; } = "package-install";
 }

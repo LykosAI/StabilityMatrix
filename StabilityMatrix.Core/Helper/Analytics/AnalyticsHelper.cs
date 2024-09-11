@@ -44,8 +44,7 @@ public class AnalyticsHelper(
     public async Task TrackFirstTimeInstallAsync(
         string? selectedPackageName,
         IEnumerable<string>? selectedRecommendedModels,
-        bool firstTimeSetupSkipped,
-        string platform
+        bool firstTimeSetupSkipped
     )
     {
         if (!Settings.IsUsageDataEnabled)
@@ -58,7 +57,6 @@ public class AnalyticsHelper(
             SelectedPackageName = selectedPackageName,
             SelectedRecommendedModels = selectedRecommendedModels,
             FirstTimeSetupSkipped = firstTimeSetupSkipped,
-            Platform = platform,
             Timestamp = DateTimeOffset.UtcNow
         };
 

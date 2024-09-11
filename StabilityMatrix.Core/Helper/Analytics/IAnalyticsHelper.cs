@@ -9,8 +9,7 @@ public interface IAnalyticsHelper
     Task TrackFirstTimeInstallAsync(
         string? selectedPackageName,
         IEnumerable<string>? selectedRecommendedModels,
-        bool firstTimeSetupSkipped,
-        string platform
+        bool firstTimeSetupSkipped
     );
 
     Task TrackAsync(AnalyticsRequest data);

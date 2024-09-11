@@ -241,8 +241,7 @@ public partial class MainWindowViewModel : ViewModelBase
                         .Where(x => x.IsSelected)
                         .Select(x => x.CivitModel.Name)
                         .ToList(),
-                    false,
-                    Compat.Platform.ToString()
+                    false
                 )
                 .SafeFireAndForget();
         }

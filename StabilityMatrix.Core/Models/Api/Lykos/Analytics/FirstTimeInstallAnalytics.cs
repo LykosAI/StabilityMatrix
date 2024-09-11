@@ -8,7 +8,5 @@ public class FirstTimeInstallAnalytics : AnalyticsRequest
 
     public bool FirstTimeSetupSkipped { get; set; }
 
-    public required string Platform { get; set; }
-
     public override string Type { get; set; } = "first-time-install";
 }

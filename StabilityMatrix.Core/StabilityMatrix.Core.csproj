@@ -65,4 +65,13 @@
       <PackageReference Include="YamlDotNet" Version="16.0.0" />
       <PackageReference Include="Yoh.Text.Json.NamingPolicies" Version="1.1.2" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Models\Api\Lykos\Analytics\AnalyticsRequest.cs">
+        <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
+      </Compile>
+      <Compile Update="Models\Api\Lykos\Analytics\PackageInstallAnalyticsRequest.cs">
+        <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
+      </Compile>
+    </ItemGroup>
 </Project>

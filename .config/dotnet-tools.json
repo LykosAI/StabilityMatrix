@@ -6,19 +6,22 @@
       "version": "0.6.0",
       "commands": [
         "husky"
-      ]
+      ],
+      "rollForward": false
     },
     "xamlstyler.console": {
-      "version": "3.2206.4",
+      "version": "3.2404.2",
       "commands": [
         "xstyler"
-      ]
+      ],
+      "rollForward": false
     },
     "csharpier": {
       "version": "0.26.7",
       "commands": [
         "dotnet-csharpier"
-      ]
+      ],
+      "rollForward": false
     }
   }
 }

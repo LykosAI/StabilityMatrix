@@ -690,6 +690,21 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {
+        ///  &quot;packageName&quot;: &quot;stable-diffusion-webui&quot;,
+        ///  &quot;packageVersion&quot;: &quot;v1.10.0&quot;,
+        ///  &quot;isSuccess&quot;: true,
+        ///  &quot;type&quot;: &quot;install&quot;,
+        ///  &quot;timestamp&quot;: &quot;2024-09-04T02:14:04.1967404+00:00&quot;
+        ///}.
+        /// </summary>
+        public static string AnalyticsExample_InstallData {
+            get {
+                return ResourceManager.GetString("AnalyticsExample_InstallData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please select a download location..
         /// </summary>
         public static string Error_PleaseSelectDownloadLocation {
@@ -767,6 +782,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_AllVersions {
             get {
                 return ResourceManager.GetString("Label_AllVersions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Analytics.
+        /// </summary>
+        public static string Label_Analytics {
+            get {
+                return ResourceManager.GetString("Label_Analytics", resourceCulture);
             }
         }
         
@@ -2301,6 +2325,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Privacy Policy.
+        /// </summary>
+        public static string Label_PrivacyPolicy {
+            get {
+                return ResourceManager.GetString("Label_PrivacyPolicy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prompt.
         /// </summary>
         public static string Label_Prompt {
@@ -2823,6 +2856,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Usage data.
+        /// </summary>
+        public static string Label_UsageData {
+            get {
+                return ResourceManager.GetString("Label_UsageData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Username.
         /// </summary>
         public static string Label_Username {
@@ -3165,6 +3207,33 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The data sent is never associated with you or your account and will not include personal data or any sensitive information..
+        /// </summary>
+        public static string Text_AnalyticsDataPrivacyInfo {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsDataPrivacyInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Help us improve Stability Matrix by sending anonymous data about features used, operating system versions, types of packages installed, etc. The data sent is never associated with you or your account and will not include personal data or any sensitive information..
+        /// </summary>
+        public static string Text_AnalyticsDescription {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Help us improve Stability Matrix by sending anonymous data about features used, operating system versions, types of packages installed, etc..
+        /// </summary>
+        public static string Text_AnalyticsDescriptionShort {
+            get {
+                return ResourceManager.GetString("Text_AnalyticsDescriptionShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The app will relaunch after updating.
         /// </summary>
         public static string Text_AppWillRelaunchAfterUpdate {
@@ -3305,6 +3374,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string TextTemplate_UpdatingPackage {
             get {
                 return ResourceManager.GetString("TextTemplate_UpdatingPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can always change this behavior in {0}..
+        /// </summary>
+        public static string TextTemplate_YouCanChangeThisBehavior {
+            get {
+                return ResourceManager.GetString("TextTemplate_YouCanChangeThisBehavior", resourceCulture);
             }
         }
         

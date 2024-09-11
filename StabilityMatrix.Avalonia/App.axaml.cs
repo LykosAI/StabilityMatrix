@@ -55,6 +55,7 @@ using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -108,6 +109,14 @@ public sealed class App : Application
     public static string LykosAuthApiBaseUrl => Config?["LykosAuthApiBaseUrl"] ?? "https://auth.lykos.ai";
 #else
     public const string LykosAuthApiBaseUrl = "https://auth.lykos.ai";
+#endif
+#if DEBUG
+    // ReSharper disable twice LocalizableElement
+    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+    public static string LykosAnalyticsApiBaseUrl =>
+        Config?["LykosAnalyticsApiBaseUrl"] ?? "https://analytics.lykos.ai";
+#else
+    public const string LykosAnalyticsApiBaseUrl = "https://analytics.lykos.ai";
 #endif
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -365,7 +374,8 @@ public sealed class App : Application
                     provider.GetRequiredService<ITrackedDownloadService>(),
                     provider.GetRequiredService<IModelIndexService>(),
                     provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
-                    provider.GetRequiredService<INotificationService>()
+                    provider.GetRequiredService<INotificationService>(),
+                    provider.GetRequiredService<IAnalyticsHelper>()
                 )
                 {
                     Pages =
@@ -571,6 +581,7 @@ public sealed class App : Application
         jsonSerializerOptions.Converters.Add(new DefaultUnknownEnumConverter<CivitModelType>());
         jsonSerializerOptions.Converters.Add(new DefaultUnknownEnumConverter<CivitModelFormat>());
         jsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+        jsonSerializerOptions.Converters.Add(new AnalyticsRequestConverter());
         jsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 
         var defaultRefitSettings = new RefitSettings
@@ -709,6 +720,16 @@ public sealed class App : Application
                 serviceProvider =>
                     new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
             );
+
+        services
+            .AddRefitClient<ILykosAnalyticsApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri(LykosAnalyticsApiBaseUrl);
+                c.Timeout = TimeSpan.FromMinutes(5);
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddPolicyHandler(retryPolicy);
 
         services
             .AddRefitClient<IOpenArtApi>(defaultRefitSettings)

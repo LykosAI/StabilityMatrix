@@ -1,0 +1,73 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Settings.AnalyticsSettingsPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:settings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    d:DesignHeight="750"
+    d:DesignWidth="800"
+    x:DataType="settings:AnalyticsSettingsViewModel"
+    mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <sg:SpacedGrid
+            Margin="8,8"
+            RowDefinitions="Auto,Auto,Auto"
+            RowSpacing="4">
+            <ui:SettingsExpander
+                Grid.Row="0"
+                Margin="8,0,8,4"
+                Description="{x:Static lang:Resources.Text_AnalyticsDescriptionShort}"
+                Header="Usage data">
+                <ui:SettingsExpander.IconSource>
+                    <fluent:SymbolIconSource IconVariant="Filled" Symbol="Box" />
+                </ui:SettingsExpander.IconSource>
+                <ui:SettingsExpander.Footer>
+                    <ToggleSwitch IsChecked="{Binding IsPackageInstallAnalyticsEnabled, Mode=TwoWay}" />
+                </ui:SettingsExpander.Footer>
+                <ui:SettingsExpanderItem Padding="8">
+                    <StackPanel>
+                        <TextBlock Margin="8" Text="Example Telemetry" />
+                        <avaloniaEdit:TextEditor
+                            Margin="16,0,16,16"
+                            Padding="8"
+                            HorizontalAlignment="Stretch"
+                            Background="#33000000"
+                            BorderThickness="0"
+                            CornerRadius="8"
+                            FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
+                            FontSize="14"
+                            IsReadOnly="True"
+                            SyntaxHighlighting="JavaScript"
+                            Text="{x:Static lang:Resources.AnalyticsExample_InstallData}" />
+                    </StackPanel>
+                </ui:SettingsExpanderItem>
+            </ui:SettingsExpander>
+
+            <ui:InfoBar
+                Title="{x:Static lang:Resources.Text_AnalyticsDataPrivacyInfo}"
+                Grid.Row="1"
+                Margin="8,0,8,4"
+                IsClosable="False"
+                IsOpen="True"
+                Severity="Success">
+                <ui:InfoBar.IconSource>
+                    <fluent:SymbolIconSource IconVariant="Filled" Symbol="Shield" />
+                </ui:InfoBar.IconSource>
+            </ui:InfoBar>
+
+            <controls:HyperlinkIconButton
+                Grid.Row="2"
+                Margin="0,16"
+                Content="{x:Static lang:Resources.Label_PrivacyPolicy}"
+                NavigateUri="https://lykos.ai/privacy" />
+        </sg:SpacedGrid>
+    </ScrollViewer>
+</controls:UserControlBase>

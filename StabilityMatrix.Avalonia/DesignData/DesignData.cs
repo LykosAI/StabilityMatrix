@@ -211,7 +211,8 @@ public static class DesignData
             null,
             null,
             null,
-            packageFactory
+            packageFactory,
+            null
         );
 
         /*ObservableCacheEx.AddOrUpdate(
@@ -1135,15 +1136,26 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public class Indexer
     {
+        private List<Type> types = new();
+
         public object? this[string typeName]
         {
             get
             {
-                var type =
-                    Type.GetType(typeName) ?? throw new ArgumentException($"Type {typeName} not found");
+                var type = Type.GetType(typeName);
+
+                type ??= typeof(DesignData)
+                    .Assembly.GetTypes()
+                    .FirstOrDefault(t => (t.FullName ?? t.Name).EndsWith(typeName));
+
+                if (type is null)
+                {
+                    throw new ArgumentException($"Type {typeName} not found");
+                }
+
                 try
                 {
-                    return Services.GetService(type);
+                    return Services.GetRequiredService(type);
                 }
                 catch (InvalidOperationException)
                 {

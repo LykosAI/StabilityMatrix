@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -12,6 +13,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using NLog;
+using Sentry;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -23,6 +25,9 @@ using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Analytics;
+using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
 
@@ -40,6 +45,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly IModelIndexService modelIndexService;
     private readonly Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler;
     private readonly INotificationService notificationService;
+    private readonly IAnalyticsHelper analyticsHelper;
     public string Greeting => "Welcome to Avalonia!";
 
     [ObservableProperty]
@@ -78,7 +84,8 @@ public partial class MainWindowViewModel : ViewModelBase
         ITrackedDownloadService trackedDownloadService,
         IModelIndexService modelIndexService,
         Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler,
-        INotificationService notificationService
+        INotificationService notificationService,
+        IAnalyticsHelper analyticsHelper
     )
     {
         this.settingsManager = settingsManager;
@@ -88,6 +95,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.modelIndexService = modelIndexService;
         this.modelDownloadLinkHandler = modelDownloadLinkHandler;
         this.notificationService = notificationService;
+        this.analyticsHelper = analyticsHelper;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
     }
@@ -160,6 +168,31 @@ public partial class MainWindowViewModel : ViewModelBase
         var startupTime = CodeTimer.FormatTime(Program.StartupTimer.Elapsed);
         Logger.Info($"App started ({startupTime})");
 
+        // Show analytics notice if not seen
+        if (
+            settingsManager.Settings.Analytics.LastSeenConsentVersion is null
+            || settingsManager.Settings.Analytics.LastSeenConsentAccepted is null
+        )
+        {
+            var vm = dialogFactory.Get<AnalyticsOptInViewModel>();
+            var result = await vm.GetDialog().ShowAsync();
+
+            settingsManager.Transaction(s =>
+            {
+                s.Analytics.LastSeenConsentVersion = Compat.AppVersion;
+                s.Analytics.LastSeenConsentAccepted = result == ContentDialogResult.Secondary;
+            });
+
+            if (result == ContentDialogResult.Secondary)
+            {
+                settingsManager.Transaction(s => s.Analytics.IsUsageDataEnabled, true);
+            }
+            else if (result is ContentDialogResult.Primary)
+            {
+                settingsManager.Transaction(s => s.Analytics.IsUsageDataEnabled, false);
+            }
+        }
+
         if (Program.Args.DebugOneClickInstall || settingsManager.Settings.InstalledPackages.Count == 0)
         {
             var viewModel = dialogFactory.Get<NewOneClickInstallViewModel>();
@@ -176,7 +209,10 @@ public partial class MainWindowViewModel : ViewModelBase
             var firstDialogResult = await dialog.ShowAsync(App.TopLevel);
 
             if (firstDialogResult != ContentDialogResult.Primary)
+            {
+                analyticsHelper.TrackFirstTimeInstallAsync(null, null, true).SafeFireAndForget();
                 return;
+            }
 
             var recommendedModelsViewModel = dialogFactory.Get<RecommendedModelsViewModel>();
             dialog = new BetterContentDialog
@@ -195,6 +231,22 @@ public partial class MainWindowViewModel : ViewModelBase
 
             EventManager.Instance.OnRecommendedModelsDialogClosed();
             EventManager.Instance.OnDownloadsTeachingTipRequested();
+
+            var installedPackageNameMaybe =
+                settingsManager.PackageInstallsInProgress.FirstOrDefault()
+                ?? settingsManager.Settings.InstalledPackages.FirstOrDefault()?.PackageName;
+
+            analyticsHelper
+                .TrackFirstTimeInstallAsync(
+                    installedPackageNameMaybe,
+                    recommendedModelsViewModel
+                        .Sd15Models.Concat(recommendedModelsViewModel.SdxlModels)
+                        .Where(x => x.IsSelected)
+                        .Select(x => x.CivitModel.Name)
+                        .ToList(),
+                    false
+                )
+                .SafeFireAndForget();
         }
 
         // Show what's new for updates
@@ -208,6 +260,37 @@ public partial class MainWindowViewModel : ViewModelBase
             );
 
             settingsManager.Transaction(s => s.UpdatingFromVersion = null);
+        }
+
+        // Periodic launch stats
+        if (
+            settingsManager.Settings.Analytics.IsUsageDataEnabled
+            && (
+                settingsManager.Settings.Analytics.LaunchDataLastSentAt is null
+                || (DateTimeOffset.UtcNow - settingsManager.Settings.Analytics.LaunchDataLastSentAt)
+                    > AnalyticsSettings.DefaultLaunchDataSendInterval
+            )
+        )
+        {
+            analyticsHelper
+                .TrackAsync(
+                    new LaunchAnalyticsRequest
+                    {
+                        Version = Compat.AppVersion.ToString(),
+                        RuntimeIdentifier = RuntimeInformation.RuntimeIdentifier,
+                        OsDescription = RuntimeInformation.OSDescription
+                    }
+                )
+                .ContinueWith(task =>
+                {
+                    if (!task.IsFaulted)
+                    {
+                        settingsManager.Transaction(
+                            s => s.Analytics.LaunchDataLastSentAt = DateTimeOffset.UtcNow
+                        );
+                    }
+                })
+                .SafeFireAndForget();
         }
     }
 

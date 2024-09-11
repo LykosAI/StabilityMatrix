@@ -1203,4 +1203,34 @@
   <data name="Label_DependencySpecifiers" xml:space="preserve">
     <value>Dependency Specifiers</value>
   </data>
+  <data name="AnalyticsExample_InstallData" xml:space="preserve">
+    <value>{
+  "packageName": "stable-diffusion-webui",
+  "packageVersion": "v1.10.0",
+  "isSuccess": true,
+  "type": "install",
+  "timestamp": "2024-09-04T02:14:04.1967404+00:00"
+}</value>
+  </data>
+  <data name="Label_Analytics" xml:space="preserve">
+    <value>Analytics</value>
+  </data>
+  <data name="TextTemplate_YouCanChangeThisBehavior" xml:space="preserve">
+    <value>You can always change this behavior in {0}.</value><comment>e.g. 'You can always change this behavior in Settings &gt; Category &gt; Item.'</comment>
+  </data>
+  <data name="Text_AnalyticsDescription" xml:space="preserve">
+    <value>Help us improve Stability Matrix by sending anonymous data about features used, operating system versions, types of packages installed, etc. The data sent is never associated with you or your account and will not include personal data or any sensitive information.</value>
+  </data>
+  <data name="Text_AnalyticsDescriptionShort" xml:space="preserve">
+    <value>Help us improve Stability Matrix by sending anonymous data about features used, operating system versions, types of packages installed, etc.</value>
+  </data>
+  <data name="Text_AnalyticsDataPrivacyInfo" xml:space="preserve">
+    <value>The data sent is never associated with you or your account and will not include personal data or any sensitive information.</value>
+  </data>
+  <data name="Label_UsageData" xml:space="preserve">
+    <value>Usage data</value>
+  </data>
+  <data name="Label_PrivacyPolicy" xml:space="preserve">
+    <value>Privacy Policy</value>
+  </data>
 </root>

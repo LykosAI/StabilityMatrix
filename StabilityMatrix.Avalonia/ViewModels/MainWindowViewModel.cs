@@ -167,8 +167,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
         // Show analytics notice if not seen
         if (
-            true
-            || settingsManager.Settings.Analytics.LastSeenConsentVersion is null
+            settingsManager.Settings.Analytics.LastSeenConsentVersion is null
             || settingsManager.Settings.Analytics.LastSeenConsentAccepted is null
         )
         {

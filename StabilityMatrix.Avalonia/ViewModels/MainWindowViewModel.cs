@@ -279,6 +279,15 @@ public partial class MainWindowViewModel : ViewModelBase
                         OsVersion = Environment.OSVersion.VersionString
                     }
                 )
+                .ContinueWith(task =>
+                {
+                    if (!task.IsFaulted)
+                    {
+                        settingsManager.Transaction(
+                            s => s.Analytics.LaunchDataLastSentAt = DateTimeOffset.UtcNow
+                        );
+                    }
+                })
                 .SafeFireAndForget();
         }
     }

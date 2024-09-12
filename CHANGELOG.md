@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed CivitAI Browser page scroll refresh not ordering models correctly
 - Fixed missing fbgemm.dll errors when using latest torch with certain packages
 - Fixed issue where ApproxVAE models would show up in the VAE folder
-- Checkpoints tab will no longer try to browse directories it can't access
+- Fixed [#878](https://github.com/LykosAI/StabilityMatrix/issues/878) - Checkpoints tab will no longer try to browse directories it can't access
 - Fixed crash when opening Settings page when refreshing CivitAI account status results in an error
 ### Supporters
 #### Visionaries

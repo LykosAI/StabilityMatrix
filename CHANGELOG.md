@@ -7,13 +7,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.12.0-pre.3
 ### Added
-- Added Pip Overrides section to the package install view, allowing you to override the default pip packages for a package
+- Added Python dependencies override table to package installation options, where the default pip packages may be overriden for a package's install and updates. This can be changed later or added to existing packages through `Package Menu > Python Dependencies Override`
+- Added optional anonymous usage reporting for gauging popularity of package installs and features. You will be asked whether you want to enable this feature on launch, and can change your choice at any time in `Settings > System > Analytics`
 ### Changed
 - Show better error messsage for early access model downloads
 - Updated torch version for a1111 on mac
 - Checkpoints tab now shows "image hidden" for images that are hidden by the NSFW filter
-- Added Python dependencies override table to package installation options, where the default pip packages may be overriden for a package's install and updates. This can be changed later or added to existing packages through `Package Menu > Python Dependencies Override`
-- Added optional anonymous usage reporting for gauging popularity of package installs and features. You will be asked whether you want to enable this feature on launch, and can change your choice at any time in `Settings > System > Analytics`
 ### Fixed
 - Fixed issue where some Inference-generated images would be saved with the bottom missing
 - Fixed CivitAI Browser page scroll refresh not ordering models correctly

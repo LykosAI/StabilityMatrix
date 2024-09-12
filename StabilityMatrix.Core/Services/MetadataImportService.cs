@@ -26,7 +26,7 @@ public class MetadataImportService(
         progress?.Report(new ProgressReport(-1f, message: "Scanning directory...", isIndeterminate: true));
 
         var checkpointsWithoutMetadata = directory
-            .EnumerateFiles(searchOption: SearchOption.AllDirectories)
+            .EnumerateFiles("*", EnumerationOptionConstants.AllDirectories)
             .Where(FileHasNoCmInfo)
             .ToList();
 
@@ -154,7 +154,12 @@ public class MetadataImportService(
         progress?.Report(new ProgressReport(-1f, message: "Scanning directory...", isIndeterminate: true));
 
         var cmInfoList = new Dictionary<FilePath, ConnectedModelInfo>();
-        foreach (var cmInfoPath in directory.EnumerateFiles("*.cm-info.json", SearchOption.AllDirectories))
+        foreach (
+            var cmInfoPath in directory.EnumerateFiles(
+                "*.cm-info.json",
+                EnumerationOptionConstants.AllDirectories
+            )
+        )
         {
             ConnectedModelInfo? cmInfo;
             try

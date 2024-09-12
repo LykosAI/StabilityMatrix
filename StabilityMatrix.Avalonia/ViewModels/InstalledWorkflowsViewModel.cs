@@ -68,7 +68,7 @@ public partial class InstalledWorkflowsViewModel(
             var workflowPath in Directory.EnumerateFiles(
                 settingsManager.WorkflowDirectory,
                 "*.json",
-                SearchOption.AllDirectories
+                EnumerationOptionConstants.AllDirectories
             )
         )
         {

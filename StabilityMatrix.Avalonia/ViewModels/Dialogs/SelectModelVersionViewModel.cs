@@ -319,7 +319,8 @@ public partial class SelectModelVersionViewModel(
             installLocations.Add(downloadDirectory.ToString().Replace(rootModelsDirectory, "Models"));
             foreach (
                 var directory in downloadDirectory.EnumerateDirectories(
-                    searchOption: SearchOption.AllDirectories
+                    "*",
+                    EnumerationOptionConstants.AllDirectories
                 )
             )
             {

@@ -127,7 +127,7 @@ public class UpdateHelper : IUpdateHelper
 
                 // Find binary and move it up to the root
                 var binaryFile = extractDir
-                    .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                    .EnumerateFiles("*", EnumerationOptionConstants.AllDirectories)
                     .First(f => f.Extension.ToLowerInvariant() is ".exe" or ".appimage");
 
                 await binaryFile.MoveToAsync((FilePath)ExecutablePath).ConfigureAwait(false);

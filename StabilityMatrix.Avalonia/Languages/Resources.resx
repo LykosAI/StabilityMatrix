@@ -1183,7 +1183,7 @@
     <value>New Folder</value>
   </data>
   <data name="Label_CopyLinkToClipboard" xml:space="preserve">
-    <value />
+    <value>Copy Link to Clipboard</value>
   </data>
   <data name="TextTemplate_OAuthLoginTitle" xml:space="preserve">
     <value>Sign in with {0}</value><comment>e.g. 'Sign in with Google'</comment>
@@ -1232,5 +1232,11 @@
   </data>
   <data name="Label_PrivacyPolicy" xml:space="preserve">
     <value>Privacy Policy</value>
+  </data>
+  <data name="Label_ImageHidden" xml:space="preserve">
+    <value>Image Hidden</value>
+  </data>
+  <data name="Label_NoImageFound" xml:space="preserve">
+    <value>No Image Found</value>
   </data>
 </root>

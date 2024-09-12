@@ -368,7 +368,50 @@ public partial class ModelIndexService : IModelIndexService
 
         var newIndexFlat = new ConcurrentBag<LocalModelFile>();
 
-        var paths = Directory.EnumerateFiles(modelsDir, "*.*", SearchOption.AllDirectories).ToHashSet();
+        var allowedDirectories = Directory
+            .EnumerateDirectories(modelsDir, "*", SearchOption.AllDirectories)
+            .Where(dir =>
+            {
+                try
+                {
+                    var attributes = File.GetAttributes(dir);
+                    // Exclude hidden or system directories
+                    return (attributes & FileAttributes.Hidden) == 0
+                        && (attributes & FileAttributes.System) == 0;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // Ignore directories that we don't have access to
+                    return false;
+                }
+                catch (IOException)
+                {
+                    // Ignore directories that can't be accessed for other reasons
+                    return false;
+                }
+            })
+            .ToList();
+
+        // Now enumerate files only in the allowed directories
+        var paths = allowedDirectories
+            .SelectMany(dir =>
+            {
+                try
+                {
+                    return Directory.EnumerateFiles(dir, "*.*", SearchOption.TopDirectoryOnly);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    // Ignore files in directories we can't access
+                    return [];
+                }
+                catch (IOException)
+                {
+                    // Ignore files that can't be accessed for other reasons
+                    return [];
+                }
+            })
+            .ToHashSet();
 
         var partitioner = Partitioner.Create(paths, EnumerablePartitionerOptions.NoBuffering);
 

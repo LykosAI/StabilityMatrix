@@ -1001,7 +1001,7 @@ public partial class CheckpointsPageViewModel(
         }
 
         return ShowModelsInSubfolders
-            ? folderPath.Contains(categoryRelativePath)
+            ? folderPath.StartsWith(categoryRelativePath)
             : categoryRelativePath.Equals(folderPath);
     }
 

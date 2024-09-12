@@ -211,23 +211,35 @@ public class A3WebUI(
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        var pipArgs = new PipInstallArgs()
-            .WithTorch("==2.1.2")
-            .WithTorchVision("==0.16.2")
-            .WithTorchExtraIndex(
-                options.PythonOptions.TorchIndex switch
-                {
-                    TorchIndex.Cpu => "cpu",
-                    TorchIndex.Cuda => "cu121",
-                    TorchIndex.Rocm => "rocm5.6",
-                    TorchIndex.Mps => "cpu",
-                    _ => throw new NotSupportedException($"Unsupported torch version: {torchVersion}")
-                }
-            )
-            .WithParsedFromRequirementsTxt(
-                await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                excludePattern: "torch"
-            );
+        var pipArgs = options.PythonOptions.TorchIndex switch
+        {
+            TorchIndex.Mps
+                => new PipInstallArgs()
+                    .WithTorch("==2.3.1")
+                    .WithTorchVision("==2.3.1")
+                    .WithParsedFromRequirementsTxt(
+                        await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+                        excludePattern: "torch"
+                    ),
+            _
+                => new PipInstallArgs()
+                    .WithTorch("==2.1.2")
+                    .WithTorchVision("==0.16.2")
+                    .WithTorchExtraIndex(
+                        options.PythonOptions.TorchIndex switch
+                        {
+                            TorchIndex.Cpu => "cpu",
+                            TorchIndex.Cuda => "cu121",
+                            TorchIndex.Rocm => "rocm5.6",
+                            TorchIndex.Mps => "cpu",
+                            _ => throw new NotSupportedException($"Unsupported torch version: {torchVersion}")
+                        }
+                    )
+                    .WithParsedFromRequirementsTxt(
+                        await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+                        excludePattern: "torch"
+                    )
+        };
 
         if (torchVersion == TorchIndex.Cuda)
         {

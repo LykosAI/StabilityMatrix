@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.12.0-pre.3
 ### Added
-- Added Python dependencies override table to package installation options, where the default pip packages may be overriden for a package before install. This can be changed later or added to existing packages through `Package Menu > Python Dependencies Override`
+- Added Python dependencies override table to package installation options, where the default pip packages may be overriden for a package's install and updates. This can be changed later or added to existing packages through `Package Menu > Python Dependencies Override`
 - Added optional anonymous usage reporting for gauging popularity of package installs and features. You will be asked whether you want to enable this feature on launch, and can change your choice at any time in `Settings > System > Analytics`
 ### Fixed
 - Fixed issue where some Inference-generated images would be saved with the bottom missing

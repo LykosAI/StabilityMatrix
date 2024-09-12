@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.12.0-pre.3
 ### Added
-- Added Pip Overrides section to the package install view, allowing you to override the default pip packages for a package
+- Added Python dependencies override table to package installation options, where the default pip packages may be overriden for a package before install. This can be changed later or added to existing packages through `Package Menu > Python Dependencies Override`
+- Added optional anonymous usage reporting for gauging popularity of package installs and features. You will be asked whether you want to enable this feature on launch, and can change your choice at any time in `Settings > System > Analytics`
 ### Fixed
 - Fixed issue where some Inference-generated images would be saved with the bottom missing
 - Fixed CivitAI Browser page scroll refresh not ordering models correctly
 - Fixed missing fbgemm.dll errors when using latest torch with certain packages
+- Fixed crash when opening Settings page when refreshing CivitAI account status results in an error
 
 ## v2.12.0-pre.2
 ### Added

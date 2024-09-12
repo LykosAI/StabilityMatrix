@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using StabilityMatrix.Core.Converters.Json;
+using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Core.Models.FileInterfaces;
 
@@ -70,7 +71,7 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
     public long GetSize()
     {
         Info.Refresh();
-        return Info.EnumerateFiles("*", SearchOption.AllDirectories).Sum(file => file.Length);
+        return Info.EnumerateFiles("*", EnumerationOptionConstants.AllDirectories).Sum(file => file.Length);
     }
 
     /// <summary>
@@ -90,7 +91,11 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
             .Sum(file => file.Length);
         var subDirs = Info.GetDirectories()
             .Where(dir => !dir.Attributes.HasFlag(FileAttributes.ReparsePoint))
-            .Sum(dir => dir.EnumerateFiles("*", SearchOption.AllDirectories).Sum(file => file.Length));
+            .Sum(
+                dir =>
+                    dir.EnumerateFiles("*", EnumerationOptionConstants.AllDirectories)
+                        .Sum(file => file.Length)
+            );
         return files + subDirs;
     }
 
@@ -247,8 +252,25 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
     ) => Info.EnumerateFiles(searchPattern, searchOption).Select(file => new FilePath(file));
 
     /// <summary>
-    /// Returns an enumerable collection of directories that matches
-    /// a specified search pattern and search subdirectory option.
+    /// Returns an enumerable collection of files. Allows passing of <see cref="EnumerationOptions"/>.
+    /// </summary>
+    public IEnumerable<FilePath> EnumerateFiles(
+        string searchPattern,
+        EnumerationOptions enumerationOptions
+    ) => Info.EnumerateFiles(searchPattern, enumerationOptions).Select(file => new FilePath(file));
+
+    /// <summary>
+    /// Returns an enumerable collection of directories. Allows passing of <see cref="EnumerationOptions"/>.
+    /// </summary>
+    public IEnumerable<DirectoryPath> EnumerateDirectories(
+        string searchPattern,
+        EnumerationOptions enumerationOptions
+    ) =>
+        Info.EnumerateDirectories(searchPattern, enumerationOptions)
+            .Select(directory => new DirectoryPath(directory));
+
+    /// <summary>
+    /// Returns an enumerable collection of directories
     /// </summary>
     public IEnumerable<DirectoryPath> EnumerateDirectories(
         string searchPattern = "*",
@@ -275,7 +297,7 @@ public class DirectoryPath : FileSystemPath, IPathObject, IEnumerable<FileSystem
     /// <inheritdoc />
     public IEnumerator<FileSystemPath> GetEnumerator()
     {
-        return Info.EnumerateFileSystemInfos("*", SearchOption.TopDirectoryOnly)
+        return Info.EnumerateFileSystemInfos("*", EnumerationOptionConstants.TopLevelOnly)
             .Select<FileSystemInfo, FileSystemPath>(
                 fsInfo =>
                     fsInfo switch

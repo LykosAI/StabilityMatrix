@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -154,7 +155,7 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
     {
         logger.LogDebug("Indexing in-progress downloads at {DownloadsDir}...", downloadsDir);
 
-        var jsonFiles = downloadsDir.Info.EnumerateFiles("*.json", SearchOption.TopDirectoryOnly);
+        var jsonFiles = downloadsDir.Info.EnumerateFiles("*.json", EnumerationOptionConstants.TopLevelOnly);
 
         // Add to dictionary, the file name is the guid
         foreach (var file in jsonFiles)

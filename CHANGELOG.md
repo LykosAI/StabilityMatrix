@@ -9,10 +9,16 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added Python dependencies override table to package installation options, where the default pip packages may be overriden for a package's install and updates. This can be changed later or added to existing packages through `Package Menu > Python Dependencies Override`
 - Added optional anonymous usage reporting for gauging popularity of package installs and features. You will be asked whether you want to enable this feature on launch, and can change your choice at any time in `Settings > System > Analytics`
+### Changed
+- Show better error messsage for early access model downloads
+- Updated torch version for a1111 on mac
+- Checkpoints tab now shows "image hidden" for images that are hidden by the NSFW filter
 ### Fixed
 - Fixed issue where some Inference-generated images would be saved with the bottom missing
 - Fixed CivitAI Browser page scroll refresh not ordering models correctly
 - Fixed missing fbgemm.dll errors when using latest torch with certain packages
+- Fixed issue where ApproxVAE models would show up in the VAE folder
+- Fixed [#878](https://github.com/LykosAI/StabilityMatrix/issues/878) - Checkpoints tab will no longer try to browse directories it can't access
 - Fixed crash when opening Settings page when refreshing CivitAI account status results in an error
 ### Supporters
 #### Visionaries

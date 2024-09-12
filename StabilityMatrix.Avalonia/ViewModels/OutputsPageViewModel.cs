@@ -501,7 +501,13 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
             var directory = category.Tag.ToString();
 
-            foreach (var path in Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories))
+            foreach (
+                var path in Directory.EnumerateFiles(
+                    directory,
+                    "*",
+                    EnumerationOptionConstants.AllDirectories
+                )
+            )
             {
                 try
                 {
@@ -587,7 +593,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             }
 
             var files = Directory
-                .EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
+                .EnumerateFiles(directory, "*", EnumerationOptionConstants.AllDirectories)
                 .Where(file => allowedExtensions.Contains(new FilePath(file).Extension))
                 .Select(file => LocalImageFile.FromPath(file))
                 .ToList();
@@ -675,13 +681,17 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (!Directory.Exists(strPath))
             return subfolders;
 
-        var directories = Directory.EnumerateDirectories(strPath, "*", SearchOption.TopDirectoryOnly);
+        var directories = Directory.EnumerateDirectories(
+            strPath,
+            "*",
+            EnumerationOptionConstants.TopLevelOnly
+        );
 
         foreach (var dir in directories)
         {
             var category = new TreeViewDirectory { Name = Path.GetFileName(dir), Path = dir };
 
-            if (Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly).Length > 0)
+            if (Directory.GetDirectories(dir, "*", EnumerationOptionConstants.TopLevelOnly).Length > 0)
             {
                 category.SubDirectories = GetSubfolders(dir);
             }

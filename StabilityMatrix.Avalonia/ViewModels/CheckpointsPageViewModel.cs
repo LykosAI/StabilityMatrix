@@ -841,7 +841,11 @@ public partial class CheckpointsPageViewModel(
         var previouslySelectedCategory = SelectedCategory;
 
         var modelCategories = Directory
-            .EnumerateDirectories(settingsManager.ModelsDirectory, "*", SearchOption.TopDirectoryOnly)
+            .EnumerateDirectories(
+                settingsManager.ModelsDirectory,
+                "*",
+                EnumerationOptionConstants.TopLevelOnly
+            )
             .Select(
                 d =>
                     new CheckpointCategory
@@ -856,7 +860,11 @@ public partial class CheckpointsPageViewModel(
         foreach (var checkpointCategory in modelCategories.SelectMany(c => c.Flatten()))
         {
             checkpointCategory.Count = Directory
-                .EnumerateFileSystemEntries(checkpointCategory.Path, "*", SearchOption.AllDirectories)
+                .EnumerateFileSystemEntries(
+                    checkpointCategory.Path,
+                    "*",
+                    EnumerationOptionConstants.AllDirectories
+                )
                 .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(x)));
         }
 
@@ -910,7 +918,11 @@ public partial class CheckpointsPageViewModel(
         if (!Directory.Exists(strPath))
             return subfolders;
 
-        var directories = Directory.EnumerateDirectories(strPath, "*", SearchOption.TopDirectoryOnly);
+        var directories = Directory.EnumerateDirectories(
+            strPath,
+            "*",
+            EnumerationOptionConstants.TopLevelOnly
+        );
 
         foreach (var dir in directories)
         {
@@ -919,11 +931,11 @@ public partial class CheckpointsPageViewModel(
                 Name = Path.GetFileName(dir),
                 Path = dir,
                 Count = new DirectoryInfo(dir)
-                    .EnumerateFileSystemInfos("*", SearchOption.AllDirectories)
+                    .EnumerateFileSystemInfos("*", EnumerationOptionConstants.AllDirectories)
                     .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(x.Extension)),
             };
 
-            if (Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly).Length > 0)
+            if (Directory.GetDirectories(dir, "*", EnumerationOptionConstants.TopLevelOnly).Length > 0)
             {
                 category.SubDirectories = GetSubfolders(dir);
             }
@@ -1001,7 +1013,7 @@ public partial class CheckpointsPageViewModel(
         }
 
         return ShowModelsInSubfolders
-            ? folderPath.Contains(categoryRelativePath)
+            ? folderPath.StartsWith(categoryRelativePath)
             : categoryRelativePath.Equals(folderPath);
     }
 

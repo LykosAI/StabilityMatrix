@@ -222,7 +222,9 @@ public partial class ModelIndexService : IModelIndexService
         var newIndex = new Dictionary<SharedFolderType, List<LocalModelFile>>();
         var newIndexFlat = new List<LocalModelFile>();
 
-        var paths = Directory.EnumerateFiles(modelsDir, "*.*", SearchOption.AllDirectories).ToHashSet();
+        var paths = Directory
+            .EnumerateFiles(modelsDir, "*", EnumerationOptionConstants.AllDirectories)
+            .ToHashSet();
 
         foreach (var path in paths)
         {
@@ -368,7 +370,9 @@ public partial class ModelIndexService : IModelIndexService
 
         var newIndexFlat = new ConcurrentBag<LocalModelFile>();
 
-        var paths = Directory.EnumerateFiles(modelsDir, "*.*", SearchOption.AllDirectories).ToHashSet();
+        var paths = Directory
+            .EnumerateFiles(modelsDir, "*", EnumerationOptionConstants.AllDirectories)
+            .ToHashSet();
 
         var partitioner = Partitioner.Create(paths, EnumerablePartitionerOptions.NoBuffering);
 

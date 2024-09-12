@@ -1263,7 +1263,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to Copy Link to Clipboard.
         /// </summary>
         public static string Label_CopyLinkToClipboard {
             get {
@@ -1655,6 +1655,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_HuggingFace {
             get {
                 return ResourceManager.GetString("Label_HuggingFace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Image Hidden.
+        /// </summary>
+        public static string Label_ImageHidden {
+            get {
+                return ResourceManager.GetString("Label_ImageHidden", resourceCulture);
             }
         }
         
@@ -2078,6 +2087,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_NoExtensionsFound {
             get {
                 return ResourceManager.GetString("Label_NoExtensionsFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Image Found.
+        /// </summary>
+        public static string Label_NoImageFound {
+            get {
+                return ResourceManager.GetString("Label_NoImageFound", resourceCulture);
             }
         }
         

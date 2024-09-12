@@ -19,6 +19,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -41,8 +42,10 @@ public partial class ProgressManagerViewModel : PageViewModelBase
     private readonly INavigationService<SettingsViewModel> settingsNavService;
 
     public override string Title => "Download Manager";
+
     public override IconSource IconSource =>
         new SymbolIconSource { Symbol = Symbol.ArrowCircleDown, IconVariant = IconVariant.Filled };
+
     public AvaloniaList<ProgressItemViewModelBase> ProgressItems { get; } = new();
 
     [ObservableProperty]
@@ -111,7 +114,18 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                     var msg = "";
                     if (download?.Exception is { } exception)
                     {
+                        msg =
+                            $"({exception.GetType().Name}) {exception.InnerException?.Message ?? exception.Message}";
+
                         if (
+                            exception is EarlyAccessException
+                            || exception.InnerException is EarlyAccessException
+                        )
+                        {
+                            msg =
+                                "This asset is in Early Access. Please check the asset page for more information.";
+                        }
+                        else if (
                             exception is UnauthorizedAccessException
                             || exception.InnerException is UnauthorizedAccessException
                         )
@@ -124,7 +138,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                                     Content = Resources.Label_CivitAiLoginRequired,
                                     PrimaryButtonText = "Go to Settings",
                                     SecondaryButtonText = "Close",
-                                    DefaultButton = ContentDialogButton.Primary,
+                                    DefaultButton = ContentDialogButton.Primary
                                 };
 
                                 var result = await errorDialog.ShowAsync();
@@ -142,21 +156,20 @@ public partial class ProgressManagerViewModel : PageViewModelBase
 
                             return;
                         }
-
-                        msg =
-                            $"({exception.GetType().Name}) {exception.InnerException?.Message ?? exception.Message}";
                     }
 
-                    notificationService
-                        .ShowPersistentAsync(
-                            NotificationKey.Download_Failed,
-                            new Notification
-                            {
-                                Title = "Download Failed",
-                                Body = $"Download of {e.FileName} failed: {msg}"
-                            }
-                        )
-                        .SafeFireAndForget();
+                    Dispatcher.UIThread.InvokeAsync(
+                        async () =>
+                            await notificationService.ShowPersistentAsync(
+                                NotificationKey.Download_Failed,
+                                new Notification
+                                {
+                                    Title = "Download Failed",
+                                    Body = $"Download of {e.FileName} failed: {msg}"
+                                }
+                            )
+                    );
+
                     break;
                 case ProgressState.Cancelled:
                     notificationService
@@ -183,9 +196,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         foreach (var download in downloads)
         {
             if (ProgressItems.Any(vm => vm.Id == download.Id))
-            {
                 continue;
-            }
             var vm = new DownloadProgressItemViewModel(download);
             ProgressItems.Add(vm);
         }
@@ -194,9 +205,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
     private Task AddPackageInstall(IPackageModificationRunner packageModificationRunner)
     {
         if (ProgressItems.Any(vm => vm.Id == packageModificationRunner.Id))
-        {
             return Task.CompletedTask;
-        }
 
         var vm = new PackageInstallProgressItemViewModel(packageModificationRunner);
         ProgressItems.Add(vm);

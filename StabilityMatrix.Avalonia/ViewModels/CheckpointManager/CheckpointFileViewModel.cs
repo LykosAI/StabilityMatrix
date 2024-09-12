@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -42,6 +43,12 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
 
     [ObservableProperty]
     private long fileSize;
+
+    [ObservableProperty]
+    private string? noImageMessage;
+
+    [ObservableProperty]
+    private bool hideImage;
 
     private readonly ISettingsManager settingsManager;
     private readonly IModelIndexService modelIndexService;
@@ -155,10 +162,20 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             if (cmInfo != null)
             {
                 CheckpointFile.ConnectedModelInfo = cmInfo;
-                ThumbnailUri =
+
+                var uri =
                     CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
-                    ?? cmInfo.ThumbnailImageUrl
-                    ?? Assets.NoImage.ToString();
+                    ?? cmInfo.ThumbnailImageUrl;
+                if (string.IsNullOrWhiteSpace(uri))
+                {
+                    HideImage = true;
+                    NoImageMessage = Resources.Label_NoImageFound;
+                }
+                else
+                {
+                    ThumbnailUri = uri;
+                    HideImage = false;
+                }
 
                 await modelIndexService.RefreshIndex();
             }
@@ -434,15 +451,26 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             && CheckpointFile.ConnectedModelInfo?.Nsfw == true
         )
         {
-            ThumbnailUri = Assets.NoImage.ToString();
+            HideImage = true;
+            NoImageMessage = Resources.Label_ImageHidden;
         }
         else
         {
-            ThumbnailUri = settingsManager.IsLibraryDirSet
+            var previewPath = settingsManager.IsLibraryDirSet
                 ? CheckpointFile.GetPreviewImageFullPath(settingsManager.ModelsDirectory)
                     ?? CheckpointFile.ConnectedModelInfo?.ThumbnailImageUrl
-                    ?? Assets.NoImage.ToString()
-                : string.Empty;
+                : null;
+
+            if (string.IsNullOrWhiteSpace(previewPath))
+            {
+                HideImage = true;
+                NoImageMessage = Resources.Label_NoImageFound;
+            }
+            else
+            {
+                ThumbnailUri = previewPath;
+                HideImage = false;
+            }
         }
     }
 }

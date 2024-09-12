@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed CivitAI Browser page scroll refresh not ordering models correctly
 - Fixed missing fbgemm.dll errors when using latest torch with certain packages
 - Fixed crash when opening Settings page when refreshing CivitAI account status results in an error
+### Supporters
+#### Visionaries
+- A huge thank you to our Visionary-tier Patreon supporter, **Waterclouds**! We appreciate your continued support, and are grateful to have you on this journey with us!
 
 ## v2.12.0-pre.2
 ### Added

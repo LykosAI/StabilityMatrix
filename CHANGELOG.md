@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.12.0-pre.3
 ### Added
-- Added Pip Overrides section to the package install view, allowing you to override the default pip packages for a package
+- Added Python dependencies override table to package installation options, where the default pip packages may be overriden for a package's install and updates. This can be changed later or added to existing packages through `Package Menu > Python Dependencies Override`
+- Added optional anonymous usage reporting for gauging popularity of package installs and features. You will be asked whether you want to enable this feature on launch, and can change your choice at any time in `Settings > System > Analytics`
 ### Changed
 - Show better error messsage for early access model downloads
 - Updated torch version for a1111 on mac
@@ -18,6 +19,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed missing fbgemm.dll errors when using latest torch with certain packages
 - Fixed issue where ApproxVAE models would show up in the VAE folder
 - Checkpoints tab will no longer try to browse directories it can't access
+- Fixed crash when opening Settings page when refreshing CivitAI account status results in an error
+### Supporters
+#### Visionaries
+- A huge thank you to our Visionary-tier Patreon supporter, **Waterclouds**! We appreciate your continued support, and are grateful to have you on this journey with us!
 
 ## v2.12.0-pre.2
 ### Added

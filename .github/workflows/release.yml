@@ -99,7 +99,9 @@ jobs:
         with:
           name: StabilityMatrix-${{ env.platform-id }}
           path: ${{ env.out-name }}
-          
+          retention-days: 1
+          if-no-files-found: error
+         
       - name: Create Sentry release
         if: ${{ github.event.inputs.sentry-release == 'true' }}
         uses: getsentry/action-release@v1
@@ -170,6 +172,8 @@ jobs:
         with:
           name: StabilityMatrix-${{ env.platform-id }}
           path: ./out/${{ env.out-name }}
+          retention-days: 1
+          if-no-files-found: error
   
   release-macos:
     name: Release (macos-arm64)
@@ -254,6 +258,8 @@ jobs:
         with:
           name: StabilityMatrix-${{ env.platform-id }}-app
           path: StabilityMatrix-${{ env.platform-id }}-app.zip
+          retention-days: 1
+          if-no-files-found: error
           
       - uses: actions/setup-node@v4
         with:
@@ -280,6 +286,8 @@ jobs:
         with:
           name: StabilityMatrix-${{ env.platform-id }}-dmg
           path: StabilityMatrix-${{ env.platform-id }}-dmg.zip
+          retention-days: 1
+          if-no-files-found: error
   
   publish-release:
     name: Publish GitHub Release
@@ -300,7 +308,7 @@ jobs:
 
       # Downloads all previous artifacts to the current working directory
       - name: Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         
       # Zip each build (except macos which is already dmg)
       - name: Zip Artifacts
@@ -346,7 +354,7 @@ jobs:
 
       # Downloads all previous artifacts to the current working directory
       - name: Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       # Zip each build (except macos which is already dmg)
       - name: Zip Artifacts
@@ -428,7 +436,7 @@ jobs:
 
       # Downloads all previous artifacts to the current working directory
       - name: Download Artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
       
       # Zip each build (except macos which is already dmg)
       - name: Zip Artifacts

@@ -1135,4 +1135,61 @@
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>STABILITE MATRISINI ÇALIŞTIRMADAN ÖNCE LÜTFEN UYGULAMAYI ZIP DOSYASINDAN ÇIKARIN</value>
   </data>
+  <data name="Label_HistorySize" xml:space="preserve">
+    <value>Geçmiş Boyutu</value>
+  </data>
+  <data name="Label_HistorySize_Description" xml:space="preserve">
+    <value>Konsolda görüntülenen satırların üzerinde geri kaydırabileceğiniz satır sayısı</value>
+  </data>
+  <data name="Label_ConnectAccountFailed" xml:space="preserve">
+    <value>Hesabınızı bağlarken bazı sorunlar yaşadık</value>
+  </data>
+  <data name="Label_EditModelMetadata" xml:space="preserve">
+    <value>Model Meta Verilerini Düzenleme</value>
+  </data>
+  <data name="Label_NSFW" xml:space="preserve">
+    <value>NSFW</value>
+  </data>
+  <data name="Label_Tags" xml:space="preserve">
+    <value>Etiketler</value>
+  </data>
+  <data name="Label_VersionName" xml:space="preserve">
+    <value>Sürüm Adı</value>
+  </data>
+  <data name="Label_TrainedWords" xml:space="preserve">
+    <value>Eğitilmiş Kelimeler</value>
+  </data>
+  <data name="Label_PreviewImage" xml:space="preserve">
+    <value>Önizleme Görüntüsü</value>
+  </data>
+  <data name="Label_BatchSize" xml:space="preserve">
+    <value>Toplu İş Boyutu</value>
+  </data>
+  <data name="Label_Batches" xml:space="preserve">
+    <value>Toplu İşler</value>
+  </data>
+  <data name="Label_Sampler" xml:space="preserve">
+    <value>Örnekleyici</value>
+  </data>
+  <data name="Label_Scheduler" xml:space="preserve">
+    <value>Programlayıcı</value>
+  </data>
+  <data name="Label_MaxSize" xml:space="preserve">
+    <value>Maksimum Boyut</value>
+  </data>
+  <data name="Label_UseSeparatePrompt" xml:space="preserve">
+    <value>Ayrı İstem Kullanın</value>
+  </data>
+  <data name="Label_Seed" xml:space="preserve">
+    <value>Seed</value>
+  </data>
+  <data name="Label_NegativePrompt" xml:space="preserve">
+    <value>Olumsuz İstem</value>
+  </data>
+  <data name="Label_NewFolder" xml:space="preserve">
+    <value>Yeni Klasör</value>
+  </data>
+  <data name="Label_CopyLinkToClipboard" xml:space="preserve">
+    <value>Bağlantıyı Panoya Kopyala</value>
+  </data>
 </root>

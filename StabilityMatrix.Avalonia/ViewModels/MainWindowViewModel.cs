@@ -74,6 +74,7 @@ public partial class MainWindowViewModel : ViewModelBase
             { Name: "de" } => 250,
             { Name: "pt-PT" } => 300,
             { Name: "pt-BR" } => 260,
+            { Name: "ko-KR" } => 235,
             _ => 200
         };
 

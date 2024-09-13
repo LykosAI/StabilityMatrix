@@ -32,7 +32,8 @@ public static class Cultures
             ["tr-TR"] = new CultureInfo("tr-TR"),
             ["de"] = new CultureInfo("de"),
             ["pt-PT"] = new CultureInfo("pt-PT"),
-            ["pt-BR"] = new CultureInfo("pt-BR")
+            ["pt-BR"] = new CultureInfo("pt-BR"),
+            ["ko-KR"] = new CultureInfo("ko-KR")
         };
 
     public static IReadOnlyList<CultureInfo> SupportedCultures =>

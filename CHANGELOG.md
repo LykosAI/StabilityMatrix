@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added optional anonymous usage reporting for gauging popularity of package installs and features. You will be asked whether you want to enable this feature on launch, and can change your choice at any time in `Settings > System > Analytics`
 - Added Korean translations thanks to maakcode!
 ### Changed
-- Show better error messsage for early access model downloads
+- Show better error message for early access model downloads
 - Updated torch version for a1111 on mac
 - Checkpoints tab now shows "image hidden" for images that are hidden by the NSFW filter
 - Updated translations for Turkish and Russian

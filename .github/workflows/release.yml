@@ -95,7 +95,7 @@ jobs:
         run: mv ./Release/linux-x64/StabilityMatrix.x86_64.AppImage ${{ env.out-name }}
       
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: StabilityMatrix-${{ env.platform-id }}
           path: ${{ env.out-name }}
@@ -166,7 +166,7 @@ jobs:
         run: mv ./out/StabilityMatrix.Avalonia.exe ./out/${{ env.out-name }}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: StabilityMatrix-${{ env.platform-id }}
           path: ./out/${{ env.out-name }}
@@ -250,7 +250,7 @@ jobs:
         run: zip -r -y "../StabilityMatrix-${{ env.platform-id }}-app.zip" "${{ env.app-name }}"
 
       - name: Upload Artifact (App)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: StabilityMatrix-${{ env.platform-id }}-app
           path: StabilityMatrix-${{ env.platform-id }}-app.zip
@@ -276,7 +276,7 @@ jobs:
         run: zip -r -y "../StabilityMatrix-${{ env.platform-id }}-dmg.zip" "${{ env.out-name }}"
         
       - name: Upload Artifact (dmg)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: StabilityMatrix-${{ env.platform-id }}-dmg
           path: StabilityMatrix-${{ env.platform-id }}-dmg.zip

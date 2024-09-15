@@ -175,6 +175,8 @@ public class Settings
             .ToList();
 
     public Size InferenceImageSize { get; set; } = new(150, 190);
+
+    [Obsolete("Use OutputsPageResizeFactor instead")]
     public Size OutputsImageSize { get; set; } = new(300, 300);
     public HolidayMode HolidayModeSetting { get; set; } = HolidayMode.Automatic;
     public bool IsWorkflowInfiniteScrollEnabled { get; set; } = true;
@@ -203,6 +205,12 @@ public class Settings
     // public bool OptedInToInstallTelemetry { get; set; }
 
     public AnalyticsSettings Analytics { get; set; } = new();
+
+    public double CheckpointsPageResizeFactor { get; set; } = 1.0d;
+
+    public double OutputsPageResizeFactor { get; set; } = 1.0d;
+
+    public double CivitBrowserResizeFactor { get; set; } = 1.0d;
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

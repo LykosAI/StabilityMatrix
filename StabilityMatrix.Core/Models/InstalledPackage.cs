@@ -245,6 +245,7 @@ public class InstalledPackage : IJsonOnDeserialized
 
     public void OnDeserialized()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
         // handle TorchIndex migration
         PreferredTorchIndex ??= PreferredTorchVersion;
 
@@ -252,7 +253,6 @@ public class InstalledPackage : IJsonOnDeserialized
         if (Version != null)
             return;
 
-#pragma warning disable CS0618 // Type or member is obsolete
         if (string.IsNullOrWhiteSpace(InstalledBranch) && !string.IsNullOrWhiteSpace(PackageVersion))
         {
             // release mode

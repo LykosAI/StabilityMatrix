@@ -58,7 +58,7 @@ public partial class CheckpointsPageViewModel(
     IMetadataImportService metadataImportService,
     IModelImportService modelImportService,
     ServiceManager<ViewModelBase> dialogFactory
-) : PageViewModelBase
+) : PageViewModelBase, IResizable
 {
     public override string Title => Resources.Label_CheckpointManager;
 
@@ -133,6 +133,12 @@ public partial class CheckpointsPageViewModel(
 
     [ObservableProperty]
     private bool showNsfwImages;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ModelCardBottomResizeFactor))]
+    private double resizeFactor;
+
+    public double ModelCardBottomResizeFactor => Math.Clamp(ResizeFactor, 0.85d, 1.25d);
 
     public string ClearButtonText =>
         SelectedBaseModels.Count == BaseModelOptions.Count
@@ -327,6 +333,13 @@ public partial class CheckpointsPageViewModel(
             this,
             vm => vm.IsImportAsConnectedEnabled,
             s => s.IsImportAsConnected,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ResizeFactor,
+            s => s.CheckpointsPageResizeFactor,
             true
         );
 

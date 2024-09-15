@@ -1623,6 +1623,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hide Empty Categories.
+        /// </summary>
+        public static string Label_HideEmptyCategories {
+            get {
+                return ResourceManager.GetString("Label_HideEmptyCategories", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to History Size.
         /// </summary>
         public static string Label_HistorySize {
@@ -2645,6 +2654,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_ShowNsfwContent {
             get {
                 return ResourceManager.GetString("Label_ShowNsfwContent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show NSFW Images.
+        /// </summary>
+        public static string Label_ShowNsfwImages {
+            get {
+                return ResourceManager.GetString("Label_ShowNsfwImages", resourceCulture);
             }
         }
         

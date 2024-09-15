@@ -18,7 +18,7 @@ using StabilityMatrix.Core.Models.Database;
 namespace StabilityMatrix.Avalonia.Views;
 
 [Singleton]
-public partial class CheckpointsPage : UserControlBase
+public partial class CheckpointsPage : ResizableUserControlBase
 {
     private Dictionary<CheckpointCategory, DispatcherTimer> dragTimers = new();
 
@@ -31,6 +31,16 @@ public partial class CheckpointsPage : UserControlBase
         AddHandler(DragDrop.DragLeaveEvent, OnDragExit);
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
     }
+
+    protected override Action OnResizeFactorChanged =>
+        () =>
+        {
+            ImageRepeater.InvalidateMeasure();
+            ImageRepeater.InvalidateArrange();
+        };
+
+    protected override double MinResizeFactor => 0.6d;
+    protected override double MaxResizeFactor => 1.5d;
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {

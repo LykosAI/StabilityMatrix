@@ -32,7 +32,6 @@
         <system:Boolean x:Key="False">False</system:Boolean>
         <system:Boolean x:Key="True">True</system:Boolean>
         <input:StandardUICommand x:Key="ItemClickCommand" Command="{Binding ItemClickCommand}" />
-        <input:StandardUICommand x:Key="NewFolderCommand" Command="{Binding CreateFolderCommand}" />
     </controls:UserControlBase.Resources>
 
     <controls:UserControlBase.Styles>
@@ -105,7 +104,6 @@
             Margin="0,0,0,8"
             ColumnDefinitions="*, Auto">
             <TextBox
-                MinWidth="250"
                 MinHeight="40"
                 Margin="4,0"
                 VerticalAlignment="Center"
@@ -187,6 +185,51 @@
                         Command="{Binding RefreshCommand}"
                         IconSource="Refresh"
                         Label="{x:Static lang:Resources.Action_Refresh}" />
+                    <ui:CommandBarButton
+                        VerticalAlignment="Center"
+                        IconSource="Zoom"
+                        Label="View">
+                        <ui:CommandBarButton.Flyout>
+                            <Flyout>
+                                <StackPanel Orientation="Vertical">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="Zoom" />
+                                    <Slider
+                                        MinWidth="150"
+                                        Maximum="1.5"
+                                        Minimum="0.6"
+                                        SmallChange="0.05"
+                                        Value="{Binding ResizeFactor, Mode=TwoWay}" />
+                                    <TextBlock
+                                        Margin="0,-8,0,0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="{Binding ResizeFactor, StringFormat={}{0:F2}x}" />
+
+                                    <TextBlock
+                                        Margin="0,32,0,0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="{x:Static lang:Resources.Label_HideEmptyCategories}" />
+                                    <ToggleSwitch
+                                        HorizontalAlignment="Center"
+                                        HorizontalContentAlignment="Center"
+                                        IsChecked="{Binding HideEmptyRootCategories}" />
+                                    <TextBlock
+                                        Margin="0,16,0,0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="{x:Static lang:Resources.Label_ShowNsfwImages}" />
+                                    <ToggleSwitch
+                                        HorizontalAlignment="Center"
+                                        HorizontalContentAlignment="Center"
+                                        IsChecked="{Binding ShowNsfwImages}" />
+                                </StackPanel>
+                            </Flyout>
+                        </ui:CommandBarButton.Flyout>
+                    </ui:CommandBarButton>
                     <ui:CommandBarButton
                         VerticalAlignment="Center"
                         IconSource="Sort"
@@ -285,16 +328,6 @@
                         IsChecked="{Binding DragMovesAllSelected, Mode=TwoWay}"
                         Label="Move All Selected Models"
                         ToolTip.Tip="When enabled, dragging and dropping a model will also move any selected models to the drop location." />
-                    <ui:CommandBarToggleButton IsChecked="{Binding HideEmptyRootCategories}" Label="Hide Empty Categories">
-                        <ui:CommandBarToggleButton.IconSource>
-                            <controls:FASymbolIconSource Symbol="fa-regular fa-eye-slash" />
-                        </ui:CommandBarToggleButton.IconSource>
-                    </ui:CommandBarToggleButton>
-                    <ui:CommandBarToggleButton IsChecked="{Binding ShowNsfwImages}" Label="Show NSFW Images">
-                        <ui:CommandBarToggleButton.IconSource>
-                            <controls:FASymbolIconSource Symbol="fa-solid fa-exclamation" />
-                        </ui:CommandBarToggleButton.IconSource>
-                    </ui:CommandBarToggleButton>
                 </ui:CommandBar.SecondaryCommands>
             </ui:CommandBar>
         </Grid>
@@ -474,39 +507,41 @@
                                         </Style>
                                     </CheckBox.Styles>
                                 </CheckBox>
+                                <LayoutTransformControl Grid.Row="0" Grid.RowSpan="2">
+                                    <LayoutTransformControl.LayoutTransform>
+                                        <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ResizeFactor, FallbackValue=1, TargetNullValue=1}" />
+                                    </LayoutTransformControl.LayoutTransform>
+                                    <Button
+                                        Width="330"
+                                        Height="400"
+                                        Margin="0"
+                                        Padding="0"
+                                        VerticalAlignment="Center"
+                                        VerticalContentAlignment="Center"
+                                        ClipToBounds="True"
+                                        Command="{StaticResource ItemClickCommand}"
+                                        CommandParameter="{Binding}"
+                                        CornerRadius="12">
+                                        <Grid>
+                                            <vendorLabs:BetterAsyncImage
+                                                ClipToBounds="True"
+                                                CornerRadius="8"
+                                                IsVisible="{Binding !HideImage}"
+                                                Source="{Binding ThumbnailUri, Converter={StaticResource FileUriConverter}}"
+                                                Stretch="UniformToFill" />
+                                            <TextBlock
+                                                Padding="0,0,0,24"
+                                                VerticalAlignment="Center"
+                                                FontSize="48"
+                                                IsVisible="{Binding HideImage}"
+                                                Text="{Binding NoImageMessage}"
+                                                TextAlignment="Center"
+                                                TextWrapping="Wrap" />
+                                        </Grid>
+                                    </Button>
+                                </LayoutTransformControl>
 
-                                <Button
-                                    Grid.Row="0"
-                                    Grid.RowSpan="2"
-                                    Width="330"
-                                    Height="400"
-                                    Margin="0"
-                                    Padding="0"
-                                    VerticalAlignment="Center"
-                                    VerticalContentAlignment="Center"
-                                    ClipToBounds="True"
-                                    Command="{StaticResource ItemClickCommand}"
-                                    CommandParameter="{Binding}"
-                                    CornerRadius="12">
-                                    <Grid>
-                                        <vendorLabs:BetterAsyncImage
-                                            ClipToBounds="True"
-                                            CornerRadius="8"
-                                            IsVisible="{Binding !HideImage}"
-                                            Source="{Binding ThumbnailUri, Converter={StaticResource FileUriConverter}}"
-                                            Stretch="UniformToFill" />
-                                        <TextBlock
-                                            Padding="0,0,0,24"
-                                            VerticalAlignment="Center"
-                                            FontSize="48"
-                                            IsVisible="{Binding HideImage}"
-                                            Text="{Binding NoImageMessage}"
-                                            TextAlignment="Center"
-                                            TextWrapping="Wrap" />
-                                    </Grid>
-                                </Button>
-
-                                <StackPanel
+                                <WrapPanel
                                     Grid.Row="0"
                                     IsVisible="{Binding CheckpointFile.HasConnectedModel}"
                                     Orientation="Horizontal">
@@ -559,53 +594,57 @@
                                             <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
                                         </TextBlock>
                                     </controls:Card>
-                                </StackPanel>
+                                </WrapPanel>
 
-                                <Border
-                                    Name="ModelCardBottom"
-                                    Grid.Row="1"
-                                    Padding="8"
-                                    CornerRadius="0,0,8,8"
-                                    IsHitTestVisible="False">
-                                    <StackPanel>
-                                        <TextBlock
-                                            MaxWidth="300"
-                                            HorizontalAlignment="Left"
-                                            Text="{Binding CheckpointFile.DisplayModelName}"
-                                            TextWrapping="NoWrap"
-                                            ToolTip.Tip="{Binding CheckpointFile.DisplayModelName}" />
-                                        <TextBlock
-                                            Margin="0,4"
-                                            HorizontalAlignment="Left"
-                                            FontSize="13"
-                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                            IsVisible="{Binding CheckpointFile.HasConnectedModel}"
-                                            Text="{Binding CheckpointFile.DisplayModelVersion, FallbackValue=''}"
-                                            TextWrapping="WrapWithOverflow" />
+                                <LayoutTransformControl Grid.Row="1">
+                                    <LayoutTransformControl.LayoutTransform>
+                                        <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" />
+                                    </LayoutTransformControl.LayoutTransform>
+                                    <Border
+                                        Name="ModelCardBottom"
+                                        Padding="8"
+                                        CornerRadius="0,0,8,8"
+                                        IsHitTestVisible="False">
+                                        <StackPanel>
+                                            <TextBlock
+                                                MaxWidth="300"
+                                                HorizontalAlignment="Left"
+                                                Text="{Binding CheckpointFile.DisplayModelName}"
+                                                TextWrapping="NoWrap"
+                                                ToolTip.Tip="{Binding CheckpointFile.DisplayModelName}" />
+                                            <TextBlock
+                                                Margin="0,4"
+                                                HorizontalAlignment="Left"
+                                                FontSize="13"
+                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                IsVisible="{Binding CheckpointFile.HasConnectedModel}"
+                                                Text="{Binding CheckpointFile.DisplayModelVersion, FallbackValue=''}"
+                                                TextWrapping="NoWrap" />
 
-                                        <TextBlock
-                                            MaxWidth="300"
-                                            Margin="0,0,0,4"
-                                            HorizontalAlignment="Left"
-                                            FontSize="13"
-                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                            Text="{Binding CheckpointFile.FileName}"
-                                            TextWrapping="NoWrap"
-                                            ToolTip.Tip="{Binding CheckpointFile.FileName}" />
+                                            <TextBlock
+                                                MaxWidth="300"
+                                                Margin="0,0,0,4"
+                                                HorizontalAlignment="Left"
+                                                FontSize="13"
+                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                Text="{Binding CheckpointFile.FileName}"
+                                                TextWrapping="NoWrap"
+                                                ToolTip.Tip="{Binding CheckpointFile.FileName}" />
 
-                                        <TextBlock
-                                            MaxWidth="300"
-                                            HorizontalAlignment="Left"
-                                            FontSize="13"
-                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                            IsVisible="{Binding CanShowTriggerWords}"
-                                            TextWrapping="NoWrap"
-                                            ToolTip.Tip="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}">
-                                            <Run Text="Trigger words:" />
-                                            <Run Text="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}" />
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Border>
+                                            <TextBlock
+                                                MaxWidth="300"
+                                                HorizontalAlignment="Left"
+                                                FontSize="13"
+                                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                                IsVisible="{Binding CanShowTriggerWords}"
+                                                TextWrapping="NoWrap"
+                                                ToolTip.Tip="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}">
+                                                <Run Text="Trigger words:" />
+                                                <Run Text="{Binding CheckpointFile.ConnectedModelInfo.TrainedWordsString}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                </LayoutTransformControl>
 
                                 <Border
                                     Grid.Row="0"

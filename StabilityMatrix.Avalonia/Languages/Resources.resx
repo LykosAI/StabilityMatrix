@@ -1239,4 +1239,10 @@
   <data name="Label_NoImageFound" xml:space="preserve">
     <value>No Image Found</value>
   </data>
+  <data name="Label_HideEmptyCategories" xml:space="preserve">
+    <value>Hide Empty Categories</value>
+  </data>
+  <data name="Label_ShowNsfwImages" xml:space="preserve">
+    <value>Show NSFW Images</value>
+  </data>
 </root>

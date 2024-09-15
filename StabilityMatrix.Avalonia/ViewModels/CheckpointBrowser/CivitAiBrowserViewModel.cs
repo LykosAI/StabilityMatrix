@@ -35,7 +35,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [View(typeof(CivitAiBrowserPage))]
 [Singleton]
-public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScroll
+public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScroll, IResizable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ICivitApi civitApi;
@@ -90,6 +90,12 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
     [ObservableProperty]
     private bool hideInstalledModels;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatsResizeFactor))]
+    private double resizeFactor;
+
+    public double StatsResizeFactor => Math.Clamp(ResizeFactor, 0.75d, 1.25d);
 
     public IEnumerable<CivitPeriod> AllCivitPeriods =>
         Enum.GetValues(typeof(CivitPeriod)).Cast<CivitPeriod>();
@@ -161,6 +167,13 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             this,
             model => model.HideInstalledModels,
             settings => settings.HideInstalledModelsInModelBrowser,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            model => model.ResizeFactor,
+            settings => settings.CivitBrowserResizeFactor,
             true
         );
     }

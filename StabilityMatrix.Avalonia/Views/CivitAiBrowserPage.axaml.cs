@@ -11,17 +11,22 @@ using CivitAiBrowserViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBr
 namespace StabilityMatrix.Avalonia.Views;
 
 [Singleton]
-public partial class CivitAiBrowserPage : UserControlBase
+public partial class CivitAiBrowserPage : ResizableUserControlBase
 {
     public CivitAiBrowserPage()
     {
         InitializeComponent();
     }
 
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
-    }
+    protected override Action OnResizeFactorChanged =>
+        () =>
+        {
+            ImageRepeater.InvalidateMeasure();
+            ImageRepeater.InvalidateArrange();
+        };
+
+    protected override double MinResizeFactor => 0.6d;
+    protected override double MaxResizeFactor => 1.5d;
 
     private void ScrollViewer_OnScrollChanged(object? sender, ScrollChangedEventArgs e)
     {

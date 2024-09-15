@@ -40,7 +40,6 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
-using Size = StabilityMatrix.Core.Models.Settings.Size;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
@@ -48,7 +47,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(Views.OutputsPage))]
 [Singleton]
-public partial class OutputsPageViewModel : PageViewModelBase
+public partial class OutputsPageViewModel : PageViewModelBase, IResizable
 {
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;
@@ -88,9 +87,6 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private string searchQuery;
 
     [ObservableProperty]
-    private Size imageSize = new(300, 300);
-
-    [ObservableProperty]
     private bool isConsolidating;
 
     [ObservableProperty]
@@ -101,6 +97,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private bool isChangingCategory;
+
+    [ObservableProperty]
+    private double resizeFactor;
 
     public bool CanShowOutputTypes => SelectedCategory?.Name?.Equals("Shared Output Folder") ?? false;
 
@@ -159,8 +158,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         settingsManager.RelayPropertyFor(
             this,
-            vm => vm.ImageSize,
-            settings => settings.OutputsImageSize,
+            vm => vm.ResizeFactor,
+            settings => settings.OutputsPageResizeFactor,
+            true,
             delay: TimeSpan.FromMilliseconds(250)
         );
 
@@ -187,7 +187,6 @@ public partial class OutputsPageViewModel : PageViewModelBase
         SelectedCategory ??= Categories.First();
         SelectedOutputType ??= SharedOutputType.All;
         SearchQuery = string.Empty;
-        ImageSize = settingsManager.Settings.OutputsImageSize;
         lastOutputCategory = SelectedCategory;
 
         IsChangingCategory = true;

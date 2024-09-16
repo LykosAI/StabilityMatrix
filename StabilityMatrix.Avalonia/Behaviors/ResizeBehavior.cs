@@ -137,6 +137,8 @@ public class ResizeBehavior : Behavior<Control>
         if (change.Property == ResizeFactorProperty)
         {
             CoerceValue(ResizeFactorProperty);
+            AssociatedObject?.InvalidateMeasure();
+            AssociatedObject?.InvalidateArrange();
         }
     }
 

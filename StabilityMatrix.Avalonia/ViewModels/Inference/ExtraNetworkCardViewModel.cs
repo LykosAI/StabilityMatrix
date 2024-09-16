@@ -1,8 +1,10 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -32,6 +34,7 @@ public partial class ExtraNetworkCardViewModel(IInferenceClientManager clientMan
     public bool IsClipWeightToggleEnabled { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TriggerWords), nameof(ShowTriggerWords))]
     private HybridModelFile? selectedModel;
 
     [ObservableProperty]
@@ -47,6 +50,10 @@ public partial class ExtraNetworkCardViewModel(IInferenceClientManager clientMan
 
     [ObservableProperty]
     private double clipWeight = 1.0;
+
+    public string TriggerWords =>
+        SelectedModel?.Local?.ConnectedModelInfo?.TrainedWordsString ?? string.Empty;
+    public bool ShowTriggerWords => !string.IsNullOrWhiteSpace(TriggerWords);
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
 
@@ -78,6 +85,15 @@ public partial class ExtraNetworkCardViewModel(IInferenceClientManager clientMan
         IsClipWeightEnabled = model.IsClipWeightEnabled;
         ModelWeight = model.ModelWeight;
         ClipWeight = model.ClipWeight;
+    }
+
+    [RelayCommand]
+    private void CopyTriggerWords()
+    {
+        if (!ShowTriggerWords)
+            return;
+
+        App.Clipboard.SetTextAsync(TriggerWords);
     }
 
     internal class ExtraNetworkCardModel

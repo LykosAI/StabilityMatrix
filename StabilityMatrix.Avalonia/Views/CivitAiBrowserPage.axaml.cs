@@ -2,7 +2,6 @@
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Markup.Xaml;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Attributes;
@@ -11,22 +10,12 @@ using CivitAiBrowserViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBr
 namespace StabilityMatrix.Avalonia.Views;
 
 [Singleton]
-public partial class CivitAiBrowserPage : ResizableUserControlBase
+public partial class CivitAiBrowserPage : UserControlBase
 {
     public CivitAiBrowserPage()
     {
         InitializeComponent();
     }
-
-    protected override Action OnResizeFactorChanged =>
-        () =>
-        {
-            ImageRepeater.InvalidateMeasure();
-            ImageRepeater.InvalidateArrange();
-        };
-
-    protected override double MinResizeFactor => 0.6d;
-    protected override double MaxResizeFactor => 1.5d;
 
     private void ScrollViewer_OnScrollChanged(object? sender, ScrollChangedEventArgs e)
     {

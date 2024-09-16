@@ -58,7 +58,7 @@ public partial class CheckpointsPageViewModel(
     IMetadataImportService metadataImportService,
     IModelImportService modelImportService,
     ServiceManager<ViewModelBase> dialogFactory
-) : PageViewModelBase, IResizable
+) : PageViewModelBase
 {
     public override string Title => Resources.Label_CheckpointManager;
 

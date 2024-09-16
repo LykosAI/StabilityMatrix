@@ -47,7 +47,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(Views.OutputsPage))]
 [Singleton]
-public partial class OutputsPageViewModel : PageViewModelBase, IResizable
+public partial class OutputsPageViewModel : PageViewModelBase
 {
     private readonly ISettingsManager settingsManager;
     private readonly IPackageFactory packageFactory;

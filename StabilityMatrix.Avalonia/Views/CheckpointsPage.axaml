@@ -2,6 +2,7 @@
     x:Class="StabilityMatrix.Avalonia.Views.CheckpointsPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
     xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
     xmlns:componentModel="clr-namespace:System.ComponentModel;assembly=System.ComponentModel.TypeConverter"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
@@ -394,15 +395,22 @@
         </TreeView>
 
         <scroll:BetterScrollViewer
+            Name="ImageScrollViewer"
             Grid.Row="1"
             Grid.Column="1"
             Padding="0,0,4,0"
             DragDrop.AllowDrop="True">
             <ItemsRepeater
-                x:Name="ImageRepeater"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
                 ItemsSource="{Binding Models}">
+                <Interaction.Behaviors>
+                    <behaviors:ResizeBehavior
+                        MaxResizeFactor="1.5"
+                        MinResizeFactor="0.6"
+                        PointerWheelTargetObject="{Binding #ImageScrollViewer}"
+                        ResizeFactor="{Binding ResizeFactor}" />
+                </Interaction.Behaviors>
                 <ItemsRepeater.Layout>
                     <UniformGridLayout MinColumnSpacing="8" MinRowSpacing="8" />
                 </ItemsRepeater.Layout>

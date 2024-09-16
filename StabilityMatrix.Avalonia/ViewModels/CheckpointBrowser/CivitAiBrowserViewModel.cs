@@ -35,7 +35,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [View(typeof(CivitAiBrowserPage))]
 [Singleton]
-public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScroll, IResizable
+public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScroll
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly ICivitApi civitApi;

@@ -1,5 +1,4 @@
-﻿using System;
-using Avalonia.Input;
+﻿using Avalonia.Input;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Core.Attributes;
@@ -7,19 +6,12 @@ using StabilityMatrix.Core.Attributes;
 namespace StabilityMatrix.Avalonia.Views;
 
 [Singleton]
-public partial class OutputsPage : ResizableUserControlBase
+public partial class OutputsPage : UserControlBase
 {
     public OutputsPage()
     {
         InitializeComponent();
     }
-
-    protected override Action OnResizeFactorChanged =>
-        () =>
-        {
-            ImageRepeater.InvalidateMeasure();
-            ImageRepeater.InvalidateArrange();
-        };
 
     private void InputElement_OnKeyDown(object? sender, KeyEventArgs e)
     {

@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
     xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
@@ -547,10 +548,15 @@
 
         <scroll:BetterScrollViewer Grid.Row="1" ScrollChanged="ScrollViewer_OnScrollChanged">
             <ItemsRepeater
-                Name="ImageRepeater"
                 HorizontalAlignment="Center"
                 ItemTemplate="{StaticResource CivitModelTemplate}"
                 ItemsSource="{Binding ModelCards}">
+                <Interaction.Behaviors>
+                    <behaviors:ResizeBehavior
+                        MaxResizeFactor="1.5"
+                        MinResizeFactor="0.6"
+                        ResizeFactor="{Binding ResizeFactor}" />
+                </Interaction.Behaviors>
                 <ItemsRepeater.Layout>
                     <UniformGridLayout Orientation="Horizontal" />
                 </ItemsRepeater.Layout>

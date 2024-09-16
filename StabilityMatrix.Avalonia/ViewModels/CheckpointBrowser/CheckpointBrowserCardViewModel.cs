@@ -105,6 +105,10 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             settingsManager.RegisterPropertyChangedHandler(
                 s => s.ModelBrowserNsfwEnabled,
                 _ => Dispatcher.UIThread.Post(UpdateImage)
+            ),
+            settingsManager.RegisterPropertyChangedHandler(
+                s => s.HideEarlyAccessModels,
+                _ => Dispatcher.UIThread.Post(UpdateImage)
             )
         );
 
@@ -165,7 +169,10 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private void UpdateImage()
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
-        var version = CivitModel.ModelVersions?.FirstOrDefault();
+        var hideEarlyAccessModels = settingsManager.Settings.HideEarlyAccessModels;
+        var version = CivitModel.ModelVersions?.FirstOrDefault(
+            v => !hideEarlyAccessModels || !v.IsEarlyAccess
+        );
         var images = version?.Images;
 
         // Try to find a valid image
@@ -240,6 +247,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         viewModel.Description = prunedDescription;
         viewModel.CivitModel = model;
         viewModel.Versions = versions
+            .Where(v => !settingsManager.Settings.HideEarlyAccessModels || !v.IsEarlyAccess)
             .Select(version => new ModelVersionViewModel(modelIndexService, version))
             .ToImmutableArray();
         viewModel.SelectedVersionViewModel = viewModel.Versions[0];

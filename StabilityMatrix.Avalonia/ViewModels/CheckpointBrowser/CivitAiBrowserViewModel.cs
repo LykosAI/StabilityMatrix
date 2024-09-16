@@ -92,6 +92,9 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     private bool hideInstalledModels;
 
     [ObservableProperty]
+    private bool hideEarlyAccessModels;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatsResizeFactor))]
     private double resizeFactor;
 
@@ -129,7 +132,13 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
         var filterPredicate = Observable
             .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
-            .Where(x => x.EventArgs.PropertyName is nameof(HideInstalledModels) or nameof(ShowNsfw))
+            .Where(
+                x =>
+                    x.EventArgs.PropertyName
+                        is nameof(HideInstalledModels)
+                            or nameof(ShowNsfw)
+                            or nameof(HideEarlyAccessModels)
+            )
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<CheckpointBrowserCardViewModel, bool>)FilterModelCardsPredicate)
             .StartWith(FilterModelCardsPredicate)
@@ -174,6 +183,13 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             this,
             model => model.ResizeFactor,
             settings => settings.CivitBrowserResizeFactor,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            model => model.HideEarlyAccessModels,
+            settings => settings.HideEarlyAccessModels,
             true
         );
     }
@@ -226,6 +242,13 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     private bool FilterModelCardsPredicate(CheckpointBrowserCardViewModel card)
     {
         if (HideInstalledModels && card.UpdateCardText == "Installed")
+            return false;
+
+        if (
+            HideEarlyAccessModels
+            && card.CivitModel.ModelVersions != null
+            && card.CivitModel.ModelVersions.All(x => x.Availability == "EarlyAccess")
+        )
             return false;
 
         return !card.CivitModel.Nsfw || ShowNsfw;

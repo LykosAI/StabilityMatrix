@@ -217,16 +217,16 @@
             IsVisible="{Binding IsChangingCategory}" />
 
         <scroll:BetterScrollViewer Grid.Row="1" Grid.Column="1">
+            <Interaction.Behaviors>
+                <behaviors:ResizeBehavior
+                    MaxResizeFactor="1.5"
+                    MinResizeFactor="0.6"
+                    ResizeFactor="{Binding ResizeFactor}" />
+            </Interaction.Behaviors>
             <ItemsRepeater
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
                 ItemsSource="{Binding Outputs}">
-                <Interaction.Behaviors>
-                    <behaviors:ResizeBehavior
-                        MaxResizeFactor="1.5"
-                        MinResizeFactor="0.6"
-                        ResizeFactor="{Binding ResizeFactor}" />
-                </Interaction.Behaviors>
                 <ItemsRepeater.Layout>
                     <UniformGridLayout MinColumnSpacing="8" MinRowSpacing="8" />
                 </ItemsRepeater.Layout>

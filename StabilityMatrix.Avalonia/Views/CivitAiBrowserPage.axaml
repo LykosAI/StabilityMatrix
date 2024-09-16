@@ -547,16 +547,16 @@
         </StackPanel>
 
         <scroll:BetterScrollViewer Grid.Row="1" ScrollChanged="ScrollViewer_OnScrollChanged">
+            <Interaction.Behaviors>
+                <behaviors:ResizeBehavior
+                    MaxResizeFactor="1.5"
+                    MinResizeFactor="0.6"
+                    ResizeFactor="{Binding ResizeFactor}" />
+            </Interaction.Behaviors>
             <ItemsRepeater
                 HorizontalAlignment="Center"
                 ItemTemplate="{StaticResource CivitModelTemplate}"
                 ItemsSource="{Binding ModelCards}">
-                <Interaction.Behaviors>
-                    <behaviors:ResizeBehavior
-                        MaxResizeFactor="1.5"
-                        MinResizeFactor="0.6"
-                        ResizeFactor="{Binding ResizeFactor}" />
-                </Interaction.Behaviors>
                 <ItemsRepeater.Layout>
                     <UniformGridLayout Orientation="Horizontal" />
                 </ItemsRepeater.Layout>

@@ -12,6 +12,15 @@ namespace StabilityMatrix.Avalonia.Behaviors;
 
 public class ResizeBehavior : Behavior<Control>
 {
+    public static readonly StyledProperty<Control?> PointerWheelTargetObjectProperty =
+        AvaloniaProperty.Register<ResizeBehavior, Control?>(nameof(PointerWheelTargetObject));
+
+    public Control? PointerWheelTargetObject
+    {
+        get => GetValue(PointerWheelTargetObjectProperty);
+        set => SetValue(PointerWheelTargetObjectProperty, value);
+    }
+
     public static readonly StyledProperty<double> MinResizeFactorProperty = AvaloniaProperty.Register<
         ResizeBehavior,
         double
@@ -82,20 +91,20 @@ public class ResizeBehavior : Behavior<Control>
     {
         base.OnAttached();
 
-        if (AssociatedObject is null)
+        if (PointerWheelTargetObject is null)
             return;
 
-        AssociatedObject.PointerWheelChanged += OnPointerWheelChanged;
+        PointerWheelTargetObject.PointerWheelChanged += OnPointerWheelChanged;
     }
 
     protected override void OnDetaching()
     {
         base.OnDetaching();
 
-        if (AssociatedObject is null)
+        if (PointerWheelTargetObject is null)
             return;
 
-        AssociatedObject.PointerWheelChanged -= OnPointerWheelChanged;
+        PointerWheelTargetObject.PointerWheelChanged -= OnPointerWheelChanged;
     }
 
     private void OnPointerWheelChanged(object? sender, PointerWheelEventArgs e)

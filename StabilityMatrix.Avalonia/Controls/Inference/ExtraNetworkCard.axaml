@@ -1,6 +1,7 @@
 ﻿<Styles
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
@@ -110,8 +111,20 @@
                             MinLines="3"
                             ScrollViewer.VerticalScrollBarVisibility="Auto"
                             Text="{Binding TriggerWords}"
-                            TextWrapping="Wrap" />
-
+                            TextWrapping="Wrap">
+                            <TextBox.InnerRightContent>
+                                <Button
+                                    Margin="0,4,4,4"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Command="{Binding CopyTriggerWordsCommand}"
+                                    FontSize="12"
+                                    IsVisible="{Binding ShowTriggerWords}"
+                                    ToolTip.Tip="{x:Static lang:Resources.Action_CopyTriggerWords}">
+                                    <avalonia:Icon Value="fa-solid fa-copy" />
+                                </Button>
+                            </TextBox.InnerRightContent>
+                        </TextBox>
                     </sg:SpacedGrid>
                 </controls:Card>
             </ControlTemplate>

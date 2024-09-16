@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -84,6 +85,15 @@ public partial class ExtraNetworkCardViewModel(IInferenceClientManager clientMan
         IsClipWeightEnabled = model.IsClipWeightEnabled;
         ModelWeight = model.ModelWeight;
         ClipWeight = model.ClipWeight;
+    }
+
+    [RelayCommand]
+    private void CopyTriggerWords()
+    {
+        if (!ShowTriggerWords)
+            return;
+
+        App.Clipboard.SetTextAsync(TriggerWords);
     }
 
     internal class ExtraNetworkCardModel

@@ -8,7 +8,6 @@
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
-    d:DataContext="{x:Static mocks:DesignData.ExtraNetworkCardViewModel}"
     x:DataType="vmInference:ExtraNetworkCardViewModel">
     <Design.PreviewWith>
         <StackPanel Width="400" Height="400">

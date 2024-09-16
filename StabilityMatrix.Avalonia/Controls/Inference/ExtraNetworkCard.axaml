@@ -1,14 +1,15 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-        xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
-        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-        xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
-        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-        d:DataContext="{x:Static mocks:DesignData.InferenceTextToImageViewModel}"
-        x:DataType="vmInference:ExtraNetworkCardViewModel">
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    d:DataContext="{x:Static mocks:DesignData.ExtraNetworkCardViewModel}"
+    x:DataType="vmInference:ExtraNetworkCardViewModel">
     <Design.PreviewWith>
         <StackPanel Width="400" Height="400">
             <controls:ExtraNetworkCard DataContext="{x:Static mocks:DesignData.ExtraNetworkCardViewModel}" />
@@ -20,11 +21,10 @@
             <ControlTemplate>
                 <controls:Card Padding="12">
                     <sg:SpacedGrid
-                        Margin="0,0,0,-8"
+                        Margin="0,0,0,0"
                         ColumnDefinitions="Auto,*"
                         ColumnSpacing="8"
-                        RowDefinitions="*,*,*,*,*"
-                        RowSpacing="8">
+                        RowDefinitions="*,*,*,*,*">
                         <!--  Model  -->
                         <TextBlock
                             Grid.Column="0"
@@ -40,54 +40,79 @@
                             ItemsSource="{Binding ClientManager.LoraModels}"
                             SelectedItem="{Binding SelectedModel}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
-                        
-                        <!-- Model Weight -->
+
+                        <!--  Model Weight  -->
                         <StackPanel
-                            IsVisible="{Binding IsModelWeightEnabled}"
-                            Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            IsVisible="{Binding IsModelWeightEnabled}">
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    Text="{x:Static lang:Resources.Label_Strength}"/>
+                                <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_Strength}" />
                                 <ui:NumberBox
                                     Grid.Column="1"
                                     Margin="4,0,0,0"
-                                    ValidationMode="InvalidInputOverwritten"
-                                    SmallChange="0.05"
+                                    HorizontalAlignment="Stretch"
                                     LargeChange="0.1"
                                     Maximum="100"
                                     Minimum="-100"
                                     SimpleNumberFormat="F2"
-                                    Value="{Binding ModelWeight}"
-                                    HorizontalAlignment="Stretch"
-                                    SpinButtonPlacementMode="Inline"/>
+                                    SmallChange="0.05"
+                                    SpinButtonPlacementMode="Inline"
+                                    ValidationMode="InvalidInputOverwritten"
+                                    Value="{Binding ModelWeight}" />
                             </Grid>
                         </StackPanel>
 
-                        <!-- CLIP Strength -->
-                        <StackPanel 
-                            Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                        <!--  CLIP Strength  -->
+                        <StackPanel
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
                             IsVisible="{Binding IsClipWeightEnabled}">
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock
-                                    VerticalAlignment="Center"
-                                    Text="{x:Static lang:Resources.Label_CLIPStrength}"/>
+                                <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_CLIPStrength}" />
                                 <ui:NumberBox
                                     Grid.Column="1"
                                     Margin="4,0,0,0"
-                                    ValidationMode="InvalidInputOverwritten"
-                                    SmallChange="0.05"
+                                    HorizontalAlignment="Stretch"
                                     LargeChange="0.1"
                                     Maximum="100"
                                     Minimum="-100"
                                     SimpleNumberFormat="F2"
-                                    Value="{Binding ClipWeight}"
-                                    HorizontalAlignment="Stretch"
-                                    SpinButtonPlacementMode="Inline"/>
+                                    SmallChange="0.05"
+                                    SpinButtonPlacementMode="Inline"
+                                    ValidationMode="InvalidInputOverwritten"
+                                    Value="{Binding ClipWeight}" />
                             </Grid>
                         </StackPanel>
-                        
-                        
+
+                        <!--  Trigger Words  -->
+                        <TextBlock
+                            Grid.Row="3"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding ShowTriggerWords}"
+                            Text="{x:Static lang:Resources.Label_TriggerWords}" />
+                        <TextBox
+                            Grid.Row="4"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            MaxHeight="250"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Stretch"
+                            AcceptsReturn="True"
+                            IsReadOnly="True"
+                            IsVisible="{Binding ShowTriggerWords}"
+                            MinLines="3"
+                            ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            Text="{Binding TriggerWords}"
+                            TextWrapping="Wrap" />
+
                     </sg:SpacedGrid>
                 </controls:Card>
             </ControlTemplate>

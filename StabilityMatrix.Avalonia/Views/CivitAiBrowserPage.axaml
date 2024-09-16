@@ -18,7 +18,7 @@
     xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
     d:DataContext="{x:Static designData:DesignData.CivitAiBrowserViewModel}"
     d:DesignHeight="700"
-    d:DesignWidth="800"
+    d:DesignWidth="1000"
     x:CompileBindings="True"
     x:DataType="checkpointBrowser:CivitAiBrowserViewModel"
     mc:Ignorable="d">
@@ -504,10 +504,10 @@
                     VerticalAlignment="Bottom"
                     DefaultLabelPosition="Right">
                     <ui:CommandBar.PrimaryCommands>
-                        <ui:CommandBarButton
-                            VerticalAlignment="Center"
-                            IconSource="Zoom"
-                            Label="Zoom">
+                        <ui:CommandBarButton VerticalAlignment="Center" Label="Zoom">
+                            <ui:CommandBarButton.IconSource>
+                                <controls:FASymbolIconSource Symbol="fa-solid fa-magnifying-glass" />
+                            </ui:CommandBarButton.IconSource>
                             <ui:CommandBarButton.Flyout>
                                 <Flyout>
                                     <StackPanel Orientation="Vertical">
@@ -522,7 +522,7 @@
                                             SmallChange="0.05"
                                             Value="{Binding ResizeFactor, Mode=TwoWay}" />
                                         <TextBlock
-                                            Margin="0,-8,0,0"
+                                            Margin="0,-4,0,0"
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
                                             Text="{Binding ResizeFactor, StringFormat={}{0:F2}x}" />
@@ -530,14 +530,22 @@
                                 </Flyout>
                             </ui:CommandBarButton.Flyout>
                         </ui:CommandBarButton>
+
                         <ui:CommandBarToggleButton IsChecked="{Binding HideInstalledModels, Mode=TwoWay}" Label="Hide Installed Models">
                             <ui:CommandBarToggleButton.IconSource>
-                                <controls:FASymbolIconSource Symbol="fa-regular fa-eye-slash" />
+                                <controls:FASymbolIconSource Symbol="fa-solid fa-database" />
                             </ui:CommandBarToggleButton.IconSource>
                         </ui:CommandBarToggleButton>
+
+                        <ui:CommandBarToggleButton IsChecked="{Binding HideEarlyAccessModels, Mode=TwoWay}" Label="Hide Early Access Models">
+                            <ui:CommandBarToggleButton.IconSource>
+                                <controls:FASymbolIconSource Symbol="fa-regular fa-credit-card" />
+                            </ui:CommandBarToggleButton.IconSource>
+                        </ui:CommandBarToggleButton>
+
                         <ui:CommandBarToggleButton IsChecked="{Binding ShowNsfw, Mode=TwoWay}" Label="{x:Static lang:Resources.Label_ShowNsfwContent}">
                             <ui:CommandBarToggleButton.IconSource>
-                                <ui:SymbolIconSource Symbol="Important" />
+                                <controls:FASymbolIconSource Symbol="fa-solid fa-triangle-exclamation" />
                             </ui:CommandBarToggleButton.IconSource>
                         </ui:CommandBarToggleButton>
                     </ui:CommandBar.PrimaryCommands>

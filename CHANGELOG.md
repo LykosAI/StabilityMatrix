@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.12.0
 ### Added
 - Added zoom sliders for Outputs, Checkpoints, and Model Browser pages
+- Added toggle to hide "Early Access" models in the CivitAI Model Browser
 
 ## v2.12.0-pre.3
 ### Added

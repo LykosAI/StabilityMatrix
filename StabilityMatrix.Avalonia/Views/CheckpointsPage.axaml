@@ -30,6 +30,7 @@
     <controls:UserControlBase.Resources>
         <converters:FileUriConverter x:Key="FileUriConverter" />
         <converters:EnumStringConverter x:Key="EnumStringConverter" />
+        <converters:MultiplyConverter x:Key="MultiplyConverter" />
         <system:Boolean x:Key="False">False</system:Boolean>
         <system:Boolean x:Key="True">True</system:Boolean>
         <input:StandardUICommand x:Key="ItemClickCommand" Command="{Binding ItemClickCommand}" />
@@ -196,6 +197,32 @@
                                     <TextBlock
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
+                                        Text="Show" />
+
+                                    <Separator Margin="0,8" />
+
+                                    <ToggleSwitch
+                                        Margin="8,-4"
+                                        HorizontalAlignment="Left"
+                                        HorizontalContentAlignment="Center"
+                                        IsChecked="{Binding !HideEmptyRootCategories}"
+                                        OffContent="Empty Root Categories"
+                                        OnContent="Empty Root Categories" />
+
+                                    <ToggleSwitch
+                                        Margin="8,-4"
+                                        HorizontalAlignment="Left"
+                                        HorizontalContentAlignment="Center"
+                                        IsChecked="{Binding ShowNsfwImages}"
+                                        OffContent="NSFW Content"
+                                        OnContent="NSFW Content" />
+
+
+                                    <Separator Margin="0,8" />
+
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
                                         Text="Zoom" />
                                     <Slider
                                         MinWidth="150"
@@ -204,29 +231,10 @@
                                         SmallChange="0.05"
                                         Value="{Binding ResizeFactor, Mode=TwoWay}" />
                                     <TextBlock
-                                        Margin="0,-8,0,0"
+                                        Margin="0,-4,0,0"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         Text="{Binding ResizeFactor, StringFormat={}{0:F2}x}" />
-
-                                    <TextBlock
-                                        Margin="0,32,0,0"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Text="{x:Static lang:Resources.Label_HideEmptyCategories}" />
-                                    <ToggleSwitch
-                                        HorizontalAlignment="Center"
-                                        HorizontalContentAlignment="Center"
-                                        IsChecked="{Binding HideEmptyRootCategories}" />
-                                    <TextBlock
-                                        Margin="0,16,0,0"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Text="{x:Static lang:Resources.Label_ShowNsfwImages}" />
-                                    <ToggleSwitch
-                                        HorizontalAlignment="Center"
-                                        HorizontalContentAlignment="Center"
-                                        IsChecked="{Binding ShowNsfwImages}" />
                                 </StackPanel>
                             </Flyout>
                         </ui:CommandBarButton.Flyout>
@@ -497,8 +505,7 @@
                                         Text="{x:Static lang:Resources.Action_Delete}" />
                                 </ui:FAMenuFlyout>
                             </Border.ContextFlyout>
-
-                            <Grid RowDefinitions="*, Auto">
+                            <Grid MaxWidth="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ResizeFactor, FallbackValue=1, TargetNullValue=1, Converter={StaticResource MultiplyConverter}, ConverterParameter=330}" RowDefinitions="*, Auto">
                                 <CheckBox
                                     Margin="14,8"
                                     Padding="0"
@@ -515,22 +522,22 @@
                                         </Style>
                                     </CheckBox.Styles>
                                 </CheckBox>
-                                <LayoutTransformControl Grid.Row="0" Grid.RowSpan="2">
-                                    <LayoutTransformControl.LayoutTransform>
-                                        <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ResizeFactor, FallbackValue=1, TargetNullValue=1}" />
-                                    </LayoutTransformControl.LayoutTransform>
-                                    <Button
-                                        Width="330"
-                                        Height="400"
-                                        Margin="0"
-                                        Padding="0"
-                                        VerticalAlignment="Center"
-                                        VerticalContentAlignment="Center"
-                                        ClipToBounds="True"
-                                        Command="{StaticResource ItemClickCommand}"
-                                        CommandParameter="{Binding}"
-                                        CornerRadius="12">
-                                        <Grid>
+                                <Button
+                                    Grid.Row="0"
+                                    Grid.RowSpan="2"
+                                    Margin="0"
+                                    Padding="0"
+                                    VerticalAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    ClipToBounds="True"
+                                    Command="{StaticResource ItemClickCommand}"
+                                    CommandParameter="{Binding}"
+                                    CornerRadius="12">
+                                    <LayoutTransformControl Name="TransformControl">
+                                        <LayoutTransformControl.LayoutTransform>
+                                            <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ResizeFactor, FallbackValue=1, TargetNullValue=1}" />
+                                        </LayoutTransformControl.LayoutTransform>
+                                        <Grid Width="330" Height="400">
                                             <vendorLabs:BetterAsyncImage
                                                 ClipToBounds="True"
                                                 CornerRadius="8"
@@ -546,63 +553,64 @@
                                                 TextAlignment="Center"
                                                 TextWrapping="Wrap" />
                                         </Grid>
-                                    </Button>
+                                    </LayoutTransformControl>
+                                </Button>
+                                <LayoutTransformControl Grid.Row="0">
+                                    <LayoutTransformControl.LayoutTransform>
+                                        <ScaleTransform ScaleX="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" ScaleY="{Binding $parent[scroll:BetterScrollViewer].((viewModels:CheckpointsPageViewModel)DataContext).ModelCardBottomResizeFactor, FallbackValue=1, TargetNullValue=1}" />
+                                    </LayoutTransformControl.LayoutTransform>
+                                    <WrapPanel IsVisible="{Binding CheckpointFile.HasConnectedModel}" Orientation="Horizontal">
+                                        <controls:Card
+                                            Height="24"
+                                            Margin="8,8,0,0"
+                                            Padding="4"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            Classes="info">
+
+                                            <TextBlock
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                FontSize="11"
+                                                FontWeight="Medium"
+                                                Text="{Binding ModelType}" />
+                                        </controls:Card>
+                                        <controls:Card
+                                            Height="24"
+                                            Margin="4,8,0,0"
+                                            Padding="4"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            Classes="info">
+
+                                            <TextBlock
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                FontSize="11"
+                                                FontWeight="Medium"
+                                                IsVisible="{Binding BaseModelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                                Text="{Binding BaseModelName}" />
+                                        </controls:Card>
+                                        <controls:Card
+                                            Height="24"
+                                            Margin="4,8,0,0"
+                                            Padding="4"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            Classes="success"
+                                            IsVisible="{Binding CheckpointFile.HasUpdate}">
+
+                                            <TextBlock
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                FontSize="11"
+                                                FontWeight="Medium">
+                                                <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
+                                                <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
+                                            </TextBlock>
+                                        </controls:Card>
+                                    </WrapPanel>
                                 </LayoutTransformControl>
-
-                                <WrapPanel
-                                    Grid.Row="0"
-                                    IsVisible="{Binding CheckpointFile.HasConnectedModel}"
-                                    Orientation="Horizontal">
-                                    <controls:Card
-                                        Height="24"
-                                        Margin="8,8,0,0"
-                                        Padding="4"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Top"
-                                        Classes="info">
-
-                                        <TextBlock
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"
-                                            FontSize="11"
-                                            FontWeight="Medium"
-                                            Text="{Binding ModelType}" />
-                                    </controls:Card>
-                                    <controls:Card
-                                        Height="24"
-                                        Margin="4,8,0,0"
-                                        Padding="4"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Top"
-                                        Classes="info">
-
-                                        <TextBlock
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"
-                                            FontSize="11"
-                                            FontWeight="Medium"
-                                            IsVisible="{Binding BaseModelName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                            Text="{Binding BaseModelName}" />
-                                    </controls:Card>
-                                    <controls:Card
-                                        Height="24"
-                                        Margin="4,8,0,0"
-                                        Padding="4"
-                                        HorizontalAlignment="Left"
-                                        VerticalAlignment="Top"
-                                        Classes="success"
-                                        IsVisible="{Binding CheckpointFile.HasUpdate}">
-
-                                        <TextBlock
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center"
-                                            FontSize="11"
-                                            FontWeight="Medium">
-                                            <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}" />
-                                            <Run Text="{Binding CheckpointFile.LatestModelInfo.LatestVersionCreatedAt}" />
-                                        </TextBlock>
-                                    </controls:Card>
-                                </WrapPanel>
 
                                 <LayoutTransformControl Grid.Row="1">
                                     <LayoutTransformControl.LayoutTransform>
@@ -613,6 +621,7 @@
                                         Padding="8"
                                         CornerRadius="0,0,8,8"
                                         IsHitTestVisible="False">
+
                                         <StackPanel>
                                             <TextBlock
                                                 MaxWidth="300"
@@ -653,7 +662,7 @@
                                         </StackPanel>
                                     </Border>
                                 </LayoutTransformControl>
-
+                                <!--  loading stuff  -->
                                 <Border
                                     Grid.Row="0"
                                     Grid.RowSpan="2"
@@ -661,7 +670,6 @@
                                     Background="#BB000000"
                                     CornerRadius="12"
                                     IsVisible="{Binding IsLoading}" />
-
                                 <TextBlock
                                     Grid.Row="0"
                                     Grid.RowSpan="2"
@@ -672,7 +680,6 @@
                                     Text="{Binding Progress.Title}"
                                     TextAlignment="Center"
                                     TextWrapping="Wrap" />
-
                                 <!--  Progress ring  -->
                                 <controls:ProgressRing
                                     Grid.Row="0"

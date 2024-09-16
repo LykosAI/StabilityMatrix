@@ -212,6 +212,8 @@ public class Settings
 
     public double CivitBrowserResizeFactor { get; set; } = 1.0d;
 
+    public bool HideEarlyAccessModels { get; set; }
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

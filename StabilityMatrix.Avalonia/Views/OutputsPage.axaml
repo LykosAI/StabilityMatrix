@@ -169,28 +169,36 @@
                                     <TextBlock
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
+                                        Text="Show" />
+
+                                    <Separator Margin="0,8" />
+
+                                    <ToggleSwitch
+                                        Margin="8,-4"
+                                        HorizontalAlignment="Left"
+                                        HorizontalContentAlignment="Center"
+                                        IsChecked="{Binding ShowFolders}"
+                                        OffContent="Folder Sidebar"
+                                        OnContent="Folder Sidebar" />
+
+
+                                    <Separator Margin="0,8" />
+
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
                                         Text="Zoom" />
                                     <Slider
                                         MinWidth="150"
-                                        Maximum="2.0"
-                                        Minimum="0.5"
+                                        Maximum="1.5"
+                                        Minimum="0.6"
                                         SmallChange="0.05"
                                         Value="{Binding ResizeFactor, Mode=TwoWay}" />
                                     <TextBlock
-                                        Margin="0,-8,0,0"
+                                        Margin="0,-4,0,0"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         Text="{Binding ResizeFactor, StringFormat={}{0:F2}x}" />
-
-                                    <TextBlock
-                                        Margin="0,32,0,0"
-                                        HorizontalAlignment="Center"
-                                        VerticalAlignment="Center"
-                                        Text="Show Folders" />
-                                    <ToggleSwitch
-                                        HorizontalAlignment="Center"
-                                        HorizontalContentAlignment="Center"
-                                        IsChecked="{Binding ShowFolders}" />
                                 </StackPanel>
                             </Flyout>
                         </ui:CommandBarButton.Flyout>

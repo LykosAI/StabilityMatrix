@@ -56,6 +56,17 @@ public class ResizeBehavior : Behavior<Control>
             : sender.GetValue(ResizeFactorProperty);
     }
 
+    public static readonly StyledProperty<double> SmallChangeProperty = AvaloniaProperty.Register<
+        ResizeBehavior,
+        double
+    >(nameof(SmallChange), 0.05);
+
+    public double SmallChange
+    {
+        get => GetValue(SmallChangeProperty);
+        set => SetValue(SmallChangeProperty, value);
+    }
+
     public static readonly StyledProperty<bool> UseMouseWheelResizeProperty = AvaloniaProperty.Register<
         ResizeBehavior,
         bool
@@ -97,11 +108,11 @@ public class ResizeBehavior : Behavior<Control>
 
         if (e.Delta.Y > 0 && ResizeFactor < MaxResizeFactor)
         {
-            ResizeFactor += 0.05;
+            ResizeFactor += SmallChange;
         }
         else if (e.Delta.Y < 0 && ResizeFactor > MinResizeFactor)
         {
-            ResizeFactor -= 0.05;
+            ResizeFactor -= SmallChange;
         }
 
         e.Handled = true;

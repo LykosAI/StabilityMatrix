@@ -14,15 +14,15 @@
     x:DataType="vmDialogs:PropertyGridViewModel"
     mc:Ignorable="d">
     <Grid>
-        <ItemsControl x:Name="MainItemsControl" ItemsSource="{Binding SelectedObjectItemsSource, Mode=OneTime}">
+        <ItemsControl x:Name="MainItemsControl" ItemsSource="{Binding SelectedObjectItemsSource, Mode=OneWay}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="componentModel:INotifyPropertyChanged">
                     <controls:BetterPropertyGrid
                         AllowFilter="False"
                         AllowQuickFilter="False"
-                        DataContext="{Binding Mode=OneTime}"
-                        IncludedCategories="{Binding $parent[ItemsControl].((vmDialogs:PropertyGridViewModel)DataContext).IncludeCategories, Mode=OneTime, FallbackValue=''}"
+                        DataContext="{Binding Mode=OneWay}"
                         ExcludedCategories="{Binding $parent[ItemsControl].((vmDialogs:PropertyGridViewModel)DataContext).ExcludeCategories, Mode=OneTime, FallbackValue=''}"
+                        IncludedCategories="{Binding $parent[ItemsControl].((vmDialogs:PropertyGridViewModel)DataContext).IncludeCategories, Mode=OneTime, FallbackValue=''}"
                         ShowStyle="{Binding $parent[ItemsControl].((vmDialogs:PropertyGridViewModel)DataContext).ShowStyle, Mode=OneTime, FallbackValue=Alphabetic}"
                         ShowTitle="False" />
                 </DataTemplate>

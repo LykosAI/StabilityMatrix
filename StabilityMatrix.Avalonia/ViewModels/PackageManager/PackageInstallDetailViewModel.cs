@@ -325,11 +325,15 @@ public partial class PackageInstallDetailViewModel(
         if (commits != null)
         {
             AvailableCommits = new ObservableCollection<GitCommit>(
-                [..commits, new GitCommit { Sha = "Custom " },]
+                [..commits, new GitCommit { Sha = "Custom " }]
             );
-            SelectedCommit = AvailableCommits.FirstOrDefault();
+        }
+        else
+        {
+            AvailableCommits = [new GitCommit { Sha = "Custom " }];
         }
 
+        SelectedCommit = AvailableCommits.FirstOrDefault();
         CanInstall = !ShowDuplicateWarning;
     }
 

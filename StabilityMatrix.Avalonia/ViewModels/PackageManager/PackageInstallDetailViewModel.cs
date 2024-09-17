@@ -374,7 +374,10 @@ public partial class PackageInstallDetailViewModel(
 
         var commitHash = textBoxFields[0].Text;
         if (string.IsNullOrWhiteSpace(commitHash))
+        {
+            SelectedCommit = oldValue;
             return;
+        }
 
         var commit = new GitCommit { Sha = commitHash };
         AvailableCommits?.Insert(AvailableCommits.IndexOf(newValue), commit);

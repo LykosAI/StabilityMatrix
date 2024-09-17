@@ -403,6 +403,27 @@ public class WindowsPrerequisiteHelper(
         }
 
         await UnzipGit(progress);
+
+        await FixGitLongPaths();
+    }
+
+    [SupportedOSPlatform("windows")]
+    public async Task<bool> FixGitLongPaths()
+    {
+        if (!Compat.IsWindows)
+            return false;
+
+        try
+        {
+            await RunGit(["config", "--system", "core.longpaths", "true"]);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Failed to set git longpaths");
+        }
+
+        return false;
     }
 
     [SupportedOSPlatform("windows")]

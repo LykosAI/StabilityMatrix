@@ -1240,6 +1240,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [RelayCommand]
     private async Task OnWindowsLongPathsToggleClick()
     {
+        if (!Compat.IsWindows)
+            return;
+
         // Command is called after value is set, so if false we need to disable
         var requestedValue = IsWindowsLongPathsEnabled;
 

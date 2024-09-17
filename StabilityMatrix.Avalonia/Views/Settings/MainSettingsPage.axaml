@@ -517,6 +517,8 @@
                     <ui:SettingsExpanderItem
                         Content="{x:Static lang:Resources.Label_EnableLongPaths}"
                         Description="{x:Static lang:Resources.Label_EnableLongPathsDescription}"
+                        IsEnabled="{OnPlatform Default=False,
+                                               Windows=True}"
                         ToolTip.Tip="{OnPlatform Default={x:Static lang:Resources.Label_OnlyAvailableOnWindows},
                                                  Windows={x:Null}}">
                         <ui:SettingsExpanderItem.Footer>

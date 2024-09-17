@@ -109,7 +109,7 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
-            
+
             <!--  Checkpoints Manager Options  -->
             <Grid RowDefinitions="Auto,*,Auto,Auto">
                 <TextBlock
@@ -187,16 +187,15 @@
                             <DropDownButton Content="Run">
                                 <DropDownButton.Flyout>
                                     <MenuFlyout Placement="Bottom">
-                                        <MenuItem Header="Command" Command="{Binding RunPythonProcessCommand}"/>
+                                        <MenuItem Command="{Binding RunPythonProcessCommand}" Header="Command" />
                                     </MenuFlyout>
                                 </DropDownButton.Flyout>
                             </DropDownButton>
-                            <Button
-                                Command="{Binding CheckPythonVersionCommand}" Content="{x:Static lang:Resources.Action_CheckVersion}" />
+                            <Button Command="{Binding CheckPythonVersionCommand}" Content="{x:Static lang:Resources.Action_CheckVersion}" />
                         </StackPanel>
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
-                
+
                 <ui:SettingsExpander
                     Grid.Row="3"
                     Margin="8,4,8,0"
@@ -209,7 +208,12 @@
                             <DropDownButton Content="Run">
                                 <DropDownButton.Flyout>
                                     <MenuFlyout Placement="Bottom">
-                                        <MenuItem Header="Command" Command="{Binding RunGitProcessCommand}"/>
+                                        <MenuItem Command="{Binding RunGitProcessCommand}" Header="Command" />
+                                        <MenuItem
+                                            Command="{Binding FixGitLongPathsCommand}"
+                                            Header="Enable Long Paths"
+                                            IsVisible="{OnPlatform Default=False,
+                                                                   Windows=True}" />
                                     </MenuFlyout>
                                 </DropDownButton.Flyout>
                             </DropDownButton>
@@ -269,23 +273,21 @@
                     Description="{x:Static lang:Resources.Label_HistorySize_Description}"
                     Header="{x:Static lang:Resources.Label_HistorySize}">
                     <ui:SettingsExpander.IconSource>
-                        <fluentIcons:SymbolIconSource
-                            FontSize="10"
-                            Symbol="History" />
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="History" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
-                        <ui:NumberBox 
-                            SpinButtonPlacementMode="Compact" 
-                            SimpleNumberFormat="F0"
-                            PlaceholderText="0"
-                            ValidationMode="InvalidInputOverwritten"
-                            Minimum="-1"
+                        <ui:NumberBox
                             Maximum="10000000"
-                            Value="{Binding ConsoleLogHistorySize}"/>
+                            Minimum="-1"
+                            PlaceholderText="0"
+                            SimpleNumberFormat="F0"
+                            SpinButtonPlacementMode="Compact"
+                            ValidationMode="InvalidInputOverwritten"
+                            Value="{Binding ConsoleLogHistorySize}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
-            
+
             <!--  Theme  -->
             <Grid RowDefinitions="Auto,*,*,*,*,*">
                 <TextBlock
@@ -395,7 +397,7 @@
                             Symbol="ArrowSync" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
-                
+
                 <!--  Updates page  -->
                 <ui:SettingsExpander
                     Grid.Row="2"
@@ -405,7 +407,7 @@
                     Header="{x:Static lang:Resources.Label_Analytics}"
                     IsClickEnabled="True">
                     <ui:SettingsExpander.IconSource>
-                        <controls:FASymbolIconSource Symbol="fa-solid fa-chart-simple"/>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-chart-simple" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
 
@@ -478,23 +480,23 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 
-                <!-- App Folders -->
-                <ui:SettingsExpander 
-                    Grid.Row="5" 
-                    IconSource="FolderLink"
-                    Header="{x:Static lang:Resources.Label_AppFolders}">
+                <!--  App Folders  -->
+                <ui:SettingsExpander
+                    Grid.Row="5"
+                    Header="{x:Static lang:Resources.Label_AppFolders}"
+                    IconSource="FolderLink">
 
                     <ui:SettingsExpanderItem>
                         <ItemsRepeater ItemsSource="{Binding DirectoryShortcutCommands}">
                             <ItemsRepeater.Layout>
-                                <WrapLayout/>
+                                <WrapLayout />
                             </ItemsRepeater.Layout>
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate DataType="models:CommandItem">
                                     <controls:HyperlinkIconButton
-                                        Command="{Binding Command}"
                                         Margin="4"
                                         Padding="12,6"
+                                        Command="{Binding Command}"
                                         Content="{Binding DisplayName}" />
                                 </DataTemplate>
                             </ItemsRepeater.ItemTemplate>
@@ -504,7 +506,7 @@
 
                 </ui:SettingsExpander>
 
-                <!-- System Information -->
+                <!--  System Information  -->
                 <ui:SettingsExpander Grid.Row="6" Header="{x:Static lang:Resources.Label_SystemInformation}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource

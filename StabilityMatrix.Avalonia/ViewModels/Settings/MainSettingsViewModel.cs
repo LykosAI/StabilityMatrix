@@ -538,6 +538,28 @@ public partial class MainSettingsViewModel : PageViewModelBase
         ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
     }
 
+    [RelayCommand]
+    private async Task FixGitLongPaths()
+    {
+        var result = await prerequisiteHelper.FixGitLongPaths();
+        if (result)
+        {
+            notificationService.Show(
+                "Long Paths Enabled",
+                "Git long paths have been enabled.",
+                NotificationType.Success
+            );
+        }
+        else
+        {
+            notificationService.Show(
+                "Long Paths Not Enabled",
+                "Could not enable Git long paths.",
+                NotificationType.Error
+            );
+        }
+    }
+
     #endregion
 
     #region Directory Shortcuts

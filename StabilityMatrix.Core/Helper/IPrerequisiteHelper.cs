@@ -178,4 +178,6 @@ public interface IPrerequisiteHelper
         IReadOnlyDictionary<string, string>? envVars = null,
         bool waitForExit = true
     );
+
+    Task<bool> FixGitLongPaths();
 }

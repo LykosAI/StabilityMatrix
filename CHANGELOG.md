@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added zoom sliders for Outputs, Checkpoints, and Model Browser pages
 - Added toggle to hide "Early Access" models in the CivitAI Model Browser
 - Added trigger words to the Inference Extra Networks (Lora/Lyco) selector for quick copy & paste
+- Added "Enable Long Paths" option for Git to the Settings page
+### Fixed
+- Fixed [#888](https://github.com/LykosAI/StabilityMatrix/issues/888) - error updating kohya_ss due to long paths
+### Supporters
+#### Visionaries
+- A heartfelt thank you to our Visionary-tier patron, **Waterclouds**! We greatly appreciate your continued support!
+### Pioneers
+- A special shoutout to our Pioneer-tier patrons: **tankfox**, **tanangular**, **Mr. Unknown**, and **Szir777**! Your unwavering support means a great deal!
 
 ## v2.12.0-pre.3
 ### Added

@@ -482,4 +482,11 @@ public class UnixPrerequisiteHelper(
     {
         throw new PlatformNotSupportedException();
     }
+
+    [UnsupportedOSPlatform("Linux")]
+    [UnsupportedOSPlatform("macOS")]
+    public Task<bool> FixGitLongPaths()
+    {
+        throw new PlatformNotSupportedException();
+    }
 }

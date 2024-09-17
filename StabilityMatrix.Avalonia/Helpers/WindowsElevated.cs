@@ -30,7 +30,7 @@ public static class WindowsElevated
     }
 
     /// <summary>
-    /// Set a registry key integer using elevated privileges using powershell.
+    /// Set a registry key integer using elevated privileges.
     /// </summary>
     public static async Task<int> SetRegistryValue(string key, string valueName, int value)
     {
@@ -48,7 +48,7 @@ public static class WindowsElevated
     }
 
     /// <summary>
-    /// Set a registry key value using elevated privileges using powershell.
+    /// Set a registry key string using elevated privileges.
     /// </summary>
     public static async Task<int> SetRegistryValue(string key, string valueName, string value)
     {

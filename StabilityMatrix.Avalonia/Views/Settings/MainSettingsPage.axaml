@@ -376,7 +376,7 @@
             </Grid>
 
             <!--  System Options  -->
-            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -398,7 +398,7 @@
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
 
-                <!--  Updates page  -->
+                <!--  Analytics page  -->
                 <ui:SettingsExpander
                     Grid.Row="2"
                     ActionIconSource="ChevronRight"
@@ -411,6 +411,7 @@
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
 
+                <!--  Add to start menu  -->
                 <ui:SettingsExpander
                     Grid.Row="3"
                     Description="{x:Static lang:Resources.Label_AddToStartMenu_Details}"
@@ -450,6 +451,7 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 
+                <!--  Select Data Directory  -->
                 <ui:SettingsExpander
                     Grid.Row="4"
                     Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
@@ -506,8 +508,37 @@
 
                 </ui:SettingsExpander>
 
+                <!--  System Settings  -->
+                <ui:SettingsExpander
+                    Grid.Row="6"
+                    Header="{x:Static lang:Resources.Label_SystemSettings}"
+                    IconSource="Settings">
+                    <!--  Windows Long Paths  -->
+                    <ui:SettingsExpanderItem
+                        Content="{x:Static lang:Resources.Label_EnableLongPaths}"
+                        Description="{x:Static lang:Resources.Label_EnableLongPathsDescription}"
+                        IsEnabled="{OnPlatform Default=False,
+                                               Windows=True}"
+                        ToolTip.Tip="{OnPlatform Default={x:Static lang:Resources.Label_OnlyAvailableOnWindows},
+                                                 Windows={x:Null}}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <controls:ProgressRing
+                                    BorderThickness="3"
+                                    IsEnabled="{Binding IsVisible, RelativeSource={RelativeSource Self}}"
+                                    IsIndeterminate="True"
+                                    IsVisible="{Binding WindowsLongPathsToggleClickCommand.IsRunning}" />
+                                <ToggleSwitch
+                                    Command="{Binding WindowsLongPathsToggleClickCommand}"
+                                    IsChecked="{Binding IsWindowsLongPathsEnabled}"
+                                    IsEnabled="{Binding !WindowsLongPathsToggleClickCommand.IsRunning}" />
+                            </StackPanel>
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
+
                 <!--  System Information  -->
-                <ui:SettingsExpander Grid.Row="6" Header="{x:Static lang:Resources.Label_SystemInformation}">
+                <ui:SettingsExpander Grid.Row="7" Header="{x:Static lang:Resources.Label_SystemInformation}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"

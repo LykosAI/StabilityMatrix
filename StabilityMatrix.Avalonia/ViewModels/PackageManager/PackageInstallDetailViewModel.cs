@@ -324,7 +324,9 @@ public partial class PackageInstallDetailViewModel(
         var commits = await SelectedPackage.GetAllCommits(branchName);
         if (commits != null)
         {
-            AvailableCommits = new ObservableCollection<GitCommit>(commits);
+            AvailableCommits = new ObservableCollection<GitCommit>(
+                [..commits, new GitCommit { Sha = "Custom " },]
+            );
             SelectedCommit = AvailableCommits.FirstOrDefault();
         }
 
@@ -350,5 +352,25 @@ public partial class PackageInstallDetailViewModel(
             return;
 
         UpdateCommits(value?.TagName ?? SelectedPackage.MainBranch).SafeFireAndForget();
+    }
+
+    async partial void OnSelectedCommitChanged(GitCommit? value)
+    {
+        if (value is not { Sha: "Custom " })
+            return;
+
+        List<TextBoxField> textBoxFields = [new() { Label = "Commit hash", MinWidth = 400 }];
+        var dialog = DialogHelper.CreateTextEntryDialog("Enter a commit hash", string.Empty, textBoxFields);
+        var dialogResult = await dialog.ShowAsync();
+        if (dialogResult != ContentDialogResult.Primary)
+            return;
+
+        var commitHash = textBoxFields[0].Text;
+        if (string.IsNullOrWhiteSpace(commitHash))
+            return;
+
+        var commit = new GitCommit { Sha = commitHash };
+        AvailableCommits?.Insert(AvailableCommits.IndexOf(value), commit);
+        SelectedCommit = commit;
     }
 }

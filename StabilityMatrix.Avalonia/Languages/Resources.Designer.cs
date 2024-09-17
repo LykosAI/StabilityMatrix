@@ -1011,6 +1011,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changes Applied.
+        /// </summary>
+        public static string Label_ChangesApplied {
+            get {
+                return ResourceManager.GetString("Label_ChangesApplied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to We&apos;re checking some hardware specifications to determine compatibility..
         /// </summary>
         public static string Label_CheckingHardware {
@@ -3356,6 +3365,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Text_RelaunchRequiredToApplyLanguage {
             get {
                 return ResourceManager.GetString("Text_RelaunchRequiredToApplyLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A restart may be required for system changes to take effect..
+        /// </summary>
+        public static string Text_RestartMayBeRequiredForSystemChanges {
+            get {
+                return ResourceManager.GetString("Text_RestartMayBeRequiredForSystemChanges", resourceCulture);
             }
         }
         

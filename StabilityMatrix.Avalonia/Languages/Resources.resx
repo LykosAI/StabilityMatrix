@@ -1254,4 +1254,10 @@
   <data name="Label_SystemSettings" xml:space="preserve">
     <value>System Settings</value>
   </data>
+  <data name="Label_ChangesApplied" xml:space="preserve">
+    <value>Changes Applied</value>
+  </data>
+  <data name="Text_RestartMayBeRequiredForSystemChanges" xml:space="preserve">
+    <value>A restart may be required for system changes to take effect.</value>
+  </data>
 </root>

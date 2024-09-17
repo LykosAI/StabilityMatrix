@@ -1258,10 +1258,26 @@ public partial class MainSettingsViewModel : PageViewModelBase
                     $"Error code: {result}",
                     NotificationType.Error
                 );
+                return;
             }
+
+            await new BetterContentDialog
+            {
+                Title = Resources.Label_ChangesApplied,
+                Content = Resources.Text_RestartMayBeRequiredForSystemChanges,
+                CloseButtonText = Resources.Action_Close
+            }.ShowAsync();
         }
         catch (Win32Exception e)
         {
+            if (
+                e.Message.EndsWith(
+                    @"The operation was canceled by the user.",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+                return;
+
             notificationService.Show("Failed to toggle long paths", e.Message, NotificationType.Error);
         }
         finally

@@ -11,7 +11,11 @@
                           xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
                           xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
                           xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
-                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
+                          xmlns:python="clr-namespace:StabilityMatrix.Core.Python;assembly=StabilityMatrix.Core"
+                          xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.Views.Dialogs"
+                          Focusable="True"
+                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="850"
                           x:DataType="packageManager:PackageInstallDetailViewModel"
                           x:CompileBindings="True"
                           d:DataContext="{x:Static designData:DesignData.PackageInstallDetailViewModel}"
@@ -48,7 +52,7 @@
                    FontWeight="Light"
                    Content="{Binding ReleaseLabelText}" />
 
-            <controls1:FAComboBox
+            <controls:BetterComboBox
                 ItemsSource="{Binding AvailableVersions}"
                 MinWidth="250"
                 HorizontalAlignment="Stretch"
@@ -56,15 +60,15 @@
                 FontSize="16"
                 Margin="8,0,8,8"
                 SelectedItem="{Binding SelectedVersion}">
-                <controls1:FAComboBox.ItemTemplate>
+                <controls:BetterComboBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:PackageVersion}">
                         <TextBlock
                             Name="NameTextBlock"
                             VerticalAlignment="Center"
                             Text="{Binding TagName}" />
                     </DataTemplate>
-                </controls1:FAComboBox.ItemTemplate>
-            </controls1:FAComboBox>
+                </controls:BetterComboBox.ItemTemplate>
+            </controls:BetterComboBox>
 
             <Label Margin="8,0"
                    FontSize="14"
@@ -106,65 +110,73 @@
                 <WrapPanel Margin="8,0">
                     <StackPanel Orientation="Vertical" Margin="0,4,24,0">
                         <Label Content="{x:Static lang:Resources.Label_SharedModelStrategyShort}" />
-                        <controls1:FAComboBox ItemsSource="{Binding SelectedPackage.AvailableSharedFolderMethods}"
-                                              MinWidth="150"
-                                              MinHeight="38"
-                                              SelectedItem="{Binding SelectedSharedFolderMethod}">
-                            <controls1:FAComboBox.ItemTemplate>
+                        <controls:BetterComboBox ItemsSource="{Binding SelectedPackage.AvailableSharedFolderMethods}"
+                                                 MinWidth="150"
+                                                 MinHeight="38"
+                                                 SelectedItem="{Binding SelectedSharedFolderMethod}">
+                            <controls:BetterComboBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type models:SharedFolderMethod}">
                                     <TextBlock
                                         Margin="8,4,0,4"
                                         Text="{Binding }" />
                                 </DataTemplate>
-                            </controls1:FAComboBox.ItemTemplate>
-                        </controls1:FAComboBox>
+                            </controls:BetterComboBox.ItemTemplate>
+                        </controls:BetterComboBox>
                     </StackPanel>
-                    
+
                     <StackPanel Orientation="Vertical" Margin="0,4,24,0">
-                        <Label Content="{x:Static lang:Resources.Label_PyTorchVersion}"
-                               IsVisible="{Binding ShowTorchVersionOptions}"/>
-                        <controls1:FAComboBox ItemsSource="{Binding SelectedPackage.AvailableTorchVersions}"
-                                              MinWidth="150"
-                                              MinHeight="38"
-                                              IsVisible="{Binding ShowTorchVersionOptions}"
-                                              SelectedItem="{Binding SelectedTorchVersion}">
-                            <controls1:FAComboBox.ItemTemplate>
-                                <DataTemplate DataType="{x:Type models:TorchVersion}">
+                        <Label Content="PyTorch Index"
+                               IsVisible="{Binding ShowTorchIndexOptions}" />
+                        <controls:BetterComboBox ItemsSource="{Binding SelectedPackage.AvailableTorchIndices}"
+                                                 MinWidth="150"
+                                                 MinHeight="38"
+                                                 IsVisible="{Binding ShowTorchIndexOptions}"
+                                                 SelectedItem="{Binding SelectedTorchIndex}">
+                            <controls:BetterComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:TorchIndex}">
                                     <TextBlock
                                         Margin="8,4,0,4"
                                         Text="{Binding }" />
                                 </DataTemplate>
-                            </controls1:FAComboBox.ItemTemplate>
-                        </controls1:FAComboBox>
+                            </controls:BetterComboBox.ItemTemplate>
+                        </controls:BetterComboBox>
                     </StackPanel>
 
                     <StackPanel Orientation="Vertical" Margin="0,4,24,0">
                         <Label Content="{x:Static lang:Resources.Label_Commit}"
                                IsVisible="{Binding !IsReleaseMode}" />
-                        <controls1:FAComboBox IsVisible="{Binding !IsReleaseMode}"
-                                              ItemsSource="{Binding AvailableCommits}"
-                                              MinWidth="150"
-                                              MinHeight="38"
-                                              SelectedItem="{Binding SelectedCommit}">
-                            <controls1:FAComboBox.ItemTemplate>
+                        <controls:BetterComboBox IsVisible="{Binding !IsReleaseMode}"
+                                                 ItemsSource="{Binding AvailableCommits}"
+                                                 MinWidth="150"
+                                                 MinHeight="38"
+                                                 SelectedItem="{Binding SelectedCommit}">
+                            <controls:BetterComboBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type database:GitCommit}">
                                     <TextBlock
                                         Margin="8,4,0,4"
                                         Name="NameTextBlock"
                                         Text="{Binding ShortSha}" />
                                 </DataTemplate>
-                            </controls1:FAComboBox.ItemTemplate>
-                        </controls1:FAComboBox>
+                            </controls:BetterComboBox.ItemTemplate>
+                        </controls:BetterComboBox>
                     </StackPanel>
-                    
+
                     <StackPanel Orientation="Vertical" Margin="0,4,24,0"
                                 IsVisible="{Binding !!SelectedPackage.SharedOutputFolders}">
-                        <Label Content="{x:Static lang:Resources.Label_UseSharedOutputFolder}"/>
+                        <Label Content="{x:Static lang:Resources.Label_UseSharedOutputFolder}" />
                         <ToggleSwitch VerticalAlignment="Center"
                                       VerticalContentAlignment="Center"
-                                      IsChecked="{Binding IsOutputSharingEnabled}"/>
+                                      IsChecked="{Binding IsOutputSharingEnabled}" />
                     </StackPanel>
                 </WrapPanel>
+            </Expander>
+
+            <Expander Header="Pip Overrides"
+                      FontSize="16"
+                      HorizontalAlignment="Stretch"
+                      Margin="8">
+                <dialogs:PythonPackageSpecifiersDialog 
+                    DataContext="{Binding PythonPackageSpecifiersViewModel, Mode=OneTime}"/>
             </Expander>
 
             <Button Classes="success"

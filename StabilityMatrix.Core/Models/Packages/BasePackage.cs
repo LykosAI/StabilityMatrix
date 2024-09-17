@@ -43,9 +43,9 @@ public abstract class BasePackage
 
     public abstract string OutputFolderName { get; }
 
-    public abstract IEnumerable<TorchVersion> AvailableTorchVersions { get; }
+    public abstract IEnumerable<TorchIndex> AvailableTorchIndices { get; }
 
-    public virtual bool IsCompatible => GetRecommendedTorchVersion() != TorchVersion.Cpu;
+    public virtual bool IsCompatible => GetRecommendedTorchVersion() != TorchIndex.Cpu;
 
     public abstract PackageDifficulty InstallerSortOrder { get; }
 
@@ -53,35 +53,37 @@ public abstract class BasePackage
 
     public abstract Task DownloadPackage(
         string installLocation,
-        DownloadPackageVersionOptions versionOptions,
-        IProgress<ProgressReport>? progress1
+        DownloadPackageOptions options,
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
     );
 
     public abstract Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    );
-
-    public abstract Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     );
 
     public abstract Task<bool> CheckForUpdates(InstalledPackage package);
 
     public abstract Task<InstalledPackageVersion> Update(
+        string installLocation,
         InstalledPackage installedPackage,
-        TorchVersion torchVersion,
-        DownloadPackageVersionOptions versionOptions,
+        UpdatePackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
+    );
+
+    public abstract Task RunPackage(
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     );
 
     public virtual IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
@@ -107,35 +109,45 @@ public abstract class BasePackage
     public abstract Task SetupOutputFolderLinks(DirectoryPath installDirectory);
     public abstract Task RemoveOutputFolderLinks(DirectoryPath installDirectory);
 
-    public virtual TorchVersion GetRecommendedTorchVersion()
+    public virtual TorchIndex GetRecommendedTorchVersion()
     {
         // if there's only one AvailableTorchVersion, return that
-        if (AvailableTorchVersions.Count() == 1)
+        if (AvailableTorchIndices.Count() == 1)
         {
-            return AvailableTorchVersions.First();
+            return AvailableTorchIndices.First();
         }
 
-        if (HardwareHelper.HasNvidiaGpu() && AvailableTorchVersions.Contains(TorchVersion.Cuda))
+        if (HardwareHelper.HasNvidiaGpu() && AvailableTorchIndices.Contains(TorchIndex.Cuda))
         {
-            return TorchVersion.Cuda;
+            return TorchIndex.Cuda;
         }
 
-        if (HardwareHelper.PreferRocm() && AvailableTorchVersions.Contains(TorchVersion.Rocm))
+        if (HardwareHelper.HasAmdGpu() && AvailableTorchIndices.Contains(TorchIndex.Zluda))
         {
-            return TorchVersion.Rocm;
+            return TorchIndex.Zluda;
         }
 
-        if (HardwareHelper.PreferDirectML() && AvailableTorchVersions.Contains(TorchVersion.DirectMl))
+        if (HardwareHelper.HasIntelGpu() && AvailableTorchIndices.Contains(TorchIndex.Ipex))
         {
-            return TorchVersion.DirectMl;
+            return TorchIndex.Ipex;
         }
 
-        if (Compat.IsMacOS && Compat.IsArm && AvailableTorchVersions.Contains(TorchVersion.Mps))
+        if (HardwareHelper.PreferRocm() && AvailableTorchIndices.Contains(TorchIndex.Rocm))
         {
-            return TorchVersion.Mps;
+            return TorchIndex.Rocm;
         }
 
-        return TorchVersion.Cpu;
+        if (HardwareHelper.PreferDirectML() && AvailableTorchIndices.Contains(TorchIndex.DirectMl))
+        {
+            return TorchIndex.DirectMl;
+        }
+
+        if (Compat.IsMacOS && Compat.IsArm && AvailableTorchIndices.Contains(TorchIndex.Mps))
+        {
+            return TorchIndex.Mps;
+        }
+
+        return TorchIndex.Cpu;
     }
 
     /// <summary>
@@ -150,7 +162,7 @@ public abstract class BasePackage
     public abstract Task<IEnumerable<Release>> GetReleaseTags();
 
     public abstract List<LaunchOptionDefinition> LaunchOptions { get; }
-    public virtual string? ExtraLaunchArguments { get; set; } = null;
+    public virtual IReadOnlyList<string> ExtraLaunchArguments { get; } = Array.Empty<string>();
 
     /// <summary>
     /// The shared folders that this package supports.
@@ -191,7 +203,12 @@ public abstract class BasePackage
             : PackageVersionType.GithubRelease | PackageVersionType.Commit;
 
     public virtual IEnumerable<PackagePrerequisite> Prerequisites =>
-        [PackagePrerequisite.Git, PackagePrerequisite.Python310, PackagePrerequisite.VcRedist];
+        [
+            PackagePrerequisite.Git,
+            PackagePrerequisite.Python310,
+            PackagePrerequisite.VcRedist,
+            PackagePrerequisite.VcBuildTools
+        ];
 
     protected async Task InstallCudaTorch(
         PyVenvRunner venvRunner,

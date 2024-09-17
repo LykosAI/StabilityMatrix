@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Processes;
 
@@ -7,13 +8,16 @@ namespace StabilityMatrix.Core.Python;
 
 public partial record PipPackageSpecifier
 {
-    public required string Name { get; init; }
+    [JsonIgnore]
+    public static IReadOnlyList<string> ConstraintOptions => ["", "==", "~=", ">=", "<=", ">", "<"];
 
-    public string? Constraint { get; init; }
+    public string? Name { get; set; }
 
-    public string? Version { get; init; }
+    public string? Constraint { get; set; }
 
-    public string? VersionConstraint => Constraint is null || Version is null ? null : Constraint + Name;
+    public string? Version { get; set; }
+
+    public string? VersionConstraint => Constraint is null || Version is null ? null : Constraint + Version;
 
     public static PipPackageSpecifier Parse(string value)
     {
@@ -63,11 +67,38 @@ public partial record PipPackageSpecifier
         return Name + VersionConstraint;
     }
 
+    public Argument ToArgument()
+    {
+        if (Name is null)
+        {
+            return new Argument("");
+        }
+
+        // Normal package specifier with version constraint
+        if (VersionConstraint is not null)
+        {
+            // Use Name as key
+            return new Argument(key: Name, value: ToString());
+        }
+
+        // Possible multi arg (e.g. '--extra-index-url ...')
+        if (Name.Trim().StartsWith('-'))
+        {
+            var parts = Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length > 1)
+            {
+                var key = parts[0];
+                var quotedParts = string.Join(' ', parts.Select(ProcessRunner.Quote));
+                return Argument.Quoted(key, quotedParts);
+            }
+        }
+
+        return new Argument(ToString());
+    }
+
     public static implicit operator Argument(PipPackageSpecifier specifier)
     {
-        return specifier.VersionConstraint is null
-            ? new Argument(specifier.Name)
-            : new Argument((specifier.Name, specifier.VersionConstraint));
+        return specifier.ToArgument();
     }
 
     public static implicit operator PipPackageSpecifier(string specifier)

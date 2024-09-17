@@ -117,8 +117,7 @@ public static class FileTransfers
         {
             while (totalRead < from.Length)
             {
-                var read = await from.ReadAsync(buffer.AsMemory(0, bufferSize))
-                    .ConfigureAwait(false);
+                var read = await from.ReadAsync(buffer.AsMemory(0, bufferSize)).ConfigureAwait(false);
                 await to.WriteAsync(buffer.AsMemory(0, read)).ConfigureAwait(false);
                 totalRead += read;
                 progress(totalRead);
@@ -160,12 +159,7 @@ public static class FileTransfers
         {
             var destinationSubDir = destinationDir.JoinDir(subDir.Name);
             // Recursively move sub directories
-            await MoveAllFilesAndDirectories(
-                    subDir,
-                    destinationSubDir,
-                    overwrite,
-                    overwriteIfHashMatches
-                )
+            await MoveAllFilesAndDirectories(subDir, destinationSubDir, overwrite, overwriteIfHashMatches)
                 .ConfigureAwait(false);
         }
     }
@@ -208,9 +202,7 @@ public static class FileTransfers
             {
                 // Check if files hashes are the same
                 var sourceHash = await FileHash.GetBlake3Async(sourceFile).ConfigureAwait(false);
-                var destinationHash = await FileHash
-                    .GetBlake3Async(destinationFile)
-                    .ConfigureAwait(false);
+                var destinationHash = await FileHash.GetBlake3Async(destinationFile).ConfigureAwait(false);
                 // For same hash, just delete original file
                 if (sourceHash == destinationHash)
                 {
@@ -220,6 +212,17 @@ public static class FileTransfers
                     );
                     sourceFile.Delete();
                     return;
+                }
+
+                // append a number to the file name until it doesn't exist
+                for (var i = 0; i < 100; i++)
+                {
+                    if (!destinationFile.Exists)
+                        break;
+
+                    destinationFile = new FilePath(
+                        destinationFile.NameWithoutExtension + $" ({i})" + destinationFile.Extension
+                    );
                 }
             }
             else if (!overwrite)

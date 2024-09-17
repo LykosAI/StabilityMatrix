@@ -9,6 +9,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -190,7 +191,9 @@ namespace Avalonia.Gif.Decoding
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void DrawFrame(GifFrame curFrame, Memory<byte> frameIndexSpan)
         {
-            var activeColorTable = curFrame.IsLocalColorTableUsed ? curFrame.LocalColorTable : Header.GlobarColorTable;
+            var activeColorTable = curFrame.IsLocalColorTableUsed
+                ? curFrame.LocalColorTable
+                : Header.GlobarColorTable;
 
             var cX = curFrame.Dimensions.X;
             var cY = curFrame.Dimensions.Y;
@@ -232,7 +235,11 @@ namespace Avalonia.Gif.Decoding
                 {
                     var indexColor = frameIndexSpan.Span[indexOffset + i];
 
-                    if (activeColorTable == null || targetOffset >= len || indexColor > activeColorTable.Length)
+                    if (
+                        activeColorTable == null
+                        || targetOffset >= len
+                        || indexColor > activeColorTable.Length
+                    )
                         return;
 
                     if (!(hT & indexColor == tC))
@@ -420,7 +427,12 @@ namespace Avalonia.Gif.Decoding
             unsafe
             {
                 fixed (void* src = &_bitmapBackBuffer[0])
-                    Buffer.MemoryCopy(src, targetPointer.ToPointer(), (uint)_backBufferBytes, (uint)_backBufferBytes);
+                    Buffer.MemoryCopy(
+                        src,
+                        targetPointer.ToPointer(),
+                        (uint)_backBufferBytes,
+                        (uint)_backBufferBytes
+                    );
                 _hasNewFrame = false;
             }
         }
@@ -428,6 +440,7 @@ namespace Avalonia.Gif.Decoding
         /// <summary>
         /// Processes GIF Header.
         /// </summary>
+        [MemberNotNull(nameof(Header))]
         private void ProcessHeaderData()
         {
             var str = _fileStream;
@@ -549,7 +562,9 @@ namespace Avalonia.Gif.Decoding
 
                 // Break the loop when the stream is not valid anymore.
                 if (_fileStream.Position >= _fileStream.Length & terminate == false)
-                    throw new InvalidProgramException("Reach the end of the filestream without trailer block.");
+                    throw new InvalidProgramException(
+                        "Reach the end of the filestream without trailer block."
+                    );
             } while (!terminate);
 
             ArrayPool<byte>.Shared.Return(tempBuf);
@@ -581,7 +596,11 @@ namespace Avalonia.Gif.Decoding
             currentFrame.LocalColorTableSize = (int)Math.Pow(2, (packed & 0x07) + 1);
 
             if (currentFrame.IsLocalColorTableUsed)
-                currentFrame.LocalColorTable = ProcessColorTable(ref str, tempBuf, currentFrame.LocalColorTableSize);
+                currentFrame.LocalColorTable = ProcessColorTable(
+                    ref str,
+                    tempBuf,
+                    currentFrame.LocalColorTableSize
+                );
 
             currentFrame.LzwMinCodeSize = str.ReadByteS(tempBuf);
             currentFrame.LzwStreamPosition = str.Position;

@@ -7,14 +7,10 @@
     </PropertyGroup>
     
     <PropertyGroup>
-        <CFBundleName>Stability Matrix</CFBundleName>
-        <CFBundleIconFile>Assets/AppIcon.icns</CFBundleIconFile>
-        <CFBundlePackageType>APPL</CFBundlePackageType>
         <OutputType>WinExe</OutputType>
         <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
         <Version>2.12.0-dev.999</Version>
@@ -22,13 +18,59 @@
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
-   
-    <ItemGroup>
-        <CFBundleURLTypes Include="dummy">
-            <CFBundleURLName>StabilityMatrix.URL</CFBundleURLName>
-            <CFBundleURLSchemes>stabilitymatrix;stabilitymatrix://</CFBundleURLSchemes>
-        </CFBundleURLTypes>
-    </ItemGroup>
+    
+    <PropertyGroup Condition=" '$(RuntimeIdentifier)' == 'win-x64' ">
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition=" '$(RuntimeIdentifier)' == 'osx-arm64' ">
+        <CFBundleName>Stability Matrix</CFBundleName>
+        <CFBundleIdentifier>ai.lykos.stabilitymatrix</CFBundleIdentifier>
+        <CFBundleIconFile>Assets/AppIcon.icns</CFBundleIconFile>
+        <CFBundlePackageType>APPL</CFBundlePackageType>
+    </PropertyGroup>
+
+    <Target Name="EditInfoPlist" AfterTargets="BundleApp" Condition=" '$(RuntimeIdentifier)' == 'osx-arm64' ">
+        <XmlPeek 
+                XmlInputPath="$(PublishDir)/Stability Matrix.app/Contents/Info.plist"
+                Query="//plist/dict">
+            <Output TaskParameter="Result" PropertyName="PlistDictOriginal"/>
+        </XmlPeek>
+        <PropertyGroup>
+            <!-- Trim the dict tags -->
+            <PlistDictOriginalInner>
+                $(PlistDictOriginal.Substring(6,
+                    $([MSBuild]::Subtract(
+                        $(PlistDictOriginal.Length),
+                        13
+                    ))
+                ))
+            </PlistDictOriginalInner>
+            <PlistDictAppend>
+                <![CDATA[
+                    <key>CFBundleURLTypes</key>
+                    <array>
+                        <dict>
+                            <key>CFBundleTypeRole</key>
+                            <string>Viewer</string>
+                            <key>CFBundleURLName</key>
+                            <string>ai.lykos.stabilitymatrix</string>
+                            <key>CFBundleURLIconFile</key>
+                            <string>AppIcon.icns</string>
+                            <key>CFBundleURLSchemes</key>
+                            <array>
+                                <string>stabilitymatrix</string>
+                            </array>
+                        </dict>
+                    </array>
+                ]]>
+            </PlistDictAppend>
+        </PropertyGroup>
+        <XmlPoke
+                XmlInputPath="$(PublishDir)/Stability Matrix.app/Contents/Info.plist"
+                Query="//plist/dict" 
+                Value="$(PlistDictOriginalInner)$(PlistDictAppend)"/>
+    </Target>
     
     <ItemGroup>
         <InternalsVisibleTo Include="StabilityMatrix.Tests" />
@@ -38,70 +80,72 @@
     <ItemGroup>
         <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.2.1" />
         <PackageReference Include="AutoComplete.Net" Version="1.2211.2014.42"/>
-        <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.0.6" />
+        <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.1.0" />
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="Avalonia.Controls.PanAndZoom" Version="11.0.0.2" />
+        <PackageReference Include="Avalonia.Controls.PanAndZoom" Version="11.1.0.1" />
         <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.HtmlRenderer" Version="11.0.0" />
-        <PackageReference Include="Avalonia.Labs.Controls" Version="11.0.3" />
-        <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.0.6" />
+        <PackageReference Include="Avalonia.Labs.Controls" Version="11.1.0" />
+        <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.1.0" />
         <PackageReference Include="AvaloniaEdit.TextMate" Version="11.0.6" />
-        <PackageReference Include="bodong.Avalonia.PropertyGrid" Version="11.0.6.3" />
-        <PackageReference Include="bodong.PropertyModels" Version="11.0.6.2" />
+        <PackageReference Include="bodong.Avalonia.PropertyGrid" Version="11.1.1.1" />
+        <PackageReference Include="bodong.PropertyModels" Version="11.1.1.1" />
         <PackageReference Include="CommandLineParser" Version="2.9.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
         <PackageReference Include="DesktopNotifications" Version="1.3.1" />
         <PackageReference Include="DesktopNotifications.Avalonia" Version="1.3.1" />
         <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
-        <PackageReference Include="Dock.Avalonia" Version="11.0.0.5" />
-        <PackageReference Include="Dock.Model.Avalonia" Version="11.0.0.5" />
-        <PackageReference Include="Dock.Serializer" Version="11.0.0.5" />
-        <PackageReference Include="DynamicData" Version="8.3.27" />
+        <PackageReference Include="Dock.Avalonia" Version="11.1.0.1" />
+        <PackageReference Include="Dock.Model.Avalonia" Version="11.1.0.1" />
+        <PackageReference Include="Dock.Serializer" Version="11.1.0.1" />
+        <PackageReference Include="DynamicData" Version="9.0.1" />
         <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
         <PackageReference Include="Exceptionless.DateTimeExtensions" Version="3.4.3" />
         <PackageReference Include="FluentAvalonia.BreadcrumbBar" Version="2.0.2" />
-        <PackageReference Include="FluentAvaloniaUI" Version="2.0.5" />
-        <PackageReference Include="FluentIcons.Avalonia" Version="1.1.228" />
-        <PackageReference Include="FluentIcons.Avalonia.Fluent" Version="1.1.228" />
+        <PackageReference Include="FluentAvaloniaUI" Version="2.1.0" />
+        <PackageReference Include="FluentIcons.Avalonia" Version="1.1.249" />
+        <PackageReference Include="FluentIcons.Avalonia.Fluent" Version="1.1.249" />
         <PackageReference Include="FuzzySharp" Version="2.0.2" />
-        <PackageReference Include="JetBrains.Annotations" Version="2023.3.0" />
+        <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
+        <PackageReference Include="KeyedSemaphores" Version="5.0.0" />
         <PackageReference Include="Markdown.Avalonia" Version="11.0.2" />
-        <PackageReference Include="MessagePipe" Version="1.7.4" />
-        <PackageReference Include="MessagePipe.Interprocess" Version="1.7.4" />
+        <PackageReference Include="MessagePipe" Version="1.8.1" />
+        <PackageReference Include="MessagePipe.Interprocess" Version="1.8.1" />
         <PackageReference Include="MetadataExtractor" Version="2.8.1" />
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.1" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.7" />
         <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
         <PackageReference Include="NLog" Version="5.3.2" />
         <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" />
         <PackageReference Include="NSubstitute" Version="5.1.0" />
-        <PackageReference Include="OneOf" Version="3.0.263" />
-        <PackageReference Include="Polly" Version="8.3.0" />
+        <PackageReference Include="OneOf" Version="3.0.271" />
+        <PackageReference Include="Polly" Version="8.4.1" />
         <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
         <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
-        <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.1.1" />
+        <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.4.0" />
         <PackageReference Include="RockLib.Reflection.Optimized" Version="3.0.0" />
-        <PackageReference Include="Sentry" Version="4.1.2" />
-        <PackageReference Include="Sentry.NLog" Version="4.1.2" />
+        <PackageReference Include="Sentry" Version="4.9.0" />
+        <PackageReference Include="Sentry.NLog" Version="4.9.0" />
         <PackageReference Include="SoftCircuits.OrderedDictionary" Version="3.2.0" />
         <PackageReference Include="SpacedGrid-Avalonia" Version="11.0.0" />
         <PackageReference Include="Sylvan.Common" Version="0.4.3" />
-        <PackageReference Include="Sylvan.Data" Version="0.2.13" />
-        <PackageReference Include="Sylvan.Data.Csv" Version="1.3.7" />
-        <PackageReference Include="System.Drawing.Common" Version="8.0.2" />
+        <PackageReference Include="Sylvan.Data" Version="0.2.16" />
+        <PackageReference Include="Sylvan.Data.Csv" Version="1.3.9" />
+        <PackageReference Include="System.Drawing.Common" Version="8.0.7" />
         <PackageReference Include="System.IO.Hashing" Version="8.0.0" />
         <PackageReference Include="TextMateSharp.Grammars" Version="1.0.56" />
         <PackageReference Include="URISchemeTools" Version="1.0.2" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.0.0-preview.4.1" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
     </ItemGroup>
 
 

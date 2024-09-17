@@ -160,6 +160,8 @@ public class Settings
 
     public bool AutoScrollLaunchConsoleToEnd { get; set; } = true;
 
+    public int ConsoleLogHistorySize { get; set; } = 9001;
+
     public HashSet<int> FavoriteModels { get; set; } = new();
 
     public HashSet<TeachingTip> SeenTeachingTips { get; set; } = new();
@@ -173,6 +175,8 @@ public class Settings
             .ToList();
 
     public Size InferenceImageSize { get; set; } = new(150, 190);
+
+    [Obsolete("Use OutputsPageResizeFactor instead")]
     public Size OutputsImageSize { get; set; } = new(300, 300);
     public HolidayMode HolidayModeSetting { get; set; } = HolidayMode.Automatic;
     public bool IsWorkflowInfiniteScrollEnabled { get; set; } = true;
@@ -189,6 +193,26 @@ public class Settings
     /// Otherwise, it will move, as it states
     /// </summary>
     public bool MoveFilesOnImport { get; set; } = true;
+
+    public bool DragMovesAllSelected { get; set; } = true;
+
+    public bool HideEmptyRootCategories { get; set; }
+
+    public bool HideInstalledModelsInModelBrowser { get; set; }
+
+    public bool ShowNsfwInCheckpointsPage { get; set; }
+
+    // public bool OptedInToInstallTelemetry { get; set; }
+
+    public AnalyticsSettings Analytics { get; set; } = new();
+
+    public double CheckpointsPageResizeFactor { get; set; } = 1.0d;
+
+    public double OutputsPageResizeFactor { get; set; } = 1.0d;
+
+    public double CivitBrowserResizeFactor { get; set; } = 1.0d;
+
+    public bool HideEarlyAccessModels { get; set; }
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>
@@ -222,6 +246,15 @@ public class Settings
         else if (InstalledPackages.All(x => x.Id != ActiveInstalledPackageId))
         {
             ActiveInstalledPackageId = InstalledPackages[0].Id;
+        }
+    }
+
+    public void SetUpdateCheckDisabledForPackage(InstalledPackage package, bool disabled)
+    {
+        var installedPackage = InstalledPackages.FirstOrDefault(p => p.Id == package.Id);
+        if (installedPackage != null)
+        {
+            installedPackage.DontCheckForUpdates = disabled;
         }
     }
 

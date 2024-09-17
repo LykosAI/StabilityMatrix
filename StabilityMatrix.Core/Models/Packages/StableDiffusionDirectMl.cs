@@ -33,8 +33,8 @@ public class StableDiffusionDirectMl(
         new("https://github.com/lshqqytiger/stable-diffusion-webui-directml/raw/master/screenshot.png");
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public override TorchVersion GetRecommendedTorchVersion() =>
-        HardwareHelper.PreferDirectML() ? TorchVersion.DirectMl : base.GetRecommendedTorchVersion();
+    public override TorchIndex GetRecommendedTorchVersion() =>
+        HardwareHelper.PreferDirectML() ? TorchIndex.DirectMl : base.GetRecommendedTorchVersion();
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
 
@@ -58,50 +58,51 @@ public class StableDiffusionDirectMl(
         }
     }
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.DirectMl };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        new[] { TorchIndex.Cpu, TorchIndex.DirectMl };
 
     public override bool ShouldIgnoreReleases => true;
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
         // Setup venv
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
-        switch (torchVersion)
-        {
-            case TorchVersion.DirectMl:
-                await InstallDirectMlTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-            case TorchVersion.Cpu:
-                await InstallCpuTorch(venvRunner, progress, onConsoleOutput).ConfigureAwait(false);
-                break;
-        }
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var pipArgs = new PipInstallArgs()
+            .WithTorch("==2.3.1")
+            .WithTorchVision("==0.18.1")
+            .AddArg("httpx==0.24.1");
 
-        await venvRunner.PipInstall("httpx==0.24.1").ConfigureAwait(false);
+        if (torchVersion == TorchIndex.DirectMl)
+        {
+            pipArgs = pipArgs.WithTorchDirectML();
+        }
 
         // Install requirements file
         progress?.Report(new ProgressReport(-1f, "Installing Package Requirements", isIndeterminate: true));
         Logger.Info("Installing requirements_versions.txt");
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        await venvRunner
-            .PipInstall(
-                new PipInstallArgs().WithParsedFromRequirementsTxt(
-                    await requirements.ReadAllTextAsync().ConfigureAwait(false),
-                    excludePattern: "torch"
-                ),
-                onConsoleOutput
-            )
-            .ConfigureAwait(false);
+        pipArgs = pipArgs.WithParsedFromRequirementsTxt(
+            await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+            excludePattern: "torch"
+        );
+
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }

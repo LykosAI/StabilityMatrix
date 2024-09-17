@@ -8,27 +8,11 @@ namespace StabilityMatrix.Core.Processes;
 /// </summary>
 public record ProcessArgsBuilder
 {
-    public IImmutableList<Argument> Arguments { get; init; } = ImmutableArray<Argument>.Empty;
-
-    private IEnumerable<string> ToStringArgs()
-    {
-        foreach (var argument in Arguments)
-        {
-            if (argument.IsT0)
-            {
-                yield return argument.AsT0;
-            }
-            else
-            {
-                yield return argument.AsT1.Item1;
-                yield return argument.AsT1.Item2;
-            }
-        }
-    }
+    public ImmutableList<Argument> Arguments { get; init; } = ImmutableList<Argument>.Empty;
 
     public ProcessArgsBuilder(params Argument[] arguments)
     {
-        Arguments = arguments.ToImmutableArray();
+        Arguments = arguments.ToImmutableList();
     }
 
     /// <inheritdoc />
@@ -39,7 +23,7 @@ public record ProcessArgsBuilder
 
     public ProcessArgs ToProcessArgs()
     {
-        return ToStringArgs().ToArray();
+        return new ProcessArgs(Arguments.ToImmutableArray());
     }
 
     public static implicit operator ProcessArgs(ProcessArgsBuilder builder) => builder.ToProcessArgs();
@@ -61,23 +45,33 @@ public static class ProcessArgBuilderExtensions
         return builder with { Arguments = builder.Arguments.AddRange(argument) };
     }
 
+    /// <summary>
+    /// Add arguments from strings using the given key.
+    /// </summary>
+    [Pure]
+    public static T AddKeyedArgs<T>(this T builder, string key, IEnumerable<string> arguments)
+        where T : ProcessArgsBuilder
+    {
+        return builder with
+        {
+            Arguments = builder.Arguments.AddRange(arguments.Select(arg => new Argument(key, arg)))
+        };
+    }
+
     [Pure]
     public static T UpdateArg<T>(this T builder, string key, Argument argument)
         where T : ProcessArgsBuilder
     {
-        var oldArg = builder
-            .Arguments
-            .FirstOrDefault(x => x.Match(stringArg => stringArg == key, tupleArg => tupleArg.Item1 == key));
-
-        if (oldArg is null)
+        foreach (var arg in builder.Arguments)
         {
-            return builder.AddArg(argument);
+            if ((arg.Key ?? arg.Value) == key)
+            {
+                return builder with { Arguments = builder.Arguments.Replace(arg, argument) };
+            }
         }
 
-        return builder with
-        {
-            Arguments = builder.Arguments.Replace(oldArg, argument)
-        };
+        // No match, add the new argument
+        return builder.AddArg(argument);
     }
 
     [Pure]
@@ -87,9 +81,8 @@ public static class ProcessArgBuilderExtensions
         return builder with
         {
             Arguments = builder
-                .Arguments
-                .Where(x => x.Match(stringArg => stringArg != argumentKey, tupleArg => tupleArg.Item1 != argumentKey))
-                .ToImmutableArray()
+                .Arguments.Where(arg => (arg.Key ?? arg.Value) != argumentKey)
+                .ToImmutableList()
         };
     }
 }

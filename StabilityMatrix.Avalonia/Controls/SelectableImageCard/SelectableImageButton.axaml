@@ -41,6 +41,7 @@
                         Command="{TemplateBinding Command}"
                         CommandParameter="{TemplateBinding CommandParameter}">
                         <vendorLabs:BetterAsyncImage
+                            IsCacheEnabled="True"
                             Stretch="UniformToFill"
                             CornerRadius="8"
                             ContextFlyout="{TemplateBinding ContextFlyout}"

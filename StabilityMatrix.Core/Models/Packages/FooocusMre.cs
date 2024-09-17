@@ -94,8 +94,8 @@ public class FooocusMre(
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        new[] { TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm };
 
     public override string MainBranch => "moonride-main";
 
@@ -103,64 +103,63 @@ public class FooocusMre(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 
-        if (torchVersion == TorchVersion.DirectMl)
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var pipInstallArgs = new PipInstallArgs();
+
+        if (torchVersion == TorchIndex.DirectMl)
         {
-            await venvRunner
-                .PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput)
-                .ConfigureAwait(false);
+            pipInstallArgs = pipInstallArgs.WithTorchDirectML();
         }
         else
         {
             var extraIndex = torchVersion switch
             {
-                TorchVersion.Cpu => "cpu",
-                TorchVersion.Cuda => "cu118",
-                TorchVersion.Rocm => "rocm5.4.2",
+                TorchIndex.Cpu => "cpu",
+                TorchIndex.Cuda => "cu118",
+                TorchIndex.Rocm => "rocm5.4.2",
                 _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
             };
 
-            await venvRunner
-                .PipInstall(
-                    new PipInstallArgs()
-                        .WithTorch("==2.0.1")
-                        .WithTorchVision("==0.15.2")
-                        .WithTorchExtraIndex(extraIndex),
-                    onConsoleOutput
-                )
-                .ConfigureAwait(false);
+            pipInstallArgs = pipInstallArgs
+                .WithTorch("==2.0.1")
+                .WithTorchVision("==0.15.2")
+                .WithTorchExtraIndex(extraIndex);
         }
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        await venvRunner
-            .PipInstall(
-                new PipInstallArgs().WithParsedFromRequirementsTxt(
-                    await requirements.ReadAllTextAsync().ConfigureAwait(false),
-                    excludePattern: "torch"
-                ),
-                onConsoleOutput
-            )
-            .ConfigureAwait(false);
+        pipInstallArgs = pipInstallArgs.WithParsedFromRequirementsTxt(
+            await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+            excludePattern: "torch"
+        );
+
+        if (installedPackage.PipOverrides != null)
+        {
+            pipInstallArgs = pipInstallArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        await venvRunner.PipInstall(pipInstallArgs, onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
+        await SetupVenv(installLocation).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -178,14 +177,10 @@ public class FooocusMre(
             }
         }
 
-        void HandleExit(int i)
-        {
-            Debug.WriteLine($"Venv process exited with code {i}");
-            OnExit(i);
-        }
-
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
-
-        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+        VenvRunner.RunDetached(
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            HandleConsoleOutput,
+            OnExit
+        );
     }
 }

@@ -521,6 +521,7 @@
   </data>
   <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
     <value>Выберите желаемый интерфейс и нажмите &quot;Установить&quot; чтобы начать работу</value>
+    <comment>Fuzzy</comment>
   </data>
   <data name="Label_Installing" xml:space="preserve">
     <value>Устанавливаю</value>
@@ -678,7 +679,270 @@
   <data name="Action_RestoreDefaultLayout" xml:space="preserve">
     <value>Восстановить вид по умолчанию</value>
   </data>
+  <data name="Action_Copy" xml:space="preserve">
+    <value>Копировать</value>
+  </data>
+  <data name="Label_NumImagesSelected" xml:space="preserve">
+    <value>Выбрано {0} изображений</value>
+  </data>
+  <data name="Label_OutputFolder" xml:space="preserve">
+    <value>Папка вывода</value>
+  </data>
+  <data name="Label_OutputType" xml:space="preserve">
+    <value>Тип вывода</value>
+  </data>
+  <data name="Action_ClearSelection" xml:space="preserve">
+    <value>Очистить секцию</value>
+  </data>
+  <data name="Action_SelectAll" xml:space="preserve">
+    <value>Выбрать всё</value>
+  </data>
+  <data name="Label_TextToImage" xml:space="preserve">
+    <value>Текст в изображение</value>
+  </data>
+  <data name="Label_ImageToImage" xml:space="preserve">
+    <value>Изображение в изображение</value>
+  </data>
+  <data name="Label_Upscale" xml:space="preserve">
+    <value>Увеличить разрешение</value>
+  </data>
+  <data name="Label_OneImageSelected" xml:space="preserve">
+    <value>Выбрана 1 картинка</value>
+  </data>
+  <data name="Label_PythonPackages" xml:space="preserve">
+    <value>Пакеты Python</value>
+  </data>
+  <data name="Label_AreYouSure" xml:space="preserve">
+    <value>Вы уверены?</value>
+  </data>
+  <data name="Action_Refresh" xml:space="preserve">
+    <value>Обновить</value>
+  </data>
+  <data name="Action_OpenGithub" xml:space="preserve">
+    <value>Открыть на GitHub</value>
+  </data>
+  <data name="Label_Connected" xml:space="preserve">
+    <value>Подключено</value>
+  </data>
+  <data name="Action_Disconnect" xml:space="preserve">
+    <value>Отключить</value>
+  </data>
+  <data name="Label_Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Label_Username" xml:space="preserve">
+    <value>Имя пользователя</value>
+  </data>
+  <data name="Label_Password" xml:space="preserve">
+    <value>Пароль</value>
+  </data>
+  <data name="Action_Login" xml:space="preserve">
+    <value>Логин</value>
+  </data>
+  <data name="Action_Signup" xml:space="preserve">
+    <value>Зарегистрироваться</value>
+  </data>
+  <data name="Label_ConfirmPassword" xml:space="preserve">
+    <value>Подтвердить пароль</value>
+  </data>
+  <data name="Label_ApiKey" xml:space="preserve">
+    <value>API ключ</value>
+  </data>
+  <data name="Label_Accounts" xml:space="preserve">
+    <value>Аккаунты</value>
+  </data>
+  <data name="Label_ControlSteps" xml:space="preserve">
+    <value>Шаги контроля</value>
+  </data>
+  <data name="Label_CivitAiLoginRequired" xml:space="preserve">
+    <value>Вы дожны войти в аккаунтб чтобы скачать. Пожалуйста введите ключ CivitAI API в настройках.</value>
+  </data>
+  <data name="Label_DownloadFailed" xml:space="preserve">
+    <value>Скачивание не удалось</value>
+  </data>
+  <data name="Label_AutoUpdates" xml:space="preserve">
+    <value>Автообновления</value>
+  </data>
+  <data name="Label_Updates" xml:space="preserve">
+    <value>Обновления</value>
+  </data>
+  <data name="Label_YouAreUpToDate" xml:space="preserve">
+    <value>Програма обновлена до последней версии</value>
+  </data>
+  <data name="Action_OpenOnHuggingFace" xml:space="preserve">
+    <value>Открыть на Hugging Face</value>
+  </data>
+  <data name="Action_UpdateExistingMetadata" xml:space="preserve">
+    <value>Обновить Существующие Метаданные</value>
+  </data>
+  <data name="Label_Prompt" xml:space="preserve">
+    <value>Запрос</value>
+    <comment>A settings category for Inference generation prompts</comment>
+  </data>
+  <data name="Label_AutoCompletion" xml:space="preserve">
+    <value>Авто-дополнение</value>
+  </data>
+  <data name="Label_SystemInformation" xml:space="preserve">
+    <value>Информация о системе</value>
+  </data>
   <data name="Label_CivitAi" xml:space="preserve">
     <value>CivitAI</value>
+  </data>
+  <data name="Label_HuggingFace" xml:space="preserve">
+    <value>Hugging Face</value>
+  </data>
+  <data name="Label_Addons" xml:space="preserve">
+    <value>Расширения</value>
+    <comment>Inference Sampler Addons</comment>
+  </data>
+  <data name="Label_Settings" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="Action_SelectFile" xml:space="preserve">
+    <value>Выбрать файл</value>
+  </data>
+  <data name="Label_ImageToVideo" xml:space="preserve">
+    <value>Картинка в Видео</value>
+  </data>
+  <data name="Label_Fps" xml:space="preserve">
+    <value>Кадров в Секунду</value>
+  </data>
+  <data name="Label_Lossless" xml:space="preserve">
+    <value>Без потерь</value>
+  </data>
+  <data name="Label_Frames" xml:space="preserve">
+    <value>Кадры</value>
+  </data>
+  <data name="Label_Installed" xml:space="preserve">
+    <value>Установлено</value>
+  </data>
+  <data name="Label_NoExtensionsFound" xml:space="preserve">
+    <value>Расширения не найдены.</value>
+  </data>
+  <data name="Action_Hide" xml:space="preserve">
+    <value>Скрыть</value>
+  </data>
+  <data name="Action_Download" xml:space="preserve">
+    <value>Скачать</value>
+  </data>
+  <data name="Label_RecommendedModels" xml:space="preserve">
+    <value>Рекомендуемые Модели</value>
+  </data>
+  <data name="Label_RecommendedModelsSubText" xml:space="preserve">
+    <value>Пока ваш пакет устонавливается, вот несколько рекомендуемых моделей для того чтобы помочь вам начать.</value>
+  </data>
+  <data name="Label_Notifications" xml:space="preserve">
+    <value>Уведомления</value>
+  </data>
+  <data name="Label_ComfyRequiredTitle" xml:space="preserve">
+    <value>Требуется ComfyUI</value>
+  </data>
+  <data name="Label_ComfyRequiredDetail" xml:space="preserve">
+    <value>Требуется ComfyUI, чтобы установить этот пакет. Хотите ли вы установить его сейчас?</value>
+  </data>
+  <data name="Error_PleaseSelectDownloadLocation" xml:space="preserve">
+    <value>Пожалуйста выберите место скачивания.</value>
+  </data>
+  <data name="Label_SelectDownloadLocation" xml:space="preserve">
+    <value>Выберите место скачивания:</value>
+  </data>
+  <data name="Label_Config" xml:space="preserve">
+    <value>Конфигурация</value>
+  </data>
+  <data name="Label_ConfirmExitDetail" xml:space="preserve">
+    <value>Вы точно хотите выйти? Это также закроет все использующиеся пакеты.</value>
+  </data>
+  <data name="Label_Console" xml:space="preserve">
+    <value>Консоль</value>
+  </data>
+  <data name="Label_WebUi" xml:space="preserve">
+    <value>Веб интерфейс</value>
+  </data>
+  <data name="Label_Packages" xml:space="preserve">
+    <value>Пакеты</value>
+  </data>
+  <data name="Label_ActionCannotBeUndone" xml:space="preserve">
+    <value>Это действие не может быть отменено.</value>
+  </data>
+  <data name="Label_AreYouSureDeleteImages" xml:space="preserve">
+    <value>Вы уверены что хотите удалить {0} картинок?</value>
+  </data>
+  <data name="Label_CheckingHardware" xml:space="preserve">
+    <value>Мы проверяем спецификации вашего компьютера, чтобы определить совместимость.</value>
+  </data>
+  <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
+    <value>Мы рекомендуем графический процессор с поддержкой CUDA для наилучшего опыта. Вы можете продолжить без него, но некоторые пакетов могут не работать и вывод будет медленнее.</value>
+  </data>
+  <data name="Label_ModelBrowser" xml:space="preserve">
+    <value>Поиск моделей</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>Бесконечная Промотка</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>Открыть в OpenArt</value>
+  </data>
+  <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
+    <value>{0} удалено успешно</value>
+  </data>
+  <data name="Label_NumberFormat" xml:space="preserve">
+    <value>Формат Чисел</value>
+  </data>
+  <data name="Text_DeleteFollowingItems" xml:space="preserve">
+    <value>Вы удалите следующие файлы:</value>
+  </data>
+  <data name="TextTemplate_DeleteFollowingCountItems" xml:space="preserve">
+    <value>Вы удалите следующие {0} файлов:</value>
+  </data>
+  <data name="Label_DeletePermanently" xml:space="preserve">
+    <value>Безвозвратно Удалить</value>
+  </data>
+  <data name="Action_MoveToTrash" xml:space="preserve">
+    <value>Отправить в Корзину</value>
+  </data>
+  <data name="Action_ToggleVisibility" xml:space="preserve">
+    <value>Переключить Видимость</value>
+  </data>
+  <data name="Label_Logs" xml:space="preserve">
+    <value>Логи</value>
+  </data>
+  <data name="Label_DisableUpdateCheck" xml:space="preserve">
+    <value>Отключите Проверку Обновлений</value>
+  </data>
+  <data name="Warning_PleaseExtractFirst" xml:space="preserve">
+    <value>ПОЖАЛУЙСТА ИЗВЛЕКИТЕ ПРИЛОЖЕНИЕ ИЗ АРХИВА ПЕРЕЗ ЗАПУСКОМ STABILITY MATRIX</value>
+  </data>
+  <data name="Label_ConnectAccountFailed" xml:space="preserve">
+    <value>Произошла проблема с подключением вашего аккаунта</value>
+  </data>
+  <data name="Label_EditModelMetadata" xml:space="preserve">
+    <value>Изменить Метаданные Модели</value>
+  </data>
+  <data name="Label_NSFW" xml:space="preserve">
+    <value>NSFW</value>
+  </data>
+  <data name="Label_Tags" xml:space="preserve">
+    <value>Тэги</value>
+  </data>
+  <data name="Label_VersionName" xml:space="preserve">
+    <value>Название Версии</value>
+  </data>
+  <data name="Label_PreviewImage" xml:space="preserve">
+    <value>Превью</value>
+  </data>
+  <data name="Label_MaxSize" xml:space="preserve">
+    <value>Максимальный Размер</value>
+  </data>
+  <data name="Label_Seed" xml:space="preserve">
+    <value>Сид</value>
+  </data>
+  <data name="Label_NegativePrompt" xml:space="preserve">
+    <value>Анти-Запрос</value>
+  </data>
+  <data name="Label_NewFolder" xml:space="preserve">
+    <value>Новая Папка</value>
+  </data>
+  <data name="Label_CopyLinkToClipboard" xml:space="preserve">
+    <value>Копировать Ссылку в Буфер Обмена</value>
   </data>
 </root>

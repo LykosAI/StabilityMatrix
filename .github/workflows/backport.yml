@@ -27,9 +27,9 @@ jobs:
               "commitConflicts": "true",
               "prTitle": "[{{sourceBranch}} to {{targetBranch}}] backport: {{sourcePullRequest.title}} ({{sourcePullRequest.number}})"
             }
-        
+
       - name: Backport Action
-        uses: sorenlouv/backport-github-action@v9.3.0
+        uses: sorenlouv/backport-github-action@v9.5.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           auto_backport_label_prefix: backport-to-

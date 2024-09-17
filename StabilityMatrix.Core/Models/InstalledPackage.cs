@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Models;
 
@@ -18,19 +19,7 @@ public class InstalledPackage : IJsonOnDeserialized
     public string? PackageName { get; set; }
 
     // Package version
-    [Obsolete("Use Version instead. (Kept for migration)")]
-    public string? PackageVersion { get; set; }
-
-    [Obsolete("Use Version instead. (Kept for migration)")]
-    public string? InstalledBranch { get; set; }
-
-    [Obsolete("Use Version instead. (Kept for migration)")]
-    public string? DisplayVersion { get; set; }
     public InstalledPackageVersion? Version { get; set; }
-
-    // Old type absolute path
-    [Obsolete("Use LibraryPath instead. (Kept for migration)")]
-    public string? Path { get; set; }
 
     /// <summary>
     /// Relative path from the library root.
@@ -48,9 +37,14 @@ public class InstalledPackage : IJsonOnDeserialized
     public List<LaunchOption>? LaunchArgs { get; set; }
     public DateTimeOffset? LastUpdateCheck { get; set; }
     public bool UpdateAvailable { get; set; }
+    public bool DontCheckForUpdates { get; set; }
 
-    [JsonConverter(typeof(JsonStringEnumConverter<TorchVersion>))]
-    public TorchVersion? PreferredTorchVersion { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter<TorchIndex>))]
+    public TorchIndex? PreferredTorchIndex { get; set; }
+
+    [JsonConverter(typeof(JsonStringEnumConverter<TorchIndex>))]
+    [Obsolete("Use PreferredTorchIndex instead. (Kept for migration)")]
+    public TorchIndex? PreferredTorchVersion { get; set; }
 
     [JsonConverter(typeof(JsonStringEnumConverter<SharedFolderMethod>))]
     public SharedFolderMethod? PreferredSharedFolderMethod { get; set; }
@@ -58,6 +52,8 @@ public class InstalledPackage : IJsonOnDeserialized
     public bool UseSharedOutputFolder { get; set; }
 
     public List<string>? ExtraExtensionManifestUrls { get; set; }
+
+    public List<PipPackageSpecifierOverride>? PipOverrides { get; set; }
 
     /// <summary>
     /// Get the launch args host option value.
@@ -103,6 +99,44 @@ public class InstalledPackage : IJsonOnDeserialized
             && !System.IO.Path.IsPathRooted(relativePath);
         return isSubPath ? relativePath : null;
     }
+
+    public static IEqualityComparer<InstalledPackage> Comparer { get; } =
+        new PropertyComparer<InstalledPackage>(p => p.Id);
+
+    protected bool Equals(InstalledPackage other)
+    {
+        return Id.Equals(other.Id);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj))
+            return false;
+        if (ReferenceEquals(this, obj))
+            return true;
+        return obj.GetType() == this.GetType() && Equals((InstalledPackage)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return Id.GetHashCode();
+    }
+
+    #region Migration / Obsolete
+
+    // Old type absolute path
+    [Obsolete("Use LibraryPath instead. (Kept for migration)")]
+    public string? Path { get; set; }
+
+    // Old type versions
+    [Obsolete("Use Version instead. (Kept for migration)")]
+    public string? PackageVersion { get; set; }
+
+    [Obsolete("Use Version instead. (Kept for migration)")]
+    public string? InstalledBranch { get; set; }
+
+    [Obsolete("Use Version instead. (Kept for migration)")]
+    public string? DisplayVersion { get; set; }
 
     /// <summary>
     /// Migrates the old Path to the new LibraryPath.
@@ -209,31 +243,12 @@ public class InstalledPackage : IJsonOnDeserialized
         LibraryPath = System.IO.Path.Combine("Packages", packageFolderName);
     }
 
-    public static IEqualityComparer<InstalledPackage> Comparer { get; } =
-        new PropertyComparer<InstalledPackage>(p => p.Id);
-
-    protected bool Equals(InstalledPackage other)
-    {
-        return Id.Equals(other.Id);
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(null, obj))
-            return false;
-        if (ReferenceEquals(this, obj))
-            return true;
-        return obj.GetType() == this.GetType() && Equals((InstalledPackage)obj);
-    }
-
-    public override int GetHashCode()
-    {
-        return Id.GetHashCode();
-    }
-
-#pragma warning disable CS0618 // Type or member is obsolete
     public void OnDeserialized()
     {
+#pragma warning disable CS0618 // Type or member is obsolete
+        // handle TorchIndex migration
+        PreferredTorchIndex ??= PreferredTorchVersion;
+
         // Handle version migration
         if (Version != null)
             return;
@@ -256,6 +271,8 @@ public class InstalledPackage : IJsonOnDeserialized
                 IsPrerelease = false
             };
         }
-    }
 #pragma warning restore CS0618 // Type or member is obsolete
+    }
+
+    #endregion
 }

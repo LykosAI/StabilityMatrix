@@ -4,6 +4,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -57,8 +58,8 @@ public class VoltaML(
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        new[] { TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl };
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
@@ -146,11 +147,11 @@ public class VoltaML(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         // Setup venv
@@ -159,21 +160,27 @@ public class VoltaML(
 
         // Install requirements
         progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
-        await venvRunner.PipInstall("rich packaging python-dotenv", onConsoleOutput).ConfigureAwait(false);
+
+        var pipArgs = new PipInstallArgs(["rich", "packaging", "python-dotenv"]);
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1, "Installing Package Requirements", isIndeterminate: false));
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
-
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
+        await SetupVenv(installLocation).ConfigureAwait(false);
 
         var foundIndicator = false;
 
@@ -201,6 +208,10 @@ public class VoltaML(
             foundIndicator = false;
         }
 
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+        VenvRunner.RunDetached(
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            HandleConsoleOutput,
+            OnExit
+        );
     }
 }

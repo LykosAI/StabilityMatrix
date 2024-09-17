@@ -22,6 +22,9 @@ public class CivitModelVersion
     [JsonPropertyName("baseModel")]
     public string? BaseModel { get; set; }
 
+    [JsonPropertyName("availability")]
+    public string? Availability { get; set; }
+
     [JsonPropertyName("files")]
     public List<CivitFile>? Files { get; set; }
 
@@ -33,4 +36,8 @@ public class CivitModelVersion
 
     [JsonPropertyName("publishedAt")]
     public DateTimeOffset? PublishedAt { get; set; }
+
+    [JsonIgnore]
+    public bool IsEarlyAccess =>
+        Availability?.Equals("EarlyAccess", StringComparison.OrdinalIgnoreCase) ?? false;
 }

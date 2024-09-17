@@ -707,7 +707,7 @@
     <value>Tümünü Seç</value>
   </data>
   <data name="Action_SendToInference" xml:space="preserve">
-    <value>Çıkarıma Gönder</value>
+    <value>Üreticiye Gönder</value>
   </data>
   <data name="Label_TextToImage" xml:space="preserve">
     <value>Metinden Resime</value>
@@ -837,7 +837,7 @@
     <comment>A general settings category</comment>
   </data>
   <data name="Label_Inference" xml:space="preserve">
-    <value>Çıkarım</value>
+    <value>Üretici</value>
     <comment>The Inference feature page</comment>
   </data>
   <data name="Label_Prompt" xml:space="preserve">
@@ -1013,7 +1013,7 @@
     <value>Her şey iyi gözüküyor!</value>
   </data>
   <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
-    <value>En iyi deneyim için CUDA destekli bir GPU öneriyoruz. Olmadan da devam edebilirsiniz ancak bazı paketler çalışmayabilir ve çıkarımlar daha yavaş olabilir.</value>
+    <value>En iyi deneyim için CUDA destekli bir GPU öneriyoruz. Olmadan da devam edebilirsiniz ancak bazı paketler çalışmayabilir ve üretimler daha yavaş olabilir.</value>
   </data>
   <data name="Label_Checkpoints" xml:space="preserve">
     <value>Kontrol noktaları</value>
@@ -1074,5 +1074,122 @@
   </data>
   <data name="Label_WorkflowImportComplete" xml:space="preserve">
     <value>İş akışı ve özel düğümler içe aktarıldı.</value>
+  </data>
+  <data name="TeachingTip_InferencePromptHelpButton" xml:space="preserve">
+    <value>Bilgi istemi sözdizimini ve Lora / Embeddings&apos;in nasıl ekleneceğini incelemek için burayı tıklayın.</value>
+  </data>
+  <data name="Label_ExtraNetworks" xml:space="preserve">
+    <value>Extra Networks (Lora / LyCORIS)</value>
+  </data>
+  <data name="Label_CLIPStrength" xml:space="preserve">
+    <value>CLIP Kuvveti</value>
+  </data>
+  <data name="Label_NumberFormat" xml:space="preserve">
+    <value>Sayı Formatı</value>
+  </data>
+  <data name="Text_DeleteFollowingItems" xml:space="preserve">
+    <value>Şu öğeleri silmek üzeresiniz:</value>
+  </data>
+  <data name="TextTemplate_DeleteFollowingCountItems" xml:space="preserve">
+    <value>Şu {0} öğeyi silmek üzeresiniz:</value>
+  </data>
+  <data name="Label_DeletePermanently" xml:space="preserve">
+    <value>Kalıcı olarak silin</value>
+  </data>
+  <data name="Action_MoveToTrash" xml:space="preserve">
+    <value>Çöp Kutusuna Taşı</value>
+  </data>
+  <data name="Label_AreYouSureDeleteModels" xml:space="preserve">
+    <value>{0} modelini silmek istediğinizden emin misiniz?</value>
+  </data>
+  <data name="Label_AutoSearchOnLoad" xml:space="preserve">
+    <value>Yükleme Sırasında Otomatik Arama</value>
+  </data>
+  <data name="Label_AutoSearchOnLoad_Description" xml:space="preserve">
+    <value>Model tarayıcı sayfası yüklendiğinde otomatik olarak bir arama başlatma</value>
+  </data>
+  <data name="Action_ToggleVisibility" xml:space="preserve">
+    <value>Görünürlüğü Değiştir</value>
+  </data>
+  <data name="Label_ClippingMask" xml:space="preserve">
+    <value>Kırpma Maskesi</value>
+  </data>
+  <data name="Label_AppFolders" xml:space="preserve">
+    <value>Uygulama Klasörleri</value>
+  </data>
+  <data name="Label_Logs" xml:space="preserve">
+    <value>Günlükler</value>
+  </data>
+  <data name="Label_AppData" xml:space="preserve">
+    <value>Uygulama Verileri</value>
+  </data>
+  <data name="TextTemplate_PackageUpdatedToSelected" xml:space="preserve">
+    <value>{0} seçilen sürüme güncellendi</value>
+  </data>
+  <data name="Action_CopyAsBitmap" xml:space="preserve">
+    <value>Bitmap Olarak Kopyala</value>
+  </data>
+  <data name="Label_DisableUpdateCheck" xml:space="preserve">
+    <value>Güncelleme Kontrolünü Devre Dışı Bırak</value>
+  </data>
+  <data name="Warning_PleaseExtractFirst" xml:space="preserve">
+    <value>STABILITE MATRISINI ÇALIŞTIRMADAN ÖNCE LÜTFEN UYGULAMAYI ZIP DOSYASINDAN ÇIKARIN</value>
+  </data>
+  <data name="Label_HistorySize" xml:space="preserve">
+    <value>Geçmiş Boyutu</value>
+  </data>
+  <data name="Label_HistorySize_Description" xml:space="preserve">
+    <value>Konsolda görüntülenen satırların üzerinde geri kaydırabileceğiniz satır sayısı</value>
+  </data>
+  <data name="Label_ConnectAccountFailed" xml:space="preserve">
+    <value>Hesabınızı bağlarken bazı sorunlar yaşadık</value>
+  </data>
+  <data name="Label_EditModelMetadata" xml:space="preserve">
+    <value>Model Meta Verilerini Düzenleme</value>
+  </data>
+  <data name="Label_NSFW" xml:space="preserve">
+    <value>NSFW</value>
+  </data>
+  <data name="Label_Tags" xml:space="preserve">
+    <value>Etiketler</value>
+  </data>
+  <data name="Label_VersionName" xml:space="preserve">
+    <value>Sürüm Adı</value>
+  </data>
+  <data name="Label_TrainedWords" xml:space="preserve">
+    <value>Eğitilmiş Kelimeler</value>
+  </data>
+  <data name="Label_PreviewImage" xml:space="preserve">
+    <value>Önizleme Görüntüsü</value>
+  </data>
+  <data name="Label_BatchSize" xml:space="preserve">
+    <value>Toplu İş Boyutu</value>
+  </data>
+  <data name="Label_Batches" xml:space="preserve">
+    <value>Toplu İşler</value>
+  </data>
+  <data name="Label_Sampler" xml:space="preserve">
+    <value>Örnekleyici</value>
+  </data>
+  <data name="Label_Scheduler" xml:space="preserve">
+    <value>Programlayıcı</value>
+  </data>
+  <data name="Label_MaxSize" xml:space="preserve">
+    <value>Maksimum Boyut</value>
+  </data>
+  <data name="Label_UseSeparatePrompt" xml:space="preserve">
+    <value>Ayrı İstem Kullanın</value>
+  </data>
+  <data name="Label_Seed" xml:space="preserve">
+    <value>Seed</value>
+  </data>
+  <data name="Label_NegativePrompt" xml:space="preserve">
+    <value>Olumsuz İstem</value>
+  </data>
+  <data name="Label_NewFolder" xml:space="preserve">
+    <value>Yeni Klasör</value>
+  </data>
+  <data name="Label_CopyLinkToClipboard" xml:space="preserve">
+    <value>Bağlantıyı Panoya Kopyala</value>
   </data>
 </root>

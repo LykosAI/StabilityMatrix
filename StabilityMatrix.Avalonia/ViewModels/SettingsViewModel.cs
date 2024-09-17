@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
@@ -19,7 +20,7 @@ public partial class SettingsViewModel : PageViewModelBase
 {
     public override string Title => "Settings";
     public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+        new SymbolIconSource { Symbol = Symbol.Settings, IconVariant = IconVariant.Filled };
 
     public IReadOnlyList<PageViewModelBase> SubPages { get; }
 
@@ -37,7 +38,8 @@ public partial class SettingsViewModel : PageViewModelBase
             vmFactory.Get<InferenceSettingsViewModel>(),
             vmFactory.Get<AccountSettingsViewModel>(),
             vmFactory.Get<UpdateSettingsViewModel>(),
-            vmFactory.Get<NotificationSettingsViewModel>()
+            vmFactory.Get<NotificationSettingsViewModel>(),
+            vmFactory.Get<AnalyticsSettingsViewModel>()
         };
 
         CurrentPagePath.AddRange(SubPages);

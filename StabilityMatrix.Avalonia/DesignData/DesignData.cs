@@ -153,7 +153,9 @@ public static class DesignData
             .AddSingleton<ICivitApi>(_ => null!)
             .AddSingleton<IGithubApiCache>(_ => null!)
             .AddSingleton<ITokenizerProvider>(_ => null!)
-            .AddSingleton<IPrerequisiteHelper>(_ => null!);
+            .AddSingleton<IPrerequisiteHelper>(_ => null!)
+            .AddSingleton<IPyPiApi>(_ => null!)
+            .AddSingleton<IPyPiCache>(_ => null!);
 
         // Override Launch page with mock
         services.Remove(ServiceDescriptor.Singleton<LaunchPageViewModel, LaunchPageViewModel>());
@@ -209,7 +211,8 @@ public static class DesignData
             null,
             null,
             null,
-            packageFactory
+            packageFactory,
+            null
         );
 
         /*ObservableCacheEx.AddOrUpdate(
@@ -326,6 +329,7 @@ public static class DesignData
                 settingsManager,
                 new MockModelIndexService(),
                 notificationService,
+                downloadService,
                 dialogFactory,
                 null,
                 new LocalModelFile
@@ -356,6 +360,7 @@ public static class DesignData
                 settingsManager,
                 new MockModelIndexService(),
                 notificationService,
+                downloadService,
                 dialogFactory,
                 null,
                 new LocalModelFile
@@ -721,6 +726,20 @@ The gallery images are often inpainted, but you will get something very similar 
                 + "response_type=code&state=test%40example.org&"
                 + "redirect_uri=http://localhost:5022/api/oauth/patreon/callback";
         });
+
+    public static OAuthLoginViewModel OAuthLoginViewModel =>
+        DialogFactory.Get<OAuthLoginViewModel>(vm =>
+        {
+            vm.Url =
+                "https://www.example.org/oauth2/authorize?"
+                + "client_id=66ad566552679cb6e650be01ed6f8d2ae9a0f803c0369850a5c9ee82a2396062&"
+                + "scope=identity%20identity.memberships&"
+                + "response_type=code&state=test%40example.org&"
+                + "redirect_uri=http://localhost:5022/api/oauth/patreon/callback";
+        });
+
+    public static PythonPackageSpecifiersViewModel PythonPackageSpecifiersViewModel =>
+        DialogFactory.Get<PythonPackageSpecifiersViewModel>();
 
     public static MaskEditorViewModel MaskEditorViewModel => DialogFactory.Get<MaskEditorViewModel>();
 
@@ -1098,21 +1117,45 @@ The gallery images are often inpainted, but you will get something very similar 
             }
         };
 
+    public static ModelMetadataEditorDialogViewModel MetadataEditorDialogViewModel =>
+        DialogFactory.Get<ModelMetadataEditorDialogViewModel>(vm =>
+        {
+            vm.ThumbnailFilePath = Assets.NoImage.ToString();
+            vm.Tags = "tag1, tag2, tag3";
+            vm.ModelDescription = "This is a description";
+            vm.ModelName = "Model Name";
+            vm.VersionName = "1.0.0";
+            vm.TrainedWords = "word1, word2, word3";
+            vm.ModelType = CivitModelType.Checkpoint;
+            vm.BaseModelType = CivitBaseModelType.Pony;
+        });
+
     public static string CurrentDirectory => Directory.GetCurrentDirectory();
 
     public static Indexer Types { get; } = new();
 
     public class Indexer
     {
+        private List<Type> types = new();
+
         public object? this[string typeName]
         {
             get
             {
-                var type =
-                    Type.GetType(typeName) ?? throw new ArgumentException($"Type {typeName} not found");
+                var type = Type.GetType(typeName);
+
+                type ??= typeof(DesignData)
+                    .Assembly.GetTypes()
+                    .FirstOrDefault(t => (t.FullName ?? t.Name).EndsWith(typeName));
+
+                if (type is null)
+                {
+                    throw new ArgumentException($"Type {typeName} not found");
+                }
+
                 try
                 {
-                    return Services.GetService(type);
+                    return Services.GetRequiredService(type);
                 }
                 catch (InvalidOperationException)
                 {

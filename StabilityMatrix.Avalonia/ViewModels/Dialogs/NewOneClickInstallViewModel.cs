@@ -143,10 +143,23 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                 var torchVersion = selectedPackage.GetRecommendedTorchVersion();
                 var recommendedSharedFolderMethod = selectedPackage.RecommendedSharedFolderMethod;
 
+                var installedPackage = new InstalledPackage
+                {
+                    DisplayName = selectedPackage.DisplayName,
+                    LibraryPath = Path.Combine("Packages", selectedPackage.Name),
+                    Id = Guid.NewGuid(),
+                    PackageName = selectedPackage.Name,
+                    Version = installedVersion,
+                    LaunchCommand = selectedPackage.LaunchCommand,
+                    LastUpdateCheck = DateTimeOffset.Now,
+                    PreferredTorchIndex = torchVersion,
+                    PreferredSharedFolderMethod = recommendedSharedFolderMethod
+                };
+
                 var downloadStep = new DownloadPackageVersionStep(
                     selectedPackage,
                     installLocation,
-                    downloadVersion
+                    new DownloadPackageOptions { VersionOptions = downloadVersion }
                 );
                 steps.Add(downloadStep);
 
@@ -157,10 +170,14 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
 
                 var installStep = new InstallPackageStep(
                     selectedPackage,
-                    torchVersion,
-                    recommendedSharedFolderMethod,
-                    downloadVersion,
-                    installLocation
+                    installLocation,
+                    installedPackage,
+                    new InstallPackageOptions
+                    {
+                        SharedFolderMethod = recommendedSharedFolderMethod,
+                        VersionOptions = downloadVersion,
+                        PythonOptions = { TorchIndex = torchVersion }
+                    }
                 );
                 steps.Add(installStep);
 
@@ -170,19 +187,6 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                     installLocation
                 );
                 steps.Add(setupModelFoldersStep);
-
-                var installedPackage = new InstalledPackage
-                {
-                    DisplayName = selectedPackage.DisplayName,
-                    LibraryPath = Path.Combine("Packages", selectedPackage.Name),
-                    Id = Guid.NewGuid(),
-                    PackageName = selectedPackage.Name,
-                    Version = installedVersion,
-                    LaunchCommand = selectedPackage.LaunchCommand,
-                    LastUpdateCheck = DateTimeOffset.Now,
-                    PreferredTorchVersion = torchVersion,
-                    PreferredSharedFolderMethod = recommendedSharedFolderMethod
-                };
 
                 var addInstalledPackageStep = new AddInstalledPackageStep(settingsManager, installedPackage);
                 steps.Add(addInstalledPackageStep);

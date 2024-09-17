@@ -1,38 +1,44 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-             xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-             xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="850"
-             x:DataType="dialogs:SelectModelVersionViewModel"
-             xmlns:fluentAvalonia="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
-             xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
-             xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-             xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-             xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
-             xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-             xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
-             d:DataContext="{x:Static designData:DesignData.SelectModelVersionViewModel}"
-             x:Class="StabilityMatrix.Avalonia.Views.Dialogs.SelectModelVersionDialog">
-    
+﻿<UserControl
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.SelectModelVersionDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:fluentAvalonia="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    d:DataContext="{x:Static designData:DesignData.SelectModelVersionViewModel}"
+    d:DesignHeight="850"
+    d:DesignWidth="700"
+    x:DataType="dialogs:SelectModelVersionViewModel"
+    mc:Ignorable="d">
+
     <Grid
-        Margin="8"
-        MinHeight="450"
         MinWidth="700"
-        RowDefinitions="Auto, Auto, *, Auto"
-        ColumnDefinitions="*,Auto,*">
-        
+        MinHeight="450"
+        Margin="8"
+        ColumnDefinitions="*,Auto,*"
+        RowDefinitions="Auto, Auto, *, Auto">
+
         <Grid.Resources>
-            <input:StandardUICommand x:Key="ImportCommand"
-                                     Command="{Binding Import}"/>
+            <input:StandardUICommand x:Key="ImportCommand" Command="{Binding Import}" />
         </Grid.Resources>
 
-        <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto, Auto, Auto">
-           <Carousel Grid.Row="0"
-                      ItemsSource="{Binding ImageUrls}"
-                      SelectedIndex="{Binding SelectedImageIndex}">
+        <Grid
+            Grid.Row="0"
+            Grid.Column="0"
+            RowDefinitions="Auto, Auto, Auto">
+            <Carousel
+                Grid.Row="0"
+                ItemsSource="{Binding ImageUrls}"
+                SelectedIndex="{Binding SelectedImageIndex}">
                 <Carousel.PageTransition>
                     <CompositePageTransition>
                         <PageSlide Orientation="Horizontal" Duration="0.167">
@@ -48,76 +54,106 @@
                 </Carousel.PageTransition>
                 <Carousel.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:ImageSource}">
-                        <controls:BetterImage Margin="8"
-                                              VerticalAlignment="Top"
-                                              HorizontalAlignment="Center"
-                                              Height="300"
-                                              Stretch="UniformToFill"
-                                              Source="{Binding BitmapAsync^}" />                        
+                        <controls:BetterImage
+                            Height="300"
+                            Margin="8"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Top"
+                            Source="{Binding BitmapAsync^}"
+                            Stretch="UniformToFill" />
                     </DataTemplate>
                 </Carousel.ItemTemplate>
             </Carousel>
-            
-            <StackPanel Grid.Row="1" Orientation="Horizontal"
-                        Margin="0,0,0,8"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Center">
-                <TextBlock Text="{Binding DisplayedPageNumber}"/>
-                <TextBlock Text="/"/>
-                <TextBlock Text="{Binding ImageUrls.Count}"/>
+
+            <StackPanel
+                Grid.Row="1"
+                Margin="0,0,0,8"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Orientation="Horizontal">
+                <TextBlock Text="{Binding DisplayedPageNumber}" />
+                <TextBlock Text="/" />
+                <TextBlock Text="{Binding ImageUrls.Count}" />
             </StackPanel>
-            
-            <StackPanel Grid.Row="2" Orientation="Horizontal"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Bottom">
-                <Button Command="{Binding PreviousImage}"
-                        Margin="0,0,8,0"
-                        IsEnabled="{Binding CanGoToPreviousImage}"
-                        ToolTip.Tip="{x:Static lang:Resources.Label_PreviousImage}"
-                        ToolTip.Placement="Top">
-                    <avalonia:Icon Value="fa-solid fa-caret-left"/>
+
+            <StackPanel
+                Grid.Row="2"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Orientation="Horizontal">
+                <Button
+                    Margin="0,0,8,0"
+                    Command="{Binding PreviousImage}"
+                    IsEnabled="{Binding CanGoToPreviousImage}"
+                    ToolTip.Placement="Top"
+                    ToolTip.Tip="{x:Static lang:Resources.Label_PreviousImage}">
+                    <avalonia:Icon Value="fa-solid fa-caret-left" />
                 </Button>
-                <Button Command="{Binding NextImage}" 
-                        IsEnabled="{Binding CanGoToNextImage}"
-                        ToolTip.Tip="{x:Static lang:Resources.Label_NextImage}"
-                        ToolTip.Placement="Top">
-                    <avalonia:Icon Value="fa-solid fa-caret-right"/>
+                <Button
+                    Command="{Binding NextImage}"
+                    IsEnabled="{Binding CanGoToNextImage}"
+                    ToolTip.Placement="Top"
+                    ToolTip.Tip="{x:Static lang:Resources.Label_NextImage}">
+                    <avalonia:Icon Value="fa-solid fa-caret-right" />
                 </Button>
             </StackPanel>
         </Grid>
 
-        <Border Grid.Row="0" Grid.Column="1"
-                MaxHeight="360"
-                Background="#33000000"
-                CornerRadius="4"/>
-        <ListBox Grid.Row="0" Grid.Column="1"
-                  Margin="0, 8, 0, 8"
-                  MaxHeight="360"
-                  VerticalAlignment="Top"
-                  ItemsSource="{Binding Versions}"
-                  SelectedItem="{Binding SelectedVersionViewModel}">
+        <Border
+            Grid.Row="0"
+            Grid.Column="1"
+            MaxHeight="360"
+            Background="#33000000"
+            CornerRadius="4" />
+        <ListBox
+            Grid.Row="0"
+            Grid.Column="1"
+            MaxHeight="360"
+            Margin="0,8,0,8"
+            VerticalAlignment="Top"
+            ItemsSource="{Binding Versions}"
+            SelectedItem="{Binding SelectedVersionViewModel}">
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type dialogs:ModelVersionViewModel}">
-                    <Grid ColumnDefinitions="Auto, Auto"
-                          RowDefinitions="Auto, Auto"
-                                MinWidth="128"
-                                Margin="0,4,0,4">
-                        <fluentAvalonia:SymbolIcon Grid.Row="0"
-                                                   Grid.Column="0"
-                                                   Grid.RowSpan="2"
-                                                   Symbol="Checkmark"
-                                                   Foreground="Lime"
-                                                   IsVisible="{Binding IsInstalled}"
-                                                   VerticalAlignment="Center" />
-                        <TextBlock Grid.Row="0" Grid.Column="1" 
-                                   Margin="4, 0"
-                                   Padding="4"
-                                   Text="{Binding ModelVersion.Name}" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" 
-                                   Margin="6, 0, 0, 0"
-                                   FontSize="11"
-                                   Padding="4, 0, 4, 4"
-                                   Text="{Binding ModelVersion.BaseModel}" />
+                    <Grid
+                        MinWidth="128"
+                        Margin="0,4,0,4"
+                        ColumnDefinitions="Auto, Auto"
+                        RowDefinitions="Auto, Auto, Auto">
+                        <fluentAvalonia:SymbolIcon
+                            Grid.Row="0"
+                            Grid.RowSpan="2"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Foreground="Lime"
+                            IsVisible="{Binding IsInstalled}"
+                            Symbol="Checkmark" />
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="4,0"
+                            Padding="4"
+                            Text="{Binding ModelVersion.Name}" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="6,0,0,0"
+                            Padding="4,0,4,4"
+                            FontSize="11"
+                            Text="{Binding ModelVersion.BaseModel}" />
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Margin="10,4"
+                            Foreground="Orange"
+                            IsVisible="{Binding ModelVersion.IsEarlyAccess}">
+                            <avalonia:Icon
+                                Margin="0,4,2,0"
+                                HorizontalAlignment="Left"
+                                Value="fa-regular fa-credit-card" />
+                            <Run FontSize="12" Text="Early Access" />
+                        </TextBlock>
+
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
@@ -130,18 +166,22 @@
             </ListBox.Template>
         </ListBox>
 
-        <Border Grid.Row="0" Grid.Column="2"
-                MaxHeight="360"
-                Background="#33000000"
-                Margin="8,0"
-                CornerRadius="4"/>
-        <ListBox Grid.Row="0" Grid.Column="2"
-                 MaxHeight="360"
-                 Margin="8,8,8,0"
-                 VerticalAlignment="Top"
-                 Background="#AA000000"
-                 ItemsSource="{Binding SelectedVersionViewModel.CivitFileViewModels}"
-                 SelectedItem="{Binding SelectedFile}">
+        <Border
+            Grid.Row="0"
+            Grid.Column="2"
+            MaxHeight="360"
+            Margin="8,0"
+            Background="#33000000"
+            CornerRadius="4" />
+        <ListBox
+            Grid.Row="0"
+            Grid.Column="2"
+            MaxHeight="360"
+            Margin="8,8,8,0"
+            VerticalAlignment="Top"
+            Background="#AA000000"
+            ItemsSource="{Binding SelectedVersionViewModel.CivitFileViewModels}"
+            SelectedItem="{Binding SelectedFile}">
             <ListBox.Template>
                 <ControlTemplate>
                     <ScrollViewer>
@@ -151,31 +191,39 @@
             </ListBox.Template>
             <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type dialogs:CivitFileViewModel}">
-                    <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="Auto, *"
-                          Margin="0,4,0,4">
+                    <Grid
+                        Margin="0,4,0,4"
+                        ColumnDefinitions="Auto, *"
+                        RowDefinitions="Auto, Auto">
                         <Grid.ContextFlyout>
                             <controls1:FAMenuFlyout>
                                 <controls1:MenuFlyoutItem
-                                    IsVisible="{Binding IsInstalled}"
                                     Command="{StaticResource ImportCommand}"
                                     IconSource="Download"
+                                    IsVisible="{Binding IsInstalled}"
                                     Text="{x:Static lang:Resources.Action_Import}" />
                             </controls1:FAMenuFlyout>
                         </Grid.ContextFlyout>
-                        <fluentAvalonia:SymbolIcon Grid.Row="0" Grid.RowSpan="2"
-                                                   Grid.Column="0"
-                                                   Margin="0, 0, 8, 0"
-                                                   Symbol="Checkmark"
-                                                   Foreground="Lime"
-                                                   IsVisible="{Binding IsInstalled}"
-                                                   VerticalAlignment="Center" />
-                        <TextBlock Grid.Row="0" Grid.Column="1"
+                        <fluentAvalonia:SymbolIcon
+                            Grid.Row="0"
+                            Grid.RowSpan="2"
+                            Grid.Column="0"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Foreground="Lime"
+                            IsVisible="{Binding IsInstalled}"
+                            Symbol="Checkmark" />
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="0,4,0,4"
                             Text="{Binding CivitFile.DisplayName}"
-                            Margin="0, 4, 0, 4"
                             TextWrapping="Wrap" />
-                        <TextBlock Grid.Row="1" Grid.Column="1"
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="0,4,0,4"
                             FontSize="11"
-                            Margin="0, 4, 0, 4"
                             TextWrapping="Wrap">
                             <Run Text="{Binding CivitFile.Metadata.Format}" />
                             <Run Text="-" />
@@ -189,79 +237,89 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        
-        <StackPanel Grid.Row="1"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="3"
-                    Margin="0,8"
-                    Orientation="Vertical"
-                    HorizontalAlignment="Center"
-                    IsVisible="{Binding !SelectedFile.IsInstalled}">
-            <TextBlock Text="{x:Static lang:Resources.Label_SelectDownloadLocation}"
-                       TextAlignment="Center"
-                       HorizontalAlignment="Center"
-                       Margin="0,4"/>
-            <ComboBox ItemsSource="{Binding AvailableInstallLocations}"
-                      SelectedItem="{Binding SelectedInstallLocation}"
-                      HorizontalAlignment="Center"
-                      MinWidth="300"/>
-            <StackPanel Orientation="Horizontal"
-                        Margin="0,4"
-                        HorizontalAlignment="Center"
-                        IsVisible="{Binding IsCustomSelected}">
-                <TextBox Text="{Binding CustomInstallLocation}"
-                         MinWidth="260"/>
-                <Button Margin="4,0,0,0"
-                        VerticalAlignment="Stretch"
-                        Command="{Binding SelectCustomFolder}">
+
+        <StackPanel
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="0,8"
+            HorizontalAlignment="Center"
+            IsVisible="{Binding !SelectedFile.IsInstalled}"
+            Orientation="Vertical">
+            <TextBlock
+                Margin="0,4"
+                HorizontalAlignment="Center"
+                Text="{x:Static lang:Resources.Label_SelectDownloadLocation}"
+                TextAlignment="Center" />
+            <ComboBox
+                MinWidth="300"
+                HorizontalAlignment="Center"
+                ItemsSource="{Binding AvailableInstallLocations}"
+                SelectedItem="{Binding SelectedInstallLocation}" />
+            <StackPanel
+                Margin="0,4"
+                HorizontalAlignment="Center"
+                IsVisible="{Binding IsCustomSelected}"
+                Orientation="Horizontal">
+                <TextBox MinWidth="260" Text="{Binding CustomInstallLocation}" />
+                <Button
+                    Margin="4,0,0,0"
+                    VerticalAlignment="Stretch"
+                    Command="{Binding SelectCustomFolder}">
                     <controls1:SymbolIcon Symbol="OpenFolder" />
                 </Button>
             </StackPanel>
-            <TextBlock Text="{x:Static lang:Resources.Error_PleaseSelectDownloadLocation}"
-                       IsVisible="{Binding ShowEmptyPathWarning}"
-                       Foreground="{DynamicResource ThemeRedColor}"
-                       TextAlignment="Center"/>
+            <TextBlock
+                Foreground="{DynamicResource ThemeRedColor}"
+                IsVisible="{Binding ShowEmptyPathWarning}"
+                Text="{x:Static lang:Resources.Error_PleaseSelectDownloadLocation}"
+                TextAlignment="Center" />
         </StackPanel>
-        
-        <Expander Grid.Column="0"
-                  Grid.ColumnSpan="3"
-                  Grid.Row="2"
-                  Header="{x:Static lang:Resources.Label_ModelDescription}"
-                  ExpandDirection="Down"
-                  Margin="8, 8">
+
+        <Expander
+            Grid.Row="2"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="8,8"
+            ExpandDirection="Down"
+            Header="{x:Static lang:Resources.Label_ModelDescription}">
             <ScrollViewer MaxHeight="200">
-                <TextBlock Text="{Binding Description}"
-                           TextWrapping="Wrap"
-                           Margin="4"/>
+                <TextBlock
+                    Margin="4"
+                    Text="{Binding Description}"
+                    TextWrapping="Wrap" />
             </ScrollViewer>
         </Expander>
-        
-        <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="3"
-                    Orientation="Horizontal"
-                    Margin="0,8,0,0"
-                    HorizontalAlignment="Center">
+
+        <StackPanel
+            Grid.Row="3"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="0,8,0,0"
+            HorizontalAlignment="Center"
+            Orientation="Horizontal">
             <Button
-                Content="{x:Static lang:Resources.Action_Cancel}"
+                Margin="8,0"
                 HorizontalAlignment="Center"
                 Command="{Binding Cancel}"
-                Margin="8, 0" />
+                Content="{x:Static lang:Resources.Action_Cancel}" />
 
             <Button
-                Margin="8, 0"
-                Content="{x:Static lang:Resources.Action_Import}"
+                Margin="8,0"
+                markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
+                Classes="accent"
                 Command="{Binding Import}"
+                Content="{x:Static lang:Resources.Action_Import}"
                 IsEnabled="{Binding IsImportEnabled}"
                 IsVisible="{Binding !SelectedFile.IsInstalled, TargetNullValue=True, FallbackValue=True}"
-                ToolTip.Tip="{Binding ImportTooltip}"
-                markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
-                Classes="accent" />
-            
+                ToolTip.Tip="{Binding ImportTooltip}" />
+
             <Button
-                Margin="8, 0"
+                Margin="8,0"
+                Classes="danger"
                 Command="{Binding Delete}"
                 Content="{x:Static lang:Resources.Action_Delete}"
-                IsVisible="{Binding SelectedFile.IsInstalled, TargetNullValue=False, FallbackValue=False}"
-                Classes="danger" />
+                IsVisible="{Binding SelectedFile.IsInstalled, TargetNullValue=False, FallbackValue=False}" />
         </StackPanel>
 
     </Grid>

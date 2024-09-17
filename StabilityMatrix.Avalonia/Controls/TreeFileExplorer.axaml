@@ -49,7 +49,7 @@
                                 <sg:SpacedGrid ColumnDefinitions="Auto,*" RowSpacing="0" ColumnSpacing="4">
                                     <fluentIcons:SymbolIcon
                                         Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                        IsFilled="True"
+                                        IconVariant="Filled"
                                         Symbol="Folder" />
                                     <TextBlock
                                         Grid.Column="1"

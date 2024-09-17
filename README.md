@@ -116,17 +116,24 @@ Stability Matrix is now available in the following languages, thanks to our comm
   - Marco Capelli
 - 🇫🇷 Français
   - eephyne
+  - Greg
 - 🇪🇸 Español
   - Carlos Baena 
   - Lautaroturina
 - 🇷🇺 Русский
   - aolko
+  - den1251
 - 🇹🇷 Türkçe
   - Progesor
 - 🇩🇪 Deutsch
   - Mario da Graca
 - 🇵🇹 Português
   - nextosai
+- 🇧🇷 Português (Brasil)
+  - jbostroski
+  - thiagojramos
+- 🇰🇷 한국어
+  - maakcode
 
 If you would like to contribute a translation, please create an issue or contact us on Discord. Include an email where we'll send an invite to our [POEditor](https://poeditor.com/) project.
 

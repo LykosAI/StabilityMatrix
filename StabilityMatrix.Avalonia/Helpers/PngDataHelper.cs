@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -32,70 +33,91 @@ public static class PngDataHelper
         InferenceProjectDocument projectDocument
     )
     {
-        var imageWidthBytes = inputImage[0x10..0x14];
-        var imageHeightBytes = inputImage[0x14..0x18];
-        var imageWidth = BitConverter.ToInt32(imageWidthBytes.Reverse().ToArray());
-        var imageHeight = BitConverter.ToInt32(imageHeightBytes.Reverse().ToArray());
+        using var memoryStream = new MemoryStream();
+        var position = 8; // Skip the PNG signature
+        memoryStream.Write(inputImage, 0, position);
 
-        generationParameters.Width = imageWidth;
-        generationParameters.Height = imageHeight;
+        var metadataInserted = false;
 
-        var idatIndex = SearchBytes(inputImage, Idat);
-        var iendIndex = SearchBytes(inputImage, Iend);
+        while (position < inputImage.Length)
+        {
+            var chunkLength = BitConverter.ToInt32(
+                inputImage[position..(position + 4)].Reverse().ToArray(),
+                0
+            );
+            var chunkType = Encoding.ASCII.GetString(inputImage[(position + 4)..(position + 8)]);
 
-        var textEndIndex = idatIndex - 4; // go back 4 cuz we don't want the length
-        var existingData = inputImage[..textEndIndex];
+            switch (chunkType)
+            {
+                case "IHDR":
+                {
+                    var imageWidthBytes = inputImage[(position + 8)..(position + 12)];
+                    var imageHeightBytes = inputImage[(position + 12)..(position + 16)];
+                    var imageWidth = BitConverter.ToInt32(imageWidthBytes.Reverse().ToArray());
+                    var imageHeight = BitConverter.ToInt32(imageHeightBytes.Reverse().ToArray());
 
-        var smprojJson = JsonSerializer.Serialize(projectDocument);
-        var smprojChunk = BuildTextChunk("smproj", smprojJson);
+                    generationParameters.Width = imageWidth;
+                    generationParameters.Height = imageHeight;
+                    break;
+                }
+                case "IDAT" when !metadataInserted:
+                {
+                    var smprojJson = JsonSerializer.Serialize(projectDocument);
+                    var smprojChunk = BuildTextChunk("smproj", smprojJson);
 
-        var paramsData =
-            $"{generationParameters.PositivePrompt}\nNegative prompt: {generationParameters.NegativePrompt}\n"
-            + $"Steps: {generationParameters.Steps}, Sampler: {generationParameters.Sampler}, "
-            + $"CFG scale: {generationParameters.CfgScale}, Seed: {generationParameters.Seed}, "
-            + $"Size: {imageWidth}x{imageHeight}, "
-            + $"Model hash: {generationParameters.ModelHash}, Model: {generationParameters.ModelName}";
-        var paramsChunk = BuildTextChunk("parameters", paramsData);
+                    var paramsData =
+                        $"{generationParameters.PositivePrompt}\nNegative prompt: {generationParameters.NegativePrompt}\n"
+                        + $"Steps: {generationParameters.Steps}, Sampler: {generationParameters.Sampler}, "
+                        + $"CFG scale: {generationParameters.CfgScale}, Seed: {generationParameters.Seed}, "
+                        + $"Size: {generationParameters.Width}x{generationParameters.Height}, "
+                        + $"Model hash: {generationParameters.ModelHash}, Model: {generationParameters.ModelName}";
+                    var paramsChunk = BuildTextChunk("parameters", paramsData);
 
-        var paramsJson = JsonSerializer.Serialize(generationParameters);
-        var paramsJsonChunk = BuildTextChunk("parameters-json", paramsJson);
+                    var paramsJson = JsonSerializer.Serialize(generationParameters);
+                    var paramsJsonChunk = BuildTextChunk("parameters-json", paramsJson);
 
-        // Go back 4 from the idat index because we need the length of the data
-        idatIndex -= 4;
+                    memoryStream.Write(paramsChunk, 0, paramsChunk.Length);
+                    memoryStream.Write(paramsJsonChunk, 0, paramsJsonChunk.Length);
+                    memoryStream.Write(smprojChunk, 0, smprojChunk.Length);
 
-        // Go forward 8 from the iend index because we need the crc
-        iendIndex += 8;
-        var actualImageData = inputImage[idatIndex..iendIndex];
+                    metadataInserted = true; // Ensure we only insert the metadata once
+                    break;
+                }
+            }
 
-        var finalImage = existingData
-            .Concat(paramsChunk)
-            .Concat(paramsJsonChunk)
-            .Concat(smprojChunk)
-            .Concat(actualImageData);
+            // Write the current chunk to the output stream
+            memoryStream.Write(inputImage, position, chunkLength + 12); // Write the length, type, data, and CRC
+            position += chunkLength + 12;
+        }
 
-        return finalImage.ToArray();
+        return memoryStream.ToArray();
     }
 
     public static byte[] RemoveMetadata(byte[] inputImage)
     {
-        var firstTextIndex = SearchBytes(inputImage, Text);
-        if (firstTextIndex == -1)
-            return inputImage;
+        using var memoryStream = new MemoryStream();
+        var position = 8; // Skip the PNG signature
+        memoryStream.Write(inputImage, 0, position);
 
-        // Don't want the size bytes either
-        firstTextIndex -= 4;
-        var existingHeader = inputImage[..firstTextIndex];
+        while (position < inputImage.Length)
+        {
+            var chunkLength = BitConverter.ToInt32(
+                inputImage[position..(position + 4)].Reverse().ToArray(),
+                0
+            );
+            var chunkType = Encoding.ASCII.GetString(inputImage[(position + 4)..(position + 8)]);
 
-        // Go back 4 from the idat index because we need the length of the data
-        var idatIndex = SearchBytes(inputImage, Idat) - 4;
+            // If the chunk is not a text chunk, write it to the output
+            if (chunkType != "tEXt" && chunkType != "zTXt" && chunkType != "iTXt")
+            {
+                memoryStream.Write(inputImage, position, chunkLength + 12); // Write the length, type, data, and CRC
+            }
 
-        // Go forward 8 from the iend index because we need the crc
-        var iendIndex = SearchBytes(inputImage, Iend) + 8;
+            // Move to the next chunk
+            position += chunkLength + 12;
+        }
 
-        var actualImageData = inputImage[idatIndex..iendIndex];
-        var finalImage = existingHeader.Concat(actualImageData);
-
-        return finalImage.ToArray();
+        return memoryStream.ToArray();
     }
 
     private static byte[] BuildTextChunk(string key, string value)
@@ -107,24 +129,5 @@ public static class PngDataHelper
         var crc = BitConverter.GetBytes(Crc32Algorithm.Compute(textDataBytes)).Reverse();
 
         return textDataLength.Concat(textDataBytes).Concat(crc).ToArray();
-    }
-
-    private static int SearchBytes(byte[] haystack, byte[] needle)
-    {
-        var limit = haystack.Length - needle.Length;
-        for (var i = 0; i <= limit; i++)
-        {
-            var k = 0;
-            for (; k < needle.Length; k++)
-            {
-                if (needle[k] != haystack[i + k])
-                    break;
-            }
-
-            if (k == needle.Length)
-                return i;
-        }
-
-        return -1;
     }
 }

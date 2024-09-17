@@ -13,6 +13,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -42,14 +43,15 @@ public class VladAutomatic(
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         new[]
         {
-            TorchVersion.Cpu,
-            TorchVersion.Cuda,
-            TorchVersion.DirectMl,
-            TorchVersion.Rocm,
-            TorchVersion.Zluda
+            TorchIndex.Cpu,
+            TorchIndex.Cuda,
+            TorchIndex.DirectMl,
+            TorchIndex.Ipex,
+            TorchIndex.Rocm,
+            TorchIndex.Zluda,
         };
 
     // https://github.com/vladmandic/automatic/blob/master/modules/shared.py#L324
@@ -134,7 +136,6 @@ public class VladAutomatic(
             {
                 Name = "Use DirectML if no compatible GPU is detected",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectML(),
                 Options = ["--use-directml"]
             },
             new()
@@ -143,6 +144,13 @@ public class VladAutomatic(
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.HasNvidiaGpu(),
                 Options = ["--use-cuda"]
+            },
+            new()
+            {
+                Name = "Force use of Intel OneAPI XPU backend",
+                Type = LaunchOptionType.Bool,
+                InitialValue = HardwareHelper.HasIntelGpu(),
+                Options = ["--use-ipex"]
             },
             new()
             {
@@ -155,7 +163,7 @@ public class VladAutomatic(
             {
                 Name = "Force use of ZLUDA backend",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferRocm(),
+                InitialValue = HardwareHelper.PreferDirectML(),
                 Options = ["--use-zluda"]
             },
             new()
@@ -179,44 +187,54 @@ public class VladAutomatic(
             LaunchOptionDefinition.Extras
         ];
 
-    public override string ExtraLaunchArguments => "";
-
     public override string MainBranch => "master";
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1f, "Installing package...", isIndeterminate: true));
         // Setup venv
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
+        if (installedPackage.PipOverrides != null)
+        {
+            var pipArgs = new PipInstallArgs().WithUserOverrides(installedPackage.PipOverrides);
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        }
+
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         switch (torchVersion)
         {
             // Run initial install
-            case TorchVersion.Cuda:
+            case TorchIndex.Cuda:
                 await venvRunner
                     .CustomInstall("launch.py --use-cuda --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
-            case TorchVersion.Rocm:
+            case TorchIndex.Rocm:
                 await venvRunner
                     .CustomInstall("launch.py --use-rocm --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
-            case TorchVersion.DirectMl:
+            case TorchIndex.DirectMl:
                 await venvRunner
                     .CustomInstall("launch.py --use-directml --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
-            case TorchVersion.Zluda:
+            case TorchIndex.Zluda:
                 await venvRunner
                     .CustomInstall("launch.py --use-zluda --debug --test", onConsoleOutput)
+                    .ConfigureAwait(false);
+                break;
+            case TorchIndex.Ipex:
+                await venvRunner
+                    .CustomInstall("launch.py --use-ipex --debug --test", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             default:
@@ -232,8 +250,9 @@ public class VladAutomatic(
 
     public override async Task DownloadPackage(
         string installLocation,
-        DownloadPackageVersionOptions downloadOptions,
-        IProgress<ProgressReport>? progress = null
+        DownloadPackageOptions options,
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(
@@ -248,9 +267,11 @@ public class VladAutomatic(
         var installDir = new DirectoryPath(installLocation);
         installDir.Create();
 
-        if (string.IsNullOrWhiteSpace(downloadOptions.BranchName))
+        var versionOptions = options.VersionOptions;
+
+        if (string.IsNullOrWhiteSpace(versionOptions.BranchName))
         {
-            throw new ArgumentNullException(nameof(downloadOptions));
+            throw new InvalidOperationException("Branch name is required for VladAutomatic");
         }
 
         await PrerequisiteHelper
@@ -259,29 +280,30 @@ public class VladAutomatic(
                 {
                     "clone",
                     "-b",
-                    downloadOptions.BranchName,
+                    versionOptions.BranchName,
                     "https://github.com/vladmandic/automatic",
                     installDir.Name
                 },
                 installDir.Parent?.FullPath ?? ""
             )
             .ConfigureAwait(false);
-        if (!string.IsNullOrWhiteSpace(downloadOptions.CommitHash) && !downloadOptions.IsLatest)
+        if (!string.IsNullOrWhiteSpace(versionOptions.CommitHash) && !versionOptions.IsLatest)
         {
             await PrerequisiteHelper
-                .RunGit(new[] { "checkout", downloadOptions.CommitHash }, installLocation)
+                .RunGit(new[] { "checkout", versionOptions.CommitHash }, installLocation)
                 .ConfigureAwait(false);
         }
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
+        await SetupVenv(installLocation).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -298,33 +320,29 @@ public class VladAutomatic(
             }
         }
 
-        void HandleExit(int i)
-        {
-            Debug.WriteLine($"Venv process exited with code {i}");
-            OnExit(i);
-        }
-
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
-
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+        VenvRunner.RunDetached(
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            HandleConsoleOutput,
+            OnExit
+        );
     }
 
     public override async Task<InstalledPackageVersion> Update(
+        string installLocation,
         InstalledPackage installedPackage,
-        TorchVersion torchVersion,
-        DownloadPackageVersionOptions versionOptions,
+        UpdatePackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         var baseUpdateResult = await base.Update(
+            installLocation,
             installedPackage,
-            torchVersion,
-            versionOptions,
+            options,
             progress,
-            includePrerelease,
-            onConsoleOutput
+            onConsoleOutput,
+            cancellationToken
         )
             .ConfigureAwait(false);
 
@@ -342,7 +360,7 @@ public class VladAutomatic(
 
             return new InstalledPackageVersion
             {
-                InstalledBranch = versionOptions.BranchName,
+                InstalledBranch = options.VersionOptions.BranchName,
                 InstalledCommitSha = result
                     .StandardOutput?.Replace(Environment.NewLine, "")
                     .Replace("\n", ""),

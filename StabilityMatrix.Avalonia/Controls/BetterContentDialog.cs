@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using AsyncAwaitBestPractices;
@@ -7,9 +8,11 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Logging;
 using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Core.Extensions;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
@@ -95,7 +98,7 @@ public class BetterContentDialog : ContentDialog
     }
     #endregion
 
-    private FABorder? backgroundPart;
+    private Border? backgroundPart;
 
     protected override Type StyleKeyOverride { get; } = typeof(ContentDialog);
 
@@ -223,27 +226,8 @@ public class BetterContentDialog : ContentDialog
         }
     }
 
-    private void TryBindButtons()
+    private void TrySetButtonCommands()
     {
-        if ((Content as Control)?.DataContext is ContentDialogViewModelBase viewModel)
-        {
-            viewModel.PrimaryButtonClick += OnDialogButtonClick;
-            viewModel.SecondaryButtonClick += OnDialogButtonClick;
-            viewModel.CloseButtonClick += OnDialogButtonClick;
-        }
-        else if (Content is ContentDialogViewModelBase viewModelDirect)
-        {
-            viewModelDirect.PrimaryButtonClick += OnDialogButtonClick;
-            viewModelDirect.SecondaryButtonClick += OnDialogButtonClick;
-            viewModelDirect.CloseButtonClick += OnDialogButtonClick;
-        }
-        else if ((Content as Control)?.DataContext is ContentDialogProgressViewModelBase progressViewModel)
-        {
-            progressViewModel.PrimaryButtonClick += OnDialogButtonClick;
-            progressViewModel.SecondaryButtonClick += OnDialogButtonClick;
-            progressViewModel.CloseButtonClick += OnDialogButtonClick;
-        }
-
         // If commands provided, bind OnCanExecuteChanged to hide buttons
         // otherwise link visibility to IsEnabled
         if (PrimaryButton is not null)
@@ -289,6 +273,28 @@ public class BetterContentDialog : ContentDialog
         }
     }
 
+    private void TryBindButtonEvents()
+    {
+        if ((Content as Control)?.DataContext is ContentDialogViewModelBase viewModel)
+        {
+            viewModel.PrimaryButtonClick += OnDialogButtonClick;
+            viewModel.SecondaryButtonClick += OnDialogButtonClick;
+            viewModel.CloseButtonClick += OnDialogButtonClick;
+        }
+        else if (Content is ContentDialogViewModelBase viewModelDirect)
+        {
+            viewModelDirect.PrimaryButtonClick += OnDialogButtonClick;
+            viewModelDirect.SecondaryButtonClick += OnDialogButtonClick;
+            viewModelDirect.CloseButtonClick += OnDialogButtonClick;
+        }
+        else if ((Content as Control)?.DataContext is ContentDialogProgressViewModelBase progressViewModel)
+        {
+            progressViewModel.PrimaryButtonClick += OnDialogButtonClick;
+            progressViewModel.SecondaryButtonClick += OnDialogButtonClick;
+            progressViewModel.CloseButtonClick += OnDialogButtonClick;
+        }
+    }
+
     protected void OnDialogButtonClick(object? sender, ContentDialogResult e)
     {
         Dispatcher.UIThread.Post(() =>
@@ -302,7 +308,7 @@ public class BetterContentDialog : ContentDialog
     {
         base.OnDataContextChanged(e);
 
-        TryBindButtons();
+        TryBindButtonEvents();
     }
 
     /// <inheritdoc />
@@ -310,7 +316,7 @@ public class BetterContentDialog : ContentDialog
     {
         base.OnApplyTemplate(e);
 
-        backgroundPart = e.NameScope.Find<FABorder>("BackgroundElement");
+        backgroundPart = e.NameScope.Find<Border>("BackgroundElement");
         if (backgroundPart is not null)
         {
             backgroundPart.Margin = ContentMargin;
@@ -319,58 +325,70 @@ public class BetterContentDialog : ContentDialog
 
     private void OnLoaded(object? sender, RoutedEventArgs? e)
     {
-        TryBindButtons();
+        TryBindButtonEvents();
 
-        // Find the named grid
-        // https://github.com/amwx/FluentAvalonia/blob/master/src/FluentAvalonia/Styling/
-        // ControlThemes/FAControls/ContentDialogStyles.axaml#L96
-        var border = VisualChildren[0] as Border;
-        var panel = border?.Child as Panel;
-        var faBorder = panel?.Children[0] as FABorder;
-
-        // Set dialog bounds
-        if (MaxDialogWidth > 0)
+        try
         {
-            faBorder!.MaxWidth = MaxDialogWidth;
-        }
+            // Find the named grid
+            // https://github.com/amwx/FluentAvalonia/blob/master/src/FluentAvalonia/Styling/
+            // ControlThemes/FAControls/ContentDialogStyles.axaml#L96
+            var containerBorder = VisualChildren[0] as Border;
+            var layoutRootPanel = containerBorder?.Child as Panel;
+            var backgroundElementBorder = (layoutRootPanel?.Children[0] as Border).Unwrap();
 
-        if (MinDialogWidth > 0)
+            // Set dialog bounds
+            if (MaxDialogWidth > 0)
+            {
+                backgroundElementBorder.MaxWidth = MaxDialogWidth;
+            }
+
+            if (MinDialogWidth > 0)
+            {
+                backgroundElementBorder.MinWidth = MinDialogWidth;
+            }
+
+            // This kind of bork for some reason
+            /*if (MinDialogHeight > 0)
+            {
+                faBorder!.MinHeight = MinDialogHeight;
+            }*/
+
+            if (MaxDialogHeight > 0)
+            {
+                backgroundElementBorder!.MaxHeight = MaxDialogHeight;
+            }
+
+            var border2 = backgroundElementBorder?.Child as Border;
+            // Named Grid 'DialogSpace'
+            var dialogSpaceGrid = (border2?.Child as Grid).Unwrap();
+
+            // Get the parent border, which is what we want to hide
+            var scrollViewer = (dialogSpaceGrid.Children[0] as ScrollViewer).Unwrap();
+            var actualBorder = (dialogSpaceGrid.Children[1] as Border).Unwrap();
+
+            var subBorder = (scrollViewer.Content as Border).Unwrap();
+            var subGrid = (subBorder.Child as Grid).Unwrap();
+
+            var contentControlTitle = (subGrid.Children[0] as ContentControl).Unwrap();
+
+            // Hide title if empty
+            if (Title is null or string { Length: 0 })
+            {
+                contentControlTitle.IsVisible = false;
+            }
+
+            // Set footer and scrollbar visibility states
+            actualBorder.IsVisible = IsFooterVisible;
+            scrollViewer.VerticalScrollBarVisibility = ContentVerticalScrollBarVisibility;
+        }
+        catch (ArgumentNullException)
         {
-            faBorder!.MinWidth = MinDialogWidth;
+            Logger
+                .TryGet(LogEventLevel.Error, nameof(BetterContentDialog))
+                ?.Log(this, "OnLoaded - Unable to find elements");
+
+            return;
         }
-        if (MaxDialogHeight > 0)
-        {
-            faBorder!.MaxHeight = MaxDialogHeight;
-        }
-
-        var border2 = faBorder?.Child as Border;
-        // Named Grid 'DialogSpace'
-        if (border2?.Child is not Grid dialogSpaceGrid)
-            throw new InvalidOperationException("Could not find DialogSpace grid");
-
-        var scrollViewer = dialogSpaceGrid.Children[0] as ScrollViewer;
-        var actualBorder = dialogSpaceGrid.Children[1] as Border;
-
-        // Get the parent border, which is what we want to hide
-        if (scrollViewer is null || actualBorder is null)
-        {
-            throw new InvalidOperationException("Could not find parent border");
-        }
-
-        var subBorder = scrollViewer.Content as Border;
-        var subGrid = subBorder?.Child as Grid;
-        if (subGrid is null)
-            throw new InvalidOperationException("Could not find sub grid");
-        var contentControlTitle = subGrid.Children[0] as ContentControl;
-        // Hide title if empty
-        if (Title is null or string { Length: 0 })
-        {
-            contentControlTitle!.IsVisible = false;
-        }
-
-        // Set footer and scrollbar visibility states
-        actualBorder.IsVisible = IsFooterVisible;
-        scrollViewer.VerticalScrollBarVisibility = ContentVerticalScrollBarVisibility;
 
         // Also call the vm's OnLoad
         if (Content is Control { DataContext: ViewModelBase viewModel })

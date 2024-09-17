@@ -79,10 +79,10 @@
                         IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNullOrEmpty}}"
                         Width="64"
                         Height="64"
-                        IsFilled="True"
+                        IconVariant="Filled"
                         FontSize="64"
                         Symbol="Person" />
-                    <ui:HyperlinkButton
+                    <HyperlinkButton
                         ToolTip.Tip="Edit on Gravatar"
                         NavigateUri="http://gravatar.com/emails/"
                         IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
@@ -95,7 +95,7 @@
                             Width="64"
                             Height="64"
                             CornerRadius="8" /> 
-                    </ui:HyperlinkButton>
+                    </HyperlinkButton>
 
 
                     <StackPanel>

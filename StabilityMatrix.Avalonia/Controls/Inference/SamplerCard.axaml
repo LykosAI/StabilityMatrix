@@ -31,7 +31,7 @@
                                 IsVisible="{Binding IsSamplerSelectionEnabled}"
                                 Margin="0,0,0,8"
                                 VerticalAlignment="Center"
-                                Text="Sampler" />
+                                Text="{x:Static lang:Resources.Label_Sampler}" />
                             <ui:FAComboBox
                                 Grid.Row="0"
                                 Grid.Column="2"
@@ -48,7 +48,7 @@
                                 IsVisible="{Binding IsSchedulerSelectionEnabled}"
                                 Margin="0,0,0,8"
                                 VerticalAlignment="Center"
-                                Text="Scheduler" />
+                                Text="{x:Static lang:Resources.Label_Scheduler}" />
                             <ui:FAComboBox
                                 Grid.Row="1"
                                 Grid.Column="2"
@@ -194,7 +194,7 @@
                             
                             <!-- Conditioning Modules -->
                             <Grid 
-                                IsVisible="{Binding IsDimensionsEnabled}"
+                                IsVisible="{Binding EnableAddons}"
                                 Margin="0,8,0,0"
                                 ColumnDefinitions="*" 
                                 RowDefinitions="*">

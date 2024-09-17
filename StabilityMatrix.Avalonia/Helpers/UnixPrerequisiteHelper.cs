@@ -7,7 +7,6 @@ using System.Linq;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using DynamicData;
 using FluentAvalonia.UI.Controls;
 using NLog;
 using StabilityMatrix.Avalonia.Languages;
@@ -215,7 +214,7 @@ public class UnixPrerequisiteHelper(
     {
         var command = args.Prepend("git");
 
-        var result = await ProcessRunner.RunBashCommand(command.ToArray(), workingDirectory ?? "");
+        var result = await ProcessRunner.RunBashCommand(command, workingDirectory ?? "");
         if (result.ExitCode != 0)
         {
             Logger.Error(
@@ -309,7 +308,7 @@ public class UnixPrerequisiteHelper(
 
     public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
     {
-        return ProcessRunner.RunBashCommand(args.Prepend("git").ToArray(), workingDirectory ?? "");
+        return ProcessRunner.RunBashCommand(args.Prepend("git"), workingDirectory ?? "");
     }
 
     [Localizable(false)]
@@ -480,6 +479,13 @@ public class UnixPrerequisiteHelper(
     [UnsupportedOSPlatform("Linux")]
     [UnsupportedOSPlatform("macOS")]
     public Task InstallVcRedistIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        throw new PlatformNotSupportedException();
+    }
+
+    [UnsupportedOSPlatform("Linux")]
+    [UnsupportedOSPlatform("macOS")]
+    public Task<bool> FixGitLongPaths()
     {
         throw new PlatformNotSupportedException();
     }

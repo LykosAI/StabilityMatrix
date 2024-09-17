@@ -1,21 +1,11 @@
-﻿using System;
-using System.Text.Json.Nodes;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using FluentAvalonia.UI.Controls;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Extensions;
-using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy;
-using StabilityMatrix.Core.Models.FileInterfaces;
-using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -47,22 +37,6 @@ public partial class UpscalerCardViewModel : LoadableViewModelBase
         this.vmFactory = vmFactory;
 
         ClientManager = clientManager;
-    }
-
-    [RelayCommand]
-    private async Task RemoteDownload(ComfyUpscaler? upscaler)
-    {
-        if (upscaler?.DownloadableResource is not { } resource)
-            return;
-
-        var confirmDialog = vmFactory.Get<DownloadResourceViewModel>();
-        confirmDialog.Resource = resource;
-        confirmDialog.FileName = upscaler.Value.Name;
-
-        if (await confirmDialog.GetDialog().ShowAsync() == ContentDialogResult.Primary)
-        {
-            confirmDialog.StartDownload();
-        }
     }
 
     /// <inheritdoc />

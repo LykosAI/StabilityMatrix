@@ -21,8 +21,7 @@ public class DankDiffusion : BaseGitPackage
     public override string DisplayName { get; set; } = "Dank Diffusion";
     public override string Author => "mohnjiles";
     public override string LicenseType => "AGPL-3.0";
-    public override string LicenseUrl =>
-        "https://github.com/LykosAI/StabilityMatrix/blob/main/LICENSE";
+    public override string LicenseUrl => "https://github.com/LykosAI/StabilityMatrix/blob/main/LICENSE";
     public override string Blurb => "A dank interface for diffusion";
     public override string LaunchCommand => "test";
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
@@ -36,21 +35,22 @@ public class DankDiffusion : BaseGitPackage
 
     public override Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         throw new NotImplementedException();
     }
 
     public override Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         throw new NotImplementedException();
@@ -80,15 +80,12 @@ public class DankDiffusion : BaseGitPackage
         throw new NotImplementedException();
     }
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions { get; }
+    public override IEnumerable<TorchIndex> AvailableTorchIndices { get; }
 
     public override List<LaunchOptionDefinition> LaunchOptions { get; }
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
-    public override Dictionary<
-        SharedOutputType,
-        IReadOnlyList<string>
-    >? SharedOutputFolders { get; }
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
 
     public override string MainBranch { get; }
 }

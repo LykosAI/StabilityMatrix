@@ -31,7 +31,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [ManagedService]
 [Transient]
-public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
+public partial class CheckpointBrowserCardViewModel : ProgressViewModel
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly IDownloadService downloadService;
@@ -57,6 +57,8 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     }
     private CivitModel civitModel;
 
+    public int Order { get; set; }
+
     public override bool IsTextVisible => Value > 0;
 
     [ObservableProperty]
@@ -64,6 +66,9 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
 
     [ObservableProperty]
     private bool isImporting;
+
+    [ObservableProperty]
+    private bool isLoading;
 
     [ObservableProperty]
     private string updateCardText = string.Empty;
@@ -96,9 +101,15 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         this.modelImportService = modelImportService;
 
         // Update image when nsfw setting changes
-        settingsManager.RegisterPropertyChangedHandler(
-            s => s.ModelBrowserNsfwEnabled,
-            _ => Dispatcher.UIThread.Post(UpdateImage)
+        AddDisposable(
+            settingsManager.RegisterPropertyChangedHandler(
+                s => s.ModelBrowserNsfwEnabled,
+                _ => Dispatcher.UIThread.Post(UpdateImage)
+            ),
+            settingsManager.RegisterPropertyChangedHandler(
+                s => s.HideEarlyAccessModels,
+                _ => Dispatcher.UIThread.Post(UpdateImage)
+            )
         );
 
         ShowSantaHats = settingsManager.Settings.IsHolidayModeActive;
@@ -158,7 +169,10 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     private void UpdateImage()
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
-        var version = CivitModel.ModelVersions?.FirstOrDefault();
+        var hideEarlyAccessModels = settingsManager.Settings.HideEarlyAccessModels;
+        var version = CivitModel.ModelVersions?.FirstOrDefault(
+            v => !hideEarlyAccessModels || !v.IsEarlyAccess
+        );
         var images = version?.Images;
 
         // Try to find a valid image
@@ -233,6 +247,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         viewModel.Description = prunedDescription;
         viewModel.CivitModel = model;
         viewModel.Versions = versions
+            .Where(v => !settingsManager.Settings.HideEarlyAccessModels || !v.IsEarlyAccess)
             .Select(version => new ModelVersionViewModel(modelIndexService, version))
             .ToImmutableArray();
         viewModel.SelectedVersionViewModel = viewModel.Versions[0];
@@ -256,14 +271,28 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
         }
         else
         {
-            var subFolder =
-                viewModel?.SelectedInstallLocation
-                ?? Path.Combine(@"Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
+            var sharedFolder = model.Type.ConvertTo<SharedFolderType>().GetStringValue();
+
+            if (
+                model.BaseModelType == CivitBaseModelType.Flux1D.GetStringValue()
+                || model.BaseModelType == CivitBaseModelType.Flux1S.GetStringValue()
+            )
+            {
+                sharedFolder = SharedFolderType.Unet.GetStringValue();
+            }
+
+            var defaultPath = Path.Combine(@"Models", sharedFolder);
+
+            var subFolder = viewModel?.SelectedInstallLocation ?? defaultPath;
             downloadPath = Path.Combine(settingsManager.LibraryDir, subFolder);
         }
 
         await Task.Delay(100);
         await DoImport(model, downloadPath, selectedVersion, selectedFile);
+
+        Text = "Import started. Check the downloads tab for progress.";
+        Value = 100;
+        DelayedClearProgress(TimeSpan.FromMilliseconds(1000));
     }
 
     private async Task DoImport(
@@ -274,6 +303,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
     )
     {
         IsImporting = true;
+        IsLoading = true;
         Text = "Downloading...";
 
         OnDownloadStart?.Invoke(this);
@@ -350,6 +380,7 @@ public partial class CheckpointBrowserCardViewModel : Base.ProgressViewModel
                 Text = string.Empty;
                 Value = 0;
                 IsImporting = false;
+                IsLoading = false;
             });
     }
 

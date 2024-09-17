@@ -185,6 +185,8 @@ public static partial class HardwareHelper
         return IterGpuInfo().Any(gpu => gpu.IsAmd);
     }
 
+    public static bool HasIntelGpu() => IterGpuInfo().Any(gpu => gpu.IsIntel);
+
     // Set ROCm for default if AMD and Linux
     public static bool PreferRocm() => !HasNvidiaGpu() && HasAmdGpu() && Compat.IsLinux;
 

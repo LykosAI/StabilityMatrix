@@ -1011,6 +1011,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changes Applied.
+        /// </summary>
+        public static string Label_ChangesApplied {
+            get {
+                return ResourceManager.GetString("Label_ChangesApplied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to We&apos;re checking some hardware specifications to determine compatibility..
         /// </summary>
         public static string Label_CheckingHardware {
@@ -1466,6 +1475,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Emphasis {
             get {
                 return ResourceManager.GetString("Label_Emphasis", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable Long Paths.
+        /// </summary>
+        public static string Label_EnableLongPaths {
+            get {
+                return ResourceManager.GetString("Label_EnableLongPaths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove MAX_PATH limitations from common Win32 file and directory functions.
+        /// </summary>
+        public static string Label_EnableLongPathsDescription {
+            get {
+                return ResourceManager.GetString("Label_EnableLongPathsDescription", resourceCulture);
             }
         }
         
@@ -2766,6 +2793,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to System Settings.
+        /// </summary>
+        public static string Label_SystemSettings {
+            get {
+                return ResourceManager.GetString("Label_SystemSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Tags.
         /// </summary>
         public static string Label_Tags {
@@ -3329,6 +3365,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Text_RelaunchRequiredToApplyLanguage {
             get {
                 return ResourceManager.GetString("Text_RelaunchRequiredToApplyLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A restart may be required for system changes to take effect..
+        /// </summary>
+        public static string Text_RestartMayBeRequiredForSystemChanges {
+            get {
+                return ResourceManager.GetString("Text_RestartMayBeRequiredForSystemChanges", resourceCulture);
             }
         }
         

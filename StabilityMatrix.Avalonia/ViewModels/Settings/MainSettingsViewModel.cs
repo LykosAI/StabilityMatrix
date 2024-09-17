@@ -175,6 +175,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         $"You are {VersionTapCountThreshold - VersionTapCount} clicks away from enabling Debug options.";
 
     public string DataDirectory => settingsManager.IsLibraryDirSet ? settingsManager.LibraryDir : "Not set";
+    public string ModelsDirectory => settingsManager.ModelsDirectory;
 
     public MainSettingsViewModel(
         INotificationService notificationService,

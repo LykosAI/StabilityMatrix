@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -24,6 +25,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Microsoft.Win32;
 using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Animations;
@@ -145,6 +147,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     [ObservableProperty]
     private bool moveFilesOnImport;
+
+    #region System Settings
+
+    [ObservableProperty]
+    private bool isWindowsLongPathsEnabled;
+
+    #endregion
 
     #region System Info
 
@@ -280,6 +289,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
         base.OnLoaded();
 
         hardwareInfoUpdateTimer.Start();
+
+        if (Compat.IsWindows)
+        {
+            UpdateRegistrySettings();
+        }
     }
 
     /// <inheritdoc />
@@ -309,6 +323,26 @@ public partial class MainSettingsViewModel : PageViewModelBase
                     NotificationType.Error
                 );
             });
+    }
+
+    [SupportedOSPlatform("windows")]
+    private void UpdateRegistrySettings()
+    {
+        try
+        {
+            using var fsKey =
+                Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\FileSystem")
+                ?? throw new InvalidOperationException(
+                    "Could not open registry key 'SYSTEM\\CurrentControlSet\\Control\\FileSystem'"
+                );
+
+            IsWindowsLongPathsEnabled = Convert.ToBoolean(fsKey.GetValue("LongPathsEnabled", null));
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Could not read registry settings");
+            notificationService.Show("Could not read registry settings", e.Message, NotificationType.Error);
+        }
     }
 
     private void OnHardwareInfoUpdateTimerTick(object? sender, EventArgs e)
@@ -1197,6 +1231,43 @@ public partial class MainSettingsViewModel : PageViewModelBase
         vm.PaintCanvasViewModel.BackgroundImage = bitmap;
 
         await vm.GetDialog().ShowAsync();
+    }
+
+    #endregion
+
+    #region Systems Setting Section
+
+    [RelayCommand]
+    private async Task OnWindowsLongPathsToggleClick()
+    {
+        // Command is called after value is set, so if false we need to disable
+        var requestedValue = IsWindowsLongPathsEnabled;
+
+        try
+        {
+            var result = await WindowsElevated.SetRegistryValue(
+                @"HKLM\SYSTEM\CurrentControlSet\Control\FileSystem",
+                @"LongPathsEnabled",
+                requestedValue ? 1 : 0
+            );
+
+            if (result != 0)
+            {
+                notificationService.Show(
+                    "Failed to toggle long paths",
+                    $"Error code: {result}",
+                    NotificationType.Error
+                );
+            }
+        }
+        catch (Win32Exception e)
+        {
+            notificationService.Show("Failed to toggle long paths", e.Message, NotificationType.Error);
+        }
+        finally
+        {
+            UpdateRegistrySettings();
+        }
     }
 
     #endregion

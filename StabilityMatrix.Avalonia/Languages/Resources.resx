@@ -1245,4 +1245,13 @@
   <data name="Label_ShowNsfwImages" xml:space="preserve">
     <value>Show NSFW Images</value>
   </data>
+  <data name="Label_EnableLongPaths" xml:space="preserve">
+    <value>Enable Long Paths</value><comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_EnableLongPathsDescription" xml:space="preserve">
+    <value>Remove MAX_PATH limitations from common Win32 file and directory functions</value><comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_SystemSettings" xml:space="preserve">
+    <value>System Settings</value>
+  </data>
 </root>

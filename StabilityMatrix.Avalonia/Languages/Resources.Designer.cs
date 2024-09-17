@@ -1470,6 +1470,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enable Long Paths.
+        /// </summary>
+        public static string Label_EnableLongPaths {
+            get {
+                return ResourceManager.GetString("Label_EnableLongPaths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove MAX_PATH limitations from common Win32 file and directory functions.
+        /// </summary>
+        public static string Label_EnableLongPathsDescription {
+            get {
+                return ResourceManager.GetString("Label_EnableLongPathsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Environment Variables.
         /// </summary>
         public static string Label_EnvironmentVariables {
@@ -2762,6 +2780,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_SystemInformation {
             get {
                 return ResourceManager.GetString("Label_SystemInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to System Settings.
+        /// </summary>
+        public static string Label_SystemSettings {
+            get {
+                return ResourceManager.GetString("Label_SystemSettings", resourceCulture);
             }
         }
         

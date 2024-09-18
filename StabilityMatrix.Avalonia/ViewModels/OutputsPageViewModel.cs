@@ -17,9 +17,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using Microsoft.Extensions.Logging;
 using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Controls.VendorLabs;
+using StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
@@ -37,7 +40,6 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
-using Size = StabilityMatrix.Core.Models.Settings.Size;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 
@@ -57,7 +59,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     public override string Title => Resources.Label_OutputsPageTitle;
 
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Grid, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Grid, IconVariant = IconVariant.Filled };
 
     public SourceCache<LocalImageFile, string> OutputsCache { get; } = new(file => file.AbsolutePath);
 
@@ -84,9 +87,6 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private string searchQuery;
 
     [ObservableProperty]
-    private Size imageSize = new(300, 300);
-
-    [ObservableProperty]
     private bool isConsolidating;
 
     [ObservableProperty]
@@ -97,6 +97,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
     [ObservableProperty]
     private bool isChangingCategory;
+
+    [ObservableProperty]
+    private double resizeFactor;
 
     public bool CanShowOutputTypes => SelectedCategory?.Name?.Equals("Shared Output Folder") ?? false;
 
@@ -155,8 +158,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
         settingsManager.RelayPropertyFor(
             this,
-            vm => vm.ImageSize,
-            settings => settings.OutputsImageSize,
+            vm => vm.ResizeFactor,
+            settings => settings.OutputsPageResizeFactor,
+            true,
             delay: TimeSpan.FromMilliseconds(250)
         );
 
@@ -183,7 +187,6 @@ public partial class OutputsPageViewModel : PageViewModelBase
         SelectedCategory ??= Categories.First();
         SelectedOutputType ??= SharedOutputType.All;
         SearchQuery = string.Empty;
-        ImageSize = settingsManager.Settings.OutputsImageSize;
         lastOutputCategory = SelectedCategory;
 
         IsChangingCategory = true;
@@ -193,6 +196,18 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 ? Path.Combine(SelectedCategory.Path, SelectedOutputType.ToString())
                 : SelectedCategory.Path;
         GetOutputs(path);
+    }
+
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+
+        logger.LogTrace("OutputsPageViewModel Unloaded");
+
+        logger.LogTrace("Clearing memory cache");
+        var items = ImageLoaders.OutputsPageImageCache.ClearMemoryCache();
+
+        logger.LogTrace("Cleared {Items} items from memory cache", items);
     }
 
     partial void OnSelectedCategoryChanged(TreeViewDirectory? oldValue, TreeViewDirectory? newValue)
@@ -244,7 +259,9 @@ public partial class OutputsPageViewModel : PageViewModelBase
         // Preload
         await image.GetBitmapAsync();
 
-        var vm = new ImageViewerViewModel { ImageSource = image, LocalImageFile = item.ImageFile };
+        var vm = vmFactory.Get<ImageViewerViewModel>();
+        vm.ImageSource = image;
+        vm.LocalImageFile = item.ImageFile;
 
         using var onNext = Observable
             .FromEventPattern<DirectionalNavigationEventArgs>(
@@ -483,7 +500,13 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
             var directory = category.Tag.ToString();
 
-            foreach (var path in Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories))
+            foreach (
+                var path in Directory.EnumerateFiles(
+                    directory,
+                    "*",
+                    EnumerationOptionConstants.AllDirectories
+                )
+            )
             {
                 try
                 {
@@ -569,7 +592,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             }
 
             var files = Directory
-                .EnumerateFiles(directory, "*.*", SearchOption.AllDirectories)
+                .EnumerateFiles(directory, "*", EnumerationOptionConstants.AllDirectories)
                 .Where(file => allowedExtensions.Contains(new FilePath(file).Extension))
                 .Select(file => LocalImageFile.FromPath(file))
                 .ToList();
@@ -657,13 +680,17 @@ public partial class OutputsPageViewModel : PageViewModelBase
         if (!Directory.Exists(strPath))
             return subfolders;
 
-        var directories = Directory.EnumerateDirectories(strPath, "*", SearchOption.TopDirectoryOnly);
+        var directories = Directory.EnumerateDirectories(
+            strPath,
+            "*",
+            EnumerationOptionConstants.TopLevelOnly
+        );
 
         foreach (var dir in directories)
         {
             var category = new TreeViewDirectory { Name = Path.GetFileName(dir), Path = dir };
 
-            if (Directory.GetDirectories(dir, "*", SearchOption.TopDirectoryOnly).Length > 0)
+            if (Directory.GetDirectories(dir, "*", EnumerationOptionConstants.TopLevelOnly).Length > 0)
             {
                 category.SubDirectories = GetSubfolders(dir);
             }

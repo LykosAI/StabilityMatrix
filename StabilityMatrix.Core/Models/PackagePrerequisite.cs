@@ -7,5 +7,6 @@ public enum PackagePrerequisite
     Git,
     Node,
     Dotnet,
-    Tkinter
+    Tkinter,
+    VcBuildTools
 }

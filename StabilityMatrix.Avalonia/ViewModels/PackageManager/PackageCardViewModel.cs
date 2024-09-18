@@ -98,6 +98,9 @@ public partial class PackageCardViewModel(
     [ObservableProperty]
     private DownloadPackageVersionOptions? updateVersion;
 
+    [ObservableProperty]
+    private bool dontCheckForUpdates;
+
     private void RunningPackagesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (runningPackageService.RunningPackages.Select(x => x.Value) is not { } runningPackages)
@@ -147,6 +150,7 @@ public partial class PackageCardViewModel(
             UseSharedOutput = Package?.UseSharedOutputFolder ?? false;
             CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
             CanUseExtensions = basePackage?.SupportsExtensions ?? false;
+            DontCheckForUpdates = Package?.DontCheckForUpdates ?? false;
 
             runningPackageService.RunningPackages.CollectionChanged += RunningPackagesOnCollectionChanged;
             EventManager.Instance.PackageRelaunchRequested += InstanceOnPackageRelaunchRequested;
@@ -435,9 +439,10 @@ public partial class PackageCardViewModel(
 
             var updatePackageStep = new UpdatePackageStep(
                 settingsManager,
+                basePackage,
+                Package.FullPath!.Unwrap(),
                 Package,
-                versionOptions,
-                basePackage
+                new UpdatePackageOptions { VersionOptions = versionOptions }
             );
             var steps = new List<IPackageStep> { updatePackageStep };
 
@@ -527,6 +532,131 @@ public partial class PackageCardViewModel(
     }
 
     [RelayCommand]
+    private async Task ChangeVersion()
+    {
+        if (Package is null || IsUnknownPackage)
+            return;
+
+        var basePackage = packageFactory[Package.PackageName!];
+        if (basePackage == null)
+        {
+            logger.LogWarning("Could not find package {SelectedPackagePackageName}", Package.PackageName);
+            notificationService.Show(
+                Resources.Label_InvalidPackageType,
+                Package.PackageName.ToRepr(),
+                NotificationType.Error
+            );
+            return;
+        }
+
+        var packageName = Package.DisplayName ?? Package.PackageName ?? "";
+
+        Text = $"Updating {packageName}";
+        IsIndeterminate = true;
+
+        try
+        {
+            var viewModel = vmFactory.Get<PackageImportViewModel>(vm =>
+            {
+                vm.PackagePath = new DirectoryPath(
+                    Package?.FullPath ?? throw new InvalidOperationException()
+                );
+            });
+
+            viewModel.SelectedBasePackage = basePackage;
+            viewModel.CanSelectBasePackage = false;
+            viewModel.IsReleaseMode = Package.Version?.IsReleaseMode ?? false;
+
+            var dialog = new TaskDialog
+            {
+                Content = new PackageImportDialog { DataContext = viewModel },
+                ShowProgressBar = false,
+                Buttons = new List<TaskDialogButton>
+                {
+                    new(Resources.Action_Update, TaskDialogStandardResult.Yes) { IsDefault = true },
+                    new(Resources.Action_Cancel, TaskDialogStandardResult.Cancel)
+                },
+                XamlRoot = App.VisualRoot
+            };
+
+            var result = await dialog.ShowAsync(true);
+            if (result is not TaskDialogStandardResult.Yes)
+                return;
+
+            var runner = new PackageModificationRunner
+            {
+                ModificationCompleteMessage = $"Updated {packageName}",
+                ModificationFailedMessage = $"Could not update {packageName}"
+            };
+
+            var versionOptions = new DownloadPackageVersionOptions();
+
+            if (!string.IsNullOrWhiteSpace(viewModel.CustomCommitSha))
+            {
+                versionOptions.BranchName = viewModel.SelectedVersion?.TagName;
+                versionOptions.CommitHash = viewModel.CustomCommitSha;
+            }
+            else if (viewModel.SelectedVersionType == PackageVersionType.GithubRelease)
+            {
+                versionOptions.VersionTag = viewModel.SelectedVersion?.TagName;
+            }
+            else
+            {
+                versionOptions.BranchName = viewModel.SelectedVersion?.TagName;
+                versionOptions.CommitHash = viewModel.SelectedCommit?.Sha;
+            }
+
+            var updatePackageStep = new UpdatePackageStep(
+                settingsManager,
+                basePackage,
+                Package.FullPath!.Unwrap(),
+                Package,
+                new UpdatePackageOptions { VersionOptions = versionOptions }
+            );
+            var steps = new List<IPackageStep> { updatePackageStep };
+
+            EventManager.Instance.OnPackageInstallProgressAdded(runner);
+            await runner.ExecuteSteps(steps);
+
+            EventManager.Instance.OnInstalledPackagesChanged();
+            IsUpdateAvailable = false;
+            InstalledVersion = Package.Version?.DisplayVersion ?? "Unknown";
+
+            if (runner.Failed)
+            {
+                notificationService.Show(
+                    Resources.Progress_UpdateFailed,
+                    string.Format(runner.ModificationFailedMessage, packageName),
+                    NotificationType.Error
+                );
+            }
+            else
+            {
+                notificationService.Show(
+                    Resources.Progress_UpdateComplete,
+                    string.Format(Resources.TextTemplate_PackageUpdatedToSelected, packageName),
+                    NotificationType.Success
+                );
+            }
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error Updating Package ({PackageName})", basePackage.Name);
+            notificationService.ShowPersistent(
+                string.Format(Resources.TextTemplate_ErrorUpdatingPackage, packageName),
+                e.Message,
+                NotificationType.Error
+            );
+        }
+        finally
+        {
+            IsIndeterminate = false;
+            Value = 0;
+            Text = "";
+        }
+    }
+
+    [RelayCommand]
     public async Task OpenPythonPackagesDialog()
     {
         if (Package is not { FullPath: not null })
@@ -538,6 +668,23 @@ public partial class PackageCardViewModel(
         });
 
         await vm.GetDialog().ShowAsync();
+    }
+
+    [RelayCommand]
+    public async Task OpenPythonDependenciesOverrideDialog()
+    {
+        if (Package is not { FullPath: not null })
+            return;
+
+        var vm = vmFactory.Get<PythonPackageSpecifiersViewModel>();
+
+        vm.LoadSpecifiers(Package.PipOverrides ?? []);
+
+        if (await vm.GetDialog().ShowAsync() is ContentDialogResult.Primary)
+        {
+            await using var st = settingsManager.BeginTransaction();
+            Package.PipOverrides = vm.GetSpecifiers().ToList();
+        }
     }
 
     [RelayCommand]
@@ -646,7 +793,7 @@ public partial class PackageCardViewModel(
 
     private async Task<bool> HasUpdate()
     {
-        if (Package == null || IsUnknownPackage || Design.IsDesignMode)
+        if (Package == null || IsUnknownPackage || Design.IsDesignMode || Package.DontCheckForUpdates)
             return false;
 
         var basePackage = packageFactory[Package.PackageName!];
@@ -688,6 +835,8 @@ public partial class PackageCardViewModel(
     public void ToggleSharedModelNone() => IsSharedModelDisabled = !IsSharedModelDisabled;
 
     public void ToggleSharedOutput() => UseSharedOutput = !UseSharedOutput;
+
+    public void ToggleDontCheckForUpdates() => DontCheckForUpdates = !DontCheckForUpdates;
 
     partial void OnUseSharedOutputChanged(bool value)
     {
@@ -773,6 +922,33 @@ public partial class PackageCardViewModel(
 
             IsSharedModelSymlink = false;
             IsSharedModelConfig = false;
+        }
+    }
+
+    partial void OnDontCheckForUpdatesChanged(bool value)
+    {
+        if (value)
+        {
+            UpdateVersion = null;
+            IsUpdateAvailable = false;
+
+            if (Package == null)
+                return;
+
+            Package.UpdateAvailable = false;
+            settingsManager.Transaction(s =>
+            {
+                s.SetUpdateCheckDisabledForPackage(Package, value);
+            });
+        }
+        else if (Package != null)
+        {
+            Package.LastUpdateCheck = DateTimeOffset.MinValue;
+            settingsManager.Transaction(s =>
+            {
+                s.SetUpdateCheckDisabledForPackage(Package, value);
+            });
+            OnLoadedAsync().SafeFireAndForget();
         }
     }
 

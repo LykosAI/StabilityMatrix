@@ -13,6 +13,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.PackageManager;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
@@ -32,6 +33,7 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
     private readonly ILogger<PackageInstallDetailViewModel> logger;
     private readonly IPyRunner pyRunner;
     private readonly IPrerequisiteHelper prerequisiteHelper;
+    private readonly IAnalyticsHelper analyticsHelper;
 
     [ObservableProperty]
     private bool showIncompatiblePackages;
@@ -54,7 +56,8 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
         INotificationService notificationService,
         ILogger<PackageInstallDetailViewModel> logger,
         IPyRunner pyRunner,
-        IPrerequisiteHelper prerequisiteHelper
+        IPrerequisiteHelper prerequisiteHelper,
+        IAnalyticsHelper analyticsHelper
     )
     {
         this.packageFactory = packageFactory;
@@ -64,6 +67,7 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
         this.logger = logger;
         this.pyRunner = pyRunner;
         this.prerequisiteHelper = prerequisiteHelper;
+        this.analyticsHelper = analyticsHelper;
 
         var incompatiblePredicate = this.WhenPropertyChanged(vm => vm.ShowIncompatiblePackages)
             .Select(_ => new Func<BasePackage, bool>(p => p.IsCompatible || ShowIncompatiblePackages))
@@ -130,7 +134,8 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
             pyRunner,
             prerequisiteHelper,
             packageNavigationService,
-            packageFactory
+            packageFactory,
+            analyticsHelper
         );
 
         Dispatcher.UIThread.Post(

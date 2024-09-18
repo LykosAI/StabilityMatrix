@@ -203,7 +203,7 @@
                             <TextBlock
                                 TextWrapping="WrapWithOverflow"
                                 Text="{Binding PipShowResult.License}" />
-                            <ui:HyperlinkButton 
+                            <HyperlinkButton 
                                 NavigateUri="{Binding PipShowResult.HomePage}"/>
                             <TextBlock
                                 TextWrapping="WrapWithOverflow"

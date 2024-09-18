@@ -1,0 +1,420 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
+        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+        x:DataType="vmInference:FaceDetailerViewModel"
+        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+        xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+        xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+        xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia">
+    <Design.PreviewWith>
+        <controls:FaceDetailerCard Width="300" />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|FaceDetailerCard">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <StackPanel>
+                    <!-- Ultralytics Models -->
+                    <TextBlock Text="BBox Model"
+                               VerticalAlignment="Center" />
+                    <controls:BetterComboBox
+                        Padding="8,6,4,6"
+                        Margin="4,4,4,8"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding ClientManager.UltralyticsModels}"
+                        SelectedItem="{Binding BboxModel}"
+                        Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
+
+                    <TextBlock Text="Segmentation Model (Optional)"
+                               VerticalAlignment="Center" />
+                    <controls:BetterDownloadableComboBox
+                        Padding="8,6,4,6"
+                        Margin="4,4,4,8"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding ClientManager.UltralyticsModels}"
+                        SelectedItem="{Binding SegmModel}"
+                        Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
+
+                    <!-- SAM Model -->
+                    <TextBlock Text="SAM Model (Optional)"
+                               Margin="0,8,0,0" />
+                    <controls:BetterDownloadableComboBox
+                        Padding="8,6,4,6"
+                        Margin="4,4,4,8"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding ClientManager.SamModels}"
+                        SelectedItem="{Binding SamModel}"
+                        Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
+
+                    <avalonia:SpacedGrid ColumnDefinitions="Auto, *"
+                                         RowDefinitions="Auto, Auto, Auto, Auto"
+                                         Margin="0,8,0,0">
+                        <!-- Sampler -->
+                        <TextBlock
+                            Margin="4,0,4,8"
+                            VerticalAlignment="Center"
+                            Text="{x:Static lang:Resources.Label_Sampler}" />
+                        <ui:FAComboBox
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            ItemsSource="{Binding ClientManager.Samplers}"
+                            SelectedItem="{Binding Sampler}"
+                            DisplayMemberBinding="{Binding DisplayName}"
+                            Margin="4,0,4,8"
+                            HorizontalAlignment="Stretch" />
+
+                        <!-- Scheduler -->
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Margin="4,0,4,8"
+                            VerticalAlignment="Center"
+                            Text="{x:Static lang:Resources.Label_Scheduler}" />
+                        <ui:FAComboBox
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            ItemsSource="{Binding ClientManager.Schedulers}"
+                            SelectedItem="{Binding Scheduler}"
+                            DisplayMemberBinding="{Binding DisplayName}"
+                            Margin="4,0,4,8"
+                            HorizontalAlignment="Stretch" />
+
+                        <!-- Steps -->
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="0"
+                                   Margin="4,0,4,8"
+                                   Text="{x:Static lang:Resources.Label_Steps}"
+                                   VerticalAlignment="Center" />
+                        <ui:NumberBox Grid.Row="2"
+                                      Grid.Column="1"
+                                      Minimum="1"
+                                      Maximum="10000"
+                                      Value="{Binding Steps}"
+                                      Margin="4,0,4,8"
+                                      HorizontalAlignment="Stretch"
+                                      SpinButtonPlacementMode="Inline" />
+
+                        <!-- CFG -->
+                        <TextBlock Grid.Row="3"
+                                   Grid.Column="0"
+                                   Margin="4,0,4,8"
+                                   VerticalAlignment="Center"
+                                   Text="{x:Static lang:Resources.Label_CFGScale}" />
+                        <ui:NumberBox Grid.Row="3"
+                                      Grid.Column="1"
+                                      Value="{Binding Cfg}"
+                                      Margin="4,0,4,8"
+                                      Minimum="0"
+                                      Maximum="100"
+                                      SimpleNumberFormat="F2"
+                                      SmallChange="0.25"
+                                      HorizontalAlignment="Stretch"
+                                      SpinButtonPlacementMode="Inline" />
+                    </avalonia:SpacedGrid>
+
+                    <!-- Seed -->
+                    <TextBlock Text="Inherit Seed"
+                               Margin="4,8,4,4"
+                               VerticalAlignment="Center"/>
+                    <ToggleSwitch IsChecked="{Binding InheritSeed}"
+                                  Margin="8,0,4,8"/>
+                    <controls:SeedCard DataContext="{Binding SeedCardViewModel}"
+                                       Background="Gray"
+                                       IsVisible="{Binding !$parent[StackPanel].((vmInference:FaceDetailerViewModel)DataContext).InheritSeed, TargetNullValue=False, FallbackValue=False}"
+                                       Margin="4,0,4,8" />
+
+                    <Separator Margin="8, 16" Background="#DDDDDD" />
+
+                    <!-- Guide Size For -->
+                    <TextBlock Text="Guide Size For"
+                               Margin="4,8,4,0" />
+                    <ToggleSwitch OnContent="BBox"
+                                  OffContent="Crop Region"
+                                  Margin="8,0,4,8"
+                                  IsChecked="{Binding GuideSizeFor}" />
+
+                    <!-- Guide Size -->
+                    <avalonia:SpacedGrid ColumnDefinitions="Auto, *"
+                                         RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto">
+                        <TextBlock Text="Guide Size"
+                                   Margin="4,0,4,2"
+                                   VerticalAlignment="Center" />
+                        <ui:NumberBox Grid.Row="0"
+                                      Grid.Column="1"
+                                      Value="{Binding GuideSize}"
+                                      Margin="4,4,4,4"
+                                      Minimum="64"
+                                      SmallChange="64"
+                                      HorizontalAlignment="Stretch"
+                                      SpinButtonPlacementMode="Inline" />
+
+                        <!-- Max Size -->
+                        <TextBlock Grid.Row="1"
+                                   Grid.Column="0"
+                                   Margin="4,0,4,2"
+                                   VerticalAlignment="Center"
+                                   Text="{x:Static lang:Resources.Label_MaxSize}" />
+                        <ui:NumberBox Grid.Row="1"
+                                      Grid.Column="1"
+                                      Value="{Binding MaxSize}"
+                                      Margin="4,4,4,4"
+                                      Minimum="64"
+                                      SmallChange="64"
+                                      HorizontalAlignment="Stretch"
+                                      SpinButtonPlacementMode="Inline" />
+
+                        <!-- BBox Threshold -->
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="0"
+                                   Margin="4,0,4,2"
+                                   VerticalAlignment="Center"
+                                   Text="Threshold" />
+                        <ui:NumberBox Grid.Row="2"
+                                      Grid.Column="1"
+                                      Value="{Binding BboxThreshold}"
+                                      Margin="4,4,4,4"
+                                      Minimum="0"
+                                      Maximum="1"
+                                      SmallChange="0.01"
+                                      SimpleNumberFormat="F2"
+                                      HorizontalAlignment="Stretch"
+                                      SpinButtonPlacementMode="Inline" />
+
+                        <!-- BBox Dilation -->
+                        <TextBlock Grid.Row="3"
+                                   Grid.Column="0"
+                                   Margin="4,0,4,2"
+                                   VerticalAlignment="Center"
+                                   Text="Dilation" />
+                        <ui:NumberBox Grid.Row="3"
+                                      Grid.Column="1"
+                                      Value="{Binding BboxDilation}"
+                                      Margin="4,4,4,4"
+                                      Minimum="-512"
+                                      Maximum="512"
+                                      SmallChange="1"
+                                      HorizontalAlignment="Stretch"
+                                      SpinButtonPlacementMode="Inline" />
+
+                        <!-- BBox Crop Factor -->
+                        <TextBlock Grid.Row="4"
+                                   Grid.Column="0"
+                                   Margin="4,0,4,2"
+                                   VerticalAlignment="Center"
+                                   Text="Crop Factor" />
+                        <ui:NumberBox Grid.Row="4"
+                                      Grid.Column="1"
+                                      Value="{Binding BboxCropFactor}"
+                                      Margin="4,4,4,4"
+                                      SimpleNumberFormat="F2"
+                                      Minimum="1"
+                                      Maximum="10"
+                                      SmallChange="0.1"
+                                      HorizontalAlignment="Stretch"
+                                      SpinButtonPlacementMode="Inline" />
+                    </avalonia:SpacedGrid>
+
+                    <Separator Margin="8, 20, 8, 8" Background="#DDDDDD" />
+                    
+                    <avalonia:SpacedGrid RowDefinitions="Auto, Auto"
+                                         ColumnDefinitions="*, *"
+                                         Margin="0,16,0,16">
+                        <!-- Noise Mask -->
+                        <TextBlock Text="Noise Mask"
+                                   VerticalAlignment="Center"
+                                   Margin="4,0, 4, 0" />
+                        <ToggleSwitch Grid.Row="1"
+                                      Grid.Column="0"
+                                      IsChecked="{Binding NoiseMask}"
+                                      Margin="8,0,4,0"
+                                      HorizontalAlignment="Stretch" />
+
+                        <!-- Force Inpaint -->
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="1"
+                                   VerticalAlignment="Center"
+                                   Margin="4,0, 4, 0"
+                                   Text="Force Inpaint" />
+                        <ToggleSwitch Grid.Row="1"
+                                      Grid.Column="1"
+                                      IsChecked="{Binding ForceInpaint}"
+                                      Margin="8,0,4,0"
+                                      HorizontalAlignment="Stretch" />
+                    </avalonia:SpacedGrid>
+                    
+                    <avalonia:SpacedGrid RowDefinitions="Auto, Auto, Auto, Auto"
+                                         ColumnDefinitions="Auto, *">
+
+                        <!-- Denoise -->
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
+                                   Margin="4,0,4,2"
+                                   VerticalAlignment="Center"
+                                   Text="Denoise" />
+                        <ui:NumberBox Grid.Row="0"
+                                      Grid.Column="1"
+                                      Value="{Binding Denoise}"
+                                      Margin="4,4,4,4"
+                                      SimpleNumberFormat="F2"
+                                      Minimum="0"
+                                      Maximum="1"
+                                      SmallChange="0.01"
+                                      HorizontalAlignment="Stretch"
+                                      SpinButtonPlacementMode="Inline" />
+
+                        <Slider Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Margin="4,-12,4,0"
+                                Minimum="0"
+                                Maximum="1"
+                                SmallChange="0.01"
+                                TickFrequency="0.01"
+                                IsSnapToTickEnabled="True"
+                                Value="{Binding Denoise}" />
+
+                        <!-- Feather -->
+                        <TextBlock Grid.Row="2"
+                                   Grid.Column="0"
+                                   Margin="4,0,4,4"
+                                   VerticalAlignment="Center"
+                                   Text="Feather" />
+                        <ui:NumberBox Grid.Row="2"
+                                      Grid.Column="1"
+                                      Value="{Binding Feather}"
+                                      Margin="4,4,4,8"
+                                      Minimum="0"
+                                      Maximum="100"
+                                      SmallChange="1"
+                                      HorizontalAlignment="Stretch"
+                                      SpinButtonPlacementMode="Inline" />
+                        <Slider Grid.Row="3"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Margin="4,-12,4,0"
+                                Minimum="0"
+                                Maximum="100"
+                                SmallChange="1"
+                                TickFrequency="1"
+                                IsSnapToTickEnabled="True"
+                                Value="{Binding Feather}" />
+                    </avalonia:SpacedGrid>
+                    
+                    <Separator Margin="8, 16" Background="#DDDDDD" />
+
+                    <!-- SAM Detection Hint -->
+                    <TextBlock Text="SAM Detection Hint"
+                               Margin="4,0,4,4"/>
+                    <ComboBox ItemsSource="{Binding SamDetectionHints}"
+                              SelectedItem="{Binding SamDetectionHint}"
+                              Margin="4,4,4,8"
+                              HorizontalAlignment="Stretch" />
+
+                    <!-- SAM Dilation -->
+                    <TextBlock Text="SAM Dilation" 
+                               Margin="4,0,4,4"/>
+                    <ui:NumberBox Value="{Binding SamDilation}"
+                                  Margin="4,4,4,8"
+                                  HorizontalAlignment="Stretch"
+                                  Minimum="-512"
+                                  Maximum="512"
+                                  SmallChange="1"
+                                  SpinButtonPlacementMode="Inline" />
+
+                    <!-- SAM Threshold -->
+                    <TextBlock Text="SAM Threshold" 
+                               Margin="4,0,4,4"/>
+                    <ui:NumberBox Value="{Binding SamThreshold}"
+                                  Margin="4,4,4,8"
+                                  HorizontalAlignment="Stretch"
+                                  SimpleNumberFormat="F2"
+                                  Minimum="0"
+                                  Maximum="1"
+                                  SmallChange="0.01"
+                                  SpinButtonPlacementMode="Inline" />
+
+                    <!-- SAM BBox Expansion -->
+                    <TextBlock Text="SAM BBox Expansion"
+                               Margin="4,0,4,4"/>
+                    <ui:NumberBox Value="{Binding SamBboxExpansion}"
+                                  Margin="4,4,4,8"
+                                  HorizontalAlignment="Stretch"
+                                  Minimum="0"
+                                  Maximum="1000"
+                                  SmallChange="1"
+                                  SpinButtonPlacementMode="Inline" />
+
+                    <!-- SAM Mask Hint Threshold -->
+                    <TextBlock Text="SAM Mask Hint Threshold"
+                               Margin="4,0,4,4"/>
+                    <ui:NumberBox Value="{Binding SamMaskHintThreshold}"
+                                  Margin="4,4,4,8"
+                                  HorizontalAlignment="Stretch"
+                                  SimpleNumberFormat="F2"
+                                  Minimum="0"
+                                  Maximum="1"
+                                  SmallChange="0.01"
+                                  SpinButtonPlacementMode="Inline" />
+
+                    <!-- SAM Mask Hint Use Negative -->
+                    <TextBlock Text="SAM Mask Hint Use Negative" 
+                               Margin="4,0,4,4"/>
+                    <ComboBox ItemsSource="{Binding SamMaskHintUseNegatives}"
+                              SelectedItem="{Binding SamMaskHintUseNegative}"
+                              Margin="4,4,4,8"
+                              HorizontalAlignment="Stretch" />
+
+                    <!-- Drop Size -->
+                    <avalonia:SpacedGrid RowDefinitions="Auto, Auto"
+                                         ColumnDefinitions="Auto, *">
+                    <TextBlock Margin="4,0,4,4"
+                               VerticalAlignment="Center"
+                               Text="Drop Size" />
+                    <ui:NumberBox Grid.Row="0"
+                                  Grid.Column="1"
+                                  Value="{Binding DropSize}"
+                                  Margin="4,4,4,8"
+                                  HorizontalAlignment="Stretch"
+                                  Minimum="1"
+                                  Maximum="16384"
+                                  SmallChange="1"
+                                  SpinButtonPlacementMode="Inline" />
+
+                    <!-- Cycle -->
+                    <TextBlock Grid.Row="1"
+                               Grid.Column="0"
+                               Margin="4,0,4,4"
+                               VerticalAlignment="Center"
+                               Text="Cycle" />
+                    <ui:NumberBox Grid.Row="1"
+                                  Grid.Column="1"
+                                  Value="{Binding Cycle}"
+                                  Margin="4,4,4,8"
+                                  Minimum="1"
+                                  Maximum="10"
+                                  SmallChange="1"
+                                  HorizontalAlignment="Stretch"
+                                  SpinButtonPlacementMode="Inline" />
+                    </avalonia:SpacedGrid>
+                    
+                    <Separator Margin="8, 16" Background="#DDDDDD" />
+
+                    <!-- Use Separate Prompt -->
+                    <TextBlock Text="{x:Static lang:Resources.Label_UseSeparatePrompt}" 
+                               Margin="4,0,4,4"/>
+                    <ToggleSwitch IsChecked="{Binding UseSeparatePrompt}"
+                                  Margin="8,0,4,8"
+                                  HorizontalAlignment="Stretch" />
+
+                    <!-- Positive Prompt -->
+                    <controls:PromptCard DataContext="{Binding PromptCardViewModel}"
+                                         IsVisible="{Binding $parent[StackPanel].((vmInference:FaceDetailerViewModel)DataContext).UseSeparatePrompt, TargetNullValue=False, FallbackValue=False}" />
+                </StackPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

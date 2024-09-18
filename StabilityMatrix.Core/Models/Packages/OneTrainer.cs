@@ -3,6 +3,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -32,7 +33,7 @@ public class OneTrainer(
 
     public override string OutputFolderName => string.Empty;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
-    public override IEnumerable<TorchVersion> AvailableTorchVersions => [TorchVersion.Cuda];
+    public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda, TorchIndex.Rocm];
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
     public override PackageType PackageType => PackageType.SdTraining;
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
@@ -45,46 +46,49 @@ public class OneTrainer(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));
+        var requirementsFileName = options.PythonOptions.TorchIndex switch
+        {
+            TorchIndex.Cuda => "requirements-cuda.txt",
+            TorchIndex.Rocm => "requirements-rocm.txt",
+            _ => "requirements-default.txt"
+        };
 
-        var pipArgs = new PipInstallArgs("-r", "requirements.txt");
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall(["-r", requirementsFileName], onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall(["-r", "requirements-global.txt"], onConsoleOutput).ConfigureAwait(false);
+
+        if (installedPackage.PipOverrides != null)
+        {
+            var pipArgs = new PipInstallArgs().WithUserOverrides(installedPackage.PipOverrides);
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        }
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
+        await SetupVenv(installLocation).ConfigureAwait(false);
 
-        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
-        return;
-
-        void HandleExit(int i)
-        {
-            Debug.WriteLine($"Venv process exited with code {i}");
-            OnExit(i);
-        }
-
-        void HandleConsoleOutput(ProcessOutput s)
-        {
-            onConsoleOutput?.Invoke(s);
-        }
+        VenvRunner.RunDetached(
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            onConsoleOutput,
+            OnExit
+        );
     }
 
     public override List<LaunchOptionDefinition> LaunchOptions => [LaunchOptionDefinition.Extras];

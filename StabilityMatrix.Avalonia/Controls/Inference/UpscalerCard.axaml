@@ -34,20 +34,13 @@
                                 Margin="0,0,4,8"
                                 VerticalAlignment="Center"
                                 Text="Upscaler" />
-                            <ui:FAComboBox
-                                Name="UpscalerComboBox"
+                            <controls:FADownloadableComboBox
                                 Grid.Row="0"
                                 Grid.Column="1"
                                 ItemsSource="{Binding ClientManager.Upscalers}"
                                 SelectedItem="{Binding SelectedUpscaler}"
                                 Margin="8,0,0,8"
                                 HorizontalAlignment="Stretch">
-                                
-                                <ui:FAComboBox.Resources>
-                                    <input:StandardUICommand 
-                                        x:Key="RemoteDownloadCommand" 
-                                        Command="{Binding RemoteDownloadCommand}"/>
-                                </ui:FAComboBox.Resources>
                                 
                                 <ui:FAComboBox.DataTemplates>
                                     <controls:ComfyUpscalerTemplateSelector>
@@ -65,7 +58,7 @@
                                                         VerticalAlignment="Center"
                                                         FontSize="18"
                                                         Foreground="{DynamicResource ThemeGreyColor}"
-                                                        IsFilled="True"
+                                                        IconVariant="Filled"
                                                         Symbol="CloudArrowDown" />
                                                 </Button>
                                             </Grid>
@@ -75,7 +68,7 @@
                                         </DataTemplate>
                                     </controls:ComfyUpscalerTemplateSelector>
                                 </ui:FAComboBox.DataTemplates>
-                            </ui:FAComboBox>
+                            </controls:FADownloadableComboBox>
                         </Grid>
                         <!-- Dimensions (Scale) -->
                         <StackPanel>

@@ -1,5 +1,3 @@
-using StabilityMatrix.Avalonia.Controls;
-
 namespace StabilityMatrix.Avalonia.Models;
 
 /// <summary>

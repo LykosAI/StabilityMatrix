@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -182,8 +183,8 @@ public class A3WebUI(
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.Rocm, TorchVersion.Mps };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        new[] { TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps };
 
     public override string MainBranch => "master";
 
@@ -193,52 +194,61 @@ public class A3WebUI(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        var venvPath = Path.Combine(installLocation, "venv");
-        var exists = Directory.Exists(venvPath);
-
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
-
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
-        var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        var pipArgs = new PipInstallArgs()
-            .WithTorch("==2.1.2")
-            .WithTorchVision("==0.16.2")
-            .WithTorchExtraIndex(
-                torchVersion switch
-                {
-                    TorchVersion.Cpu => "cpu",
-                    TorchVersion.Cuda => "cu121",
-                    TorchVersion.Rocm => "rocm5.6",
-                    TorchVersion.Mps => "cpu",
-                    _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
-                }
-            )
-            .WithParsedFromRequirementsTxt(
-                await requirements.ReadAllTextAsync().ConfigureAwait(false),
-                excludePattern: "torch"
-            );
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
-        if (torchVersion == TorchVersion.Cuda)
+        var requirements = new FilePath(installLocation, "requirements_versions.txt");
+        var pipArgs = options.PythonOptions.TorchIndex switch
+        {
+            TorchIndex.Mps
+                => new PipInstallArgs()
+                    .WithTorch("==2.3.1")
+                    .WithTorchVision("==2.3.1")
+                    .WithParsedFromRequirementsTxt(
+                        await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+                        excludePattern: "torch"
+                    ),
+            _
+                => new PipInstallArgs()
+                    .WithTorch("==2.1.2")
+                    .WithTorchVision("==0.16.2")
+                    .WithTorchExtraIndex(
+                        options.PythonOptions.TorchIndex switch
+                        {
+                            TorchIndex.Cpu => "cpu",
+                            TorchIndex.Cuda => "cu121",
+                            TorchIndex.Rocm => "rocm5.6",
+                            TorchIndex.Mps => "cpu",
+                            _ => throw new NotSupportedException($"Unsupported torch version: {torchVersion}")
+                        }
+                    )
+                    .WithParsedFromRequirementsTxt(
+                        await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+                        excludePattern: "torch"
+                    )
+        };
+
+        if (torchVersion == TorchIndex.Cuda)
         {
             pipArgs = pipArgs.WithXFormers("==0.0.23.post1");
         }
 
-        if (exists)
+        if (installedPackage.PipOverrides != null)
         {
-            pipArgs = pipArgs.AddArg("--upgrade");
-            pipArgs = pipArgs.AddArg("--force-reinstall");
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
         }
 
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
@@ -251,20 +261,22 @@ public class A3WebUI(
         if (!File.Exists(configPath))
         {
             var config = new JsonObject { { "show_progress_type", "TAESD" } };
-            await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
+            await File.WriteAllTextAsync(configPath, config.ToString(), cancellationToken)
+                .ConfigureAwait(false);
         }
 
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
+        await SetupVenv(installLocation).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -282,15 +294,19 @@ public class A3WebUI(
             OnStartupComplete(WebUrl);
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
-
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+        VenvRunner.RunDetached(
+            [
+                Path.Combine(installLocation, options.Command ?? LaunchCommand),
+                ..options.Arguments,
+                ..ExtraLaunchArguments
+            ],
+            HandleConsoleOutput,
+            OnExit
+        );
     }
 
-    public override string? ExtraLaunchArguments { get; set; } =
-        settingsManager.IsLibraryDirSet
-            ? $"--gradio-allowed-path \"{settingsManager.ImagesDirectory}\""
-            : string.Empty;
+    public override IReadOnlyList<string> ExtraLaunchArguments =>
+        settingsManager.IsLibraryDirSet ? ["--gradio-allowed-path", settingsManager.ImagesDirectory] : [];
 
     private class A3WebUiExtensionManager(A3WebUI package)
         : GitPackageExtensionManager(package.PrerequisiteHelper)

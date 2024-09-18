@@ -104,10 +104,31 @@
                                         <Button.Flyout>
                                             <MenuFlyout Placement="BottomEdgeAlignedLeft">
                                                 <MenuItem Header="{x:Static lang:Resources.Action_CheckForUpdates}"
-                                                          IsVisible="{Binding !IsUnknownPackage}"
                                                           Command="{Binding OnLoadedAsync}">
+                                                    <MenuItem.IsVisible>
+                                                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                            <Binding Path="!IsUnknownPackage" />
+                                                            <Binding Path="!IsUpdateAvailable" />
+                                                            <Binding Path="!DontCheckForUpdates" />
+                                                        </MultiBinding>
+                                                    </MenuItem.IsVisible>
                                                     <MenuItem.Icon>
                                                         <ui:SymbolIcon Symbol="Refresh" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem
+                                                    Header="{x:Static lang:Resources.Label_DisableUpdateCheck}"
+                                                    Command="{Binding ToggleDontCheckForUpdates}"
+                                                    IsVisible="{Binding !IsUnknownPackage}">
+                                                    <MenuItem.Icon>
+                                                        <CheckBox Margin="8,0,0,0"
+                                                                  Padding="0"
+                                                                  Width="28" Height="28"
+                                                                  IsChecked="{Binding DontCheckForUpdates}">
+                                                            <CheckBox.RenderTransform>
+                                                                <ScaleTransform ScaleX="1.5" ScaleY="1.5" />
+                                                            </CheckBox.RenderTransform>
+                                                        </CheckBox>
                                                     </MenuItem.Icon>
                                                 </MenuItem>
                                                 <MenuItem
@@ -127,7 +148,7 @@
                                                     </MenuItem.Icon>
                                                 </MenuItem>
 
-                                                <Separator />
+                                                <Separator IsVisible="{Binding !IsUnknownPackage}" />
 
                                                 <MenuItem
                                                     Header="{x:Static lang:Resources.Label_PythonPackages}"
@@ -139,12 +160,31 @@
                                                     </MenuItem.Icon>
                                                 </MenuItem>
                                                 <MenuItem
+                                                    Header="{x:Static lang:Resources.Label_PythonDependenciesOverride_Title}"
+                                                    IsVisible="{Binding !IsUnknownPackage}"
+                                                    Command="{Binding OpenPythonDependenciesOverrideDialogCommand}">
+                                                    <MenuItem.Icon>
+                                                        <icons:Icon
+                                                            Value="fa-solid fa-bandage" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem
                                                     Header="Extensions"
                                                     IsVisible="{Binding CanUseExtensions}"
                                                     Command="{Binding OpenExtensionsDialogCommand}">
                                                     <MenuItem.Icon>
                                                         <icons:Icon
                                                             Value="fa-solid fa-puzzle-piece" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                
+                                                <MenuItem
+                                                    Header="Change Version"
+                                                    Command="{Binding ChangeVersionCommand}"
+                                                    IsVisible="{Binding !IsUnknownPackage}">
+                                                    <MenuItem.Icon>
+                                                        <icons:Icon
+                                                            Value="fa-solid fa-code-compare" />
                                                     </MenuItem.Icon>
                                                 </MenuItem>
 
@@ -215,7 +255,9 @@
                                                         </CheckBox>
                                                     </MenuItem.Icon>
                                                 </MenuItem>
-                                                <Separator />
+                                                
+                                                <Separator IsVisible="{Binding !IsUnknownPackage}" />
+                                                
                                                 <MenuItem Header="{x:Static lang:Resources.Action_Uninstall}"
                                                           IsEnabled="{Binding !IsRunning}"
                                                           Command="{Binding Uninstall}">
@@ -240,6 +282,7 @@
                                                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                                                     <Binding Path="!IsUnknownPackage" />
                                                     <Binding Path="!IsUpdateAvailable" />
+                                                    <Binding Path="!DontCheckForUpdates" />
                                                 </MultiBinding>
                                             </Button.IsVisible>
                                             <ui:SymbolIcon Symbol="Refresh"

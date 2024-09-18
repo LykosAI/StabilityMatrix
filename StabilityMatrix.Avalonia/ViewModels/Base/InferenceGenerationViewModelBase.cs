@@ -656,7 +656,9 @@ public abstract partial class InferenceGenerationViewModelBase
     {
         // Get prompt required extensions
         // Just static for now but could do manifest lookup when we support custom workflows
-        var requiredExtensionSpecifiers = nodeDictionary.RequiredExtensions.ToList();
+        var requiredExtensionSpecifiers = nodeDictionary
+            .RequiredExtensions.DistinctBy(ext => ext.Name)
+            .ToList();
 
         // Skip if no extensions required
         if (requiredExtensionSpecifiers.Count == 0)

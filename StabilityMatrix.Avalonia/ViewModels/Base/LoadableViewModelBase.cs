@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
@@ -11,7 +10,6 @@ using NLog;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
-using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
@@ -23,14 +21,18 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(PromptExpansionCardViewModel), PromptExpansionCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(ExtraNetworkCardViewModel), ExtraNetworkCardViewModel.ModuleKey)]
 [JsonDerivedType(typeof(LayerDiffuseCardViewModel), LayerDiffuseCardViewModel.ModuleKey)]
+[JsonDerivedType(typeof(FaceDetailerViewModel), FaceDetailerViewModel.ModuleKey)]
 [JsonDerivedType(typeof(FreeUModule))]
 [JsonDerivedType(typeof(HiresFixModule))]
+[JsonDerivedType(typeof(FluxHiresFixModule))]
 [JsonDerivedType(typeof(UpscalerModule))]
 [JsonDerivedType(typeof(ControlNetModule))]
 [JsonDerivedType(typeof(SaveImageModule))]
 [JsonDerivedType(typeof(PromptExpansionModule))]
 [JsonDerivedType(typeof(LoraModule))]
 [JsonDerivedType(typeof(LayerDiffuseModule))]
+[JsonDerivedType(typeof(FaceDetailerModule))]
+[JsonDerivedType(typeof(FluxGuidanceModule))]
 public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

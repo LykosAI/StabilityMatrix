@@ -14,15 +14,17 @@
     <StackPanel Margin="8" Spacing="8">
         <ui:SettingsExpander Header="{x:Static lang:Resources.Label_PackageType}">
             <ui:SettingsExpander.Footer>
-                <ui:FAComboBox 
+                <ui:FAComboBox
                     HorizontalAlignment="Stretch"
+                    IsEnabled="{Binding CanSelectBasePackage}"
                     ItemsSource="{Binding AvailablePackages}"
                     DisplayMemberBinding="{Binding DisplayName}"
                     SelectedItem="{Binding SelectedBasePackage}"/>
             </ui:SettingsExpander.Footer>
         </ui:SettingsExpander>
         
-        <ui:SettingsExpander Header="{x:Static lang:Resources.Label_VersionType}">
+        <ui:SettingsExpander Header="{x:Static lang:Resources.Label_VersionType}"
+                             IsVisible="{Binding IsReleaseModeAvailable}">
             <ui:SettingsExpander.Footer>
                 <ToggleSwitch
                     IsEnabled="{Binding IsReleaseModeAvailable}"
@@ -44,6 +46,15 @@
                         ItemsSource="{Binding AvailableCommits}"
                         DisplayMemberBinding="{Binding Sha}"
                         SelectedItem="{Binding SelectedCommit}"/>
+                </StackPanel>
+            </ui:SettingsExpander.Footer>
+        </ui:SettingsExpander>
+        <ui:SettingsExpander Header="{x:Static lang:Resources.Label_Commit}"
+                             IsVisible="{Binding ShowCustomCommitSha}">
+            <ui:SettingsExpander.Footer>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBox Text="{Binding CustomCommitSha, Mode=TwoWay}"
+                             MinWidth="250"/>
                 </StackPanel>
             </ui:SettingsExpander.Footer>
         </ui:SettingsExpander>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData.Binding;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -17,6 +19,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
+using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -30,6 +33,9 @@ public partial class ModelCardViewModel(
 {
     [ObservableProperty]
     private HybridModelFile? selectedModel;
+
+    [ObservableProperty]
+    private HybridModelFile? selectedUnetModel;
 
     [ObservableProperty]
     private bool isRefinerSelectionEnabled;
@@ -57,10 +63,36 @@ public partial class ModelCardViewModel(
     [ObservableProperty]
     private bool isExtraNetworksEnabled;
 
+    [ObservableProperty]
+    private bool isModelLoaderSelectionEnabled;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsStandaloneModelLoader), nameof(ShowPrecisionSelection))]
+    private ModelLoader selectedModelLoader;
+
+    [ObservableProperty]
+    private HybridModelFile? selectedClip1;
+
+    [ObservableProperty]
+    private HybridModelFile? selectedClip2;
+
+    [ObservableProperty]
+    private string? selectedDType;
+
+    [ObservableProperty]
+    private bool enableModelLoaderSelection = true;
+
+    public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e5m2"];
+
     public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
         new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
+
+    public List<ModelLoader> ModelLoaders { get; } = Enum.GetValues<ModelLoader>().ToList();
+
+    public bool IsStandaloneModelLoader => SelectedModelLoader is ModelLoader.Unet or ModelLoader.Gguf;
+    public bool ShowPrecisionSelection => SelectedModelLoader is ModelLoader.Unet;
 
     [RelayCommand]
     private static async Task OnConfigClickAsync()
@@ -68,16 +100,16 @@ public partial class ModelCardViewModel(
         await DialogHelper
             .CreateMarkdownDialog(
                 """
-                                                 You can use a config (.yaml) file to load a model with specific settings.
-                                                 
-                                                 Place the config file next to the model file with the same name:
-                                                 ```md
-                                                 Models/
-                                                     StableDiffusion/
-                                                         my_model.safetensors
-                                                         my_model.yaml <-
-                                                 ```
-                                                 """,
+                You can use a config (.yaml) file to load a model with specific settings.
+
+                Place the config file next to the model file with the same name:
+                ```md
+                Models/
+                    StableDiffusion/
+                        my_model.safetensors
+                        my_model.yaml <-
+                ```
+                """,
                 "Using Model Configs",
                 TextEditorPreset.Console
             )
@@ -86,7 +118,10 @@ public partial class ModelCardViewModel(
 
     public async Task<bool> ValidateModel()
     {
-        if (SelectedModel != null)
+        if (IsStandaloneModelLoader && SelectedUnetModel != null)
+            return true;
+
+        if (!IsStandaloneModelLoader && SelectedModel != null)
             return true;
 
         var dialog = DialogHelper.CreateMarkdownDialog(
@@ -101,7 +136,7 @@ public partial class ModelCardViewModel(
         ModelNodeConnection,
         ClipNodeConnection,
         VAENodeConnection
-    > GetModelLoader(ModuleApplyStepEventArgs e, string nodeName, HybridModelFile model)
+    > GetDefaultModelLoader(ModuleApplyStepEventArgs e, string nodeName, HybridModelFile model)
     {
         // Check if config
         if (model.Local?.ConfigFullPath is { } configPath)
@@ -125,49 +160,13 @@ public partial class ModelCardViewModel(
     /// <inheritdoc />
     public virtual void ApplyStep(ModuleApplyStepEventArgs e)
     {
-        // Load base checkpoint
-        var baseLoader = e.Nodes.AddTypedNode(
-            GetModelLoader(
-                e,
-                "CheckpointLoader_Base",
-                SelectedModel ?? throw new ValidationException("Model not selected")
-            )
-        );
-
-        e.Builder.Connections.Base.Model = baseLoader.Output1;
-        e.Builder.Connections.Base.Clip = baseLoader.Output2;
-        e.Builder.Connections.Base.VAE = baseLoader.Output3;
-
-        // Load refiner if enabled
-        if (IsRefinerSelectionEnabled && SelectedRefiner is { IsNone: false })
+        if (SelectedModelLoader is ModelLoader.Default or ModelLoader.Nf4)
         {
-            var refinerLoader = e.Nodes.AddTypedNode(
-                GetModelLoader(
-                    e,
-                    "CheckpointLoader_Refiner",
-                    SelectedRefiner ?? throw new ValidationException("Refiner Model enabled but not selected")
-                )
-            );
-
-            e.Builder.Connections.Refiner.Model = refinerLoader.Output1;
-            e.Builder.Connections.Refiner.Clip = refinerLoader.Output2;
-            e.Builder.Connections.Refiner.VAE = refinerLoader.Output3;
+            SetupDefaultModelLoader(e);
         }
-
-        // Load VAE override if enabled
-        if (IsVaeSelectionEnabled && SelectedVae is { IsNone: false, IsDefault: false })
+        else // UNET/GGUF UNET workflow
         {
-            var vaeLoader = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.VAELoader
-                {
-                    Name = "VAELoader",
-                    VaeName =
-                        SelectedVae?.RelativePath
-                        ?? throw new ValidationException("VAE enabled but not selected")
-                }
-            );
-
-            e.Builder.Connections.PrimaryVAE = vaeLoader.Output;
+            SetupStandaloneModelLoader(e);
         }
 
         // Clip skip all models if enabled
@@ -205,7 +204,9 @@ public partial class ModelCardViewModel(
         return SerializeModel(
             new ModelCardModel
             {
-                SelectedModelName = SelectedModel?.RelativePath,
+                SelectedModelName = IsStandaloneModelLoader
+                    ? SelectedUnetModel?.RelativePath
+                    : SelectedModel?.RelativePath,
                 SelectedVaeName = SelectedVae?.RelativePath,
                 SelectedRefinerName = SelectedRefiner?.RelativePath,
                 ClipSkip = ClipSkip,
@@ -213,6 +214,10 @@ public partial class ModelCardViewModel(
                 IsRefinerSelectionEnabled = IsRefinerSelectionEnabled,
                 IsClipSkipEnabled = IsClipSkipEnabled,
                 IsExtraNetworksEnabled = IsExtraNetworksEnabled,
+                IsModelLoaderSelectionEnabled = IsModelLoaderSelectionEnabled,
+                SelectedClip1Name = SelectedClip1?.RelativePath,
+                SelectedClip2Name = SelectedClip2?.RelativePath,
+                ModelLoader = SelectedModelLoader,
                 ExtraNetworks = ExtraNetworksStackCardViewModel.SaveStateToJsonObject()
             }
         );
@@ -223,9 +228,20 @@ public partial class ModelCardViewModel(
     {
         var model = DeserializeModel<ModelCardModel>(state);
 
-        SelectedModel = model.SelectedModelName is null
-            ? null
-            : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedModelName);
+        SelectedModelLoader = model.ModelLoader;
+
+        if (model.ModelLoader is ModelLoader.Unet or ModelLoader.Gguf)
+        {
+            SelectedUnetModel = model.SelectedModelName is null
+                ? null
+                : ClientManager.UnetModels.FirstOrDefault(x => x.RelativePath == model.SelectedModelName);
+        }
+        else
+        {
+            SelectedModel = model.SelectedModelName is null
+                ? null
+                : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedModelName);
+        }
 
         SelectedVae = model.SelectedVaeName is null
             ? HybridModelFile.Default
@@ -235,12 +251,21 @@ public partial class ModelCardViewModel(
             ? HybridModelFile.None
             : ClientManager.Models.FirstOrDefault(x => x.RelativePath == model.SelectedRefinerName);
 
+        SelectedClip1 = model.SelectedClip1Name is null
+            ? HybridModelFile.None
+            : ClientManager.ClipModels.FirstOrDefault(x => x.RelativePath == model.SelectedClip1Name);
+
+        SelectedClip2 = model.SelectedClip2Name is null
+            ? HybridModelFile.None
+            : ClientManager.ClipModels.FirstOrDefault(x => x.RelativePath == model.SelectedClip2Name);
+
         ClipSkip = model.ClipSkip;
 
         IsVaeSelectionEnabled = model.IsVaeSelectionEnabled;
         IsRefinerSelectionEnabled = model.IsRefinerSelectionEnabled;
         IsClipSkipEnabled = model.IsClipSkipEnabled;
         IsExtraNetworksEnabled = model.IsExtraNetworksEnabled;
+        IsModelLoaderSelectionEnabled = model.IsModelLoaderSelectionEnabled;
 
         if (model.ExtraNetworks is not null)
         {
@@ -254,7 +279,7 @@ public partial class ModelCardViewModel(
         if (parameters.ModelName is not { } paramsModelName)
             return;
 
-        var currentModels = ClientManager.Models;
+        var currentModels = ClientManager.Models.Concat(ClientManager.UnetModels).ToList();
 
         HybridModelFile? model;
 
@@ -274,7 +299,14 @@ public partial class ModelCardViewModel(
             model ??= currentModels.FirstOrDefault(m => m.ShortDisplayName.StartsWith(paramsModelName));
         }
 
-        if (model is not null)
+        if (model is null)
+            return;
+
+        if (model.Local?.SharedFolderType is SharedFolderType.Unet)
+        {
+            SelectedUnetModel = model;
+        }
+        else
         {
             SelectedModel = model;
         }
@@ -283,6 +315,15 @@ public partial class ModelCardViewModel(
     /// <inheritdoc />
     public GenerationParameters SaveStateToParameters(GenerationParameters parameters)
     {
+        if (IsStandaloneModelLoader)
+        {
+            return parameters with
+            {
+                ModelName = SelectedUnetModel?.FileName,
+                ModelHash = SelectedUnetModel?.Local?.ConnectedModelInfo?.Hashes.SHA256
+            };
+        }
+
         return parameters with
         {
             ModelName = SelectedModel?.FileName,
@@ -290,17 +331,136 @@ public partial class ModelCardViewModel(
         };
     }
 
+    partial void OnSelectedModelLoaderChanged(ModelLoader value)
+    {
+        if (value is ModelLoader.Unet or ModelLoader.Gguf && IsVaeSelectionEnabled is false)
+        {
+            IsVaeSelectionEnabled = true;
+        }
+    }
+
+    private void SetupStandaloneModelLoader(ModuleApplyStepEventArgs e)
+    {
+        if (SelectedModelLoader is ModelLoader.Gguf)
+        {
+            var checkpointLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.UnetLoaderGGUF
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
+                    UnetName =
+                        SelectedUnetModel?.RelativePath ?? throw new ValidationException("Model not selected")
+                }
+            );
+            e.Builder.Connections.Base.Model = checkpointLoader.Output;
+        }
+        else
+        {
+            var checkpointLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.UNETLoader
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
+                    UnetName =
+                        SelectedUnetModel?.RelativePath
+                        ?? throw new ValidationException("Model not selected"),
+                    WeightDtype = SelectedDType ?? "default"
+                }
+            );
+            e.Builder.Connections.Base.Model = checkpointLoader.Output;
+        }
+
+        var vaeLoader = e.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.VAELoader
+            {
+                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.VAELoader)),
+                VaeName = SelectedVae?.RelativePath ?? throw new ValidationException("No VAE Selected")
+            }
+        );
+        e.Builder.Connections.Base.VAE = vaeLoader.Output;
+
+        // DualCLIPLoader
+        var clipLoader = e.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.DualCLIPLoader
+            {
+                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoader)),
+                ClipName1 = SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
+                ClipName2 = SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
+                Type = "flux"
+            }
+        );
+        e.Builder.Connections.Base.Clip = clipLoader.Output;
+    }
+
+    private void SetupDefaultModelLoader(ModuleApplyStepEventArgs e)
+    {
+        // Load base checkpoint
+        var loaderNode =
+            SelectedModelLoader is ModelLoader.Default
+                ? GetDefaultModelLoader(
+                    e,
+                    "CheckpointLoader_Base",
+                    SelectedModel ?? throw new ValidationException("Model not selected")
+                )
+                : new ComfyNodeBuilder.CheckpointLoaderNF4
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CheckpointLoaderNF4)),
+                    CkptName =
+                        SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected")
+                };
+
+        var baseLoader = e.Nodes.AddTypedNode(loaderNode);
+
+        e.Builder.Connections.Base.Model = baseLoader.Output1;
+        e.Builder.Connections.Base.Clip = baseLoader.Output2;
+        e.Builder.Connections.Base.VAE = baseLoader.Output3;
+
+        // Load refiner if enabled
+        if (IsRefinerSelectionEnabled && SelectedRefiner is { IsNone: false })
+        {
+            var refinerLoader = e.Nodes.AddTypedNode(
+                GetDefaultModelLoader(
+                    e,
+                    "CheckpointLoader_Refiner",
+                    SelectedRefiner ?? throw new ValidationException("Refiner Model enabled but not selected")
+                )
+            );
+
+            e.Builder.Connections.Refiner.Model = refinerLoader.Output1;
+            e.Builder.Connections.Refiner.Clip = refinerLoader.Output2;
+            e.Builder.Connections.Refiner.VAE = refinerLoader.Output3;
+        }
+
+        // Load VAE override if enabled
+        if (IsVaeSelectionEnabled && SelectedVae is { IsNone: false, IsDefault: false })
+        {
+            var vaeLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.VAELoader
+                {
+                    Name = "VAELoader",
+                    VaeName =
+                        SelectedVae?.RelativePath
+                        ?? throw new ValidationException("VAE enabled but not selected")
+                }
+            );
+
+            e.Builder.Connections.PrimaryVAE = vaeLoader.Output;
+        }
+    }
+
     internal class ModelCardModel
     {
         public string? SelectedModelName { get; init; }
         public string? SelectedRefinerName { get; init; }
         public string? SelectedVaeName { get; init; }
+        public string? SelectedClip1Name { get; init; }
+        public string? SelectedClip2Name { get; init; }
+        public ModelLoader ModelLoader { get; init; }
         public int ClipSkip { get; init; } = 1;
 
         public bool IsVaeSelectionEnabled { get; init; }
         public bool IsRefinerSelectionEnabled { get; init; }
         public bool IsClipSkipEnabled { get; init; }
         public bool IsExtraNetworksEnabled { get; init; }
+        public bool IsModelLoaderSelectionEnabled { get; init; }
 
         public JsonObject? ExtraNetworks { get; init; }
     }

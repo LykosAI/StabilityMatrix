@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 using NLog;
 using StabilityMatrix.Core.Attributes;
@@ -51,28 +50,30 @@ public class ComfyUI(
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = new[] { "models/checkpoints" },
-            [SharedFolderType.Diffusers] = new[] { "models/diffusers" },
-            [SharedFolderType.Lora] = new[] { "models/loras" },
-            [SharedFolderType.CLIP] = new[] { "models/clip" },
-            [SharedFolderType.InvokeClipVision] = new[] { "models/clip_vision" },
-            [SharedFolderType.TextualInversion] = new[] { "models/embeddings" },
-            [SharedFolderType.VAE] = new[] { "models/vae" },
-            [SharedFolderType.ApproxVAE] = new[] { "models/vae_approx" },
-            [SharedFolderType.ControlNet] = new[] { "models/controlnet/ControlNet" },
-            [SharedFolderType.GLIGEN] = new[] { "models/gligen" },
-            [SharedFolderType.ESRGAN] = new[] { "models/upscale_models" },
-            [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
-            [SharedFolderType.IpAdapter] = new[] { "models/ipadapter/base" },
-            [SharedFolderType.InvokeIpAdapters15] = new[] { "models/ipadapter/sd15" },
-            [SharedFolderType.InvokeIpAdaptersXl] = new[] { "models/ipadapter/sdxl" },
-            [SharedFolderType.T2IAdapter] = new[] { "models/controlnet/T2IAdapter" },
-            [SharedFolderType.PromptExpansion] = new[] { "models/prompt_expansion" },
-            [SharedFolderType.Unet] = new[] { "models/unet" }
+            [SharedFolderType.StableDiffusion] = ["models/checkpoints"],
+            [SharedFolderType.Diffusers] = ["models/diffusers"],
+            [SharedFolderType.Lora] = ["models/loras"],
+            [SharedFolderType.CLIP] = ["models/clip"],
+            [SharedFolderType.InvokeClipVision] = ["models/clip_vision"],
+            [SharedFolderType.TextualInversion] = ["models/embeddings"],
+            [SharedFolderType.VAE] = ["models/vae"],
+            [SharedFolderType.ApproxVAE] = ["models/vae_approx"],
+            [SharedFolderType.ControlNet] = ["models/controlnet/ControlNet"],
+            [SharedFolderType.GLIGEN] = ["models/gligen"],
+            [SharedFolderType.ESRGAN] = ["models/upscale_models"],
+            [SharedFolderType.Hypernetwork] = ["models/hypernetworks"],
+            [SharedFolderType.IpAdapter] = ["models/ipadapter/base"],
+            [SharedFolderType.InvokeIpAdapters15] = ["models/ipadapter/sd15"],
+            [SharedFolderType.InvokeIpAdaptersXl] = ["models/ipadapter/sdxl"],
+            [SharedFolderType.T2IAdapter] = ["models/controlnet/T2IAdapter"],
+            [SharedFolderType.PromptExpansion] = ["models/prompt_expansion"],
+            [SharedFolderType.Ultralytics] = ["models/ultralytics"],
+            [SharedFolderType.Sams] = ["models/sams"],
+            [SharedFolderType.Unet] = ["models/diffusion_models"]
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
-        new() { [SharedOutputType.Text2Img] = new[] { "output" } };
+        new() { [SharedOutputType.Text2Img] = ["output"] };
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
@@ -173,23 +174,16 @@ public class ComfyUI(
 
     public override string MainBranch => "master";
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[]
-        {
-            TorchVersion.Cpu,
-            TorchVersion.Cuda,
-            TorchVersion.DirectMl,
-            TorchVersion.Rocm,
-            TorchVersion.Mps
-        };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
@@ -197,19 +191,13 @@ public class ComfyUI(
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+
         var pipArgs = new PipInstallArgs();
 
         pipArgs = torchVersion switch
         {
-            TorchVersion.DirectMl => pipArgs.WithTorchDirectML(),
-            TorchVersion.Mps => pipArgs.WithTorch().WithTorchVision().WithTorchExtraIndex("cpu"),
-            TorchVersion.Cuda when Compat.IsWindows
-                => pipArgs
-                    .AddArg("--upgrade")
-                    .WithTorch("==2.1.2")
-                    .WithTorchVision("==0.16.2")
-                    .WithTorchAudio("==2.1.2")
-                    .WithTorchExtraIndex("cu121"),
+            TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
             _
                 => pipArgs
                     .AddArg("--upgrade")
@@ -218,9 +206,10 @@ public class ComfyUI(
                     .WithTorchExtraIndex(
                         torchVersion switch
                         {
-                            TorchVersion.Cpu => "cpu",
-                            TorchVersion.Cuda => "cu121",
-                            TorchVersion.Rocm => "rocm5.7",
+                            TorchIndex.Cpu => "cpu",
+                            TorchIndex.Cuda => "cu124",
+                            TorchIndex.Rocm => "rocm6.1",
+                            TorchIndex.Mps => "cpu",
                             _
                                 => throw new ArgumentOutOfRangeException(
                                     nameof(torchVersion),
@@ -231,14 +220,21 @@ public class ComfyUI(
                     )
         };
 
-        pipArgs = pipArgs.AddArg("numpy==1.26.4").AddArg("mpmath==1.3.0");
-
         var requirements = new FilePath(installLocation, "requirements.txt");
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(
-            await requirements.ReadAllTextAsync().ConfigureAwait(false),
-            excludePattern: "torch"
+            await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+            excludePattern: "torch$|numpy"
         );
+
+        // https://github.com/comfyanonymous/ComfyUI/pull/4121
+        // https://github.com/comfyanonymous/ComfyUI/commit/e6829e7ac5bef5db8099005b5b038c49e173e87c
+        pipArgs = pipArgs.AddArg("numpy<2");
+
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
 
         progress?.Report(
             new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
@@ -249,23 +245,22 @@ public class ComfyUI(
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
+        await SetupVenv(installLocation).ConfigureAwait(false);
 
-        VenvRunner?.RunDetached(args.TrimEnd(), HandleConsoleOutput, HandleExit);
+        VenvRunner.RunDetached(
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            HandleConsoleOutput,
+            OnExit
+        );
+
         return;
-
-        void HandleExit(int i)
-        {
-            Debug.WriteLine($"Venv process exited with code {i}");
-            OnExit(i);
-        }
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -374,7 +369,11 @@ public class ComfyUI(
                 Path.Combine(modelsDir, "InvokeIpAdaptersXl")
             );
             nodeValue.Children["prompt_expansion"] = Path.Combine(modelsDir, "PromptExpansion");
-            nodeValue.Children["unet"] = Path.Combine(modelsDir, "unet");
+            nodeValue.Children["ultralytics"] = Path.Combine(modelsDir, "Ultralytics");
+            nodeValue.Children["ultralytics_bbox"] = Path.Combine(modelsDir, "Ultralytics", "bbox");
+            nodeValue.Children["ultralytics_segm"] = Path.Combine(modelsDir, "Ultralytics", "segm");
+            nodeValue.Children["sams"] = Path.Combine(modelsDir, "Sams");
+            nodeValue.Children["diffusion_models"] = Path.Combine(modelsDir, "unet");
         }
         else
         {
@@ -414,7 +413,11 @@ public class ComfyUI(
                         )
                     },
                     { "prompt_expansion", Path.Combine(modelsDir, "PromptExpansion") },
-                    { "unet", Path.Combine(modelsDir, "unet") },
+                    { "ultralytics", Path.Combine(modelsDir, "Ultralytics") },
+                    { "ultralytics_bbox", Path.Combine(modelsDir, "Ultralytics", "bbox") },
+                    { "ultralytics_segm", Path.Combine(modelsDir, "Ultralytics", "segm") },
+                    { "sams", Path.Combine(modelsDir, "Sams") },
+                    { "diffusion_models", Path.Combine(modelsDir, "unet") }
                 }
             );
         }
@@ -471,9 +474,10 @@ public class ComfyUI(
         await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);
     }
 
-    public override IPackageExtensionManager ExtensionManager => new ComfyExtensionManager(this);
+    public override IPackageExtensionManager ExtensionManager =>
+        new ComfyExtensionManager(this, settingsManager);
 
-    private class ComfyExtensionManager(ComfyUI package)
+    private class ComfyExtensionManager(ComfyUI package, ISettingsManager settingsManager)
         : GitPackageExtensionManager(package.PrerequisiteHelper)
     {
         public override string RelativeInstallDirectory => "custom_nodes";
@@ -634,6 +638,19 @@ public class ComfyUI(
                         .ConfigureAwait(false);
 
                     venvRunner.WorkingDirectory = installScript.Directory;
+                    venvRunner.UpdateEnvironmentVariables(env =>
+                    {
+                        // set env vars for Impact Pack for Face Detailer
+                        env = env.SetItem("COMFYUI_PATH", installedPackage.FullPath!);
+
+                        var modelPath =
+                            installedPackage.PreferredSharedFolderMethod == SharedFolderMethod.None
+                                ? Path.Combine(installedPackage.FullPath!, "models")
+                                : settingsManager.ModelsDirectory;
+
+                        env = env.SetItem("COMFYUI_MODEL_PATH", modelPath);
+                        return env;
+                    });
 
                     venvRunner.RunDetached(["install.py"], progress.AsProcessOutputHandler());
 

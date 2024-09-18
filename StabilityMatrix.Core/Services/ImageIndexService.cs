@@ -60,7 +60,7 @@ public class ImageIndexService : IImageIndexService
         await Task.Run(() =>
             {
                 var files = searchDir
-                    .EnumerateFiles("*.*", SearchOption.AllDirectories)
+                    .EnumerateFiles("*", EnumerationOptionConstants.AllDirectories)
                     .Where(file => LocalImageFile.SupportedImageExtensions.Contains(file.Extension));
 
                 Parallel.ForEach(

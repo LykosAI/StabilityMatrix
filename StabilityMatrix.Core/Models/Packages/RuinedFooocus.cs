@@ -106,14 +106,16 @@ public class RuinedFooocus(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        if (torchVersion == TorchVersion.Cuda)
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+
+        if (torchVersion == TorchIndex.Cuda)
         {
             await using var venvRunner = await SetupVenvPure(installLocation, forceRecreate: true)
                 .ConfigureAwait(false);
@@ -121,25 +123,29 @@ public class RuinedFooocus(
             progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
             var requirements = new FilePath(installLocation, "requirements_versions.txt");
+            var pipArgs = new PipInstallArgs()
+                .WithTorchExtraIndex("cu121")
+                .WithParsedFromRequirementsTxt(
+                    await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+                    "--extra-index-url.*|--index-url.*"
+                );
 
-            await venvRunner
-                .PipInstall(
-                    new PipInstallArgs().WithParsedFromRequirementsTxt(
-                        await requirements.ReadAllTextAsync().ConfigureAwait(false)
-                    ),
-                    onConsoleOutput
-                )
-                .ConfigureAwait(false);
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         }
         else
         {
             await base.InstallPackage(
                 installLocation,
-                torchVersion,
-                selectedSharedFolderMethod,
-                versionOptions,
+                installedPackage,
+                options,
                 progress,
-                onConsoleOutput
+                onConsoleOutput,
+                cancellationToken
             )
                 .ConfigureAwait(false);
         }

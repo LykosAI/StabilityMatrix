@@ -35,7 +35,7 @@ public class KohyaSs(
 
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
 
-    public override TorchVersion GetRecommendedTorchVersion() => TorchVersion.Cuda;
+    public override TorchIndex GetRecommendedTorchVersion() => TorchIndex.Cuda;
 
     public override string Disclaimer =>
         "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
@@ -44,7 +44,7 @@ public class KohyaSs(
     public override PackageType PackageType => PackageType.SdTraining;
     public override bool OfferInOneClickInstaller => false;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
-    public override IEnumerable<TorchVersion> AvailableTorchVersions => [TorchVersion.Cuda];
+    public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda];
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.None };
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
@@ -106,11 +106,11 @@ public class KohyaSs(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1f, "Updating submodules", isIndeterminate: true));
@@ -122,13 +122,25 @@ public class KohyaSs(
             )
             .ConfigureAwait(false);
 
+        // make sure long paths are enabled
+        if (Compat.IsWindows)
+        {
+            await PrerequisiteHelper.FixGitLongPaths().ConfigureAwait(false);
+        }
+
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
         // Setup venv
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         // Extra dep needed before running setup since v23.0.x
-        await venvRunner.PipInstall(["rich", "packaging"]).ConfigureAwait(false);
+        var pipArgs = new PipInstallArgs("rich", "packaging");
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        await venvRunner.PipInstall(pipArgs).ConfigureAwait(false);
 
         if (Compat.IsWindows)
         {
@@ -153,13 +165,14 @@ public class KohyaSs(
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
+        await SetupVenv(installLocation).ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -177,9 +190,11 @@ public class KohyaSs(
             OnStartupComplete(WebUrl);
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" {arguments}";
-
-        VenvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+        VenvRunner.RunDetached(
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            HandleConsoleOutput,
+            OnExit
+        );
     }
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }

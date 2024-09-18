@@ -106,8 +106,8 @@ public class StableSwarm(
         new() { [SharedOutputType.Text2Img] = [OutputFolderName] };
     public override string MainBranch => "master";
     public override bool ShouldIgnoreReleases => true;
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        [TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm, TorchVersion.Mps];
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         [
@@ -125,11 +125,11 @@ public class StableSwarm(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1f, "Installing SwarmUI...", isIndeterminate: true));
@@ -180,74 +180,81 @@ public class StableSwarm(
             )
             .ConfigureAwait(false);
 
-        // set default settings
-        var settings = new StableSwarmSettings { IsInstalled = true };
-
-        if (selectedSharedFolderMethod is SharedFolderMethod.Configuration)
+        if (!options.IsUpdate)
         {
-            settings.Paths = new StableSwarmSettings.PathsData
+            // set default settings
+            var settings = new StableSwarmSettings { IsInstalled = true };
+
+            if (options.SharedFolderMethod is SharedFolderMethod.Configuration)
             {
-                ModelRoot = settingsManager.ModelsDirectory,
-                SDModelFolder = Path.Combine(
-                    settingsManager.ModelsDirectory,
-                    SharedFolderType.StableDiffusion.ToString()
-                ),
-                SDLoraFolder = Path.Combine(
-                    settingsManager.ModelsDirectory,
-                    SharedFolderType.Lora.ToString()
-                ),
-                SDVAEFolder = Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.VAE.ToString()),
-                SDEmbeddingFolder = Path.Combine(
-                    settingsManager.ModelsDirectory,
-                    SharedFolderType.TextualInversion.ToString()
-                ),
-                SDControlNetsFolder = Path.Combine(
-                    settingsManager.ModelsDirectory,
-                    SharedFolderType.ControlNet.ToString()
-                ),
-                SDClipVisionFolder = Path.Combine(
-                    settingsManager.ModelsDirectory,
-                    SharedFolderType.InvokeClipVision.ToString()
-                )
-            };
+                settings.Paths = new StableSwarmSettings.PathsData
+                {
+                    ModelRoot = settingsManager.ModelsDirectory,
+                    SDModelFolder = Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        SharedFolderType.StableDiffusion.ToString()
+                    ),
+                    SDLoraFolder = Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        SharedFolderType.Lora.ToString()
+                    ),
+                    SDVAEFolder = Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        SharedFolderType.VAE.ToString()
+                    ),
+                    SDEmbeddingFolder = Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        SharedFolderType.TextualInversion.ToString()
+                    ),
+                    SDControlNetsFolder = Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        SharedFolderType.ControlNet.ToString()
+                    ),
+                    SDClipVisionFolder = Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        SharedFolderType.InvokeClipVision.ToString()
+                    )
+                };
+            }
+
+            settings.Save(true).SaveToFile(GetSettingsPath(installLocation));
+
+            var backendsFile = new FDSSection();
+            var dataSection = new FDSSection();
+            dataSection.Set("type", "comfyui_selfstart");
+            dataSection.Set("title", "StabilityMatrix ComfyUI Self-Start");
+            dataSection.Set("enabled", true);
+
+            var launchArgs = comfy.LaunchArgs ?? [];
+            var comfyArgs = string.Join(
+                ' ',
+                launchArgs
+                    .Select(arg => arg.ToArgString()?.TrimEnd())
+                    .Where(arg => !string.IsNullOrWhiteSpace(arg))
+            );
+
+            dataSection.Set(
+                "settings",
+                new ComfyUiSelfStartSettings
+                {
+                    StartScript = $"../{comfy.DisplayName}/main.py",
+                    DisableInternalArgs = false,
+                    AutoUpdate = false,
+                    ExtraArgs = comfyArgs
+                }.Save(true)
+            );
+
+            backendsFile.Set("0", dataSection);
+            backendsFile.SaveToFile(GetBackendsPath(installLocation));
         }
-
-        settings.Save(true).SaveToFile(GetSettingsPath(installLocation));
-
-        var backendsFile = new FDSSection();
-        var dataSection = new FDSSection();
-        dataSection.Set("type", "comfyui_selfstart");
-        dataSection.Set("title", "StabilityMatrix ComfyUI Self-Start");
-        dataSection.Set("enabled", true);
-
-        var launchArgs = comfy.LaunchArgs ?? [];
-        var comfyArgs = string.Join(
-            ' ',
-            launchArgs
-                .Select(arg => arg.ToArgString()?.TrimEnd())
-                .Where(arg => !string.IsNullOrWhiteSpace(arg))
-        );
-
-        dataSection.Set(
-            "settings",
-            new ComfyUiSelfStartSettings
-            {
-                StartScript = $"../{comfy.DisplayName}/main.py",
-                DisableInternalArgs = false,
-                AutoUpdate = false,
-                ExtraArgs = comfyArgs
-            }.Save(true)
-        );
-
-        backendsFile.Set("0", dataSection);
-        backendsFile.SaveToFile(GetBackendsPath(installLocation));
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         var aspEnvVars = new Dictionary<string, string>
@@ -273,7 +280,7 @@ public class StableSwarm(
             }
         }
 
-        var releaseFolder = Path.Combine(installedPackagePath, "src", "bin", "live_release");
+        var releaseFolder = Path.Combine(installLocation, "src", "bin", "live_release");
         var dllName = "StableSwarmUI.dll";
         if (File.Exists(Path.Combine(releaseFolder, "SwarmUI.dll")))
         {
@@ -282,10 +289,8 @@ public class StableSwarm(
 
         dotnetProcess = await prerequisiteHelper
             .RunDotnet(
-                args: new ProcessArgs(new[] { Path.Combine(releaseFolder, dllName) }).Concat(
-                    arguments.TrimEnd()
-                ),
-                workingDirectory: installedPackagePath,
+                args: [Path.Combine(releaseFolder, dllName), ..options.Arguments],
+                workingDirectory: installLocation,
                 envVars: aspEnvVars,
                 onProcessOutput: HandleConsoleOutput,
                 waitForExit: false

@@ -117,6 +117,13 @@ public partial class StackEditableCardViewModel : StackViewModelBase, IComfyStep
         AddCards(card!);
     }
 
+    public bool IsModuleEnabled<T>(int index = 0)
+        where T : ModuleBase
+    {
+        var card = Cards.OfType<T>().ElementAtOrDefault(index);
+        return card is { IsEnabled: true };
+    }
+
     /*/// <inheritdoc />
     public override void LoadStateFromJsonObject(JsonObject state)
     {

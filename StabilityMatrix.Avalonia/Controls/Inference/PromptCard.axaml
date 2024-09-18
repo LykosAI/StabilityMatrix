@@ -21,7 +21,9 @@
         <!--  Set Defaults  -->
         <Setter Property="Template">
             <ControlTemplate>
-                <controls:Card Padding="12" HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
+                <controls:Card Padding="12" HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                               VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                               VerticalContentAlignment="Stretch">
                     <controls:Card.Styles>
                         <Style Selector="avaloniaEdit|TextEditor">
                             <Setter Property="Margin" Value="0,8,0,8" />
@@ -35,7 +37,8 @@
                         </Style>
                     </controls:Card.Styles>
 
-                    <Grid RowDefinitions="*,16,*,16,Auto">
+                    <Grid RowDefinitions="*,16,*,16,Auto"
+                          Name="PART_RootGrid">
                         <!--  Prompt  -->
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,*">
                             <StackPanel
@@ -93,6 +96,7 @@
 
                                 <avaloniaEdit:TextEditor
                                     x:Name="PromptEditor"
+                                    VerticalAlignment="Stretch"
                                     Document="{Binding PromptDocument}"
                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace">
                                     <i:Interaction.Behaviors>
@@ -116,7 +120,8 @@
                             Opacity="0.3" />
 
                         <!--  Negative Prompt  -->
-                        <Grid Grid.Row="2" RowDefinitions="Auto,*">
+                        <Grid Grid.Row="2" RowDefinitions="Auto,*"
+                              IsVisible="{Binding IsNegativePromptEnabled, FallbackValue=True, TargetNullValue=True}">
                             <StackPanel Margin="4,0,4,8" Orientation="Horizontal">
                                 <TextBlock FontSize="14" Text="Negative Prompt" />
                                 <icons:Icon
@@ -133,6 +138,7 @@
 
                                 <avaloniaEdit:TextEditor
                                     x:Name="NegativePromptEditor"
+                                    VerticalAlignment="Stretch"
                                     Document="{Binding NegativePromptDocument}"
                                     FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace">
                                     <i:Interaction.Behaviors>

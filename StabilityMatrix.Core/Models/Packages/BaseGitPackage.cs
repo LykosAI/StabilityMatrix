@@ -210,11 +210,15 @@ public abstract class BaseGitPackage : BasePackage
 
     public override async Task DownloadPackage(
         string installLocation,
-        DownloadPackageVersionOptions versionOptions,
-        IProgress<ProgressReport>? progress = null
+        DownloadPackageOptions options,
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
     )
     {
+        var versionOptions = options.VersionOptions;
+
         const long fiveGigs = 5 * SystemInfo.Gibibyte;
+
         if (SystemInfo.GetDiskFreeSpaceBytes(installLocation) is < fiveGigs)
         {
             throw new ApplicationException(
@@ -378,12 +382,12 @@ public abstract class BaseGitPackage : BasePackage
     }
 
     public override async Task<InstalledPackageVersion> Update(
+        string installLocation,
         InstalledPackage installedPackage,
-        TorchVersion torchVersion,
-        DownloadPackageVersionOptions versionOptions,
+        UpdatePackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         if (installedPackage.Version == null)
@@ -405,6 +409,8 @@ public abstract class BaseGitPackage : BasePackage
                 .ConfigureAwait(false);
         }
 
+        var versionOptions = options.VersionOptions;
+
         if (!string.IsNullOrWhiteSpace(versionOptions.VersionTag))
         {
             progress?.Report(new ProgressReport(-1f, "Fetching tags...", isIndeterminate: true));
@@ -424,12 +430,12 @@ public abstract class BaseGitPackage : BasePackage
                 .ConfigureAwait(false);
 
             await InstallPackage(
-                    installedPackage.FullPath!,
-                    torchVersion,
-                    installedPackage.PreferredSharedFolderMethod ?? SharedFolderMethod.Symlink,
-                    versionOptions,
+                    installLocation,
+                    installedPackage,
+                    options.AsInstallOptions(),
                     progress,
-                    onConsoleOutput
+                    onConsoleOutput,
+                    cancellationToken
                 )
                 .ConfigureAwait(false);
 
@@ -494,12 +500,12 @@ public abstract class BaseGitPackage : BasePackage
         }
 
         await InstallPackage(
-                installedPackage.FullPath,
-                torchVersion,
-                installedPackage.PreferredSharedFolderMethod ?? SharedFolderMethod.Symlink,
-                versionOptions,
+                installLocation,
+                installedPackage,
+                options.AsInstallOptions(),
                 progress,
-                onConsoleOutput
+                onConsoleOutput,
+                cancellationToken
             )
             .ConfigureAwait(false);
 

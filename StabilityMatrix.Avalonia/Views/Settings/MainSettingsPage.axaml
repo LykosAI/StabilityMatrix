@@ -57,7 +57,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="AppGeneric" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
@@ -93,7 +93,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="Person" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
@@ -154,7 +154,7 @@
             </Grid>
 
             <!--  Environment Options  -->
-            <Grid RowDefinitions="Auto, Auto, Auto">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto">
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
@@ -172,7 +172,7 @@
 
                 <ui:SettingsExpander
                     Grid.Row="2"
-                    Margin="8,4"
+                    Margin="8,4,8,0"
                     Header="{x:Static lang:Resources.Label_EmbeddedPython}">
                     <ui:SettingsExpander.IconSource>
                         <controls:FASymbolIconSource Symbol="fa-brands fa-python" />
@@ -184,7 +184,39 @@
                                 IsEnabled="{Binding CheckPythonVersionCommand.IsRunning}"
                                 IsIndeterminate="True"
                                 IsVisible="{Binding CheckPythonVersionCommand.IsRunning}" />
+                            <DropDownButton Content="Run">
+                                <DropDownButton.Flyout>
+                                    <MenuFlyout Placement="Bottom">
+                                        <MenuItem Command="{Binding RunPythonProcessCommand}" Header="Command" />
+                                    </MenuFlyout>
+                                </DropDownButton.Flyout>
+                            </DropDownButton>
                             <Button Command="{Binding CheckPythonVersionCommand}" Content="{x:Static lang:Resources.Action_CheckVersion}" />
+                        </StackPanel>
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+
+                <ui:SettingsExpander
+                    Grid.Row="3"
+                    Margin="8,4,8,0"
+                    Header="Git">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-brands fa-git-alt" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <DropDownButton Content="Run">
+                                <DropDownButton.Flyout>
+                                    <MenuFlyout Placement="Bottom">
+                                        <MenuItem Command="{Binding RunGitProcessCommand}" Header="Command" />
+                                        <MenuItem
+                                            Command="{Binding FixGitLongPathsCommand}"
+                                            Header="Enable Long Paths"
+                                            IsVisible="{OnPlatform Default=False,
+                                                                   Windows=True}" />
+                                    </MenuFlyout>
+                                </DropDownButton.Flyout>
+                            </DropDownButton>
                         </StackPanel>
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
@@ -229,6 +261,33 @@
                 </ui:SettingsExpander>
             </sg:SpacedGrid>
 
+            <!--  Console  -->
+            <sg:SpacedGrid RowDefinitions="Auto,*" RowSpacing="4">
+                <TextBlock
+                    Margin="0,0,0,4"
+                    FontWeight="Medium"
+                    Text="{x:Static lang:Resources.Label_Console}" />
+                <ui:SettingsExpander
+                    Grid.Row="1"
+                    Margin="8,0,8,4"
+                    Description="{x:Static lang:Resources.Label_HistorySize_Description}"
+                    Header="{x:Static lang:Resources.Label_HistorySize}">
+                    <ui:SettingsExpander.IconSource>
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="History" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ui:NumberBox
+                            Maximum="10000000"
+                            Minimum="-1"
+                            PlaceholderText="0"
+                            SimpleNumberFormat="F0"
+                            SpinButtonPlacementMode="Compact"
+                            ValidationMode="InvalidInputOverwritten"
+                            Value="{Binding ConsoleLogHistorySize}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+            </sg:SpacedGrid>
+
             <!--  Theme  -->
             <Grid RowDefinitions="Auto,*,*,*,*,*">
                 <TextBlock
@@ -268,7 +327,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="DecimalArrowLeft" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
@@ -296,7 +355,7 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="WeatherSnowflake" />
                     </ui:SettingsExpander.IconSource>
                     <ui:SettingsExpander.Footer>
@@ -317,7 +376,7 @@
             </Grid>
 
             <!--  System Options  -->
-            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -334,13 +393,27 @@
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="ArrowSync" />
                     </ui:SettingsExpander.IconSource>
                 </ui:SettingsExpander>
 
+                <!--  Analytics page  -->
                 <ui:SettingsExpander
                     Grid.Row="2"
+                    ActionIconSource="ChevronRight"
+                    Command="{Binding NavigateToSubPageCommand}"
+                    CommandParameter="{x:Type vmSettings:AnalyticsSettingsViewModel}"
+                    Header="{x:Static lang:Resources.Label_Analytics}"
+                    IsClickEnabled="True">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-chart-simple" />
+                    </ui:SettingsExpander.IconSource>
+                </ui:SettingsExpander>
+
+                <!--  Add to start menu  -->
+                <ui:SettingsExpander
+                    Grid.Row="3"
                     Description="{x:Static lang:Resources.Label_AddToStartMenu_Details}"
                     Header="{x:Static lang:Resources.Label_AddToStartMenu}"
                     IconSource="StarAdd"
@@ -378,8 +451,9 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 
+                <!--  Select Data Directory  -->
                 <ui:SettingsExpander
-                    Grid.Row="3"
+                    Grid.Row="4"
                     Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
                     IconSource="MoveToFolder">
                     <ui:SettingsExpander.Header>
@@ -408,23 +482,23 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 
-                <!-- App Folders -->
-                <ui:SettingsExpander 
-                    Grid.Row="4" 
-                    IconSource="FolderLink"
-                    Header="{x:Static lang:Resources.Label_AppFolders}">
+                <!--  App Folders  -->
+                <ui:SettingsExpander
+                    Grid.Row="5"
+                    Header="{x:Static lang:Resources.Label_AppFolders}"
+                    IconSource="FolderLink">
 
                     <ui:SettingsExpanderItem>
                         <ItemsRepeater ItemsSource="{Binding DirectoryShortcutCommands}">
                             <ItemsRepeater.Layout>
-                                <WrapLayout/>
+                                <WrapLayout />
                             </ItemsRepeater.Layout>
                             <ItemsRepeater.ItemTemplate>
                                 <DataTemplate DataType="models:CommandItem">
                                     <controls:HyperlinkIconButton
-                                        Command="{Binding Command}"
                                         Margin="4"
                                         Padding="12,6"
+                                        Command="{Binding Command}"
                                         Content="{Binding DisplayName}" />
                                 </DataTemplate>
                             </ItemsRepeater.ItemTemplate>
@@ -434,12 +508,41 @@
 
                 </ui:SettingsExpander>
 
-                <!-- System Information -->
-                <ui:SettingsExpander Grid.Row="5" Header="{x:Static lang:Resources.Label_SystemInformation}">
+                <!--  System Settings  -->
+                <ui:SettingsExpander
+                    Grid.Row="6"
+                    Header="{x:Static lang:Resources.Label_SystemSettings}"
+                    IconSource="Settings">
+                    <!--  Windows Long Paths  -->
+                    <ui:SettingsExpanderItem
+                        Content="{x:Static lang:Resources.Label_EnableLongPaths}"
+                        Description="{x:Static lang:Resources.Label_EnableLongPathsDescription}"
+                        IsEnabled="{OnPlatform Default=False,
+                                               Windows=True}"
+                        ToolTip.Tip="{OnPlatform Default={x:Static lang:Resources.Label_OnlyAvailableOnWindows},
+                                                 Windows={x:Null}}">
+                        <ui:SettingsExpanderItem.Footer>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <controls:ProgressRing
+                                    BorderThickness="3"
+                                    IsEnabled="{Binding IsVisible, RelativeSource={RelativeSource Self}}"
+                                    IsIndeterminate="True"
+                                    IsVisible="{Binding WindowsLongPathsToggleClickCommand.IsRunning}" />
+                                <ToggleSwitch
+                                    Command="{Binding WindowsLongPathsToggleClickCommand}"
+                                    IsChecked="{Binding IsWindowsLongPathsEnabled}"
+                                    IsEnabled="{Binding !WindowsLongPathsToggleClickCommand.IsRunning}" />
+                            </StackPanel>
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+                </ui:SettingsExpander>
+
+                <!--  System Information  -->
+                <ui:SettingsExpander Grid.Row="7" Header="{x:Static lang:Resources.Label_SystemInformation}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
-                            IsFilled="True"
+                            IconVariant="Filled"
                             Symbol="Info" />
                     </ui:SettingsExpander.IconSource>
 

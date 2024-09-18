@@ -15,6 +15,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
@@ -57,7 +58,8 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     private static partial Regex InputYesNoRegex();
 
     public override string Title => "Launch";
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Rocket, IsFilled = true };
+    public override IconSource IconSource =>
+        new SymbolIconSource { Symbol = Symbol.Rocket, IconVariant = IconVariant.Filled };
 
     public ConsoleViewModel Console { get; } = new();
 
@@ -331,7 +333,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         // Use input command if provided, otherwise use package launch command
         command ??= basePackage.LaunchCommand;
 
-        await basePackage.RunPackage(packagePath, command, userArgsString, OnProcessOutputReceived);
+        // await basePackage.RunPackage(packagePath, command, userArgsString, OnProcessOutputReceived);
         RunningPackage = new PackagePair(activeInstall, basePackage);
 
         EventManager.Instance.OnRunningPackageStatusChanged(RunningPackage);

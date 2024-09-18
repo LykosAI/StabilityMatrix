@@ -149,7 +149,7 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <!--  BoxShadow="0 0 10 2 #BF000000"  -->
-                <ui:FABorder
+                <Border
                     Padding="{DynamicResource FlyoutBorderThemePadding}"
                     Background="{TemplateBinding Background}"
                     BorderBrush="{TemplateBinding BorderBrush}"
@@ -216,7 +216,7 @@
                     </Grid>
 
 
-                </ui:FABorder>
+                </Border>
 
             </ControlTemplate>
         </Setter>

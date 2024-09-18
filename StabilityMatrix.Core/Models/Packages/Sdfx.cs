@@ -9,6 +9,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -33,8 +34,8 @@ public class Sdfx(
         new("https://github.com/sdfxai/sdfx/raw/main/docs/static/screen-sdfx.png");
     public override string OutputFolderName => Path.Combine("data", "media", "output");
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        [TorchVersion.Cpu, TorchVersion.Cuda, TorchVersion.DirectMl, TorchVersion.Rocm, TorchVersion.Mps];
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
@@ -75,11 +76,11 @@ public class Sdfx(
 
     public override async Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
@@ -91,31 +92,40 @@ public class Sdfx(
             new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
         );
 
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+
         var gpuArg = torchVersion switch
         {
-            TorchVersion.Cuda => "--nvidia",
-            TorchVersion.Rocm => "--amd",
-            TorchVersion.DirectMl => "--directml",
-            TorchVersion.Cpu => "--cpu",
-            TorchVersion.Mps => "--mac",
-            _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+            TorchIndex.Cuda => "--nvidia",
+            TorchIndex.Rocm => "--amd",
+            TorchIndex.DirectMl => "--directml",
+            TorchIndex.Cpu => "--cpu",
+            TorchIndex.Mps => "--mac",
+            _ => throw new NotSupportedException($"Torch version {torchVersion} is not supported.")
         };
 
         await venvRunner
             .CustomInstall(["setup.py", "--install", gpuArg], onConsoleOutput)
             .ConfigureAwait(false);
 
+        if (installedPackage.PipOverrides != null)
+        {
+            var pipArgs = new PipInstallArgs().WithUserOverrides(installedPackage.PipOverrides);
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        }
+
         progress?.Report(new ProgressReport(1, "Installed Package Requirements", isIndeterminate: false));
     }
 
     public override async Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
-        var venvRunner = await SetupVenv(installedPackagePath).ConfigureAwait(false);
+        var venvRunner = await SetupVenv(installLocation).ConfigureAwait(false);
         venvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
         void HandleConsoleOutput(ProcessOutput s)
@@ -134,9 +144,11 @@ public class Sdfx(
             OnStartupComplete(WebUrl);
         }
 
-        var args = $"\"{Path.Combine(installedPackagePath, command)}\" --run {arguments}";
-
-        venvRunner.RunDetached(args.TrimEnd(), HandleConsoleOutput, OnExit);
+        venvRunner.RunDetached(
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), "--run", ..options.Arguments],
+            HandleConsoleOutput,
+            OnExit
+        );
 
         // Cuz node was getting detached on process exit
         if (Compat.IsWindows)

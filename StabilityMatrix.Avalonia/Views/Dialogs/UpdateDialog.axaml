@@ -42,7 +42,7 @@
                 Margin="8,0"
                 VerticalAlignment="Center"
                 Symbol="ArrowRight" 
-                IsFilled="True"/>
+                IconVariant="Filled"/>
             <TextBlock
                 FontSize="18"
                 Text="{Binding NewVersionText}"/>

@@ -41,6 +41,7 @@ using Polly.Extensions.Http;
 using Polly.Timeout;
 using Refit;
 using Sentry;
+using StabilityMatrix.Avalonia.Behaviors;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -54,6 +55,7 @@ using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Analytics;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -100,6 +102,22 @@ public sealed class App : Application
     // ReSharper disable once MemberCanBePrivate.Global
     [NotNull]
     public static IConfiguration? Config { get; private set; }
+
+#if DEBUG
+    // ReSharper disable twice LocalizableElement
+    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+    public static string LykosAuthApiBaseUrl => Config?["LykosAuthApiBaseUrl"] ?? "https://auth.lykos.ai";
+#else
+    public const string LykosAuthApiBaseUrl = "https://auth.lykos.ai";
+#endif
+#if DEBUG
+    // ReSharper disable twice LocalizableElement
+    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+    public static string LykosAnalyticsApiBaseUrl =>
+        Config?["LykosAnalyticsApiBaseUrl"] ?? "https://analytics.lykos.ai";
+#else
+    public const string LykosAnalyticsApiBaseUrl = "https://analytics.lykos.ai";
+#endif
 
     // ReSharper disable once MemberCanBePrivate.Global
     public IClassicDesktopStyleApplicationLifetime? DesktopLifetime =>
@@ -255,6 +273,13 @@ public sealed class App : Application
 
         // Setup uri handler for `stabilitymatrix://` protocol
         Program.UriHandler.RegisterUriScheme();
+
+        // Setup activation protocol handlers (uri handler on macOS)
+        if (Compat.IsMacOS && this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
+        {
+            Logger.Debug("ActivatableLifetime available, setting up activation protocol handlers");
+            activatableLifetime.Activated += OnActivated;
+        }
     }
 
     private void ShowMainWindow()
@@ -349,7 +374,8 @@ public sealed class App : Application
                     provider.GetRequiredService<ITrackedDownloadService>(),
                     provider.GetRequiredService<IModelIndexService>(),
                     provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
-                    provider.GetRequiredService<INotificationService>()
+                    provider.GetRequiredService<INotificationService>(),
+                    provider.GetRequiredService<IAnalyticsHelper>()
                 )
                 {
                     Pages =
@@ -402,8 +428,16 @@ public sealed class App : Application
         services.AddMemoryCache();
         services.AddLazyInstance();
 
-        services.AddMessagePipe();
-        services.AddMessagePipeNamedPipeInterprocess("StabilityMatrix");
+        // Named pipe interprocess communication on Windows and Linux for uri handling
+        if (Compat.IsWindows || Compat.IsLinux)
+        {
+            services.AddMessagePipe().AddNamedPipeInterprocess("StabilityMatrix");
+        }
+        else
+        {
+            // Use activation events on macOS, so just in-memory message pipe
+            services.AddMessagePipe().AddInMemoryDistributedMessageBroker();
+        }
 
         var exportedTypes = AppDomain
             .CurrentDomain.GetAssemblies()
@@ -547,6 +581,7 @@ public sealed class App : Application
         jsonSerializerOptions.Converters.Add(new DefaultUnknownEnumConverter<CivitModelType>());
         jsonSerializerOptions.Converters.Add(new DefaultUnknownEnumConverter<CivitModelFormat>());
         jsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+        jsonSerializerOptions.Converters.Add(new AnalyticsRequestConverter());
         jsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 
         var defaultRefitSettings = new RefitSettings
@@ -571,63 +606,113 @@ public sealed class App : Application
             HttpStatusCode.ServiceUnavailable, // 503
             HttpStatusCode.GatewayTimeout // 504
         };
-        var delay = Backoff.DecorrelatedJitterBackoffV2(
-            medianFirstRetryDelay: TimeSpan.FromMilliseconds(80),
-            retryCount: 5
-        );
+
+        // Default retry policy: ~30s max
         var retryPolicy = HttpPolicyExtensions
             .HandleTransientHttpError()
             .Or<TimeoutRejectedException>()
             .OrResult(r => retryStatusCodes.Contains(r.StatusCode))
-            .WaitAndRetryAsync(delay);
+            .WaitAndRetryAsync(
+                Backoff.DecorrelatedJitterBackoffV2(
+                    medianFirstRetryDelay: TimeSpan.FromMilliseconds(750),
+                    retryCount: 6
+                ),
+                onRetry: (result, timeSpan, retryCount, _) =>
+                {
+                    if (retryCount > 3)
+                    {
+                        Logger.Info(
+                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to {Exception}",
+                            retryCount,
+                            6,
+                            timeSpan.TotalSeconds,
+                            result.Exception?.ToString()
+                        );
+                    }
+                }
+            )
+            // 10s timeout for each attempt
+            .WrapAsync(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(60)));
 
-        // Shorter timeout for local requests
-        var localTimeout = Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(3));
-        var localDelay = Backoff.DecorrelatedJitterBackoffV2(
-            medianFirstRetryDelay: TimeSpan.FromMilliseconds(50),
-            retryCount: 3
-        );
+        // Longer retry policy: ~60s max
+        var retryPolicyLonger = HttpPolicyExtensions
+            .HandleTransientHttpError()
+            .Or<TimeoutRejectedException>()
+            .OrResult(r => retryStatusCodes.Contains(r.StatusCode))
+            .WaitAndRetryAsync(
+                Backoff.DecorrelatedJitterBackoffV2(
+                    medianFirstRetryDelay: TimeSpan.FromMilliseconds(1000),
+                    retryCount: 7
+                ),
+                onRetry: (result, timeSpan, retryCount, _) =>
+                {
+                    if (retryCount > 4)
+                    {
+                        Logger.Info(
+                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to {Exception}",
+                            retryCount,
+                            7,
+                            timeSpan.TotalSeconds,
+                            result.Exception?.ToString()
+                        );
+                    }
+                }
+            )
+            // 30s timeout for each attempt
+            .WrapAsync(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(120)));
+
+        // Shorter local retry policy: ~5s total
         var localRetryPolicy = HttpPolicyExtensions
             .HandleTransientHttpError()
             .Or<TimeoutRejectedException>()
             .OrResult(r => retryStatusCodes.Contains(r.StatusCode))
             .WaitAndRetryAsync(
-                localDelay,
-                onRetryAsync: (_, _) =>
-                {
-                    Debug.WriteLine("Retrying local request...");
-                    return Task.CompletedTask;
-                }
-            );
+                Backoff.DecorrelatedJitterBackoffV2(
+                    medianFirstRetryDelay: TimeSpan.FromMilliseconds(320),
+                    retryCount: 5
+                )
+            )
+            // 3s timeout for each attempt
+            .WrapAsync(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(3)));
 
         // named client for update
         services.AddHttpClient("UpdateClient").AddPolicyHandler(retryPolicy);
 
         // Add Refit clients
+        // Note: HttpClient.Timeout should be high to allow Polly to handle timeouts instead
         services
             .AddRefitClient<ICivitApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://civitai.com");
-                c.Timeout = TimeSpan.FromSeconds(30);
+                c.Timeout = TimeSpan.FromHours(1);
             })
-            .AddPolicyHandler(retryPolicy);
+            .AddPolicyHandler(retryPolicyLonger);
 
         services
             .AddRefitClient<ICivitTRPCApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://civitai.com");
-                c.Timeout = TimeSpan.FromSeconds(30);
+                c.Timeout = TimeSpan.FromHours(1);
             })
-            .AddPolicyHandler(retryPolicy);
+            .AddPolicyHandler(retryPolicyLonger);
+
+        services
+            .AddRefitClient<IPyPiApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://pypi.org");
+                c.Timeout = TimeSpan.FromHours(1);
+            })
+            .AddPolicyHandler(retryPolicyLonger);
 
         services
             .AddRefitClient<ILykosAuthApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {
-                c.BaseAddress = new Uri("https://auth.lykos.ai");
-                c.Timeout = TimeSpan.FromSeconds(60);
+                c.BaseAddress = new Uri(LykosAuthApiBaseUrl);
+                c.Timeout = TimeSpan.FromHours(1);
             })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy)
@@ -637,24 +722,31 @@ public sealed class App : Application
             );
 
         services
+            .AddRefitClient<ILykosAnalyticsApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri(LykosAnalyticsApiBaseUrl);
+                c.Timeout = TimeSpan.FromMinutes(5);
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddPolicyHandler(retryPolicy);
+
+        services
             .AddRefitClient<IOpenArtApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri("https://openart.ai/api/public/workflows");
-                c.Timeout = TimeSpan.FromSeconds(30);
+                c.Timeout = TimeSpan.FromHours(1);
             })
             .AddPolicyHandler(retryPolicy);
 
         // Add Refit client managers
-        services.AddHttpClient("A3Client").AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));
+        services.AddHttpClient("A3Client").AddPolicyHandler(localRetryPolicy);
 
         services
             .AddHttpClient("DontFollowRedirects")
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy);
-
-        /*services.AddHttpClient("IComfyApi")
-            .AddPolicyHandler(localTimeout.WrapAsync(localRetryPolicy));*/
 
         // Add Refit client factory
         services.AddSingleton<IApiFactory, ApiFactory>(
@@ -915,6 +1007,33 @@ public sealed class App : Application
         }
     }
 
+    private static async void OnActivated(object? sender, ActivatedEventArgs args)
+    {
+        if (args is not ProtocolActivatedEventArgs protocolArgs)
+        {
+            Logger.Warn("Activated with unknown args: {Args}", args);
+            return;
+        }
+
+        if (protocolArgs.Kind is ActivationKind.OpenUri)
+        {
+            Logger.Info("Activated with Protocol OpenUri: {Uri}", protocolArgs.Uri);
+
+            // Ensure the uri scheme is our custom scheme
+            if (
+                !protocolArgs.Uri.Scheme.Equals(Program.UriHandler.Scheme, StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                Logger.Warn("Unknown scheme for OpenUri: {Uri}", protocolArgs.Uri);
+                return;
+            }
+
+            var publisher = Services.GetRequiredService<IDistributedPublisher<string, Uri>>();
+
+            await publisher.PublishAsync(UriHandler.IpcKeySend, protocolArgs.Uri);
+        }
+    }
+
     private static LoggingConfiguration ConfigureLogging()
     {
         var setupBuilder = LogManager.Setup();
@@ -929,7 +1048,12 @@ public sealed class App : Application
             builder.ForLogger("Microsoft.Extensions.Http.*").WriteToNil(NLog.LogLevel.Warn);
 
             // Disable some trace logging by default, unless overriden by app settings
-            var typesToDisableTrace = new[] { typeof(ConsoleViewModel), typeof(LoadableViewModelBase) };
+            var typesToDisableTrace = new[]
+            {
+                typeof(ConsoleViewModel),
+                typeof(LoadableViewModelBase),
+                typeof(TextEditorCompletionBehavior)
+            };
 
             foreach (var type in typesToDisableTrace)
             {
@@ -942,7 +1066,8 @@ public sealed class App : Application
                     continue;
                 }
 
-                builder.ForLogger(type.FullName).FilterMinLevel(NLog.LogLevel.Debug);
+                // Set minimum level to Debug for these types
+                builder.ForLogger(type.FullName).WriteToNil(NLog.LogLevel.Debug);
             }
 
             // Debug console logging

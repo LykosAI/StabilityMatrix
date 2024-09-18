@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Markup.Xaml;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Attributes;
@@ -17,11 +15,6 @@ public partial class CivitAiBrowserPage : UserControlBase
     public CivitAiBrowserPage()
     {
         InitializeComponent();
-    }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
     }
 
     private void ScrollViewer_OnScrollChanged(object? sender, ScrollChangedEventArgs e)

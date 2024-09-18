@@ -4,8 +4,8 @@
     <Design.PreviewWith>
         <Border Padding="20">
             <StackPanel>
+                <ToggleButton Content="Button" Margin="8" HorizontalAlignment="Center" />
                 <ToggleButton Classes="success" Content="Success Button" Margin="8" HorizontalAlignment="Center" />
-                <ToggleButton Classes="accent" Content="FA Accent Button" Margin="8" HorizontalAlignment="Center" />
                 <ToggleButton Classes="systemaccent" Content="System Accent Button" Margin="8" HorizontalAlignment="Center" />
                 <ToggleButton Classes="danger" Content="Danger Button" Margin="8" HorizontalAlignment="Center" />
                 <ToggleButton Classes="info" Content="Info Button" Margin="8" HorizontalAlignment="Center" />
@@ -18,8 +18,8 @@
     </Design.PreviewWith>
 
     <!-- Success -->
-    <Style Selector="ToggleButton.success">
-        <Style Selector="^ /template/ ui|FABorder#Root">
+    <Style Selector="ToggleButton.success:checked">
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource ThemeGreenColor}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeGreenColor}" />
         </Style>
@@ -28,7 +28,7 @@
         </Style>
 
         <Style Selector="^:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkGreenColor}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkGreenColor}" />
             </Style>
@@ -38,7 +38,7 @@
         </Style>
 
         <Style Selector="^:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkDarkGreenColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkDarkGreenColor}" />
             </Style>
@@ -48,7 +48,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>
@@ -59,8 +59,8 @@
     </Style>
     
     <!-- Danger -->
-    <Style Selector="ToggleButton.danger">
-        <Style Selector="^ /template/ ui|FABorder#Root">
+    <Style Selector="ToggleButton.danger:checked">
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource ThemeRedColor}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeRedColor}" />
         </Style>
@@ -69,7 +69,7 @@
         </Style>
 
         <Style Selector="^:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkRedColor}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkRedColor}" />
             </Style>
@@ -79,7 +79,7 @@
         </Style>
 
         <Style Selector="^:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkDarkRedColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkDarkRedColor}" />
             </Style>
@@ -89,7 +89,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>
@@ -100,8 +100,8 @@
     </Style>
     
     <!-- Info -->
-    <Style Selector="ToggleButton.info">
-        <Style Selector="^ /template/ ui|FABorder#Root">
+    <Style Selector="ToggleButton.info:checked">
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource ThemeLightBlueColor}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeLightBlueColor}" />
         </Style>
@@ -110,7 +110,7 @@
         </Style>
 
         <Style Selector="^:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeBlueColor}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeBlueColor}" />
             </Style>
@@ -120,7 +120,7 @@
         </Style>
 
         <Style Selector="^:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ThemeDarkBlueColor}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkBlueColor}" />
             </Style>
@@ -130,7 +130,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>
@@ -140,50 +140,9 @@
         </Style>
     </Style>
     
-    <!--Accent Button-->
-    <Style Selector="ToggleButton.accent">
-        <Style Selector="^ /template/ ui|FABorder#Root">
-            <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrush}" />
-        </Style>
-        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Foreground" Value="{DynamicResource AccentButtonForeground}" />
-        </Style>
-
-        <Style Selector="^:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
-                <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundPointerOver}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrushPointerOver}" />
-            </Style>
-            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="Foreground" Value="{DynamicResource AccentButtonForegroundPointerOver}" />
-            </Style>
-        </Style>
-
-        <Style Selector="^:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
-                <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundPressed}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrushPressed}" />
-            </Style>
-            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="Foreground" Value="{DynamicResource AccentButtonForegroundPressed}" />
-            </Style>
-        </Style>
-
-        <Style Selector="^:disabled">
-            <Style Selector="^ /template/ ui|FABorder#Root">
-                <Setter Property="Background" Value="{DynamicResource AccentButtonBackgroundDisabled}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource AccentButtonBorderBrushDisabled}" />
-            </Style>
-            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="Foreground" Value="{DynamicResource AccentButtonForegroundDisabled}" />
-            </Style>
-        </Style>
-    </Style>
-    
     <!-- SystemAccent -->
-    <Style Selector="ToggleButton.systemaccent">
-        <Style Selector="^ /template/ ui|FABorder#Root">
+    <Style Selector="ToggleButton.systemaccent:checked">
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource SystemAccentColor}" />
             <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
         </Style>
@@ -192,7 +151,7 @@
         </Style>
 
         <Style Selector="^:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource SystemAccentColorDark1}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark1}" />
             </Style>
@@ -202,7 +161,7 @@
         </Style>
 
         <Style Selector="^:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource SystemAccentColorDark2}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColorDark2}" />
             </Style>
@@ -212,7 +171,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>
@@ -223,8 +182,8 @@
     </Style>
     
     <!-- Transparent -->
-    <Style Selector="ToggleButton.transparent">
-        <Style Selector="^ /template/ ui|FABorder#Root">
+    <Style Selector="ToggleButton.transparent:unchecked">
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />
         </Style>
@@ -233,7 +192,7 @@
         </Style>
 
         <Style Selector="^:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundDisabled}" />
             </Style>
@@ -243,7 +202,7 @@
         </Style>
 
         <Style Selector="^:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundPressed}" />
             </Style>
@@ -253,48 +212,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ ui|FABorder#Root">
-                <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
-            </Style>
             <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundDisabled}" />
-            </Style>
-        </Style>
-    </Style>
-    
-    <!-- Semi-Transparent Info -->
-    <Style Selector="ToggleButton.transparent-info">
-        <Style Selector="^ /template/ ui|FABorder#Root">
-            <Setter Property="Background" Value="{DynamicResource ThemeLightBlueColorTransparent}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ThemeLightBlueColorTransparent}" />
-        </Style>
-        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
-        </Style>
-
-        <Style Selector="^:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
-                <Setter Property="Background" Value="{DynamicResource ThemeBlueColorTransparent}"/>
-                <Setter Property="BorderBrush" Value="{DynamicResource ThemeBlueColorTransparent}" />
-            </Style>
-            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPointerOver}" />
-            </Style>
-        </Style>
-
-        <Style Selector="^:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
-                <Setter Property="Background" Value="{DynamicResource ThemeDarkBlueColorTransparent}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkBlueColorTransparent}" />
-            </Style>
-            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPressed}" />
-            </Style>
-        </Style>
-
-        <Style Selector="^:disabled">
-            <Style Selector="^ /template/ ui|FABorder#Root">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>
@@ -305,8 +223,8 @@
     </Style>
     
     <!-- Full Transparent -->
-    <Style Selector="ToggleButton.transparent-full">
-        <Style Selector="^ /template/ ui|FABorder#Root">
+    <Style Selector="ToggleButton.transparent-full:unchecked">
+        <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource SystemControlTransparentBrush}" />
         </Style>
@@ -315,7 +233,7 @@
         </Style>
 
         <Style Selector="^:pointerover">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}"/>
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundDisabled}" />
             </Style>
@@ -325,7 +243,7 @@
         </Style>
 
         <Style Selector="^:pressed">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundPressed}" />
             </Style>
@@ -335,7 +253,7 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Style Selector="^ /template/ ui|FABorder#Root">
+            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
                 <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushDisabled}" />
             </Style>

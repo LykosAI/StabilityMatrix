@@ -196,7 +196,24 @@ public partial class CheckpointsPage : UserControlBase
             case CheckpointCategory category:
                 if (e.Data.GetContext<CheckpointFileViewModel>() is { } vm)
                 {
-                    await checkpointsVm.MoveBetweenFolders(vm.CheckpointFile, category.Path);
+                    var allSelectedCheckpoints = checkpointsVm.Models.Where(x => x.IsSelected).ToList();
+
+                    if (allSelectedCheckpoints.Any() && checkpointsVm.DragMovesAllSelected)
+                    {
+                        if (!allSelectedCheckpoints.Contains(vm))
+                        {
+                            allSelectedCheckpoints.Add(vm);
+                        }
+
+                        foreach (var checkpoint in allSelectedCheckpoints)
+                        {
+                            await checkpointsVm.MoveBetweenFolders(checkpoint.CheckpointFile, category.Path);
+                        }
+                    }
+                    else
+                    {
+                        await checkpointsVm.MoveBetweenFolders(vm.CheckpointFile, category.Path);
+                    }
                 }
                 else if (e.Data.Get(DataFormats.Files) is IEnumerable<IStorageItem> files)
                 {

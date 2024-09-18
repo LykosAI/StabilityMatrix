@@ -31,8 +31,9 @@ public class UnknownPackage : BasePackage
 
     public override Task DownloadPackage(
         string installLocation,
-        DownloadPackageVersionOptions versionOptions,
-        IProgress<ProgressReport>? progress1
+        DownloadPackageOptions options,
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
     )
     {
         throw new NotImplementedException();
@@ -41,21 +42,22 @@ public class UnknownPackage : BasePackage
     /// <inheritdoc />
     public override Task InstallPackage(
         string installLocation,
-        TorchVersion torchVersion,
-        SharedFolderMethod selectedSharedFolderMethod,
-        DownloadPackageVersionOptions versionOptions,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         throw new NotImplementedException();
     }
 
     public override Task RunPackage(
-        string installedPackagePath,
-        string command,
-        string arguments,
-        Action<ProcessOutput>? onConsoleOutput
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         throw new NotImplementedException();
@@ -98,8 +100,8 @@ public class UnknownPackage : BasePackage
         throw new NotImplementedException();
     }
 
-    public override IEnumerable<TorchVersion> AvailableTorchVersions =>
-        new[] { TorchVersion.Cuda, TorchVersion.Cpu, TorchVersion.Rocm, TorchVersion.DirectMl };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
+        new[] { TorchIndex.Cuda, TorchIndex.Cpu, TorchIndex.Rocm, TorchIndex.DirectMl };
 
     /// <inheritdoc />
     public override void Shutdown()
@@ -121,12 +123,12 @@ public class UnknownPackage : BasePackage
 
     /// <inheritdoc />
     public override Task<InstalledPackageVersion> Update(
+        string installLocation,
         InstalledPackage installedPackage,
-        TorchVersion torchVersion,
-        DownloadPackageVersionOptions versionOptions,
+        UpdatePackageOptions options,
         IProgress<ProgressReport>? progress = null,
-        bool includePrerelease = false,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
     )
     {
         throw new NotImplementedException();

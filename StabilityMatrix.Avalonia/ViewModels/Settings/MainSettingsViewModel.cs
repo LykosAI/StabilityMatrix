@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -23,6 +24,8 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using FluentIcons.Common;
+using Microsoft.Win32;
 using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Animations;
@@ -43,8 +46,10 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -77,7 +82,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public override string Title => "Settings";
     public override IconSource IconSource =>
-        new SymbolIconSource { Symbol = Symbol.Settings, IsFilled = true };
+        new SymbolIconSource { Symbol = Symbol.Settings, IconVariant = IconVariant.Filled };
 
     // ReSharper disable once MemberCanBeMadeStatic.Global
     public string AppVersion =>
@@ -117,6 +122,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isDiscordRichPresenceEnabled;
 
+    // Console section
+    [ObservableProperty]
+    private int consoleLogHistorySize;
+
     // Debug section
     [ObservableProperty]
     private string? debugPaths;
@@ -138,6 +147,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     [ObservableProperty]
     private bool moveFilesOnImport;
+
+    #region System Settings
+
+    [ObservableProperty]
+    private bool isWindowsLongPathsEnabled;
+
+    #endregion
 
     #region System Info
 
@@ -255,6 +271,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             true
         );
 
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ConsoleLogHistorySize,
+            settings => settings.ConsoleLogHistorySize,
+            true
+        );
+
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 
         hardwareInfoUpdateTimer.Tick += OnHardwareInfoUpdateTimerTick;
@@ -266,6 +289,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
         base.OnLoaded();
 
         hardwareInfoUpdateTimer.Start();
+
+        if (Compat.IsWindows)
+        {
+            UpdateRegistrySettings();
+        }
     }
 
     /// <inheritdoc />
@@ -284,7 +312,37 @@ public partial class MainSettingsViewModel : PageViewModelBase
         await notificationService.TryAsync(completionProvider.Setup());
 
         // Start accounts update
-        accountsService.RefreshAsync().SafeFireAndForget();
+        accountsService
+            .RefreshAsync()
+            .SafeFireAndForget(ex =>
+            {
+                Logger.Error(ex, "Failed to refresh accounts");
+                notificationService.ShowPersistent(
+                    "Failed to update account status",
+                    ex.ToString(),
+                    NotificationType.Error
+                );
+            });
+    }
+
+    [SupportedOSPlatform("windows")]
+    private void UpdateRegistrySettings()
+    {
+        try
+        {
+            using var fsKey =
+                Registry.LocalMachine.OpenSubKey(@"SYSTEM\CurrentControlSet\Control\FileSystem")
+                ?? throw new InvalidOperationException(
+                    "Could not open registry key 'SYSTEM\\CurrentControlSet\\Control\\FileSystem'"
+                );
+
+            IsWindowsLongPathsEnabled = Convert.ToBoolean(fsKey.GetValue("LongPathsEnabled", null));
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Could not read registry settings");
+            notificationService.Show("Could not read registry settings", e.Message, NotificationType.Error);
+        }
     }
 
     private void OnHardwareInfoUpdateTimerTick(object? sender, EventArgs e)
@@ -443,6 +501,97 @@ public partial class MainSettingsViewModel : PageViewModelBase
             IsPrimaryButtonEnabled = true
         };
         await dialog.ShowAsync();
+    }
+
+    [RelayCommand]
+    private async Task RunPythonProcess()
+    {
+        await prerequisiteHelper.UnpackResourcesIfNecessary();
+        await prerequisiteHelper.InstallPythonIfNecessary();
+
+        var processPath = new FilePath(PyRunner.PythonExePath);
+
+        if (
+            await DialogHelper.GetTextEntryDialogResultAsync(
+                new TextBoxField { Label = "Arguments", InnerLeftText = processPath.Name },
+                title: "Run Python"
+            )
+            is not { IsPrimary: true } dialogResult
+        )
+        {
+            return;
+        }
+
+        var step = new ProcessStep
+        {
+            FileName = processPath,
+            Args = dialogResult.Value.Text,
+            WorkingDirectory = Compat.AppCurrentDir,
+            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary()
+        };
+
+        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private async Task RunGitProcess()
+    {
+        await prerequisiteHelper.InstallGitIfNecessary();
+
+        FilePath processPath;
+
+        if (Compat.IsWindows)
+        {
+            processPath = new FilePath(prerequisiteHelper.GitBinPath, "git.exe");
+        }
+        else
+        {
+            var whichGitResult = await ProcessRunner.RunBashCommand(["which", "git"]).EnsureSuccessExitCode();
+            processPath = new FilePath(whichGitResult.StandardOutput?.Trim() ?? "git");
+        }
+
+        if (
+            await DialogHelper.GetTextEntryDialogResultAsync(
+                new TextBoxField { Label = "Arguments", InnerLeftText = "git" },
+                title: "Run Git"
+            )
+            is not { IsPrimary: true } dialogResult
+        )
+        {
+            return;
+        }
+
+        var step = new ProcessStep
+        {
+            FileName = processPath,
+            Args = dialogResult.Value.Text,
+            WorkingDirectory = Compat.AppCurrentDir,
+            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary()
+        };
+
+        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private async Task FixGitLongPaths()
+    {
+        var result = await prerequisiteHelper.FixGitLongPaths();
+        if (result)
+        {
+            notificationService.Show(
+                "Long Paths Enabled",
+                "Git long paths have been enabled.",
+                NotificationType.Success
+            );
+        }
+        else
+        {
+            notificationService.Show(
+                "Long Paths Not Enabled",
+                "Could not enable Git long paths.",
+                NotificationType.Error
+            );
+        }
     }
 
     #endregion
@@ -852,7 +1001,32 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugShowImageMaskEditorCommand),
             new CommandItem(DebugExtractImagePromptsToTxtCommand),
             new CommandItem(DebugShowConfirmDeleteDialogCommand),
+            new CommandItem(DebugShowModelMetadataEditorDialogCommand),
         ];
+
+    [RelayCommand]
+    private async Task DebugShowModelMetadataEditorDialog()
+    {
+        var vm = dialogFactory.Get<ModelMetadataEditorDialogViewModel>();
+        vm.ThumbnailFilePath = Assets.NoImage.ToString();
+        vm.Tags = "tag1, tag2, tag3";
+        vm.ModelDescription = "This is a description";
+        vm.ModelName = "Model Name";
+        vm.VersionName = "1.0.0";
+        vm.TrainedWords = "word1, word2, word3";
+        vm.ModelType = CivitModelType.Checkpoint;
+        vm.BaseModelType = CivitBaseModelType.Pony;
+
+        var dialog = vm.GetDialog();
+        dialog.MinDialogHeight = 800;
+        dialog.IsPrimaryButtonEnabled = true;
+        dialog.IsFooterVisible = true;
+        dialog.PrimaryButtonText = "Save";
+        dialog.DefaultButton = ContentDialogButton.Primary;
+        dialog.CloseButtonText = "Cancel";
+
+        await dialog.ShowAsync();
+    }
 
     [RelayCommand]
     private async Task DebugShowConfirmDeleteDialog()
@@ -1057,6 +1231,62 @@ public partial class MainSettingsViewModel : PageViewModelBase
         vm.PaintCanvasViewModel.BackgroundImage = bitmap;
 
         await vm.GetDialog().ShowAsync();
+    }
+
+    #endregion
+
+    #region Systems Setting Section
+
+    [RelayCommand]
+    private async Task OnWindowsLongPathsToggleClick()
+    {
+        if (!Compat.IsWindows)
+            return;
+
+        // Command is called after value is set, so if false we need to disable
+        var requestedValue = IsWindowsLongPathsEnabled;
+
+        try
+        {
+            var result = await WindowsElevated.SetRegistryValue(
+                @"HKLM\SYSTEM\CurrentControlSet\Control\FileSystem",
+                @"LongPathsEnabled",
+                requestedValue ? 1 : 0
+            );
+
+            if (result != 0)
+            {
+                notificationService.Show(
+                    "Failed to toggle long paths",
+                    $"Error code: {result}",
+                    NotificationType.Error
+                );
+                return;
+            }
+
+            await new BetterContentDialog
+            {
+                Title = Resources.Label_ChangesApplied,
+                Content = Resources.Text_RestartMayBeRequiredForSystemChanges,
+                CloseButtonText = Resources.Action_Close
+            }.ShowAsync();
+        }
+        catch (Win32Exception e)
+        {
+            if (
+                e.Message.EndsWith(
+                    @"The operation was canceled by the user.",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+                return;
+
+            notificationService.Show("Failed to toggle long paths", e.Message, NotificationType.Error);
+        }
+        finally
+        {
+            UpdateRegistrySettings();
+        }
     }
 
     #endregion

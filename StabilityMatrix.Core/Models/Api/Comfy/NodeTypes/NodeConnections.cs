@@ -25,3 +25,13 @@ public class SamplerNodeConnection : NodeConnectionBase;
 public class SigmasNodeConnection : NodeConnectionBase;
 
 public class StringNodeConnection : NodeConnectionBase;
+
+public class BboxDetectorNodeConnection : NodeConnectionBase;
+
+public class SegmDetectorNodeConnection : NodeConnectionBase;
+
+public class SamModelNodeConnection : NodeConnectionBase;
+
+public class GuiderNodeConnection : NodeConnectionBase;
+
+public class NoiseNodeConnection : NodeConnectionBase;

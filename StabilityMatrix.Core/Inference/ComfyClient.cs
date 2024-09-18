@@ -476,6 +476,19 @@ public class ComfyClient : InferenceClientBase
         return info?.Input.GetOptionalValueAsNestedList(optionName);
     }
 
+    public async Task<List<string>?> GetRequiredNodeOptionNamesFromOptionalNodeAsync(
+        string nodeName,
+        string optionName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await comfyApi.GetObjectInfo(nodeName, cancellationToken).ConfigureAwait(false);
+
+        var info = response.GetValueOrDefault(nodeName);
+
+        return info?.Input.GetRequiredValueAsNestedList(optionName);
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (isDisposed)

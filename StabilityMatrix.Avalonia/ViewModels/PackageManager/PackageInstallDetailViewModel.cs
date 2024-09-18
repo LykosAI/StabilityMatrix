@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -17,9 +19,12 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.PackageSteps;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Analytics;
+using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
@@ -42,7 +47,8 @@ public partial class PackageInstallDetailViewModel(
     IPyRunner pyRunner,
     IPrerequisiteHelper prerequisiteHelper,
     INavigationService<PackageManagerViewModel> packageNavigationService,
-    IPackageFactory packageFactory
+    IPackageFactory packageFactory,
+    IAnalyticsHelper analyticsHelper
 ) : PageViewModelBase
 {
     public BasePackage SelectedPackage { get; } = package;
@@ -54,7 +60,7 @@ public partial class PackageInstallDetailViewModel(
 
     public string ReleaseLabelText => IsReleaseMode ? Resources.Label_Version : Resources.Label_Branch;
 
-    public bool ShowTorchVersionOptions => SelectedTorchVersion != TorchVersion.None;
+    public bool ShowTorchIndexOptions => SelectedTorchIndex != TorchIndex.None;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FullInstallPath))]
@@ -77,8 +83,8 @@ public partial class PackageInstallDetailViewModel(
     private SharedFolderMethod selectedSharedFolderMethod;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowTorchVersionOptions))]
-    private TorchVersion selectedTorchVersion;
+    [NotifyPropertyChangedFor(nameof(ShowTorchIndexOptions))]
+    private TorchIndex selectedTorchIndex;
 
     [ObservableProperty]
     private ObservableCollection<GitCommit>? availableCommits;
@@ -92,6 +98,9 @@ public partial class PackageInstallDetailViewModel(
     [ObservableProperty]
     private bool canInstall;
 
+    public PythonPackageSpecifiersViewModel PythonPackageSpecifiersViewModel { get; } =
+        new() { Title = null };
+
     private PackageVersionOptions? allOptions;
 
     public override async Task OnLoadedAsync()
@@ -103,7 +112,7 @@ public partial class PackageInstallDetailViewModel(
 
         CanInstall = false;
 
-        SelectedTorchVersion = SelectedPackage.GetRecommendedTorchVersion();
+        SelectedTorchIndex = SelectedPackage.GetRecommendedTorchVersion();
         SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
 
         allOptions = await SelectedPackage.GetAllVersionOptions();
@@ -170,7 +179,8 @@ public partial class PackageInstallDetailViewModel(
                     pyRunner,
                     prerequisiteHelper,
                     packageNavigationService,
-                    packageFactory
+                    packageFactory,
+                    analyticsHelper
                 );
                 packageNavigationService.NavigateTo(vm);
                 return;
@@ -179,17 +189,12 @@ public partial class PackageInstallDetailViewModel(
 
         InstallName = InstallName.Trim();
 
-        var setPackageInstallingStep = new SetPackageInstallingStep(settingsManager, InstallName);
-
         var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
         if (Directory.Exists(installLocation))
         {
             var installPath = new DirectoryPath(installLocation);
             await installPath.DeleteVerboseAsync(logger);
         }
-
-        var prereqStep = new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, SelectedPackage);
-        var unpackSiteCustomizeStep = new UnpackSiteCustomizeStep(Path.Combine(installLocation, "venv"));
 
         var downloadOptions = new DownloadPackageVersionOptions();
         var installedVersion = new InstalledPackageVersion();
@@ -216,22 +221,7 @@ public partial class PackageInstallDetailViewModel(
             installedVersion.InstalledCommitSha = downloadOptions.CommitHash;
         }
 
-        var downloadStep = new DownloadPackageVersionStep(SelectedPackage, installLocation, downloadOptions);
-        var installStep = new InstallPackageStep(
-            SelectedPackage,
-            SelectedTorchVersion,
-            SelectedSharedFolderMethod,
-            downloadOptions,
-            installLocation
-        );
-
-        var setupModelFoldersStep = new SetupModelFoldersStep(
-            SelectedPackage,
-            SelectedSharedFolderMethod,
-            installLocation
-        );
-
-        var setupOutputSharingStep = new SetupOutputSharingStep(SelectedPackage, installLocation);
+        var pipOverrides = PythonPackageSpecifiersViewModel.GetSpecifiers().ToList();
 
         var package = new InstalledPackage
         {
@@ -242,28 +232,42 @@ public partial class PackageInstallDetailViewModel(
             Version = installedVersion,
             LaunchCommand = SelectedPackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now,
-            PreferredTorchVersion = SelectedTorchVersion,
+            PreferredTorchIndex = SelectedTorchIndex,
             PreferredSharedFolderMethod = SelectedSharedFolderMethod,
-            UseSharedOutputFolder = IsOutputSharingEnabled
+            UseSharedOutputFolder = IsOutputSharingEnabled,
+            PipOverrides = pipOverrides.Count > 0 ? pipOverrides : null
         };
-
-        var addInstalledPackageStep = new AddInstalledPackageStep(settingsManager, package);
 
         var steps = new List<IPackageStep>
         {
-            setPackageInstallingStep,
-            prereqStep,
-            downloadStep,
-            unpackSiteCustomizeStep,
-            installStep,
-            setupModelFoldersStep,
-            addInstalledPackageStep
+            new SetPackageInstallingStep(settingsManager, InstallName),
+            new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, SelectedPackage),
+            new DownloadPackageVersionStep(
+                SelectedPackage,
+                installLocation,
+                new DownloadPackageOptions { VersionOptions = downloadOptions }
+            ),
+            new UnpackSiteCustomizeStep(Path.Combine(installLocation, "venv")),
+            new InstallPackageStep(
+                SelectedPackage,
+                installLocation,
+                package,
+                new InstallPackageOptions
+                {
+                    SharedFolderMethod = SelectedSharedFolderMethod,
+                    VersionOptions = downloadOptions,
+                    PythonOptions = { TorchIndex = SelectedTorchIndex }
+                }
+            ),
+            new SetupModelFoldersStep(SelectedPackage, SelectedSharedFolderMethod, installLocation)
         };
 
         if (IsOutputSharingEnabled)
         {
-            steps.Insert(steps.IndexOf(addInstalledPackageStep), setupOutputSharingStep);
+            steps.Add(new SetupOutputSharingStep(SelectedPackage, installLocation));
         }
+
+        steps.Add(new AddInstalledPackageStep(settingsManager, package));
 
         var packageName = SelectedPackage.Name;
 
@@ -279,7 +283,7 @@ public partial class PackageInstallDetailViewModel(
         };
 
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
-        await runner.ExecuteSteps(steps.ToList());
+        await runner.ExecuteSteps(steps);
 
         if (!runner.Failed)
         {
@@ -292,6 +296,10 @@ public partial class PackageInstallDetailViewModel(
 
             EventManager.Instance.OnInstalledPackagesChanged();
         }
+
+        analyticsHelper
+            .TrackPackageInstallAsync(packageName, installedVersion.DisplayVersion, !runner.Failed)
+            .SafeFireAndForget();
     }
 
     private void UpdateVersions()
@@ -316,10 +324,16 @@ public partial class PackageInstallDetailViewModel(
         var commits = await SelectedPackage.GetAllCommits(branchName);
         if (commits != null)
         {
-            AvailableCommits = new ObservableCollection<GitCommit>(commits);
-            SelectedCommit = AvailableCommits.FirstOrDefault();
+            AvailableCommits = new ObservableCollection<GitCommit>(
+                [..commits, new GitCommit { Sha = "Custom " }]
+            );
+        }
+        else
+        {
+            AvailableCommits = [new GitCommit { Sha = "Custom " }];
         }
 
+        SelectedCommit = AvailableCommits.FirstOrDefault();
         CanInstall = !ShowDuplicateWarning;
     }
 
@@ -342,5 +356,31 @@ public partial class PackageInstallDetailViewModel(
             return;
 
         UpdateCommits(value?.TagName ?? SelectedPackage.MainBranch).SafeFireAndForget();
+    }
+
+    async partial void OnSelectedCommitChanged(GitCommit? oldValue, GitCommit? newValue)
+    {
+        if (newValue is not { Sha: "Custom " })
+            return;
+
+        List<TextBoxField> textBoxFields = [new() { Label = "Commit hash", MinWidth = 400 }];
+        var dialog = DialogHelper.CreateTextEntryDialog("Enter a commit hash", string.Empty, textBoxFields);
+        var dialogResult = await dialog.ShowAsync();
+        if (dialogResult != ContentDialogResult.Primary)
+        {
+            SelectedCommit = oldValue;
+            return;
+        }
+
+        var commitHash = textBoxFields[0].Text;
+        if (string.IsNullOrWhiteSpace(commitHash))
+        {
+            SelectedCommit = oldValue;
+            return;
+        }
+
+        var commit = new GitCommit { Sha = commitHash };
+        AvailableCommits?.Insert(AvailableCommits.IndexOf(newValue), commit);
+        SelectedCommit = commit;
     }
 }

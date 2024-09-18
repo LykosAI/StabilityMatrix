@@ -65,12 +65,12 @@
                                        FontSize="14" />
 
                             <ItemsRepeater Margin="16, 8, 0, 0"
-                                           ItemsSource="{Binding AvailableTorchVersions}">
+                                           ItemsSource="{Binding AvailableTorchIndices}">
                                 <ItemsRepeater.Layout>
                                     <StackLayout Orientation="Horizontal" />
                                 </ItemsRepeater.Layout>
                                 <ItemsRepeater.ItemTemplate>
-                                    <DataTemplate DataType="{x:Type models:TorchVersion}">
+                                    <DataTemplate DataType="{x:Type models:TorchIndex}">
                                         <controls:Card
                                             Tag="{Binding }"
                                             HorizontalAlignment="Left"
@@ -178,6 +178,28 @@
                                                                 TextAlignment="Center"
                                                                 VerticalAlignment="Center"
                                                                 ToolTip.Tip="For AMD GPUs that support ZLUDA" />
+                                                        </Template>
+                                                    </Setter>
+                                                </Style>
+                                                <Style Selector="controls|Card[Tag=Ipex]">
+                                                    <Setter Property="Background"
+                                                            Value="{DynamicResource ThemeLightBlueColor}" />
+                                                    <Setter Property="BorderBrush"
+                                                            Value="{DynamicResource ThemeLightBlueColor}" />
+                                                    <Style
+                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground"
+                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    </Style>
+                                                    <Setter Property="Content">
+                                                        <Template>
+                                                            <TextBlock
+                                                                FontWeight="Medium"
+                                                                HorizontalAlignment="Center"
+                                                                Text="IPEX"
+                                                                TextAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                ToolTip.Tip="For Intel Arc GPUs" />
                                                         </Template>
                                                     </Setter>
                                                 </Style>

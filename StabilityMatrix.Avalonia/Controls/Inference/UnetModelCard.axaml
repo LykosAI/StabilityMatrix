@@ -1,0 +1,122 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    x:DataType="inference:UnetModelCardViewModel">
+    <Design.PreviewWith>
+        <Panel Width="400" Height="400">
+            <StackPanel Width="300" VerticalAlignment="Center" Spacing="32">
+                <controls:UnetModelCard />
+            </StackPanel>
+        </Panel>
+    </Design.PreviewWith>
+    
+    <Style Selector="controls|UnetModelCard">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card Padding="8">
+                    <Grid
+                        ColumnDefinitions="Auto,*"
+                        RowDefinitions="*,*,*,*,*">
+                        <!--  Model  -->
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Margin="4"
+                            Text="{x:Static lang:Resources.Label_Model}"
+                            TextAlignment="Left" />
+
+                        <controls:BetterComboBox
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="4"
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding ClientManager.UnetModels}"
+                            SelectedItem="{Binding SelectedModel}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
+                        
+                        <!--  Model  -->
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Margin="4"
+                            Text="Precision"
+                            TextAlignment="Left" />
+
+                        <controls:BetterComboBox
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="4"
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding WeightDTypes}"
+                            SelectedItem="{Binding SelectedDType}" />
+
+                        <!--  VAE  -->
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Margin="4"
+                            VerticalAlignment="Center"
+                            Text="{x:Static lang:Resources.Label_VAE}"
+                            TextAlignment="Left" />
+
+                        <controls:BetterComboBox
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Margin="4"
+                            HorizontalAlignment="Stretch"
+                            IsTextSearchEnabled="True"
+                            ItemsSource="{Binding ClientManager.VaeModels}"
+                            SelectedItem="{Binding SelectedVae}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
+
+                        <!--  CLIP Selection 1  -->
+                        <TextBlock
+                            Grid.Row="3"
+                            Grid.Column="0"
+                            Margin="4"
+                            VerticalAlignment="Center"
+                            Text="CLIP 1"
+                            TextAlignment="Left" />
+
+                        <controls:BetterDownloadableComboBox
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            Margin="4"
+                            HorizontalAlignment="Stretch"
+                            IsTextSearchEnabled="True"
+                            ItemsSource="{Binding ClientManager.ClipModels}"
+                            SelectedItem="{Binding SelectedClip1}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
+
+                        <!--  CLIP Selection 2  -->
+                        <TextBlock
+                            Grid.Row="4"
+                            Grid.Column="0"
+                            Margin="4"
+                            VerticalAlignment="Center"
+                            Text="CLIP 2"
+                            TextAlignment="Left" />
+
+                        <controls:BetterDownloadableComboBox
+                            Grid.Row="4"
+                            Grid.Column="1"
+                            Margin="4"
+                            HorizontalAlignment="Stretch"
+                            IsTextSearchEnabled="True"
+                            ItemsSource="{Binding ClientManager.ClipModels}"
+                            SelectedItem="{Binding SelectedClip2}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}"/>
+                    </Grid>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Numerics;
 using Avalonia.Data.Converters;
@@ -31,7 +30,8 @@ public class NullableDefaultNumericConverter<TSource, TTarget> : IValueConverter
             return NanHandling switch
             {
                 ReturnBehavior.DefaultValue => default,
-                ReturnBehavior.Throw => throw new InvalidCastException("Cannot convert NaN to a numeric type"),
+                ReturnBehavior.Throw
+                    => throw new InvalidCastException("Cannot convert NaN to a numeric type"),
                 _
                     => throw new InvalidEnumArgumentException(
                         nameof(NanHandling),

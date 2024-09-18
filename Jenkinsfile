@@ -33,6 +33,8 @@ node("Diligence") {
             }
 
             stage('Publish Linux') {
+                sh "rm -rf StabilityMatrix.Avalonia/bin/*"
+                sh "rm -rf StabilityMatrix.Avalonia/obj/*"
                 sh "/home/jenkins/.dotnet/tools/pupnet --runtime linux-x64 --kind appimage --app-version ${version} --clean -y"
             }
         }

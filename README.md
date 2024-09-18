@@ -29,6 +29,8 @@
 [forge]: https://github.com/lllyasviel/stable-diffusion-webui-forge
 [stable-swarm]: https://github.com/Stability-AI/StableSwarmUI
 [sdfx]: https://github.com/sdfxai/sdfx
+[fooocus-mashb1t]: https://github.com/mashb1t/Fooocus
+[reforge]: https://github.com/Panchovix/stable-diffusion-webui-reForge
 
 [civitai]: https://civitai.com/
 [huggingface]: https://huggingface.co/
@@ -44,8 +46,8 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
 
 ### 🖱️ One click install and update for Stable Diffusion Web UI Packages
 - Supports:
-  - [Stable Diffusion WebUI Forge][forge], [Automatic 1111][auto1111], [Automatic 1111 DirectML][auto1111-directml], [SD Web UI-UX][webui-ux], [SD.Next][sdnext]
-  - [Fooocus][fooocus], [Fooocus MRE][fooocus-mre], [Fooocus ControlNet SDXL][fooocus-controlnet], [Ruined Fooocus][ruined-fooocus]
+  - [Stable Diffusion WebUI reForge][reforge], [Stable Diffusion WebUI Forge][forge], [Automatic 1111][auto1111], [Automatic 1111 DirectML][auto1111-directml], [SD Web UI-UX][webui-ux], [SD.Next][sdnext]
+  - [Fooocus][fooocus], [Fooocus MRE][fooocus-mre], [Fooocus ControlNet SDXL][fooocus-controlnet], [Ruined Fooocus][ruined-fooocus], [Fooocus - mashb1t's 1-Up Edition][fooocus-mashb1t]
   - [ComfyUI][comfy]
   - [StableSwarmUI][stable-swarm]
   - [VoltaML][voltaml]

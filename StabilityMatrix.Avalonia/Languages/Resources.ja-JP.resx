@@ -171,14 +171,14 @@
     <comment>checkpoint / embedding / LoRA are often used in the same way as the above words on Japanese information websites, so it is easier to understand them without translation.</comment>
   </data>
   <data name="Label_Emphasis" xml:space="preserve">
-    <value>プロンプトの強調</value>
+    <value>プロンプトを強調</value>
     <comment>The word has not been translated because it is not possible to guess what part of the UI it is used in. It is a little difficult to translate the word into Japanese, so I want to be careful not to change the meaning of the word.</comment>
   </data>
   <data name="Label_Deemphasis" xml:space="preserve">
-    <value>プロンプトの縮小</value>
+    <value>プロンプトを弱める</value>
   </data>
   <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
-    <value>Emebeddings / Textual Inversion</value>
+    <value>Embeddings / Textual Inversion</value>
   </data>
   <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
     <value>Networks (Lora / LyCORIS)</value>
@@ -205,10 +205,10 @@
     <value>Denoising Strength</value>
   </data>
   <data name="Label_Width" xml:space="preserve">
-    <value>幅</value>
+    <value>横</value>
   </data>
   <data name="Label_Height" xml:space="preserve">
-    <value>高</value>
+    <value>縦</value>
   </data>
   <data name="Label_Refiner" xml:space="preserve">
     <value>Refiner</value>
@@ -309,7 +309,7 @@
     <value>Modelの説明</value>
   </data>
   <data name="Label_NewVersionAvailable" xml:space="preserve">
-    <value>Stability Matrixを最新版に更新中！</value>
+    <value>新しいバージョンのStability Matrixが利用可能です！</value>
   </data>
   <data name="Label_ImportLatest" xml:space="preserve">
     <value>最新版DL</value>
@@ -410,7 +410,7 @@
     <value>使用許諾契約書</value>
   </data>
   <data name="Label_FindConnectedMetadata" xml:space="preserve">
-    <value>メタデータが見つかりました</value>
+    <value>メタデータを探す</value>
   </data>
   <data name="Label_ShowModelImages" xml:space="preserve">
     <value>モデルの見出し画像を表示</value>
@@ -620,7 +620,7 @@
     <value>パッケージのアンインストール</value>
   </data>
   <data name="Text_SomeFilesCouldNotBeDeleted" xml:space="preserve">
-    <value>一部のファイルを削除できませんでした。該当のディレクトリ内にあるファイルで開いていたものを全て閉じて、もう一度試してください。</value>
+    <value>一部のファイルを削除できませんでした。該当のフォルダの開いているファイルを全て閉じてから、もう一度試してください。</value>
   </data>
   <data name="Label_InvalidPackageType" xml:space="preserve">
     <value>無効なパッケージタイプ</value>
@@ -759,7 +759,7 @@
     <value>よろしいですか？</value>
   </data>
   <data name="Label_ConsolidateExplanation" xml:space="preserve">
-    <value>これにより、選択したパッケージから生成されたすべてのイメージが、共有出力フォルダの Consolidated ディレクトリに移動します。この操作は元に戻せません。</value>
+    <value>これにより、選択したパッケージから生成されたすべてのイメージが、共有出力フォルダの Consolidated フォルダに移動します。この操作は元に戻せません。</value>
   </data>
   <data name="Action_Refresh" xml:space="preserve">
     <value>更新</value>
@@ -1042,22 +1042,22 @@
     <value>いい感じ！</value>
   </data>
   <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
-    <value>快適な利用にはCUDA対応GPUを推奨します。それ以外だと一部のパッケージが動作しなかったり、動くけど遅い場合があります。</value>
+    <value>快適な利用にはCUDA対応GPUを推奨します。非対応の場合一部のパッケージが動作しない場合や、動作が遅くなる場合があります。</value>
   </data>
   <data name="Label_Checkpoints" xml:space="preserve">
     <value>Checkpoints</value>
   </data>
   <data name="Label_ModelBrowser" xml:space="preserve">
-    <value>Model Brouser</value>
+    <value>Model Browser</value>
   </data>
   <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
     <value>&apos;Web UIを開く&apos;ボタンがコマンドバーに移動しました</value>
   </data>
   <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
-    <value>Stability Matrixは既に立ち上がってます。それを終了させてから、もう一度起動してください。</value>
+    <value>Stability Matrixは既に起動中です。終了してから、もう一度起動してください。</value>
   </data>
   <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
-    <value>Stability Matrixは既に立ち上がってます</value>
+    <value>Stability Matrixは既に起動中です</value>
   </data>
   <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
     <value>{0} 個削除しました</value>
@@ -1132,7 +1132,7 @@
     <value>{0}のバージョンが更新されました。</value>
   </data>
   <data name="Action_CopyAsBitmap" xml:space="preserve">
-    <value>bitmapにコピー</value>
+    <value>Bitmapとしてコピー</value>
   </data>
   <data name="Label_DisableUpdateCheck" xml:space="preserve">
     <value>アップデートチェックを無効にする</value>

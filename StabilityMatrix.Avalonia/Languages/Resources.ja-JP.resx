@@ -146,8 +146,7 @@
     <value>再起動が必要です</value>
   </data>
   <data name="Label_UnknownPackage" xml:space="preserve">
-    <value>不明なパッケージ
-</value>
+    <value>不明なパッケージ</value>
   </data>
   <data name="Action_Import" xml:space="preserve">
     <value>インポート</value>
@@ -165,8 +164,7 @@
     <value>Releases</value>
   </data>
   <data name="Label_Branches" xml:space="preserve">
-    <value>ブランチ
-</value>
+    <value>ブランチ</value>
   </data>
   <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
     <value>インポートしたいcheckpointをここにドラッグ＆ドロップ</value>
@@ -739,6 +737,18 @@
   <data name="Label_OneImageSelected" xml:space="preserve">
     <value>1枚の画像を選択</value>
   </data>
+    <data name="Label_Preprocessor" xml:space="preserve">
+    <value>プリプロセッサ</value>
+  </data>
+  <data name="Label_Strength" xml:space="preserve">
+    <value>強度</value>
+  </data>
+  <data name="Label_ControlWeight" xml:space="preserve">
+    <value>Control Weight</value>
+  </data>
+  <data name="Label_ControlSteps" xml:space="preserve">
+    <value>Control Steps</value>
+  </data>
   <data name="Label_PythonPackages" xml:space="preserve">
     <value>Pythonパッケージ</value>
   </data>
@@ -793,18 +803,6 @@
   <data name="Label_Accounts" xml:space="preserve">
     <value>アカウント</value>
   </data>
-  <data name="Label_Preprocessor" xml:space="preserve">
-    <value>プリプロセッサ</value>
-  </data>
-  <data name="Label_Strength" xml:space="preserve">
-    <value>強度</value>
-  </data>
-  <data name="Label_ControlWeight" xml:space="preserve">
-    <value>Control Weight</value>
-  </data>
-  <data name="Label_ControlSteps" xml:space="preserve">
-    <value>Control Steps</value>
-  </data>
   <data name="Label_CivitAiLoginRequired" xml:space="preserve">
     <value>ダウンロードにはCivitAIのログインが必要です。SettingからAPIキーを入力してください。</value>
   </data>
@@ -845,16 +843,13 @@
     <value>Metadataをアップデートする</value>
   </data>
   <data name="Label_General" xml:space="preserve">
-    <value>General</value>
-    <comment>A general settings category</comment>
+    <value>General</value><comment>A general settings category</comment>
   </data>
   <data name="Label_Inference" xml:space="preserve">
-    <value>Inference</value>
-    <comment>The Inference feature page</comment>
+    <value>Inference</value><comment>The Inference feature page</comment>
   </data>
   <data name="Label_Prompt" xml:space="preserve">
-    <value>プロンプト</value>
-    <comment>A settings category for Inference generation prompts</comment>
+    <value>プロンプト</value><comment>A settings category for Inference generation prompts</comment>
   </data>
   <data name="Label_OutputImageFiles" xml:space="preserve">
     <value>アウトプット画像</value>
@@ -869,8 +864,7 @@
     <value>入力補完でアンダースコアをスペースに置き換える</value>
   </data>
   <data name="Label_PromptTags" xml:space="preserve">
-    <value>Prompt Tags</value>
-    <comment>Tags for image generation prompts</comment>
+    <value>Prompt Tags</value><comment>Tags for image generation prompts</comment>
   </data>
   <data name="Label_PromptTagsImport" xml:space="preserve">
     <value>Import Prompt tags</value>
@@ -888,12 +882,10 @@
     <value>Hugging Face</value>
   </data>
   <data name="Label_Addons" xml:space="preserve">
-    <value>Addons</value>
-    <comment>Inference Sampler Addons</comment>
+    <value>Addons</value><comment>Inference Sampler Addons</comment>
   </data>
   <data name="Label_SaveIntermediateImage" xml:space="preserve">
-    <value>中間画像を保存</value>
-    <comment>Inference module step to save an intermediate image</comment>
+    <value>中間画像を保存</value><comment>Inference module step to save an intermediate image</comment>
   </data>
   <data name="Label_Settings" xml:space="preserve">
     <value>設定</value>
@@ -962,6 +954,12 @@
   <data name="Action_CopyDetails" xml:space="preserve">
     <value>Copy Details</value>
   </data>
+  <data name="Label_Notifications" xml:space="preserve">
+    <value>通知</value>
+  </data>
+  <data name="Label_NotificationOption_None" xml:space="preserve">
+    <value>None</value>
+  </data>
   <data name="Action_Download" xml:space="preserve">
     <value>ダウンロード</value>
   </data>
@@ -973,12 +971,6 @@
   </data>
   <data name="Label_RecommendedModelsSubText" xml:space="preserve">
     <value>Packageのインストール中に、推奨Modelをいくつかご紹介しましょう。</value>
-  </data>
-  <data name="Label_Notifications" xml:space="preserve">
-    <value>通知</value>
-  </data>
-  <data name="Label_NotificationOption_None" xml:space="preserve">
-    <value>None</value>
   </data>
   <data name="Label_ComfyRequiredTitle" xml:space="preserve">
     <value>ComfyUIが必要です</value>
@@ -992,8 +984,32 @@
   <data name="Label_SelectDownloadLocation" xml:space="preserve">
     <value>ダウンロード先を選んでください:</value>
   </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>ワークフロー</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>無限スクロール</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>ワークフローブラウザ</value>
+  </data>
   <data name="Label_Config" xml:space="preserve">
     <value>設定</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>OpenArtで開く</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>ノード詳細</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>ワークフロー概要</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>OpenArtブラウザ</value>
+  </data>
+  <data name="Action_PreviewPreprocessor" xml:space="preserve">
+    <value>プリプロセッサをプレビュー</value>
   </data>
   <data name="Label_ToggleAutoScrolling" xml:space="preserve">
     <value>最後まで自動スクロール</value>
@@ -1033,30 +1049,6 @@
   </data>
   <data name="Label_ModelBrowser" xml:space="preserve">
     <value>Model Brouser</value>
-  </data>
-  <data name="Label_Workflows" xml:space="preserve">
-    <value>ワークフロー</value>
-  </data>
-  <data name="Label_InfiniteScrolling" xml:space="preserve">
-    <value>無限スクロール</value>
-  </data>
-  <data name="Label_WorkflowBrowser" xml:space="preserve">
-    <value>ワークフローブラウザ</value>
-  </data>
-  <data name="Action_OpenOnOpenArt" xml:space="preserve">
-    <value>OpenArtで開く</value>
-  </data>
-  <data name="Label_NodeDetails" xml:space="preserve">
-    <value>ノード詳細</value>
-  </data>
-  <data name="Label_WorkflowDescription" xml:space="preserve">
-    <value>ワークフロー概要</value>
-  </data>
-  <data name="Label_OpenArtBrowser" xml:space="preserve">
-    <value>OpenArtブラウザ</value>
-  </data>
-  <data name="Action_PreviewPreprocessor" xml:space="preserve">
-    <value>プリプロセッサをプレビュー</value>
   </data>
   <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
     <value>&apos;Web UIを開く&apos;ボタンがコマンドバーに移動しました</value>
@@ -1147,5 +1139,137 @@
   </data>
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>Stability Matrixを実行する前に、ZIPファイルからアプリを抽出してください</value>
+  </data>
+    <data name="Label_HistorySize" xml:space="preserve">
+    <value>History Size</value>
+  </data>
+  <data name="Label_HistorySize_Description" xml:space="preserve">
+    <value>The number of lines above the ones displayed in the console you can scroll back to</value>
+  </data>
+  <data name="Label_ConnectAccountFailed" xml:space="preserve">
+    <value>We had some trouble connecting your account</value>
+  </data>
+  <data name="Label_EditModelMetadata" xml:space="preserve">
+    <value>Edit Model Metadata</value>
+  </data>
+  <data name="Label_NSFW" xml:space="preserve">
+    <value>NSFW</value>
+  </data>
+  <data name="Label_Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Label_VersionName" xml:space="preserve">
+    <value>Version Name</value>
+  </data>
+  <data name="Label_TrainedWords" xml:space="preserve">
+    <value>Trained Words</value>
+  </data>
+  <data name="Label_PreviewImage" xml:space="preserve">
+    <value>Preview Image</value>
+  </data>
+  <data name="Label_BatchSize" xml:space="preserve">
+    <value>Batch Size</value>
+  </data>
+  <data name="Label_Batches" xml:space="preserve">
+    <value>Batches</value>
+  </data>
+  <data name="Label_Sampler" xml:space="preserve">
+    <value>Sampler</value>
+  </data>
+  <data name="Label_Scheduler" xml:space="preserve">
+    <value>Scheduler</value>
+  </data>
+  <data name="Label_MaxSize" xml:space="preserve">
+    <value>Max Size</value>
+  </data>
+  <data name="Label_UseSeparatePrompt" xml:space="preserve">
+    <value>Use Separate Prompt</value>
+  </data>
+  <data name="Label_Seed" xml:space="preserve">
+    <value>Seed</value>
+  </data>
+  <data name="Label_NegativePrompt" xml:space="preserve">
+    <value>Negative Prompt</value>
+  </data>
+  <data name="Label_NewFolder" xml:space="preserve">
+    <value>New Folder</value>
+  </data>
+  <data name="Label_CopyLinkToClipboard" xml:space="preserve">
+    <value>Copy Link to Clipboard</value>
+  </data>
+  <data name="TextTemplate_OAuthLoginTitle" xml:space="preserve">
+    <value>Sign in with {0}</value><comment>e.g. 'Sign in with Google'</comment>
+  </data>
+  <data name="Text_AllowBrowserOpenAppLink" xml:space="preserve">
+    <value>Please allow your browser to open this app when prompted to continue.</value>
+  </data>
+  <data name="Text_OAuthLoginDescription" xml:space="preserve">
+    <value>Open the link in your browser and follow the instructions to connect your account.</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Title" xml:space="preserve">
+    <value>Python Dependencies Override</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Description" xml:space="preserve">
+    <value>Add, replace, or remove dependencies for install and update</value>
+  </data>
+  <data name="Label_DependencySpecifiers" xml:space="preserve">
+    <value>Dependency Specifiers</value>
+  </data>
+  <data name="AnalyticsExample_InstallData" xml:space="preserve">
+    <value>{
+  "packageName": "stable-diffusion-webui",
+  "packageVersion": "v1.10.0",
+  "isSuccess": true,
+  "type": "install",
+  "timestamp": "2024-09-04T02:14:04.1967404+00:00"
+}</value>
+  </data>
+  <data name="Label_Analytics" xml:space="preserve">
+    <value>Analytics</value>
+  </data>
+  <data name="TextTemplate_YouCanChangeThisBehavior" xml:space="preserve">
+    <value>You can always change this behavior in {0}.</value><comment>e.g. 'You can always change this behavior in Settings &gt; Category &gt; Item.'</comment>
+  </data>
+  <data name="Text_AnalyticsDescription" xml:space="preserve">
+    <value>Help us improve Stability Matrix by sending anonymous data about features used, operating system versions, types of packages installed, etc. The data sent is never associated with you or your account and will not include personal data or any sensitive information.</value>
+  </data>
+  <data name="Text_AnalyticsDescriptionShort" xml:space="preserve">
+    <value>Help us improve Stability Matrix by sending anonymous data about features used, operating system versions, types of packages installed, etc.</value>
+  </data>
+  <data name="Text_AnalyticsDataPrivacyInfo" xml:space="preserve">
+    <value>The data sent is never associated with you or your account and will not include personal data or any sensitive information.</value>
+  </data>
+  <data name="Label_UsageData" xml:space="preserve">
+    <value>Usage data</value>
+  </data>
+  <data name="Label_PrivacyPolicy" xml:space="preserve">
+    <value>Privacy Policy</value>
+  </data>
+  <data name="Label_ImageHidden" xml:space="preserve">
+    <value>Image Hidden</value>
+  </data>
+  <data name="Label_NoImageFound" xml:space="preserve">
+    <value>No Image Found</value>
+  </data>
+  <data name="Label_HideEmptyCategories" xml:space="preserve">
+    <value>Hide Empty Categories</value>
+  </data>
+  <data name="Label_ShowNsfwImages" xml:space="preserve">
+    <value>Show NSFW Images</value>
+  </data>
+  <data name="Label_EnableLongPaths" xml:space="preserve">
+    <value>Enable Long Paths</value><comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_EnableLongPathsDescription" xml:space="preserve">
+    <value>Remove MAX_PATH limitations from common Win32 file and directory functions</value><comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_SystemSettings" xml:space="preserve">
+    <value>System Settings</value>
+  </data>
+  <data name="Label_ChangesApplied" xml:space="preserve">
+    <value>Changes Applied</value>
+  </data>
+  <data name="Text_RestartMayBeRequiredForSystemChanges" xml:space="preserve">
+    <value>A restart may be required for system changes to take effect.</value>
   </data>
 </root>

@@ -216,7 +216,10 @@ public class InvokeAI : BaseGitPackage
             torchInstallArgs = torchInstallArgs.WithUserOverrides(installedPackage.PipOverrides);
         }
 
-        await venvRunner.PipInstall(torchInstallArgs, onConsoleOutput).ConfigureAwait(false);
+        if (torchInstallArgs.Arguments.Count > 0)
+        {
+            await venvRunner.PipInstall(torchInstallArgs, onConsoleOutput).ConfigureAwait(false);
+        }
 
         await venvRunner
             .PipInstall($"{pipCommandArgs}{(exists ? " --upgrade" : "")}", onConsoleOutput)
@@ -345,21 +348,6 @@ public class InvokeAI : BaseGitPackage
         // above the minimum in invokeai.frontend.install.widgets
 
         var code = $"""
-                    try:
-                        import os
-                        import shutil
-                        from invokeai.frontend.install import widgets
-                        
-                        _min_cols = widgets.MIN_COLS
-                        _min_lines = widgets.MIN_LINES
-                        
-                        static_size_fn = lambda: os.terminal_size((_min_cols, _min_lines))
-                        shutil.get_terminal_size = static_size_fn
-                        widgets.get_terminal_size = static_size_fn
-                    except Exception as e:
-                        import warnings
-                        warnings.warn('Could not patch terminal size for InvokeAI' + str(e))
-                        
                     import sys
                     from {split[0]} import {split[1]}
                     sys.exit({split[1]}())

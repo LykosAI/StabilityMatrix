@@ -122,6 +122,12 @@ public class KohyaSs(
             )
             .ConfigureAwait(false);
 
+        // make sure long paths are enabled
+        if (Compat.IsWindows)
+        {
+            await PrerequisiteHelper.FixGitLongPaths().ConfigureAwait(false);
+        }
+
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
         // Setup venv

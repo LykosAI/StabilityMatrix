@@ -393,7 +393,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable
 
         if (indexUrl is not null)
         {
-            args = args.AddArg(("--index-url", indexUrl));
+            args = args.AddKeyedArgs("--index-url", ["--index-url", indexUrl]);
         }
 
         var result = await ProcessRunner

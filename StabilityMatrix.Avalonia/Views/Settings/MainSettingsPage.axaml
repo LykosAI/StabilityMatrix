@@ -376,7 +376,7 @@
             </Grid>
 
             <!--  System Options  -->
-            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -496,7 +496,7 @@
                         </StackPanel>
                     </ui:SettingsExpander.Header>
                     <ui:SettingsExpander.Footer>
-                        <Button Command="{Binding PickNewDataDirectory}">
+                        <Button Command="{Binding PickNewModelsFolder}">
                             <Grid ColumnDefinitions="Auto, Auto">
                                 <avalonia:Icon
                                     Grid.Row="0"
@@ -540,7 +540,7 @@
 
                 <!--  System Settings  -->
                 <ui:SettingsExpander
-                    Grid.Row="6"
+                    Grid.Row="7"
                     Header="{x:Static lang:Resources.Label_SystemSettings}"
                     IconSource="Settings">
                     <!--  Windows Long Paths  -->
@@ -568,7 +568,7 @@
                 </ui:SettingsExpander>
 
                 <!--  System Information  -->
-                <ui:SettingsExpander Grid.Row="7" Header="{x:Static lang:Resources.Label_SystemInformation}">
+                <ui:SettingsExpander Grid.Row="8" Header="{x:Static lang:Resources.Label_SystemInformation}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"

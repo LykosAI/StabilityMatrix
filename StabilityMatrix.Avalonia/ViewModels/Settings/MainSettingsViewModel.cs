@@ -786,6 +786,33 @@ public partial class MainSettingsViewModel : PageViewModelBase
         }
     }
 
+    public async Task PickNewModelsFolder()
+    {
+        var provider = App.StorageProvider;
+        var result = await provider.OpenFolderPickerAsync(new FolderPickerOpenOptions());
+
+        if (result.Count == 0)
+            return;
+
+        var newPath = (result[0].Path.LocalPath);
+        settingsManager.Transaction(s => s.ModelDirectoryOverride = newPath);
+        SharedFolders.SetupSharedModelFolders(newPath);
+
+        // Restart
+        var restartDialog = new BetterContentDialog
+        {
+            Title = "Restart required",
+            Content = "Stability Matrix must be restarted for the changes to take effect.",
+            PrimaryButtonText = Resources.Action_Restart,
+            DefaultButton = ContentDialogButton.Primary,
+            IsSecondaryButtonEnabled = false,
+        };
+        await restartDialog.ShowAsync();
+
+        Process.Start(Compat.AppCurrentPath);
+        App.Shutdown();
+    }
+
     #endregion
 
     #region Debug Section

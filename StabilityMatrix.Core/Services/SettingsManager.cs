@@ -347,6 +347,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
         GlobalConfig.LibraryDir = LibraryDir;
         ArchiveHelper.HomeDir = LibraryDir;
         PyRunner.HomeDir = LibraryDir;
+        GlobalConfig.ModelsDir = ModelsDirectory;
     }
 
     /// <summary>

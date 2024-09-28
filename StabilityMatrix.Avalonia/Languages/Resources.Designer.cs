@@ -2631,7 +2631,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Does not move existing data.
+        ///   Looks up a localized string similar to Does not move existing data. Requires application restart..
         /// </summary>
         public static string Label_SelectNewDataDirectory_Details {
             get {

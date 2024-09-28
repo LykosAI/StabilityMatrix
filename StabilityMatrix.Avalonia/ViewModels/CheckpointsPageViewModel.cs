@@ -614,7 +614,8 @@ public partial class CheckpointsPageViewModel(
             var subFolder =
                 viewModel?.SelectedInstallLocation
                 ?? Path.Combine(@"Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
-            downloadPath = Path.Combine(settingsManager.LibraryDir, subFolder);
+            subFolder = subFolder.Replace(@"Models\", string.Empty);
+            downloadPath = Path.Combine(settingsManager.ModelsDirectory, subFolder);
         }
 
         await Task.Delay(100);

@@ -47,41 +47,42 @@ public class A3WebUI(
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = new[] { "models/Stable-diffusion" },
-            [SharedFolderType.ESRGAN] = new[] { "models/ESRGAN" },
-            [SharedFolderType.GFPGAN] = new[] { "models/GFPGAN" },
-            [SharedFolderType.RealESRGAN] = new[] { "models/RealESRGAN" },
-            [SharedFolderType.SwinIR] = new[] { "models/SwinIR" },
-            [SharedFolderType.Lora] = new[] { "models/Lora" },
-            [SharedFolderType.LyCORIS] = new[] { "models/LyCORIS" },
-            [SharedFolderType.ApproxVAE] = new[] { "models/VAE-approx" },
-            [SharedFolderType.VAE] = new[] { "models/VAE" },
-            [SharedFolderType.DeepDanbooru] = new[] { "models/deepbooru" },
-            [SharedFolderType.Karlo] = new[] { "models/karlo" },
-            [SharedFolderType.TextualInversion] = new[] { "embeddings" },
-            [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
-            [SharedFolderType.ControlNet] = new[] { "models/controlnet/ControlNet" },
-            [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
-            [SharedFolderType.LDSR] = new[] { "models/LDSR" },
-            [SharedFolderType.AfterDetailer] = new[] { "models/adetailer" },
-            [SharedFolderType.T2IAdapter] = new[] { "models/controlnet/T2IAdapter" },
-            [SharedFolderType.IpAdapter] = new[] { "models/controlnet/IpAdapter" },
-            [SharedFolderType.InvokeIpAdapters15] = new[] { "models/controlnet/DiffusersIpAdapters" },
-            [SharedFolderType.InvokeIpAdaptersXl] = new[] { "models/controlnet/DiffusersIpAdaptersXL" },
-            [SharedFolderType.SVD] = new[] { "models/svd" },
-            [SharedFolderType.CLIP] = new[] { "models/text_encoder" }
+            [SharedFolderType.StableDiffusion] = ["models/Stable-diffusion/sd"],
+            [SharedFolderType.ESRGAN] = ["models/ESRGAN"],
+            [SharedFolderType.GFPGAN] = ["models/GFPGAN"],
+            [SharedFolderType.RealESRGAN] = ["models/RealESRGAN"],
+            [SharedFolderType.SwinIR] = ["models/SwinIR"],
+            [SharedFolderType.Lora] = ["models/Lora"],
+            [SharedFolderType.LyCORIS] = ["models/LyCORIS"],
+            [SharedFolderType.ApproxVAE] = ["models/VAE-approx"],
+            [SharedFolderType.VAE] = ["models/VAE"],
+            [SharedFolderType.DeepDanbooru] = ["models/deepbooru"],
+            [SharedFolderType.Karlo] = ["models/karlo"],
+            [SharedFolderType.TextualInversion] = ["embeddings"],
+            [SharedFolderType.Hypernetwork] = ["models/hypernetworks"],
+            [SharedFolderType.ControlNet] = ["models/controlnet/ControlNet"],
+            [SharedFolderType.Codeformer] = ["models/Codeformer"],
+            [SharedFolderType.LDSR] = ["models/LDSR"],
+            [SharedFolderType.AfterDetailer] = ["models/adetailer"],
+            [SharedFolderType.T2IAdapter] = ["models/controlnet/T2IAdapter"],
+            [SharedFolderType.IpAdapter] = ["models/controlnet/IpAdapter"],
+            [SharedFolderType.InvokeIpAdapters15] = ["models/controlnet/DiffusersIpAdapters"],
+            [SharedFolderType.InvokeIpAdaptersXl] = ["models/controlnet/DiffusersIpAdaptersXL"],
+            [SharedFolderType.SVD] = ["models/svd"],
+            [SharedFolderType.CLIP] = ["models/text_encoder"],
+            [SharedFolderType.Unet] = ["models/Stable-diffusion/unet"],
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new()
         {
-            [SharedOutputType.Extras] = new[] { "outputs/extras-images" },
-            [SharedOutputType.Saved] = new[] { "log/images" },
-            [SharedOutputType.Img2Img] = new[] { "outputs/img2img-images" },
-            [SharedOutputType.Text2Img] = new[] { "outputs/txt2img-images" },
-            [SharedOutputType.Img2ImgGrids] = new[] { "outputs/img2img-grids" },
-            [SharedOutputType.Text2ImgGrids] = new[] { "outputs/txt2img-grids" },
-            [SharedOutputType.SVD] = new[] { "outputs/svd" }
+            [SharedOutputType.Extras] = ["outputs/extras-images"],
+            [SharedOutputType.Saved] = ["log/images"],
+            [SharedOutputType.Img2Img] = ["outputs/img2img-images"],
+            [SharedOutputType.Text2Img] = ["outputs/txt2img-images"],
+            [SharedOutputType.Img2ImgGrids] = ["outputs/img2img-grids"],
+            [SharedOutputType.Text2ImgGrids] = ["outputs/txt2img-grids"],
+            [SharedOutputType.SVD] = ["outputs/svd"]
         };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
@@ -101,7 +102,7 @@ public class A3WebUI(
                 DefaultValue = "7860",
                 Options = ["--port"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
@@ -181,10 +182,10 @@ public class A3WebUI(
         ];
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
+        [SharedFolderMethod.Symlink, SharedFolderMethod.None];
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
-        new[] { TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps };
+        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps];
 
     public override string MainBranch => "master";
 

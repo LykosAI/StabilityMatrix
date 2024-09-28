@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.12.1
 ### Fixed
 - Fixed [#916](https://github.com/LykosAI/StabilityMatrix/issues/916) - InvokeAI failing to install/update on macOS
+- Fixed [#914](https://github.com/LykosAI/StabilityMatrix/issues/914) - Unable to use escaped colon `:` character in Inference prompts
+- Fixed [#908](https://github.com/LykosAI/StabilityMatrix/issues/908) - Forge unable to use models from "unet" shared folder
+- Fixed [#902](https://github.com/LykosAI/StabilityMatrix/issues/902) - Images from shared outputs folder not displaying properly in Stable Diffusion WebUI-UX
+- Fixed [#898](https://github.com/LykosAI/StabilityMatrix/issues/898) - Incorrect launch options for RuinedFooocus
+- Fixed index url parsing in Python Packages window causing some packages to not have versions available
 
 ## v2.12.0
 ### Added

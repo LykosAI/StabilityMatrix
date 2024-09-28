@@ -32,77 +32,44 @@ public class RuinedFooocus(
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
-        new()
-        {
-            new LaunchOptionDefinition
-            {
-                Name = "Preset",
-                Type = LaunchOptionType.Bool,
-                Options = { "--preset anime", "--preset realistic" }
-            },
-            new LaunchOptionDefinition
+        [
+            new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 Description = "Sets the listen port",
                 Options = { "--port" }
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to share on Gradio",
                 Options = { "--share" }
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Listen",
                 Type = LaunchOptionType.String,
                 Description = "Set the listen interface",
                 Options = { "--listen" }
             },
-            new LaunchOptionDefinition
+            new()
             {
-                Name = "Output Directory",
+                Name = "Auth",
                 Type = LaunchOptionType.String,
-                Description = "Override the output directory",
-                Options = { "--output-directory" }
+                Description = "Set credentials username/password",
+                Options = { "--auth" }
             },
             new()
             {
-                Name = "VRAM",
+                Name = "No Browser",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.IterGpuInfo().Select(gpu => gpu.MemoryLevel).Max() switch
-                {
-                    MemoryLevel.Low => "--lowvram",
-                    MemoryLevel.Medium => "--normalvram",
-                    _ => null
-                },
-                Options = { "--highvram", "--normalvram", "--lowvram", "--novram" }
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Use DirectML",
-                Type = LaunchOptionType.Bool,
-                Description = "Use pytorch with DirectML support",
-                InitialValue = HardwareHelper.PreferDirectML(),
-                Options = { "--directml" }
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Disable Xformers",
-                Type = LaunchOptionType.Bool,
-                InitialValue = !HardwareHelper.HasNvidiaGpu(),
-                Options = { "--disable-xformers" }
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Auto-Launch",
-                Type = LaunchOptionType.Bool,
-                Options = { "--auto-launch" }
+                Description = "Do not launch in browser",
+                Options = { "--nobrowser" }
             },
             LaunchOptionDefinition.Extras
-        };
+        ];
 
     public override async Task InstallPackage(
         string installLocation,

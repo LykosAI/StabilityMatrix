@@ -41,78 +41,78 @@ public class SDWebForge(
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
                 Options = ["--server-name"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7860",
                 Options = ["--port"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to share on Gradio",
                 Options = { "--share" }
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Pin Shared Memory",
                 Type = LaunchOptionType.Bool,
                 Options = { "--pin-shared-memory" }
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "CUDA Malloc",
                 Type = LaunchOptionType.Bool,
                 Options = { "--cuda-malloc" }
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "CUDA Stream",
                 Type = LaunchOptionType.Bool,
                 Options = { "--cuda-stream" }
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Always Offload from VRAM",
                 Type = LaunchOptionType.Bool,
                 Options = ["--always-offload-from-vram"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Always GPU",
                 Type = LaunchOptionType.Bool,
                 Options = ["--always-gpu"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Always CPU",
                 Type = LaunchOptionType.Bool,
                 Options = ["--always-cpu"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Use DirectML",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.PreferDirectML(),
                 Options = ["--directml"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Skip Torch CUDA Test",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS,
                 Options = ["--skip-torch-cuda-test"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "No half-precision VAE",
                 Type = LaunchOptionType.Bool,
@@ -123,7 +123,7 @@ public class SDWebForge(
         ];
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
-        new[] { TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps };
+        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
 
     public override async Task InstallPackage(
         string installLocation,

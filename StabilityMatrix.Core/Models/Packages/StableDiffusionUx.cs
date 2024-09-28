@@ -177,6 +177,9 @@ public class StableDiffusionUx(
 
     public override string OutputFolderName => "outputs";
 
+    public override IReadOnlyList<string> ExtraLaunchArguments =>
+        settingsManager.IsLibraryDirSet ? ["--gradio-allowed-path", settingsManager.ImagesDirectory] : [];
+
     public override async Task InstallPackage(
         string installLocation,
         InstalledPackage installedPackage,
@@ -263,31 +266,14 @@ public class StableDiffusionUx(
         }
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            [
+                Path.Combine(installLocation, options.Command ?? LaunchCommand),
+                ..options.Arguments,
+                ..ExtraLaunchArguments
+            ],
             HandleConsoleOutput,
             OnExit
         );
-    }
-
-    private async Task InstallRocmTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for ROCm", isIndeterminate: true));
-
-        await venvRunner.PipInstall(["--upgrade", "pip", "wheel"], onConsoleOutput).ConfigureAwait(false);
-
-        await venvRunner
-            .PipInstall(
-                new PipInstallArgs()
-                    .WithTorch("==2.0.1")
-                    .WithTorchVision("==0.15.2")
-                    .WithTorchExtraIndex("rocm5.4.2"),
-                onConsoleOutput
-            )
-            .ConfigureAwait(false);
     }
 
     private class A3WebUiExtensionManager(StableDiffusionUx package)

@@ -284,7 +284,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             var defaultPath = Path.Combine(@"Models", sharedFolder);
 
             var subFolder = viewModel?.SelectedInstallLocation ?? defaultPath;
-            subFolder = subFolder.Replace(@"Models\", "");
+            subFolder = subFolder.StripStart(@$"Models{Path.DirectorySeparatorChar}");
             downloadPath = Path.Combine(settingsManager.ModelsDirectory, subFolder);
         }
 

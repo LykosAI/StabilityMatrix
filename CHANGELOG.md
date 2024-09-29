@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#902](https://github.com/LykosAI/StabilityMatrix/issues/902) - Images from shared outputs folder not displaying properly in Stable Diffusion WebUI-UX
 - Fixed [#898](https://github.com/LykosAI/StabilityMatrix/issues/898) - Incorrect launch options for RuinedFooocus
 - Fixed index url parsing in Python Packages window causing some packages to not have versions available
+- Fixed a crash when switching between Model Sharing options for certain packages
 
 ## v2.12.0
 ### Added

@@ -184,6 +184,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         $"You are {VersionTapCountThreshold - VersionTapCount} clicks away from enabling Debug options.";
 
     public string DataDirectory => settingsManager.IsLibraryDirSet ? settingsManager.LibraryDir : "Not set";
+    public string ModelsDirectory => settingsManager.ModelsDirectory;
 
     public MainSettingsViewModel(
         INotificationService notificationService,
@@ -783,6 +784,33 @@ public partial class MainSettingsViewModel : PageViewModelBase
             Process.Start(Compat.AppCurrentPath);
             App.Shutdown();
         }
+    }
+
+    public async Task PickNewModelsFolder()
+    {
+        var provider = App.StorageProvider;
+        var result = await provider.OpenFolderPickerAsync(new FolderPickerOpenOptions());
+
+        if (result.Count == 0)
+            return;
+
+        var newPath = (result[0].Path.LocalPath);
+        settingsManager.Transaction(s => s.ModelDirectoryOverride = newPath);
+        SharedFolders.SetupSharedModelFolders(newPath);
+
+        // Restart
+        var restartDialog = new BetterContentDialog
+        {
+            Title = "Restart required",
+            Content = "Stability Matrix must be restarted for the changes to take effect.",
+            PrimaryButtonText = Resources.Action_Restart,
+            DefaultButton = ContentDialogButton.Primary,
+            IsSecondaryButtonEnabled = false,
+        };
+        await restartDialog.ShowAsync();
+
+        Process.Start(Compat.AppCurrentPath);
+        App.Shutdown();
     }
 
     #endregion

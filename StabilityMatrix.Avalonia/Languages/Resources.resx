@@ -472,7 +472,7 @@
     <value>Select new Data Directory</value>
   </data>
   <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
-    <value>Does not move existing data</value>
+    <value>Does not move existing data. Requires application restart.</value>
   </data>
   <data name="Action_SelectDirectory" xml:space="preserve">
     <value>Select Directory</value>

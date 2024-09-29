@@ -62,7 +62,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
 
     // Dynamic paths from library
     private FilePath SettingsFile => LibraryDir.JoinFile("settings.json");
-    public string ModelsDirectory => Path.Combine(LibraryDir, "Models");
+    public string ModelsDirectory => Settings.ModelDirectoryOverride ?? Path.Combine(LibraryDir, "Models");
     public string DownloadsDirectory => Path.Combine(LibraryDir, ".downloads");
     public DirectoryPath WorkflowDirectory => LibraryDir.JoinDir("Workflows");
     public DirectoryPath TagsDirectory => LibraryDir.JoinDir("Tags");
@@ -347,6 +347,7 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
         GlobalConfig.LibraryDir = LibraryDir;
         ArchiveHelper.HomeDir = LibraryDir;
         PyRunner.HomeDir = LibraryDir;
+        GlobalConfig.ModelsDir = ModelsDirectory;
     }
 
     /// <summary>

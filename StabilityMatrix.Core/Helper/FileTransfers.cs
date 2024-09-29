@@ -161,6 +161,16 @@ public static class FileTransfers
             // Recursively move sub directories
             await MoveAllFilesAndDirectories(subDir, destinationSubDir, overwrite, overwriteIfHashMatches)
                 .ConfigureAwait(false);
+
+            if (!subDir.EnumerateFileSystemInfos().Any())
+            {
+                subDir.Delete();
+            }
+
+            if (destinationSubDir.Exists)
+                continue;
+
+            destinationSubDir.Create();
         }
     }
 

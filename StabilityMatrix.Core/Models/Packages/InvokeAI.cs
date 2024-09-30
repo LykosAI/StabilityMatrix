@@ -435,7 +435,7 @@ public class InvokeAI : BaseGitPackage
         var result = await invokeAiApi.ScanFolder(SettingsManager.ModelsDirectory).ConfigureAwait(false);
         var modelsToScan = result.Where(x => !x.IsInstalled).ToList();
         if (modelsToScan.Count <= 0)
-            return true;
+            return false;
 
         foreach (var model in modelsToScan)
         {

@@ -1,10 +1,14 @@
 ﻿using System.Collections.Immutable;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using NLog;
+using Refit;
+using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Models.Api.Invoke;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -37,7 +41,7 @@ public class InvokeAI : BaseGitPackage
         new("https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png");
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        new[] { SharedFolderMethod.None };
+        [SharedFolderMethod.None, SharedFolderMethod.Configuration];
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
 
     public override string MainBranch => "main";
@@ -297,6 +301,7 @@ public class InvokeAI : BaseGitPackage
             options.Command ?? LaunchCommand,
             options.Arguments,
             true,
+            installedPackage,
             onConsoleOutput
         );
 
@@ -305,6 +310,7 @@ public class InvokeAI : BaseGitPackage
         string command,
         string arguments,
         bool runDetached,
+        InstalledPackage installedPackage,
         Action<ProcessOutput>? onConsoleOutput,
         bool spam3 = false
     )
@@ -355,28 +361,49 @@ public class InvokeAI : BaseGitPackage
 
         if (runDetached)
         {
-            void HandleConsoleOutput(ProcessOutput s)
+            async void HandleConsoleOutput(ProcessOutput s)
             {
-                onConsoleOutput?.Invoke(s);
-
-                if (
-                    spam3 && s.Text.Contains("[3] Accept the best guess;", StringComparison.OrdinalIgnoreCase)
-                )
+                if (s.Text.Contains("running on", StringComparison.OrdinalIgnoreCase))
                 {
-                    VenvRunner.Process?.StandardInput.WriteLine("3");
-                    return;
+                    var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
+                    var match = regex.Match(s.Text);
+                    if (!match.Success)
+                        return;
+
+                    if (installedPackage.PreferredSharedFolderMethod == SharedFolderMethod.Configuration)
+                    {
+                        try
+                        {
+                            // returns true if we printed the url already cuz it took too long
+                            if (
+                                await SetupInvokeModelSharingConfig(onConsoleOutput, match, s)
+                                    .ConfigureAwait(false)
+                            )
+                                return;
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.Error(e, "Failed to setup InvokeAI model sharing config");
+                        }
+                    }
+
+                    onConsoleOutput?.Invoke(s);
+
+                    WebUrl = match.Value;
+                    OnStartupComplete(WebUrl);
                 }
+                else
+                {
+                    onConsoleOutput?.Invoke(s);
 
-                if (!s.Text.Contains("running on", StringComparison.OrdinalIgnoreCase))
-                    return;
-
-                var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
-                var match = regex.Match(s.Text);
-                if (!match.Success)
-                    return;
-
-                WebUrl = match.Value;
-                OnStartupComplete(WebUrl);
+                    if (
+                        spam3
+                        && s.Text.Contains("[3] Accept the best guess;", StringComparison.OrdinalIgnoreCase)
+                    )
+                    {
+                        VenvRunner.Process?.StandardInput.WriteLine("3");
+                    }
+                }
             }
 
             VenvRunner.RunDetached($"-c \"{code}\" {arguments}".TrimEnd(), HandleConsoleOutput, OnExit);
@@ -386,6 +413,95 @@ public class InvokeAI : BaseGitPackage
             var result = await VenvRunner.Run($"-c \"{code}\" {arguments}".TrimEnd()).ConfigureAwait(false);
             onConsoleOutput?.Invoke(new ProcessOutput { Text = result.StandardOutput });
         }
+    }
+
+    private async Task<bool> SetupInvokeModelSharingConfig(
+        Action<ProcessOutput>? onConsoleOutput,
+        Match match,
+        ProcessOutput s
+    )
+    {
+        var invokeAiUrl = match.Value;
+        var invokeAiApi = RestService.For<IInvokeAiApi>(
+            invokeAiUrl,
+            new RefitSettings
+            {
+                ContentSerializer = new SystemTextJsonContentSerializer(
+                    new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
+                )
+            }
+        );
+
+        var result = await invokeAiApi.ScanFolder(SettingsManager.ModelsDirectory).ConfigureAwait(false);
+        var modelsToScan = result.Where(x => !x.IsInstalled).ToList();
+        if (modelsToScan.Count <= 0)
+            return true;
+
+        foreach (var model in modelsToScan)
+        {
+            Logger.Info($"Installing model {model.Path}");
+            await invokeAiApi
+                .InstallModel(
+                    new InstallModelRequest
+                    {
+                        Name = Path.GetFileNameWithoutExtension(model.Path),
+                        Description = Path.GetFileName(model.Path)
+                    },
+                    source: model.Path,
+                    inplace: true
+                )
+                .ConfigureAwait(false);
+        }
+
+        var installStatus = await invokeAiApi.GetModelInstallStatus().ConfigureAwait(false);
+
+        var installCheckCount = 0;
+
+        while (
+            !installStatus.All(
+                x =>
+                    (x.Status != null && x.Status.Equals("completed", StringComparison.OrdinalIgnoreCase))
+                    || (x.Status != null && x.Status.Equals("error", StringComparison.OrdinalIgnoreCase))
+            )
+        )
+        {
+            installCheckCount++;
+            if (installCheckCount > 5)
+            {
+                onConsoleOutput?.Invoke(
+                    new ProcessOutput
+                    {
+                        Text =
+                            "This may take awhile, feel free to use the web interface while the rest of your models are imported.\n"
+                    }
+                );
+
+                onConsoleOutput?.Invoke(s);
+
+                WebUrl = match.Value;
+                OnStartupComplete(WebUrl);
+            }
+
+            onConsoleOutput?.Invoke(
+                new ProcessOutput
+                {
+                    Text =
+                        $"\nWaiting for model import... ({installStatus.Count(x => (x.Status != null && !x.Status.Equals("completed",
+                        StringComparison.OrdinalIgnoreCase)) && !x.Status.Equals("error", StringComparison.OrdinalIgnoreCase))} remaining)\n"
+                }
+            );
+            await Task.Delay(5000).ConfigureAwait(false);
+            try
+            {
+                installStatus = await invokeAiApi.GetModelInstallStatus().ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to get model install status");
+            }
+        }
+
+        return installCheckCount > 5;
     }
 
     private ImmutableDictionary<string, string> GetEnvVars(

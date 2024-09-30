@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.13.0-dev.1
 ### Added
 - Added the ability to change the Models directory separately from the rest of the Data directory. This can be set in `Settings > Select new Models Folder`
+- Added "Copy" menu to the Inference gallery context menu, allowing you to copy the image or the seed (other params coming soon™️)
+- Added InvokeAI model sharing option
 
 ## v2.12.1
 ### Fixed

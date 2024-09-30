@@ -451,11 +451,14 @@ public partial class PackageCardViewModel(
 
             IsUpdateAvailable = false;
             InstalledVersion = Package.Version?.DisplayVersion ?? "Unknown";
-            notificationService.Show(
-                Resources.Progress_UpdateComplete,
-                string.Format(Resources.TextTemplate_PackageUpdatedToLatest, packageName),
-                NotificationType.Success
-            );
+            if (!runner.Failed)
+            {
+                notificationService.Show(
+                    Resources.Progress_UpdateComplete,
+                    string.Format(Resources.TextTemplate_PackageUpdatedToLatest, packageName),
+                    NotificationType.Success
+                );
+            }
         }
         catch (Exception e)
         {

@@ -5,6 +5,18 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
+=======
+## v2.13.0-dev.1
+### Added
+- Added the ability to change the Models directory separately from the rest of the Data directory. This can be set in `Settings > Select new Models Folder`
+- Added "Copy" menu to the Inference gallery context menu, allowing you to copy the image or the seed (other params coming soon™️)
+- Added InvokeAI model sharing option
+### Supporters
+#### Visionaries
+- A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
+
+>>>>>>> 67ce72bf (Merge pull request #849 from ionite34/chagenlog)
 ## v2.12.1
 ### Fixed
 - Fixed [#916](https://github.com/LykosAI/StabilityMatrix/issues/916) - InvokeAI failing to install/update on macOS
@@ -14,6 +26,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#898](https://github.com/LykosAI/StabilityMatrix/issues/898) - Incorrect launch options for RuinedFooocus
 - Fixed index url parsing in Python Packages window causing some packages to not have versions available
 - Fixed a crash when switching between Model Sharing options for certain packages
+### Supporters
+#### Visionaries
+- A sincere thank you to our valued Visionary-tier Patreon supporter, **Waterclouds**. Your continued support is truly appreciated, and we’re grateful to have you with us on this journey.
+#### Pioneers
+- We’d also like to extend our gratitude to our Pioneer-tier patrons: **tankfox**, **tanangular**, **Mr. Unknown**, and **Szir777**. Your ongoing support means a great deal to us!
 
 ## v2.12.0
 ### Added
@@ -89,7 +106,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Supporters
 #### Visionaries
 - A heartfelt thank you to our Visionary-tier patron, **Waterclouds**! We greatly appreciate your continued support!
-### Pioneers
+#### Pioneers
 - A special shoutout to our Pioneer-tier patrons: **tankfox**, **tanangular**, **Mr. Unknown**, and **Szir777**! Your unwavering support means a great deal!
 
 ## v2.12.0-pre.3

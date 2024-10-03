@@ -82,12 +82,6 @@ public class Fooocus(
             },
             new LaunchOptionDefinition
             {
-                Name = "Auto-Launch",
-                Type = LaunchOptionType.Bool,
-                Options = { "--auto-launch" }
-            },
-            new LaunchOptionDefinition
-            {
                 Name = "Disable Image Log",
                 Type = LaunchOptionType.Bool,
                 Options = { "--disable-image-log" }

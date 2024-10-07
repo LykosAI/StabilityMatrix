@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### Visionaries
 - A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
 
+## v2.12.2
+### Added
+- Added Beta scheduler to the scheduler selector in Inference
+### Fixed
+- Fixed ComfyUI NF4 extension not installing properly when prompted in Inference
+
 ## v2.12.1
 ### Fixed
 - Fixed [#916](https://github.com/LykosAI/StabilityMatrix/issues/916) - InvokeAI failing to install/update on macOS

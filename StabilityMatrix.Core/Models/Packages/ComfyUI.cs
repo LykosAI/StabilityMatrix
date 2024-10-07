@@ -500,13 +500,28 @@ public class ComfyUI(
                     .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
                     .ConfigureAwait(false);
 
+                // nf4 hack
+                var nf4Extension = new PackageExtension
+                {
+                    Author = "comfyanonymous",
+                    Files = [new Uri("https://github.com/comfyanonymous/ComfyUI_bitsandbytes_NF4")],
+                    Reference = new Uri("https://github.com/comfyanonymous/ComfyUI_bitsandbytes_NF4"),
+                    Title = "ComfyUI_bitsandbytes_NF4",
+                    InstallType = "git-clone"
+                };
+
                 // Parse json
                 var jsonManifest = JsonSerializer.Deserialize<ComfyExtensionManifest>(
                     content,
                     ComfyExtensionManifestSerializerContext.Default.Options
                 );
 
-                return jsonManifest?.GetPackageExtensions() ?? Enumerable.Empty<PackageExtension>();
+                if (jsonManifest == null)
+                    return [];
+
+                var extensions = jsonManifest.GetPackageExtensions().ToList();
+                extensions.Add(nf4Extension);
+                return extensions;
             }
             catch (Exception e)
             {

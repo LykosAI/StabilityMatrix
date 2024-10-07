@@ -9,6 +9,7 @@ public readonly record struct ComfyScheduler(string Name)
     public static ComfyScheduler Exponential { get; } = new("exponential");
     public static ComfyScheduler SDTurbo { get; } = new("sd_turbo");
     public static ComfyScheduler Simple { get; } = new("simple");
+    public static ComfyScheduler Beta { get; } = new("beta");
 
     private static Dictionary<string, string> ConvertDict { get; } =
         new()
@@ -19,7 +20,8 @@ public readonly record struct ComfyScheduler(string Name)
             ["sgm_uniform"] = "SGM Uniform",
             [Simple.Name] = "Simple",
             ["ddim_uniform"] = "DDIM Uniform",
-            [SDTurbo.Name] = "SD Turbo"
+            [SDTurbo.Name] = "SD Turbo",
+            [Beta.Name] = "Beta"
         };
 
     public static IReadOnlyList<ComfyScheduler> Defaults { get; } =

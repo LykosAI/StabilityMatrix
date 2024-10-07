@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Copy" menu to the Inference gallery context menu, allowing you to copy the image or the seed (other params coming soon™️)
 - Added InvokeAI model sharing option
 
+## v2.12.2
+### Added
+- Added Beta scheduler to the scheduler selector in Inference
+### Fixed
+- Fixed ComfyUI NF4 extension not installing properly when prompted in Inference
+
 ## v2.12.1
 ### Fixed
 - Fixed [#916](https://github.com/LykosAI/StabilityMatrix/issues/916) - InvokeAI failing to install/update on macOS

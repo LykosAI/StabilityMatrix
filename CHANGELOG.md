@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.13.0-dev.2
 ### Added
 - Added "Search by Creator" command to Civitai browser context menu
+- Added Beta scheduler to the scheduler selector in Inference
+### Fixed
+- Fixed ComfyUI NF4 extension not installing properly when prompted in Inference
+- Fixed [#932](https://github.com/LykosAI/StabilityMatrix/issues/932), [#935](https://github.com/LykosAI/StabilityMatrix/issues/935), [#939](https://github.com/LykosAI/StabilityMatrix/issues/939) - InvokeAI failing to update
+- Fixed repeated nested folders being created in `Models/StableDiffusion` when using Forge in Symlink mode in certain conditions. Existing folders will be repaired to their original structure on launch.
 
 ## v2.13.0-dev.1
 ### Added
@@ -23,6 +28,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added Beta scheduler to the scheduler selector in Inference
 ### Fixed
 - Fixed ComfyUI NF4 extension not installing properly when prompted in Inference
+- Fixed [#932](https://github.com/LykosAI/StabilityMatrix/issues/932), [#935](https://github.com/LykosAI/StabilityMatrix/issues/935), [#939](https://github.com/LykosAI/StabilityMatrix/issues/939) - InvokeAI failing to update
+- Fixed repeated nested folders being created in `Models/StableDiffusion` when using Forge in Symlink mode in certain conditions. Existing folders will be repaired to their original structure on launch.
 
 ## v2.12.1
 ### Fixed

@@ -187,14 +187,14 @@ public class InvokeAI : BaseGitPackage
         {
             case TorchIndex.Cuda:
                 torchInstallArgs = torchInstallArgs
-                    .WithTorch("==2.2.2")
-                    .WithTorchVision("==0.17.2")
-                    .WithXFormers("==0.0.25.post1")
-                    .WithTorchExtraIndex("cu121");
+                    .WithTorch("==2.4.1")
+                    .WithTorchVision("==0.19.1")
+                    .WithXFormers("==0.0.28.post1")
+                    .WithTorchExtraIndex("cu124");
 
                 Logger.Info("Starting InvokeAI install (CUDA)...");
                 pipCommandArgs =
-                    "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu121";
+                    "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu124";
                 break;
 
             case TorchIndex.Rocm:

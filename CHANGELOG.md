@@ -5,6 +5,24 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.13.0-dev.2
+### Added
+- Added "Search by Creator" command to Civitai browser context menu
+- Added Beta scheduler to the scheduler selector in Inference
+### Fixed
+- Fixed ComfyUI NF4 extension not installing properly when prompted in Inference
+- Fixed [#932](https://github.com/LykosAI/StabilityMatrix/issues/932), [#935](https://github.com/LykosAI/StabilityMatrix/issues/935), [#939](https://github.com/LykosAI/StabilityMatrix/issues/939) - InvokeAI failing to update
+- Fixed repeated nested folders being created in `Models/StableDiffusion` when using Forge in Symlink mode in certain conditions. Existing folders will be repaired to their original structure on launch.
+
+## v2.13.0-dev.1
+### Added
+- Added the ability to change the Models directory separately from the rest of the Data directory. This can be set in `Settings > Select new Models Folder`
+- Added "Copy" menu to the Inference gallery context menu, allowing you to copy the image or the seed (other params coming soon™️)
+- Added InvokeAI model sharing option
+### Supporters
+#### Visionaries
+- A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
+
 ## v2.12.2
 ### Added
 - Added Beta scheduler to the scheduler selector in Inference

@@ -376,6 +376,17 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
     }
 
     [RelayCommand]
+    private async Task CopySeedToClipboard(LocalImageFile? item)
+    {
+        if (item?.GenerationParameters is null)
+        {
+            return;
+        }
+
+        await App.Clipboard.SetTextAsync(item.GenerationParameters.Seed.ToString());
+    }
+
+    [RelayCommand]
     private Task OnImageExportPng(LocalImageFile? item) => ImageExportImpl(item, SKEncodedImageFormat.Png);
 
     [RelayCommand]

@@ -568,6 +568,7 @@ public abstract class BaseGitPackage : BasePackage
 
         // fix infinity controlnet folders
         await FixInfinityFolders(modelsDir.JoinDir("ControlNet"), "ControlNet").ConfigureAwait(false);
+        await FixInfinityFolders(modelsDir.JoinDir("StableDiffusion"), "sd").ConfigureAwait(false);
 
         // fix duplicate links in models dir
         // see https://github.com/LykosAI/StabilityMatrix/issues/338

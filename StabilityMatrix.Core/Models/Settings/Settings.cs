@@ -214,6 +214,8 @@ public class Settings
 
     public bool HideEarlyAccessModels { get; set; }
 
+    public string? ModelDirectoryOverride { get; set; } = null;
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

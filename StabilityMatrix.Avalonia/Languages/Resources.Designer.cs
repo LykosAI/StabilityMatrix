@@ -2532,6 +2532,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Releases are unavailable for this package..
+        /// </summary>
+        public static string Label_ReleasesUnavailableForThisPackage {
+            get {
+                return ResourceManager.GetString("Label_ReleasesUnavailableForThisPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove shared checkpoints directory symbolic links on shutdown.
         /// </summary>
         public static string Label_RemoveSymlinksOnShutdown {
@@ -2631,7 +2640,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Does not move existing data.
+        ///   Looks up a localized string similar to Does not move existing data. Requires application restart..
         /// </summary>
         public static string Label_SelectNewDataDirectory_Details {
             get {

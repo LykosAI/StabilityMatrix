@@ -18,6 +18,7 @@ public static class GenerationParametersConverter
             ["Euler Simple"] = (ComfySampler.Euler, ComfyScheduler.Simple),
             ["LMS"] = (ComfySampler.LMS, ComfyScheduler.Normal),
             ["Heun"] = (ComfySampler.Heun, ComfyScheduler.Normal),
+            ["Heun Beta"] = (ComfySampler.Heun, ComfyScheduler.Beta),
             ["DPM2"] = (ComfySampler.Dpm2, ComfyScheduler.Normal),
             ["DPM2 Karras"] = (ComfySampler.Dpm2, ComfyScheduler.Karras),
             ["DPM2 a"] = (ComfySampler.Dpm2Ancestral, ComfyScheduler.Normal),
@@ -34,6 +35,7 @@ public static class GenerationParametersConverter
             ["DPM adaptive"] = (ComfySampler.DpmAdaptive, ComfyScheduler.Normal),
             ["LMS Karras"] = (ComfySampler.LMS, ComfyScheduler.Karras),
             ["DDIM"] = (ComfySampler.DDIM, ComfyScheduler.Normal),
+            ["DDIM Beta"] = (ComfySampler.DDIM, ComfyScheduler.Beta),
             ["UniPC"] = (ComfySampler.UniPC, ComfyScheduler.Normal),
         }.ToImmutableDictionary();
 

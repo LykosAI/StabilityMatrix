@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#932](https://github.com/LykosAI/StabilityMatrix/issues/932), [#935](https://github.com/LykosAI/StabilityMatrix/issues/935), [#939](https://github.com/LykosAI/StabilityMatrix/issues/939) - InvokeAI failing to update
 - Fixed repeated nested folders being created in `Models/StableDiffusion` when using Forge in Symlink mode in certain conditions. Existing folders will be repaired to their original structure on launch.
 - Fixed minimize button not working on macOS
+- Fixed InvokeAI model sharing spamming the console with "This may take awhile" in certain conditions
 ### Supporters
 #### Visionaries
 - A big thank you to our amazing Visionary-tier Patreon supporter, **Waterclouds**! Your continued support is invaluable!

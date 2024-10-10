@@ -6,6 +6,7 @@
     xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:database="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
     xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.Views.Dialogs"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
@@ -87,12 +88,6 @@
                 </controls:BetterComboBox>
             </Grid>
 
-            <!--  <ToggleSwitch OnContent="{x:Static lang:Resources.Label_Releases}"  -->
-            <!--  OffContent="{x:Static lang:Resources.Label_Branches}"  -->
-            <!--    -->
-            <!--  IsChecked="{Binding IsReleaseMode}"  -->
-            <!--  Margin="8,0,8,8" />  -->
-
             <Label
                 Margin="8,4"
                 Content="{x:Static lang:Resources.Label_DisplayName}"
@@ -132,10 +127,73 @@
             </StackPanel>
 
             <Expander
-                Margin="8,8,8,8"
+                Margin="8"
                 HorizontalAlignment="Stretch"
                 FontSize="16"
-                Header="{x:Static lang:Resources.Label_AdvancedOptions}" />
+                Header="{x:Static lang:Resources.Label_AdvancedOptions}">
+                <WrapPanel Margin="8,0">
+                    <StackPanel Margin="0,4,24,0" Orientation="Vertical">
+                        <Label Content="{x:Static lang:Resources.Label_SharedModelStrategyShort}" />
+                        <controls:BetterComboBox
+                            MinWidth="150"
+                            MinHeight="38"
+                            ItemsSource="{Binding SelectedPackage.AvailableSharedFolderMethods}"
+                            SelectedItem="{Binding SelectedSharedFolderMethod}">
+                            <controls:BetterComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:SharedFolderMethod}">
+                                    <TextBlock Margin="8,4,0,4" Text="{Binding}" />
+                                </DataTemplate>
+                            </controls:BetterComboBox.ItemTemplate>
+                        </controls:BetterComboBox>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,4,24,0" Orientation="Vertical">
+                        <Label Content="PyTorch Index" IsVisible="{Binding ShowTorchIndexOptions}" />
+                        <controls:BetterComboBox
+                            MinWidth="150"
+                            MinHeight="38"
+                            IsVisible="{Binding ShowTorchIndexOptions}"
+                            ItemsSource="{Binding SelectedPackage.AvailableTorchIndices}"
+                            SelectedItem="{Binding SelectedTorchIndex}">
+                            <controls:BetterComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:TorchIndex}">
+                                    <TextBlock Margin="8,4,0,4" Text="{Binding}" />
+                                </DataTemplate>
+                            </controls:BetterComboBox.ItemTemplate>
+                        </controls:BetterComboBox>
+                    </StackPanel>
+
+                    <StackPanel Margin="0,4,24,0" Orientation="Vertical">
+                        <Label Content="{x:Static lang:Resources.Label_Commit}" IsVisible="{Binding !IsReleaseMode}" />
+                        <controls:BetterComboBox
+                            MinWidth="150"
+                            MinHeight="38"
+                            IsVisible="{Binding !IsReleaseMode}"
+                            ItemsSource="{Binding AvailableCommits}"
+                            SelectedItem="{Binding SelectedCommit}">
+                            <controls:BetterComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type database:GitCommit}">
+                                    <TextBlock
+                                        Name="NameTextBlock"
+                                        Margin="8,4,0,4"
+                                        Text="{Binding ShortSha}" />
+                                </DataTemplate>
+                            </controls:BetterComboBox.ItemTemplate>
+                        </controls:BetterComboBox>
+                    </StackPanel>
+
+                    <StackPanel
+                        Margin="0,4,24,0"
+                        IsVisible="{Binding !!SelectedPackage.SharedOutputFolders}"
+                        Orientation="Vertical">
+                        <Label Content="{x:Static lang:Resources.Label_UseSharedOutputFolder}" />
+                        <ToggleSwitch
+                            VerticalAlignment="Center"
+                            VerticalContentAlignment="Center"
+                            IsChecked="{Binding IsOutputSharingEnabled}" />
+                    </StackPanel>
+                </WrapPanel>
+            </Expander>
 
             <Expander
                 Margin="8"

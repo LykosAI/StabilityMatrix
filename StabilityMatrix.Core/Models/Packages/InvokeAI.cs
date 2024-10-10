@@ -42,7 +42,7 @@ public class InvokeAI : BaseGitPackage
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         [SharedFolderMethod.None, SharedFolderMethod.Configuration];
-    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
+    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
 
     public override string MainBranch => "main";
 
@@ -480,6 +480,8 @@ public class InvokeAI : BaseGitPackage
 
                 WebUrl = match.Value;
                 OnStartupComplete(WebUrl);
+
+                break;
             }
 
             onConsoleOutput?.Invoke(

@@ -1260,4 +1260,7 @@
   <data name="Text_RestartMayBeRequiredForSystemChanges" xml:space="preserve">
     <value>A restart may be required for system changes to take effect.</value>
   </data>
+  <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
+    <value>Releases are unavailable for this package.</value>
+  </data>
 </root>

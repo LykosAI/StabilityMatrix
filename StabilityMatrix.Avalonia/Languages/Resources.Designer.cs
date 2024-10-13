@@ -618,6 +618,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Log in Explorer.
+        /// </summary>
+        public static string Action_ShowLogInExplorer {
+            get {
+                return ResourceManager.GetString("Action_ShowLogInExplorer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Log in Finder.
+        /// </summary>
+        public static string Action_ShowLogInFinder {
+            get {
+                return ResourceManager.GetString("Action_ShowLogInFinder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Signup.
         /// </summary>
         public static string Action_Signup {
@@ -3392,6 +3410,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Text_SomeFilesCouldNotBeDeleted {
             get {
                 return ResourceManager.GetString("Text_SomeFilesCouldNotBeDeleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please let us know about this issue with the details below and attach the zipped log files..
+        /// </summary>
+        public static string Text_UnexpectedError_Description {
+            get {
+                return ResourceManager.GetString("Text_UnexpectedError_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can continue, but full functionality will be available after restart. Please let us know about this issue with the details below and attach the zipped log files..
+        /// </summary>
+        public static string Text_UnexpectedErrorRecoverable_Description {
+            get {
+                return ResourceManager.GetString("Text_UnexpectedErrorRecoverable_Description", resourceCulture);
             }
         }
         

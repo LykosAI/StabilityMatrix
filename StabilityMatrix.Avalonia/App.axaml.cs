@@ -47,8 +47,10 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Converters.Json;
@@ -320,6 +322,8 @@ public sealed class App : Application
 
         AppDomain.CurrentDomain.ProcessExit += OnExit;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+
+        Dispatcher.UIThread.UnhandledException += Dispatcher_UnhandledException;
 
         // Since we're manually shutting down NLog in OnExit
         LogManager.AutoShutdown = false;
@@ -982,7 +986,14 @@ public sealed class App : Application
         UnobservedTaskExceptionEventArgs e
     )
     {
-        if (e.Exception is not Exception unobservedEx)
+        if (e.Observed || e.Exception is not Exception unobservedEx)
+            return;
+
+        // Skip if already handled as dispatcher exception
+        if (
+            unobservedEx.Data["dispatcher_exception_handled"] is true
+            || unobservedEx.InnerException?.Data["dispatcher_exception_handled"] is true
+        )
             return;
 
         try
@@ -1004,6 +1015,84 @@ public sealed class App : Application
         catch (Exception ex)
         {
             Logger.Error(ex, "Failed to show Unobserved Task Exception notification");
+        }
+    }
+
+    private static void Dispatcher_UnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        if (e.Exception is not { } ex)
+            return;
+
+        SentryId? sentryId = null;
+
+        // Exception automatically logged by Sentry if enabled
+        if (SentrySdk.IsEnabled)
+        {
+            ex.SetSentryMechanism("Dispatcher.UnhandledException", handled: false);
+            sentryId = SentrySdk.CaptureException(ex);
+            SentrySdk.FlushAsync().SafeFireAndForget();
+            Logger.Warn(ex, "Dispatcher Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
+        }
+        else
+        {
+            Logger.Fatal(ex, "Dispatcher Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
+        }
+
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime lifetime)
+        {
+            var viewModel = new ExceptionViewModel
+            {
+                Exception = ex,
+                SentryId = sentryId,
+                IsRecoverable = true
+            };
+            var dialog = new ExceptionDialog { DataContext = viewModel };
+
+            // We can only show dialog if main window exists, and is visible
+            if (lifetime.MainWindow is { PlatformImpl: not null, IsVisible: true } mainWindow)
+            {
+                // Configure for dialog mode
+                dialog.ShowAsDialog = true;
+                dialog.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+
+                // Show synchronously without blocking UI thread
+                // https://github.com/AvaloniaUI/Avalonia/issues/4810#issuecomment-704259221
+                var cts = new CancellationTokenSource();
+
+                dialog
+                    .ShowDialog(mainWindow)
+                    .ContinueWith(
+                        _ =>
+                        {
+                            cts.Cancel();
+                            if (viewModel.IsContinueResult)
+                            {
+                                e.Handled = true;
+                                e.Exception.Data["dispatcher_exception_handled"] = true;
+                            }
+                            else
+                            {
+                                Program.ExitWithException(ex);
+                            }
+                        },
+                        TaskScheduler.FromCurrentSynchronizationContext()
+                    );
+
+                Dispatcher.UIThread.MainLoop(cts.Token);
+            }
+            else
+            {
+                viewModel.IsRecoverable = false;
+
+                // No parent window available
+                var cts = new CancellationTokenSource();
+                // Exit on token cancellation
+                cts.Token.Register(() => Program.ExitWithException(ex));
+
+                dialog.ShowWithCts(cts);
+
+                Dispatcher.UIThread.MainLoop(cts.Token);
+            }
         }
     }
 

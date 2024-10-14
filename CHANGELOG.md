@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added "Search by Creator" command to Civitai browser context menu
 - Added Beta scheduler to the scheduler selector in Inference
+- Added zipping of log files and "Show Log in Explorer" button on exceptions dialog for easier support
 ### Changed
 - (Internal) Updated to Avalonia 11.1.4
 - Adjusted the Branch/Release toggle during package install flow to be a little more obvious 

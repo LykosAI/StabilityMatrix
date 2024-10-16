@@ -557,6 +557,33 @@ public static class DesignData
                     new InstalledPackageExtension { Paths = [new DirectoryPath("example-dir-2")] }
                 ]
             );
+            vm.AddExtensionPacks(
+                [
+                    new ExtensionPack
+                    {
+                        Name = "Test Pack",
+                        PackageType = "ComfyUI",
+                        Extensions =
+                        [
+                            new SavedPackageExtension
+                            {
+                                PackageExtension = new PackageExtension
+                                {
+                                    Author = "TestAuthor",
+                                    Title = "Test",
+                                    Reference = new Uri("https://github.com/LykosAI/StabilityMatrix"),
+                                    Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")]
+                                },
+                                Version = new PackageExtensionVersion
+                                {
+                                    Branch = "main",
+                                    CommitSha = "abcd123"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            );
         });
 
     public static CheckpointsPageViewModel CheckpointsPageViewModel =>

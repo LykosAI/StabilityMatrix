@@ -1019,17 +1019,18 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public CommandItem[] DebugCommands =>
         [
-            new CommandItem(DebugRefreshModelIndexCommand),
-            new CommandItem(DebugFindLocalModelFromIndexCommand),
-            new CommandItem(DebugExtractDmgCommand),
-            new CommandItem(DebugShowNativeNotificationCommand),
-            new CommandItem(DebugClearImageCacheCommand),
-            new CommandItem(DebugGCCollectCommand),
-            new CommandItem(DebugExtractImagePromptsToTxtCommand),
-            new CommandItem(DebugShowImageMaskEditorCommand),
-            new CommandItem(DebugExtractImagePromptsToTxtCommand),
-            new CommandItem(DebugShowConfirmDeleteDialogCommand),
-            new CommandItem(DebugShowModelMetadataEditorDialogCommand),
+            new(DebugRefreshModelIndexCommand),
+            new(DebugFindLocalModelFromIndexCommand),
+            new(DebugExtractDmgCommand),
+            new(DebugShowNativeNotificationCommand),
+            new(DebugClearImageCacheCommand),
+            new(DebugGCCollectCommand),
+            new(DebugExtractImagePromptsToTxtCommand),
+            new(DebugShowImageMaskEditorCommand),
+            new(DebugExtractImagePromptsToTxtCommand),
+            new(DebugShowConfirmDeleteDialogCommand),
+            new(DebugShowModelMetadataEditorDialogCommand),
+            new(DebugNvidiaSmiCommand)
         ];
 
     [RelayCommand]
@@ -1259,6 +1260,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
         vm.PaintCanvasViewModel.BackgroundImage = bitmap;
 
         await vm.GetDialog().ShowAsync();
+    }
+
+    [RelayCommand]
+    private void DebugNvidiaSmi()
+    {
+        HardwareHelper.IterGpuInfoNvidiaSmi();
     }
 
     #endregion

@@ -1,25 +1,30 @@
-<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-                          xmlns:ui="using:FluentAvalonia.UI.Controls"
-                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:system="clr-namespace:System;assembly=System.Runtime"
-                          xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
-                          xmlns:extensions="clr-namespace:StabilityMatrix.Core.Models.Packages.Extensions;assembly=StabilityMatrix.Core"
-                          xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
-                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                          xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
-                          xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
-                          xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
-                          xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
-                          xmlns:models1="clr-namespace:StabilityMatrix.Avalonia.Models"
-                          d:DataContext="{x:Static mocks:DesignData.PackageExtensionBrowserViewModel}"
-                          x:DataType="packageManager:PackageExtensionBrowserViewModel"
-                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                          x:Class="StabilityMatrix.Avalonia.Views.PackageManager.PackageExtensionBrowserView">
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.PackageManager.PackageExtensionBrowserView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.Views.Dialogs"
+    xmlns:extensions="clr-namespace:StabilityMatrix.Core.Models.Packages.Extensions;assembly=StabilityMatrix.Core"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+    xmlns:models1="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    d:DataContext="{x:Static mocks:DesignData.PackageExtensionBrowserViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="packageManager:PackageExtensionBrowserViewModel"
+    mc:Ignorable="d">
     <controls:UserControlBase.Resources>
         <!--<input:StandardUICommand x:Key="InstallExtensionCommand"
                                  Command="{Binding InstallExtensionCommand}" />-->
@@ -27,20 +32,21 @@
 
         <DataTemplate x:Key="PackageExtensionTemplate">
             <DataTemplate.DataType>
-                <x:Type TypeName="models1:SelectableItem" x:TypeArguments="extensions:PackageExtension" />
+                <x:Type x:TypeArguments="extensions:PackageExtension" TypeName="models1:SelectableItem" />
             </DataTemplate.DataType>
-            <Button Background="Transparent"
-                    Padding="-5"
-                    Margin="4, 0, 0, 8"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Stretch"
-                    Classes="transparent-full"
-                    BorderBrush="Transparent"
-                    CornerRadius="8"
-                    Command="{Binding ToggleSelectedCommand}">
+            <Button
+                Margin="4,0,0,8"
+                Padding="-5"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                Classes="transparent-full"
+                Command="{Binding ToggleSelectedCommand}"
+                CornerRadius="8">
                 <controls:Card
-                    Padding="12,12"
                     Margin="4"
+                    Padding="12,12"
                     Classes="transparent-full"
                     CornerRadius="8">
 
@@ -52,40 +58,46 @@
                         Stretch="UniformToFill"
                         CornerRadius="4"
                         Source="{Binding PreviewImageUri}" />-->
-                        <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="4">
-                            <TextBlock Text="{Binding Item.Title}"
-                                       FontWeight="Light"
-                                       FontSize="16" />
+                        <StackPanel
+                            Grid.Column="1"
+                            Orientation="Vertical"
+                            Spacing="4">
+                            <TextBlock
+                                FontSize="16"
+                                FontWeight="Light"
+                                Text="{Binding Item.Title}" />
 
-                            <TextBlock Text="{Binding Item.Author}"
-                                       FontWeight="Light"
-                                       FontSize="13" />
+                            <TextBlock
+                                FontSize="13"
+                                FontWeight="Light"
+                                Text="{Binding Item.Author}" />
 
-                            <TextBlock TextWrapping="Wrap"
-                                       Text="{Binding Item.Description}"
-                                       Foreground="{DynamicResource TextFillColorSecondary}"
-                                       FontWeight="Light"
-                                       FontSize="13" />
+                            <TextBlock
+                                FontSize="13"
+                                FontWeight="Light"
+                                Foreground="{DynamicResource TextFillColorSecondary}"
+                                Text="{Binding Item.Description}"
+                                TextWrapping="Wrap" />
 
                             <controls:HyperlinkIconButton
                                 Margin="0"
                                 Padding="0,2"
-                                NavigateUri="{Binding Item.Reference}"
-                                Content="GitHub" />
+                                Content="GitHub"
+                                NavigateUri="{Binding Item.Reference}" />
                         </StackPanel>
 
-                        <TextBlock 
+                        <TextBlock
                             Grid.Column="2"
-                            VerticalAlignment="Center"
-                            IsVisible="{Binding Item.IsInstalled}"
-                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                            Text="{Binding Source={x:Static lang:Resources.Label_Installed}, StringFormat='{}({0})'}"
-                            Margin="0,0,16,0"/>
-                        <CheckBox
-                            IsVisible="{Binding !Item.IsInstalled}"
-                            IsChecked="{Binding IsSelected}"
                             Margin="0,0,16,0"
-                            Grid.Column="2" />
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                            IsVisible="{Binding Item.IsInstalled}"
+                            Text="{Binding Source={x:Static lang:Resources.Label_Installed}, StringFormat='{}({0})'}" />
+                        <CheckBox
+                            Grid.Column="2"
+                            Margin="0,0,16,0"
+                            IsChecked="{Binding IsSelected}"
+                            IsVisible="{Binding !Item.IsInstalled}" />
 
                     </sg:SpacedGrid>
                 </controls:Card>
@@ -94,92 +106,194 @@
 
         <DataTemplate x:Key="InstalledPackageExtensionTemplate">
             <DataTemplate.DataType>
-                <x:Type TypeName="models1:SelectableItem" x:TypeArguments="extensions:InstalledPackageExtension" />
+                <x:Type x:TypeArguments="extensions:InstalledPackageExtension" TypeName="models1:SelectableItem" />
             </DataTemplate.DataType>
-            <Button Background="Transparent"
-                    Padding="-5"
-                    Margin="4, 0, 0, 8"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Stretch"
-                    Classes="transparent-full"
-                    BorderBrush="Transparent"
-                    CornerRadius="8"
-                    Command="{Binding ToggleSelectedCommand}">
+            <Button
+                Margin="4,0,0,8"
+                Padding="-5"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                Classes="transparent-full"
+                Command="{Binding ToggleSelectedCommand}"
+                CornerRadius="8">
                 <controls:Card
-                    Padding="12,12"
                     Margin="4"
+                    Padding="12,12"
                     Classes="transparent-full"
                     CornerRadius="8">
 
                     <sg:SpacedGrid ColumnDefinitions="*,Auto">
                         <StackPanel
                             DataContext="{Binding Item}"
-                            Orientation="Vertical" Spacing="4">
+                            Orientation="Vertical"
+                            Spacing="4">
                             <TextBlock
-                                Text="{Binding Title}"
+                                FontSize="16"
                                 FontWeight="Light"
-                                FontSize="16" />
-                            <TextBlock Text="{Binding Version, FallbackValue=''}"
-                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                                       FontSize="13" />
-                            <TextBlock TextWrapping="Wrap"
-                                       Text="{Binding Definition.Description, FallbackValue=''}"
-                                       Foreground="{DynamicResource TextFillColorSecondary}"
-                                       FontWeight="Light"
-                                       FontSize="13" />
+                                Text="{Binding Title}" />
+                            <TextBlock
+                                FontSize="13"
+                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                Text="{Binding Version, FallbackValue=''}" />
+                            <TextBlock
+                                FontSize="13"
+                                FontWeight="Light"
+                                Foreground="{DynamicResource TextFillColorSecondary}"
+                                Text="{Binding Definition.Description, FallbackValue=''}"
+                                TextWrapping="Wrap" />
                             <StackPanel Orientation="Horizontal" Spacing="2">
                                 <controls:HyperlinkIconButton
-                                    IsEnabled="{Binding Definition, Converter={x:Static ObjectConverters.IsNotNull}}"
                                     Margin="0"
                                     Padding="0,2"
-                                    NavigateUri="{Binding Definition.Reference, FallbackValue=''}"
-                                    Content="GitHub" />
+                                    Content="GitHub"
+                                    IsEnabled="{Binding Definition, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                    NavigateUri="{Binding Definition.Reference, FallbackValue=''}" />
 
                                 <Ellipse
                                     Width="3"
                                     Height="3"
-                                    Opacity="0.8"
                                     VerticalAlignment="Center"
-                                    Fill="{DynamicResource TextFillColorTertiaryBrush}" />
+                                    Fill="{DynamicResource TextFillColorTertiaryBrush}"
+                                    Opacity="0.8" />
 
                                 <controls:HyperlinkIconButton
-                                    IsEnabled="{Binding Definition, Converter={x:Static ObjectConverters.IsNotNull}}"
                                     Margin="0"
                                     Padding="0,2"
-                                    NavigateUri="{Binding PrimaryPath.FullPath, Converter={StaticResource FileUriConverter}}"
-                                    Content="{Binding DisplayPath}" />
+                                    Content="{Binding DisplayPath}"
+                                    IsEnabled="{Binding Definition, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                    NavigateUri="{Binding PrimaryPath.FullPath, Converter={StaticResource FileUriConverter}}" />
                             </StackPanel>
                         </StackPanel>
                         <CheckBox
                             Grid.Column="1"
+                            Margin="0,0,16,0"
                             HorizontalAlignment="Right"
-                            IsChecked="{Binding IsSelected}"
-                            Margin="0,0,16,0" />
+                            IsChecked="{Binding IsSelected}" />
+                    </sg:SpacedGrid>
+                </controls:Card>
+            </Button>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ExtensionPackTemplate">
+            <DataTemplate.DataType>
+                <x:Type x:TypeArguments="extensions:SavedPackageExtension" TypeName="models1:SelectableItem" />
+            </DataTemplate.DataType>
+            <Button
+                Margin="4,0,0,8"
+                Padding="-5"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                Classes="transparent-full"
+                Command="{Binding ToggleSelectedCommand}"
+                CornerRadius="8">
+                <controls:Card
+                    Margin="4"
+                    Padding="12,12"
+                    Classes="transparent-full"
+                    CornerRadius="8">
+
+                    <sg:SpacedGrid ColumnDefinitions="*,Auto">
+                        <StackPanel
+                            DataContext="{Binding Item}"
+                            Orientation="Vertical"
+                            Spacing="4">
+                            <TextBlock
+                                FontSize="16"
+                                FontWeight="Light"
+                                Text="{Binding PackageExtension.Title}" />
+                            <TextBlock
+                                FontSize="13"
+                                Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                Text="{Binding Version, FallbackValue=''}" />
+                            <TextBlock
+                                FontSize="13"
+                                FontWeight="Light"
+                                Foreground="{DynamicResource TextFillColorSecondary}"
+                                Text="{Binding PackageExtension.Description, FallbackValue=''}"
+                                TextWrapping="Wrap" />
+
+                            <Grid
+                                Margin="8,0,0,16"
+                                HorizontalAlignment="Stretch"
+                                ColumnDefinitions="Auto, Auto, *">
+                                <ToggleButton
+                                    Grid.Column="0"
+                                    Content="Branches"
+                                    CornerRadius="8,0,0,8"
+                                    IsChecked="{Binding !IsReleaseMode, Mode=TwoWay}" />
+                                <ToggleButton
+                                    Grid.Column="1"
+                                    markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
+                                    Content="Releases"
+                                    CornerRadius="0,8,8,0"
+                                    IsChecked="{Binding IsReleaseMode, Mode=TwoWay}"
+                                    IsEnabled="{Binding ShowReleaseMode}"
+                                    ToolTip.Tip="{Binding ReleaseTooltipText}" />
+
+                                <controls:BetterComboBox
+                                    Grid.Column="2"
+                                    MinWidth="250"
+                                    Margin="24,0,8,0"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    FontSize="16"
+                                    ItemsSource="{Binding AvailableVersions}"
+                                    SelectedItem="{Binding SelectedVersion}">
+                                    <controls:BetterComboBox.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type models:PackageVersion}">
+                                            <TextBlock
+                                                Name="NameTextBlock"
+                                                VerticalAlignment="Center"
+                                                Text="{Binding TagName}" />
+                                        </DataTemplate>
+                                    </controls:BetterComboBox.ItemTemplate>
+                                </controls:BetterComboBox>
+                            </Grid>
+
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <controls:HyperlinkIconButton
+                                    Margin="0"
+                                    Padding="0,2"
+                                    Content="GitHub"
+                                    NavigateUri="{Binding PackageExtension.Reference, FallbackValue=''}" />
+                            </StackPanel>
+                        </StackPanel>
+                        <CheckBox
+                            Grid.Column="1"
+                            Margin="0,0,16,0"
+                            HorizontalAlignment="Right"
+                            IsChecked="{Binding IsSelected}" />
                     </sg:SpacedGrid>
                 </controls:Card>
             </Button>
         </DataTemplate>
     </controls:UserControlBase.Resources>
 
-    <TabControl TabStripPlacement="Top" SelectionChanged="TabControl_OnSelectionChanged">
+    <TabControl SelectionChanged="TabControl_OnSelectionChanged" TabStripPlacement="Top">
         <TabControl.Items>
-            <TabItem FontSize="18" Header="Available Extensions" Margin="8,0,0,0">
+            <TabItem
+                Margin="8,0,0,0"
+                FontSize="18"
+                Header="Available Extensions">
                 <sg:SpacedGrid
+                    Margin="8"
                     RowDefinitions="Auto,*,Auto"
-                    RowSpacing="12"
-                    Margin="8">
-                    <sg:SpacedGrid
-                        ColumnDefinitions="*,Auto,Auto"
-                        ColumnSpacing="8">
+                    RowSpacing="12">
+                    <sg:SpacedGrid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                         <TextBox
-                            Classes="search"
-                            Margin="4, 0,0,0"
-                            Watermark="{x:Static lang:Resources.Action_Search}"
+                            Margin="4,0,0,0"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Center"
-                            Text="{Binding AvailableItemsSearchCollection.Query, Mode=TwoWay}" />
+                            Classes="search"
+                            Text="{Binding AvailableItemsSearchCollection.Query, Mode=TwoWay}"
+                            Watermark="{x:Static lang:Resources.Action_Search}" />
 
-                        <!-- Refresh Button -->
+                        <!--  Refresh Button  -->
                         <Button
                             Grid.Row="0"
                             Grid.Column="1"
@@ -190,26 +304,25 @@
                             <ui:SymbolIcon FontSize="16" Symbol="Refresh" />
                         </Button>
 
-                        <!-- Settings / Edit Manifests Button -->
+                        <!--  Settings / Edit Manifests Button  -->
                         <Button
                             Grid.Row="0"
                             Grid.Column="2"
-                            Command="{Binding OpenExtensionsSettingsDialogCommand}"
                             Padding="16,6"
                             HorizontalAlignment="Left"
-                            VerticalAlignment="Stretch">
+                            VerticalAlignment="Stretch"
+                            Command="{Binding OpenExtensionsSettingsDialogCommand}">
                             <ui:SymbolIcon FontSize="16" Symbol="Settings" />
                         </Button>
                     </sg:SpacedGrid>
-                    
-                    <TextBlock Grid.Row="1"
-                               HorizontalAlignment="Center"
-                               IsVisible="{Binding ShowNoExtensionsFoundMessage}"
-                               Text="{x:Static lang:Resources.Label_NoExtensionsFound}"/>
 
-                    <ScrollViewer
-                        IsVisible="{Binding !IsLoading}"
-                        Grid.Row="1">
+                    <TextBlock
+                        Grid.Row="1"
+                        HorizontalAlignment="Center"
+                        IsVisible="{Binding ShowNoExtensionsFoundMessage}"
+                        Text="{x:Static lang:Resources.Label_NoExtensionsFound}" />
+
+                    <ScrollViewer Grid.Row="1" IsVisible="{Binding !IsLoading}">
                         <ItemsRepeater
                             DataContext="{Binding AvailableItemsSearchCollection}"
                             ItemTemplate="{StaticResource PackageExtensionTemplate}"
@@ -220,23 +333,21 @@
                         </ItemsRepeater>
                     </ScrollViewer>
 
-                    <Panel
-                        IsVisible="{Binding IsLoading}"
-                        Grid.Row="1">
+                    <Panel Grid.Row="1" IsVisible="{Binding IsLoading}">
                         <ProgressBar
                             Margin="32,16"
-                            IsIndeterminate="True"
                             IsEnabled="{Binding IsLoading}"
+                            IsIndeterminate="True"
                             IsVisible="{Binding IsLoading}" />
                     </Panel>
 
                     <ui:InfoBar
                         Grid.Row="2"
-                        IsOpen="{Binding !!SelectedAvailableItems.Count}"
-                        HorizontalContentAlignment="Right"
                         HorizontalAlignment="Right"
+                        HorizontalContentAlignment="Right"
                         CloseButtonCommand="{Binding ClearSelection}"
-                        IsIconVisible="False">
+                        IsIconVisible="False"
+                        IsOpen="{Binding !!SelectedAvailableItems.Count}">
                         <ui:InfoBar.Title>
                             <MultiBinding StringFormat="{}{0} Selected">
                                 <Binding Path="SelectedAvailableItems.Count" />
@@ -253,25 +364,26 @@
                 </sg:SpacedGrid>
             </TabItem>
 
-            <TabItem FontSize="18" Header="Installed Extensions" Margin="0,0,0,0">
+            <TabItem
+                Margin="0,0,0,0"
+                FontSize="18"
+                Header="Installed Extensions">
 
                 <sg:SpacedGrid
+                    Margin="8"
                     RowDefinitions="Auto,*,Auto"
-                    RowSpacing="12"
-                    Margin="8">
-                    <sg:SpacedGrid
-                        ColumnDefinitions="*,Auto"
-                        ColumnSpacing="8">
+                    RowSpacing="12">
+                    <sg:SpacedGrid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                         <TextBox
-                            Classes="search"
-                            Margin="4, 0,0,0"
-                            DataContext="{Binding InstalledItemsSearchCollection}"
-                            Watermark="{x:Static lang:Resources.Action_Search}"
+                            Margin="4,0,0,0"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Center"
-                            Text="{Binding Query, Mode=TwoWay}" />
+                            Classes="search"
+                            DataContext="{Binding InstalledItemsSearchCollection}"
+                            Text="{Binding Query, Mode=TwoWay}"
+                            Watermark="{x:Static lang:Resources.Action_Search}" />
 
-                        <!-- Refresh Button -->
+                        <!--  Refresh Button  -->
                         <Button
                             Grid.Row="0"
                             Grid.Column="1"
@@ -282,7 +394,7 @@
                             <ui:SymbolIcon FontSize="16" Symbol="Refresh" />
                         </Button>
 
-                        <!-- Settings / Edit Manifests Button -->
+                        <!--  Settings / Edit Manifests Button  -->
                         <!--<Button
                             Grid.Row="0"
                             Grid.Column="2"
@@ -293,9 +405,7 @@
                         </Button>-->
                     </sg:SpacedGrid>
 
-                    <ScrollViewer
-                        IsVisible="{Binding !IsLoading}"
-                        Grid.Row="1">
+                    <ScrollViewer Grid.Row="1" IsVisible="{Binding !IsLoading}">
                         <ItemsRepeater
                             DataContext="{Binding InstalledItemsSearchCollection}"
                             ItemTemplate="{StaticResource InstalledPackageExtensionTemplate}"
@@ -306,23 +416,21 @@
                         </ItemsRepeater>
                     </ScrollViewer>
 
-                    <Panel
-                        IsVisible="{Binding IsLoading}"
-                        Grid.Row="1">
+                    <Panel Grid.Row="1" IsVisible="{Binding IsLoading}">
                         <ProgressBar
                             Margin="32,16"
-                            IsIndeterminate="True"
                             IsEnabled="{Binding IsLoading}"
+                            IsIndeterminate="True"
                             IsVisible="{Binding IsLoading}" />
                     </Panel>
 
                     <ui:InfoBar
                         Grid.Row="2"
-                        IsOpen="{Binding !!SelectedInstalledItems.Count}"
-                        HorizontalContentAlignment="Right"
                         HorizontalAlignment="Right"
+                        HorizontalContentAlignment="Right"
                         CloseButtonCommand="{Binding ClearSelection}"
-                        IsIconVisible="False">
+                        IsIconVisible="False"
+                        IsOpen="{Binding !!SelectedInstalledItems.Count}">
                         <ui:InfoBar.Title>
                             <MultiBinding StringFormat="{}{0} Selected">
                                 <Binding Path="SelectedInstalledItems.Count" />
@@ -334,7 +442,16 @@
                                     Classes="accent"
                                     Command="{Binding UpdateSelectedExtensionsCommand}"
                                     Content="{x:Static lang:Resources.Action_Update}" />
+                                <Button Classes="accent" Content="Save...">
+                                    <Button.Flyout>
+                                        <MenuFlyout>
+                                            <MenuItem Header="Add to Existing Pack" />
+                                            <MenuItem Command="{Binding CreateExtensionPackCommand}" Header="New Extension Pack" />
+                                        </MenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
                                 <Button
+                                    Classes="danger"
                                     Command="{Binding UninstallSelectedExtensionsCommand}"
                                     Content="{x:Static lang:Resources.Action_Uninstall}" />
                             </StackPanel>
@@ -344,6 +461,69 @@
 
                 </sg:SpacedGrid>
 
+            </TabItem>
+
+            <TabItem FontSize="18" Header="Extension Packs">
+                <Grid
+                    Margin="0,8"
+                    ColumnDefinitions="Auto, *"
+                    RowDefinitions="Auto, Auto, *">
+
+                    <Panel
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        IsVisible="{Binding AreExtensionPacksLoading}">
+                        <ProgressBar
+                            Margin="32,16"
+                            IsEnabled="{Binding AreExtensionPacksLoading}"
+                            IsIndeterminate="True"
+                            IsVisible="{Binding AreExtensionPacksLoading}" />
+                    </Panel>
+
+                    <ListBox
+                        Grid.Row="0"
+                        Grid.RowSpan="3"
+                        Grid.Column="0"
+                        Padding="8"
+                        Background="#22000000"
+                        IsVisible="{Binding !AreExtensionPacksLoading}"
+                        ItemsSource="{Binding ExtensionPacks}"
+                        SelectedItem="{Binding SelectedExtensionPack}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type extensions:ExtensionPack}">
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <ui:CommandBar
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="6,8"
+                        DefaultLabelPosition="Right"
+                        IsVisible="{Binding !AreExtensionPacksLoading}">
+                        <ui:CommandBar.PrimaryCommands>
+                            <ui:CommandBarButton IconSource="Download" Label="Install All" />
+                        </ui:CommandBar.PrimaryCommands>
+                    </ui:CommandBar>
+
+                    <ScrollViewer
+                        Grid.Row="1"
+                        Grid.RowSpan="2"
+                        Grid.Column="1"
+                        Margin="8,0"
+                        IsVisible="{Binding !AreExtensionPacksLoading}">
+                        <ItemsRepeater
+                            DataContext="{Binding ExtensionPackExtensionsSearchCollection}"
+                            ItemTemplate="{StaticResource ExtensionPackTemplate}"
+                            ItemsSource="{Binding FilteredItems}">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Orientation="Vertical" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                    </ScrollViewer>
+                </Grid>
             </TabItem>
         </TabControl.Items>
     </TabControl>

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Styles;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -34,6 +36,15 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
             FailColorBrush = ThemeColors.ThemeYellow,
         };
 
+    [ObservableProperty]
+    private bool selectDifferentGpu;
+
+    [ObservableProperty]
+    private ObservableCollection<GpuInfo> gpuInfoCollection = [];
+
+    [ObservableProperty]
+    private GpuInfo? selectedGpu;
+
     public FirstLaunchSetupViewModel()
     {
         CheckHardwareBadge.RefreshFunc = SetGpuInfo;
@@ -47,6 +58,7 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
         {
             // Query GPU info
             gpuInfo = await Task.Run(() => HardwareHelper.IterGpuInfo().ToArray());
+            GpuInfoCollection = new ObservableCollection<GpuInfo>(gpuInfo);
         }
 
         // First Nvidia GPU
@@ -58,6 +70,7 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
         // Otherwise first GPU
         activeGpu ??= gpuInfo.FirstOrDefault();
 
+        SelectedGpu = activeGpu;
         GpuInfoText = activeGpu is null
             ? "No GPU detected"
             : $"{activeGpu.Name} ({Size.FormatBytes(activeGpu.MemoryBytes)})";
@@ -75,5 +88,11 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
     {
         base.OnLoaded();
         CheckHardwareBadge.RefreshCommand.ExecuteAsync(null).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private void ToggleManualGpu()
+    {
+        SelectDifferentGpu = !SelectDifferentGpu;
     }
 }

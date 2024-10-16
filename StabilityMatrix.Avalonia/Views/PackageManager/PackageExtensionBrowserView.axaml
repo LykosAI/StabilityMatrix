@@ -216,45 +216,6 @@
                                 Text="{Binding PackageExtension.Description, FallbackValue=''}"
                                 TextWrapping="Wrap" />
 
-                            <Grid
-                                Margin="8,0,0,16"
-                                HorizontalAlignment="Stretch"
-                                ColumnDefinitions="Auto, Auto, *">
-                                <ToggleButton
-                                    Grid.Column="0"
-                                    Content="Branches"
-                                    CornerRadius="8,0,0,8"
-                                    IsChecked="{Binding !IsReleaseMode, Mode=TwoWay}" />
-                                <ToggleButton
-                                    Grid.Column="1"
-                                    markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
-                                    Content="Releases"
-                                    CornerRadius="0,8,8,0"
-                                    IsChecked="{Binding IsReleaseMode, Mode=TwoWay}"
-                                    IsEnabled="{Binding ShowReleaseMode}"
-                                    ToolTip.Tip="{Binding ReleaseTooltipText}" />
-
-                                <controls:BetterComboBox
-                                    Grid.Column="2"
-                                    MinWidth="250"
-                                    Margin="24,0,8,0"
-                                    HorizontalAlignment="Stretch"
-                                    VerticalAlignment="Stretch"
-                                    HorizontalContentAlignment="Stretch"
-                                    FontSize="16"
-                                    ItemsSource="{Binding AvailableVersions}"
-                                    SelectedItem="{Binding SelectedVersion}">
-                                    <controls:BetterComboBox.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type models:PackageVersion}">
-                                            <TextBlock
-                                                Name="NameTextBlock"
-                                                VerticalAlignment="Center"
-                                                Text="{Binding TagName}" />
-                                        </DataTemplate>
-                                    </controls:BetterComboBox.ItemTemplate>
-                                </controls:BetterComboBox>
-                            </Grid>
-
                             <StackPanel Orientation="Horizontal" Spacing="2">
                                 <controls:HyperlinkIconButton
                                     Margin="0"

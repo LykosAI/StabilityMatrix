@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.12.3
 ### Fixed
-- Fixed some cases of FileTransferExists error when opening re/Forge or Automatic1111
+- Fixed some cases of FileTransferExists error when running re/Forge or Automatic1111
 - Fixed update check not happening on startup for some users
 
 ## v2.12.2

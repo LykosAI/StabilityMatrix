@@ -47,8 +47,10 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Converters.Json;
@@ -982,7 +984,7 @@ public sealed class App : Application
         UnobservedTaskExceptionEventArgs e
     )
     {
-        if (e.Exception is not Exception unobservedEx)
+        if (e.Observed || e.Exception is not Exception unobservedEx)
             return;
 
         try

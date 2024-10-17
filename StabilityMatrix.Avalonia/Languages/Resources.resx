@@ -1263,4 +1263,16 @@
   <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
     <value>Releases are unavailable for this package.</value>
   </data>
+  <data name="Text_UnexpectedError_Description" xml:space="preserve">
+    <value>Please let us know about this issue with the details below and attach the zipped log files.</value>
+  </data>
+  <data name="Text_UnexpectedErrorRecoverable_Description" xml:space="preserve">
+    <value>You can continue, but full functionality will be available after restart. Please let us know about this issue with the details below and attach the zipped log files.</value>
+  </data>
+  <data name="Action_ShowLogInExplorer" xml:space="preserve">
+    <value>Show Log in Explorer</value>
+  </data>
+  <data name="Action_ShowLogInFinder" xml:space="preserve">
+    <value>Show Log in Finder</value>
+  </data>
 </root>

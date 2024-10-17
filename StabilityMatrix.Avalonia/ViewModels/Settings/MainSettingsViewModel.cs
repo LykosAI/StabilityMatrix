@@ -902,6 +902,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
     }
 
     [RelayCommand]
+    private void DebugThrowDispatcherException()
+    {
+        Dispatcher.UIThread.Post(() => throw new OperationCanceledException("Example Message"));
+    }
+
+    [RelayCommand]
     private async Task DebugMakeImageGrid()
     {
         var provider = App.StorageProvider;

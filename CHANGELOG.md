@@ -5,6 +5,41 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
+=======
+## v2.13.0-dev.2
+### Added
+- Added "Search by Creator" command to Civitai browser context menu
+- Added Beta scheduler to the scheduler selector in Inference
+- Added zipping of log files and "Show Log in Explorer" button on exceptions dialog for easier support
+### Changed
+- (Internal) Updated to Avalonia 11.1.4
+- Adjusted the Branch/Release toggle during package install flow to be a little more obvious 
+### Fixed
+- Fixed ComfyUI NF4 extension not installing properly when prompted in Inference
+- Fixed [#932](https://github.com/LykosAI/StabilityMatrix/issues/932), [#935](https://github.com/LykosAI/StabilityMatrix/issues/935), [#939](https://github.com/LykosAI/StabilityMatrix/issues/939) - InvokeAI failing to update
+- Fixed repeated nested folders being created in `Models/StableDiffusion` when using Forge in Symlink mode in certain conditions. Existing folders will be repaired to their original structure on launch.
+- Fixed minimize button not working on macOS
+- Fixed InvokeAI model sharing spamming the console with "This may take awhile" in certain conditions
+### Supporters
+#### Visionaries
+- A big thank you to our amazing Visionary-tier Patreon supporter, **Waterclouds**! Your continued support is invaluable!
+
+## v2.13.0-dev.1
+### Added
+- Added the ability to change the Models directory separately from the rest of the Data directory. This can be set in `Settings > Select new Models Folder`
+- Added "Copy" menu to the Inference gallery context menu, allowing you to copy the image or the seed (other params coming soon™️)
+- Added InvokeAI model sharing option
+### Supporters
+#### Visionaries
+- A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
+
+## v2.12.3
+### Fixed
+- Fixed some cases of FileTransferExists error when running re/Forge or Automatic1111
+- Fixed update check not happening on startup for some users
+
+>>>>>>> bdb0f40e (Merge pull request #863 from ionite34/fix-infinity-and-updates)
 ## v2.12.2
 ### Added
 - Added Beta scheduler to the scheduler selector in Inference

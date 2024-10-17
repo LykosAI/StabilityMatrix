@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
+using System.Text.RegularExpressions;
 using NLog;
 using Octokit;
 using StabilityMatrix.Core.Helper;
@@ -554,6 +555,51 @@ public abstract class BaseGitPackage : BasePackage
         await firstInfinity.DeleteAsync(true).ConfigureAwait(false);
     }
 
+    private async Task FixForgeInfinity()
+    {
+        var modelsDir = new DirectoryPath(SettingsManager.ModelsDirectory);
+        var rootDirectory = modelsDir.JoinDir("StableDiffusion").JoinDir("sd");
+        var infinityFolderName = "sd";
+        var firstInfinity = rootDirectory.JoinDir(infinityFolderName);
+
+        var depth = 0;
+        var currentDir = rootDirectory;
+
+        while (currentDir.JoinDir(infinityFolderName) is { Exists: true, IsSymbolicLink: false } newInfinity)
+        {
+            depth++;
+            currentDir = newInfinity;
+        }
+
+        if (depth <= 5)
+        {
+            Logger.Info("not really that infinity, aborting");
+            return;
+        }
+
+        Logger.Info("Found {Depth} infinity folders from {FirstPath}", depth, firstInfinity.ToString());
+
+        // Move all items in infinity folder to root
+        Logger.Info("Moving infinity folders content to root: {Path}", currentDir.ToString());
+        await FileTransfers
+            .MoveAllFilesAndDirectories(currentDir, rootDirectory, overwriteIfHashMatches: true)
+            .ConfigureAwait(false);
+
+        // Move any files from first infinity by enumeration just in case
+        var leftoverFiles = firstInfinity.EnumerateFiles(searchOption: SearchOption.AllDirectories);
+        foreach (var file in leftoverFiles)
+        {
+            await file.MoveToWithIncrementAsync(rootDirectory.JoinFile(file.Name)).ConfigureAwait(false);
+        }
+
+        if (!firstInfinity.EnumerateFiles(searchOption: SearchOption.AllDirectories).Any())
+        {
+            // Delete infinity folders chain from first
+            Logger.Info("Deleting infinity folders: {Path}", currentDir.ToString());
+            await firstInfinity.DeleteAsync(true).ConfigureAwait(false);
+        }
+    }
+
     public override async Task SetupModelFolders(
         DirectoryPath installDirectory,
         SharedFolderMethod sharedFolderMethod
@@ -568,7 +614,7 @@ public abstract class BaseGitPackage : BasePackage
 
         // fix infinity controlnet folders
         await FixInfinityFolders(modelsDir.JoinDir("ControlNet"), "ControlNet").ConfigureAwait(false);
-        await FixInfinityFolders(modelsDir.JoinDir("StableDiffusion"), "sd").ConfigureAwait(false);
+        await FixForgeInfinity().ConfigureAwait(false);
 
         // fix duplicate links in models dir
         // see https://github.com/LykosAI/StabilityMatrix/issues/338

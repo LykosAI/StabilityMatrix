@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### Visionaries
 - A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
 
+## v2.12.3
+### Fixed
+- Fixed some cases of FileTransferExists error when opening re/Forge or Automatic1111
+- Fixed update check not happening on startup for some users
+
 ## v2.12.2
 ### Added
 - Added Beta scheduler to the scheduler selector in Inference

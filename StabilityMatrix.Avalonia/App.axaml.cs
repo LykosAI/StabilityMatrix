@@ -63,6 +63,7 @@ using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
 using Logger = NLog.Logger;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
@@ -377,7 +378,8 @@ public sealed class App : Application
                     provider.GetRequiredService<IModelIndexService>(),
                     provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
                     provider.GetRequiredService<INotificationService>(),
-                    provider.GetRequiredService<IAnalyticsHelper>()
+                    provider.GetRequiredService<IAnalyticsHelper>(),
+                    provider.GetRequiredService<IUpdateHelper>()
                 )
                 {
                     Pages =

@@ -141,7 +141,8 @@ public static class FileTransfers
         DirectoryPath sourceDir,
         DirectoryPath destinationDir,
         bool overwrite = false,
-        bool overwriteIfHashMatches = false
+        bool overwriteIfHashMatches = false,
+        bool deleteSymlinks = false
     )
     {
         // Create the destination directory if it doesn't exist
@@ -157,6 +158,12 @@ public static class FileTransfers
         // Then move directories
         foreach (var subDir in sourceDir.Info.EnumerateDirectories())
         {
+            if (deleteSymlinks && new DirectoryPath(subDir).IsSymbolicLink)
+            {
+                subDir.Delete(false);
+                continue;
+            }
+
             var destinationSubDir = destinationDir.JoinDir(subDir.Name);
             // Recursively move sub directories
             await MoveAllFilesAndDirectories(subDir, destinationSubDir, overwrite, overwriteIfHashMatches)

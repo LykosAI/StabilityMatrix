@@ -78,7 +78,7 @@
                     <HyperlinkButton
                         Margin="0,8"
                         Command="{Binding ToggleManualGpuCommand}"
-                        Content="Select a different GPU"
+                        Content="Select a different default GPU"
                         FontSize="11" />
 
                     <controls:BetterComboBox
@@ -93,7 +93,11 @@
                         </controls:BetterComboBox.ItemTemplate>
                     </controls:BetterComboBox>
 
-                    <TextBlock Text="{x:Static lang:Resources.TextTemplate_YouCanChangeThisBehavior}" TextWrapping="Wrap" />
+                    <TextBlock
+                        Margin="8,4"
+                        IsVisible="{Binding SelectDifferentGpu}"
+                        Text="{Binding YouCanChangeThis}"
+                        TextWrapping="Wrap" />
 
                 </StackPanel>
                 <!--  Checkbox  -->

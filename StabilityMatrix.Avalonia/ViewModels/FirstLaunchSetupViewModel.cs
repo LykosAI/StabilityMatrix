@@ -12,13 +12,14 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(FirstLaunchSetupWindow))]
 [ManagedService]
 [Singleton]
-public partial class FirstLaunchSetupViewModel : ViewModelBase
+public partial class FirstLaunchSetupViewModel : DisposableViewModelBase
 {
     [ObservableProperty]
     private bool eulaAccepted;
@@ -45,9 +46,21 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
     [ObservableProperty]
     private GpuInfo? selectedGpu;
 
-    public FirstLaunchSetupViewModel()
+    public string YouCanChangeThis =>
+        string.Format(Resources.TextTemplate_YouCanChangeThisBehavior, "Settings > Idk Yet");
+
+    public FirstLaunchSetupViewModel(ISettingsManager settingsManager)
     {
         CheckHardwareBadge.RefreshFunc = SetGpuInfo;
+
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.SelectedGpu,
+                settings => settings.PreferredGpu,
+                true
+            )
+        );
     }
 
     private async Task<bool> SetGpuInfo()

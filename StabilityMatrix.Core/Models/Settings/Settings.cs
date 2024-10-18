@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Semver;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Update;
 
@@ -215,6 +216,8 @@ public class Settings
     public bool HideEarlyAccessModels { get; set; }
 
     public string? ModelDirectoryOverride { get; set; } = null;
+
+    public GpuInfo? PreferredGpu { get; set; }
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

@@ -12,9 +12,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
 using Avalonia.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Dock.Avalonia.MarkupExtension;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
@@ -30,6 +32,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Services;
@@ -200,6 +203,16 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         );
     }
 
+    /// <inheritdoc />
+    public override async Task OnLoadedAsync()
+    {
+        await base.OnLoadedAsync();
+
+        await Refresh();
+
+        await LoadExtensionPacksAsync();
+    }
+
     public void AddExtensions(
         IEnumerable<PackageExtension> packageExtensions,
         IEnumerable<InstalledPackageExtension> installedExtensions
@@ -364,32 +377,64 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     }
 
     [RelayCommand]
-    public async Task CreateExtensionPack()
+    private async Task InstallExtensionPack()
+    {
+        if (SelectedExtensionPack == null)
+            return;
+
+        var steps = new List<IPackageStep>();
+
+        foreach (var extension in SelectedExtensionPack.Extensions)
+        {
+            var installedExtension = installedExtensionsSource.Items.FirstOrDefault(
+                x => x.Definition == extension.PackageExtension
+            );
+
+            if (installedExtension != null)
+            {
+                steps.Add(
+                    new UpdateExtensionStep(
+                        PackagePair!.BasePackage.ExtensionManager!,
+                        PackagePair.InstalledPackage,
+                        installedExtension,
+                        extension.Version
+                    )
+                );
+            }
+            else
+            {
+                steps.Add(
+                    new InstallExtensionStep(
+                        PackagePair!.BasePackage.ExtensionManager!,
+                        PackagePair!.InstalledPackage,
+                        extension.PackageExtension,
+                        extension.Version
+                    )
+                );
+            }
+        }
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            CloseWhenFinished = true,
+            ModificationCompleteMessage = $"Extension Pack {SelectedExtensionPack.Name} installed"
+        };
+
+        await runner.ExecuteSteps(steps);
+    }
+
+    [RelayCommand]
+    public async Task CreateExtensionPackFromInstalled()
     {
         var extensions = SelectedInstalledItems.Select(x => x.Item).ToArray();
         if (extensions.Length == 0)
             return;
 
-        var textFields = new TextBoxField[]
-        {
-            new()
-            {
-                Label = "Name",
-                Validator = text =>
-                {
-                    if (string.IsNullOrWhiteSpace(text))
-                        throw new DataValidationException("Name is required");
-
-                    if (ExtensionPacks.Any(pack => pack.Name == text))
-                        throw new DataValidationException("Pack already exists");
-                }
-            }
-        };
-
-        var dialog = DialogHelper.CreateTextEntryDialog("Pack Name", "", textFields);
+        var (dialog, nameField) = GetNameEntryDialog();
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
-            var name = textFields[0].Text;
+            var name = nameField.Text;
             var newExtensionPack = new ExtensionPack
             {
                 Name = name,
@@ -407,19 +452,163 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
                     .ToList()
             };
 
-            var path = settingsManager.ExtensionPackDirectory.JoinFile($"{name}.json");
-            var json = JsonSerializer.Serialize(newExtensionPack);
-            path.WriteAllText(json);
+            SaveExtensionPack(newExtensionPack, name);
+            await LoadExtensionPacksAsync();
+            notificationService.Show("Extension Pack Created", "The extension pack has been created");
         }
     }
 
-    /// <inheritdoc />
-    public override async Task OnLoadedAsync()
+    [RelayCommand]
+    public async Task CreateExtensionPackFromAvailable()
     {
-        await base.OnLoadedAsync();
+        var extensions = SelectedAvailableItems.Select(x => x.Item).ToArray();
+        if (extensions.Length == 0)
+            return;
 
-        await Refresh();
+        var (dialog, nameField) = GetNameEntryDialog();
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var name = nameField.Text;
+            var newExtensionPack = new ExtensionPack
+            {
+                Name = name,
+                PackageType = PackagePair!.InstalledPackage.PackageName,
+                Extensions = SelectedAvailableItems
+                    .Select(
+                        x =>
+                            new SavedPackageExtension
+                            {
+                                PackageExtension = x.Item,
+                                Version = new PackageExtensionVersion
+                                {
+                                    Branch = "idk",
+                                    CommitSha = "???????"
+                                }
+                            }
+                    )
+                    .ToList()
+            };
+
+            SaveExtensionPack(newExtensionPack, name);
+            await LoadExtensionPacksAsync();
+            notificationService.Show("Extension Pack Created", "The extension pack has been created");
+        }
+    }
+
+    [RelayCommand]
+    public async Task AddInstalledExtensionToPack(ExtensionPack pack)
+    {
+        foreach (var extension in SelectedInstalledItems)
+        {
+            if (
+                pack.Extensions.Any(
+                    x =>
+                        x.PackageExtension.Title == extension.Item.Definition?.Title
+                        && x.PackageExtension.Author == extension.Item.Definition?.Author
+                        && x.PackageExtension.Reference == extension.Item.Definition?.Reference
+                )
+            )
+            {
+                continue;
+            }
+
+            pack.Extensions.Add(
+                new SavedPackageExtension
+                {
+                    PackageExtension = extension.Item.Definition!,
+                    Version = extension.Item.Version
+                }
+            );
+        }
+
+        SaveExtensionPack(pack, pack.Name);
+        ClearSelection();
         await LoadExtensionPacksAsync();
+        notificationService.Show(
+            "Extensions added to pack",
+            "The selected extensions have been added to the pack"
+        );
+    }
+
+    [RelayCommand]
+    public async Task AddExtensionToPack(ExtensionPack pack)
+    {
+        foreach (var extension in SelectedAvailableItems)
+        {
+            if (
+                pack.Extensions.Any(
+                    x =>
+                        x.PackageExtension.Title == extension.Item.Title
+                        && x.PackageExtension.Author == extension.Item.Author
+                        && x.PackageExtension.Reference == extension.Item.Reference
+                )
+            )
+            {
+                continue;
+            }
+
+            pack.Extensions.Add(
+                new SavedPackageExtension
+                {
+                    PackageExtension = extension.Item,
+                    Version = new PackageExtensionVersion { Branch = "idk", CommitSha = "??????????" }
+                }
+            );
+        }
+
+        SaveExtensionPack(pack, pack.Name);
+        ClearSelection();
+        await LoadExtensionPacksAsync();
+        notificationService.Show(
+            "Extensions added to pack",
+            "The selected extensions have been added to the pack"
+        );
+    }
+
+    [RelayCommand]
+    public async Task RemoveExtensionFromPack()
+    {
+        if (SelectedExtensionPack is null)
+            return;
+
+        foreach (var extension in SelectedExtensionPackExtensions)
+        {
+            extensionPackExtensionsSource.Remove(extension.Item);
+            SelectedExtensionPack.Extensions.Remove(extension.Item);
+        }
+
+        SaveExtensionPack(SelectedExtensionPack, SelectedExtensionPack.Name);
+        ClearSelection();
+        await LoadExtensionPacksAsync();
+    }
+
+    [RelayCommand]
+    private async Task DeleteExtensionPackAsync(ExtensionPack pack)
+    {
+        var pathToDelete = settingsManager
+            .ExtensionPackDirectory.JoinDir(pack.PackageType)
+            .JoinFile($"{pack.Name}.json");
+
+        var confirmDeleteVm = vmFactory.Get<ConfirmDeleteDialogViewModel>();
+        confirmDeleteVm.PathsToDelete = [pathToDelete];
+
+        if (await confirmDeleteVm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        try
+        {
+            await confirmDeleteVm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent("Error deleting files", e.Message, NotificationType.Error);
+            return;
+        }
+
+        ClearSelection();
+        extensionPackSource.Remove(pack);
     }
 
     [RelayCommand]
@@ -470,11 +659,9 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         using var _ = CodeTimer.StartDebug();
 
         if (PackagePair?.BasePackage.ExtensionManager is not { } extensionManager)
-        {
             throw new NotSupportedException(
                 $"The package {PackagePair?.BasePackage} does not support extensions."
             );
-        }
 
         var availableExtensions = (
             await extensionManager.GetManifestExtensionsAsync(
@@ -506,14 +693,34 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     public void ClearSelection()
     {
         foreach (var item in SelectedAvailableItems.ToImmutableArray())
-        {
             item.IsSelected = false;
-        }
 
         foreach (var item in SelectedInstalledItems.ToImmutableArray())
-        {
             item.IsSelected = false;
-        }
+
+        foreach (var item in SelectedExtensionPackExtensions.ToImmutableArray())
+            item.IsSelected = false;
+    }
+
+    private (BetterContentDialog dialog, TextBoxField nameField) GetNameEntryDialog()
+    {
+        var textFields = new TextBoxField[]
+        {
+            new()
+            {
+                Label = "Name",
+                Validator = text =>
+                {
+                    if (string.IsNullOrWhiteSpace(text))
+                        throw new DataValidationException("Name is required");
+
+                    if (ExtensionPacks.Any(pack => pack.Name == text))
+                        throw new DataValidationException("Pack already exists");
+                }
+            }
+        };
+
+        return (DialogHelper.CreateTextEntryDialog("Pack Name", "", textFields), textFields[0]);
     }
 
     private async Task<bool> BeforeInstallCheck()
@@ -529,9 +736,9 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
                 Title = "Installing Extensions",
                 Content = """
                           Extensions, the extension index, and their dependencies are community provided and not verified by the Stability Matrix team. 
-                          
+
                           The install process may invoke external programs and scripts.
-                          
+
                           Please review the extension's source code and applicable licenses before installing.
                           """,
                 PrimaryButtonText = Resources.Action_Continue,
@@ -541,9 +748,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             };
 
             if (await dialog.ShowAsync() != ContentDialogResult.Primary)
-            {
                 return false;
-            }
 
             settingsManager.Transaction(
                 s => s.SeenTeachingTips.Add(Core.Models.Settings.TeachingTip.PackageExtensionsInstallNotice)
@@ -585,7 +790,6 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         var extensionsInstalled = new HashSet<PackageExtension>();
 
         foreach (var (i, installedExt) in installedExtensions.Enumerate())
-        {
             if (
                 installedExt.GitRepositoryUrl is not null
                 && repoToExtension.TryGetValue(
@@ -598,16 +802,11 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
 
                 installedExtensions[i] = installedExt with { Definition = mappedExt };
             }
-        }
 
         // For available extensions, add installed status if available
         foreach (var (i, ext) in extensions.Enumerate())
-        {
             if (extensionsInstalled.Contains(ext))
-            {
                 extensions[i] = ext with { IsInstalled = true };
-            }
-        }
     }
 
     private async Task LoadExtensionPacksAsync()
@@ -636,9 +835,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
                         extensionPack != null
                         && extensionPack.PackageType == PackagePair!.InstalledPackage.PackageName
                     )
-                    {
                         packs.Add(extensionPack);
-                    }
                 }
                 catch (JsonException)
                 {
@@ -647,12 +844,20 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             }
 
             extensionPackSource.AddOrUpdate(packs);
-            SelectedExtensionPack = packs.FirstOrDefault();
         }
         finally
         {
             AreExtensionPacksLoading = false;
         }
+    }
+
+    private void SaveExtensionPack(ExtensionPack newExtensionPack, string name)
+    {
+        var path = settingsManager
+            .ExtensionPackDirectory.JoinDir(newExtensionPack.PackageType)
+            .JoinFile($"{name}.json");
+        var json = JsonSerializer.Serialize(newExtensionPack);
+        path.WriteAllText(json);
     }
 
     partial void OnSelectedExtensionPackChanged(ExtensionPack value)

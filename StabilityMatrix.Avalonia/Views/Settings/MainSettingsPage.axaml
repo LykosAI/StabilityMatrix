@@ -543,6 +543,22 @@
                     Grid.Row="7"
                     Header="{x:Static lang:Resources.Label_SystemSettings}"
                     IconSource="Settings">
+
+                    <ui:SettingsExpanderItem Content="Default GPU" Description="This influences which version of pytorch will be used during package installs">
+                        <ui:SettingsExpanderItem.Footer>
+                            <controls:BetterComboBox
+                                HorizontalAlignment="Stretch"
+                                ItemsSource="{Binding GpuInfoCollection}"
+                                SelectedItem="{Binding PreferredGpu}">
+                                <controls:BetterComboBox.ItemTemplate>
+                                    <DataTemplate DataType="hardwareInfo:GpuInfo">
+                                        <TextBlock Text="{Binding Name}" />
+                                    </DataTemplate>
+                                </controls:BetterComboBox.ItemTemplate>
+                            </controls:BetterComboBox>
+                        </ui:SettingsExpanderItem.Footer>
+                    </ui:SettingsExpanderItem>
+
                     <!--  Windows Long Paths  -->
                     <ui:SettingsExpanderItem
                         Content="{x:Static lang:Resources.Label_EnableLongPaths}"

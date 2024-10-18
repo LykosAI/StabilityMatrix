@@ -153,6 +153,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isWindowsLongPathsEnabled;
 
+    [ObservableProperty]
+    private ObservableCollection<GpuInfo> gpuInfoCollection = [];
+
+    [ObservableProperty]
+    private GpuInfo? preferredGpu;
+
     #endregion
 
     #region System Info
@@ -279,6 +285,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             true
         );
 
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.PreferredGpu,
+            settings => settings.PreferredGpu,
+            true
+        );
+
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 
         hardwareInfoUpdateTimer.Tick += OnHardwareInfoUpdateTimerTick;
@@ -311,6 +324,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
         await base.OnLoadedAsync();
 
         await notificationService.TryAsync(completionProvider.Setup());
+
+        var gpuInfos = HardwareHelper.IterGpuInfo();
+        GpuInfoCollection = new ObservableCollection<GpuInfo>(gpuInfos);
+        PreferredGpu ??=
+            GpuInfos.FirstOrDefault(
+                gpu => gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
+            ) ?? GpuInfos.FirstOrDefault();
 
         // Start accounts update
         accountsService

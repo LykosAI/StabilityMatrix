@@ -30,6 +30,24 @@
                                  Command="{Binding InstallExtensionCommand}" />-->
         <converters:FileUriConverter x:Key="FileUriConverter" />
 
+        <input:StandardUICommand
+            x:Key="AddInstalledExtensionsToPackCommand"
+            Command="{Binding AddInstalledExtensionToPackCommand}"
+            IconSource="Add"
+            Label="Add" />
+
+        <input:StandardUICommand
+            x:Key="AddExtensionsToPackCommand"
+            Command="{Binding AddExtensionToPackCommand}"
+            IconSource="Add"
+            Label="Add" />
+
+        <input:StandardUICommand
+            x:Key="DeleteExtensionPackCommand"
+            Command="{Binding DeleteExtensionPackCommand}"
+            IconSource="Delete"
+            Label="Delete" />
+
         <DataTemplate x:Key="PackageExtensionTemplate">
             <DataTemplate.DataType>
                 <x:Type x:TypeArguments="extensions:PackageExtension" TypeName="models1:SelectableItem" />
@@ -315,10 +333,30 @@
                             </MultiBinding>
                         </ui:InfoBar.Title>
                         <ui:InfoBar.ActionButton>
-                            <Button
-                                Classes="accent"
-                                Command="{Binding InstallSelectedExtensionsCommand}"
-                                Content="{x:Static lang:Resources.Action_Install}" />
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Button
+                                    Classes="accent"
+                                    Command="{Binding InstallSelectedExtensionsCommand}"
+                                    Content="{x:Static lang:Resources.Action_Install}" />
+
+                                <Button Classes="accent" Content="Save...">
+                                    <Button.Flyout>
+                                        <MenuFlyout>
+                                            <MenuItem Header="Add to Existing Pack" ItemsSource="{Binding ExtensionPacks}">
+                                                <MenuItem.DataTemplates>
+                                                    <DataTemplate DataType="extensions:ExtensionPack">
+                                                        <MenuItem
+                                                            Command="{StaticResource AddExtensionsToPackCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Header="{Binding Name}" />
+                                                    </DataTemplate>
+                                                </MenuItem.DataTemplates>
+                                            </MenuItem>
+                                            <MenuItem Command="{Binding CreateExtensionPackFromAvailableCommand}" Header="New Extension Pack" />
+                                        </MenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
+                            </StackPanel>
                         </ui:InfoBar.ActionButton>
                     </ui:InfoBar>
 
@@ -406,8 +444,17 @@
                                 <Button Classes="accent" Content="Save...">
                                     <Button.Flyout>
                                         <MenuFlyout>
-                                            <MenuItem Header="Add to Existing Pack" />
-                                            <MenuItem Command="{Binding CreateExtensionPackCommand}" Header="New Extension Pack" />
+                                            <MenuItem Header="Add to Existing Pack" ItemsSource="{Binding ExtensionPacks}">
+                                                <MenuItem.DataTemplates>
+                                                    <DataTemplate DataType="extensions:ExtensionPack">
+                                                        <MenuItem
+                                                            Command="{StaticResource AddInstalledExtensionsToPackCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Header="{Binding Name}" />
+                                                    </DataTemplate>
+                                                </MenuItem.DataTemplates>
+                                            </MenuItem>
+                                            <MenuItem Command="{Binding CreateExtensionPackFromInstalledCommand}" Header="New Extension Pack" />
                                         </MenuFlyout>
                                     </Button.Flyout>
                                 </Button>
@@ -450,10 +497,21 @@
                         Background="#22000000"
                         IsVisible="{Binding !AreExtensionPacksLoading}"
                         ItemsSource="{Binding ExtensionPacks}"
-                        SelectedItem="{Binding SelectedExtensionPack}">
+                        SelectedItem="{Binding SelectedExtensionPack}"
+                        SelectionMode="AlwaysSelected">
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="{x:Type extensions:ExtensionPack}">
-                                <TextBlock Text="{Binding Name}" />
+                                <TextBlock Text="{Binding Name}">
+                                    <TextBlock.ContextFlyout>
+                                        <MenuFlyout>
+                                            <MenuItem
+                                                Command="{StaticResource DeleteExtensionPackCommand}"
+                                                CommandParameter="{Binding}"
+                                                Header="Delete"
+                                                Icon="Delete" />
+                                        </MenuFlyout>
+                                    </TextBlock.ContextFlyout>
+                                </TextBlock>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
@@ -465,10 +523,12 @@
                         DefaultLabelPosition="Right"
                         IsVisible="{Binding !AreExtensionPacksLoading}">
                         <ui:CommandBar.PrimaryCommands>
-                            <ui:CommandBarButton IconSource="Download" Label="Install All" />
+                            <ui:CommandBarButton
+                                Command="{Binding InstallExtensionPackCommand}"
+                                IconSource="Download"
+                                Label="Install All" />
                         </ui:CommandBar.PrimaryCommands>
                     </ui:CommandBar>
-
                     <ScrollViewer
                         Grid.Row="1"
                         Grid.RowSpan="2"
@@ -484,6 +544,30 @@
                             </ItemsRepeater.Layout>
                         </ItemsRepeater>
                     </ScrollViewer>
+
+                    <ui:InfoBar
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Margin="0,4"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        HorizontalContentAlignment="Right"
+                        CloseButtonCommand="{Binding ClearSelection}"
+                        IsIconVisible="False"
+                        IsOpen="{Binding !!SelectedExtensionPackExtensions.Count}">
+                        <ui:InfoBar.Title>
+                            <MultiBinding StringFormat="{}{0} Selected">
+                                <Binding Path="SelectedExtensionPackExtensions.Count" />
+                            </MultiBinding>
+                        </ui:InfoBar.Title>
+                        <ui:InfoBar.ActionButton>
+                            <Button
+                                Classes="danger"
+                                Command="{Binding RemoveExtensionFromPackCommand}"
+                                Content="{x:Static lang:Resources.Action_Remove}" />
+                        </ui:InfoBar.ActionButton>
+                    </ui:InfoBar>
+
                 </Grid>
             </TabItem>
         </TabControl.Items>

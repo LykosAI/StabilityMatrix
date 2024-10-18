@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added "Search by Creator" command to Civitai browser context menu
 - Added Beta scheduler to the scheduler selector in Inference
+- Added zipping of log files and "Show Log in Explorer" button on exceptions dialog for easier support
 ### Changed
 - (Internal) Updated to Avalonia 11.1.4
 - Adjusted the Branch/Release toggle during package install flow to be a little more obvious 
@@ -30,6 +31,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Supporters
 #### Visionaries
 - A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
+
+## v2.12.3
+### Fixed
+- Fixed some cases of FileTransferExists error when running re/Forge or Automatic1111
+- Fixed update check not happening on startup for some users
 
 ## v2.12.2
 ### Added

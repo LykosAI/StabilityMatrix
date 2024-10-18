@@ -90,7 +90,8 @@ public class SharedFolders : ISharedFolders
                             destinationDir,
                             sourceDir,
                             overwriteIfHashMatches: true,
-                            overwrite: overwrite
+                            overwrite: overwrite,
+                            deleteSymlinks: true
                         )
                         .ConfigureAwait(false);
                 }

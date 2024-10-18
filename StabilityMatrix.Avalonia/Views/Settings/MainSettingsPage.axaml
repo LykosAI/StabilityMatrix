@@ -770,7 +770,10 @@
                         Content="Exceptions"
                         IconSource="Flag">
                         <ui:SettingsExpanderItem.Footer>
-                            <Button Command="{Binding DebugThrowExceptionCommand}" Content="Unhandled Exception" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Command="{Binding DebugThrowExceptionCommand}" Content="Unhandled Exception" />
+                                <Button Command="{Binding DebugThrowDispatcherExceptionCommand}" Content="Dispatcher Unhandled Exception" />
+                            </StackPanel>
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
 

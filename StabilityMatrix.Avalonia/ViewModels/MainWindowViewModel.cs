@@ -30,6 +30,7 @@ using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
+using StabilityMatrix.Core.Updater;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -46,6 +47,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler;
     private readonly INotificationService notificationService;
     private readonly IAnalyticsHelper analyticsHelper;
+    private readonly IUpdateHelper updateHelper;
     public string Greeting => "Welcome to Avalonia!";
 
     [ObservableProperty]
@@ -86,7 +88,8 @@ public partial class MainWindowViewModel : ViewModelBase
         IModelIndexService modelIndexService,
         Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler,
         INotificationService notificationService,
-        IAnalyticsHelper analyticsHelper
+        IAnalyticsHelper analyticsHelper,
+        IUpdateHelper updateHelper
     )
     {
         this.settingsManager = settingsManager;
@@ -97,6 +100,7 @@ public partial class MainWindowViewModel : ViewModelBase
         this.modelDownloadLinkHandler = modelDownloadLinkHandler;
         this.notificationService = notificationService;
         this.analyticsHelper = analyticsHelper;
+        this.updateHelper = updateHelper;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
     }
@@ -262,6 +266,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
             settingsManager.Transaction(s => s.UpdatingFromVersion = null);
         }
+
+        // Start checking for updates
+        await updateHelper.StartCheckingForUpdates();
 
         // Periodic launch stats
         if (

@@ -207,10 +207,8 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     public override async Task OnLoadedAsync()
     {
         await base.OnLoadedAsync();
-
-        await Refresh();
-
         await LoadExtensionPacksAsync();
+        await Refresh();
     }
 
     public void AddExtensions(
@@ -387,7 +385,9 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         foreach (var extension in SelectedExtensionPack.Extensions)
         {
             var installedExtension = installedExtensionsSource.Items.FirstOrDefault(
-                x => x.Definition == extension.PackageExtension
+                x =>
+                    x.Definition?.Title == extension.PackageExtension.Title
+                    && x.Definition.Reference == extension.PackageExtension.Reference
             );
 
             if (installedExtension != null)
@@ -421,7 +421,9 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             ModificationCompleteMessage = $"Extension Pack {SelectedExtensionPack.Name} installed"
         };
 
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps(steps);
+        await Refresh();
     }
 
     [RelayCommand]
@@ -474,18 +476,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
                 Name = name,
                 PackageType = PackagePair!.InstalledPackage.PackageName,
                 Extensions = SelectedAvailableItems
-                    .Select(
-                        x =>
-                            new SavedPackageExtension
-                            {
-                                PackageExtension = x.Item,
-                                Version = new PackageExtensionVersion
-                                {
-                                    Branch = "idk",
-                                    CommitSha = "???????"
-                                }
-                            }
-                    )
+                    .Select(x => new SavedPackageExtension { PackageExtension = x.Item, Version = null })
                     .ToList()
             };
 
@@ -548,11 +539,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             }
 
             pack.Extensions.Add(
-                new SavedPackageExtension
-                {
-                    PackageExtension = extension.Item,
-                    Version = new PackageExtensionVersion { Branch = "idk", CommitSha = "??????????" }
-                }
+                new SavedPackageExtension { PackageExtension = extension.Item, Version = null }
             );
         }
 
@@ -860,9 +847,16 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         path.WriteAllText(json);
     }
 
-    partial void OnSelectedExtensionPackChanged(ExtensionPack value)
+    partial void OnSelectedExtensionPackChanged(ExtensionPack? value)
     {
-        extensionPackExtensionsSource.Edit(updater => updater.Load(value.Extensions));
+        if (value != null)
+        {
+            extensionPackExtensionsSource.Edit(updater => updater.Load(value.Extensions));
+        }
+        else
+        {
+            extensionPackExtensionsSource.Clear();
+        }
     }
 
     /// <inheritdoc />

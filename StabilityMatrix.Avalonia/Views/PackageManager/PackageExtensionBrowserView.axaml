@@ -501,19 +501,18 @@
                         SelectionMode="AlwaysSelected">
                         <ListBox.ItemTemplate>
                             <DataTemplate DataType="{x:Type extensions:ExtensionPack}">
-                                <TextBlock Text="{Binding Name}">
-                                    <TextBlock.ContextFlyout>
-                                        <MenuFlyout>
-                                            <MenuItem
-                                                Command="{StaticResource DeleteExtensionPackCommand}"
-                                                CommandParameter="{Binding}"
-                                                Header="Delete"
-                                                Icon="Delete" />
-                                        </MenuFlyout>
-                                    </TextBlock.ContextFlyout>
-                                </TextBlock>
+                                <TextBlock Text="{Binding Name}" />
                             </DataTemplate>
                         </ListBox.ItemTemplate>
+                        <ListBox.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuItem
+                                    Command="{StaticResource DeleteExtensionPackCommand}"
+                                    CommandParameter="{Binding SelectedExtensionPack}"
+                                    Header="Delete"
+                                    Icon="Delete" />
+                            </MenuFlyout>
+                        </ListBox.ContextFlyout>
                     </ListBox>
 
                     <ui:CommandBar

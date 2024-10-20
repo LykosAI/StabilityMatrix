@@ -55,20 +55,6 @@ public class SimpleSDXL(
                 Description = "Set the listen interface",
                 Options = { "--listen" }
             },
-            new()
-            {
-                Name = "Auth",
-                Type = LaunchOptionType.String,
-                Description = "Set credentials username/password",
-                Options = { "--auth" }
-            },
-            new()
-            {
-                Name = "No Browser",
-                Type = LaunchOptionType.Bool,
-                Description = "Do not launch in browser",
-                Options = { "--nobrowser" }
-            },
             LaunchOptionDefinition.Extras
         ];
 

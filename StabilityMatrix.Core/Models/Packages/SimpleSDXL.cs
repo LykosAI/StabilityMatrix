@@ -30,6 +30,7 @@ public class SimpleSDXL(
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         [SharedFolderMethod.Symlink, SharedFolderMethod.None];
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
+    public override string MainBranch => "SimpleSDXL";
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [

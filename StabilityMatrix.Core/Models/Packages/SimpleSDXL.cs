@@ -88,6 +88,8 @@ public class SimpleSDXL(
             await using var venvRunner = await SetupVenvPure(installLocation, forceRecreate: true)
                 .ConfigureAwait(false);
 
+            await venvRunner.PipInstall("--upgrade pip", onConsoleOutput).ConfigureAwait(false);
+            await venvRunner.PipInstall("nvidia-pyindex", onConsoleOutput).ConfigureAwait(false);
             progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
             var requirements = new FilePath(installLocation, "requirements_versions.txt");
@@ -95,7 +97,7 @@ public class SimpleSDXL(
                 .WithTorchExtraIndex("cu121")
                 .WithParsedFromRequirementsTxt(
                     await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                    "--extra-index-url.*|--index-url.*"
+                    ""
                 );
 
             if (installedPackage.PipOverrides != null)

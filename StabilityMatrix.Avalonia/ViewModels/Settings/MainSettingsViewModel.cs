@@ -148,6 +148,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool moveFilesOnImport;
 
+    [ObservableProperty]
+    private int maxConcurrentDownloads;
+
     #region System Settings
 
     [ObservableProperty]
@@ -289,6 +292,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.PreferredGpu,
             settings => settings.PreferredGpu,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.MaxConcurrentDownloads,
+            settings => settings.MaxConcurrentDownloads,
             true
         );
 
@@ -437,6 +447,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
     partial void OnRemoveSymlinksOnShutdownChanged(bool value)
     {
         settingsManager.Transaction(s => s.RemoveFolderLinksOnShutdown = value);
+    }
+
+    partial void OnMaxConcurrentDownloadsChanged(int value)
+    {
+        trackedDownloadService.UpdateMaxConcurrentDownloads(value);
     }
 
     public async Task ResetCheckpointCache()
@@ -1036,7 +1051,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             var url = textFields[0].Text;
             var filePath = textFields[1].Text;
             var download = trackedDownloadService.NewDownload(new Uri(url), new FilePath(filePath));
-            download.Start();
+            await trackedDownloadService.TryStartDownload(download);
         }
     }
     #endregion

@@ -371,9 +371,25 @@ public static class DesignData
             ),
         };
 
-        ProgressManagerViewModel.ProgressItems.AddRange(
-            new ProgressItemViewModelBase[]
+        var packageInstall = new PackageInstallProgressItemViewModel(
+            new PackageModificationRunner
             {
+                CurrentProgress = new ProgressReport(0.5f, "Installing package...", "Installing... 50%"),
+                ModificationCompleteMessage = "Package installed successfully"
+            }
+        )
+        {
+            Progress = new ContentDialogProgressViewModelBase
+            {
+                Value = 50,
+                IsIndeterminate = false,
+                Text = "UwU Install",
+                Description = "Installing...",
+            }
+        };
+
+        ProgressManagerViewModel.ProgressItems.AddRange(
+            [
                 new ProgressItemViewModel(
                     new ProgressItem(
                         Guid.NewGuid(),
@@ -384,14 +400,20 @@ public static class DesignData
                 new MockDownloadProgressItemViewModel(
                     "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
                 ),
-                new PackageInstallProgressItemViewModel(
-                    new PackageModificationRunner
-                    {
-                        CurrentProgress = new ProgressReport(0.5f, "Installing package..."),
-                        ModificationCompleteMessage = "Package installed successfully"
-                    }
+                new MockDownloadProgressItemViewModel(
+                    "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
                 )
-            }
+                {
+                    Progress = new ContentDialogProgressViewModelBase
+                    {
+                        Value = 50,
+                        IsIndeterminate = false,
+                        Text = "Waiting on other downloads to finish",
+                        Description = "Waiting on other downloads to finish",
+                    }
+                },
+                packageInstall
+            ]
         );
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();

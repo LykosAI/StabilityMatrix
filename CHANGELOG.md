@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Search by Creator" command to Civitai browser context menu
 - Added Beta scheduler to the scheduler selector in Inference
 - Added zipping of log files and "Show Log in Explorer" button on exceptions dialog for easier support
+- Added max concurrent downloads option & download queueing for most downloads
 ### Changed
 - (Internal) Updated to Avalonia 11.1.4
 - Adjusted the Branch/Release toggle during package install flow to be a little more obvious 
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed repeated nested folders being created in `Models/StableDiffusion` when using Forge in Symlink mode in certain conditions. Existing folders will be repaired to their original structure on launch.
 - Fixed minimize button not working on macOS
 - Fixed InvokeAI model sharing spamming the console with "This may take awhile" in certain conditions
+- Fixed text alignment issues in the Downloads tab for certain long names / progress infos
 ### Supporters
 #### Visionaries
 - A big thank you to our amazing Visionary-tier Patreon supporter, **Waterclouds**! Your continued support is invaluable!

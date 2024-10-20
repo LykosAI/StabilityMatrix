@@ -219,6 +219,8 @@ public class Settings
 
     public GpuInfo? PreferredGpu { get; set; }
 
+    public int MaxConcurrentDownloads { get; set; }
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

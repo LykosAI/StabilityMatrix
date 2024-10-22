@@ -88,6 +88,7 @@ public class SimpleSDXL(
                 .DownloadToFileAsync(wheelUrl, wheelPath, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             await venvRunner.PipInstall($"{wheelPath}", onConsoleOutput).ConfigureAwait(false);
+            await wheelPath.DeleteAsync(cancellationToken).ConfigureAwait(false);
 
             var requirements = new FilePath(installLocation, "requirements_versions.txt");
             var pipArgs = new PipInstallArgs()

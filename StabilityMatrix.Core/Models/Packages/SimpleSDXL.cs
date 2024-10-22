@@ -67,6 +67,8 @@ public class SimpleSDXL(
         CancellationToken cancellationToken = default
     )
     {
+        const string wheelUrl =
+            "https://github.com/Gourieff/Assets/raw/main/Insightface/insightface-0.7.3-cp310-cp310-win_amd64.whl";
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
         if (torchVersion == TorchIndex.Cuda)
@@ -74,9 +76,18 @@ public class SimpleSDXL(
             await using var venvRunner = await SetupVenvPure(installLocation, forceRecreate: true)
                 .ConfigureAwait(false);
 
+            // Get necessary dependencies
             await venvRunner.PipInstall("--upgrade pip", onConsoleOutput).ConfigureAwait(false);
-            await venvRunner.PipInstall("nvidia-pyindex", onConsoleOutput).ConfigureAwait(false);
+            await venvRunner.PipInstall("nvidia-pyindex pygit2", onConsoleOutput).ConfigureAwait(false);
             progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
+            await venvRunner.PipInstall("facexlib cpm_kernels", onConsoleOutput).ConfigureAwait(false);
+
+            // Download and Install pre-built insightface
+            var wheelPath = new FilePath(installLocation, "insightface-0.7.3-cp310-cp310-win_amd64.whl");
+            await downloadService
+                .DownloadToFileAsync(wheelUrl, wheelPath, cancellationToken: cancellationToken)
+                .ConfigureAwait(false);
+            await venvRunner.PipInstall($"{wheelPath}", onConsoleOutput).ConfigureAwait(false);
 
             var requirements = new FilePath(installLocation, "requirements_versions.txt");
             var pipArgs = new PipInstallArgs()

@@ -77,8 +77,7 @@ public class FluxGym(
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
 
-    public override IEnumerable<TorchIndex> AvailableTorchIndices =>
-        new[] { TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices => new[] { TorchIndex.Cuda };
 
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;

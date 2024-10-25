@@ -1,4 +1,4 @@
-﻿using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -34,6 +34,27 @@ public class SimpleSDXL(
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
+            new()
+            {
+                Name = "Preset",
+                Type = LaunchOptionType.Bool,
+                Options =
+                {
+                    "--preset anime",
+                    "--preset realistic",
+                    "--preset Flux",
+                    "--preset Kolors",
+                    "--preset pony_v6"
+                },
+            },
+            new()
+            {
+                Name = "Language",
+                Type = LaunchOptionType.String,
+                Description = "Change the language of the UI",
+                Options = { "--language" },
+                DefaultValue = "en"
+            },
             new()
             {
                 Name = "Port",

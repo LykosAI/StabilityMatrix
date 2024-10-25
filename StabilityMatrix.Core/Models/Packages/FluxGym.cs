@@ -111,7 +111,12 @@ public class FluxGym(
         progress?.Report(
             new ProgressReport(-1f, "Installing sd-scripts requirements", isIndeterminate: true)
         );
-        // @TODO: cd into sd-scripts and run pip install -r requirements.txt
+        var sdsRequirements = new FilePath(installLocation, "sd-scripts", "requirements.txt");
+        var sdsPipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(
+            await sdsRequirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+            "torch"
+        );
+        await venvRunner.PipInstall(sdsPipArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));
         var requirements = new FilePath(installLocation, "requirements.txt");
@@ -143,7 +148,6 @@ public class FluxGym(
     )
     {
         await SetupVenv(installLocation).ConfigureAwait(false);
-
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
             onConsoleOutput,

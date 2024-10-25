@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.13.0-dev.2
 ### Added
+- Added a new "Extension Packs" section to the extension manager, allowing you to create packs for easier installation of multiple extensions at once
 - Added "Search by Creator" command to Civitai browser context menu
 - Added Beta scheduler to the scheduler selector in Inference
 - Added zipping of log files and "Show Log in Explorer" button on exceptions dialog for easier support

@@ -35,6 +35,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages.Extensions;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
@@ -596,6 +597,28 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
 
         ClearSelection();
         extensionPackSource.Remove(pack);
+    }
+
+    [RelayCommand]
+    private async Task OpenExtensionPackFolder()
+    {
+        var extensionPackDir = settingsManager.ExtensionPackDirectory.JoinDir(
+            PackagePair!.InstalledPackage.PackageName
+        );
+        if (!extensionPackDir.Exists)
+        {
+            extensionPackDir.Create();
+        }
+
+        if (SelectedExtensionPack is null || ExtensionPacks.Count <= 0)
+        {
+            await ProcessRunner.OpenFolderBrowser(extensionPackDir);
+        }
+        else
+        {
+            var extensionPackPath = extensionPackDir.JoinFile($"{SelectedExtensionPack.Name}.json");
+            await ProcessRunner.OpenFileBrowser(extensionPackPath);
+        }
     }
 
     [RelayCommand]

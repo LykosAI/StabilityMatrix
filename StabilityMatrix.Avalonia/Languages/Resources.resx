@@ -1275,4 +1275,31 @@
   <data name="Action_ShowLogInFinder" xml:space="preserve">
     <value>Show Log in Finder</value>
   </data>
+  <data name="Label_ExtensionPacks" xml:space="preserve">
+    <value>Extension Packs</value>
+  </data>
+  <data name="Label_NoExtensionPacksFound" xml:space="preserve">
+    <value>No Extension Packs Found</value>
+  </data>
+  <data name="Label_OpenExtensionPacksFolder" xml:space="preserve">
+    <value>Open Extension Packs Folder</value>
+  </data>
+  <data name="Label_InstallExtensionPack" xml:space="preserve">
+    <value>Install Extension Pack</value>
+  </data>
+  <data name="Label_AddToExistingPack" xml:space="preserve">
+    <value>Add to Existing Pack</value>
+  </data>
+  <data name="Label_NewExtensionPack" xml:space="preserve">
+    <value>New Extension Pack</value>
+  </data>
+  <data name="Label_CreateExtensionPackExplanation" xml:space="preserve">
+    <value>To create one, simply select the extensions you want from the 'Available Extensions' or 'Installed Extensions' tab and click 'Save'</value>
+  </data>
+  <data name="Label_ImportExtensionPacksExplanation" xml:space="preserve">
+    <value>Add a .json extension pack file to the ExtensionPacks folder within your Data directory.</value>
+  </data>
+  <data name="Label_OrWithHyphensAround" xml:space="preserve">
+    <value>- or -</value>
+  </data>
 </root>

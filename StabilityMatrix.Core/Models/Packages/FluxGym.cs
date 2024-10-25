@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -150,9 +150,28 @@ public class FluxGym(
     )
     {
         await SetupVenv(installLocation).ConfigureAwait(false);
+
+        void HandleConsoleOutput(ProcessOutput s)
+        {
+            onConsoleOutput?.Invoke(s);
+
+            if (s.Text.Contains("Running on local URL", StringComparison.OrdinalIgnoreCase))
+            {
+                var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
+                var match = regex.Match(s.Text);
+
+                if (match.Success)
+                {
+                    Console.WriteLine($"AAAAAA {match.Value}");
+                    WebUrl = match.Value;
+                }
+                OnStartupComplete(WebUrl);
+            }
+        }
+
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
-            onConsoleOutput,
+            HandleConsoleOutput,
             OnExit
         );
     }

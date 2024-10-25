@@ -1,4 +1,4 @@
-using StabilityMatrix.Core.Attributes;
+﻿using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -97,10 +97,11 @@ public class SimpleSDXL(
             await using var venvRunner = await SetupVenvPure(installLocation, forceRecreate: true)
                 .ConfigureAwait(false);
 
+            progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
+
             // Get necessary dependencies
             await venvRunner.PipInstall("--upgrade pip", onConsoleOutput).ConfigureAwait(false);
             await venvRunner.PipInstall("nvidia-pyindex pygit2", onConsoleOutput).ConfigureAwait(false);
-            progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
             await venvRunner.PipInstall("facexlib cpm_kernels", onConsoleOutput).ConfigureAwait(false);
 
             // Download and Install pre-built insightface
@@ -113,10 +114,13 @@ public class SimpleSDXL(
 
             var requirements = new FilePath(installLocation, "requirements_versions.txt");
             var pipArgs = new PipInstallArgs()
+                .WithTorch("==2.3.1")
+                .WithTorchVision("==0.18.1")
+                .WithTorchAudio("==2.3.1")
                 .WithTorchExtraIndex("cu121")
                 .WithParsedFromRequirementsTxt(
                     await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                    ""
+                    "torch"
                 );
 
             if (installedPackage.PipOverrides != null)

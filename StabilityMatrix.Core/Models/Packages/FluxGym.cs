@@ -65,11 +65,6 @@ public class FluxGym(
                     SourceTypes = [SharedFolderType.VAE],
                     TargetRelativePaths = ["models/vae"],
                     ConfigDocumentPaths = ["path_vae"]
-                },
-                new SharedFolderLayoutRule
-                {
-                    TargetRelativePaths = [OutputFolderName],
-                    ConfigDocumentPaths = ["path_outputs"]
                 }
             ]
         };

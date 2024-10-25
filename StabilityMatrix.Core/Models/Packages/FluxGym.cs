@@ -162,7 +162,6 @@ public class FluxGym(
 
                 if (match.Success)
                 {
-                    Console.WriteLine($"AAAAAA {match.Value}");
                     WebUrl = match.Value;
                 }
                 OnStartupComplete(WebUrl);

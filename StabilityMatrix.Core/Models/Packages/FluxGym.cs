@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -112,10 +112,12 @@ public class FluxGym(
             new ProgressReport(-1f, "Installing sd-scripts requirements", isIndeterminate: true)
         );
         var sdsRequirements = new FilePath(installLocation, "sd-scripts", "requirements.txt");
-        var sdsPipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(
-            await sdsRequirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-            "torch"
-        );
+        var sdsPipArgs = new PipInstallArgs()
+            .WithParsedFromRequirementsTxt(
+                await sdsRequirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+                "torch"
+            )
+            .RemovePipArgKey("-e .");
         await venvRunner.PipInstall(sdsPipArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));

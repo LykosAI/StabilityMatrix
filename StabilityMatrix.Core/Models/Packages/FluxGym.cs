@@ -74,14 +74,11 @@ public class FluxGym(
             ]
         };
 
-    public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
-        new() { [SharedOutputType.Text2Img] = new[] { "outputs" } };
-
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
     public override IEnumerable<TorchIndex> AvailableTorchIndices => new[] { TorchIndex.Cuda };
-
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
-    public override string OutputFolderName => "outputs";
+    public override string OutputFolderName => string.Empty;
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
     public override PackageType PackageType => PackageType.SdTraining;
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;

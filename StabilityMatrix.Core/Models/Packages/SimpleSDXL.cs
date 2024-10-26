@@ -107,7 +107,7 @@ public class SimpleSDXL(
 
             // Download and Install pre-built insightface
             var wheelPath = new FilePath(installLocation, "insightface-0.7.3-cp310-cp310-win_amd64.whl");
-            await downloadService
+            await DownloadService
                 .DownloadToFileAsync(wheelUrl, wheelPath, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             await venvRunner.PipInstall($"{wheelPath}", onConsoleOutput).ConfigureAwait(false);

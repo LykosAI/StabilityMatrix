@@ -1,4 +1,4 @@
-﻿using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -53,6 +53,7 @@ public class SimpleSDXL(
                 Type = LaunchOptionType.String,
                 Description = "Change the language of the UI",
                 Options = { "--language" },
+                InitialValue = "en",
                 DefaultValue = "en"
             },
             new()

@@ -1,4 +1,4 @@
-using StabilityMatrix.Core.Attributes;
+﻿using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -36,6 +36,7 @@ public class SimpleSDXL(
             new()
             {
                 Name = "Preset",
+                Description = "Apply specified UI preset.",
                 Type = LaunchOptionType.Bool,
                 Options =
                 {
@@ -50,10 +51,9 @@ public class SimpleSDXL(
             {
                 Name = "Language",
                 Type = LaunchOptionType.String,
-                Description = "Change the language of the UI",
-                Options = { "--language" },
+                Description = "Translate UI using json files in [language] folder.",
                 InitialValue = "en",
-                DefaultValue = "en"
+                Options = { "--language" }
             },
             new()
             {
@@ -75,6 +75,75 @@ public class SimpleSDXL(
                 Type = LaunchOptionType.String,
                 Description = "Set the listen interface",
                 Options = { "--listen" }
+            },
+            new()
+            {
+                Name = "Disable preset download",
+                Description = "Disables downloading models for presets",
+                DefaultValue = false,
+                Type = LaunchOptionType.Bool,
+                Options = { "--disable-preset-download" }
+            },
+            new()
+            {
+                Name = "Theme",
+                Description = "Launches the UI with light or dark theme",
+                Type = LaunchOptionType.String,
+                DefaultValue = "dark",
+                Options = { "--theme" }
+            },
+            new()
+            {
+                Name = "Disable offload from VRAM",
+                Description =
+                    "Force loading models to vram when the unload can be avoided. Some Mac users may need this.",
+                Type = LaunchOptionType.Bool,
+                InitialValue = Compat.IsMacOS,
+                Options = { "--disable-offload-from-vram" }
+            },
+            new()
+            {
+                Name = "Disable image log",
+                Description = "Prevent writing images and logs to the outputs folder.",
+                Type = LaunchOptionType.Bool,
+                Options = { "--disable-image-log" }
+            },
+            new()
+            {
+                Name = "Disable metadata",
+                Description = "Disables saving metadata to images.",
+                Type = LaunchOptionType.Bool,
+                Options = { "--disable-metadata" }
+            },
+            new()
+            {
+                Name = "Disable enhance output sorting",
+                Description = "Disables enhance output sorting for final image gallery.",
+                Type = LaunchOptionType.Bool,
+                Options = { "--disable-enhance-output-sorting" }
+            },
+            new()
+            {
+                Name = "Enable auto describe image",
+                Description = "Enables automatic description of uov and enhance image when prompt is empty",
+                DefaultValue = true,
+                Type = LaunchOptionType.Bool,
+                Options = { "--enable-auto-describe-image" }
+            },
+            new()
+            {
+                Name = "Always download new models",
+                Description = "Always download newer models.",
+                DefaultValue = false,
+                Type = LaunchOptionType.Bool,
+                Options = { "--always-download-new-model" }
+            },
+            new()
+            {
+                Name = "Disable comfyd",
+                Description = "Disable auto start comfyd server at launch",
+                Type = LaunchOptionType.Bool,
+                Options = { "--disable-comfyd" }
             },
             LaunchOptionDefinition.Extras
         ];

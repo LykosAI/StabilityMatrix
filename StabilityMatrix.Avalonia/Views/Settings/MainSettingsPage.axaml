@@ -376,7 +376,7 @@
             </Grid>
 
             <!--  System Options  -->
-            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
@@ -482,9 +482,39 @@
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
 
-                <!--  App Folders  -->
                 <ui:SettingsExpander
                     Grid.Row="5"
+                    Description="{x:Static lang:Resources.Label_SelectNewDataDirectory_Details}"
+                    IconSource="MoveToFolder">
+                    <ui:SettingsExpander.Header>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="Select new Models Folder" />
+                            <TextBlock FontSize="12" Foreground="{DynamicResource TextFillColorSecondaryBrush}">
+                                <Run Text="{x:Static lang:Resources.Label_CurrentDirectory}" />
+                                <Run Text="{Binding ModelsDirectory}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </ui:SettingsExpander.Header>
+                    <ui:SettingsExpander.Footer>
+                        <Button Command="{Binding PickNewModelsFolder}">
+                            <Grid ColumnDefinitions="Auto, Auto">
+                                <avalonia:Icon
+                                    Grid.Row="0"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Center"
+                                    Value="fa-solid fa-folder-open" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Text="{x:Static lang:Resources.Action_SelectDirectory}" />
+                            </Grid>
+                        </Button>
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+
+                <!--  App Folders  -->
+                <ui:SettingsExpander
+                    Grid.Row="6"
                     Header="{x:Static lang:Resources.Label_AppFolders}"
                     IconSource="FolderLink">
 
@@ -510,7 +540,7 @@
 
                 <!--  System Settings  -->
                 <ui:SettingsExpander
-                    Grid.Row="6"
+                    Grid.Row="7"
                     Header="{x:Static lang:Resources.Label_SystemSettings}"
                     IconSource="Settings">
                     <!--  Windows Long Paths  -->
@@ -538,7 +568,7 @@
                 </ui:SettingsExpander>
 
                 <!--  System Information  -->
-                <ui:SettingsExpander Grid.Row="7" Header="{x:Static lang:Resources.Label_SystemInformation}">
+                <ui:SettingsExpander Grid.Row="8" Header="{x:Static lang:Resources.Label_SystemInformation}">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource
                             FontSize="10"
@@ -740,7 +770,10 @@
                         Content="Exceptions"
                         IconSource="Flag">
                         <ui:SettingsExpanderItem.Footer>
-                            <Button Command="{Binding DebugThrowExceptionCommand}" Content="Unhandled Exception" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Command="{Binding DebugThrowExceptionCommand}" Content="Unhandled Exception" />
+                                <Button Command="{Binding DebugThrowDispatcherExceptionCommand}" Content="Dispatcher Unhandled Exception" />
+                            </StackPanel>
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
 

@@ -31,6 +31,10 @@
 [sdfx]: https://github.com/sdfxai/sdfx
 [fooocus-mashb1t]: https://github.com/mashb1t/Fooocus
 [reforge]: https://github.com/Panchovix/stable-diffusion-webui-reForge
+[simplesdxl]: https://github.com/metercai/SimpleSDXL/
+[fluxgym]: https://github.com/cocktailpeanut/fluxgym
+[cogvideo]: https://github.com/THUDM/CogVideo
+[cogstudio]: https://github.com/pinokiofactory/cogstudio
 
 [civitai]: https://civitai.com/
 [huggingface]: https://huggingface.co/
@@ -47,7 +51,7 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
 ### 🖱️ One click install and update for Stable Diffusion Web UI Packages
 - Supports:
   - [Stable Diffusion WebUI reForge][reforge], [Stable Diffusion WebUI Forge][forge], [Automatic 1111][auto1111], [Automatic 1111 DirectML][auto1111-directml], [SD Web UI-UX][webui-ux], [SD.Next][sdnext]
-  - [Fooocus][fooocus], [Fooocus MRE][fooocus-mre], [Fooocus ControlNet SDXL][fooocus-controlnet], [Ruined Fooocus][ruined-fooocus], [Fooocus - mashb1t's 1-Up Edition][fooocus-mashb1t], [SimpleSDXL](https://github.com/metercai/SimpleSDXL/)
+  - [Fooocus][fooocus], [Fooocus MRE][fooocus-mre], [Fooocus ControlNet SDXL][fooocus-controlnet], [Ruined Fooocus][ruined-fooocus], [Fooocus - mashb1t's 1-Up Edition][fooocus-mashb1t], [SimpleSDXL][simplesdxl]
   - [ComfyUI][comfy]
   - [StableSwarmUI][stable-swarm]
   - [VoltaML][voltaml]
@@ -55,7 +59,8 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
   - [SDFX][sdfx]
   - [Kohya's GUI][kohya-ss]
   - [OneTrainer][onetrainer]
-  - [FluxGym](https://github.com/cocktailpeanut/fluxgym)
+  - [FluxGym][fluxgym]
+  - [CogVideo][cogvideo] via [CogStudio][cogstudio]
 - Manage plugins / extensions for supported packages ([Automatic1111][auto1111], [Comfy UI][comfy], [SD Web UI-UX][webui-ux], and [SD.Next][sdnext])
 - Easily install or update Python dependencies for each package
 - Embedded Git and Python dependencies, with no need for either to be globally installed

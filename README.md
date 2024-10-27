@@ -33,6 +33,8 @@
 [reforge]: https://github.com/Panchovix/stable-diffusion-webui-reForge
 [simplesdxl]: https://github.com/metercai/SimpleSDXL/
 [fluxgym]: https://github.com/cocktailpeanut/fluxgym
+[cogvideo]: https://github.com/THUDM/CogVideo
+[cogstudio]: https://github.com/pinokiofactory/cogstudio
 
 [civitai]: https://civitai.com/
 [huggingface]: https://huggingface.co/
@@ -58,6 +60,7 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
   - [Kohya's GUI][kohya-ss]
   - [OneTrainer][onetrainer]
   - [FluxGym][fluxgym]
+  - [CogVideo][cogvideo] via [CogStudio][cogstudio]
 - Manage plugins / extensions for supported packages ([Automatic1111][auto1111], [Comfy UI][comfy], [SD Web UI-UX][webui-ux], and [SD.Next][sdnext])
 - Easily install or update Python dependencies for each package
 - Embedded Git and Python dependencies, with no need for either to be globally installed

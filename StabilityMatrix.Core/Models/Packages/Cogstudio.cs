@@ -83,7 +83,9 @@ public class Cogstudio(
             .WithTorchExtraIndex("cu121")
             .WithParsedFromRequirementsTxt(
                 await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                excludePattern: Compat.IsWindows ? "torch*|moviepy|SwissArmyTransformer" : "torch*|moviepy"
+                excludePattern: Compat.IsWindows
+                    ? "torch.*|moviepy.*|SwissArmyTransformer.*"
+                    : "torch.*|moviepy.*"
             );
 
         if (installedPackage.PipOverrides != null)

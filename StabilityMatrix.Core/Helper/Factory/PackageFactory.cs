@@ -90,6 +90,8 @@ public class PackageFactory : IPackageFactory
                 => new Mashb1tFooocus(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             "reforge" => new Reforge(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             "FluxGym" => new FluxGym(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "SimpleSDXL"
+                => new SimpleSDXL(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage))
         };
     }

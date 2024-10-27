@@ -20,9 +20,11 @@ public class Cogstudio(
     : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper),
         ISharedFolderLayoutPackage
 {
-    public override string Name => "CogVideo";
+    public override string Name => "Cogstudio";
     public override string DisplayName { get; set; } = "Cogstudio";
-    public override string Author => "THUDM";
+    public override string RepositoryName => "CogVideo";
+    public override string RepositoryAuthor => "THUDM";
+    public override string Author => "pinokiofactory";
     public override string Blurb =>
         "An advanced gradio web ui for generating and editing videos with CogVideo.";
     public override string LicenseType => "Apache-2.0";
@@ -30,9 +32,7 @@ public class Cogstudio(
     public override string LaunchCommand => "inference/gradio_composite_demo/cogstudio.py";
     public override Uri PreviewImageUri =>
         new("https://raw.githubusercontent.com/pinokiofactory/cogstudio/main/img2vid.gif");
-
     public override List<LaunchOptionDefinition> LaunchOptions => new() { LaunchOptionDefinition.Extras };
-
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.None };
@@ -41,7 +41,6 @@ public class Cogstudio(
     public virtual SharedFolderLayout SharedFolderLayout => new();
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Text2Vid] = new[] { "inference/gradio_composite_demo/output" } };
-
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         new[] { TorchIndex.Cpu, TorchIndex.Cuda };
     public override string MainBranch => "main";
@@ -84,7 +83,7 @@ public class Cogstudio(
             .WithTorchExtraIndex("cu121")
             .WithParsedFromRequirementsTxt(
                 await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                Compat.IsWindows ? "torch*|moviepy|SwissArmyTransformer" : "torch*|moviepy"
+                excludePattern: Compat.IsWindows ? "torch*|moviepy|SwissArmyTransformer" : "torch*|moviepy"
             );
 
         if (installedPackage.PipOverrides != null)

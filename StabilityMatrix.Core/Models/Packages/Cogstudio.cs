@@ -40,12 +40,12 @@ public class Cogstudio(
         ((ISharedFolderLayoutPackage)this).LegacySharedFolders;
     public virtual SharedFolderLayout SharedFolderLayout => new();
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
-        new() { [SharedOutputType.Text2Vid] = new[] { "inference/gradio_composite_demo/output" } };
+        new() { [SharedOutputType.Text2Vid] = new[] { "output" } };
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         new[] { TorchIndex.Cpu, TorchIndex.Cuda };
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
-    public override string OutputFolderName => "inference/gradio_composite_demo/output";
+    public override string OutputFolderName => "output";
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
 
     public override async Task InstallPackage(

@@ -39,7 +39,7 @@ public class FluxGym(
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        new[] { SharedFolderMethod.Symlink, SharedFolderMethod.Configuration, SharedFolderMethod.None };
+        new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         ((ISharedFolderLayoutPackage)this).LegacySharedFolders;
@@ -47,7 +47,6 @@ public class FluxGym(
     public virtual SharedFolderLayout SharedFolderLayout =>
         new()
         {
-            RelativeConfigPath = "config.txt",
             Rules =
             [
                 new SharedFolderLayoutRule
@@ -64,7 +63,6 @@ public class FluxGym(
                 {
                     SourceTypes = [SharedFolderType.VAE],
                     TargetRelativePaths = ["models/vae"],
-                    ConfigDocumentPaths = ["path_vae"]
                 }
             ]
         };

@@ -38,7 +38,7 @@ public class Cogstudio(
         new[] { SharedFolderMethod.None };
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         ((ISharedFolderLayoutPackage)this).LegacySharedFolders;
-    public virtual SharedFolderLayout SharedFolderLayout => new() { };
+    public virtual SharedFolderLayout SharedFolderLayout => new();
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Text2Vid] = new[] { "inference/gradio_composite_demo/output" } };
 
@@ -92,6 +92,7 @@ public class Cogstudio(
             pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
         }
 
+        // SwissArmyTransformer is not available on Windows and DeepSpeed needs prebuilt wheels
         if (Compat.IsWindows)
         {
             await venvRunner

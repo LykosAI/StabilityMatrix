@@ -36,7 +36,7 @@ public class FluxGym(
 
     public override List<LaunchOptionDefinition> LaunchOptions => [LaunchOptionDefinition.Extras];
 
-    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
+    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };

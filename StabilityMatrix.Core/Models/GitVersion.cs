@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
@@ -6,6 +7,7 @@ namespace StabilityMatrix.Core.Models;
 /// <summary>
 /// Union of either Tag or Branch + CommitSha.
 /// </summary>
+[Localizable(false)]
 public record GitVersion : IFormattable, IUtf8SpanParsable<GitVersion>
 {
     public string? Tag { get; init; }

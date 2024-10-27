@@ -14,7 +14,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added max concurrent downloads option & download queueing for most downloads
 ### Changed
 - (Internal) Updated to Avalonia 11.1.4
-- Adjusted the Branch/Release toggle during package install flow to be a little more obvious 
+- Adjusted the Branch/Release toggle during package install flow to be a little more obvious
+- Updated the Dock library used for Inference - fixes some weirdness with resizing / rearranging panels
 ### Fixed
 - Fixed ComfyUI NF4 extension not installing properly when prompted in Inference
 - Fixed [#932](https://github.com/LykosAI/StabilityMatrix/issues/932), [#935](https://github.com/LykosAI/StabilityMatrix/issues/935), [#939](https://github.com/LykosAI/StabilityMatrix/issues/939) - InvokeAI failing to update

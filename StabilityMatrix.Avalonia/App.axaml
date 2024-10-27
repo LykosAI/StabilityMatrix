@@ -1,99 +1,101 @@
-<Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="StabilityMatrix.Avalonia.App"
-             xmlns:local="using:StabilityMatrix.Avalonia"
-             xmlns:idcr="using:Dock.Avalonia.Controls.Recycling"
-             xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
-             xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
-             Name="Stability Matrix"
-             RequestedThemeVariant="Dark">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+﻿<Application
+    x:Class="StabilityMatrix.Avalonia.App"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+    xmlns:local="using:StabilityMatrix.Avalonia"
+    xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
+    Name="Stability Matrix"
+    RequestedThemeVariant="Dark">
+    <!--  "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options.  -->
 
     <Application.DataTemplates>
-        <local:ViewLocator/>
+        <local:ViewLocator />
     </Application.DataTemplates>
-             
-     <Application.Resources>
-         <ResourceDictionary>
-             <ResourceDictionary.MergedDictionaries>
-                 <ResourceInclude Source="Styles/ThemeColors.axaml"/>
-                 <ResourceInclude Source="Styles/ThemeMaterials.axaml"/>
-                 <ResourceInclude Source="Styles/Card.axaml"/>
-                 <ResourceInclude Source="Controls/CodeCompletion/CompletionListThemes.axaml"/>
-                 <ResourceInclude Source="Styles/ContextMenuStyles.axaml"/>
-                 <ResourceInclude Source="Controls/EditorFlyouts.axaml"/>
-                 <ResourceInclude Source="Controls/Scroll/BetterScrollViewer.axaml"/>
-                 <ResourceInclude Source="Styles/ControlThemes/HyperlinkIconButtonStyles.axaml"/>
-                 <ResourceInclude Source="Styles/ControlThemes/ListBoxStyles.axaml"/>
-                 <ResourceInclude Source="Styles/ControlThemes/BetterComboBoxStyles.axaml"/>
-                 <ResourceInclude Source="Styles/ListBoxStyles.axaml"/>
-                 <ResourceInclude Source="Styles/FAComboBoxStyles.axaml"/>
-                 <ResourceInclude Source="Controls/Inference/ImageFolderCard.axaml"/>
-                 <ResourceInclude Source="Controls/VendorLabs/Themes/BetterAsyncImage.axaml"/>
-             </ResourceDictionary.MergedDictionaries>
-             
-             <idcr:ControlRecycling x:Key="ControlRecyclingKey" />
-             <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
-             
-             <SolidColorBrush x:Key="ToolTipBackground" Color="#1E1F22"/>
-             <SolidColorBrush x:Key="ToolTipForeground" Color="#9FBDC3"/>
-             <FontFamily x:Key="NotoSansJP">avares://StabilityMatrix.Avalonia/Assets/Fonts/NotoSansJP#Noto Sans JP</FontFamily>
-         </ResourceDictionary>
-     </Application.Resources>
-  
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="Styles/ThemeColors.axaml" />
+                <ResourceInclude Source="Styles/ThemeMaterials.axaml" />
+                <ResourceInclude Source="Styles/Card.axaml" />
+                <ResourceInclude Source="Controls/CodeCompletion/CompletionListThemes.axaml" />
+                <ResourceInclude Source="Styles/ContextMenuStyles.axaml" />
+                <ResourceInclude Source="Controls/EditorFlyouts.axaml" />
+                <ResourceInclude Source="Controls/Scroll/BetterScrollViewer.axaml" />
+                <ResourceInclude Source="Styles/ControlThemes/HyperlinkIconButtonStyles.axaml" />
+                <ResourceInclude Source="Styles/ControlThemes/ListBoxStyles.axaml" />
+                <ResourceInclude Source="Styles/ControlThemes/BetterComboBoxStyles.axaml" />
+                <ResourceInclude Source="Styles/ListBoxStyles.axaml" />
+                <ResourceInclude Source="Styles/FAComboBoxStyles.axaml" />
+                <ResourceInclude Source="Controls/Inference/ImageFolderCard.axaml" />
+                <ResourceInclude Source="Controls/VendorLabs/Themes/BetterAsyncImage.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <ControlRecycling x:Key="ControlRecyclingKey" />
+            <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
+
+            <SolidColorBrush x:Key="ToolTipBackground" Color="#1E1F22" />
+            <SolidColorBrush x:Key="ToolTipForeground" Color="#9FBDC3" />
+            <FontFamily x:Key="NotoSansJP">avares://StabilityMatrix.Avalonia/Assets/Fonts/NotoSansJP#Noto Sans JP</FontFamily>
+        </ResourceDictionary>
+    </Application.Resources>
+
     <Application.Styles>
-        <styling:FluentAvaloniaTheme PreferUserAccentColor="True" UseSystemFontOnWindows="True"
-                                     TextVerticalAlignmentOverrideBehavior="Disabled"/>
+        <styling:FluentAvaloniaTheme
+            PreferUserAccentColor="True"
+            TextVerticalAlignmentOverrideBehavior="Disabled"
+            UseSystemFontOnWindows="True" />
         <StyleInclude Source="avares://Dock.Avalonia/Themes/DockSimpleTheme.axaml" />
-        <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml"/>
+        <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
         <StyleInclude Source="avares://AsyncImageLoader.Avalonia/AdvancedImage.axaml" />
         <StyleInclude Source="avares://Avalonia.Xaml.Interactions.Draggable/Styles.axaml" />
         <StyleInclude Source="avares://FluentAvalonia.BreadcrumbBar/Styling/Styles.axaml" />
-        <StyleInclude Source="Styles/ProgressRing.axaml"/>
-        <StyleInclude Source="Styles/ButtonStyles.axaml"/>
-        <StyleInclude Source="Styles/SplitButtonStyles.axaml"/>
-        <StyleInclude Source="Styles/ToggleButtonStyles.axaml"/>
-        <StyleInclude Source="Styles/DockStyles.axaml"/>
-        <StyleInclude Source="Styles/BorderStyles.axaml"/>
-        <StyleInclude Source="Styles/TextBoxStyles.axaml"/>
-        <StyleInclude Source="Styles/CommandBarButtonStyles.axaml"/>
-        <StyleInclude Source="Controls/AdvancedImageBox.axaml"/>
-        <StyleInclude Source="Controls/FrameCarousel.axaml"/>
-        <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml"/>
-        <StyleInclude Source="Controls/Paginator.axaml"/>
-        <StyleInclude Source="Controls/SelectableImageCard/SelectableImageButton.axaml"/>
-        <StyleInclude Source="Controls/SettingsAccountLinkExpander.axaml"/>
-        <StyleInclude Source="Controls/StarsRating.axaml"/>
-        <StyleInclude Source="Controls/VideoGenerationSettingsCard.axaml"/>
-        <StyleInclude Source="Controls/VideoOutputSettingsCard.axaml"/>
-        <StyleInclude Source="Controls/TreeFileExplorer.axaml"/>
-        <StyleInclude Source="Controls/Inference/StackCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/StackEditableCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/StackExpander.axaml"/>
-        <StyleInclude Source="Controls/Inference/SeedCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/SamplerCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/ImageGalleryCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/PromptCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/UpscalerCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/ModelCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/FaceDetailerCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/BatchSizeCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/SelectImageCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/SharpenCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/FreeUCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/ControlNetCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/PromptExpansionCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/ExtraNetworkCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/LayerDiffuseCard.axaml"/>
-        <StyleInclude Source="Controls/Inference/UnetModelCard.axaml"/>
-        <StyleInclude Source="Controls/Painting/PaintCanvas.axaml"/>
-        <labs:ControlThemes/>
-        
+        <StyleInclude Source="Styles/ProgressRing.axaml" />
+        <StyleInclude Source="Styles/ButtonStyles.axaml" />
+        <StyleInclude Source="Styles/SplitButtonStyles.axaml" />
+        <StyleInclude Source="Styles/ToggleButtonStyles.axaml" />
+        <StyleInclude Source="Styles/DockStyles.axaml" />
+        <StyleInclude Source="Styles/BorderStyles.axaml" />
+        <StyleInclude Source="Styles/TextBoxStyles.axaml" />
+        <StyleInclude Source="Styles/CommandBarButtonStyles.axaml" />
+        <StyleInclude Source="Controls/AdvancedImageBox.axaml" />
+        <StyleInclude Source="Controls/FrameCarousel.axaml" />
+        <StyleInclude Source="Controls/CodeCompletion/CompletionWindow.axaml" />
+        <StyleInclude Source="Controls/Paginator.axaml" />
+        <StyleInclude Source="Controls/SelectableImageCard/SelectableImageButton.axaml" />
+        <StyleInclude Source="Controls/SettingsAccountLinkExpander.axaml" />
+        <StyleInclude Source="Controls/StarsRating.axaml" />
+        <StyleInclude Source="Controls/VideoGenerationSettingsCard.axaml" />
+        <StyleInclude Source="Controls/VideoOutputSettingsCard.axaml" />
+        <StyleInclude Source="Controls/TreeFileExplorer.axaml" />
+        <StyleInclude Source="Controls/Inference/StackCard.axaml" />
+        <StyleInclude Source="Controls/Inference/StackEditableCard.axaml" />
+        <StyleInclude Source="Controls/Inference/StackExpander.axaml" />
+        <StyleInclude Source="Controls/Inference/SeedCard.axaml" />
+        <StyleInclude Source="Controls/Inference/SamplerCard.axaml" />
+        <StyleInclude Source="Controls/Inference/ImageGalleryCard.axaml" />
+        <StyleInclude Source="Controls/Inference/PromptCard.axaml" />
+        <StyleInclude Source="Controls/Inference/UpscalerCard.axaml" />
+        <StyleInclude Source="Controls/Inference/ModelCard.axaml" />
+        <StyleInclude Source="Controls/Inference/FaceDetailerCard.axaml" />
+        <StyleInclude Source="Controls/Inference/BatchSizeCard.axaml" />
+        <StyleInclude Source="Controls/Inference/SelectImageCard.axaml" />
+        <StyleInclude Source="Controls/Inference/SharpenCard.axaml" />
+        <StyleInclude Source="Controls/Inference/FreeUCard.axaml" />
+        <StyleInclude Source="Controls/Inference/ControlNetCard.axaml" />
+        <StyleInclude Source="Controls/Inference/PromptExpansionCard.axaml" />
+        <StyleInclude Source="Controls/Inference/ExtraNetworkCard.axaml" />
+        <StyleInclude Source="Controls/Inference/LayerDiffuseCard.axaml" />
+        <StyleInclude Source="Controls/Inference/UnetModelCard.axaml" />
+        <StyleInclude Source="Controls/Painting/PaintCanvas.axaml" />
+        <labs:ControlThemes />
+
         <Style Selector="DockControl">
-            <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
+            <Setter Property="(ControlRecyclingDataTemplate.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
         </Style>
         <Style Selector="ScrollViewer">
-            <Setter Property="BringIntoViewOnFocusChange" Value="False"/>
+            <Setter Property="BringIntoViewOnFocusChange" Value="False" />
         </Style>
     </Application.Styles>
 </Application>

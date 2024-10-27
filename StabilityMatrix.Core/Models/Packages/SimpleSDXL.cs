@@ -1,6 +1,7 @@
 ﻿using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -27,9 +28,11 @@ public class SimpleSDXL(
         new("https://github.com/user-attachments/assets/98715a4d-9f4a-4846-ae62-eb8d69793d31");
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        [SharedFolderMethod.Symlink, SharedFolderMethod.None];
-    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
+        [SharedFolderMethod.Configuration, SharedFolderMethod.Symlink, SharedFolderMethod.None];
+    public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
     public override string MainBranch => "SimpleSDXL";
+    public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda];
+    public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
@@ -157,60 +160,47 @@ public class SimpleSDXL(
         CancellationToken cancellationToken = default
     )
     {
-        const string wheelUrl =
-            "https://github.com/Gourieff/Assets/raw/main/Insightface/insightface-0.7.3-cp310-cp310-win_amd64.whl";
-        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        await using var venvRunner = await SetupVenvPure(installLocation, forceRecreate: true)
+            .ConfigureAwait(false);
 
-        if (torchVersion == TorchIndex.Cuda)
+        progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
+        // Get necessary dependencies
+        await venvRunner.PipInstall("--upgrade pip", onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall("nvidia-pyindex pygit2", onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall("facexlib cpm_kernels", onConsoleOutput).ConfigureAwait(false);
+
+        if (Compat.IsWindows)
         {
-            await using var venvRunner = await SetupVenvPure(installLocation, forceRecreate: true)
-                .ConfigureAwait(false);
-
-            progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
-
-            // Get necessary dependencies
-            await venvRunner.PipInstall("--upgrade pip", onConsoleOutput).ConfigureAwait(false);
-            await venvRunner.PipInstall("nvidia-pyindex pygit2", onConsoleOutput).ConfigureAwait(false);
-            await venvRunner.PipInstall("facexlib cpm_kernels", onConsoleOutput).ConfigureAwait(false);
-
             // Download and Install pre-built insightface
+            const string wheelUrl =
+                "https://github.com/Gourieff/Assets/raw/main/Insightface/insightface-0.7.3-cp310-cp310-win_amd64.whl";
+
             var wheelPath = new FilePath(installLocation, "insightface-0.7.3-cp310-cp310-win_amd64.whl");
             await DownloadService
                 .DownloadToFileAsync(wheelUrl, wheelPath, cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
             await venvRunner.PipInstall($"{wheelPath}", onConsoleOutput).ConfigureAwait(false);
             await wheelPath.DeleteAsync(cancellationToken).ConfigureAwait(false);
-
-            var requirements = new FilePath(installLocation, "requirements_versions.txt");
-            var pipArgs = new PipInstallArgs()
-                .WithTorch("==2.3.1")
-                .WithTorchVision("==0.18.1")
-                .WithTorchAudio("==2.3.1")
-                .WithTorchExtraIndex("cu121")
-                .WithParsedFromRequirementsTxt(
-                    await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                    "torch"
-                );
-
-            if (installedPackage.PipOverrides != null)
-            {
-                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-            }
-
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         }
-        else
+
+        var requirements = new FilePath(installLocation, "requirements_versions.txt");
+
+        var pipArgs = new PipInstallArgs()
+            .WithTorch("==2.3.1")
+            .WithTorchVision("==0.18.1")
+            .WithTorchAudio("==2.3.1")
+            .WithTorchExtraIndex("cu121")
+            .WithParsedFromRequirementsTxt(
+                await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+                "torch"
+            );
+
+        if (installedPackage.PipOverrides != null)
         {
-            await base.InstallPackage(
-                installLocation,
-                installedPackage,
-                options,
-                progress,
-                onConsoleOutput,
-                cancellationToken
-            )
-                .ConfigureAwait(false);
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
         }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
         // Create output folder since it's not created by default
         var outputFolder = new DirectoryPath(installLocation, OutputFolderName);

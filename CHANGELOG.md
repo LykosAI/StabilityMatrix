@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#932](https://github.com/LykosAI/StabilityMatrix/issues/932), [#935](https://github.com/LykosAI/StabilityMatrix/issues/935), [#939](https://github.com/LykosAI/StabilityMatrix/issues/939) - InvokeAI failing to update
 - Fixed repeated nested folders being created in `Models/StableDiffusion` when using Forge in Symlink mode in certain conditions. Existing folders will be repaired to their original structure on launch.
 - Fixed minimize button not working on macOS
-- Fixed InvokeAI model sharing spamming the console with "This may take awhile" in certain conditions
+- Fixed InvokeAI model sharing spamming the console with "This may take a while" in certain conditions
 ### Supporters
 #### Visionaries
 - A big thank you to our amazing Visionary-tier Patreon supporter, **Waterclouds**! Your continued support is invaluable!
@@ -34,9 +34,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
 
 ## v2.12.3
+### Added
+- Added new package - [SimpleSDXL](https://github.com/metercai/SimpleSDXL) - many thanks to @NullDev for the contribution!
+- Added new package - [FluxGym](https://github.com/cocktailpeanut/fluxgym) - many thanks to @NullDev for the contribution!
 ### Fixed
 - Fixed some cases of FileTransferExists error when running re/Forge or Automatic1111
 - Fixed update check not happening on startup for some users
+- Fixed error when installing Automatic1111 on macOS
 
 ## v2.12.2
 ### Added

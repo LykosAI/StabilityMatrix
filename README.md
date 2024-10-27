@@ -55,6 +55,7 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
   - [SDFX][sdfx]
   - [Kohya's GUI][kohya-ss]
   - [OneTrainer][onetrainer]
+  - [FluxGym](https://github.com/cocktailpeanut/fluxgym)
 - Manage plugins / extensions for supported packages ([Automatic1111][auto1111], [Comfy UI][comfy], [SD Web UI-UX][webui-ux], and [SD.Next][sdnext])
 - Easily install or update Python dependencies for each package
 - Embedded Git and Python dependencies, with no need for either to be globally installed

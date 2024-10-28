@@ -1040,6 +1040,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugShowConfirmDeleteDialogCommand),
             new CommandItem(DebugShowModelMetadataEditorDialogCommand),
             new CommandItem(DebugShowGitVersionSelectorDialogCommand),
+            new CommandItem(DebugShowMockGitVersionSelectorDialogCommand),
         ];
 
     [RelayCommand]

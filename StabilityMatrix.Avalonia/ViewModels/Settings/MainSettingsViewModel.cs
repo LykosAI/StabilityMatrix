@@ -45,6 +45,7 @@ using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Git;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
@@ -1043,6 +1044,24 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     [RelayCommand]
     private async Task DebugShowGitVersionSelectorDialog()
+    {
+        var vm = new GitVersionSelectorViewModel
+        {
+            GitVersionProvider = new CachedCommandGitVersionProvider(
+                "https://github.com/ltdrdata/ComfyUI-Manager",
+                prerequisiteHelper
+            )
+        };
+        var dialog = vm.GetDialog();
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            notificationService.ShowPersistent("Selected version", $"{vm.SelectedGitVersion}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task DebugShowMockGitVersionSelectorDialog()
     {
         var vm = new GitVersionSelectorViewModel { GitVersionProvider = new MockGitVersionProvider() };
         var dialog = vm.GetDialog();

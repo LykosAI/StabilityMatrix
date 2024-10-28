@@ -217,7 +217,7 @@ public class A3WebUI(
             TorchIndex.Mps
                 => new PipInstallArgs()
                     .WithTorch("==2.3.1")
-                    .WithTorchVision("==2.3.1")
+                    .WithTorchVision("==0.18.1")
                     .WithParsedFromRequirementsTxt(
                         await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
                         excludePattern: "torch"

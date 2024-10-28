@@ -28,64 +28,74 @@
         <Setter Property="Margin" Value="8" />
         <Setter Property="Template">
             <ControlTemplate>
-                <TabControl
-                    Margin="0,-6,0,0"
-                    VerticalAlignment="{TemplateBinding VerticalAlignment}"
-                    SelectedIndex="{TemplateBinding SelectedVersionType,
-                                                    Mode=TwoWay,
-                                                    Converter={StaticResource EnumToIntConverter}}">
-                    <TabControl.Styles>
-                        <Style Selector="TabItem">
-                            <Setter Property="Padding" Value="4,4" />
-                            <Setter Property="FontSize" Value="{TemplateBinding FontSize}" />
-                        </Style>
-                    </TabControl.Styles>
+                <Grid>
+                    <ui:ProgressRing HorizontalAlignment="Right" VerticalAlignment="Top">
+                        <ui:ProgressRing.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                <Binding Path="PopulateBranchesCommand.IsRunning" RelativeSource="{RelativeSource TemplatedParent}" />
+                                <Binding Path="PopulateCommitsForCurrentBranchCommand.IsRunning" RelativeSource="{RelativeSource TemplatedParent}" />
+                                <Binding Path="PopulateTagsCommand.IsRunning" RelativeSource="{RelativeSource TemplatedParent}" />
+                            </MultiBinding>
+                        </ui:ProgressRing.IsVisible>
+                    </ui:ProgressRing>
+                    <TabControl
+                        Margin="0,-6,0,0"
+                        VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                        SelectedIndex="{TemplateBinding SelectedVersionType,
+                                                        Mode=TwoWay,
+                                                        Converter={StaticResource EnumToIntConverter}}">
+                        <TabControl.Styles>
+                            <Style Selector="TabItem">
+                                <Setter Property="Padding" Value="4,4" />
+                                <Setter Property="FontSize" Value="{TemplateBinding FontSize}" />
+                            </Style>
+                        </TabControl.Styles>
 
-                    <!--  Branches Tab  -->
-                    <TabItem Header="Branches">
-                        <sg:SpacedGrid
-                            Margin="0,4,0,0"
-                            ColumnDefinitions="0.4*,4,*"
-                            RowDefinitions="Auto,*"
-                            RowSpacing="8">
-                            <TextBox
-                                Grid.Row="0"
-                                Grid.Column="0"
-                                Text="{TemplateBinding SelectedBranch,
-                                                       Mode=TwoWay}"
-                                UseFloatingWatermark="True"
-                                Watermark="Branch" />
-                            <ScrollViewer
-                                Grid.Row="1"
-                                Grid.Column="0"
-                                VerticalScrollBarVisibility="Visible">
+                        <!--  Branches Tab  -->
+                        <TabItem Header="Branches">
+                            <sg:SpacedGrid
+                                Margin="0,4,0,0"
+                                ColumnDefinitions="0.4*,4,*"
+                                RowDefinitions="Auto,*"
+                                RowSpacing="8">
+                                <TextBox
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Text="{TemplateBinding SelectedBranch,
+                                                           Mode=TwoWay}"
+                                    UseFloatingWatermark="True"
+                                    Watermark="Branch" />
+                                <ScrollViewer
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    VerticalScrollBarVisibility="Visible">
+                                    <ListBox
+                                        AutoScrollToSelectedItem="True"
+                                        ItemsSource="{TemplateBinding BranchSource}"
+                                        SelectedItem="{TemplateBinding SelectedBranch,
+                                                                       Mode=TwoWay}"
+                                        SelectionMode="Single" />
+                                </ScrollViewer>
+                                <GridSplitter
+                                    Grid.Row="0"
+                                    Grid.RowSpan="2"
+                                    Grid.Column="1" />
+                                <TextBox
+                                    Grid.Row="0"
+                                    Grid.Column="2"
+                                    Text="{TemplateBinding SelectedCommit,
+                                                           Mode=TwoWay}"
+                                    UseFloatingWatermark="True"
+                                    Watermark="Commit" />
                                 <ListBox
+                                    Grid.Row="1"
+                                    Grid.Column="2"
                                     AutoScrollToSelectedItem="True"
-                                    ItemsSource="{TemplateBinding BranchSource}"
-                                    SelectedItem="{TemplateBinding SelectedBranch,
+                                    ItemsSource="{TemplateBinding CommitSource}"
+                                    SelectedItem="{TemplateBinding SelectedCommit,
                                                                    Mode=TwoWay}"
                                     SelectionMode="Single" />
-                            </ScrollViewer>
-                            <GridSplitter
-                                Grid.Row="0"
-                                Grid.RowSpan="2"
-                                Grid.Column="1" />
-                            <TextBox
-                                Grid.Row="0"
-                                Grid.Column="2"
-                                Text="{TemplateBinding SelectedCommit,
-                                                       Mode=TwoWay}"
-                                UseFloatingWatermark="True"
-                                Watermark="Commit" />
-                            <ListBox
-                                Grid.Row="1"
-                                Grid.Column="2"
-                                AutoScrollToSelectedItem="True"
-                                ItemsSource="{TemplateBinding CommitSource}"
-                                SelectedItem="{TemplateBinding SelectedCommit,
-                                                               Mode=TwoWay}"
-                                SelectionMode="Single" />
-                            <!--<ScrollViewer
+                                <!--<ScrollViewer
                                 Grid.Row="1"
                                 Grid.Column="2"
                                 VerticalScrollBarVisibility="Visible">
@@ -94,37 +104,39 @@
                                     SelectedItem="{TemplateBinding SelectedCommit, Mode=TwoWay}"
                                     SelectionMode="Single" AutoScrollToSelectedItem="True" />
                             </ScrollViewer>-->
-                        </sg:SpacedGrid>
-                    </TabItem>
+                            </sg:SpacedGrid>
+                        </TabItem>
 
-                    <!--  Tags Tab  -->
-                    <TabItem Header="Tags">
-                        <sg:SpacedGrid
-                            Margin="0,4,0,0"
-                            ColumnDefinitions="*"
-                            RowDefinitions="Auto,*"
-                            RowSpacing="8">
-                            <TextBox
-                                Grid.Row="0"
-                                Grid.Column="0"
-                                Text="{TemplateBinding SelectedTag,
-                                                       Mode=TwoWay}"
-                                UseFloatingWatermark="True"
-                                Watermark="Tag" />
-                            <ScrollViewer
-                                Grid.Row="1"
-                                Grid.Column="0"
-                                VerticalScrollBarVisibility="Visible">
-                                <ListBox
-                                    AutoScrollToSelectedItem="True"
-                                    ItemsSource="{TemplateBinding TagSource}"
-                                    SelectedItem="{TemplateBinding SelectedTag,
-                                                                   Mode=TwoWay}"
-                                    SelectionMode="AlwaysSelected" />
-                            </ScrollViewer>
-                        </sg:SpacedGrid>
-                    </TabItem>
-                </TabControl>
+                        <!--  Tags Tab  -->
+                        <TabItem Header="Tags">
+                            <sg:SpacedGrid
+                                Margin="0,4,0,0"
+                                ColumnDefinitions="*"
+                                RowDefinitions="Auto,*"
+                                RowSpacing="8">
+                                <TextBox
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Text="{TemplateBinding SelectedTag,
+                                                           Mode=TwoWay}"
+                                    UseFloatingWatermark="True"
+                                    Watermark="Tag" />
+                                <ScrollViewer
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    VerticalScrollBarVisibility="Visible">
+                                    <ListBox
+                                        AutoScrollToSelectedItem="True"
+                                        ItemsSource="{TemplateBinding TagSource}"
+                                        SelectedItem="{TemplateBinding SelectedTag,
+                                                                       Mode=TwoWay}"
+                                        SelectionMode="AlwaysSelected" />
+                                </ScrollViewer>
+                            </sg:SpacedGrid>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+
             </ControlTemplate>
         </Setter>
     </Style>

@@ -4,11 +4,11 @@ using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Logging;
+using CommunityToolkit.Mvvm.Input;
 using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Controls.Models;
 using StabilityMatrix.Core.Git;
@@ -155,20 +155,44 @@ public partial class GitVersionSelector : TemplatedControl
         set => SetValue(SelectedVersionTypeProperty, value);
     }
 
+    public static readonly DirectProperty<
+        GitVersionSelector,
+        IAsyncRelayCommand
+    > PopulateBranchesCommandProperty = AvaloniaProperty.RegisterDirect<
+        GitVersionSelector,
+        IAsyncRelayCommand
+    >(nameof(PopulateBranchesCommand), o => o.PopulateBranchesCommand);
+
+    public static readonly DirectProperty<
+        GitVersionSelector,
+        IAsyncRelayCommand
+    > PopulateCommitsForCurrentBranchCommandProperty = AvaloniaProperty.RegisterDirect<
+        GitVersionSelector,
+        IAsyncRelayCommand
+    >(nameof(PopulateCommitsForCurrentBranchCommand), o => o.PopulateCommitsForCurrentBranchCommand);
+
+    public static readonly DirectProperty<
+        GitVersionSelector,
+        IAsyncRelayCommand
+    > PopulateTagsCommandProperty = AvaloniaProperty.RegisterDirect<GitVersionSelector, IAsyncRelayCommand>(
+        nameof(PopulateTagsCommand),
+        o => o.PopulateTagsCommand
+    );
+
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
 
         if (GitVersionProvider is not null)
         {
-            PopulateBranches().SafeFireAndForget();
+            PopulateBranchesCommand.Execute(null);
 
             if (SelectedBranch is not null)
             {
-                PopulateCommitsForCurrentBranch().SafeFireAndForget();
+                PopulateCommitsForCurrentBranchCommand.Execute(null);
             }
 
-            PopulateTags().SafeFireAndForget();
+            PopulateTagsCommand.Execute(null);
         }
     }
 
@@ -179,10 +203,11 @@ public partial class GitVersionSelector : TemplatedControl
         // On branch change, fetch commits
         if (change.Property == SelectedBranchProperty)
         {
-            PopulateCommitsForCurrentBranch().SafeFireAndForget();
+            PopulateCommitsForCurrentBranchCommand.Execute(null);
         }
     }
 
+    [RelayCommand]
     public async Task PopulateBranches()
     {
         if (GitVersionProvider is null)
@@ -193,6 +218,7 @@ public partial class GitVersionSelector : TemplatedControl
         BranchSource = branches.Select(v => v.Branch).WhereNotNull().ToImmutableList();
     }
 
+    [RelayCommand]
     public async Task PopulateCommitsForCurrentBranch()
     {
         if (string.IsNullOrEmpty(SelectedBranch))
@@ -218,6 +244,7 @@ public partial class GitVersionSelector : TemplatedControl
         }
     }
 
+    [RelayCommand]
     public async Task PopulateTags()
     {
         if (GitVersionProvider is null)

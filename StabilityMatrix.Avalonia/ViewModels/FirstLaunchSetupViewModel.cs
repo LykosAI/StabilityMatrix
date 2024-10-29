@@ -47,7 +47,10 @@ public partial class FirstLaunchSetupViewModel : DisposableViewModelBase
     private GpuInfo? selectedGpu;
 
     public string YouCanChangeThis =>
-        string.Format(Resources.TextTemplate_YouCanChangeThisBehavior, "Settings > Idk Yet");
+        string.Format(
+            Resources.TextTemplate_YouCanChangeThisBehavior,
+            "Settings > System Settings > Default GPU"
+        );
 
     public FirstLaunchSetupViewModel(ISettingsManager settingsManager)
     {

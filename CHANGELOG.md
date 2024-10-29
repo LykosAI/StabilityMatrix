@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.13.0-dev.2
 ### Added
+- Added new package - [SimpleSDXL](https://github.com/metercai/SimpleSDXL) - many thanks to @NullDev for the contribution!
+- Added new package - [FluxGym](https://github.com/cocktailpeanut/fluxgym) - many thanks to @NullDev for the contribution!
 - Added a new "Extension Packs" section to the extension manager, allowing you to create packs for easier installation of multiple extensions at once
 - Added "Search by Creator" command to Civitai browser context menu
 - Added Beta scheduler to the scheduler selector in Inference

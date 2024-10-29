@@ -25,10 +25,12 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.PackageManager;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Git;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -46,6 +48,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     private readonly INotificationService notificationService;
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly CompositeDisposable cleanUp;
 
     public PackagePair? PackagePair { get; set; }
@@ -112,12 +115,14 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     public PackageExtensionBrowserViewModel(
         INotificationService notificationService,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> vmFactory
+        ServiceManager<ViewModelBase> vmFactory,
+        IPrerequisiteHelper prerequisiteHelper
     )
     {
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.vmFactory = vmFactory;
+        this.prerequisiteHelper = prerequisiteHelper;
 
         var availableItemsChangeSet = availableExtensionsSource
             .Connect()
@@ -616,6 +621,40 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         {
             var extensionPackPath = extensionPackDir.JoinFile($"{SelectedExtensionPack.Name}.json");
             await ProcessRunner.OpenFileBrowser(extensionPackPath);
+        }
+    }
+
+    [RelayCommand]
+    private async Task SetExtensionVersion(SavedPackageExtension selectedExtension)
+    {
+        if (SelectedExtensionPack is null)
+            return;
+
+        var vm = new GitVersionSelectorViewModel
+        {
+            GitVersionProvider = new CachedCommandGitVersionProvider(
+                selectedExtension.PackageExtension.Reference.ToString(),
+                prerequisiteHelper
+            )
+        };
+
+        var dialog = vm.GetDialog();
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            if (string.IsNullOrWhiteSpace(vm.SelectedGitVersion.ToString()))
+                return;
+
+            // update the version and save pack
+            selectedExtension.Version = new PackageExtensionVersion
+            {
+                Branch = vm.SelectedGitVersion.Branch,
+                CommitSha = vm.SelectedGitVersion.CommitSha,
+                Tag = vm.SelectedGitVersion.Tag
+            };
+            SaveExtensionPack(SelectedExtensionPack, SelectedExtensionPack.Name);
+
+            await LoadExtensionPacksAsync();
         }
     }
 

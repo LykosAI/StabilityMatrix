@@ -2,24 +2,19 @@
     x:Class="StabilityMatrix.Avalonia.Views.PackageManager.PackageExtensionBrowserView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.Views.Dialogs"
     xmlns:extensions="clr-namespace:StabilityMatrix.Core.Models.Packages.Extensions;assembly=StabilityMatrix.Core"
-    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:models1="clr-namespace:StabilityMatrix.Avalonia.Models"
     xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
-    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
-    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     d:DataContext="{x:Static mocks:DesignData.PackageExtensionBrowserViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -47,6 +42,12 @@
             Command="{Binding DeleteExtensionPackCommand}"
             IconSource="Delete"
             Label="Delete" />
+
+        <input:StandardUICommand
+            x:Key="SetExtensionVersionCommand"
+            Command="{Binding SetExtensionVersionCommand}"
+            IconSource="Add"
+            Label="Add" />
 
         <DataTemplate x:Key="PackageExtensionTemplate">
             <DataTemplate.DataType>
@@ -237,9 +238,21 @@
                             <StackPanel Orientation="Horizontal" Spacing="2">
                                 <controls:HyperlinkIconButton
                                     Margin="0"
-                                    Padding="0,2"
+                                    Padding="8"
                                     Content="GitHub"
                                     NavigateUri="{Binding PackageExtension.Reference, FallbackValue=''}" />
+                                <Button
+                                    Margin="8,0"
+                                    Padding="8"
+                                    Classes="transparent-full"
+                                    Command="{StaticResource SetExtensionVersionCommand}"
+                                    CommandParameter="{Binding}"
+                                    Foreground="{DynamicResource HyperlinkButtonForeground}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <avalonia:Icon Foreground="{DynamicResource HyperlinkButtonForeground}" Value="fa-solid fa-code-compare" />
+                                        <TextBlock Foreground="{DynamicResource HyperlinkButtonForeground}" Text="Change Version" />
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
                         </StackPanel>
                         <CheckBox

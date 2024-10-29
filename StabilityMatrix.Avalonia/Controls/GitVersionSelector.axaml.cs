@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.Primitives;
+using Avalonia.Data;
 using Avalonia.Interactivity;
 using Avalonia.Logging;
 using CommunityToolkit.Mvvm.Input;
@@ -114,7 +115,7 @@ public partial class GitVersionSelector : TemplatedControl
     public static readonly StyledProperty<string?> SelectedBranchProperty = AvaloniaProperty.Register<
         GitVersionSelector,
         string?
-    >(nameof(SelectedBranch));
+    >(nameof(SelectedBranch), defaultBindingMode: BindingMode.TwoWay);
 
     public string? SelectedBranch
     {
@@ -125,7 +126,7 @@ public partial class GitVersionSelector : TemplatedControl
     public static readonly StyledProperty<string?> SelectedCommitProperty = AvaloniaProperty.Register<
         GitVersionSelector,
         string?
-    >(nameof(SelectedCommit));
+    >(nameof(SelectedCommit), defaultBindingMode: BindingMode.TwoWay);
 
     public string? SelectedCommit
     {
@@ -136,7 +137,7 @@ public partial class GitVersionSelector : TemplatedControl
     public static readonly StyledProperty<string?> SelectedTagProperty = AvaloniaProperty.Register<
         GitVersionSelector,
         string?
-    >(nameof(SelectedTag));
+    >(nameof(SelectedTag), defaultBindingMode: BindingMode.TwoWay);
 
     public string? SelectedTag
     {
@@ -146,7 +147,8 @@ public partial class GitVersionSelector : TemplatedControl
 
     public static readonly StyledProperty<GitVersionSelectorVersionType> SelectedVersionTypeProperty =
         AvaloniaProperty.Register<GitVersionSelector, GitVersionSelectorVersionType>(
-            nameof(SelectedVersionType)
+            nameof(SelectedVersionType),
+            defaultBindingMode: BindingMode.TwoWay
         );
 
     public GitVersionSelectorVersionType SelectedVersionType

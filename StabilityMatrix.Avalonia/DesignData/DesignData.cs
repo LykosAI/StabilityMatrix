@@ -1179,6 +1179,8 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.BaseModelType = CivitBaseModelType.Pony;
         });
 
+    public static MockGitVersionProvider MockGitVersionProvider => new();
+
     public static string CurrentDirectory => Directory.GetCurrentDirectory();
 
     public static Indexer Types { get; } = new();

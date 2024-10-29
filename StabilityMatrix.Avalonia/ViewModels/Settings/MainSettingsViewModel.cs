@@ -30,6 +30,7 @@ using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
@@ -37,12 +38,14 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Git;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
@@ -1060,19 +1063,47 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
     public CommandItem[] DebugCommands =>
         [
-            new(DebugRefreshModelIndexCommand),
-            new(DebugFindLocalModelFromIndexCommand),
-            new(DebugExtractDmgCommand),
-            new(DebugShowNativeNotificationCommand),
-            new(DebugClearImageCacheCommand),
-            new(DebugGCCollectCommand),
-            new(DebugExtractImagePromptsToTxtCommand),
-            new(DebugShowImageMaskEditorCommand),
-            new(DebugExtractImagePromptsToTxtCommand),
-            new(DebugShowConfirmDeleteDialogCommand),
-            new(DebugShowModelMetadataEditorDialogCommand),
-            new(DebugNvidiaSmiCommand)
+            new CommandItem(DebugRefreshModelIndexCommand),
+            new CommandItem(DebugFindLocalModelFromIndexCommand),
+            new CommandItem(DebugExtractDmgCommand),
+            new CommandItem(DebugShowNativeNotificationCommand),
+            new CommandItem(DebugClearImageCacheCommand),
+            new CommandItem(DebugGCCollectCommand),
+            new CommandItem(DebugExtractImagePromptsToTxtCommand),
+            new CommandItem(DebugShowImageMaskEditorCommand),
+            new CommandItem(DebugExtractImagePromptsToTxtCommand),
+            new CommandItem(DebugShowConfirmDeleteDialogCommand),
+            new CommandItem(DebugShowModelMetadataEditorDialogCommand),
+            new CommandItem(DebugNvidiaSmiCommand),
+            new CommandItem(DebugShowGitVersionSelectorDialogCommand),
+            new CommandItem(DebugShowMockGitVersionSelectorDialogCommand),
         ];
+
+    [RelayCommand]
+    private async Task DebugShowGitVersionSelectorDialog()
+    {
+        var vm = new GitVersionSelectorViewModel
+        {
+            GitVersionProvider = new CachedCommandGitVersionProvider(
+                "https://github.com/ltdrdata/ComfyUI-Manager",
+                prerequisiteHelper
+            )
+        };
+        var dialog = vm.GetDialog();
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            notificationService.ShowPersistent("Selected version", $"{vm.SelectedGitVersion}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task DebugShowMockGitVersionSelectorDialog()
+    {
+        var vm = new GitVersionSelectorViewModel { GitVersionProvider = new MockGitVersionProvider() };
+        var dialog = vm.GetDialog();
+        await dialog.ShowAsync();
+    }
 
     [RelayCommand]
     private async Task DebugShowModelMetadataEditorDialog()

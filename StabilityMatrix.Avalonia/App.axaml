@@ -69,6 +69,7 @@
         <StyleInclude Source="Controls/VideoGenerationSettingsCard.axaml" />
         <StyleInclude Source="Controls/VideoOutputSettingsCard.axaml" />
         <StyleInclude Source="Controls/TreeFileExplorer.axaml" />
+        <StyleInclude Source="Controls/GitVersionSelector.axaml" />
         <StyleInclude Source="Controls/Inference/StackCard.axaml" />
         <StyleInclude Source="Controls/Inference/StackEditableCard.axaml" />
         <StyleInclude Source="Controls/Inference/StackExpander.axaml" />

@@ -70,7 +70,11 @@ public partial class GitVersionSelectorViewModel : ObservableObject
             DataContext = this,
             Height = 400,
             Width = 600,
-            [!GitVersionSelector.GitVersionProviderProperty] = new Binding(nameof(GitVersionProvider))
+            [!GitVersionSelector.GitVersionProviderProperty] = new Binding(nameof(GitVersionProvider)),
+            [!GitVersionSelector.SelectedVersionTypeProperty] = new Binding(nameof(SelectedVersionType)),
+            [!GitVersionSelector.SelectedBranchProperty] = new Binding(nameof(SelectedBranch)),
+            [!GitVersionSelector.SelectedCommitProperty] = new Binding(nameof(SelectedCommit)),
+            [!GitVersionSelector.SelectedTagProperty] = new Binding(nameof(SelectedTag))
         };
 
         var dialog = new BetterContentDialog

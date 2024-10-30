@@ -900,9 +900,14 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
 
     private void SaveExtensionPack(ExtensionPack newExtensionPack, string name)
     {
-        var path = settingsManager
-            .ExtensionPackDirectory.JoinDir(newExtensionPack.PackageType)
-            .JoinFile($"{name}.json");
+        var extensionPackDir = settingsManager.ExtensionPackDirectory.JoinDir(newExtensionPack.PackageType);
+
+        if (!extensionPackDir.Exists)
+        {
+            extensionPackDir.Create();
+        }
+
+        var path = extensionPackDir.JoinFile($"{name}.json");
         var json = JsonSerializer.Serialize(newExtensionPack);
         path.WriteAllText(json);
     }

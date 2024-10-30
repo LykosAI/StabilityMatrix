@@ -2,7 +2,6 @@
     x:Class="StabilityMatrix.Avalonia.App"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:idcr="using:Dock.Avalonia.Controls.Recycling"
     xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     xmlns:local="using:StabilityMatrix.Avalonia"
     xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
@@ -33,7 +32,7 @@
                 <ResourceInclude Source="Controls/VendorLabs/Themes/BetterAsyncImage.axaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <idcr:ControlRecycling x:Key="ControlRecyclingKey" />
+            <ControlRecycling x:Key="ControlRecyclingKey" />
             <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
 
             <SolidColorBrush x:Key="ToolTipBackground" Color="#1E1F22" />
@@ -94,7 +93,7 @@
         <labs:ControlThemes />
 
         <Style Selector="DockControl">
-            <Setter Property="(DockProperties.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
+            <Setter Property="(ControlRecyclingDataTemplate.ControlRecycling)" Value="{StaticResource ControlRecyclingKey}" />
         </Style>
         <Style Selector="ScrollViewer">
             <Setter Property="BringIntoViewOnFocusChange" Value="False" />

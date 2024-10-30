@@ -13,7 +13,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public class AnalyticsOptInViewModel : ContentDialogViewModelBase
 {
     public string ChangeThisBehaviorInSettings =>
-        string.Format(Resources.TextTemplate_YouCanChangeThisBehavior, "Settings | System | Analytics")
+        string.Format(Resources.TextTemplate_YouCanChangeThisBehavior, "Settings > System > Analytics")
             .Trim();
 
     public override BetterContentDialog GetDialog()

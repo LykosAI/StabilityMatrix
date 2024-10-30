@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
+using Avalonia.Controls.Notifications;
+using Avalonia.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
@@ -21,14 +25,17 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.PackageManager;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Git;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages.Extensions;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
@@ -41,6 +48,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     private readonly INotificationService notificationService;
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly CompositeDisposable cleanUp;
 
     public PackagePair? PackagePair { get; set; }
@@ -76,21 +84,45 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         string
     > InstalledItemsSearchCollection { get; }
 
-    public IObservableCollection<InstalledPackageExtension> InstalledExtensions { get; } =
-        new ObservableCollectionExtended<InstalledPackageExtension>();
+    private SourceCache<ExtensionPack, string> extensionPackSource = new(ext => ext.Name);
+
+    public IObservableCollection<ExtensionPack> ExtensionPacks { get; } =
+        new ObservableCollectionExtended<ExtensionPack>();
+
+    private SourceCache<SavedPackageExtension, string> extensionPackExtensionsSource =
+        new(ext => ext.PackageExtension.Author + ext.PackageExtension.Title + ext.PackageExtension.Reference);
+
+    public IObservableCollection<
+        SelectableItem<SavedPackageExtension>
+    > SelectedExtensionPackExtensions { get; } =
+        new ObservableCollectionExtended<SelectableItem<SavedPackageExtension>>();
+
+    public SearchCollection<
+        SelectableItem<SavedPackageExtension>,
+        string,
+        string
+    > ExtensionPackExtensionsSearchCollection { get; }
+
+    [ObservableProperty]
+    private ExtensionPack? selectedExtensionPack;
 
     [ObservableProperty]
     private bool showNoExtensionsFoundMessage;
 
+    [ObservableProperty]
+    private bool areExtensionPacksLoading;
+
     public PackageExtensionBrowserViewModel(
         INotificationService notificationService,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> vmFactory
+        ServiceManager<ViewModelBase> vmFactory,
+        IPrerequisiteHelper prerequisiteHelper
     )
     {
         this.notificationService = notificationService;
         this.settingsManager = settingsManager;
         this.vmFactory = vmFactory;
+        this.prerequisiteHelper = prerequisiteHelper;
 
         var availableItemsChangeSet = availableExtensionsSource
             .Connect()
@@ -114,6 +146,24 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             .AutoRefresh(item => item.IsSelected)
             .Filter(item => item.IsSelected)
             .Bind(SelectedInstalledItems)
+            .Subscribe();
+
+        extensionPackSource
+            .Connect()
+            .ObserveOn(SynchronizationContext.Current!)
+            .Bind(ExtensionPacks)
+            .Subscribe();
+
+        var extensionPackExtensionsChangeSet = extensionPackExtensionsSource
+            .Connect()
+            .Transform(ext => new SelectableItem<SavedPackageExtension>(ext))
+            .ObserveOn(SynchronizationContext.Current!)
+            .Publish();
+
+        extensionPackExtensionsChangeSet
+            .AutoRefresh(item => item.IsSelected)
+            .Filter(item => item.IsSelected)
+            .Bind(SelectedExtensionPackExtensions)
             .Subscribe();
 
         cleanUp = new CompositeDisposable(
@@ -140,8 +190,29 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
                         ? _ => true
                         : x => x.Item.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
             ),
-            installedItemsChangeSet.Connect()
+            installedItemsChangeSet.Connect(),
+            ExtensionPackExtensionsSearchCollection = new SearchCollection<
+                SelectableItem<SavedPackageExtension>,
+                string,
+                string
+            >(
+                extensionPackExtensionsChangeSet,
+                query =>
+                    string.IsNullOrWhiteSpace(query)
+                        ? _ => true
+                        : x =>
+                            x.Item.PackageExtension.Title.Contains(query, StringComparison.OrdinalIgnoreCase)
+            ),
+            extensionPackExtensionsChangeSet.Connect()
         );
+    }
+
+    /// <inheritdoc />
+    public override async Task OnLoadedAsync()
+    {
+        await base.OnLoadedAsync();
+        await LoadExtensionPacksAsync();
+        await Refresh();
     }
 
     public void AddExtensions(
@@ -151,6 +222,16 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     {
         availableExtensionsSource.AddOrUpdate(packageExtensions);
         installedExtensionsSource.AddOrUpdate(installedExtensions);
+    }
+
+    public void AddExtensionPacks(IEnumerable<ExtensionPack> packs)
+    {
+        extensionPackSource.AddOrUpdate(packs);
+        SelectedExtensionPack = packs.FirstOrDefault();
+        if (SelectedExtensionPack == null)
+            return;
+
+        extensionPackExtensionsSource.AddOrUpdate(SelectedExtensionPack.Extensions);
     }
 
     [RelayCommand]
@@ -297,12 +378,284 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         }
     }
 
-    /// <inheritdoc />
-    public override async Task OnLoadedAsync()
+    [RelayCommand]
+    private async Task InstallExtensionPack()
     {
-        await base.OnLoadedAsync();
+        if (SelectedExtensionPack == null)
+            return;
 
+        var steps = new List<IPackageStep>();
+
+        foreach (var extension in SelectedExtensionPack.Extensions)
+        {
+            var installedExtension = installedExtensionsSource.Items.FirstOrDefault(
+                x =>
+                    x.Definition?.Title == extension.PackageExtension.Title
+                    && x.Definition.Reference == extension.PackageExtension.Reference
+            );
+
+            if (installedExtension != null)
+            {
+                steps.Add(
+                    new UpdateExtensionStep(
+                        PackagePair!.BasePackage.ExtensionManager!,
+                        PackagePair.InstalledPackage,
+                        installedExtension,
+                        extension.Version
+                    )
+                );
+            }
+            else
+            {
+                steps.Add(
+                    new InstallExtensionStep(
+                        PackagePair!.BasePackage.ExtensionManager!,
+                        PackagePair!.InstalledPackage,
+                        extension.PackageExtension,
+                        extension.Version
+                    )
+                );
+            }
+        }
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            CloseWhenFinished = true,
+            ModificationCompleteMessage = $"Extension Pack {SelectedExtensionPack.Name} installed"
+        };
+
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps(steps);
         await Refresh();
+    }
+
+    [RelayCommand]
+    public async Task CreateExtensionPackFromInstalled()
+    {
+        var extensions = SelectedInstalledItems.Select(x => x.Item).ToArray();
+        if (extensions.Length == 0)
+            return;
+
+        var (dialog, nameField) = GetNameEntryDialog();
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var name = nameField.Text;
+            var newExtensionPack = new ExtensionPack
+            {
+                Name = name,
+                PackageType = PackagePair!.InstalledPackage.PackageName,
+                Extensions = SelectedInstalledItems
+                    .Where(x => x.Item.Definition != null)
+                    .Select(
+                        x =>
+                            new SavedPackageExtension
+                            {
+                                PackageExtension = x.Item.Definition,
+                                Version = x.Item.Version
+                            }
+                    )
+                    .ToList()
+            };
+
+            SaveExtensionPack(newExtensionPack, name);
+            await LoadExtensionPacksAsync();
+            notificationService.Show("Extension Pack Created", "The extension pack has been created");
+        }
+    }
+
+    [RelayCommand]
+    public async Task CreateExtensionPackFromAvailable()
+    {
+        var extensions = SelectedAvailableItems.Select(x => x.Item).ToArray();
+        if (extensions.Length == 0)
+            return;
+
+        var (dialog, nameField) = GetNameEntryDialog();
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var name = nameField.Text;
+            var newExtensionPack = new ExtensionPack
+            {
+                Name = name,
+                PackageType = PackagePair!.InstalledPackage.PackageName,
+                Extensions = SelectedAvailableItems
+                    .Select(x => new SavedPackageExtension { PackageExtension = x.Item, Version = null })
+                    .ToList()
+            };
+
+            SaveExtensionPack(newExtensionPack, name);
+            await LoadExtensionPacksAsync();
+            notificationService.Show("Extension Pack Created", "The extension pack has been created");
+        }
+    }
+
+    [RelayCommand]
+    public async Task AddInstalledExtensionToPack(ExtensionPack pack)
+    {
+        foreach (var extension in SelectedInstalledItems)
+        {
+            if (
+                pack.Extensions.Any(
+                    x =>
+                        x.PackageExtension.Title == extension.Item.Definition?.Title
+                        && x.PackageExtension.Author == extension.Item.Definition?.Author
+                        && x.PackageExtension.Reference == extension.Item.Definition?.Reference
+                )
+            )
+            {
+                continue;
+            }
+
+            pack.Extensions.Add(
+                new SavedPackageExtension
+                {
+                    PackageExtension = extension.Item.Definition!,
+                    Version = extension.Item.Version
+                }
+            );
+        }
+
+        SaveExtensionPack(pack, pack.Name);
+        ClearSelection();
+        await LoadExtensionPacksAsync();
+        notificationService.Show(
+            "Extensions added to pack",
+            "The selected extensions have been added to the pack"
+        );
+    }
+
+    [RelayCommand]
+    public async Task AddExtensionToPack(ExtensionPack pack)
+    {
+        foreach (var extension in SelectedAvailableItems)
+        {
+            if (
+                pack.Extensions.Any(
+                    x =>
+                        x.PackageExtension.Title == extension.Item.Title
+                        && x.PackageExtension.Author == extension.Item.Author
+                        && x.PackageExtension.Reference == extension.Item.Reference
+                )
+            )
+            {
+                continue;
+            }
+
+            pack.Extensions.Add(
+                new SavedPackageExtension { PackageExtension = extension.Item, Version = null }
+            );
+        }
+
+        SaveExtensionPack(pack, pack.Name);
+        ClearSelection();
+        await LoadExtensionPacksAsync();
+        notificationService.Show(
+            "Extensions added to pack",
+            "The selected extensions have been added to the pack"
+        );
+    }
+
+    [RelayCommand]
+    public async Task RemoveExtensionFromPack()
+    {
+        if (SelectedExtensionPack is null)
+            return;
+
+        foreach (var extension in SelectedExtensionPackExtensions)
+        {
+            extensionPackExtensionsSource.Remove(extension.Item);
+            SelectedExtensionPack.Extensions.Remove(extension.Item);
+        }
+
+        SaveExtensionPack(SelectedExtensionPack, SelectedExtensionPack.Name);
+        ClearSelection();
+        await LoadExtensionPacksAsync();
+    }
+
+    [RelayCommand]
+    private async Task DeleteExtensionPackAsync(ExtensionPack pack)
+    {
+        var pathToDelete = settingsManager
+            .ExtensionPackDirectory.JoinDir(pack.PackageType)
+            .JoinFile($"{pack.Name}.json");
+
+        var confirmDeleteVm = vmFactory.Get<ConfirmDeleteDialogViewModel>();
+        confirmDeleteVm.PathsToDelete = [pathToDelete];
+
+        if (await confirmDeleteVm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        try
+        {
+            await confirmDeleteVm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent("Error deleting files", e.Message, NotificationType.Error);
+            return;
+        }
+
+        ClearSelection();
+        extensionPackSource.Remove(pack);
+    }
+
+    [RelayCommand]
+    private async Task OpenExtensionPackFolder()
+    {
+        var extensionPackDir = settingsManager.ExtensionPackDirectory.JoinDir(
+            PackagePair!.InstalledPackage.PackageName
+        );
+        if (!extensionPackDir.Exists)
+        {
+            extensionPackDir.Create();
+        }
+
+        if (SelectedExtensionPack is null || ExtensionPacks.Count <= 0)
+        {
+            await ProcessRunner.OpenFolderBrowser(extensionPackDir);
+        }
+        else
+        {
+            var extensionPackPath = extensionPackDir.JoinFile($"{SelectedExtensionPack.Name}.json");
+            await ProcessRunner.OpenFileBrowser(extensionPackPath);
+        }
+    }
+
+    [RelayCommand]
+    private async Task SetExtensionVersion(SavedPackageExtension selectedExtension)
+    {
+        if (SelectedExtensionPack is null)
+            return;
+
+        var vm = new GitVersionSelectorViewModel
+        {
+            GitVersionProvider = new CachedCommandGitVersionProvider(
+                selectedExtension.PackageExtension.Reference.ToString(),
+                prerequisiteHelper
+            )
+        };
+
+        var dialog = vm.GetDialog();
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            if (string.IsNullOrWhiteSpace(vm.SelectedGitVersion.ToString()))
+                return;
+
+            // update the version and save pack
+            selectedExtension.Version = new PackageExtensionVersion
+            {
+                Branch = vm.SelectedGitVersion.Branch,
+                CommitSha = vm.SelectedGitVersion.CommitSha,
+                Tag = vm.SelectedGitVersion.Tag
+            };
+            SaveExtensionPack(SelectedExtensionPack, SelectedExtensionPack.Name);
+
+            await LoadExtensionPacksAsync();
+        }
     }
 
     [RelayCommand]
@@ -353,11 +706,9 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         using var _ = CodeTimer.StartDebug();
 
         if (PackagePair?.BasePackage.ExtensionManager is not { } extensionManager)
-        {
             throw new NotSupportedException(
                 $"The package {PackagePair?.BasePackage} does not support extensions."
             );
-        }
 
         var availableExtensions = (
             await extensionManager.GetManifestExtensionsAsync(
@@ -389,14 +740,34 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     public void ClearSelection()
     {
         foreach (var item in SelectedAvailableItems.ToImmutableArray())
-        {
             item.IsSelected = false;
-        }
 
         foreach (var item in SelectedInstalledItems.ToImmutableArray())
-        {
             item.IsSelected = false;
-        }
+
+        foreach (var item in SelectedExtensionPackExtensions.ToImmutableArray())
+            item.IsSelected = false;
+    }
+
+    private (BetterContentDialog dialog, TextBoxField nameField) GetNameEntryDialog()
+    {
+        var textFields = new TextBoxField[]
+        {
+            new()
+            {
+                Label = "Name",
+                Validator = text =>
+                {
+                    if (string.IsNullOrWhiteSpace(text))
+                        throw new DataValidationException("Name is required");
+
+                    if (ExtensionPacks.Any(pack => pack.Name == text))
+                        throw new DataValidationException("Pack already exists");
+                }
+            }
+        };
+
+        return (DialogHelper.CreateTextEntryDialog("Pack Name", "", textFields), textFields[0]);
     }
 
     private async Task<bool> BeforeInstallCheck()
@@ -412,9 +783,9 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
                 Title = "Installing Extensions",
                 Content = """
                           Extensions, the extension index, and their dependencies are community provided and not verified by the Stability Matrix team. 
-                          
+
                           The install process may invoke external programs and scripts.
-                          
+
                           Please review the extension's source code and applicable licenses before installing.
                           """,
                 PrimaryButtonText = Resources.Action_Continue,
@@ -424,9 +795,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             };
 
             if (await dialog.ShowAsync() != ContentDialogResult.Primary)
-            {
                 return false;
-            }
 
             settingsManager.Transaction(
                 s => s.SeenTeachingTips.Add(Core.Models.Settings.TeachingTip.PackageExtensionsInstallNotice)
@@ -468,7 +837,6 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         var extensionsInstalled = new HashSet<PackageExtension>();
 
         foreach (var (i, installedExt) in installedExtensions.Enumerate())
-        {
             if (
                 installedExt.GitRepositoryUrl is not null
                 && repoToExtension.TryGetValue(
@@ -481,15 +849,73 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
 
                 installedExtensions[i] = installedExt with { Definition = mappedExt };
             }
-        }
 
         // For available extensions, add installed status if available
         foreach (var (i, ext) in extensions.Enumerate())
-        {
             if (extensionsInstalled.Contains(ext))
-            {
                 extensions[i] = ext with { IsInstalled = true };
+    }
+
+    private async Task LoadExtensionPacksAsync()
+    {
+        if (Design.IsDesignMode)
+            return;
+
+        try
+        {
+            AreExtensionPacksLoading = true;
+
+            var packDir = settingsManager.ExtensionPackDirectory;
+            if (!packDir.Exists)
+                packDir.Create();
+
+            var jsonFiles = packDir.EnumerateFiles("*.json", SearchOption.AllDirectories);
+            var packs = new List<ExtensionPack>();
+
+            foreach (var jsonFile in jsonFiles)
+            {
+                var json = await jsonFile.ReadAllTextAsync();
+                try
+                {
+                    var extensionPack = JsonSerializer.Deserialize<ExtensionPack>(json);
+                    if (
+                        extensionPack != null
+                        && extensionPack.PackageType == PackagePair!.InstalledPackage.PackageName
+                    )
+                        packs.Add(extensionPack);
+                }
+                catch (JsonException)
+                {
+                    // ignored for now, need to log
+                }
             }
+
+            extensionPackSource.AddOrUpdate(packs);
+        }
+        finally
+        {
+            AreExtensionPacksLoading = false;
+        }
+    }
+
+    private void SaveExtensionPack(ExtensionPack newExtensionPack, string name)
+    {
+        var path = settingsManager
+            .ExtensionPackDirectory.JoinDir(newExtensionPack.PackageType)
+            .JoinFile($"{name}.json");
+        var json = JsonSerializer.Serialize(newExtensionPack);
+        path.WriteAllText(json);
+    }
+
+    partial void OnSelectedExtensionPackChanged(ExtensionPack? value)
+    {
+        if (value != null)
+        {
+            extensionPackExtensionsSource.Edit(updater => updater.Load(value.Extensions));
+        }
+        else
+        {
+            extensionPackExtensionsSource.Clear();
         }
     }
 

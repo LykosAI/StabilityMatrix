@@ -138,7 +138,29 @@ public static partial class HardwareHelper
     {
         if (Compat.IsWindows)
         {
-            return IterGpuInfoWindows();
+            try
+            {
+                var smi = IterGpuInfoNvidiaSmi()?.ToList();
+                if (smi is null)
+                    return IterGpuInfoWindows();
+
+                var newList = smi.Concat(IterGpuInfoWindows().Where(gpu => !gpu.IsNvidia))
+                    .Select(
+                        (gpu, index) =>
+                            new GpuInfo
+                            {
+                                Name = gpu.Name,
+                                Index = index,
+                                MemoryBytes = gpu.MemoryBytes
+                            }
+                    );
+
+                return newList;
+            }
+            catch
+            {
+                return IterGpuInfoWindows();
+            }
         }
 
         if (Compat.IsLinux)
@@ -167,6 +189,49 @@ public static partial class HardwareHelper
         }
 
         return Enumerable.Empty<GpuInfo>();
+    }
+
+    public static IEnumerable<GpuInfo>? IterGpuInfoNvidiaSmi()
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = "nvidia-smi",
+            UseShellExecute = false,
+            Arguments = "--query-gpu name,memory.total --format=csv",
+            RedirectStandardOutput = true,
+            CreateNoWindow = true
+        };
+
+        var process = Process.Start(psi);
+        process?.WaitForExit();
+        var stdout = process?.StandardOutput.ReadToEnd();
+        var split = stdout?.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        var results = split?[1..];
+
+        if (results is null)
+            return null;
+
+        var gpuInfos = new List<GpuInfo>();
+        for (var index = 0; index < results?.Length; index++)
+        {
+            var gpu = results[index];
+            var datas = gpu.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            if (datas is not { Length: 2 })
+                continue;
+
+            var memory = Regex.Replace(datas[1], @"([A-Z])\w+", "").Trim();
+
+            gpuInfos.Add(
+                new GpuInfo
+                {
+                    Name = datas[0],
+                    Index = index,
+                    MemoryBytes = Convert.ToUInt64(memory) * Size.MiB
+                }
+            );
+        }
+
+        return gpuInfos;
     }
 
     /// <summary>

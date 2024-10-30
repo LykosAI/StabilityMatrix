@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
+using AsyncAwaitBestPractices;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -18,11 +19,21 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
 
     private readonly ConcurrentDictionary<Guid, (TrackedDownload Download, FileStream Stream)> downloads =
         new();
+    private readonly ConcurrentQueue<TrackedDownload> pendingDownloads = new();
+    private readonly SemaphoreSlim downloadSemaphore;
 
     public IEnumerable<TrackedDownload> Downloads => downloads.Values.Select(x => x.Download);
+    public IEnumerable<TrackedDownload> PendingDownloads => pendingDownloads;
 
     /// <inheritdoc />
     public event EventHandler<TrackedDownload>? DownloadAdded;
+    public event EventHandler<TrackedDownload>? DownloadStarted;
+
+    private int MaxConcurrentDownloads { get; set; }
+
+    private bool IsQueueEnabled => MaxConcurrentDownloads > 0;
+    public int ActiveDownloads =>
+        downloads.Count(kvp => kvp.Value.Download.ProgressState == ProgressState.Working);
 
     public TrackedDownloadService(
         ILogger<TrackedDownloadService> logger,
@@ -46,12 +57,21 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
 
             LoadInProgressDownloads(downloadsDir);
         });
+
+        MaxConcurrentDownloads = settingsManager.Settings.MaxConcurrentDownloads;
+        downloadSemaphore = new SemaphoreSlim(MaxConcurrentDownloads);
     }
 
     private void OnDownloadAdded(TrackedDownload download)
     {
         logger.LogInformation("Download added: ({Download}, {State})", download.Id, download.ProgressState);
         DownloadAdded?.Invoke(this, download);
+    }
+
+    private void OnDownloadStarted(TrackedDownload download)
+    {
+        logger.LogInformation("Download started: ({Download}, {State})", download.Id, download.ProgressState);
+        DownloadStarted?.Invoke(this, download);
     }
 
     /// <summary>
@@ -83,6 +103,103 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
         OnDownloadAdded(download);
     }
 
+    public async Task TryStartDownload(TrackedDownload download)
+    {
+        if (IsQueueEnabled && ActiveDownloads >= MaxConcurrentDownloads)
+        {
+            logger.LogDebug("Download {Download} is pending", download.FileName);
+            pendingDownloads.Enqueue(download);
+            download.SetPending();
+            UpdateJsonForDownload(download);
+            return;
+        }
+
+        if (!IsQueueEnabled || await downloadSemaphore.WaitAsync(0).ConfigureAwait(false))
+        {
+            logger.LogDebug("Starting download {Download}", download.FileName);
+            download.Start();
+            OnDownloadStarted(download);
+        }
+        else
+        {
+            logger.LogDebug("Download {Download} is pending", download.FileName);
+            pendingDownloads.Enqueue(download);
+            download.SetPending();
+            UpdateJsonForDownload(download);
+        }
+    }
+
+    public async Task TryResumeDownload(TrackedDownload download)
+    {
+        if (IsQueueEnabled && ActiveDownloads >= MaxConcurrentDownloads)
+        {
+            logger.LogDebug("Download {Download} is pending", download.FileName);
+            pendingDownloads.Enqueue(download);
+            download.SetPending();
+            UpdateJsonForDownload(download);
+            return;
+        }
+
+        if (!IsQueueEnabled || await downloadSemaphore.WaitAsync(0).ConfigureAwait(false))
+        {
+            logger.LogDebug("Resuming download {Download}", download.FileName);
+            download.Resume();
+            OnDownloadStarted(download);
+        }
+        else
+        {
+            logger.LogDebug("Download {Download} is pending", download.FileName);
+            pendingDownloads.Enqueue(download);
+            download.SetPending();
+            UpdateJsonForDownload(download);
+        }
+    }
+
+    public void UpdateMaxConcurrentDownloads(int newMax)
+    {
+        if (newMax <= 0)
+        {
+            MaxConcurrentDownloads = 0;
+            return;
+        }
+
+        var oldMax = MaxConcurrentDownloads;
+        MaxConcurrentDownloads = newMax;
+
+        if (oldMax == newMax)
+            return;
+
+        logger.LogInformation("Updating max concurrent downloads from {OldMax} to {NewMax}", oldMax, newMax);
+
+        if (newMax > oldMax)
+        {
+            downloadSemaphore.Release(newMax - oldMax);
+            ProcessPendingDownloads().SafeFireAndForget();
+        }
+        // When reducing, we don't need to do anything immediately.
+        // The system will naturally adjust as downloads complete or are paused/resumed.
+
+        AdjustSemaphoreCount();
+    }
+
+    private void AdjustSemaphoreCount()
+    {
+        var currentCount = downloadSemaphore.CurrentCount;
+        var targetCount = MaxConcurrentDownloads - ActiveDownloads;
+
+        if (currentCount < targetCount)
+        {
+            downloadSemaphore.Release(targetCount - currentCount);
+        }
+        else if (currentCount > targetCount)
+        {
+            for (var i = 0; i < currentCount - targetCount; i++)
+            {
+                downloadSemaphore.Wait(0);
+            }
+        }
+    }
+
     /// <summary>
     /// Update the json file for the download.
     /// </summary>
@@ -102,6 +219,33 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
     private void AttachHandlers(TrackedDownload download)
     {
         download.ProgressStateChanged += TrackedDownload_OnProgressStateChanged;
+    }
+
+    private async Task ProcessPendingDownloads()
+    {
+        while (pendingDownloads.TryPeek(out var nextDownload))
+        {
+            if (ActiveDownloads >= MaxConcurrentDownloads)
+            {
+                break;
+            }
+
+            if (pendingDownloads.TryDequeue(out nextDownload))
+            {
+                if (nextDownload.DownloadedBytes > 0)
+                {
+                    await TryResumeDownload(nextDownload).ConfigureAwait(false);
+                }
+                else
+                {
+                    await TryStartDownload(nextDownload).ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                break;
+            }
+        }
     }
 
     /// <summary>
@@ -128,7 +272,26 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
                     .JoinFile($"{download.Id}.json")
                     .Delete();
                 logger.LogDebug("Removed download {Download}", download.FileName);
+
+                if (IsQueueEnabled)
+                {
+                    try
+                    {
+                        downloadSemaphore.Release();
+                    }
+                    catch (SemaphoreFullException)
+                    {
+                        // Ignore
+                    }
+
+                    ProcessPendingDownloads().SafeFireAndForget();
+                }
             }
+        }
+        else if (e is ProgressState.Paused && IsQueueEnabled)
+        {
+            downloadSemaphore.Release();
+            ProcessPendingDownloads().SafeFireAndForget();
         }
 
         // On successes, run the continuation action
@@ -169,11 +332,15 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
                 var download = JsonSerializer.Deserialize<TrackedDownload>(fileStream)!;
 
                 // If the download is marked as working, pause it
-                if (download.ProgressState == ProgressState.Working)
+                if (download.ProgressState is ProgressState.Working or ProgressState.Pending)
                 {
-                    download.ProgressState = ProgressState.Inactive;
+                    download.ProgressState = ProgressState.Paused;
                 }
-                else if (download.ProgressState != ProgressState.Inactive)
+                else if (
+                    download.ProgressState != ProgressState.Inactive
+                    && download.ProgressState != ProgressState.Paused
+                    && download.ProgressState != ProgressState.Pending
+                )
                 {
                     // If the download is not inactive, skip it
                     logger.LogWarning(
@@ -195,6 +362,11 @@ public class TrackedDownloadService : ITrackedDownloadService, IDisposable
                 download.SetDownloadService(downloadService);
 
                 downloads.TryAdd(download.Id, (download, fileStream));
+
+                if (download.ProgressState == ProgressState.Pending)
+                {
+                    pendingDownloads.Enqueue(download);
+                }
 
                 AttachHandlers(download);
 

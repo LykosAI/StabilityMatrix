@@ -34,7 +34,6 @@ public class OneTrainer(
     public override string OutputFolderName => string.Empty;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda, TorchIndex.Rocm];
-    public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
     public override PackageType PackageType => PackageType.SdTraining;
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.None };

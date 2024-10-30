@@ -151,10 +151,19 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool moveFilesOnImport;
 
+    [ObservableProperty]
+    private int maxConcurrentDownloads;
+
     #region System Settings
 
     [ObservableProperty]
     private bool isWindowsLongPathsEnabled;
+
+    [ObservableProperty]
+    private ObservableCollection<GpuInfo> gpuInfoCollection = [];
+
+    [ObservableProperty]
+    private GpuInfo? preferredGpu;
 
     #endregion
 
@@ -282,6 +291,20 @@ public partial class MainSettingsViewModel : PageViewModelBase
             true
         );
 
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.PreferredGpu,
+            settings => settings.PreferredGpu,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.MaxConcurrentDownloads,
+            settings => settings.MaxConcurrentDownloads,
+            true
+        );
+
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 
         hardwareInfoUpdateTimer.Tick += OnHardwareInfoUpdateTimerTick;
@@ -314,6 +337,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
         await base.OnLoadedAsync();
 
         await notificationService.TryAsync(completionProvider.Setup());
+
+        var gpuInfos = HardwareHelper.IterGpuInfo();
+        GpuInfoCollection = new ObservableCollection<GpuInfo>(gpuInfos);
+        PreferredGpu ??=
+            GpuInfos.FirstOrDefault(
+                gpu => gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
+            ) ?? GpuInfos.FirstOrDefault();
 
         // Start accounts update
         accountsService
@@ -420,6 +450,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
     partial void OnRemoveSymlinksOnShutdownChanged(bool value)
     {
         settingsManager.Transaction(s => s.RemoveFolderLinksOnShutdown = value);
+    }
+
+    partial void OnMaxConcurrentDownloadsChanged(int value)
+    {
+        trackedDownloadService.UpdateMaxConcurrentDownloads(value);
     }
 
     public async Task ResetCheckpointCache()
@@ -1019,7 +1054,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             var url = textFields[0].Text;
             var filePath = textFields[1].Text;
             var download = trackedDownloadService.NewDownload(new Uri(url), new FilePath(filePath));
-            download.Start();
+            await trackedDownloadService.TryStartDownload(download);
         }
     }
     #endregion
@@ -1039,6 +1074,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugExtractImagePromptsToTxtCommand),
             new CommandItem(DebugShowConfirmDeleteDialogCommand),
             new CommandItem(DebugShowModelMetadataEditorDialogCommand),
+            new CommandItem(DebugNvidiaSmiCommand),
             new CommandItem(DebugShowGitVersionSelectorDialogCommand),
             new CommandItem(DebugShowMockGitVersionSelectorDialogCommand),
         ];
@@ -1296,6 +1332,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
         vm.PaintCanvasViewModel.BackgroundImage = bitmap;
 
         await vm.GetDialog().ShowAsync();
+    }
+
+    [RelayCommand]
+    private void DebugNvidiaSmi()
+    {
+        HardwareHelper.IterGpuInfoNvidiaSmi();
     }
 
     #endregion

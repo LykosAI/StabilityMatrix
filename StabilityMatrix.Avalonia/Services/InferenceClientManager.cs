@@ -431,10 +431,12 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Get CLIP model names from DualCLIPLoader node
         if (await Client.GetNodeOptionNamesAsync("DualCLIPLoader", "clip_name1") is { } clipModelNames)
         {
-            clipModelsSource.EditDiff(
-                clipModelNames.Select(HybridModelFile.FromRemote),
-                HybridModelFile.Comparer
-            );
+            IEnumerable<HybridModelFile> models =
+            [
+                HybridModelFile.None,
+                ..clipModelNames.Select(HybridModelFile.FromRemote)
+            ];
+            clipModelsSource.EditDiff(models, HybridModelFile.Comparer);
         }
     }
 

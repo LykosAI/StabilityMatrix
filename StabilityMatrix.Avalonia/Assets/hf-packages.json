@@ -934,6 +934,15 @@
   },
   {
     "ModelCategory": "Clip",
+    "ModelName": "CLIP G",
+    "RepositoryPath": "Comfy-Org/stable-diffusion-3.5-fp8",
+    "Files": [
+      "text_encoders/clip_g.safetensors"
+    ],
+    "LicenseType": "MIT"
+  },
+  {
+    "ModelCategory": "Clip",
     "ModelName": "T5XXL FP16",
     "RepositoryPath": "comfyanonymous/flux_text_encoders",
     "Files": [

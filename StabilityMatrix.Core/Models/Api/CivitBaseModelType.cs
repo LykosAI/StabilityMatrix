@@ -17,6 +17,18 @@ public enum CivitBaseModelType
     [StringValue("Flux.1 D")]
     Flux1D,
 
+    [StringValue("Hunyuan 1")]
+    Hunyuan1,
+
+    [StringValue("Illustrious")]
+    Illustrious,
+
+    [StringValue("Kolors")]
+    Kolors,
+
+    [StringValue("Lumina")]
+    Lumina,
+
     [StringValue("PixArt a")]
     PixArtA,
 
@@ -37,6 +49,9 @@ public enum CivitBaseModelType
 
     [StringValue("SD 3")]
     Sd3,
+
+    [StringValue("SD 3.5")]
+    Sd35,
 
     [StringValue("SDXL 0.9")]
     Sdxl09,

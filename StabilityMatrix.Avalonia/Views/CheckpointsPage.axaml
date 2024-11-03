@@ -350,7 +350,8 @@
             DragDrop.AllowDrop="True"
             IsVisible="{Binding ShowFolders}"
             ItemsSource="{Binding Categories}"
-            SelectedItem="{Binding SelectedCategory}">
+            SelectedItem="{Binding SelectedCategory}"
+            SelectionMode="AlwaysSelected">
             <TreeView.Styles>
                 <Style Selector="TreeViewItem">
                     <Setter Property="IsExpanded" Value="{Binding $self.((models1:CheckpointCategory)DataContext).IsExpanded, Mode=TwoWay}" />

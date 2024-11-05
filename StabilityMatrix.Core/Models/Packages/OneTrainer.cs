@@ -56,7 +56,8 @@ public class OneTrainer(
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));
-        var requirementsFileName = options.PythonOptions.TorchIndex switch
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var requirementsFileName = torchVersion switch
         {
             TorchIndex.Cuda => "requirements-cuda.txt",
             TorchIndex.Rocm => "requirements-rocm.txt",

@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Changed
 - Text Encoder / CLIP selection in Inference is now enabled via the cogwheel ⚙️ button next to the model selector 
 - Added more base model types to the CivitAI Model Browser & Checkpoint Manager
+- Updated Russian translations thanks to @vanja-san
+- Updated Simplified Chinese translations thanks to @QL-boy
 ### Fixed
 - Fixed some instances of Civitai model browser not loading new results
 - Fixed "Unsupported Torch Version: Cuda" errors when installing a1111
@@ -54,6 +56,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added new package - [SimpleSDXL](https://github.com/metercai/SimpleSDXL) - many thanks to @NullDev for the contribution!
 - Added new package - [FluxGym](https://github.com/cocktailpeanut/fluxgym) - many thanks to @NullDev for the contribution!
 - Added more base model types to the CivitAI Model Browser & Checkpoint Manager
+### Changed
+- Updated Russian translations thanks to @vanja-san
+- Updated Simplified Chinese translations thanks to @QL-boy
 ### Fixed
 - Fixed some cases of FileTransferExists error when running re/Forge or Automatic1111
 - Fixed update check not happening on startup for some users

@@ -7,6 +7,7 @@ namespace StabilityMatrix.Core.Models;
 public static class GlobalConfig
 {
     private static DirectoryPath? libraryDir;
+    private static DirectoryPath? modelsDir;
 
     /// <summary>
     /// Absolute path to the library directory.
@@ -19,7 +20,9 @@ public static class GlobalConfig
         {
             if (libraryDir is null)
             {
-                throw new NullReferenceException("GlobalConfig.LibraryDir was not set before being accessed.");
+                throw new NullReferenceException(
+                    "GlobalConfig.LibraryDir was not set before being accessed."
+                );
             }
             return libraryDir;
         }
@@ -38,4 +41,17 @@ public static class GlobalConfig
     /// Currently %APPDATA%\StabilityMatrix
     ///</summary>
     public static DirectoryPath HomeDir { get; set; } = AppDataDir.JoinDir("StabilityMatrix");
+
+    public static DirectoryPath ModelsDir
+    {
+        get
+        {
+            if (modelsDir is null)
+            {
+                throw new NullReferenceException("GlobalConfig.ModelsDir was not set before being accessed.");
+            }
+            return modelsDir;
+        }
+        set => modelsDir = value;
+    }
 }

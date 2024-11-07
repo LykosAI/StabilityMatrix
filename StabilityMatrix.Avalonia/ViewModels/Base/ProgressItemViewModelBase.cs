@@ -16,5 +16,5 @@ public abstract partial class ProgressItemViewModelBase : ViewModelBase
 
     public virtual bool IsCompleted => Progress.Value >= 100 || Failed;
 
-    public ContentDialogProgressViewModelBase Progress { get; } = new();
+    public ContentDialogProgressViewModelBase Progress { get; init; } = new();
 }

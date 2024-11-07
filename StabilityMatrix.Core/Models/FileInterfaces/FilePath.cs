@@ -244,6 +244,24 @@ public partial class FilePath : FileSystemPath, IPathObject
         return destinationFile;
     }
 
+    /// <summary>
+    /// Copy the file to a target path asynchronously with a specified the file share mode.
+    /// </summary>
+    public async Task<FilePath> CopyToAsync(
+        FilePath destinationFile,
+        FileShare sourceShare,
+        bool overwrite = false
+    )
+    {
+        await using var sourceStream = Info.Open(FileMode.Open, FileAccess.Read, sourceShare);
+        await using var destinationStream = destinationFile.Info.OpenWrite();
+
+        await sourceStream.CopyToAsync(destinationStream).ConfigureAwait(false);
+
+        // Return the new path
+        return destinationFile;
+    }
+
     // Implicit conversions to and from string
     public static implicit operator string(FilePath path) => path.FullPath;
 

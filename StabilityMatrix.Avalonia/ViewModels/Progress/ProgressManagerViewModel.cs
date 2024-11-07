@@ -37,6 +37,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 [Singleton]
 public partial class ProgressManagerViewModel : PageViewModelBase
 {
+    private readonly ITrackedDownloadService trackedDownloadService;
     private readonly INotificationService notificationService;
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly INavigationService<SettingsViewModel> settingsNavService;
@@ -58,6 +59,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         INavigationService<SettingsViewModel> settingsNavService
     )
     {
+        this.trackedDownloadService = trackedDownloadService;
         this.notificationService = notificationService;
         this.navigationService = navigationService;
         this.settingsNavService = settingsNavService;
@@ -186,7 +188,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
             }
         };
 
-        var vm = new DownloadProgressItemViewModel(e);
+        var vm = new DownloadProgressItemViewModel(trackedDownloadService, e);
 
         ProgressItems.Add(vm);
     }
@@ -197,7 +199,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         {
             if (ProgressItems.Any(vm => vm.Id == download.Id))
                 continue;
-            var vm = new DownloadProgressItemViewModel(download);
+            var vm = new DownloadProgressItemViewModel(trackedDownloadService, download);
             ProgressItems.Add(vm);
         }
     }

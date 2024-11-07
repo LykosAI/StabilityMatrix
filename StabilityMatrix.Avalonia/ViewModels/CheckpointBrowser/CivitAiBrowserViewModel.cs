@@ -192,6 +192,17 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             settings => settings.HideEarlyAccessModels,
             true
         );
+
+        EventManager.Instance.NavigateAndFindCivitAuthorRequested += OnNavigateAndFindCivitAuthorRequested;
+    }
+
+    private void OnNavigateAndFindCivitAuthorRequested(object? sender, string e)
+    {
+        if (string.IsNullOrWhiteSpace(e))
+            return;
+
+        SearchQuery = $"@{e}";
+        SearchModelsCommand.ExecuteAsync(false).SafeFireAndForget();
     }
 
     private void OnNavigateAndFindCivitModelRequested(object? sender, int e)

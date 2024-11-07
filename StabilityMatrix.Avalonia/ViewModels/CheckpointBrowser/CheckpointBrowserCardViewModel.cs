@@ -213,6 +213,12 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     }
 
     [RelayCommand]
+    public void SearchAuthor()
+    {
+        EventManager.Instance.OnNavigateAndFindCivitAuthorRequested(CivitModel.Creator.Username);
+    }
+
+    [RelayCommand]
     private async Task ShowVersionDialog(CivitModel model)
     {
         var versions = model.ModelVersions;
@@ -284,7 +290,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             var defaultPath = Path.Combine(@"Models", sharedFolder);
 
             var subFolder = viewModel?.SelectedInstallLocation ?? defaultPath;
-            downloadPath = Path.Combine(settingsManager.LibraryDir, subFolder);
+            subFolder = subFolder.StripStart(@$"Models{Path.DirectorySeparatorChar}");
+            downloadPath = Path.Combine(settingsManager.ModelsDirectory, subFolder);
         }
 
         await Task.Delay(100);

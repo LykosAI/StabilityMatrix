@@ -3,15 +3,18 @@ using System.Threading.Tasks;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 
 public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
 {
+    private readonly ITrackedDownloadService downloadService;
     private readonly TrackedDownload download;
 
-    public DownloadProgressItemViewModel(TrackedDownload download)
+    public DownloadProgressItemViewModel(ITrackedDownloadService downloadService, TrackedDownload download)
     {
+        this.downloadService = downloadService;
         this.download = download;
 
         Id = download.Id;
@@ -42,7 +45,7 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
 
     private void OnProgressStateChanged(ProgressState state)
     {
-        if (state == ProgressState.Inactive)
+        if (state is ProgressState.Inactive or ProgressState.Paused)
         {
             Progress.Text = "Paused";
         }
@@ -62,6 +65,10 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
         {
             Progress.Text = "Failed";
         }
+        else if (state == ProgressState.Pending)
+        {
+            Progress.Text = "Waiting for other downloads to finish";
+        }
     }
 
     /// <inheritdoc />
@@ -75,13 +82,13 @@ public class DownloadProgressItemViewModel : PausableProgressItemViewModelBase
     public override Task Pause()
     {
         download.Pause();
+        State = ProgressState.Paused;
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
     public override Task Resume()
     {
-        download.Resume();
-        return Task.CompletedTask;
+        return downloadService.TryResumeDownload(download);
     }
 }

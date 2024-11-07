@@ -90,7 +90,7 @@ public partial class DownloadResourceViewModel(
         download.ExtractRelativePath = Resource.ExtractRelativePath;
 
         download.ContextAction = new ModelPostDownloadContextAction();
-        download.Start();
+        trackedDownloadService.TryStartDownload(download);
 
         EventManager.Instance.OnToggleProgressFlyout();
 

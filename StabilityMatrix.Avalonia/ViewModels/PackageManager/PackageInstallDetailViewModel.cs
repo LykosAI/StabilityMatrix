@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
-using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -24,7 +22,6 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Analytics;
-using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
@@ -58,7 +55,8 @@ public partial class PackageInstallDetailViewModel(
     public string FullInstallPath => Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
     public bool ShowReleaseMode => SelectedPackage.ShouldIgnoreReleases == false;
 
-    public string ReleaseLabelText => IsReleaseMode ? Resources.Label_Version : Resources.Label_Branch;
+    public string? ReleaseTooltipText =>
+        ShowReleaseMode ? null : Resources.Label_ReleasesUnavailableForThisPackage;
 
     public bool ShowTorchIndexOptions => SelectedTorchIndex != TorchIndex.None;
 
@@ -70,7 +68,7 @@ public partial class PackageInstallDetailViewModel(
     private bool showDuplicateWarning;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ReleaseLabelText))]
+    [NotifyPropertyChangedFor(nameof(ReleaseTooltipText))]
     private bool isReleaseMode;
 
     [ObservableProperty]

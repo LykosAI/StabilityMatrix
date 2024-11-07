@@ -5,6 +5,21 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.12.3
+### Added
+- Added new package - [SimpleSDXL](https://github.com/metercai/SimpleSDXL) - many thanks to @NullDev for the contribution!
+- Added new package - [FluxGym](https://github.com/cocktailpeanut/fluxgym) - many thanks to @NullDev for the contribution!
+- Added more base model types to the CivitAI Model Browser & Checkpoint Manager
+### Changed
+- Updated Russian translations thanks to @vanja-san
+- Updated Simplified Chinese translations thanks to @QL-boy
+### Fixed
+- Fixed some cases of FileTransferExists error when running re/Forge or Automatic1111
+- Fixed update check not happening on startup for some users
+- Fixed error when installing Automatic1111 on macOS
+- Fixed some instances of Civitai model browser not loading new results
+- Fixed "Unsupported Torch Version: Cuda" errors when installing a1111
+
 ## v2.12.2
 ### Added
 - Added Beta scheduler to the scheduler selector in Inference

@@ -387,6 +387,16 @@ public class ComfyNodeBuilder
         public required string WeightDtype { get; init; }
     }
 
+    public record CLIPLoader : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required string ClipName { get; init; }
+
+        /// <summary>
+        /// possible values: "stable_diffusion", "stable_cascade", "sd3", "stable_audio", "mochi"
+        /// </summary>
+        public required string Type { get; init; }
+    }
+
     public record DualCLIPLoader : ComfyTypedNodeBase<ClipNodeConnection>
     {
         public required string ClipName1 { get; init; }
@@ -396,6 +406,15 @@ public class ComfyNodeBuilder
         /// possible values: "sdxl", "sd3", "flux"
         /// </summary>
         public required string Type { get; init; }
+    }
+
+    public record TripleCLIPLoader : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required string ClipName1 { get; init; }
+        public required string ClipName2 { get; init; }
+        public required string ClipName3 { get; init; }
+
+        // no type, always sd3 I guess?
     }
 
     public record FluxGuidance : ComfyTypedNodeBase<ConditioningNodeConnection>

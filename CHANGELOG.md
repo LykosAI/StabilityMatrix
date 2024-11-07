@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.13.0-dev.3
 ### Added
+- Added support for SD3.5 in Inference
+- Added CLIP_G to HuggingFace model browser
+### Changed
+- Text Encoder / CLIP selection in Inference is now enabled via the cogwheel ⚙️ button next to the model selector 
 - Added more base model types to the CivitAI Model Browser & Checkpoint Manager
 ### Fixed
 - Fixed some instances of Civitai model browser not loading new results

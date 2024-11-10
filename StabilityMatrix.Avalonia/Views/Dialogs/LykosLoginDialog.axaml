@@ -3,132 +3,128 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:sm="clr-namespace:StabilityMatrix.Avalonia"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-    xmlns:sm="clr-namespace:StabilityMatrix.Avalonia"
-    xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
-    xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
-    Focusable="True"
     MaxWidth="400"
     d:DataContext="{x:Static mocks:DesignData.LykosLoginViewModel}"
     d:DesignHeight="350"
     d:DesignWidth="400"
     x:DataType="vmDialogs:LykosLoginViewModel"
+    Focusable="True"
     mc:Ignorable="d">
 
     <sg:SpacedGrid MinWidth="400" MinHeight="300">
         <!--<TextBlock Text="Log in or sign up" Theme="{DynamicResource SubtitleTextBlockStyle}" />-->
         <TabControl SelectedIndex="{Binding IsSignupMode}">
-            <TabItem
-                FontSize="20"
-                Header="Login">
-                
+            <TabItem FontSize="20" Header="Login">
+
                 <sg:SpacedGrid
                     Margin="-4,32,-4,8"
                     RowDefinitions="Auto,Auto,Auto,*,*"
                     RowSpacing="8">
                     <!--  Username  -->
                     <TextBox
-                        Watermark="{x:Static lang:Resources.Label_Email}"
+                        Grid.Row="0"
                         Text="{Binding Email}"
                         UseFloatingWatermark="True"
-                        Grid.Row="0" />
+                        Watermark="{x:Static lang:Resources.Label_Email}" />
                     <!--  Password  -->
-                    <MaskedTextBox 
+                    <MaskedTextBox
+                        Grid.Row="1"
                         PasswordChar="*"
                         Text="{Binding Password}"
-                        Watermark="{x:Static lang:Resources.Label_Password}"
-                        Grid.Row="1" />
-                    
-                    <ui:InfoBar 
-                        Severity="Error"
-                        IsOpen="{Binding LoginError, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Watermark="{x:Static lang:Resources.Label_Password}" />
+
+                    <ui:InfoBar
                         Title="{Binding LoginError.Message}"
+                        Grid.Row="2"
+                        IsOpen="{Binding LoginError, Converter={x:Static ObjectConverters.IsNotNull}}"
                         Message="{Binding LoginError.Details}"
-                        Grid.Row="2"/>
-                    
+                        Severity="Error" />
+
                     <controls:HyperlinkIconButton
+                        Grid.Row="3"
                         VerticalAlignment="Bottom"
                         Content="Forgot Password?"
-                        NavigateUri="{x:Static sm:Assets.LykosForgotPasswordUrl}"
-                        Grid.Row="3"/>
-                    
+                        NavigateUri="{x:Static sm:Assets.LykosForgotPasswordUrl}" />
+
                     <controls:HyperlinkIconButton
+                        Grid.Row="4"
                         VerticalAlignment="Bottom"
-                        Content="Sign in with Google"
                         Command="{Binding GoogleOAuthButtonClickCommand}"
-                        Grid.Row="4"/>
+                        Content="Sign in with Google" />
                 </sg:SpacedGrid>
-                
+
             </TabItem>
-            <TabItem
-                FontSize="20"
-                Header="Sign up">
-                
+            <TabItem FontSize="20" Header="Sign up">
+
                 <sg:SpacedGrid
                     Margin="-4,32,-4,8"
                     RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
                     RowSpacing="8">
                     <!--  Email  -->
                     <TextBox
-                        Watermark="{x:Static lang:Resources.Label_Email}"
+                        Grid.Row="0"
                         Text="{Binding Email}"
                         UseFloatingWatermark="True"
-                        Grid.Row="0" />
+                        Watermark="{x:Static lang:Resources.Label_Email}" />
                     <!--  Username  -->
                     <TextBox
-                        Watermark="{x:Static lang:Resources.Label_Username}"
+                        Grid.Row="1"
                         Text="{Binding Username}"
                         UseFloatingWatermark="True"
-                        Grid.Row="1" />
+                        Watermark="{x:Static lang:Resources.Label_Username}" />
                     <!--  Password  -->
-                    <TextBox 
+                    <TextBox
+                        Grid.Row="2"
                         PasswordChar="*"
                         Text="{Binding Password}"
-                        Watermark="{x:Static lang:Resources.Label_Password}"
                         UseFloatingWatermark="True"
-                        Grid.Row="2" />
+                        Watermark="{x:Static lang:Resources.Label_Password}" />
                     <!--  Confirm Password  -->
-                    <TextBox 
+                    <TextBox
+                        Grid.Row="3"
                         PasswordChar="*"
                         Text="{Binding ConfirmPassword}"
-                        Watermark="{x:Static lang:Resources.Label_ConfirmPassword}"
                         UseFloatingWatermark="True"
-                        Grid.Row="3" />
-                    
-                    <ui:InfoBar 
-                        Severity="Error"
-                        IsOpen="{Binding SignupError, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        Watermark="{x:Static lang:Resources.Label_ConfirmPassword}" />
+
+                    <ui:InfoBar
                         Title="{Binding SignupError.Message}"
+                        Grid.Row="4"
+                        IsOpen="{Binding SignupError, Converter={x:Static ObjectConverters.IsNotNull}}"
                         Message="{Binding SignupError.Details}"
-                        Grid.Row="4"/>
-                    
-                    <mdxaml:MarkdownScrollViewer
+                        Severity="Error" />
+
+                    <controls:BetterMarkdownScrollViewer
                         Grid.Row="5"
+                        MaxWidth="380"
                         Margin="4,0"
                         VerticalAlignment="Bottom"
-                        MaxWidth="380"
-                        TextElement.Foreground="{DynamicResource TextFillColorTertiaryBrush}"
-                        Markdown="{Binding SignupFooterMarkdown}">
-                        <mdxaml:MarkdownScrollViewer.Styles>
+                        Markdown="{Binding SignupFooterMarkdown}"
+                        TextElement.Foreground="{DynamicResource TextFillColorTertiaryBrush}">
+                        <controls:BetterMarkdownScrollViewer.Styles>
                             <Style Selector="ctxt|CHyperlink">
                                 <Style.Setters>
-                                    <Setter Property="IsUnderline" Value="False"/>
+                                    <Setter Property="IsUnderline" Value="False" />
                                 </Style.Setters>
                             </Style>
                             <Style Selector="ctxt|CHyperlink:pointerover">
-                                <Setter Property="IsUnderline" Value="True"/>
-                                <Setter Property="Foreground" Value="{StaticResource ThemeEldenRingOrangeColor}"/>
+                                <Setter Property="IsUnderline" Value="True" />
+                                <Setter Property="Foreground" Value="{StaticResource ThemeEldenRingOrangeColor}" />
                             </Style>
-                        </mdxaml:MarkdownScrollViewer.Styles>
-                    </mdxaml:MarkdownScrollViewer>
+                        </controls:BetterMarkdownScrollViewer.Styles>
+                    </controls:BetterMarkdownScrollViewer>
                 </sg:SpacedGrid>
-                
+
             </TabItem>
         </TabControl>
     </sg:SpacedGrid>

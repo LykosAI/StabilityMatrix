@@ -1,107 +1,120 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-                          xmlns:ui="using:FluentAvalonia.UI.Controls"
-                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
-                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                          xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
-                          d:DataContext="{x:Static mocks:DesignData.UpdateViewModel}"
-                          x:DataType="dialogs:UpdateViewModel"
-                          mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="550"
-                          x:Class="StabilityMatrix.Avalonia.Views.Dialogs.UpdateDialog">
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.UpdateDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    d:DataContext="{x:Static mocks:DesignData.UpdateViewModel}"
+    d:DesignHeight="550"
+    d:DesignWidth="700"
+    x:DataType="dialogs:UpdateViewModel"
+    mc:Ignorable="d">
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto">
-        
+
         <!--<TitleBar Background="{ui:ThemeResource ApplicationBackgroundBrush}">
             <TitleBar.Header>
                 <TextBlock Margin="16,8" Text="Stability Matrix - Update Available" />
             </TitleBar.Header>
         </TitleBar>-->
-        
-        <TextBlock Grid.Row="0" 
-                   Text="{x:Static lang:Resources.Label_NewVersionAvailable}"
-                   HorizontalAlignment="Center"
-                   FontWeight="Thin"
-                   Margin="0,16,0,0"
-                   FontSize="28"/>
-        
-        <StackPanel Grid.Row="1" 
-                    Margin="0,4"
-                    Orientation="Horizontal" 
-                    IsVisible="{Binding UpdateText, Converter={x:Static StringConverters.IsNullOrEmpty}}"
-                    HorizontalAlignment="Center">
+
+        <TextBlock
+            Grid.Row="0"
+            Margin="0,16,0,0"
+            HorizontalAlignment="Center"
+            FontSize="28"
+            FontWeight="Thin"
+            Text="{x:Static lang:Resources.Label_NewVersionAvailable}" />
+
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,4"
+            HorizontalAlignment="Center"
+            IsVisible="{Binding UpdateText, Converter={x:Static StringConverters.IsNullOrEmpty}}"
+            Orientation="Horizontal">
             <TextBlock
-                Foreground="{StaticResource ThemeGreyColor}"
                 FontSize="18"
-                Text="{Binding CurrentVersionText}"/>
-            <fluentIcons:SymbolIcon 
-                FontSize="15"
+                Foreground="{StaticResource ThemeGreyColor}"
+                Text="{Binding CurrentVersionText}" />
+            <fluentIcons:SymbolIcon
                 Margin="8,0"
                 VerticalAlignment="Center"
-                Symbol="ArrowRight" 
-                IconVariant="Filled"/>
-            <TextBlock
-                FontSize="18"
-                Text="{Binding NewVersionText}"/>
+                FontSize="15"
+                IconVariant="Filled"
+                Symbol="ArrowRight" />
+            <TextBlock FontSize="18" Text="{Binding NewVersionText}" />
         </StackPanel>
-        
-        <TextBlock Grid.Row="1" 
-                   HorizontalAlignment="Center"
-                   FontSize="18"
-                   TextWrapping="Wrap"
-                   TextAlignment="Center"
-                   IsVisible="{Binding UpdateText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                   Text="{Binding UpdateText}"
-                   Margin="16,32,16,0"/>
-        
-        <TextBlock Grid.Row="2" 
-                   Text="{x:Static lang:Resources.Label_ReleaseNotes}" 
-                   FontSize="16"
-                   IsVisible="{Binding !ShowProgressBar}"
-                   Margin="32,16,32,0"/>
-        
-        <ProgressBar Grid.Row="3" 
-                     Height="200"
-                     Value="{Binding ProgressValue}"
-                     IsIndeterminate="{Binding IsProgressIndeterminate}"
-                     IsVisible="{Binding ShowProgressBar}"
-                     Margin="32"/>
-        
-        <Grid Grid.Row="4" 
-              Margin="8"
-              IsVisible="{Binding !ShowProgressBar}">
-            <Border Margin="32, 16"
-                    CornerRadius="8"
-                    Background="{DynamicResource ButtonBackgroundPressed}">
-                <mdxaml:MarkdownScrollViewer
-                    Margin="16"
-                    Markdown="{Binding ReleaseNotes, Mode=OneWay}"/>
+
+        <TextBlock
+            Grid.Row="1"
+            Margin="16,32,16,0"
+            HorizontalAlignment="Center"
+            FontSize="18"
+            IsVisible="{Binding UpdateText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            Text="{Binding UpdateText}"
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
+
+        <TextBlock
+            Grid.Row="2"
+            Margin="32,16,32,0"
+            FontSize="16"
+            IsVisible="{Binding !ShowProgressBar}"
+            Text="{x:Static lang:Resources.Label_ReleaseNotes}" />
+
+        <ProgressBar
+            Grid.Row="3"
+            Height="200"
+            Margin="32"
+            IsIndeterminate="{Binding IsProgressIndeterminate}"
+            IsVisible="{Binding ShowProgressBar}"
+            Value="{Binding ProgressValue}" />
+
+        <Grid
+            Grid.Row="4"
+            Margin="8"
+            IsVisible="{Binding !ShowProgressBar}">
+            <Border
+                Margin="32,16"
+                Background="{DynamicResource ButtonBackgroundPressed}"
+                CornerRadius="8">
+                <controls:BetterMarkdownScrollViewer Margin="16" Markdown="{Binding ReleaseNotes, Mode=OneWay}" />
             </Border>
         </Grid>
-        
-        <ui:InfoBar Grid.Row="5" 
-                    Margin="64,0,64,16"
-                    IsOpen="True"
-                    IsClosable="False"
-                    Title="{x:Static lang:Resources.Text_AppWillRelaunchAfterUpdate}" /> 
-        
-        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
-            <Button Content="{x:Static lang:Resources.Action_RemindMeLater}"
-                    Classes="info"
-                    Margin="0,0,8,0"
-                    FontSize="15"
-                    Command="{Binding OnCloseButtonClick}"
-                    IsEnabled="{Binding !InstallUpdateCommand.IsRunning}" />
-            
-            <Button Content="{x:Static lang:Resources.Action_InstallNow}"
-                    Classes="success"
-                       Margin="8,0,0,0"
-                       FontSize="15"
-                       Command="{Binding InstallUpdateCommand}" />
+
+        <ui:InfoBar
+            Title="{x:Static lang:Resources.Text_AppWillRelaunchAfterUpdate}"
+            Grid.Row="5"
+            Margin="64,0,64,16"
+            IsClosable="False"
+            IsOpen="True" />
+
+        <StackPanel
+            Grid.Row="6"
+            Margin="0,0,0,16"
+            HorizontalAlignment="Center"
+            Orientation="Horizontal">
+            <Button
+                Margin="0,0,8,0"
+                Classes="info"
+                Command="{Binding OnCloseButtonClick}"
+                Content="{x:Static lang:Resources.Action_RemindMeLater}"
+                FontSize="15"
+                IsEnabled="{Binding !InstallUpdateCommand.IsRunning}" />
+
+            <Button
+                Margin="8,0,0,0"
+                Classes="success"
+                Command="{Binding InstallUpdateCommand}"
+                Content="{x:Static lang:Resources.Action_InstallNow}"
+                FontSize="15" />
         </StackPanel>
-        
+
     </Grid>
 </controls:UserControlBase>

@@ -113,7 +113,7 @@
         <PackageReference Include="FuzzySharp" Version="2.0.2" />
         <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
         <PackageReference Include="KeyedSemaphores" Version="5.0.0" />
-        <PackageReference Include="Markdown.Avalonia" Version="11.0.2" />
+        <PackageReference Include="Markdown.Avalonia" Version="11.0.3-a1" />
         <PackageReference Include="MessagePipe" Version="1.8.1" />
         <PackageReference Include="MessagePipe.Interprocess" Version="1.8.1" />
         <PackageReference Include="MetadataExtractor" Version="2.8.1" />

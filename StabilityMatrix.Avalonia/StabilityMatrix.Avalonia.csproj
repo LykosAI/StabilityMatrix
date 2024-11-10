@@ -82,11 +82,12 @@
         <PackageReference Include="AutoComplete.Net" Version="1.2211.2014.42"/>
         <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.1.0" />
         <PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="$(AvaloniaVersion)" />
+        <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.4" />
         <PackageReference Include="Avalonia.Controls.PanAndZoom" Version="11.1.0.1" />
         <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+        <PackageReference Include="Avalonia.Svg" Version="11.1.0.1" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Avalonia.HtmlRenderer" Version="11.0.0" />
@@ -113,7 +114,7 @@
         <PackageReference Include="FuzzySharp" Version="2.0.2" />
         <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
         <PackageReference Include="KeyedSemaphores" Version="5.0.0" />
-        <PackageReference Include="Markdown.Avalonia" Version="11.0.2" />
+        <PackageReference Include="Markdig" Version="0.38.0" />
         <PackageReference Include="MessagePipe" Version="1.8.1" />
         <PackageReference Include="MessagePipe.Interprocess" Version="1.8.1" />
         <PackageReference Include="MetadataExtractor" Version="2.8.1" />
@@ -154,6 +155,7 @@
         <AvaloniaResource Include="Assets\Icon.png" />
         <AvaloniaResource Include="Assets\hf-packages.json" />
         <AvaloniaResource Include="Assets\santahat.png" />
+        <AvaloniaResource Include="Assets\markdown.css" />
     </ItemGroup>
 
     <ItemGroup>

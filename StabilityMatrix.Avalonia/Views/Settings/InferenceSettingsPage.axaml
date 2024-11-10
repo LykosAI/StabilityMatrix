@@ -9,12 +9,12 @@
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:native="clr-namespace:StabilityMatrix.Native;assembly=StabilityMatrix.Native"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
-    xmlns:native="clr-namespace:StabilityMatrix.Native;assembly=StabilityMatrix.Native"
     d:DataContext="{x:Static mocks:DesignData.InferenceSettingsViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="900"
@@ -103,12 +103,12 @@
                             <CheckBox Margin="8" IsChecked="{Binding IsImageViewerPixelGridEnabled}" />
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
-                    
-                    <!-- Recycle Option -->
-                    <ui:SettingsExpanderItem 
-                        IsVisible="{x:Static native:NativeFileOperations.IsRecycleBinAvailable}"
-                        Content="Move files to the Recycle Bin when deleting" 
-                        Description="If disabled, files will be permanently deleted">
+
+                    <!--  Recycle Option  -->
+                    <ui:SettingsExpanderItem
+                        Content="Move files to the Recycle Bin when deleting"
+                        Description="If disabled, files will be permanently deleted"
+                        IsVisible="{x:Static native:NativeFileOperations.IsRecycleBinAvailable}">
                         <ui:SettingsExpanderItem.IconSource>
                             <fluentIcons:SymbolIconSource Symbol="Delete" />
                         </ui:SettingsExpanderItem.IconSource>
@@ -116,7 +116,7 @@
                             <CheckBox Margin="8" IsChecked="{Binding IsInferenceImageBrowserUseRecycleBinForDelete}" />
                         </ui:SettingsExpanderItem.Footer>
                     </ui:SettingsExpanderItem>
-                    
+
                 </ui:SettingsExpander>
 
                 <!--  Output Image Files  -->
@@ -151,8 +151,6 @@
                     PreferredPlacement="Top"
                     Target="{Binding #OutputImageFileNameFormatTextBox, Mode=OneWay}">
                     <DataGrid AutoGenerateColumns="True" ItemsSource="{Binding OutputImageFileNameFormatVars}" />
-                    <!--<mdxaml:MarkdownScrollViewer
-                        Markdown="{Binding OutputImageFileNameFormatGuideMarkdown}"/>-->
                 </ui:TeachingTip>
 
             </sg:SpacedGrid>

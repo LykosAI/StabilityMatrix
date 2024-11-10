@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed some instances of Civitai model browser not loading new results
 - Fixed "Unsupported Torch Version: Cuda" errors when installing a1111
+- Fixed crash when clicking "Remind me Later" on the update dialog
 
 ## v2.13.0-dev.2
 ### Added
@@ -50,6 +51,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Supporters
 #### Visionaries
 - A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
+
+## v2.12.4
+### Fixed
+- Fixed crash when clicking "Remind me Later" on the update dialog
 
 ## v2.12.3
 ### Added

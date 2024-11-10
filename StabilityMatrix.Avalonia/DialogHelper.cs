@@ -19,7 +19,6 @@ using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
-using Markdown.Avalonia;
 using NLog;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
@@ -81,7 +80,7 @@ public static class DialogHelper
         IReadOnlyList<TextBoxField> textFields
     )
     {
-        return CreateTextEntryDialog(title, new MarkdownScrollViewer { Markdown = description }, textFields);
+        return CreateTextEntryDialog(title, new MarkdownViewer { Text = description }, textFields);
     }
 
     /// <summary>
@@ -94,7 +93,7 @@ public static class DialogHelper
         IReadOnlyList<TextBoxField> textFields
     )
     {
-        var markdown = new MarkdownScrollViewer { Markdown = description };
+        var markdown = new MarkdownViewer { Text = description };
         var image = new BetterAdvancedImage((Uri?)null)
         {
             Source = imageSource,
@@ -235,7 +234,7 @@ public static class DialogHelper
     {
         Dispatcher.UIThread.VerifyAccess();
 
-        var viewer = new MarkdownScrollViewer { Markdown = markdown };
+        var viewer = new MarkdownViewer { Text = markdown };
 
         // Apply syntax highlighting to code blocks if preset is provided
         if (editorPreset != default)

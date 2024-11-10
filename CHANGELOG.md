@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added support for SD3.5 in Inference
 - Added CLIP_G to HuggingFace model browser
+- Added search bar to the Installed Workflows tab
+- Added "Search with Google" and "Search with ChatGPT" to the console output context menu
+- Added "Date Created" and "Date Last Modified" sorting options to the Checkpoints tab
 ### Changed
 - Text Encoder / CLIP selection in Inference is now enabled via the cogwheel ⚙️ button next to the model selector 
 - Added more base model types to the CivitAI Model Browser & Checkpoint Manager

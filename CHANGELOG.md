@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added more base model types to the CivitAI Model Browser & Checkpoint Manager
 - Updated Russian translations thanks to @vanja-san
 - Updated Simplified Chinese translations thanks to @QL-boy
+- (Internal) Updated to Avalonia 11.2.0
 ### Fixed
 - Fixed some instances of Civitai model browser not loading new results
 - Fixed "Unsupported Torch Version: Cuda" errors when installing a1111

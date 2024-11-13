@@ -188,7 +188,7 @@ public abstract class BasePackage
         int page = 1,
         int perPage = 10
     );
-    public abstract Task<DownloadPackageVersionOptions> GetLatestVersion(bool includePrerelease = false);
+    public abstract Task<DownloadPackageVersionOptions?> GetLatestVersion(bool includePrerelease = false);
     public abstract string MainBranch { get; }
     public event EventHandler<int>? Exited;
     public event EventHandler<string>? StartupComplete;

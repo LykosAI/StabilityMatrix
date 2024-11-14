@@ -715,6 +715,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         NoResultsText = "No results found";
     }
 
+    [Localizable(false)]
     private async Task<List<string>> GetBaseModelList()
     {
         try
@@ -724,7 +725,8 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             var baseModels = JsonNode.Parse(jsonContent);
 
             var jArray =
-                baseModels?["error"]["issues"][0]["unionErrors"][0]["issues"][0]["options"] as JsonArray;
+                baseModels?["error"]?["issues"]?[0]?["unionErrors"]?[0]?["issues"]?[0]?["options"]
+                as JsonArray;
             var civitBaseModels = jArray?.GetValues<string>().ToList() ?? [];
 
             civitBaseModels.Insert(0, CivitBaseModelType.All.ToString());

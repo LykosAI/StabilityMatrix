@@ -62,9 +62,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
 
 ## v2.12.4
+### Changed
+- Base model types are now loaded dynamically, reducing the need for updates to add new types
 ### Fixed
 - Fixed crash when clicking "Remind me Later" on the update dialog
-- Base model types are now loaded dynamically, reducing the need for updates to add new types
 - Fixed some cases of crashing when GitHub API rate limits are exceeded
 ### Supporters
 #### Visionaries

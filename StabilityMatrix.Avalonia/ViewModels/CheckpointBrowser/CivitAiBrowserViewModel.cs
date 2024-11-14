@@ -43,6 +43,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     private readonly ISettingsManager settingsManager;
     private readonly ILiteDbContext liteDbContext;
     private readonly INotificationService notificationService;
+    private bool dontSearch = false;
 
     private readonly SourceCache<OrderedValue<CivitModel>, int> modelCache = new(static ov => ov.Value.Id);
 
@@ -99,9 +100,10 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     [NotifyPropertyChangedFor(nameof(StatsResizeFactor))]
     private double resizeFactor;
 
+    private readonly SourceCache<string, string> baseModelCache = new(static s => s);
+
     [ObservableProperty]
-    private IEnumerable<string> baseModelOptions = Enum.GetValues<CivitBaseModelType>()
-        .Select(t => t.GetStringValue());
+    private IObservableCollection<string> allBaseModels = new ObservableCollectionExtended<string>();
 
     public double StatsResizeFactor => Math.Clamp(ResizeFactor, 0.75d, 1.25d);
 
@@ -166,6 +168,10 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             .Filter(filterPredicate)
             .SortAndBind(ModelCards, sortPredicate)
             .Subscribe();
+
+        baseModelCache.Connect().DeferUntilLoaded().SortAndBind(AllBaseModels).Subscribe();
+
+        baseModelCache.AddOrUpdate(Enum.GetValues<CivitBaseModelType>().Select(t => t.GetStringValue()));
 
         settingsManager.RelayPropertyFor(
             this,
@@ -261,18 +267,17 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             return;
         }
 
-        BaseModelOptions = baseModels;
+        baseModelCache.AddOrUpdate(baseModels);
         LoadSelectedBaseModelType();
     }
 
     private void LoadSelectedBaseModelType()
     {
         var searchOptions = settingsManager.Settings.ModelSearchOptions;
-        var searched = HasSearched;
-        HasSearched = false;
+        dontSearch = true;
         SelectedBaseModelType = "All";
         SelectedBaseModelType = searchOptions is null ? "All" : searchOptions.SelectedBaseModelType;
-        HasSearched = searched;
+        dontSearch = false;
     }
 
     /// <summary>
@@ -669,6 +674,9 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
     partial void OnSelectedBaseModelTypeChanged(string value)
     {
+        if (dontSearch)
+            return;
+
         TrySearchAgain().SafeFireAndForget();
         settingsManager.Transaction(
             s =>
@@ -686,6 +694,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     {
         if (!HasSearched)
             return;
+
         modelCache.Clear();
 
         if (shouldUpdatePageNumber)

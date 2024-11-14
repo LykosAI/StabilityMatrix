@@ -506,7 +506,7 @@
                     Grid.Column="3"
                     MinWidth="100"
                     Margin="4,0,4,8"
-                    ItemsSource="{Binding BaseModelOptions}"
+                    ItemsSource="{Binding AllBaseModels}"
                     SelectedItem="{Binding SelectedBaseModelType}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="system:String">

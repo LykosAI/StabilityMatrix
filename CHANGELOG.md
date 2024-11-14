@@ -6,8 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.12.4
+### Changed
+- Model browser base model types are now loaded dynamically from CivitAI, reducing the need for updates to add new types
 ### Fixed
 - Fixed crash when clicking "Remind me Later" on the update dialog
+- Fixed some cases of crashing when GitHub API rate limits are exceeded
+### Supporters
+#### Visionaries
+- A huge thank you to our dedicated Visionary-tier Patreon supporter, **Waterclouds**! We’re thrilled to have your ongoing support!
+#### Pioneers
+- Shoutout to our great Pioneer-tier patrons: **tankfox**, **tanangular**, **Mr. Unknown**, **Szir777**, and our newest Pioneer, **Tigon**!. Your continued support is greatly appreciated!
 
 ## v2.12.3
 ### Added

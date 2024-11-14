@@ -267,7 +267,10 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             return;
         }
 
+        dontSearch = true;
         baseModelCache.AddOrUpdate(baseModels);
+        dontSearch = false;
+
         LoadSelectedBaseModelType();
     }
 

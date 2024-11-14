@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Changed
 - Text Encoder / CLIP selection in Inference is now enabled via the cogwheel ⚙️ button next to the model selector 
 - Added more base model types to the CivitAI Model Browser & Checkpoint Manager
-- Base model types are now loaded dynamically, reducing the need for updates to add new types
+- Model browser base model types are now loaded dynamically from CivitAI, reducing the need for updates to add new types
 - Updated Russian translations thanks to @vanja-san
 - Updated Simplified Chinese translations thanks to @QL-boy
 - (Internal) Updated to Avalonia 11.2.0
@@ -63,7 +63,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.12.4
 ### Changed
-- Base model types are now loaded dynamically, reducing the need for updates to add new types
+- Model browser base model types are now loaded dynamically from CivitAI, reducing the need for updates to add new types
 ### Fixed
 - Fixed crash when clicking "Remind me Later" on the update dialog
 - Fixed some cases of crashing when GitHub API rate limits are exceeded

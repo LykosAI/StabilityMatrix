@@ -11,6 +11,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Apizr;
+using Apizr.Logging;
 using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
@@ -743,6 +745,24 @@ public sealed class App : Application
                 c.Timeout = TimeSpan.FromHours(1);
             })
             .AddPolicyHandler(retryPolicy);
+
+        // Apizr clients
+        services.AddApizrManagerFor<IOpenModelDbApi>(options =>
+        {
+            options
+                .WithRefitSettings(
+                    new RefitSettings(
+                        new SystemTextJsonContentSerializer(OpenModelDbApiJsonContext.Default.Options)
+                    )
+                )
+                .ConfigureHttpClientBuilder(c => c.AddPolicyHandler(retryPolicy))
+                .WithInMemoryCacheHandler()
+                .WithLogging(
+                    HttpTracerMode.ExceptionsOnly,
+                    HttpMessageParts.AllButResponseBody,
+                    LogLevel.Warning
+                );
+        });
 
         // Add Refit client managers
         services.AddHttpClient("A3Client").AddPolicyHandler(localRetryPolicy);

@@ -276,6 +276,18 @@ public partial class CheckpointsPageViewModel(
                                 ? comparer.ThenByAscending(vm => vm.FileSize)
                                 : comparer.ThenByDescending(vm => vm.FileSize);
                         break;
+                    case CheckpointSortMode.Created:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.Created)
+                                : comparer.ThenByDescending(vm => vm.Created);
+                        break;
+                    case CheckpointSortMode.LastModified:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.LastModified)
+                                : comparer.ThenByDescending(vm => vm.LastModified);
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

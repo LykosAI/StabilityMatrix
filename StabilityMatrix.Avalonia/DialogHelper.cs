@@ -80,7 +80,11 @@ public static class DialogHelper
         IReadOnlyList<TextBoxField> textFields
     )
     {
-        return CreateTextEntryDialog(title, new MarkdownViewer { Text = description }, textFields);
+        return CreateTextEntryDialog(
+            title,
+            new BetterMarkdownScrollViewer { Markdown = description },
+            textFields
+        );
     }
 
     /// <summary>
@@ -93,7 +97,7 @@ public static class DialogHelper
         IReadOnlyList<TextBoxField> textFields
     )
     {
-        var markdown = new MarkdownViewer { Text = description };
+        var markdown = new BetterMarkdownScrollViewer { Markdown = description };
         var image = new BetterAdvancedImage((Uri?)null)
         {
             Source = imageSource,
@@ -234,7 +238,7 @@ public static class DialogHelper
     {
         Dispatcher.UIThread.VerifyAccess();
 
-        var viewer = new MarkdownViewer { Text = markdown };
+        var viewer = new BetterMarkdownScrollViewer { Markdown = markdown };
 
         // Apply syntax highlighting to code blocks if preset is provided
         if (editorPreset != default)

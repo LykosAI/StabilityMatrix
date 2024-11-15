@@ -9,15 +9,24 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added support for SD3.5 in Inference
 - Added CLIP_G to HuggingFace model browser
+- Added search bar to the Installed Workflows tab
+- Added "Search with Google" and "Search with ChatGPT" to the console output context menu
+- Added "Date Created" and "Date Last Modified" sorting options to the Checkpoints tab
 ### Changed
 - Text Encoder / CLIP selection in Inference is now enabled via the cogwheel ⚙️ button next to the model selector 
 - Added more base model types to the CivitAI Model Browser & Checkpoint Manager
+- Model browser base model types are now loaded dynamically from CivitAI, reducing the need for updates to add new types
 - Updated Russian translations thanks to @vanja-san
 - Updated Simplified Chinese translations thanks to @QL-boy
+- (Internal) Updated to Avalonia 11.2.0
 ### Fixed
 - Fixed some instances of Civitai model browser not loading new results
 - Fixed "Unsupported Torch Version: Cuda" errors when installing a1111
 - Fixed crash when clicking "Remind me Later" on the update dialog
+- Fixed some cases of crashing when GitHub API rate limits are exceeded
+### Supporters
+#### Visionaries
+- Big shoutout to our amazing Visionary-tier Patreon supporter, **Waterclouds**! We are very grateful for your continued support!
 
 ## v2.13.0-dev.2
 ### Added
@@ -53,8 +62,16 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
 
 ## v2.12.4
+### Changed
+- Model browser base model types are now loaded dynamically from CivitAI, reducing the need for updates to add new types
 ### Fixed
 - Fixed crash when clicking "Remind me Later" on the update dialog
+- Fixed some cases of crashing when GitHub API rate limits are exceeded
+### Supporters
+#### Visionaries
+- A huge thank you to our dedicated Visionary-tier Patreon supporter, **Waterclouds**! We’re thrilled to have your ongoing support!
+#### Pioneers
+- Shoutout to our great Pioneer-tier patrons: **tankfox**, **tanangular**, **Mr. Unknown**, **Szir777**, and our newest Pioneer, **Tigon**!. Your continued support is greatly appreciated!
 
 ## v2.12.3
 ### Added

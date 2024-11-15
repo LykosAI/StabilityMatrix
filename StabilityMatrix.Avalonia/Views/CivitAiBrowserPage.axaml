@@ -506,8 +506,14 @@
                     Grid.Column="3"
                     MinWidth="100"
                     Margin="4,0,4,8"
-                    ItemsSource="{Binding BaseModelOptions}"
-                    SelectedItem="{Binding SelectedBaseModelType}" />
+                    ItemsSource="{Binding AllBaseModels}"
+                    SelectedItem="{Binding SelectedBaseModelType}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="system:String">
+                            <TextBlock MinWidth="100" Text="{Binding .}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
 
                 <ui:CommandBar
                     Grid.Row="0"

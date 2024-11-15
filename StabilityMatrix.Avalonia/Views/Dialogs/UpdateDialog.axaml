@@ -8,6 +8,7 @@
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     d:DataContext="{x:Static mocks:DesignData.UpdateViewModel}"
@@ -83,7 +84,7 @@
                 Margin="32,16"
                 Background="{DynamicResource ButtonBackgroundPressed}"
                 CornerRadius="8">
-                <controls:MarkdownViewer Margin="16" Text="{Binding ReleaseNotes, Mode=OneWay}" />
+                <controls:BetterMarkdownScrollViewer Margin="16" Markdown="{Binding ReleaseNotes, Mode=OneWay}" />
             </Border>
         </Grid>
 

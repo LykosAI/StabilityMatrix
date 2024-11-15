@@ -3,9 +3,11 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:sm="clr-namespace:StabilityMatrix.Avalonia"
@@ -102,14 +104,25 @@
                         Message="{Binding SignupError.Details}"
                         Severity="Error" />
 
-                    <controls:MarkdownViewer
+                    <controls:BetterMarkdownScrollViewer
                         Grid.Row="5"
                         MaxWidth="380"
                         Margin="4,0"
                         VerticalAlignment="Bottom"
-                        CustomCss=".markdown-body a { color: #FF4F00; }"
-                        Text="{Binding SignupFooterMarkdown}"
-                        TextElement.Foreground="{DynamicResource TextFillColorTertiaryBrush}" />
+                        Markdown="{Binding SignupFooterMarkdown}"
+                        TextElement.Foreground="{DynamicResource TextFillColorTertiaryBrush}">
+                        <controls:BetterMarkdownScrollViewer.Styles>
+                            <Style Selector="ctxt|CHyperlink">
+                                <Style.Setters>
+                                    <Setter Property="IsUnderline" Value="False" />
+                                </Style.Setters>
+                            </Style>
+                            <Style Selector="ctxt|CHyperlink:pointerover">
+                                <Setter Property="IsUnderline" Value="True" />
+                                <Setter Property="Foreground" Value="{StaticResource ThemeEldenRingOrangeColor}" />
+                            </Style>
+                        </controls:BetterMarkdownScrollViewer.Styles>
+                    </controls:BetterMarkdownScrollViewer>
                 </sg:SpacedGrid>
 
             </TabItem>

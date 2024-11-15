@@ -74,4 +74,14 @@ public class MarkdownViewer : TemplatedControl
             ParseText(Text);
         }
     }
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        if (change.Property == TextProperty && change.NewValue != null)
+        {
+            ParseText(change.NewValue.ToString());
+        }
+
+        base.OnPropertyChanged(change);
+    }
 }

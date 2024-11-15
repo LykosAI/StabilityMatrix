@@ -26,7 +26,7 @@ public class Fooocus(
     public override string Author => "lllyasviel";
 
     public override string Blurb => "Fooocus is a rethinking of Stable Diffusion and Midjourney’s designs";
-
+    public override string ReadmeFileName => "readme.md";
     public override string LicenseType => "GPL-3.0";
     public override string LicenseUrl => "https://github.com/lllyasviel/Fooocus/blob/main/LICENSE";
     public override string LaunchCommand => "launch.py";

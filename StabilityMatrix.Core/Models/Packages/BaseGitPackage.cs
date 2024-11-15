@@ -33,6 +33,9 @@ public abstract class BaseGitPackage : BasePackage
 
     public virtual string RepositoryName => Name;
     public virtual string RepositoryAuthor => Author;
+    public virtual string ReadmeFileName => "README.md";
+    public virtual string ReadmeUrl =>
+        $"https://raw.githubusercontent.com/{RepositoryAuthor}/{RepositoryName}/refs/heads/{MainBranch}/{ReadmeFileName}";
 
     /// <summary>
     /// URL of the hosted web page on launch

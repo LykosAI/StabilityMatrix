@@ -17,7 +17,7 @@
             <ControlTemplate>
                 <avalonia:HtmlPanel
                     x:Name="PART_HtmlPanel"
-                    Background="#232323"
+                    Background="Transparent"
                     Text="{TemplateBinding Html}" />
             </ControlTemplate>
         </Setter>

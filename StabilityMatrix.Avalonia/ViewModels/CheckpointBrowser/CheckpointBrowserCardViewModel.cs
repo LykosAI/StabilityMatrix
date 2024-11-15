@@ -242,15 +242,16 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             IsFooterVisible = false,
             CloseOnClickOutside = true,
             MaxDialogWidth = 750,
-            MaxDialogHeight = 950,
+            MaxDialogHeight = 1000,
         };
 
-        var prunedDescription = Utilities.RemoveHtml(model.Description);
+        var htmlDescription = $"""<html><body class="markdown-body">{model.Description}</body></html>""";
 
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
         viewModel.Dialog = dialog;
         viewModel.Title = model.Name;
-        viewModel.Description = prunedDescription;
+
+        viewModel.Description = htmlDescription;
         viewModel.CivitModel = model;
         viewModel.Versions = versions
             .Where(v => !settingsManager.Settings.HideEarlyAccessModels || !v.IsEarlyAccess)

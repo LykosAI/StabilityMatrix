@@ -283,11 +283,8 @@
             Margin="8,8"
             ExpandDirection="Down"
             Header="{x:Static lang:Resources.Label_ModelDescription}">
-            <ScrollViewer MaxHeight="200">
-                <TextBlock
-                    Margin="4"
-                    Text="{Binding Description}"
-                    TextWrapping="Wrap" />
+            <ScrollViewer MaxHeight="300">
+                <controls:MarkdownViewer Html="{Binding Description}" />
             </ScrollViewer>
         </Expander>
 

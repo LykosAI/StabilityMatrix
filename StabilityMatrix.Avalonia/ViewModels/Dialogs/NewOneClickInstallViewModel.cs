@@ -76,13 +76,13 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
             .Connect()
             .DeferUntilLoaded()
             .Filter(incompatiblePredicate)
-            .Filter(p => p.OfferInOneClickInstaller)
-            .Sort(
+            .Filter(p => p is { OfferInOneClickInstaller: true, PackageType: PackageType.SdInference })
+            .SortAndBind(
+                ShownPackages,
                 SortExpressionComparer<BasePackage>
                     .Ascending(p => p.InstallerSortOrder)
                     .ThenByAscending(p => p.DisplayName)
             )
-            .Bind(ShownPackages)
             .Subscribe();
 
         AllPackagesCache.AddOrUpdate(packageFactory.GetAllAvailablePackages());

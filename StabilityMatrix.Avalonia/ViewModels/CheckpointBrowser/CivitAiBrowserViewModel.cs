@@ -162,7 +162,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             )
             .DisposeMany()
             .Filter(filterPredicate)
-            .SortAndBind(ModelCards, sortPredicate, new SortAndBindOptions { UseBinarySearch = true })
+            .SortAndBind(ModelCards, sortPredicate)
             .Subscribe();
 
         settingsManager.RelayPropertyFor(

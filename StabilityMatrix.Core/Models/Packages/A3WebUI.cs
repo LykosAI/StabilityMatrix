@@ -212,12 +212,12 @@ public class A3WebUI(
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        var pipArgs = options.PythonOptions.TorchIndex switch
+        var pipArgs = torchVersion switch
         {
             TorchIndex.Mps
                 => new PipInstallArgs()
                     .WithTorch("==2.3.1")
-                    .WithTorchVision("==2.3.1")
+                    .WithTorchVision("==0.18.1")
                     .WithParsedFromRequirementsTxt(
                         await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
                         excludePattern: "torch"
@@ -227,7 +227,7 @@ public class A3WebUI(
                     .WithTorch("==2.1.2")
                     .WithTorchVision("==0.16.2")
                     .WithTorchExtraIndex(
-                        options.PythonOptions.TorchIndex switch
+                        torchVersion switch
                         {
                             TorchIndex.Cpu => "cpu",
                             TorchIndex.Cuda => "cu121",

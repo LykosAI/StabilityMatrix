@@ -18,8 +18,12 @@ public sealed class OpenModelDbBrowserCardViewModel(OpenModelDbManager openModel
     public Uri? ModelUri => Model is { } model ? openModelDbManager.ModelsBaseUri.Append(model.Id) : null;
 
     public Uri? ThumbnailUri =>
-        Model?.Thumbnail?.GetThumbnailAbsoluteUri()
-        ?? Model?.Images?.Select(image => image.GetThumbnailAbsoluteUri()).WhereNotNull().FirstOrDefault();
+        Model?.Thumbnail?.GetImageAbsoluteUris().FirstOrDefault()
+        ?? Model
+            ?.Images
+            ?.Select(image => image.GetImageAbsoluteUris().FirstOrDefault())
+            .WhereNotNull()
+            .FirstOrDefault();
 
     public IEnumerable<OpenModelDbTag> Tags =>
         Model?.Tags?.Select(tagId => openModelDbManager.Tags?.GetValueOrDefault(tagId)).WhereNotNull() ?? [];

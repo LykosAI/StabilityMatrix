@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Avalonia.Data.Converters;
 using StabilityMatrix.Core.Models;
 
@@ -7,13 +8,10 @@ namespace StabilityMatrix.Avalonia.Converters;
 [SuppressMessage("ReSharper", "LocalizableElement")]
 public static class FileSizeConverters
 {
-    public static FuncValueConverter<double?, string> HumanizeFileSizeConverter { get; } =
+    public static FuncValueConverter<object?, string> HumanizeFileSizeConverter { get; } =
         new(value =>
         {
-            if (value is not { } size)
-            {
-                return string.Empty;
-            }
+            var size = Convert.ToDouble(value);
 
             string[] sizeUnits = ["KB", "MB", "GB", "TB"];
 
@@ -28,13 +26,10 @@ public static class FileSizeConverters
             return $"{size:0.##} {sizeUnits[unitIndex]}";
         });
 
-    public static FuncValueConverter<double?, string> HumanizeBinaryFileSizeConverter { get; } =
+    public static FuncValueConverter<object?, string> HumanizeBinaryFileSizeConverter { get; } =
         new(value =>
         {
-            if (value is not { } size)
-            {
-                return string.Empty;
-            }
+            var size = Convert.ToDouble(value);
 
             string[] sizeUnits = ["KiB", "MiB", "GiB", "TiB"];
 

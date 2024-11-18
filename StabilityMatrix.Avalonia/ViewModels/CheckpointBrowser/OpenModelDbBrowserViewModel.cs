@@ -12,7 +12,9 @@ using Fusillade;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
@@ -24,6 +26,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 [Singleton]
 public sealed partial class OpenModelDbBrowserViewModel(
     ILogger<OpenModelDbBrowserViewModel> logger,
+    ServiceManager<ViewModelBase> vmManager,
     OpenModelDbManager openModelDbManager,
     INotificationService notificationService
 ) : TabViewModelBase
@@ -72,6 +75,20 @@ public sealed partial class OpenModelDbBrowserViewModel(
         }
 
         SearchQueryReload.OnNext(Unit.Default);
+    }
+
+    [RelayCommand]
+    private async Task OpenModelCardAsync(OpenModelDbBrowserCardViewModel? card)
+    {
+        if (card?.Model is not { } model)
+        {
+            return;
+        }
+
+        var vm = vmManager.Get<OpenModelDbModelDetailsViewModel>();
+        vm.Model = model;
+
+        await vm.GetDialog().ShowAsync();
     }
 
     /// <summary>

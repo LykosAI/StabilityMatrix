@@ -90,7 +90,7 @@
             x:Key="OpenWorkflowCommand"
             Command="{Binding OpenWorkflowCommand}" />-->
 
-        <input:StandardUICommand x:Key="OpenModelCardCommand" />
+        <input:StandardUICommand x:Key="OpenModelCardCommand" Command="{Binding OpenModelCardCommand}" />
 
         <DataTemplate x:Key="ModelCardTemplate" DataType="{x:Type vmCheckpointBrowser:OpenModelDbBrowserCardViewModel}">
             <Border

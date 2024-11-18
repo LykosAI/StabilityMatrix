@@ -88,6 +88,7 @@
         <StyleInclude Source="Controls/Inference/LayerDiffuseCard.axaml" />
         <StyleInclude Source="Controls/Inference/UnetModelCard.axaml" />
         <StyleInclude Source="Controls/Painting/PaintCanvas.axaml" />
+        <StyleInclude Source="Controls/MarkdownViewer.axaml" />
         <labs:ControlThemes />
 
         <Style Selector="DockControl">

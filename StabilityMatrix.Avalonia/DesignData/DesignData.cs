@@ -420,7 +420,8 @@ public static class DesignData
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
         UpdateViewModel.CurrentVersionText = "v2.0.0";
         UpdateViewModel.NewVersionText = "v2.0.1";
-        UpdateViewModel.ReleaseNotes = "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature";
+        UpdateViewModel.ReleaseNotes =
+            "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature\n - Did some `--code` stuff";
 
         isInitialized = true;
     }

@@ -11,6 +11,7 @@ public enum CivitFileType
     Model,
     VAE,
     Config,
+    Archive,
 
     [EnumMember(Value = "Pruned Model")]
     PrunedModel,

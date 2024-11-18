@@ -37,6 +37,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.OpenArt;
+using StabilityMatrix.Core.Models.Api.OpenModelsDb;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -988,6 +989,18 @@ The gallery images are often inpainted, but you will get something very similar 
             return vm;
         }
     }
+
+    public static OpenModelDbBrowserViewModel OpenModelDbBrowserViewModel
+    {
+        get
+        {
+            var vm = Services.GetRequiredService<OpenModelDbBrowserViewModel>();
+            return vm;
+        }
+    }
+
+    public static OpenModelDbModelDetailsViewModel OpenModelDbModelDetailsViewModel =>
+        DialogFactory.Get<OpenModelDbModelDetailsViewModel>();
 
     public static IList<ICompletionData> SampleCompletionData =>
         new List<ICompletionData>

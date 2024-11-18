@@ -4,7 +4,7 @@ using StabilityMatrix.Core.Converters.Json;
 
 namespace StabilityMatrix.Core.Models.Api.OpenModelsDb;
 
-public class OpenModelDbModel
+public record OpenModelDbModel
 {
     public string? Name { get; set; }
 
@@ -22,4 +22,24 @@ public class OpenModelDbModel
     public List<OpenModelDbResource>? Resources { get; set; }
     public List<OpenModelDbImage>? Images { get; set; }
     public OpenModelDbImage? Thumbnail { get; set; }
+
+    public OpenModelDbModel() { }
+
+    public OpenModelDbModel(OpenModelDbModel model)
+    {
+        Name = model.Name;
+        Author = model.Author;
+        License = model.License;
+        Tags = model.Tags;
+        Description = model.Description;
+        Date = model.Date;
+        Architecture = model.Architecture;
+        Size = model.Size;
+        Scale = model.Scale;
+        InputChannels = model.InputChannels;
+        OutputChannels = model.OutputChannels;
+        Resources = model.Resources;
+        Images = model.Images;
+        Thumbnail = model.Thumbnail;
+    }
 }

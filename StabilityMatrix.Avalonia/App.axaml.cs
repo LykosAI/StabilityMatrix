@@ -747,7 +747,7 @@ public sealed class App : Application
             .AddPolicyHandler(retryPolicy);
 
         // Apizr clients
-        services.AddApizrManagerFor<IOpenModelDbApi>(options =>
+        services.AddApizrManagerFor<IOpenModelDbApi, OpenModelDbManager>(options =>
         {
             options
                 .WithRefitSettings(
@@ -757,12 +757,11 @@ public sealed class App : Application
                 )
                 .ConfigureHttpClientBuilder(c => c.AddPolicyHandler(retryPolicy))
                 .WithInMemoryCacheHandler()
-                .WithLogging(
-                    HttpTracerMode.ExceptionsOnly,
-                    HttpMessageParts.AllButResponseBody,
-                    LogLevel.Warning
-                );
+                .WithLogging(HttpTracerMode.ExceptionsOnly, HttpMessageParts.AllButResponseBody);
         });
+        services.AddSingleton<OpenModelDbManager>(
+            sp => (OpenModelDbManager)sp.GetRequiredService<IApizrManager<IOpenModelDbApi>>()
+        );
 
         // Add Refit client managers
         services.AddHttpClient("A3Client").AddPolicyHandler(localRetryPolicy);

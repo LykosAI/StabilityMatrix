@@ -24,7 +24,6 @@
       <PackageReference Include="Apizr.Extensions.Microsoft.Caching" Version="6.3.0" />
       <PackageReference Include="Apizr.Extensions.Microsoft.DependencyInjection" Version="6.3.0" />
       <PackageReference Include="Apizr.Integrations.Fusillade" Version="6.3.0" />
-      <PackageReference Include="Apizr.Integrations.Optional" Version="6.3.0" />
       <PackageReference Include="AsyncAwaitBestPractices" Version="8.0.0" />
       <PackageReference Include="AutoCtor" Version="2.4.1" />
       <PackageReference Include="Blake3" Version="1.1.0" />

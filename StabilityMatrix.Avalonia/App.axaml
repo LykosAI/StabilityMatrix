@@ -23,9 +23,7 @@
                 <ResourceInclude Source="Styles/ContextMenuStyles.axaml" />
                 <ResourceInclude Source="Controls/EditorFlyouts.axaml" />
                 <ResourceInclude Source="Controls/Scroll/BetterScrollViewer.axaml" />
-                <ResourceInclude Source="Styles/ControlThemes/HyperlinkIconButtonStyles.axaml" />
-                <ResourceInclude Source="Styles/ControlThemes/ListBoxStyles.axaml" />
-                <ResourceInclude Source="Styles/ControlThemes/BetterComboBoxStyles.axaml" />
+                <ResourceInclude Source="Styles/ControlThemes/_index.axaml" />
                 <ResourceInclude Source="Styles/ListBoxStyles.axaml" />
                 <ResourceInclude Source="Styles/FAComboBoxStyles.axaml" />
                 <ResourceInclude Source="Controls/Inference/ImageFolderCard.axaml" />

@@ -4,6 +4,11 @@ public record OpenModelDbKeyedModel : OpenModelDbModel
 {
     public required string Id { get; set; }
 
+    public OpenModelDbKeyedModel() { }
+
+    public OpenModelDbKeyedModel(OpenModelDbModel model)
+        : base(model) { }
+
     public OpenModelDbKeyedModel(OpenModelDbKeyedModel model)
         : base(model)
     {

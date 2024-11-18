@@ -39,9 +39,29 @@ public class OpenModelDbImage
 
         public Uri? Thumbnail { get; set; }
 
-        public override Uri? GetThumbnailAbsoluteUri()
+        [JsonIgnore]
+        public Uri? SrAbsoluteUri => ToAbsoluteUri(Sr);
+
+        [JsonIgnore]
+        public Uri? LrAbsoluteUri => ToAbsoluteUri(Lr);
+
+        public override IEnumerable<Uri> GetImageAbsoluteUris()
         {
-            return ToAbsoluteUri(Sr) ?? ToAbsoluteUri(Lr) ?? ToAbsoluteUri(Thumbnail);
+            var hasHq = false;
+            if (ToAbsoluteUri(Sr) is { } srUri)
+            {
+                hasHq = true;
+                yield return srUri;
+            }
+            if (ToAbsoluteUri(Lr) is { } lrUri)
+            {
+                hasHq = true;
+                yield return lrUri;
+            }
+            if (!hasHq && ToAbsoluteUri(Thumbnail) is { } thumbnail)
+            {
+                yield return thumbnail;
+            }
         }
     }
 
@@ -58,13 +78,20 @@ public class OpenModelDbImage
 
         public Uri? Thumbnail { get; set; }
 
-        public override Uri? GetThumbnailAbsoluteUri()
+        public override IEnumerable<Uri> GetImageAbsoluteUris()
         {
-            return ToAbsoluteUri(Url) ?? ToAbsoluteUri(Thumbnail);
+            if (ToAbsoluteUri(Url) is { } url)
+            {
+                yield return url;
+            }
+            else if (ToAbsoluteUri(Thumbnail) is { } thumbnail)
+            {
+                yield return thumbnail;
+            }
         }
     }
 
-    public static Uri? ToAbsoluteUri(Uri? url)
+    private static Uri? ToAbsoluteUri(Uri? url)
     {
         if (url is null)
         {
@@ -81,8 +108,16 @@ public class OpenModelDbImage
         return new Uri(baseUri, url);
     }
 
-    public virtual Uri? GetThumbnailAbsoluteUri()
+    public virtual IEnumerable<Uri> GetImageAbsoluteUris()
     {
-        return null;
+        return [];
+    }
+}
+
+public static class OpenModelDbImageEnumerableExtensions
+{
+    public static IEnumerable<Uri> SelectImageAbsoluteUris(this IEnumerable<OpenModelDbImage> images)
+    {
+        return images.SelectMany(image => image.GetImageAbsoluteUris());
     }
 }

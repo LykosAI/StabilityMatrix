@@ -23,8 +23,6 @@ public record OpenModelDbModel
     public List<OpenModelDbImage>? Images { get; set; }
     public OpenModelDbImage? Thumbnail { get; set; }
 
-    public OpenModelDbModel() { }
-
     public OpenModelDbModel(OpenModelDbModel model)
     {
         Name = model.Name;

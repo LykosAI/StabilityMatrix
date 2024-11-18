@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     xmlns:local="using:StabilityMatrix.Avalonia"
+    xmlns:styles="clr-namespace:StabilityMatrix.Avalonia.Styles"
     xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
     Name="Stability Matrix"
     RequestedThemeVariant="Dark">
@@ -40,6 +41,7 @@
     </Application.Resources>
 
     <Application.Styles>
+        <styles:SemiStyles />
         <styling:FluentAvaloniaTheme
             PreferUserAccentColor="True"
             TextVerticalAlignmentOverrideBehavior="Disabled"

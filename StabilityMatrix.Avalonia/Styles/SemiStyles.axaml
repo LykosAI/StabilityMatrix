@@ -1,0 +1,44 @@
+﻿<Styles
+    x:Class="StabilityMatrix.Avalonia.Styles.SemiStyles"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:semi="https://irihi.tech/semi">
+    <Styles.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!--  Shared  -->
+                <ResourceInclude Source="avares://Semi.Avalonia/Themes/Base.axaml" />
+                <!--  Carousel  -->
+                <ResourceDictionary>
+                    <ResourceDictionary.ThemeDictionaries>
+                        <ResourceInclude x:Key="Default" Source="avares://Semi.Avalonia/Themes/Light/Carousel.axaml" />
+                        <ResourceInclude x:Key="Dark" Source="avares://Semi.Avalonia/Themes/Dark/Carousel.axaml" />
+                    </ResourceDictionary.ThemeDictionaries>
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceInclude Source="avares://Semi.Avalonia/Controls/Carousel.axaml" />
+                        <ResourceInclude Source="avares://Semi.Avalonia/Themes/Shared/Carousel.axaml" />
+                    </ResourceDictionary.MergedDictionaries>
+                    <!--  Custom  -->
+                    <ControlTheme
+                        x:Key="FullCarousel"
+                        BasedOn="{StaticResource FullCarousel}"
+                        TargetType="Carousel">
+                        <Setter Property="PageTransition">
+                            <CompositePageTransition>
+                                <PageSlide Orientation="Horizontal" Duration="0.167">
+                                    <PageSlide.SlideInEasing>
+                                        <SineEaseIn />
+                                    </PageSlide.SlideInEasing>
+                                    <PageSlide.SlideOutEasing>
+                                        <SineEaseOut />
+                                    </PageSlide.SlideOutEasing>
+                                </PageSlide>
+                                <CrossFade Duration="0.167" />
+                            </CompositePageTransition>
+                        </Setter>
+                    </ControlTheme>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+</Styles>

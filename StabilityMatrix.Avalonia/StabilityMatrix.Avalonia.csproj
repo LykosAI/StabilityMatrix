@@ -136,6 +136,7 @@
         <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.4.0" />
         <PackageReference Include="RockLib.Reflection.Optimized" Version="3.0.0" />
+        <PackageReference Include="Semi.Avalonia" Version="11.2.0" />
         <PackageReference Include="Sentry" Version="4.9.0" />
         <PackageReference Include="Sentry.NLog" Version="4.9.0" />
         <PackageReference Include="SoftCircuits.OrderedDictionary" Version="3.2.0" />

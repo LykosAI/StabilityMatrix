@@ -7,6 +7,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
@@ -17,8 +18,9 @@
     xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
     xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmCheckpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DataContext="{x:Static designData:DesignData.OpenModelDbBrowserViewModel}"
+    d:DesignHeight="650"
+    d:DesignWidth="900"
     x:DataType="vmCheckpointBrowser:OpenModelDbBrowserViewModel"
     mc:Ignorable="d">
     <UserControl.Styles>
@@ -68,6 +70,17 @@
     </UserControl.Styles>
 
     <UserControl.Resources>
+        <DropShadowEffect
+            x:Key="TextDropShadowEffect"
+            BlurRadius="12"
+            Opacity="0.9"
+            Color="#FF000000" />
+        <DropShadowEffect
+            x:Key="ImageDropShadowEffect"
+            BlurRadius="12"
+            Opacity="0.2"
+            Color="#FF000000" />
+
         <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter" />
 
         <!--<input:StandardUICommand
@@ -113,8 +126,8 @@
                         <vendorLabs:BetterAsyncImage
                             Grid.Row="0"
                             Grid.RowSpan="2"
-                            Width="330"
-                            Height="400"
+                            MinWidth="300"
+                            MinHeight="400"
                             CornerRadius="8"
                             Source="{Binding ThumbnailUri}"
                             Stretch="UniformToFill" />
@@ -128,18 +141,6 @@
                             BoxShadow="inset 1.2 0 80 1.8 #66000000"
                             ClipToBounds="True"
                             CornerRadius="16">
-                            <Border.Resources>
-                                <DropShadowEffect
-                                    x:Key="TextDropShadowEffect"
-                                    BlurRadius="12"
-                                    Opacity="0.9"
-                                    Color="#FF000000" />
-                                <DropShadowEffect
-                                    x:Key="ImageDropShadowEffect"
-                                    BlurRadius="12"
-                                    Opacity="0.2"
-                                    Color="#FF000000" />
-                            </Border.Resources>
                             <Button
                                 Padding="10,4"
                                 Classes="transparent"
@@ -184,12 +185,12 @@
                                     TextWrapping="NoWrap"
                                     ToolTip.Tip="{Binding Model.Name}" />
 
-                                <StackPanel
+                                <!--<StackPanel
                                     Grid.Row="2"
                                     Grid.Column="0"
                                     Orientation="Horizontal">
 
-                                    <!--<controls:StarsRating
+                                    <controls:StarsRating
                                         Margin="8,8,0,8"
                                         Background="#66000000"
                                         FontSize="16"
@@ -199,15 +200,38 @@
                                         Margin="4,0,0,0"
                                         VerticalAlignment="Center"
                                         Text="{Binding Stats.NumReviews}"
-                                        TextAlignment="Center" />-->
-                                </StackPanel>
+                                        TextAlignment="Center" />
+                                </StackPanel>-->
+
+                                <!--  Tags  -->
+                                <ui:ItemsRepeater
+                                    Grid.Row="2"
+                                    Grid.Column="0"
+                                    Margin="8"
+                                    HorizontalAlignment="Left"
+                                    ItemsSource="{Binding Tags}">
+                                    <ui:ItemsRepeater.Layout>
+                                        <ui:FlowLayout
+                                            MinColumnSpacing="4"
+                                            MinRowSpacing="2"
+                                            Orientation="Horizontal" />
+                                    </ui:ItemsRepeater.Layout>
+                                    <ui:ItemsRepeater.ItemTemplate>
+                                        <DataTemplate x:DataType="openModelsDb:OpenModelDbTag">
+                                            <Label
+                                                Classes="Teal"
+                                                Content="{Binding Name}"
+                                                Theme="{StaticResource TagLabel}" />
+                                        </DataTemplate>
+                                    </ui:ItemsRepeater.ItemTemplate>
+                                </ui:ItemsRepeater>
 
                                 <StackPanel
                                     Grid.Row="2"
                                     Grid.Column="1"
                                     HorizontalAlignment="Right"
                                     Orientation="Horizontal">
-                                    <avalonia:Icon Value="fa-solid fa-heart" />
+                                    <!--<avalonia:Icon Value="fa-solid fa-heart" />-->
                                     <!--<TextBlock
                                         Margin="4,0"
                                         VerticalAlignment="Center"
@@ -311,11 +335,14 @@
             Grid.Row="2"
             HorizontalContentAlignment="Center"
             IsVisible="{Binding !IsLoading}">
-            <ItemsRepeater ItemTemplate="{StaticResource ModelCardTemplate}" ItemsSource="{Binding FilteredModelCards}">
-                <ItemsRepeater.Layout>
-                    <UniformGridLayout MinColumnSpacing="4" MinRowSpacing="4" />
-                </ItemsRepeater.Layout>
-            </ItemsRepeater>
+            <ui:ItemsRepeater ItemTemplate="{StaticResource ModelCardTemplate}" ItemsSource="{Binding FilteredModelCards}">
+                <ui:ItemsRepeater.Layout>
+                    <ui:UniformGridLayout
+                        ItemsStretch="Fill"
+                        MinItemHeight="400"
+                        MinItemWidth="300" />
+                </ui:ItemsRepeater.Layout>
+            </ui:ItemsRepeater>
         </ScrollViewer>
 
         <StackPanel

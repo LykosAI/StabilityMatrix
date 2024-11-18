@@ -1,24 +1,35 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using Nito.Disposables.Internals;
-using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
-public partial class OpenModelDbBrowserCardViewModel : DisposableViewModelBase
+[Localizable(false)]
+public sealed class OpenModelDbBrowserCardViewModel(OpenModelDbManager openModelDbManager)
 {
-    private static Uri UsersBaseUri => new("https://openmodeldb.info/users");
-    private static Uri ModelsBaseUri => new("https://openmodeldb.info/models");
-
     public OpenModelDbKeyedModel? Model { get; set; }
 
-    public Uri? ModelUri => Model is { } model ? ModelsBaseUri.Append(model.Id) : null;
+    public Uri? ModelUri => Model is { } model ? openModelDbManager.ModelsBaseUri.Append(model.Id) : null;
 
     public Uri? ThumbnailUri =>
         Model?.Thumbnail?.GetThumbnailAbsoluteUri()
         ?? Model?.Images?.Select(image => image.GetThumbnailAbsoluteUri()).WhereNotNull().FirstOrDefault();
+
+    public IEnumerable<OpenModelDbTag> Tags =>
+        Model?.Tags?.Select(tagId => openModelDbManager.Tags?.GetValueOrDefault(tagId)).WhereNotNull() ?? [];
+
+    public OpenModelDbArchitecture? Architecture =>
+        Model?.Architecture is { } architectureId
+            ? openModelDbManager.Architectures?.GetValueOrDefault(architectureId)
+            : null;
+
+    public string? DisplayScale => Model?.Scale is { } scale ? $"{scale}x" : null;
 
     public string? DefaultAuthor
     {
@@ -36,5 +47,6 @@ public partial class OpenModelDbBrowserCardViewModel : DisposableViewModelBase
         }
     }
 
-    public Uri? DefaultAuthorProfileUri => DefaultAuthor is { } author ? UsersBaseUri.Append(author) : null;
+    public Uri? DefaultAuthorProfileUri =>
+        DefaultAuthor is { } author ? openModelDbManager.UsersBaseUri.Append(author) : null;
 }

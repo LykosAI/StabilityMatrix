@@ -1,27 +1,30 @@
 ﻿using System;
-using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Apizr;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Fusillade;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
-using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [View(typeof(OpenModelDbBrowserPage))]
 [Singleton]
-public partial class OpenModelDbBrowserViewModel(
+public sealed partial class OpenModelDbBrowserViewModel(
     ILogger<OpenModelDbBrowserViewModel> logger,
-    IApizrManager<IOpenModelDbApi> apiManager,
+    OpenModelDbManager openModelDbManager,
     INotificationService notificationService
 ) : TabViewModelBase
 {
@@ -31,10 +34,7 @@ public partial class OpenModelDbBrowserViewModel(
     [ObservableProperty]
     private bool isLoading;
 
-    [ObservableProperty]
-    private string? searchQuery;
-
-    private readonly SourceCache<OpenModelDbKeyedModel, string> modelCache = new(static x => x.Id);
+    public SourceCache<OpenModelDbKeyedModel, string> ModelCache { get; } = new(static x => x.Id);
 
     public IObservableCollection<OpenModelDbBrowserCardViewModel> FilteredModelCards { get; } =
         new ObservableCollectionExtended<OpenModelDbBrowserCardViewModel>();
@@ -43,17 +43,18 @@ public partial class OpenModelDbBrowserViewModel(
     {
         base.OnInitialLoaded();
 
-        modelCache
+        ModelCache
             .Connect()
             .DeferUntilLoaded()
             .Filter(SearchQueryPredicate)
-            .Transform(model => new OpenModelDbBrowserCardViewModel { Model = model })
+            .Transform(model => new OpenModelDbBrowserCardViewModel(openModelDbManager) { Model = model })
             .SortAndBind(
                 FilteredModelCards,
                 SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Descending(
                     card => card.Model?.Date ?? DateOnly.MinValue
                 )
             )
+            .ObserveOn(SynchronizationContext.Current!)
             .Subscribe();
     }
 
@@ -69,18 +70,32 @@ public partial class OpenModelDbBrowserViewModel(
             logger.LogWarning(e, "Failed to load models from OpenModelDB");
             notificationService.ShowPersistent("Failed to load models from OpenModelDB", e.Message);
         }
+
+        SearchQueryReload.OnNext(Unit.Default);
     }
 
     /// <summary>
     /// Populate the model cache from api.
     /// </summary>
-    private async Task LoadDataAsync()
+    private async Task LoadDataAsync(Priority priority = default)
     {
-        var response = await apiManager.ExecuteAsync(api => api.GetModels());
+        await openModelDbManager.EnsureMetadataLoadedAsync();
 
-        modelCache.Edit(innerCache =>
+        var response = await openModelDbManager.ExecuteAsync(
+            api => api.GetModels(),
+            options => options.WithPriority(priority)
+        );
+
+        if (ModelCache.Count == 0)
         {
-            innerCache.Load(response.GetKeyedModels());
-        });
+            ModelCache.Edit(innerCache =>
+            {
+                innerCache.Load(response.GetKeyedModels());
+            });
+        }
+        else
+        {
+            ModelCache.EditDiff(response.GetKeyedModels());
+        }
     }
 }

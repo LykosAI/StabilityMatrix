@@ -991,6 +991,61 @@ The gallery images are often inpainted, but you will get something very similar 
         }
     }
 
+    public static OpenModelDbKeyedModel SampleOpenModelDbKeyedModel =>
+        new()
+        {
+            Id = "test-id",
+            Name = "16x PSNR Prretrained Model",
+            Author = "author123",
+            License = "Apache-2.0",
+            Tags = ["pretrained"],
+            Description =
+                "Pretrained: RRDB_PSNR_x4.pth\n\nThe original RRDB_PSNR_x4.pth model converted to 1x, 2x, 8x and 16x scales, intended to be used as pretrained models for new models at those scales. These are compatible with victor's 4xESRGAN.pth conversions",
+            Date = new DateOnly(2020, 4, 20),
+            Architecture = "esrgan",
+            Size = ["64nf", "23nb"],
+            Scale = 16,
+            InputChannels = 3,
+            OutputChannels = 3,
+            Resources =
+            [
+                new OpenModelDbResource
+                {
+                    Platform = "pytorch",
+                    Type = "pth",
+                    Size = 67254807,
+                    Sha256 = "d7ae3b9a3572a01d1ddfc788ebca253c872d959d3765bcb3b48c65a3ab2f9aba",
+                    Urls = ["https://drive.google.com/open?id=0"]
+                },
+                new OpenModelDbResource
+                {
+                    Platform = "onnx",
+                    Type = "onnx",
+                    Size = 20098601,
+                    Sha256 = "d7ae3b9a3572a01d1ddfc788ebca253c872d959d3765bcb3b48c65a3ab2f9aba",
+                    Urls = ["https://drive.google.com/open?id=0"]
+                }
+            ],
+            Images =
+            [
+                new OpenModelDbImage.Paired
+                {
+                    Lr = new Uri("https://imgsli.com/i/c9978a74-32ee-478b-b228-10744521fc21.jpg"),
+                    Sr = new Uri("https://imgsli.com/i/c90377d5-287d-4f1c-ab4c-96267bfaa04e.jpg"),
+                },
+                new OpenModelDbImage.Paired
+                {
+                    Lr = new Uri("https://imgsli.com/i/7c22ba75-01ca-407a-98b9-16e27ad6de55.jpg"),
+                    Sr = new Uri("https://imgsli.com/i/12aa0959-36db-49a1-8a0c-e58f99226395.jpg"),
+                },
+                new OpenModelDbImage.Paired
+                {
+                    Lr = new Uri("https://imgsli.com/i/83e9600a-a8ee-4f2b-96e7-f42dc7e5ab12.jpg"),
+                    Sr = new Uri("https://imgsli.com/i/a611b9a9-422f-44ed-882a-3ada8f478625.jpg"),
+                }
+            ]
+        };
+
     public static OpenModelDbBrowserViewModel OpenModelDbBrowserViewModel
     {
         get
@@ -1001,7 +1056,10 @@ The gallery images are often inpainted, but you will get something very similar 
     }
 
     public static OpenModelDbModelDetailsViewModel OpenModelDbModelDetailsViewModel =>
-        DialogFactory.Get<OpenModelDbModelDetailsViewModel>();
+        DialogFactory.Get<OpenModelDbModelDetailsViewModel>(vm =>
+        {
+            vm.Model = SampleOpenModelDbKeyedModel;
+        });
 
     public static IList<ICompletionData> SampleCompletionData =>
         new List<ICompletionData>

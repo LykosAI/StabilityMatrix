@@ -238,17 +238,17 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         SelectedModelType = searchOptions?.SelectedModelType ?? CivitModelType.Checkpoint;
         SelectedBaseModelType = searchOptions?.SelectedBaseModelType ?? "All";
 
-        if (settingsManager.Settings.AutoLoadCivitModels)
-        {
-            SearchModelsCommand.ExecuteAsync(false);
-        }
-
         base.OnLoaded();
     }
 
     protected override async Task OnInitialLoadedAsync()
     {
         await base.OnInitialLoadedAsync();
+        if (settingsManager.Settings.AutoLoadCivitModels)
+        {
+            await SearchModelsCommand.ExecuteAsync(false);
+        }
+
         var baseModels = await GetBaseModelList();
         if (baseModels.Count == 0)
         {

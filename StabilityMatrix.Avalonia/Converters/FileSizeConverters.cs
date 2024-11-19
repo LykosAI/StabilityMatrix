@@ -13,7 +13,7 @@ public static class FileSizeConverters
         {
             var size = Convert.ToDouble(value);
 
-            string[] sizeUnits = ["KB", "MB", "GB", "TB"];
+            string[] sizeUnits = ["B", "KB", "MB", "GB", "TB"];
 
             var unitIndex = 0;
 
@@ -31,7 +31,7 @@ public static class FileSizeConverters
         {
             var size = Convert.ToDouble(value);
 
-            string[] sizeUnits = ["KiB", "MiB", "GiB", "TiB"];
+            string[] sizeUnits = ["B", "KiB", "MiB", "GiB", "TiB"];
 
             var unitIndex = 0;
 

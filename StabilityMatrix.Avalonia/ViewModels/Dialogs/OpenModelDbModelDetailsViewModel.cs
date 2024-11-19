@@ -4,13 +4,18 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -20,7 +25,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [Transient]
 public partial class OpenModelDbModelDetailsViewModel(
     OpenModelDbManager openModelDbManager,
-    IModelIndexService modelIndexService
+    IModelIndexService modelIndexService,
+    IModelImportService modelImportService,
+    INotificationService notificationService,
+    ISettingsManager settingsManager
 ) : ContentDialogViewModelBase
 {
     public class ModelResourceViewModel(IModelIndexService modelIndexService)
@@ -47,10 +55,36 @@ public partial class OpenModelDbModelDetailsViewModel(
     [NotifyPropertyChangedFor(nameof(CanImport))]
     private ModelResourceViewModel? selectedResource;
 
-    public bool CanImport => SelectedResource is not null;
+    public bool CanImport => SelectedResource is { IsInstalled: false };
 
-    [RelayCommand]
-    private async Task ImportAsync(ModelResourceViewModel resourceVm) { }
+    [RelayCommand(CanExecute = nameof(CanImport))]
+    private async Task ImportAsync(ModelResourceViewModel? resourceVm)
+    {
+        if (resourceVm?.Resource is null || Model is null)
+            return;
+
+        if (
+            Model.GetSharedFolderType() is not { } sharedFolderType
+            || sharedFolderType is SharedFolderType.Unknown
+        )
+        {
+            notificationService.ShowPersistent(
+                "Failed to import model",
+                $"Model Architecture '{Model.Architecture}' not supported",
+                NotificationType.Error
+            );
+            return;
+        }
+
+        var downloadFolder = new DirectoryPath(
+            settingsManager.ModelsDirectory,
+            sharedFolderType.GetStringValue()
+        );
+
+        await modelImportService.DoOpenModelDbImport(Model, resourceVm.Resource, downloadFolder);
+
+        OnPrimaryButtonClick();
+    }
 
     public override BetterContentDialog GetDialog()
     {

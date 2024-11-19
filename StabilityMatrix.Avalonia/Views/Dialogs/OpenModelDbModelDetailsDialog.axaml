@@ -194,6 +194,7 @@
                 Margin="8,0"
                 Classes="accent"
                 Command="{Binding ImportCommand}"
+                CommandParameter="{Binding SelectedResource}"
                 Content="{x:Static lang:Resources.Action_Import}" />
 
             <!--<Button

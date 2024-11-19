@@ -14,4 +14,13 @@ public record OpenModelDbKeyedModel : OpenModelDbModel
     {
         Id = model.Id;
     }
+
+    public SharedFolderType? GetSharedFolderType()
+    {
+        return Architecture?.ToLowerInvariant() switch
+        {
+            "esrgan" => SharedFolderType.ESRGAN,
+            _ => null
+        };
+    }
 }

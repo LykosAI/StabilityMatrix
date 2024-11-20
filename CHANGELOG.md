@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed crash when clicking "Remind me Later" on the update dialog
 - Fixed some cases of crashing when GitHub API rate limits are exceeded
+- Fixed Git missing from env vars when running SwarmUI
 ### Supporters
 #### Visionaries
 - A huge thank you to our dedicated Visionary-tier Patreon supporter, **Waterclouds**! We’re thrilled to have your ongoing support!

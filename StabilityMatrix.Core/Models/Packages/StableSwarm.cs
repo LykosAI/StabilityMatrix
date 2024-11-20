@@ -257,12 +257,23 @@ public class StableSwarm(
         CancellationToken cancellationToken = default
     )
     {
+        var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
         var aspEnvVars = new Dictionary<string, string>
         {
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
-            ["ASPNETCORE_URLS"] = "http://*:7801"
+            ["ASPNETCORE_URLS"] = "http://*:7801",
+            ["GIT"] = portableGitBin.JoinFile("git.exe")
         };
         aspEnvVars.Update(settingsManager.Settings.EnvironmentVariables);
+
+        if (aspEnvVars.TryGetValue("PATH", out var pathValue))
+        {
+            aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, pathValue);
+        }
+        else
+        {
+            aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin);
+        }
 
         void HandleConsoleOutput(ProcessOutput s)
         {

@@ -35,6 +35,8 @@ using NLog.Config;
 using NLog.Extensions.Logging;
 using NLog.Targets;
 using Octokit;
+using OpenIddict.Abstractions;
+using OpenIddict.Client;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
@@ -120,6 +122,14 @@ public sealed class App : Application
         Config?["LykosAnalyticsApiBaseUrl"] ?? "https://analytics.lykos.ai";
 #else
     public const string LykosAnalyticsApiBaseUrl = "https://analytics.lykos.ai";
+#endif
+#if DEBUG
+    // ReSharper disable twice LocalizableElement
+    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+    public static string LykosAccountApiBaseUrl =>
+        Config?["LykosAccountApiBaseUrl"] ?? "https://localhost:44310/";
+#else
+    public const string LykosAccountApiBaseUrl = "https://account.lykos.ai/";
 #endif
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -760,6 +770,34 @@ public sealed class App : Application
                     RefitSettings = apiFactoryRefitSettings,
                 }
         );
+
+        // Add OpenId
+        services
+            .AddOpenIddict()
+            .AddClient(options =>
+            {
+                options.AllowDeviceCodeFlow().AllowRefreshTokenFlow();
+
+                options.DisableTokenStorage();
+                options.AddEphemeralEncryptionKey().AddEphemeralSigningKey();
+
+                options.UseSystemNetHttp().SetProductInformation("StabilityMatrix", "2.0");
+
+                options.AddRegistration(
+                    new OpenIddictClientRegistration
+                    {
+                        Issuer = new Uri(LykosAccountApiBaseUrl),
+                        ClientId = "ai.lykos.stabilitymatrix",
+                        Scopes =
+                        {
+                            OpenIddictConstants.Scopes.OpenId,
+                            OpenIddictConstants.Scopes.OfflineAccess,
+                            "api"
+                        }
+                        // RedirectUri = new Uri(Program.MessagePipeUri, "/callback/login/lykos")
+                    }
+                );
+            });
 
         ConditionalAddLogViewer(services);
 

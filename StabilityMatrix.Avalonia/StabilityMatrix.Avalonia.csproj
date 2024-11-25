@@ -129,6 +129,8 @@
         <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" />
         <PackageReference Include="NSubstitute" Version="5.1.0" />
         <PackageReference Include="OneOf" Version="3.0.271" />
+        <PackageReference Include="OpenIddict.Client" Version="5.8.0" />
+        <PackageReference Include="OpenIddict.Client.SystemNetHttp" Version="5.8.0" />
         <PackageReference Include="Polly" Version="8.4.1" />
         <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
         <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />

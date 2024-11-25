@@ -25,6 +25,13 @@
         <input:StandardUICommand x:Key="ImportCommand" Command="{Binding ImportCommand}" />
     </controls:UserControlBase.Resources>
 
+    <controls:UserControlBase.Styles>
+        <Style Selector="vendorLabs|BetterAsyncImage">
+            <Setter Property="ImageCache" Value="{x:Static controls:ImageLoaders.OpenModelDbImageCache}" />
+            <Setter Property="IsCacheEnabled" Value="True" />
+        </Style>
+    </controls:UserControlBase.Styles>
+
     <Grid
         Margin="8"
         ColumnDefinitions="*,Auto,*"

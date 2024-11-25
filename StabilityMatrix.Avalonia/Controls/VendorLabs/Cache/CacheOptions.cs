@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 
 namespace StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 
@@ -14,6 +15,10 @@ public class CacheOptions
     }
 
     public string? BaseCachePath { get; set; }
+    public string? CacheFolderName { get; set; }
     public TimeSpan? CacheDuration { get; set; }
     public int? MaxMemoryCacheCount { get; set; }
+
+    public HttpMessageHandler? HttpMessageHandler { get; set; }
+    public HttpClient? HttpClient { get; set; }
 }

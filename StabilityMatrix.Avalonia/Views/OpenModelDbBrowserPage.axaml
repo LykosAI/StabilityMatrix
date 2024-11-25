@@ -43,6 +43,11 @@
                 </Setter>
             </Style>
 
+            <Style Selector="^ vendorLabs|BetterAsyncImage">
+                <Setter Property="ImageCache" Value="{x:Static controls:ImageLoaders.OpenModelDbImageCache}" />
+                <Setter Property="IsCacheEnabled" Value="True" />
+            </Style>
+
             <Style Selector="^:pointerover">
                 <Setter Property="BoxShadow" Value="0 0 40 0 #60000000" />
                 <Setter Property="Cursor" Value="Hand" />

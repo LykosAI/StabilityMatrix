@@ -788,7 +788,11 @@ The gallery images are often inpainted, but you will get something very similar 
         });
 
     public static OAuthDeviceAuthViewModel OAuthDeviceAuthViewModel =>
-        DialogFactory.Get<OAuthDeviceAuthViewModel>();
+        DialogFactory.Get<OAuthDeviceAuthViewModel>(vm =>
+        {
+            vm.VerificationUri = new Uri("https://example.org/connect/verify");
+            vm.DeviceCode = "AB23-CD56";
+        });
 
     public static PythonPackageSpecifiersViewModel PythonPackageSpecifiersViewModel =>
         DialogFactory.Get<PythonPackageSpecifiersViewModel>();

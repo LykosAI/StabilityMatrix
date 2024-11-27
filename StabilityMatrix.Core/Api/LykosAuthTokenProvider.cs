@@ -31,7 +31,7 @@ public class LykosAuthTokenProvider(ISecretsManager secretsManager, OpenIddictCl
             .AuthenticateWithRefreshTokenAsync(
                 new OpenIddictClientModels.RefreshTokenAuthenticationRequest
                 {
-                    ProviderName = "Lykos Account",
+                    ProviderName = OpenIdClientConstants.LykosAccount.ProviderName,
                     RefreshToken = secrets.LykosAccountV2.RefreshToken
                 }
             )

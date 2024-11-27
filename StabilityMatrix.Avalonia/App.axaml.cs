@@ -801,7 +801,7 @@ public sealed class App : Application
                 options.AddRegistration(
                     new OpenIddictClientRegistration
                     {
-                        ProviderName = "Lykos Account",
+                        ProviderName = OpenIdClientConstants.LykosAccount.ProviderName,
                         Issuer = new Uri(LykosAccountApiBaseUrl),
                         ClientId = "ai.lykos.stabilitymatrix",
                         Scopes =

@@ -50,11 +50,14 @@
       <PackageReference Include="Octokit" Version="13.0.1" />
       <PackageReference Include="OneOf" Version="3.0.271" />
       <PackageReference Include="OneOf.SourceGenerator" Version="3.0.271" />
+      <PackageReference Include="OpenIddict.Client" Version="5.8.0" />
+      <PackageReference Include="OpenIddict.Client.SystemNetHttp" Version="5.8.0" />
       <PackageReference Include="Polly" Version="8.4.1" />
       <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
       <PackageReference Include="pythonnet" Version="3.0.3" />
-      <PackageReference Include="Refit" Version="7.1.2" />
-      <PackageReference Include="Refit.HttpClientFactory" Version="7.1.2" />
+      <PackageReference Include="Refit" Version="8.0.0" />
+      <PackageReference Include="Refit.HttpClientFactory" Version="8.0.0" />
+      <PackageReference Include="Refitter.SourceGenerator" Version="1.4.1" />
       <PackageReference Include="RockLib.Reflection.Optimized" Version="3.0.0" />
       <PackageReference Include="Salaros.ConfigParser" Version="0.3.8" />
       <PackageReference Include="Semver" Version="3.0.0-beta.1" />

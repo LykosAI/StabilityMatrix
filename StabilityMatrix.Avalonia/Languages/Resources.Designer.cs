@@ -168,6 +168,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Copy and Open.
+        /// </summary>
+        public static string Action_CopyAndOpen {
+            get {
+                return ResourceManager.GetString("Action_CopyAndOpen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Copy as Bitmap.
         /// </summary>
         public static string Action_CopyAsBitmap {
@@ -3428,6 +3437,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Text_DeleteFollowingItems {
             get {
                 return ResourceManager.GetString("Text_DeleteFollowingItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open the link in your browser and enter the following code to authorize your account with Stability Matrix..
+        /// </summary>
+        public static string Text_OAuthDeviceAuthDescription {
+            get {
+                return ResourceManager.GetString("Text_OAuthDeviceAuthDescription", resourceCulture);
             }
         }
         

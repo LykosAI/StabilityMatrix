@@ -1,0 +1,12 @@
+{
+  "openApiPath": "https://stableauthentication-dev.azurewebsites.net/swagger/v2/swagger.json",
+  "namespace": "StabilityMatrix.Core.Api.LykosAuthApi",
+  "naming": {
+    "useOpenApiTitle": false,
+    "interfaceName": "LykosAuthApiV2"
+  },
+  "includePathMatches": [
+    "^/api/v2/Accounts/me$"
+  ],
+  "trimUnusedSchema": true
+}

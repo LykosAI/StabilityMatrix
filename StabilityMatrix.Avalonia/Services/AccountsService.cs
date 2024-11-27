@@ -47,6 +47,7 @@ public class AccountsService : IAccountsService
         this.secretsManager = secretsManager;
         this.lykosAuthApi = lykosAuthApi;
         this.civitTRPCApi = civitTRPCApi;
+        this.openIdClient = openIdClient;
 
         // Update our own status when the Lykos account status changes
         LykosAccountStatusUpdate += (_, args) => LykosStatus = args;
@@ -97,6 +98,23 @@ public class AccountsService : IAccountsService
     {
         var secrets = await secretsManager.SafeLoadAsync();
         await secretsManager.SaveAsync(secrets with { LykosAccount = null });
+
+        OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs.Disconnected);
+    }
+
+    public async Task LykosAccountV2LoginAsync(LykosAccountV2Tokens tokens)
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        secrets = secrets with { LykosAccountV2 = tokens };
+        await secretsManager.SaveAsync(secrets);
+
+        await RefreshLykosAsync(secrets);
+    }
+
+    public async Task LykosAccountV2LogoutAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        await secretsManager.SaveAsync(secrets with { LykosAccountV2 = null });
 
         OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs.Disconnected);
     }

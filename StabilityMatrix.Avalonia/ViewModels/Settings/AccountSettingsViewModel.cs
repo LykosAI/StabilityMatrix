@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using OpenIddict.Client;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -152,14 +153,25 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         if (!await BeforeConnectCheck())
             return;
 
-        var vm = vmFactory.Get<LykosLoginViewModel>();
+        var vm = vmFactory.Get<OAuthDeviceAuthViewModel>();
+        vm.ChallengeRequest = new OpenIddictClientModels.DeviceChallengeRequest
+        {
+            ProviderName = OpenIdClientConstants.LykosAccount.ProviderName
+        };
         await vm.ShowDialogAsync();
+
+        if (vm.AuthenticationResult is { } result)
+        {
+            await accountsService.LykosAccountV2LoginAsync(
+                new LykosAccountV2Tokens(result.AccessToken, result.RefreshToken)
+            );
+        }
     }
 
     [RelayCommand]
     private Task DisconnectLykos()
     {
-        return accountsService.LykosLogoutAsync();
+        return accountsService.LykosAccountV2LogoutAsync();
     }
 
     [RelayCommand(CanExecute = nameof(IsInitialUpdateFinished))]

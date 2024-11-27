@@ -1,41 +1,52 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
 using Avalonia.Controls;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Microsoft.Extensions.Logging;
 using OpenIddict.Client;
-using PropertyModels.Extensions;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
-using Windows.ApplicationModel;
+using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
+/// <summary>
+/// ViewModel for OAuth Device Authentication
+/// </summary>
+/// <code>
+/// <![CDATA[
+/// var vm = dialogService.Get<OAuthDeviceAuthViewModel>();
+/// vm.ServiceName = "My Service";
+///
+/// </code>
 [View(typeof(OAuthDeviceAuthDialog))]
 [ManagedService]
 [Transient]
 public partial class OAuthDeviceAuthViewModel(
     ILogger<OAuthDeviceAuthViewModel> logger,
     OpenIddictClientService openIdClient
-) : ContentDialogViewModelBase
+) : TaskDialogViewModelBase
 {
+    private CancellationTokenSource authenticationCts = new();
+
     public OpenIddictClientModels.DeviceChallengeRequest? ChallengeRequest { get; set; }
 
-    public OpenIddictClientModels.DeviceChallengeResult? ChallengeResult { get; set; }
+    public OpenIddictClientModels.DeviceChallengeResult? ChallengeResult { get; private set; }
 
-    public OpenIddictClientModels.DeviceAuthenticationResult AuthenticationResult { get; set; }
+    public OpenIddictClientModels.DeviceAuthenticationRequest? AuthenticationRequest { get; private set; }
 
-    public string? Description { get; set; }
+    public OpenIddictClientModels.DeviceAuthenticationResult? AuthenticationResult { get; private set; }
 
-    public string? ServiceName { get; set; }
+    public virtual string? ServiceName => ChallengeRequest?.ProviderName;
+
+    [ObservableProperty]
+    private string? description = Resources.Text_OAuthDeviceAuthDescription;
 
     [ObservableProperty]
     private Uri? verificationUri;
@@ -46,49 +57,73 @@ public partial class OAuthDeviceAuthViewModel(
     [ObservableProperty]
     private bool isLoading;
 
-    /// <summary>
+    /*public override BetterContentDialog GetDialog()
+    {
+        var dialog = base.GetDialog();
+        dialog.Title = ServiceName;
+        return dialog;
+    }*/
+
+    public override TaskDialog GetDialog()
+    {
+        var dialog = base.GetDialog();
+        dialog.Title = string.Format(Resources.Text_OAuthLoginDescription, ServiceName);
+        dialog.Buttons =
+        [
+            GetCommandButton(Resources.Action_OpenInBrowser, CopyCodeAndOpenUrlCommand),
+            GetCloseButton(Resources.Action_Cancel)
+        ];
+        return dialog;
+    }
+
+    [RelayCommand]
+    private void CopyCodeAndOpenUrl()
+    {
+        if (VerificationUri is null)
+            return;
+
+        ProcessRunner.OpenUrl(VerificationUri);
+    }
+
+    /*/// <summary>
     /// Prompt to authenticate with the service using a dialog
     /// </summary>
     public async Task<OpenIddictClientModels.DeviceAuthenticationResult?> AuthenticateWithDialogAsync()
     {
-        var dialog = new BetterContentDialog
-        {
-            Title = ServiceName,
-            Content = this,
-            CloseButtonText = Resources.Action_Cancel
-        };
-
         using var cts = new CancellationTokenSource();
 
-        var result = await dialog.ShowAsync();
+        var dialogTask = ShowDialogAsync();
+
+        await TryAuthenticateAsync(ChallengeRequest!, cts.Token);
+
+        var result = await dialogTask;
         await cts.CancelAsync();
 
         return result switch
         {
-            ContentDialogResult.Primary => AuthenticationResult,
+            TaskDialogStandardResult.OK => AuthenticationResult,
             _ => null
         };
-    }
+    }*/
 
     public override async Task OnLoadedAsync()
     {
         await base.OnLoadedAsync();
-        
-        if (Design.IsDess)asdasd
-        
 
-          if (!Design.IsDesignMode && ChallengeRequest is not null && ChallengeResult is null)
+        if (!Design.IsDesignMode && ChallengeRequest is not null && ChallengeResult is null)
         {
-            await StartChallengeAsync();
+            await TryAuthenticateAsync();
         }
     }
 
-    public override Task OnUnloadedAsync()
+    protected override void OnDialogClosing(object? sender, TaskDialogClosingEventArgs e)
     {
-        return base.OnUnloadedAsync();
+        base.OnDialogClosing(sender, e);
+
+        authenticationCts.Cancel();
     }
 
-    private async Task StartChallengeAsync()
+    public async Task ChallengeAsync()
     {
         if (ChallengeRequest is null)
         {
@@ -103,60 +138,57 @@ public partial class OAuthDeviceAuthViewModel(
         VerificationUri = ChallengeResult.VerificationUri;
     }
 
-    private async Task AuthenticateAsync(CancellationToken cancellationToken)
+    public async Task TryAuthenticateAsync()
     {
-        if (ChallengeResult is null)
+        if (ChallengeRequest is null)
         {
-            throw new InvalidOperationException(
-                "ChallengeResult must be set before calling AuthenticateAsync"
-            );
+            throw new InvalidOperationException("ChallengeRequest must be set");
         }
 
-        AuthenticationResult = await openIdClient.AuthenticateWithDeviceAsync(
-            new OpenIddictClientModels.DeviceAuthenticationRequest
-            {
-                DeviceCode = ChallengeResult.DeviceCode,
-                Interval = ChallengeResult.Interval,
-                Timeout = ChallengeResult.ExpiresIn,
-                CancellationToken = cancellationToken
-            }
-        );
-    }
-
-    private async Task TryAuthenticateUsingDeviceAsync(
-        OpenIddictClientModels.DeviceChallengeRequest challengeRequest,
-        CancellationToken cancellationToken
-    )
-    {
         try
         {
-            var challenge = await openIdClient.ChallengeUsingDeviceAsync(challengeRequest);
+            // Get challenge result
+            ChallengeResult = await openIdClient.ChallengeUsingDeviceAsync(ChallengeRequest);
 
-            DeviceCode = challenge.DeviceCode;
-            VerificationUri = challenge.VerificationUri;
+            DeviceCode = ChallengeResult.DeviceCode;
+            VerificationUri = ChallengeResult.VerificationUri;
 
             // Wait for user to complete auth
             var result = await openIdClient.AuthenticateWithDeviceAsync(
                 new OpenIddictClientModels.DeviceAuthenticationRequest
                 {
-                    DeviceCode = challenge.DeviceCode,
-                    Interval = challenge.Interval,
-                    Timeout = challenge.ExpiresIn,
-                    CancellationToken = cancellationToken
+                    DeviceCode = ChallengeResult.DeviceCode,
+                    Interval = ChallengeResult.Interval,
+                    Timeout = ChallengeResult.ExpiresIn,
+                    CancellationToken = authenticationCts.Token
                 }
             );
+
+            logger.LogInformation("Device authentication completed");
+            AuthenticationResult = result;
+            CloseDialog(TaskDialogStandardResult.OK);
+        }
+        catch (OperationCanceledException e)
+        {
+            logger.LogInformation(e, "Device authentication was cancelled");
+            AuthenticationResult = null;
+            CloseDialog(TaskDialogStandardResult.Close);
         }
         catch (Exception e)
         {
-            Dispatcher.UIThread.Post(() =>
-            {
-                var dialog = DialogHelper.CreateMarkdownDialog(content, Resources.Label_ConnectAccountFailed);
-
-                dialog
-                    .ShowAsync()
-                    .ContinueWith(_ => OnCloseButtonClick(), CancellationToken.None)
-                    .SafeFireAndForget();
-            });
+            logger.LogWarning(e, "Device authentication error");
+            AuthenticationResult = null;
+            await CloseDialogWithErrorResultAsync(e.Message);
         }
+    }
+
+    private async Task CloseDialogWithErrorResultAsync(string message)
+    {
+        var dialog = DialogHelper.CreateMarkdownDialog(message, Resources.Label_ConnectAccountFailed);
+
+        await dialog.ShowAsync();
+
+        CloseDialog(TaskDialogStandardResult.Close);
+        // OnCloseButtonClick();
     }
 }

@@ -1,4 +1,7 @@
-﻿namespace StabilityMatrix.Core.Models.Api.Lykos;
+﻿using System.Security.Claims;
+using StabilityMatrix.Core.Api.LykosAuthApi;
+
+namespace StabilityMatrix.Core.Models.Api.Lykos;
 
 public class LykosAccountStatusUpdateEventArgs : EventArgs
 {
@@ -6,7 +9,9 @@ public class LykosAccountStatusUpdateEventArgs : EventArgs
 
     public bool IsConnected { get; init; }
 
-    public GetUserResponse? User { get; init; }
+    public ClaimsPrincipal? Principal { get; init; }
+
+    public AccountResponse? User { get; init; }
 
     public bool IsPatreonConnected => User?.PatreonId != null;
 }

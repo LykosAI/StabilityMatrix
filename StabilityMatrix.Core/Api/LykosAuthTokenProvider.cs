@@ -44,7 +44,11 @@ public class LykosAuthTokenProvider(ISecretsManager secretsManager, OpenIddictCl
 
         secrets = secrets with
         {
-            LykosAccountV2 = new LykosAccountV2Tokens(result.AccessToken, result.RefreshToken)
+            LykosAccountV2 = new LykosAccountV2Tokens(
+                result.AccessToken,
+                result.RefreshToken,
+                result.IdentityToken
+            )
         };
 
         await secretsManager.SaveAsync(secrets).ConfigureAwait(false);

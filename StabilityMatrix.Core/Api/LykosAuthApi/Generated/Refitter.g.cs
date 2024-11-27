@@ -37,6 +37,71 @@ namespace StabilityMatrix.Core.Api.LykosAuthApi
         [Get("/api/v2/Accounts/me")]
         Task<AccountResponse> Me();
 
+        /// <returns>A <see cref="Task"/> that completes when the request is finished.</returns>
+        /// <exception cref="ApiException">
+        /// Thrown when the request returns a non-success status code:
+        /// <list type="table">
+        /// <listheader>
+        /// <term>Status</term>
+        /// <description>Description</description>
+        /// </listheader>
+        /// <item>
+        /// <term>302</term>
+        /// <description>Found</description>
+        /// </item>
+        /// </list>
+        /// </exception>
+        [Get("/api/v2/oauth/patreon/redirect")]
+        Task Redirect([Query] System.Uri redirectUrl);
+
+        /// <returns>A <see cref="Task"/> that completes when the request is finished.</returns>
+        /// <exception cref="ApiException">
+        /// Thrown when the request returns a non-success status code:
+        /// <list type="table">
+        /// <listheader>
+        /// <term>Status</term>
+        /// <description>Description</description>
+        /// </listheader>
+        /// <item>
+        /// <term>401</term>
+        /// <description>Unauthorized</description>
+        /// </item>
+        /// </list>
+        /// </exception>
+        [Headers("Accept: text/plain, application/json, text/json")]
+        [Delete("/api/v2/oauth/patreon")]
+        Task Patreon();
+
+        /// <returns>A <see cref="Task"/> that completes when the request is finished.</returns>
+        /// <exception cref="ApiException">
+        /// Thrown when the request returns a non-success status code:
+        /// <list type="table">
+        /// <listheader>
+        /// <term>Status</term>
+        /// <description>Description</description>
+        /// </listheader>
+        /// <item>
+        /// <term>302</term>
+        /// <description>Found</description>
+        /// </item>
+        /// <item>
+        /// <term>401</term>
+        /// <description>Unauthorized</description>
+        /// </item>
+        /// <item>
+        /// <term>404</term>
+        /// <description>Not Found</description>
+        /// </item>
+        /// <item>
+        /// <term>400</term>
+        /// <description>Bad Request</description>
+        /// </item>
+        /// </list>
+        /// </exception>
+        [Headers("Accept: text/plain, application/json, text/json")]
+        [Get("/api/v2/oauth/patreon/callback")]
+        Task Callback([Query] string code, [Query] string state);
+
 
     }
 

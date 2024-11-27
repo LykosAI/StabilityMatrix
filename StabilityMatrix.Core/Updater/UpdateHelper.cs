@@ -21,7 +21,7 @@ public class UpdateHelper : IUpdateHelper
     private readonly IHttpClientFactory httpClientFactory;
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
-    private readonly ILykosAuthApi lykosAuthApi;
+    private readonly ILykosAuthApiV1 lykosAuthApi;
     private readonly DebugOptions debugOptions;
     private readonly System.Timers.Timer timer = new(TimeSpan.FromMinutes(60));
 
@@ -45,7 +45,7 @@ public class UpdateHelper : IUpdateHelper
         IDownloadService downloadService,
         IOptions<DebugOptions> debugOptions,
         ISettingsManager settingsManager,
-        ILykosAuthApi lykosAuthApi
+        ILykosAuthApiV1 lykosAuthApi
     )
     {
         this.logger = logger;

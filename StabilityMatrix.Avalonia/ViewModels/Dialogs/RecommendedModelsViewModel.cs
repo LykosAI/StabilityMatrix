@@ -27,7 +27,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
 {
     private readonly ILogger<RecommendedModelsViewModel> logger;
-    private readonly ILykosAuthApi lykosApi;
+    private readonly ILykosAuthApiV1 lykosApi;
     private readonly ICivitApi civitApi;
     private readonly ILiteDbContext liteDbContext;
     private readonly ISettingsManager settingsManager;
@@ -48,7 +48,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
 
     public RecommendedModelsViewModel(
         ILogger<RecommendedModelsViewModel> logger,
-        ILykosAuthApi lykosApi,
+        ILykosAuthApiV1 lykosApi,
         ICivitApi civitApi,
         ILiteDbContext liteDbContext,
         ISettingsManager settingsManager,

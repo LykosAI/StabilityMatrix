@@ -722,7 +722,7 @@ public sealed class App : Application
             .AddPolicyHandler(retryPolicyLonger);
 
         services
-            .AddRefitClient<ILykosAuthApi>(defaultRefitSettings)
+            .AddRefitClient<ILykosAuthApiV1>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri(LykosAuthApiBaseUrl);

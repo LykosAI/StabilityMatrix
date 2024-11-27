@@ -4,6 +4,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+    xmlns:icExt="clr-namespace:FluentIcons.Avalonia.Fluent.MarkupExtensions;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
@@ -18,15 +21,40 @@
 
     <sg:SpacedGrid
         Margin="8,4"
-        RowDefinitions="Auto,Auto"
-        RowSpacing="4">
+        ColumnDefinitions="*,Auto"
+        RowDefinitions="Auto,Auto,Auto"
+        RowSpacing="8">
         <TextBlock
             Grid.Row="0"
-            Text="Please authorize the application on the device."
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Text="{Binding Description}"
             TextWrapping="Wrap" />
 
-        <ProgressBar
+        <controls:HyperlinkIconButton
             Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Content="{Binding VerificationUri}"
+            NavigateUri="{Binding VerificationUri}" />
+
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="0"
+            Margin="16,0"
+            IsReadOnly="True"
+            Text="{Binding DeviceCode}">
+            <TextBox.InnerRightContent>
+                <Button
+                    Classes="transparent-full"
+                    Command="{x:Static helpers:ClipboardCommands.CopyTextCommand}"
+                    CommandParameter="{Binding DeviceCode}"
+                    Content="{icExt:SymbolIcon Symbol=Copy}" />
+            </TextBox.InnerRightContent>
+        </TextBox>
+
+        <ProgressBar
+            Grid.Row="2"
             Margin="0,16,0,0"
             IsEnabled="{Binding IsLoading}"
             IsIndeterminate="True"

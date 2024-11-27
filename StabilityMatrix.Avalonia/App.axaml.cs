@@ -127,7 +127,7 @@ public sealed class App : Application
     // ReSharper disable twice LocalizableElement
     // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
     public static string LykosAccountApiBaseUrl =>
-        Config?["LykosAccountApiBaseUrl"] ?? "https://localhost:44310/";
+        Config?["LykosAccountApiBaseUrl"] ?? "https://account.lykos.ai/";
 #else
     public const string LykosAccountApiBaseUrl = "https://account.lykos.ai/";
 #endif
@@ -786,15 +786,17 @@ public sealed class App : Application
                 options.AddRegistration(
                     new OpenIddictClientRegistration
                     {
+                        ProviderName = "Lykos Account",
                         Issuer = new Uri(LykosAccountApiBaseUrl),
                         ClientId = "ai.lykos.stabilitymatrix",
                         Scopes =
                         {
+                            OpenIddictConstants.Scopes.Profile,
                             OpenIddictConstants.Scopes.OpenId,
-                            OpenIddictConstants.Scopes.OfflineAccess,
-                            "api"
-                        }
-                        // RedirectUri = new Uri(Program.MessagePipeUri, "/callback/login/lykos")
+                            "api",
+                            OpenIddictConstants.Scopes.OfflineAccess
+                        },
+                        RedirectUri = Program.MessagePipeUri.Append("/callback/login/lykos")
                     }
                 );
             });

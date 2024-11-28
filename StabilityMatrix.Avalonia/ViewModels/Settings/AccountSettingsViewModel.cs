@@ -18,6 +18,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Api.LykosAuthApi;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api;
@@ -38,7 +39,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;
     private readonly INotificationService notificationService;
-    private readonly ILykosAuthApiV1 lykosAuthApi;
+    private readonly ILykosAuthApiV2 lykosAuthApi;
 
     /// <inheritdoc />
     public override string Title => "Accounts";
@@ -71,7 +72,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> vmFactory,
         INotificationService notificationService,
-        ILykosAuthApiV1 lykosAuthApi
+        ILykosAuthApiV2 lykosAuthApi
     )
     {
         this.accountsService = accountsService;
@@ -184,9 +185,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
             return;
 
         var urlResult = await notificationService.TryAsync(
-            lykosAuthApi.GetPatreonOAuthUrl(
-                Program.MessagePipeUri.Append("/oauth/patreon/callback").ToString()
-            )
+            lykosAuthApi.ApiV2OauthPatreonLink(Program.MessagePipeUri.Append("/oauth/patreon/callback"))
         );
 
         if (!urlResult.IsSuccessful || urlResult.Result is not { } url)
@@ -198,7 +197,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 
         var dialogVm = vmFactory.Get<OAuthConnectViewModel>();
         dialogVm.Title = "Connect Patreon Account";
-        dialogVm.Url = url;
+        dialogVm.Url = url.ToString();
 
         if (await dialogVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
         {

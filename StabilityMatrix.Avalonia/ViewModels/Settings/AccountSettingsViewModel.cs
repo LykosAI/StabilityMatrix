@@ -163,7 +163,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         if (vm.AuthenticationResult is { } result)
         {
             await accountsService.LykosAccountV2LoginAsync(
-                new LykosAccountV2Tokens(result.AccessToken, result.RefreshToken)
+                new LykosAccountV2Tokens(result.AccessToken, result.RefreshToken, result.IdentityToken)
             );
         }
     }

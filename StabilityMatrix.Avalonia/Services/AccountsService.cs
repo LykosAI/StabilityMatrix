@@ -190,7 +190,7 @@ public class AccountsService : IAccountsService
         {
             try
             {
-                var user = await lykosAuthApiV2.Me();
+                var user = await lykosAuthApiV2.ApiV2AccountsMe();
 
                 ClaimsPrincipal? principal = null;
 

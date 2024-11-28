@@ -9,5 +9,6 @@
     "^/api/v2/Accounts/me$",
     "^/api/v2/oauth/patreon"
   ],
-  "trimUnusedSchema": true
+  "trimUnusedSchema": true,
+  "operationNameGenerator": "SingleClientFromPathSegments"
 }

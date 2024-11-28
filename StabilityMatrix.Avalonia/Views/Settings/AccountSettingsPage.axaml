@@ -103,7 +103,7 @@
                             Margin="-1,0,0,0"
                             Text="{Binding LykosStatus.DisplayName, FallbackValue=''}"
                             Theme="{DynamicResource SubtitleTextBlockStyle}" />
-                        <TextBlock Text="{Binding LykosStatus.User.Id, FallbackValue=''}" />
+                        <TextBlock Text="{Binding LykosStatus.Email, FallbackValue=''}" />
                     </StackPanel>
                 </StackPanel>
             </sg:SpacedGrid>

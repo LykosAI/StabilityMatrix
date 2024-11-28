@@ -807,6 +807,7 @@ public sealed class App : Application
                         Scopes =
                         {
                             OpenIddictConstants.Scopes.Profile,
+                            OpenIddictConstants.Scopes.Email,
                             OpenIddictConstants.Scopes.OpenId,
                             "api",
                             OpenIddictConstants.Scopes.OfflineAccess

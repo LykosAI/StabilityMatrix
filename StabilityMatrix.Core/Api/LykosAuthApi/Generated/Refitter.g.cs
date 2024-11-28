@@ -143,6 +143,9 @@ namespace StabilityMatrix.Core.Api.LykosAuthApi
         [JsonPropertyName("roles")]
         public ICollection<string> Roles { get; set; }
 
+        [JsonPropertyName("permissions")]
+        public ICollection<string> Permissions { get; set; }
+
         [JsonPropertyName("patreonId")]
         public string PatreonId { get; set; }
 

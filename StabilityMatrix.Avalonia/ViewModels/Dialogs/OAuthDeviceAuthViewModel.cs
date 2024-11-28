@@ -19,12 +19,6 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 /// <summary>
 /// ViewModel for OAuth Device Authentication
 /// </summary>
-/// <code>
-/// <![CDATA[
-/// var vm = dialogService.Get<OAuthDeviceAuthViewModel>();
-/// vm.ServiceName = "My Service";
-///
-/// </code>
 [View(typeof(OAuthDeviceAuthDialog))]
 [ManagedService]
 [Transient]

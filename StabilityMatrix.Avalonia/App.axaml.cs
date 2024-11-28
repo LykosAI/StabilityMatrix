@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -70,6 +71,7 @@ using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
 using Logger = NLog.Logger;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using ProductHeaderValue = Octokit.ProductHeaderValue;
 #if DEBUG
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer;
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Extensions;
@@ -742,6 +744,7 @@ public sealed class App : Application
             {
                 c.BaseAddress = new Uri(LykosAuthApiBaseUrl);
                 c.Timeout = TimeSpan.FromHours(1);
+                c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
             })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy)

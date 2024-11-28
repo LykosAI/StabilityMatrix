@@ -22,6 +22,13 @@
         "dotnet-csharpier"
       ],
       "rollForward": false
+    },
+    "refitter": {
+      "version": "1.4.1",
+      "commands": [
+        "refitter"
+      ],
+      "rollForward": false
     }
   }
 }

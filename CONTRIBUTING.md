@@ -31,10 +31,15 @@ pupnet -r linux-x64 -c Release --kind appimage --app-version $RELEASE_VERSION --
 ```bash
 dotnet tool restore && dotnet husky install
 ```
-
 ## Adding Husky pre-commit hooks
 ```bash
 dotnet husky install
+```
+## Generated OpenApi clients
+- Refitter is used to generate some OpenApi clients. New clients should be added to `./.husky/task-runner.json`.
+- To regenerate clients, run the following command:
+```bash
+dotnet husky run -g generate-openapi
 ```
 
 # Style Guidelines

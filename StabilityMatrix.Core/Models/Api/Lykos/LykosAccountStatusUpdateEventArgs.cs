@@ -15,8 +15,12 @@ public class LykosAccountStatusUpdateEventArgs : EventArgs
 
     public AccountResponse? User { get; init; }
 
+    public string? Id => Principal?.GetClaim(OpenIddictConstants.Claims.Subject);
+
     public string? DisplayName =>
         Principal?.GetClaim(OpenIddictConstants.Claims.PreferredUsername) ?? Principal?.Identity?.Name;
+
+    public string? Email => Principal?.GetClaim(OpenIddictConstants.Claims.Email);
 
     public bool IsPatreonConnected => User?.PatreonId != null;
 }

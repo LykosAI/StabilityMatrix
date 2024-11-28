@@ -1,10 +1,16 @@
 ﻿using System;
 using System.Net;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
+using OpenIddict.Abstractions;
 using OpenIddict.Client;
+using OpenIddict.Client.SystemNetHttp;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Api.LykosAuthApi;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
@@ -22,6 +28,7 @@ public class AccountsService : IAccountsService
     private readonly ILogger<AccountsService> logger;
     private readonly ISecretsManager secretsManager;
     private readonly ILykosAuthApiV1 lykosAuthApi;
+    private readonly ILykosAuthApiV2 lykosAuthApiV2;
     private readonly ICivitTRPCApi civitTRPCApi;
     private readonly OpenIddictClientService openIdClient;
 
@@ -39,6 +46,7 @@ public class AccountsService : IAccountsService
         ILogger<AccountsService> logger,
         ISecretsManager secretsManager,
         ILykosAuthApiV1 lykosAuthApi,
+        ILykosAuthApiV2 lykosAuthApiV2,
         ICivitTRPCApi civitTRPCApi,
         OpenIddictClientService openIdClient
     )
@@ -46,6 +54,7 @@ public class AccountsService : IAccountsService
         this.logger = logger;
         this.secretsManager = secretsManager;
         this.lykosAuthApi = lykosAuthApi;
+        this.lykosAuthApiV2 = lykosAuthApiV2;
         this.civitTRPCApi = civitTRPCApi;
         this.openIdClient = openIdClient;
 
@@ -174,17 +183,29 @@ public class AccountsService : IAccountsService
     private async Task RefreshLykosAsync(Secrets secrets)
     {
         if (
-            secrets.LykosAccount is not null
-            && !string.IsNullOrWhiteSpace(secrets.LykosAccount?.RefreshToken)
-            && !string.IsNullOrWhiteSpace(secrets.LykosAccount?.AccessToken)
+            secrets.LykosAccountV2 is not null
+            && !string.IsNullOrWhiteSpace(secrets.LykosAccountV2?.RefreshToken)
+            && !string.IsNullOrWhiteSpace(secrets.LykosAccountV2?.AccessToken)
         )
         {
             try
             {
-                var user = await lykosAuthApi.GetUserSelf();
+                var user = await lykosAuthApiV2.Me();
+
+                ClaimsPrincipal? principal = null;
+
+                if (secrets.LykosAccountV2.IdentityToken is not null)
+                {
+                    principal = secrets.LykosAccountV2.GetIdentityTokenPrincipal();
+                }
 
                 OnLykosAccountStatusUpdate(
-                    new LykosAccountStatusUpdateEventArgs { IsConnected = true, User = user }
+                    new LykosAccountStatusUpdateEventArgs
+                    {
+                        IsConnected = true,
+                        Principal = principal,
+                        User = user
+                    }
                 );
 
                 return;
@@ -259,7 +280,7 @@ public class AccountsService : IAccountsService
             logger.LogInformation(
                 "Lykos account connected: {Id} ({Username})",
                 e.User?.Id,
-                e.User?.Account.Name
+                e.Principal?.Identity?.Name
             );
         }
 

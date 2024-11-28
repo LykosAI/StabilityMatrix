@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Web;
 using AsyncAwaitBestPractices;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MessagePipe;
 using Microsoft.Extensions.Logging;
@@ -82,23 +83,33 @@ public partial class OAuthConnectViewModel : ContentDialogViewModelBase
                 {
                     logger.LogError("OAuth connection failed ({Status}): {Error}", status, error);
 
-                    var dialog = DialogHelper.CreateMarkdownDialog(
-                        $"- {error}",
-                        Resources.Label_ConnectAccountFailed
-                    );
-
-                    dialog.ShowAsync().ContinueWith(_ => OnCloseButtonClick()).SafeFireAndForget();
+                    Dispatcher
+                        .UIThread.InvokeAsync(async () =>
+                        {
+                            var dialog = DialogHelper.CreateMarkdownDialog(
+                                $"- {error}",
+                                Resources.Label_ConnectAccountFailed
+                            );
+                            await dialog.ShowAsync();
+                            OnCloseButtonClick();
+                        })
+                        .SafeFireAndForget();
                 }
                 else
                 {
                     logger.LogError("OAuth connection unknown status ({Status}): {Error}", status, error);
 
-                    var dialog = DialogHelper.CreateMarkdownDialog(
-                        $"- {error}",
-                        Resources.Label_ConnectAccountFailed
-                    );
-
-                    dialog.ShowAsync().ContinueWith(_ => OnCloseButtonClick()).SafeFireAndForget();
+                    Dispatcher
+                        .UIThread.InvokeAsync(async () =>
+                        {
+                            var dialog = DialogHelper.CreateMarkdownDialog(
+                                $"- {error}",
+                                Resources.Label_ConnectAccountFailed
+                            );
+                            await dialog.ShowAsync();
+                            OnCloseButtonClick();
+                        })
+                        .SafeFireAndForget();
                 }
             }
         );

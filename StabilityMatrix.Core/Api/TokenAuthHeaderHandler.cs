@@ -23,10 +23,7 @@ public class TokenAuthHeaderHandler : DelegatingHandler
             && response.RequestMessage?.Headers.Authorization is { Scheme: "Bearer", Parameter: { } param }
             && !string.IsNullOrWhiteSpace(param);
 
-    public TokenAuthHeaderHandler(
-        ITokenProvider tokenProvider,
-        Func<HttpResponseMessage, bool>? shouldRetry = null
-    )
+    public TokenAuthHeaderHandler(ITokenProvider tokenProvider)
     {
         this.tokenProvider = tokenProvider;
 

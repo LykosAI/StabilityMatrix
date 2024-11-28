@@ -46,35 +46,38 @@ public partial class OAuthDeviceAuthViewModel(
     private Uri? verificationUri;
 
     [ObservableProperty]
-    private string? deviceCode;
+    private string? userCode;
 
     [ObservableProperty]
     private bool isLoading;
 
-    /*public override BetterContentDialog GetDialog()
-    {
-        var dialog = base.GetDialog();
-        dialog.Title = ServiceName;
-        return dialog;
-    }*/
-
     public override TaskDialog GetDialog()
     {
         var dialog = base.GetDialog();
-        dialog.Title = string.Format(Resources.Text_OAuthLoginDescription, ServiceName);
+        dialog.Title = string.Format(Resources.TextTemplate_OAuthLoginTitle, ServiceName);
+        dialog.Header = dialog.Title;
         dialog.Buttons =
         [
-            GetCommandButton(Resources.Action_OpenInBrowser, CopyCodeAndOpenUrlCommand),
+            GetCommandButton(Resources.Action_CopyAndOpen, CopyCodeAndOpenUrlCommand),
             GetCloseButton(Resources.Action_Cancel)
         ];
         return dialog;
     }
 
     [RelayCommand]
-    private void CopyCodeAndOpenUrl()
+    private async Task CopyCodeAndOpenUrl()
     {
         if (VerificationUri is null)
             return;
+
+        try
+        {
+            await App.Clipboard.SetTextAsync(UserCode);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to copy user code to clipboard");
+        }
 
         ProcessRunner.OpenUrl(VerificationUri);
     }
@@ -128,7 +131,7 @@ public partial class OAuthDeviceAuthViewModel(
 
         ChallengeResult = await openIdClient.ChallengeUsingDeviceAsync(ChallengeRequest);
 
-        DeviceCode = ChallengeResult.DeviceCode;
+        UserCode = ChallengeResult.DeviceCode;
         VerificationUri = ChallengeResult.VerificationUri;
     }
 
@@ -144,7 +147,7 @@ public partial class OAuthDeviceAuthViewModel(
             // Get challenge result
             ChallengeResult = await openIdClient.ChallengeUsingDeviceAsync(ChallengeRequest);
 
-            DeviceCode = ChallengeResult.DeviceCode;
+            UserCode = ChallengeResult.UserCode;
             VerificationUri = ChallengeResult.VerificationUri;
 
             // Wait for user to complete auth
@@ -183,6 +186,5 @@ public partial class OAuthDeviceAuthViewModel(
         await dialog.ShowAsync();
 
         CloseDialog(TaskDialogStandardResult.Close);
-        // OnCloseButtonClick();
     }
 }

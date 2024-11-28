@@ -43,12 +43,12 @@
             Grid.Column="0"
             Margin="16,0"
             IsReadOnly="True"
-            Text="{Binding DeviceCode}">
+            Text="{Binding UserCode}">
             <TextBox.InnerRightContent>
                 <Button
                     Classes="transparent-full"
                     Command="{x:Static helpers:ClipboardCommands.CopyTextCommand}"
-                    CommandParameter="{Binding DeviceCode}"
+                    CommandParameter="{Binding UserCode}"
                     Content="{icExt:SymbolIcon Symbol=Copy}" />
             </TextBox.InnerRightContent>
         </TextBox>

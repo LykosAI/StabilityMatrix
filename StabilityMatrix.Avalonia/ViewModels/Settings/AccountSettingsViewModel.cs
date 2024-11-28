@@ -273,7 +273,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     /// </summary>
     partial void OnLykosStatusChanged(LykosAccountStatusUpdateEventArgs value)
     {
-        if (value.User?.Id is { } userEmail)
+        if (value.Email is { } userEmail)
         {
             userEmail = userEmail.Trim().ToLowerInvariant();
 

@@ -67,6 +67,8 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private CivitAccountStatusUpdateEventArgs civitStatus = CivitAccountStatusUpdateEventArgs.Disconnected;
 
+    public string LykosAccountManageUrl => new Uri(App.LykosAccountApiBaseUrl).Append("/manage").ToString();
+
     public AccountSettingsViewModel(
         IAccountsService accountsService,
         ISettingsManager settingsManager,

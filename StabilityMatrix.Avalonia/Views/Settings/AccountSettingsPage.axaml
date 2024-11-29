@@ -5,6 +5,7 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
@@ -82,20 +83,40 @@
                         IconVariant="Filled"
                         IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNullOrEmpty}}"
                         Symbol="Person" />
-                    <HyperlinkButton
+                    <Button
                         Padding="2"
                         HorizontalAlignment="Left"
                         Classes="transparent-full"
                         CornerRadius="8"
-                        IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                        NavigateUri="http://gravatar.com/emails/"
-                        ToolTip.Tip="Edit on Gravatar">
+                        IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <Button.Flyout>
+                            <ui:FAMenuFlyout>
+                                <ui:MenuFlyoutItem
+                                    Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                                    CommandParameter="{Binding LykosAccountManageUrl}"
+                                    HotKey="{x:Null}"
+                                    IconSource="Link"
+                                    Text="Manage your Lykos Account" />
+                                <ui:MenuFlyoutItem
+                                    Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                                    CommandParameter="http://gravatar.com/emails/"
+                                    HotKey="{x:Null}"
+                                    IconSource="Link"
+                                    Text="Edit Profile Image on Gravatar" />
+                                <ui:MenuFlyoutSeparator />
+                                <ui:MenuFlyoutItem
+                                    Command="{x:Static helpers:ClipboardCommands.CopyTextCommand}"
+                                    CommandParameter="{Binding LykosStatus.Id}"
+                                    IconSource="Copy"
+                                    Text="Copy User ID" />
+                            </ui:FAMenuFlyout>
+                        </Button.Flyout>
                         <controls:BetterAdvancedImage
                             Width="64"
                             Height="64"
                             CornerRadius="8"
                             Source="{Binding LykosProfileImageUrl}" />
-                    </HyperlinkButton>
+                    </Button>
 
 
                     <StackPanel>

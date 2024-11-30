@@ -134,6 +134,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(100))!
             .Select(property => searcher.GetPredicate(property.Value))
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         OutputsCache
@@ -149,12 +150,18 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .Bind(Outputs)
             .WhenPropertyChanged(p => p.IsSelected)
             .Throttle(TimeSpan.FromMilliseconds(50))
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe(_ =>
             {
                 NumItemsSelected = Outputs.Count(o => o.IsSelected);
             });
 
-        categoriesCache.Connect().DeferUntilLoaded().Bind(Categories).Subscribe();
+        categoriesCache
+            .Connect()
+            .DeferUntilLoaded()
+            .Bind(Categories)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
 
         settingsManager.RelayPropertyFor(
             this,
@@ -268,6 +275,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
                 vm,
                 nameof(ImageViewerViewModel.NavigationRequested)
             )
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe(ctx =>
             {
                 Dispatcher

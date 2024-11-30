@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reactive.Linq;
+using System.Threading;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using DynamicData.Binding;
@@ -24,6 +26,7 @@ public class SelectImageCard : DropTargetTemplatedControlBase
 
         imageControl
             .WhenPropertyChanged(x => x.CurrentImage)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe(propertyValue =>
             {
                 if (propertyValue.Value is { } image)

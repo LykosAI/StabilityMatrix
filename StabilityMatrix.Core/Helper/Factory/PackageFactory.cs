@@ -92,6 +92,8 @@ public class PackageFactory : IPackageFactory
             "FluxGym" => new FluxGym(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             "SimpleSDXL"
                 => new SimpleSDXL(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "Cogstudio"
+                => new Cogstudio(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage))
         };
     }

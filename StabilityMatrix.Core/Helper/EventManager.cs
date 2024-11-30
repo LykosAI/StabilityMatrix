@@ -48,6 +48,7 @@ public class EventManager
     public event InferenceProjectRequestedEventHandler? InferenceProjectRequested;
     public event EventHandler<InferenceQueueCustomPromptEventArgs>? InferenceQueueCustomPrompt;
     public event EventHandler<int>? NavigateAndFindCivitModelRequested;
+    public event EventHandler<string?>? NavigateAndFindCivitAuthorRequested;
     public event EventHandler? DownloadsTeachingTipRequested;
     public event EventHandler? RecommendedModelsDialogClosed;
     public event EventHandler? WorkflowInstalled;
@@ -110,4 +111,7 @@ public class EventManager
 
     public void OnInferenceProjectRequested(LocalImageFile imageFile, InferenceProjectType type) =>
         InferenceProjectRequested?.Invoke(this, imageFile, type);
+
+    public void OnNavigateAndFindCivitAuthorRequested(string? author) =>
+        NavigateAndFindCivitAuthorRequested?.Invoke(this, author);
 }

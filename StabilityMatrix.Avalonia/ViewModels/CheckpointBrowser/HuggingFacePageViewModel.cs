@@ -170,7 +170,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
                         viewModel.NotifyExistsChanged();
                     }
                 };
-                download.Start();
+                await trackedDownloadService.TryStartDownload(download);
 
                 await Task.Delay(Random.Shared.Next(50, 100));
             }

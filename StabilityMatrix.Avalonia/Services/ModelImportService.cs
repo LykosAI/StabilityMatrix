@@ -161,6 +161,6 @@ public class ModelImportService(
         // Add hash context action
         download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
 
-        download.Start();
+        await trackedDownloadService.TryStartDownload(download);
     }
 }

@@ -6,13 +6,13 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:progress="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Progress"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vmBase="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
-    xmlns:progress="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Progress"
     MaxHeight="550"
     d:DataContext="{x:Static mocks:DesignData.ProgressManagerViewModel}"
     d:DesignHeight="550"
-    d:DesignWidth="300"
+    d:DesignWidth="450"
     x:DataType="progress:ProgressManagerViewModel"
     mc:Ignorable="d">
     <ScrollViewer>
@@ -48,45 +48,58 @@
                             BorderBrush="#33000000"
                             BorderThickness="2"
                             CornerRadius="8">
-                            <Grid ColumnDefinitions="Auto,Auto" RowDefinitions="Auto,Auto">
+                            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                                <Grid
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Margin="0,0,8,0"
+                                    RowDefinitions="Auto, Auto">
+                                    <TextBlock
+                                        MaxWidth="300"
+                                        HorizontalAlignment="Left"
+                                        Text="{Binding Name, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
 
-                                <Grid Grid.Row="0" Grid.Column="0" RowDefinitions="Auto, Auto">
-                                    <TextBlock 
-                                               MaxWidth="200"
-                                               Text="{Binding Name, Mode=OneWay}" 
-                                               TextWrapping="NoWrap"
-                                               TextTrimming="CharacterEllipsis"/>
-                                    
                                     <!--  non-indeterminate progress  -->
-                                    <StackPanel Grid.Row="1" Orientation="Horizontal"
-                                                IsVisible="{Binding !Progress.IsIndeterminate}">
-                                        <TextBlock Margin="0,0"
-                                                   Text="{Binding Progress.Text, Mode=OneWay}"/>
-                                        <TextBlock Margin="0,0"
-                                                   IsVisible="{Binding !IsCompleted}">
+                                    <StackPanel
+                                        Grid.Row="1"
+                                        IsVisible="{Binding !Progress.IsIndeterminate}"
+                                        Orientation="Horizontal">
+                                        <TextBlock
+                                            MaxWidth="200"
+                                            Margin="0,0"
+                                            Text="{Binding Progress.Text, Mode=OneWay}"
+                                            TextTrimming="CharacterEllipsis"
+                                            TextWrapping="NoWrap" />
+                                        <TextBlock Margin="4,0,0,0" IsVisible="{Binding !IsCompleted}">
                                             <Run Text="{Binding Progress.Value, Mode=OneWay}" /><Run Text="%" />
-                                            <Run Text=" - "/>
-                                            <Run Text="{Binding Progress.FormattedDownloadSpeed}" 
-                                                 Foreground="Lime"/>
+                                            <Run Text=" - " />
+                                            <Run Foreground="Lime" Text="{Binding Progress.FormattedDownloadSpeed}" />
                                         </TextBlock>
-                                        
+
                                     </StackPanel>
 
                                     <!--  indeterminate progress  -->
-                                    <TextBlock Grid.Row="1"
+                                    <TextBlock
+                                        Grid.Row="1"
+                                        MaxWidth="200"
                                         Margin="0,4"
                                         IsVisible="{Binding Progress.IsIndeterminate}"
-                                        Text="{Binding Progress.Text, Mode=OneWay}" />
+                                        Text="{Binding Progress.Text, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
                                 </Grid>
 
 
                                 <!--  Buttons  -->
-                                <UniformGrid
+                                <StackPanel
                                     Grid.Row="0"
                                     Grid.Column="1"
-                                    Columns="2">
-                                    <ToggleButton 
-                                        Name="PauseResumeToggleButton" 
+                                    HorizontalAlignment="Right"
+                                    Orientation="Horizontal">
+                                    <ToggleButton
+                                        Name="PauseResumeToggleButton"
                                         Classes="transparent-full"
                                         Command="{Binding TogglePauseResumeCommand}"
                                         IsChecked="{Binding IsPaused}"
@@ -96,14 +109,14 @@
                                             <ui:SymbolIcon IsVisible="{Binding ElementName=PauseResumeToggleButton, Path=IsChecked}" Symbol="Play" />
                                         </Panel>
                                     </ToggleButton>
-                                    
-                                    <Button 
+
+                                    <Button
+                                        Classes="transparent-full"
                                         Command="{Binding CancelCommand}"
-                                        IsVisible="{Binding CanCancel}"
-                                        Classes="transparent-full">
+                                        IsVisible="{Binding CanCancel}">
                                         <ui:SymbolIcon Symbol="Cancel" />
                                     </Button>
-                                </UniformGrid>
+                                </StackPanel>
 
                                 <ProgressBar
                                     Grid.Row="1"
@@ -137,11 +150,11 @@
                             <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
                                 <StackPanel Grid.Row="0" Grid.Column="0">
                                     <TextBlock Margin="0,0" Text="{Binding Name, Mode=OneWay}" />
-                                    
+
                                     <!--  non-indeterminate progress  -->
                                     <TextBlock
-                                        Margin="0,0"
                                         MaxWidth="250"
+                                        Margin="0,0"
                                         HorizontalAlignment="Left"
                                         IsVisible="{Binding !Progress.IsIndeterminate}">
                                         <Run Text="{Binding Progress.Text, Mode=OneWay}" />
@@ -151,8 +164,8 @@
                                     <!--  indeterminate progress  -->
                                     <TextBlock
                                         MaxWidth="250"
-                                        HorizontalAlignment="Left"
                                         Margin="0,4"
+                                        HorizontalAlignment="Left"
                                         IsVisible="{Binding Progress.IsIndeterminate}"
                                         Text="{Binding Progress.Text, Mode=OneWay}" />
                                 </StackPanel>
@@ -177,7 +190,7 @@
                             </Grid>
                         </Border>
                     </DataTemplate>
-                    
+
                     <DataTemplate DataType="{x:Type progress:PackageInstallProgressItemViewModel}">
                         <Border
                             Margin="4"
@@ -189,17 +202,19 @@
                             <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
 
                                 <StackPanel Grid.Row="0" Grid.Column="0">
-                                    <TextBlock Margin="0,0" 
-                                               MaxWidth="250"
-                                               HorizontalAlignment="Left"
-                                               TextWrapping="NoWrap"
-                                               TextTrimming="CharacterEllipsis"
-                                               Text="{Binding Progress.Text, Mode=OneWay}" />
-                                    
+                                    <TextBlock
+                                        MaxWidth="300"
+                                        Margin="0,0"
+                                        HorizontalAlignment="Left"
+                                        Text="{Binding Progress.Text, Mode=OneWay}"
+                                        TextTrimming="CharacterEllipsis"
+                                        TextWrapping="NoWrap" />
+
                                     <!--  non-indeterminate progress  -->
                                     <TextBlock
-                                        Margin="0,4"
                                         MaxWidth="300"
+                                        Margin="0,4"
+                                        HorizontalAlignment="Left"
                                         IsVisible="{Binding !Progress.IsIndeterminate}">
                                         <Run Text="{Binding Progress.Description, Mode=OneWay}" />
                                         <Run Text="{Binding Progress.Value, Mode=OneWay}" /><Run Text="%" />
@@ -207,8 +222,10 @@
 
                                     <!--  indeterminate progress  -->
                                     <TextBlock
-                                        Margin="0,4"
+                                        MinWidth="300"
                                         MaxWidth="300"
+                                        Margin="0,4"
+                                        HorizontalAlignment="Left"
                                         IsVisible="{Binding Progress.IsIndeterminate}"
                                         Text="{Binding Progress.Description, Mode=OneWay}" />
                                 </StackPanel>
@@ -219,9 +236,9 @@
                                     Grid.Row="0"
                                     Grid.Column="1"
                                     Margin="8,0"
-                                    ToolTip.Tip="Show Progress Dialog"
+                                    Classes="transparent-full"
                                     Command="{Binding ShowProgressDialog}"
-                                    Classes="transparent-full">
+                                    ToolTip.Tip="Show Progress Dialog">
                                     <ui:SymbolIcon Symbol="Open" />
                                 </Button>
 

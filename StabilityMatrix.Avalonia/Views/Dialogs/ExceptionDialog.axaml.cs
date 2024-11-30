@@ -35,6 +35,16 @@ public partial class ExceptionDialog : AppWindowBase
         }
     }
 
+    private void ContinueButton_OnClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is ExceptionViewModel viewModel)
+        {
+            viewModel.IsContinueResult = true;
+        }
+
+        Close();
+    }
+
     [SuppressMessage("ReSharper", "UnusedParameter.Local")]
     private void ExitButton_OnClick(object? sender, RoutedEventArgs e)
     {

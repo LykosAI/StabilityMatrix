@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -29,9 +31,7 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
     private ToolTip? toolTip;
 
     public static readonly StyledProperty<ITokenizerProvider?> TokenizerProviderProperty =
-        AvaloniaProperty.Register<TextEditorCompletionBehavior, ITokenizerProvider?>(
-            "TokenizerProvider"
-        );
+        AvaloniaProperty.Register<TextEditorCompletionBehavior, ITokenizerProvider?>("TokenizerProvider");
 
     public ITokenizerProvider? TokenizerProvider
     {
@@ -137,6 +137,7 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
 
             toolTip
                 .GetPropertyChangedObservable(ToolTip.IsOpenProperty)
+                .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(c =>
                 {
                     if (c.NewValue as bool? != true)
@@ -159,10 +160,7 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
     private ToolTipData? GetCaretToolTipData(TextViewPosition position)
     {
         var logicalPosition = position.Location;
-        var pointerOffset = textEditor.Document.GetOffset(
-            logicalPosition.Line,
-            logicalPosition.Column
-        );
+        var pointerOffset = textEditor.Document.GetOffset(logicalPosition.Line, logicalPosition.Column);
 
         var line = textEditor.Document.GetLineByOffset(pointerOffset);
         var lineText = textEditor.Document.GetText(line.Offset, line.Length);
@@ -227,10 +225,7 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
             if (result.Tokens.ElementAtOrDefault(currentTokenIndex + tokenOffset) is { } token)
             {
                 // Check supported scopes
-                if (
-                    token.Scopes.Where(s => s.Contains("invalid")).ToArray() is
-                    { Length: > 0 } results
-                )
+                if (token.Scopes.Where(s => s.Contains("invalid")).ToArray() is { Length: > 0 } results)
                 {
                     // Special cases
                     if (results.Contains("invalid.illegal.mismatched.parenthesis.closing.prompt"))

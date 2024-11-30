@@ -32,6 +32,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed error when installing Automatic1111 on macOS
 - Fixed some instances of Civitai model browser not loading new results
 - Fixed "Unsupported Torch Version: Cuda" errors when installing a1111
+### Supporters
+#### Visionaries
+- A huge shout-out to our dedicated Visionary-tier Patreon supporter, **Waterclouds**! Your unwavering support is greatly appreciated!
+#### Pioneers
+- We'd also like to express our gratitude to our amazing Pioneer-tier patrons: **tankfox**, **tanangular**, **Mr. Unknown**, and **Szir777**! Your ongoing support means a great deal!
 
 ## v2.12.2
 ### Added

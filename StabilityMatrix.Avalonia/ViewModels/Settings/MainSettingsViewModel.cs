@@ -1340,6 +1340,24 @@ public partial class MainSettingsViewModel : PageViewModelBase
         HardwareHelper.IterGpuInfoNvidiaSmi();
     }
 
+    // [RelayCommand]
+    // private async Task DebugDoTheOauth()
+    // {
+    //     var request = new OpenIddictClientModels.DeviceChallengeRequest {ProviderName = "Lykos Account"};
+    //     deviceAuthViewModel.ChallengeRequest = request;
+    //
+    //     await deviceAuthViewModel.TryAuthenticateAsync();
+    //
+    //     if (deviceAuthViewModel.AuthenticationResult is { } response)
+    //     {
+    //         notificationService.Show("Device Auth Success", response.ToString());
+    //     }
+    //     else
+    //     {
+    //         notificationService.Show("Device Auth Failed", "No response received", NotificationType.Error);
+    //     }
+    // }
+
     #endregion
 
     #region Systems Setting Section

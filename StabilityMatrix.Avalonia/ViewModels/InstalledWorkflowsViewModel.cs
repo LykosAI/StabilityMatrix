@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -62,6 +63,7 @@ public partial class InstalledWorkflowsViewModel(
             .Filter(searchPredicate)
             .SortBy(x => x.Index)
             .Bind(DisplayedWorkflows)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         if (Design.IsDesignMode)

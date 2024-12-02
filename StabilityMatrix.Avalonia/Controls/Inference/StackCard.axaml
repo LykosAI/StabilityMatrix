@@ -1,42 +1,36 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-        xmlns:system="clr-namespace:System;assembly=System.Runtime"
-        xmlns:ui="using:FluentAvalonia.UI.Controls"
-        xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
-        xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
-        xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
-        x:DataType="vmInference:StackCardViewModel">
-    
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:StackCardViewModel">
+
     <Design.PreviewWith>
-        <Grid Width="600" Height="800">
-            <controls:StackCard
-                DataContext="{x:Static mocks:DesignData.StackCardViewModel}"/>
-        </Grid>
+        <StackPanel Width="600" Height="800">
+            <controls:StackCard DataContext="{x:Static mocks:DesignData.StackCardViewModel}" Spacing="16" />
+            <controls:StackCard DataContext="{x:Static mocks:DesignData.StackCardViewModel}" Spacing="4" />
+        </StackPanel>
     </Design.PreviewWith>
-    
+
     <Style Selector="controls|StackCard">
-        <!-- Set Defaults -->
+        <!--  Set Defaults  -->
         <Setter Property="Template">
             <ControlTemplate>
                 <ScrollViewer Padding="4,0,4,0">
-                    <ItemsControl 
-                        VerticalAlignment="Top"
-                        ItemsSource="{Binding Cards}">
-                        
+                    <ItemsControl VerticalAlignment="Top" ItemsSource="{Binding Cards}">
+
                         <ItemsControl.DataTemplates>
-                            <local:ViewLocator/>
+                            <local:ViewLocator />
                         </ItemsControl.DataTemplates>
-                        
+
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel 
-                                    VerticalAlignment="Top"
-                                    Spacing="{TemplateBinding Spacing}"/>
+                                <StackPanel VerticalAlignment="Top" Spacing="{Binding $parent[controls:StackCard].Spacing}" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
-                        
+
                     </ItemsControl>
                 </ScrollViewer>
             </ControlTemplate>

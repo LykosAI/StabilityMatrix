@@ -1,4 +1,5 @@
-﻿using DynamicData;
+﻿using System.Reactive.Linq;
+using DynamicData;
 using DynamicData.Binding;
 using StabilityMatrix.Core.Services;
 
@@ -16,16 +17,12 @@ public class IndexCollection<TObject, TKey>
     /// <summary>
     /// Observable Collection of indexed items
     /// </summary>
-    public IObservableCollection<TObject> Items { get; } =
-        new ObservableCollectionExtended<TObject>();
+    public IObservableCollection<TObject> Items { get; } = new ObservableCollectionExtended<TObject>();
 
     public IndexCollection(
         IImageIndexService imageIndexService,
         Func<TObject, TKey> keySelector,
-        Func<
-            IObservable<IChangeSet<TObject, TKey>>,
-            IObservable<IChangeSet<TObject, TKey>>
-        >? transform = null
+        Func<IObservable<IChangeSet<TObject, TKey>>, IObservable<IChangeSet<TObject, TKey>>>? transform = null
     )
     {
         this.imageIndexService = imageIndexService;
@@ -39,7 +36,7 @@ public class IndexCollection<TObject, TKey>
             source = transform(source);
         }
 
-        source.Bind(Items).Subscribe();
+        source.Bind(Items).ObserveOn(SynchronizationContext.Current).Subscribe();
     }
 
     public void Add(TObject item)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reactive.Linq;
+using System.Threading;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
@@ -71,6 +72,7 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
 
         var incompatiblePredicate = this.WhenPropertyChanged(vm => vm.ShowIncompatiblePackages)
             .Select(_ => new Func<BasePackage, bool>(p => p.IsCompatible || ShowIncompatiblePackages))
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchFilter)
@@ -80,6 +82,7 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
                         p => p.DisplayName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
                     )
             )
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         packageSource
@@ -94,6 +97,7 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
                     .ThenByAscending(p => p.DisplayName)
             )
             .Bind(InferencePackages)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         packageSource
@@ -108,6 +112,7 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
                     .ThenByAscending(p => p.DisplayName)
             )
             .Bind(TrainingPackages)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         packageSource.EditDiff(

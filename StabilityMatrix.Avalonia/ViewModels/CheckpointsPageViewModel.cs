@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -196,6 +197,7 @@ public partial class CheckpointsPageViewModel(
                             )
                     )
             )
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         var filterPredicate = Observable
@@ -209,6 +211,7 @@ public partial class CheckpointsPageViewModel(
             )
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<LocalModelFile, bool>)FilterModels)
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         var comparerObservable = Observable
@@ -294,6 +297,7 @@ public partial class CheckpointsPageViewModel(
 
                 return comparer;
             })
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         ModelsCache
@@ -316,6 +320,7 @@ public partial class CheckpointsPageViewModel(
             .SortAndBind(Models, comparerObservable)
             .WhenPropertyChanged(p => p.IsSelected)
             .Throttle(TimeSpan.FromMilliseconds(50))
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe(_ =>
             {
                 NumItemsSelected = Models.Count(o => o.IsSelected);
@@ -327,6 +332,7 @@ public partial class CheckpointsPageViewModel(
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<CheckpointCategory, bool>)FilterCategories)
             .StartWith(FilterCategories)
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         categoriesCache
@@ -339,6 +345,7 @@ public partial class CheckpointsPageViewModel(
                     .Descending(x => x.Name == "All Models")
                     .ThenByAscending(x => x.Name)
             )
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         settingsManager.RelayPropertyFor(

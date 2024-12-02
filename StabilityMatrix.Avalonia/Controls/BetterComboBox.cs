@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
@@ -48,7 +49,9 @@ public class BetterComboBox : ComboBox
             .Select(_ => currentInput);
 
         // Subscribe to the observable to filter the ComboBox items
-        subscription = inputObservable.Subscribe(OnInputReceived, _ => ResetPopupText());
+        subscription = inputObservable
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe(OnInputReceived, _ => ResetPopupText());
 
         // Initialize the popup
         inputPopup = new Popup

@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.13.0-dev.4
+### Changed
+- Improved Packages Page grid layout to dynamically stretch to fill available space
+
 ## v2.13.0-dev.3
 ### Added
 - Added support for SD3.5 in Inference

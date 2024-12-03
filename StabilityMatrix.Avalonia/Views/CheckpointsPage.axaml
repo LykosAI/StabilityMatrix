@@ -624,12 +624,24 @@
                                         IsHitTestVisible="False">
 
                                         <StackPanel>
-                                            <TextBlock
-                                                MaxWidth="300"
-                                                HorizontalAlignment="Left"
-                                                Text="{Binding CheckpointFile.DisplayModelName}"
-                                                TextWrapping="NoWrap"
-                                                ToolTip.Tip="{Binding CheckpointFile.DisplayModelName}" />
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <TextBlock
+                                                    MaxWidth="300"
+                                                    HorizontalAlignment="Left"
+                                                    Text="{Binding CheckpointFile.DisplayModelName}"
+                                                    TextWrapping="NoWrap"
+                                                    ToolTip.Tip="{Binding CheckpointFile.DisplayModelName}" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    MaxWidth="300"
+                                                    Margin="4,0,0,0"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="13"
+                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                                    Text="{Binding FileSize, Converter={x:Static converters:FileSizeConverters.HumanizeBinaryFileSizeConverter}}"
+                                                    TextWrapping="NoWrap" />
+                                            </Grid>
                                             <TextBlock
                                                 Margin="0,4"
                                                 HorizontalAlignment="Left"

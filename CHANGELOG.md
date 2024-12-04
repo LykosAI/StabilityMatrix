@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added file sizes to the Checkpoint Manager tab
 ### Changed
 - Improved Packages Page grid layout to dynamically stretch to fill available space
+### Fixed
+- Fixed missing package thumbnails due to moved or inaccessible urls
 
 ## v2.13.0-dev.3
 ### Added
@@ -76,6 +78,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed crash when clicking "Remind me Later" on the update dialog
 - Fixed some cases of crashing when GitHub API rate limits are exceeded
 - Fixed Git missing from env vars when running SwarmUI
+- Fixed missing package thumbnails due to moved or inaccessible urls
 ### Supporters
 #### Visionaries
 - A huge thank you to our dedicated Visionary-tier Patreon supporter, **Waterclouds**! We’re thrilled to have your ongoing support!

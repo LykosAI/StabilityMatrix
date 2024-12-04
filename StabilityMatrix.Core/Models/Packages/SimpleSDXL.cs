@@ -24,8 +24,7 @@ public class SimpleSDXL(
     public override string Blurb =>
         "Enhanced version of Fooocus for SDXL, more suitable for Chinese and Cloud. Supports Flux.";
     public override string LicenseUrl => "https://github.com/metercai/SimpleSDXL/blob/SimpleSDXL/LICENSE";
-    public override Uri PreviewImageUri =>
-        new("https://github.com/user-attachments/assets/98715a4d-9f4a-4846-ae62-eb8d69793d31");
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/simplesdxl/preview.webp");
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         [SharedFolderMethod.Configuration, SharedFolderMethod.Symlink, SharedFolderMethod.None];

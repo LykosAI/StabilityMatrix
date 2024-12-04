@@ -36,8 +36,7 @@ public class VladAutomatic(
     public override string Blurb => "Stable Diffusion implementation with advanced features and modern UI";
     public override string LaunchCommand => "launch.py";
 
-    public override Uri PreviewImageUri =>
-        new("https://github.com/vladmandic/automatic/raw/master/html/screenshot-modernui.jpg");
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/vladautomatic/preview.webp");
     public override bool ShouldIgnoreReleases => true;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;

@@ -1,5 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.Text.Json.Nodes;
+﻿using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -13,7 +12,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class DiscreteModelSamplingCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "DiscreteModelSampling";
-    public ObservableCollection<string> SamplingMethods { get; set; } = ["eps", "v_prediction", "lcm", "x0"];
+    public List<string> SamplingMethods => ["eps", "v_prediction", "lcm", "x0"];
 
     [ObservableProperty]
     private bool isZsnrEnabled;

@@ -2,7 +2,9 @@
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Reactive.Linq;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
@@ -45,7 +47,7 @@ public partial class InstalledWorkflowsViewModel(
     {
         await base.OnInitialLoadedAsync();
 
-        workflowsCache.Connect().DeferUntilLoaded().Bind(DisplayedWorkflows).Subscribe();
+        workflowsCache.Connect().DeferUntilLoaded().Bind(DisplayedWorkflows).ObserveOn(SynchronizationContext.Current).Subscribe();
 
         if (Design.IsDesignMode)
             return;

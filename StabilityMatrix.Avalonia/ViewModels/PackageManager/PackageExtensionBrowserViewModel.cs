@@ -102,6 +102,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             .AutoRefresh(item => item.IsSelected)
             .Filter(item => item.IsSelected)
             .Bind(SelectedAvailableItems)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         var installedItemsChangeSet = installedExtensionsSource
@@ -114,6 +115,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             .AutoRefresh(item => item.IsSelected)
             .Filter(item => item.IsSelected)
             .Bind(SelectedInstalledItems)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         cleanUp = new CompositeDisposable(

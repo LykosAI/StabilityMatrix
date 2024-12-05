@@ -46,23 +46,7 @@ public partial class InstalledWorkflowsViewModel(
     {
         await base.OnInitialLoadedAsync();
 
-<<<<<<< HEAD
-        workflowsCache.Connect().DeferUntilLoaded().Bind(DisplayedWorkflows).Subscribe();
-=======
-        var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
-            .Throttle(TimeSpan.FromMilliseconds(100))
-            .DistinctUntilChanged()
-            .Select(_ => (Func<OpenArtMetadata, bool>)FilterWorkflows);
-
-        workflowsCache
-            .Connect()
-            .DeferUntilLoaded()
-            .Filter(searchPredicate)
-            .SortBy(x => x.Index)
-            .Bind(DisplayedWorkflows)
-            .ObserveOn(SynchronizationContext.Current)
-            .Subscribe();
->>>>>>> 64b44ab1 (Merge pull request #899 from ionite34/observe-on)
+        workflowsCache.Connect().DeferUntilLoaded().Bind(DisplayedWorkflows).ObserveOn(SynchronizationContext.Current).Subscribe();
 
         if (Design.IsDesignMode)
             return;

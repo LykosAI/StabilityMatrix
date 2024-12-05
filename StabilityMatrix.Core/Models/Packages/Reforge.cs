@@ -21,10 +21,7 @@ public class Reforge(
         "Stable Diffusion WebUI reForge is a platform on top of Stable Diffusion WebUI (based on Gradio) to make development easier, optimize resource management, speed up inference, and study experimental features.";
     public override string LicenseUrl =>
         "https://github.com/Panchovix/stable-diffusion-webui-reForge/blob/main/LICENSE.txt";
-    public override Uri PreviewImageUri =>
-        new(
-            "https://github.com/lllyasviel/stable-diffusion-webui-forge/assets/19834515/de1a2d05-344a-44d7-bab8-9ecc0a58a8d3"
-        );
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/reforge/preview.webp");
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
 }

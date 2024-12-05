@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
@@ -122,6 +123,7 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
 
         this.WhenPropertyChanged(vm => vm.OutputImageFileNameFormat)
             .Throttle(TimeSpan.FromMilliseconds(50))
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe(formatProperty =>
             {
                 var provider = FileNameFormatProvider.GetSample();

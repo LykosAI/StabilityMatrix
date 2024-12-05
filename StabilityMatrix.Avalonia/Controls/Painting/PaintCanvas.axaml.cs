@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -108,6 +110,7 @@ public class PaintCanvas : TemplatedControl
             viewModelSubscription?.Dispose();
             viewModelSubscription = viewModel
                 .WhenPropertyChanged(vm => vm.CanvasSize)
+                .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(change =>
                 {
                     if (MainCanvas is not null && !change.Value.IsEmpty)

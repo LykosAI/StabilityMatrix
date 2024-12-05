@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
@@ -76,6 +77,7 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(50))!
             .Select(property => searcher.GetPredicate(property.Value))
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         imageIndexService
@@ -84,6 +86,7 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
             .Filter(searchPredicate)
             .SortBy(file => file.LastModifiedAt, SortDirection.Descending)
             .Bind(LocalImages)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         AddDisposable(
@@ -191,6 +194,7 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
                 vm,
                 nameof(ImageViewerViewModel.NavigationRequested)
             )
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe(ctx =>
             {
                 Dispatcher
@@ -373,6 +377,17 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
         }
 
         notificationService.Show("Image Exported", $"Saved to {targetPath}", NotificationType.Success);
+    }
+
+    [RelayCommand]
+    private async Task CopySeedToClipboard(LocalImageFile? item)
+    {
+        if (item?.GenerationParameters is null)
+        {
+            return;
+        }
+
+        await App.Clipboard.SetTextAsync(item.GenerationParameters.Seed.ToString());
     }
 
     [RelayCommand]

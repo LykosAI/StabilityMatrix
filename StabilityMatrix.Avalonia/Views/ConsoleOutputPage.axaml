@@ -1,50 +1,54 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-             xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
-             xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-             xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-             xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-             xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:DataType="viewModels:RunningPackageViewModel"
-             x:Class="StabilityMatrix.Avalonia.Views.ConsoleOutputPage">
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.ConsoleOutputPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:viewModels="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="viewModels:RunningPackageViewModel"
+    mc:Ignorable="d">
     <Grid RowDefinitions="Auto, *, Auto">
-        <ui:CommandBar Grid.Row="0"
-                              Margin="12,0,0,4"
-                              VerticalAlignment="Center"
-                              VerticalContentAlignment="Center"
-                              HorizontalAlignment="Left"
-                              HorizontalContentAlignment="Left"
-                              DefaultLabelPosition="Right">
+        <ui:CommandBar
+            Grid.Row="0"
+            Margin="12,0,0,4"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            HorizontalContentAlignment="Left"
+            VerticalContentAlignment="Center"
+            DefaultLabelPosition="Right">
             <ui:CommandBar.PrimaryCommands>
                 <ui:CommandBarButton
-                    IconSource="Stop"
-                    IsVisible="{Binding IsRunning}"
+                    VerticalAlignment="Center"
                     Classes="danger"
                     Command="{Binding StopCommand}"
-                    VerticalAlignment="Center"
+                    IconSource="Stop"
+                    IsVisible="{Binding IsRunning}"
                     Label="{x:Static lang:Resources.Action_Stop}" />
                 <ui:CommandBarButton
-                    IconSource="Play"
-                    IsVisible="{Binding !IsRunning}"
+                    VerticalAlignment="Center"
                     Classes="success"
                     Command="{Binding LaunchPackageCommand}"
-                    VerticalAlignment="Center"
+                    IconSource="Play"
+                    IsVisible="{Binding !IsRunning}"
                     Label="{x:Static lang:Resources.Action_Launch}" />
                 <ui:CommandBarButton
-                    IconSource="Refresh"
                     Margin="4,0,0,0"
-                    Classes="info"
-                    IsVisible="{Binding IsRunning}"
-                    Command="{Binding RestartCommand}"
                     VerticalAlignment="Center"
+                    Classes="info"
+                    Command="{Binding RestartCommand}"
+                    IconSource="Refresh"
+                    IsVisible="{Binding IsRunning}"
                     Label="{x:Static lang:Resources.Action_Restart}" />
-                
-                <ui:CommandBarSeparator Margin="16,0,16,0"/>
-                
+
+                <ui:CommandBarSeparator Margin="16,0,16,0" />
+
                 <ui:CommandBarToggleButton
                     VerticalAlignment="Center"
                     IsChecked="{Binding AutoScrollToEnd}"
@@ -54,50 +58,93 @@
                         <controls:FASymbolIconSource Symbol="fa-solid fa-arrow-down-wide-short" />
                     </ui:CommandBarToggleButton.IconSource>
                 </ui:CommandBarToggleButton>
-                
+
                 <ui:CommandBarButton
+                    x:Name="OpenWebUiButton"
+                    VerticalAlignment="Center"
                     Command="{Binding LaunchWebUiCommand}"
                     IsVisible="{Binding ShowWebUiButton}"
-                    VerticalAlignment="Center"
-                    x:Name="OpenWebUiButton"
                     Label="{x:Static lang:Resources.Action_OpenWebUI}">
                     <ui:CommandBarButton.IconSource>
-                        <controls:FASymbolIconSource Symbol="fa-solid fa-up-right-from-square"/>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-up-right-from-square" />
                     </ui:CommandBarButton.IconSource>
                 </ui:CommandBarButton>
             </ui:CommandBar.PrimaryCommands>
         </ui:CommandBar>
-        
+
         <avaloniaEdit:TextEditor
-            Grid.Row="1"
             x:Name="Console"
+            Grid.Row="1"
             Margin="8,8,16,10"
             DataContext="{Binding Console}"
             Document="{Binding Document}"
             FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
-            IsReadOnly="True"
             FontSize="14"
+            IsReadOnly="True"
             LineNumbersForeground="DarkSlateGray"
             ShowLineNumbers="True"
             VerticalScrollBarVisibility="Auto"
-            WordWrap="True" />
-        
-        <Grid Grid.Row="2" ColumnDefinitions="*, Auto"
-              Margin="16,4,16,16">
-            <TextBox Grid.Column="0" Text="{Binding ConsoleInput, Mode=TwoWay}"
-                     Margin="0,0,8,0"/>
-            <Button Grid.Column="1"
-                    Classes="accent"
-                    IsDefault="True"
-                    Content="{x:Static lang:Resources.Action_Send}"
-                    IsEnabled="{Binding IsRunning}"
-                    Command="{Binding SendToConsoleCommand}"/>
+            WordWrap="True">
+            <avaloniaEdit:TextEditor.ContextFlyout>
+                <MenuFlyout>
+                    <MenuItem
+                        Command="{Binding CopySelectionCommand}"
+                        CommandParameter="{Binding ., ElementName=Console}"
+                        Header="{x:Static lang:Resources.Action_Copy}">
+                        <MenuItem.Icon>
+                            <avalonia:Icon Value="fa-solid fa-copy" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding SelectAllCommand}"
+                        CommandParameter="{Binding ., ElementName=Console}"
+                        Header="{x:Static lang:Resources.Action_SelectAll}"
+                        IsEnabled="{Binding CanSelectAll, ElementName=Console}">
+                        <MenuItem.Icon>
+                            <avalonia:Icon Value="fa-solid fa-table-cells" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding SearchWithGoogleCommand}"
+                        CommandParameter="{Binding ., ElementName=Console}"
+                        Header="Search with Google">
+                        <MenuItem.Icon>
+                            <avalonia:Icon Value="fa-brands fa-google" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding SearchWithChatGptCommand}"
+                        CommandParameter="{Binding ., ElementName=Console}"
+                        Header="Search with ChatGPT"
+                        Icon="{StaticResource OpenAiIcon}" />
+                </MenuFlyout>
+            </avaloniaEdit:TextEditor.ContextFlyout>
+        </avaloniaEdit:TextEditor>
+
+        <Grid
+            Grid.Row="2"
+            Margin="16,4,16,16"
+            ColumnDefinitions="*, Auto">
+            <TextBox
+                Grid.Column="0"
+                Margin="0,0,8,0"
+                Text="{Binding ConsoleInput, Mode=TwoWay}" />
+            <Button
+                Grid.Column="1"
+                Classes="accent"
+                Command="{Binding SendToConsoleCommand}"
+                Content="{x:Static lang:Resources.Action_Send}"
+                IsDefault="True"
+                IsEnabled="{Binding IsRunning}" />
         </Grid>
-        
-        <ui:TeachingTip Grid.Row="0" Grid.Column="0" Name="TeachingTip1"
-                        Target="{Binding #OpenWebUiButton}"
-                        Title="{x:Static lang:Resources.TeachingTip_WebUiButtonMoved}"
-                        PreferredPlacement="Bottom"
-                        IsOpen="{Binding ShowWebUiTeachingTip}"/>
+
+        <ui:TeachingTip
+            Name="TeachingTip1"
+            Title="{x:Static lang:Resources.TeachingTip_WebUiButtonMoved}"
+            Grid.Row="0"
+            Grid.Column="0"
+            IsOpen="{Binding ShowWebUiTeachingTip}"
+            PreferredPlacement="Bottom"
+            Target="{Binding #OpenWebUiButton}" />
     </Grid>
 </controls:UserControlBase>

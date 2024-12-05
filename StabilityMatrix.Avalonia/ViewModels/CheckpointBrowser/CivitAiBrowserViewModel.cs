@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reactive.Linq;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -146,6 +147,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<CheckpointBrowserCardViewModel, bool>)FilterModelCardsPredicate)
             .StartWith(FilterModelCardsPredicate)
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         var sortPredicate = SortExpressionComparer<CheckpointBrowserCardViewModel>.Ascending(
@@ -167,9 +169,15 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             .DisposeMany()
             .Filter(filterPredicate)
             .SortAndBind(ModelCards, sortPredicate)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
-        baseModelCache.Connect().DeferUntilLoaded().SortAndBind(AllBaseModels).Subscribe();
+        baseModelCache
+            .Connect()
+            .DeferUntilLoaded()
+            .SortAndBind(AllBaseModels)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
 
         baseModelCache.AddOrUpdate(Enum.GetValues<CivitBaseModelType>().Select(t => t.GetStringValue()));
 
@@ -200,6 +208,17 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             settings => settings.HideEarlyAccessModels,
             true
         );
+
+        EventManager.Instance.NavigateAndFindCivitAuthorRequested += OnNavigateAndFindCivitAuthorRequested;
+    }
+
+    private void OnNavigateAndFindCivitAuthorRequested(object? sender, string e)
+    {
+        if (string.IsNullOrWhiteSpace(e))
+            return;
+
+        SearchQuery = $"@{e}";
+        SearchModelsCommand.ExecuteAsync(false).SafeFireAndForget();
     }
 
     private void OnNavigateAndFindCivitModelRequested(object? sender, int e)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
@@ -164,6 +165,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(Models)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         controlNetModelsSource
@@ -176,6 +178,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(ControlNetModels)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         loraModelsSource
@@ -185,6 +188,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 LoraModels,
                 SortExpressionComparer<HybridModelFile>.Ascending(f => f.Type).ThenByAscending(f => f.SortKey)
             )
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         promptExpansionModelsSource
@@ -197,6 +201,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(PromptExpansionModels)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         ultralyticsModelsSource
@@ -209,6 +214,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(UltralyticsModels)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         samModelsSource
@@ -221,6 +227,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(SamModels)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         unetModelsSource
@@ -232,6 +239,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(UnetModels)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         clipModelsSource
@@ -244,13 +252,24 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(ClipModels)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         vaeModelsDefaults.AddOrUpdate(HybridModelFile.Default);
 
-        vaeModelsDefaults.Connect().Or(vaeModelsSource.Connect()).Bind(VaeModels).Subscribe();
+        vaeModelsDefaults
+            .Connect()
+            .Or(vaeModelsSource.Connect())
+            .Bind(VaeModels)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
 
-        samplersSource.Connect().DeferUntilLoaded().Bind(Samplers).Subscribe();
+        samplersSource
+            .Connect()
+            .DeferUntilLoaded()
+            .Bind(Samplers)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
 
         latentUpscalersSource
             .Connect()
@@ -258,11 +277,22 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .Or(downloadableUpscalersSource.Connect())
             .Sort(SortExpressionComparer<ComfyUpscaler>.Ascending(f => f.Type).ThenByAscending(f => f.Name))
             .Bind(Upscalers)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
-        schedulersSource.Connect().DeferUntilLoaded().Bind(Schedulers).Subscribe();
+        schedulersSource
+            .Connect()
+            .DeferUntilLoaded()
+            .Bind(Schedulers)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
 
-        preprocessorsSource.Connect().DeferUntilLoaded().Bind(Preprocessors).Subscribe();
+        preprocessorsSource
+            .Connect()
+            .DeferUntilLoaded()
+            .Bind(Preprocessors)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
 
         settingsManager.RegisterOnLibraryDirSet(_ =>
         {
@@ -431,10 +461,12 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Get CLIP model names from DualCLIPLoader node
         if (await Client.GetNodeOptionNamesAsync("DualCLIPLoader", "clip_name1") is { } clipModelNames)
         {
-            clipModelsSource.EditDiff(
-                clipModelNames.Select(HybridModelFile.FromRemote),
-                HybridModelFile.Comparer
-            );
+            IEnumerable<HybridModelFile> models =
+            [
+                HybridModelFile.None,
+                ..clipModelNames.Select(HybridModelFile.FromRemote)
+            ];
+            clipModelsSource.EditDiff(models, HybridModelFile.Comparer);
         }
     }
 

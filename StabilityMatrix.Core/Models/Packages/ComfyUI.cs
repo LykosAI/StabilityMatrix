@@ -37,8 +37,7 @@ public class ComfyUI(
     public override string Blurb => "A powerful and modular stable diffusion GUI and backend";
     public override string LaunchCommand => "main.py";
 
-    public override Uri PreviewImageUri =>
-        new("https://github.com/comfyanonymous/ComfyUI/raw/master/comfyui_screenshot.png");
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/comfyui/preview.webp");
     public override bool ShouldIgnoreReleases => true;
     public override bool IsInferenceCompatible => true;
     public override string OutputFolderName => "output";

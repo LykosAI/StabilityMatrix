@@ -1,12 +1,16 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using System.Web;
 using Avalonia.Threading;
+using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Nito.AsyncEx;
 using Nito.AsyncEx.Synchronous;
 using NLog;
@@ -138,6 +142,34 @@ public partial class ConsoleViewModel : ObservableObject, IDisposable, IAsyncDis
             writeCursor = Document.TextLength;
         }
         DebugPrintDocument();
+    }
+
+    [RelayCommand]
+    private async Task CopySelection(TextEditor textEditor)
+    {
+        await App.Clipboard.SetTextAsync(textEditor.SelectedText);
+    }
+
+    [RelayCommand]
+    private void SelectAll(TextEditor textEditor)
+    {
+        textEditor.SelectAll();
+    }
+
+    [Localizable(false)]
+    [RelayCommand]
+    private void SearchWithGoogle(TextEditor textEditor)
+    {
+        var url = $"https://google.com/search?q={HttpUtility.UrlEncode(textEditor.SelectedText)}";
+        ProcessRunner.OpenUrl(url);
+    }
+
+    [Localizable(false)]
+    [RelayCommand]
+    private void SearchWithChatGpt(TextEditor textEditor)
+    {
+        var url = $"https://chatgpt.com/?q={HttpUtility.UrlEncode(textEditor.SelectedText)}";
+        ProcessRunner.OpenUrl(url);
     }
 
     private async Task ConsoleUpdateLoop()

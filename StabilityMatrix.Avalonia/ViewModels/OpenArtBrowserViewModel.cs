@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
@@ -86,7 +88,12 @@ public partial class OpenArtBrowserViewModel(
 
     protected override void OnInitialLoaded()
     {
-        searchResultsCache.Connect().DeferUntilLoaded().Bind(SearchResults).Subscribe();
+        searchResultsCache
+            .Connect()
+            .DeferUntilLoaded()
+            .Bind(SearchResults)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
         SelectedSortMode = AllSortModes.First();
         DoSearch().SafeFireAndForget();
     }

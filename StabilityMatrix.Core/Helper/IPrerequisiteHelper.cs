@@ -102,13 +102,16 @@ public interface IPrerequisiteHelper
 
     async Task UpdateGitRepository(string repositoryDir, string repositoryUrl, GitVersion version)
     {
-        // Specify Tag
-        if (version.Tag is not null)
+        if (!Directory.Exists(Path.Combine(repositoryDir, ".git")))
         {
             await RunGit(["init"], repositoryDir).ConfigureAwait(false);
             await RunGit(["remote", "add", "origin", repositoryUrl], repositoryDir).ConfigureAwait(false);
-            await RunGit(["fetch", "--tags"], repositoryDir).ConfigureAwait(false);
+        }
 
+        // Specify Tag
+        if (version.Tag is not null)
+        {
+            await RunGit(["fetch", "--tags", "--force"], repositoryDir).ConfigureAwait(false);
             await RunGit(["checkout", version.Tag, "--force"], repositoryDir).ConfigureAwait(false);
             // Update submodules
             await RunGit(["submodule", "update", "--init", "--recursive"], repositoryDir)
@@ -117,9 +120,7 @@ public interface IPrerequisiteHelper
         // Specify Branch + CommitSha
         else if (version.Branch is not null && version.CommitSha is not null)
         {
-            await RunGit(["init"], repositoryDir).ConfigureAwait(false);
-            await RunGit(["remote", "add", "origin", repositoryUrl], repositoryDir).ConfigureAwait(false);
-            await RunGit(["fetch", "--tags"], repositoryDir).ConfigureAwait(false);
+            await RunGit(["fetch", "--force"], repositoryDir).ConfigureAwait(false);
 
             await RunGit(["checkout", version.CommitSha, "--force"], repositoryDir).ConfigureAwait(false);
             // Update submodules
@@ -130,7 +131,7 @@ public interface IPrerequisiteHelper
         else if (version.Branch is not null)
         {
             // Fetch
-            await RunGit(["fetch", "--tags", "--force"], repositoryDir).ConfigureAwait(false);
+            await RunGit(["fetch", "--force"], repositoryDir).ConfigureAwait(false);
             // Checkout
             await RunGit(["checkout", version.Branch, "--force"], repositoryDir).ConfigureAwait(false);
             // Pull latest

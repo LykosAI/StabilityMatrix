@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -75,6 +77,7 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
         // Update our width and height when the image changes
         SelectImageCardViewModel
             .WhenPropertyChanged(card => card.CurrentBitmapSize)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe(propertyValue =>
             {
                 if (!propertyValue.Value.IsEmpty)

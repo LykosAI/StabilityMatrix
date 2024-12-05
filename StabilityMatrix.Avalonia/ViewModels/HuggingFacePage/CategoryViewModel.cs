@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
@@ -35,6 +37,7 @@ public partial class CategoryViewModel : ViewModelBase
             .Transform(i => new HuggingfaceItemViewModel { Item = i, ModelsDir = modelsDir })
             .Bind(Items)
             .WhenPropertyChanged(p => p.IsSelected)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe(_ => NumSelected = Items.Count(i => i.IsSelected));
 
         ItemsCache.EditDiff(items, (a, b) => a.RepositoryPath == b.RepositoryPath);

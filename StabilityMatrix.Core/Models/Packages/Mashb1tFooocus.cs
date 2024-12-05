@@ -23,8 +23,5 @@ public class Mashb1tFooocus(
 
     public override string LicenseUrl => "https://github.com/mashb1t/Fooocus/blob/main/LICENSE";
 
-    public override Uri PreviewImageUri =>
-        new("https://github.com/lllyasviel/Fooocus/assets/19834515/483fb86d-c9a2-4c20-997c-46dafc124f25");
-
     public override bool ShouldIgnoreReleases => false;
 }

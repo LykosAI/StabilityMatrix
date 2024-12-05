@@ -1,5 +1,11 @@
 ﻿<Project>
     <PropertyGroup>
-        <AvaloniaVersion>11.1.4</AvaloniaVersion>
+        <AvaloniaVersion>11.2.1</AvaloniaVersion>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <!--Some bug with SDK 8.0.403 
+        https://github.com/dotnet/sdk/issues/44026-->
+        <NoWarn>$(NoWarn);CsWinRT1028</NoWarn>
     </PropertyGroup>
 </Project>

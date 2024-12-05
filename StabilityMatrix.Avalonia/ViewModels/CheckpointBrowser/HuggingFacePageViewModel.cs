@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -86,6 +87,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
             .Bind(Categories)
             .WhenAnyPropertyChanged()
             .Throttle(TimeSpan.FromMilliseconds(50))
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe(_ => NumSelected = Categories.Sum(c => c.NumSelected));
 
         progressTimer.Tick += (_, _) =>
@@ -170,7 +172,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
                         viewModel.NotifyExistsChanged();
                     }
                 };
-                download.Start();
+                await trackedDownloadService.TryStartDownload(download);
 
                 await Task.Delay(Random.Shared.Next(50, 100));
             }

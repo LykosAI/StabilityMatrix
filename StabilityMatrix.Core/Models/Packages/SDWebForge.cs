@@ -29,10 +29,7 @@ public class SDWebForge(
     public override string LicenseUrl =>
         "https://github.com/lllyasviel/stable-diffusion-webui-forge/blob/main/LICENSE.txt";
 
-    public override Uri PreviewImageUri =>
-        new(
-            "https://github.com/lllyasviel/stable-diffusion-webui-forge/assets/19834515/ca5e05ed-bd86-4ced-8662-f41034648e8c"
-        );
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/sdwebforge/preview.webp");
 
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;

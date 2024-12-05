@@ -1,0 +1,36 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="inference:DiscreteModelSamplingCardViewModel">
+    <Design.PreviewWith>
+        <Panel Width="400" Height="200">
+            <StackPanel Width="300" VerticalAlignment="Center">
+                <controls:DiscreteModelSamplingCard />
+            </StackPanel>
+        </Panel>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|DiscreteModelSamplingCard">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card Padding="12">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Sampling Method" />
+                        <controls:BetterComboBox
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding SamplingMethods}"
+                            SelectedItem="{Binding SelectedSamplingMethod}" />
+
+                        <ToggleSwitch
+                            Margin="0,12,0,0"
+                            Content="ZSNR"
+                            IsChecked="{Binding IsZsnrEnabled}" />
+                    </StackPanel>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

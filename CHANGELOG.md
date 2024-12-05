@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added new package - [CogVideo](https://github.com/THUDM/CogVideo) - many thanks to @NullDev for the contribution!
 - Added file sizes to the Checkpoint Manager tab
 - Added more formatting options for Inference output filenames - thanks to @yansigit!
+  Added the Discrete Model Sampling addon for Inference samplers, allows selecting different sampling methods, such as v_prediction, lcm, or x0, and optionally adjusts the model’s noise reduction strategy with the zero-shot noise ratio (ZSNR) toggle.
 ### Changed
 - Improved Packages Page grid layout to dynamically stretch to fill available space
 ### Fixed

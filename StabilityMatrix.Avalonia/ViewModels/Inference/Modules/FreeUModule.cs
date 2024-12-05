@@ -31,7 +31,7 @@ public class FreeUModule : ModuleBase
 
         foreach (var modelConnections in e.Builder.Connections.Models.Values.Where(m => m.Model is not null))
         {
-            modelConnections.Model = e.Nodes.AddTypedNode(
+            var freeUOutput = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.FreeU
                 {
                     Name = e.Nodes.GetUniqueName($"FreeU_{modelConnections.Name}"),
@@ -42,6 +42,9 @@ public class FreeUModule : ModuleBase
                     S2 = card.S2
                 }
             ).Output;
+
+            modelConnections.Model = freeUOutput;
+            e.Temp.Base.Model = freeUOutput;
         }
     }
 }

@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Reactive.Linq;
+using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -42,6 +44,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     private readonly ISettingsManager settingsManager;
     private readonly ILiteDbContext liteDbContext;
     private readonly INotificationService notificationService;
+    private bool dontSearch = false;
 
     private readonly SourceCache<OrderedValue<CivitModel>, int> modelCache = new(static ov => ov.Value.Id);
 
@@ -80,7 +83,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     private string noResultsText = string.Empty;
 
     [ObservableProperty]
-    private string selectedBaseModelType = "All";
+    private string selectedBaseModelType;
 
     [ObservableProperty]
     private bool showSantaHats = true;
@@ -98,6 +101,11 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     [NotifyPropertyChangedFor(nameof(StatsResizeFactor))]
     private double resizeFactor;
 
+    private readonly SourceCache<string, string> baseModelCache = new(static s => s);
+
+    [ObservableProperty]
+    private IObservableCollection<string> allBaseModels = new ObservableCollectionExtended<string>();
+
     public double StatsResizeFactor => Math.Clamp(ResizeFactor, 0.75d, 1.25d);
 
     public IEnumerable<CivitPeriod> AllCivitPeriods =>
@@ -110,9 +118,6 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             .Cast<CivitModelType>()
             .Where(t => t == CivitModelType.All || t.ConvertTo<SharedFolderType>() > 0)
             .OrderBy(t => t.ToString());
-
-    public IEnumerable<string> BaseModelOptions =>
-        Enum.GetValues<CivitBaseModelType>().Select(t => t.GetStringValue());
 
     public CivitAiBrowserViewModel(
         ICivitApi civitApi,
@@ -142,6 +147,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<CheckpointBrowserCardViewModel, bool>)FilterModelCardsPredicate)
             .StartWith(FilterModelCardsPredicate)
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         var sortPredicate = SortExpressionComparer<CheckpointBrowserCardViewModel>.Ascending(
@@ -163,7 +169,17 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             .DisposeMany()
             .Filter(filterPredicate)
             .SortAndBind(ModelCards, sortPredicate)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
+
+        baseModelCache
+            .Connect()
+            .DeferUntilLoaded()
+            .SortAndBind(AllBaseModels)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
+
+        baseModelCache.AddOrUpdate(Enum.GetValues<CivitBaseModelType>().Select(t => t.GetStringValue()));
 
         settingsManager.RelayPropertyFor(
             this,
@@ -230,10 +246,38 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         SelectedModelType = searchOptions?.SelectedModelType ?? CivitModelType.Checkpoint;
         SelectedBaseModelType = searchOptions?.SelectedBaseModelType ?? "All";
 
+        base.OnLoaded();
+    }
+
+    protected override async Task OnInitialLoadedAsync()
+    {
+        await base.OnInitialLoadedAsync();
         if (settingsManager.Settings.AutoLoadCivitModels)
         {
-            SearchModelsCommand.ExecuteAsync(false);
+            await SearchModelsCommand.ExecuteAsync(false);
         }
+
+        var baseModels = await GetBaseModelList();
+        if (baseModels.Count == 0)
+        {
+            LoadSelectedBaseModelType();
+            return;
+        }
+
+        dontSearch = true;
+        baseModelCache.AddOrUpdate(baseModels);
+        dontSearch = false;
+
+        LoadSelectedBaseModelType();
+    }
+
+    private void LoadSelectedBaseModelType()
+    {
+        var searchOptions = settingsManager.Settings.ModelSearchOptions;
+        dontSearch = true;
+        SelectedBaseModelType = "All";
+        SelectedBaseModelType = searchOptions is null ? "All" : searchOptions.SelectedBaseModelType;
+        dontSearch = false;
     }
 
     /// <summary>
@@ -340,7 +384,22 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                 }
             );
 
-            UpdateModelCards(models, isInfiniteScroll);
+            if (cacheNew)
+            {
+                var doesBaseModelTypeMatch =
+                    SelectedBaseModelType == "All"
+                        ? string.IsNullOrWhiteSpace(request.BaseModel)
+                        : SelectedBaseModelType == request.BaseModel;
+                var doesModelTypeMatch =
+                    SelectedModelType == CivitModelType.All
+                        ? request.Types == null || request.Types.Length == 0
+                        : SelectedModelType == request.Types?.FirstOrDefault();
+
+                if (doesBaseModelTypeMatch && doesModelTypeMatch)
+                {
+                    UpdateModelCards(models, isInfiniteScroll);
+                }
+            }
 
             NextPageCursor = modelsResponse?.Metadata?.NextCursor;
         }
@@ -615,6 +674,9 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
     partial void OnSelectedBaseModelTypeChanged(string value)
     {
+        if (dontSearch)
+            return;
+
         TrySearchAgain().SafeFireAndForget();
         settingsManager.Transaction(
             s =>
@@ -632,6 +694,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     {
         if (!HasSearched)
             return;
+
         modelCache.Clear();
 
         if (shouldUpdatePageNumber)
@@ -647,6 +710,36 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     {
         NoResultsFound = ModelCards?.Count <= 0;
         NoResultsText = "No results found";
+    }
+
+    [Localizable(false)]
+    private async Task<List<string>> GetBaseModelList()
+    {
+        try
+        {
+            var baseModelsResponse = await civitApi.GetBaseModelList();
+            var jsonContent = await baseModelsResponse.Content.ReadAsStringAsync();
+            var baseModels = JsonNode.Parse(jsonContent);
+
+            var jArray =
+                baseModels?["error"]?["issues"]?[0]?["unionErrors"]?[0]?["issues"]?[0]?["options"]
+                as JsonArray;
+            var civitBaseModels = jArray?.GetValues<string>().ToList() ?? [];
+
+            civitBaseModels.Insert(0, CivitBaseModelType.All.ToString());
+
+            var filteredResults = civitBaseModels
+                .Where(s => s.Equals("odor", StringComparison.OrdinalIgnoreCase) == false)
+                .OrderBy(s => s)
+                .ToList();
+
+            return filteredResults;
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Failed to get base model list");
+            return [];
+        }
     }
 
     public override string Header => Resources.Label_CivitAi;

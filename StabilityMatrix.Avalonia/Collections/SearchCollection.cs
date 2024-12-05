@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Threading;
 using DynamicData;
 using DynamicData.Binding;
 using JetBrains.Annotations;
@@ -72,6 +73,7 @@ public class SearchCollection<TObject, TKey, TQuery> : AbstractNotifyPropertyCha
             .Filter(dynamicPredicate)
             .Sort(SortComparer)
             .Bind(FilteredItems)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
     }
 
@@ -114,6 +116,7 @@ public class SearchCollection<TObject, TKey, TQuery> : AbstractNotifyPropertyCha
                 .Sort(SearchItemSortComparer, SortOptimisations.ComparesImmutableValuesOnly)
                 .Transform(searchItem => searchItem.Item)
                 .Bind(FilteredItems)
+                .ObserveOn(SynchronizationContext.Current)
                 .Subscribe()
         );
     }

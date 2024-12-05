@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -114,6 +115,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         AddDisposable(
             ModelCardViewModel
                 .WhenPropertyChanged(x => x.IsRefinerSelectionEnabled)
+                .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(e =>
                 {
                     SamplerCardViewModel.IsRefinerStepsEnabled =

@@ -76,7 +76,9 @@ public abstract class BaseGitPackage : BasePackage
         PrerequisiteHelper = prerequisiteHelper;
     }
 
-    public override async Task<DownloadPackageVersionOptions> GetLatestVersion(bool includePrerelease = false)
+    public override async Task<DownloadPackageVersionOptions?> GetLatestVersion(
+        bool includePrerelease = false
+    )
     {
         if (ShouldIgnoreReleases)
         {
@@ -88,12 +90,23 @@ public abstract class BaseGitPackage : BasePackage
                 IsLatest = true,
                 IsPrerelease = false,
                 BranchName = MainBranch,
-                CommitHash = commits?.FirstOrDefault()?.Sha ?? "unknown"
+                CommitHash = commits?.FirstOrDefault()?.Sha
             };
         }
 
         var releases = await GithubApi.GetAllReleases(RepositoryAuthor, RepositoryName).ConfigureAwait(false);
-        var latestRelease = includePrerelease ? releases.First() : releases.First(x => !x.Prerelease);
+        var releaseList = releases.ToList();
+        if (releaseList.Count == 0)
+        {
+            return new DownloadPackageVersionOptions
+            {
+                IsLatest = true,
+                IsPrerelease = false,
+                BranchName = MainBranch
+            };
+        }
+
+        var latestRelease = includePrerelease ? releaseList.First() : releaseList.First(x => !x.Prerelease);
 
         return new DownloadPackageVersionOptions
         {
@@ -319,7 +332,7 @@ public abstract class BaseGitPackage : BasePackage
                 await GetAllCommits(currentVersion.InstalledBranch!).ConfigureAwait(false)
             )?.ToList();
 
-            if (allCommits == null || !allCommits.Any())
+            if (allCommits == null || allCommits.Count == 0)
             {
                 Logger.Warn("No commits found for {Package}", package.PackageName);
                 return false;
@@ -363,7 +376,7 @@ public abstract class BaseGitPackage : BasePackage
                 await GetAllCommits(currentVersion.InstalledBranch!).ConfigureAwait(false)
             )?.ToList();
 
-            if (allCommits == null || !allCommits.Any())
+            if (allCommits == null || allCommits.Count == 0)
             {
                 Logger.Warn("No commits found for {Package}", installedPackage.PackageName);
                 return null;

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -73,6 +75,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
             .DeferUntilLoaded()
             .Filter(f => f.ModelVersion.BaseModel == "SD 1.5")
             .Bind(Sd15Models)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         CivitModels
@@ -80,6 +83,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
             .DeferUntilLoaded()
             .Filter(f => f.ModelVersion.BaseModel == "SDXL 1.0" || f.ModelVersion.BaseModel == "Pony")
             .Bind(SdxlModels)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
     }
 

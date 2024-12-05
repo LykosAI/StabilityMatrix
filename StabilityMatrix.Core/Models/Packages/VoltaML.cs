@@ -26,10 +26,7 @@ public class VoltaML(
     public override string Blurb => "Fast Stable Diffusion with support for AITemplate";
     public override string LaunchCommand => "main.py";
 
-    public override Uri PreviewImageUri =>
-        new(
-            "https://github.com/LykosAI/StabilityMatrix/assets/13956642/d9a908ed-5665-41a5-a380-98458f4679a8"
-        );
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/voltaml/preview.webp");
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
 

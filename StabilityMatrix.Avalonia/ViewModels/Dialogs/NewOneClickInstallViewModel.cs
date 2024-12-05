@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Threading;
@@ -70,6 +71,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
 
         var incompatiblePredicate = this.WhenPropertyChanged(vm => vm.ShowIncompatiblePackages)
             .Select(_ => new Func<BasePackage, bool>(p => p.IsCompatible || ShowIncompatiblePackages))
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         AllPackagesCache
@@ -83,6 +85,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                     .Ascending(p => p.InstallerSortOrder)
                     .ThenByAscending(p => p.DisplayName)
             )
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         AllPackagesCache.AddOrUpdate(packageFactory.GetAllAvailablePackages());

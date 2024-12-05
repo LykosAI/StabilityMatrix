@@ -29,6 +29,9 @@ public enum CivitBaseModelType
     [StringValue("Lumina")]
     Lumina,
 
+    [StringValue("Mochi")]
+    Mochi,
+
     [StringValue("PixArt a")]
     PixArtA,
 
@@ -52,6 +55,15 @@ public enum CivitBaseModelType
 
     [StringValue("SD 3.5")]
     Sd35,
+
+    [StringValue("SD 3.5 Large")]
+    Sd35Large,
+
+    [StringValue("SD 3.5 Large Turbo")]
+    Sd35LargeTurbo,
+
+    [StringValue("SD 3.5 Medium")]
+    Sd35Medium,
 
     [StringValue("SDXL 0.9")]
     Sdxl09,

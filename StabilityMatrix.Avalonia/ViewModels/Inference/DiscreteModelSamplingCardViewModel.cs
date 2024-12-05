@@ -19,27 +19,5 @@ public partial class DiscreteModelSamplingCardViewModel : LoadableViewModelBase
     private bool isZsnrEnabled;
 
     [ObservableProperty]
-    private string selectedSamplingMethod;
-
-    public override JsonObject SaveStateToJsonObject() =>
-        SerializeModel(
-            new DiscreteModelSamplingCardModel
-            {
-                SamplingMethod = SelectedSamplingMethod,
-                IsZsnrEnabled = IsZsnrEnabled
-            }
-        );
-
-    public override void LoadStateFromJsonObject(JsonObject state)
-    {
-        var model = DeserializeModel<DiscreteModelSamplingCardModel>(state);
-        SelectedSamplingMethod = model.SamplingMethod;
-        IsZsnrEnabled = model.IsZsnrEnabled;
-    }
-
-    internal class DiscreteModelSamplingCardModel
-    {
-        public string SamplingMethod { get; set; }
-        public bool IsZsnrEnabled { get; set; }
-    }
+    private string selectedSamplingMethod = "eps";
 }

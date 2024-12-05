@@ -118,28 +118,6 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
-<<<<<<< HEAD
-=======
-        extensionPackSource
-            .Connect()
-            .Bind(ExtensionPacks)
-            .ObserveOn(SynchronizationContext.Current)
-            .Subscribe();
-
-        var extensionPackExtensionsChangeSet = extensionPackExtensionsSource
-            .Connect()
-            .Transform(ext => new SelectableItem<SavedPackageExtension>(ext))
-            .ObserveOn(SynchronizationContext.Current!)
-            .Publish();
-
-        extensionPackExtensionsChangeSet
-            .AutoRefresh(item => item.IsSelected)
-            .Filter(item => item.IsSelected)
-            .Bind(SelectedExtensionPackExtensions)
-            .ObserveOn(SynchronizationContext.Current)
-            .Subscribe();
-
->>>>>>> 64b44ab1 (Merge pull request #899 from ionite34/observe-on)
         cleanUp = new CompositeDisposable(
             AvailableItemsSearchCollection = new SearchCollection<
                 SelectableItem<PackageExtension>,

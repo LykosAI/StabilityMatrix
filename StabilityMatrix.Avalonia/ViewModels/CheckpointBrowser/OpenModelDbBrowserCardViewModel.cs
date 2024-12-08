@@ -23,7 +23,8 @@ public sealed class OpenModelDbBrowserCardViewModel(OpenModelDbManager openModel
             ?.Images
             ?.Select(image => image.GetImageAbsoluteUris().FirstOrDefault())
             .WhereNotNull()
-            .FirstOrDefault();
+            .FirstOrDefault()
+        ?? Assets.NoImage;
 
     public IEnumerable<OpenModelDbTag> Tags =>
         Model?.Tags?.Select(tagId => openModelDbManager.Tags?.GetValueOrDefault(tagId)).WhereNotNull() ?? [];

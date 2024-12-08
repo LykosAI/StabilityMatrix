@@ -44,7 +44,10 @@ public partial class OpenModelDbModelDetailsViewModel(
     [Required]
     public OpenModelDbKeyedModel? Model { get; set; }
 
-    public IEnumerable<Uri> ImageUris => Model?.Images?.SelectImageAbsoluteUris() ?? [];
+    public IEnumerable<Uri> ImageUris =>
+        Model?.Images?.SelectImageAbsoluteUris().Any() ?? false
+            ? Model?.Images?.SelectImageAbsoluteUris() ?? [Assets.NoImage]
+            : [Assets.NoImage];
 
     public IEnumerable<ModelResourceViewModel> Resources =>
         Model

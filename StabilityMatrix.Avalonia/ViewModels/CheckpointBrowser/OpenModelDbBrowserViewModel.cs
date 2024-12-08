@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
@@ -37,10 +38,16 @@ public sealed partial class OpenModelDbBrowserViewModel(
     [ObservableProperty]
     private bool isLoading;
 
+    [ObservableProperty]
+    private string selectedSortOption = "Latest";
+
     public SourceCache<OpenModelDbKeyedModel, string> ModelCache { get; } = new(static x => x.Id);
 
     public IObservableCollection<OpenModelDbBrowserCardViewModel> FilteredModelCards { get; } =
         new ObservableCollectionExtended<OpenModelDbBrowserCardViewModel>();
+
+    public List<string> SortOptions =>
+        ["Latest", "Largest Scale", "Smallest Scale", "Largest Size", "Smallest Size"];
 
     protected override void OnInitialLoaded()
     {
@@ -51,12 +58,7 @@ public sealed partial class OpenModelDbBrowserViewModel(
             .DeferUntilLoaded()
             .Filter(SearchQueryPredicate)
             .Transform(model => new OpenModelDbBrowserCardViewModel(openModelDbManager) { Model = model })
-            .SortAndBind(
-                FilteredModelCards,
-                SortExpressionComparer<OpenModelDbBrowserCardViewModel>.Descending(
-                    card => card.Model?.Date ?? DateOnly.MinValue
-                )
-            )
+            .SortAndBind(FilteredModelCards, SortComparer)
             .ObserveOn(SynchronizationContext.Current!)
             .Subscribe();
     }

@@ -323,10 +323,10 @@
             IsVisible="{Binding SearchQuery, Converter={x:Static StringConverters.IsNullOrEmpty}}"
             Orientation="Vertical">
             <Label Content="{x:Static lang:Resources.Label_Sort}" />
-            <!--<ComboBox
+            <controls:BetterComboBox
                 MinWidth="100"
-                ItemsSource="{Binding AllSortModes}"
-                SelectedItem="{Binding SelectedSortMode}"/>-->
+                ItemsSource="{Binding SortOptions}"
+                SelectedItem="{Binding SelectedSortOption}" />
         </StackPanel>
 
         <controls:ProgressRing

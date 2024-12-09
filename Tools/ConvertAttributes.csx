@@ -36,7 +36,8 @@ foreach (var file in Directory.GetFiles(projectDirectory, "*.cs", SearchOption.A
     csFiles.Add(file);
 }
 
-var attributePattern = new Regex(@"\[(?<AttributeName>\w+)(?:\((typeof\((?<TypeName>\w+)\))?\))?\]");
+// var attributePattern = new Regex(@"\[(?<AttributeName>\w+)(?:\((typeof\((?<TypeName>\w+)\))?\))?\]");
+var attributePattern = new Regex(@"\[(?<AttributeName>\w+)(?:\((typeof\((?<TypeName>\w+)\))?\))?");
 
 var totalFiles = 0;
 
@@ -73,7 +74,7 @@ foreach (var file in csFiles)
             replacement += "(Duplicate = DuplicateStrategy.Append)";
         }
         
-        replacement += "]";
+        // replacement += "]";
         
         // Replace
         Console.WriteLine($"Replacing {singletonMatch.Value} with {replacement}");
@@ -94,7 +95,7 @@ foreach (var file in csFiles)
             replacement += "(Duplicate = DuplicateStrategy.Append)";
         }
         
-        replacement += "]";
+        // replacement += "]";
         
         // Replace
         Console.WriteLine($"Replacing {transientMatch.Value} with {replacement}");

@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -47,10 +48,8 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.Views;
-using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Converters.Json;
@@ -396,36 +395,6 @@ public sealed class App : Application
         );
     }
 
-    internal static void ConfigureDialogViewModels(IServiceCollection services, Type[] exportedTypes)
-    {
-        // Dialog factory
-        services.AddSingleton<ServiceManager<ViewModelBase>>(provider =>
-        {
-            var serviceManager = new ServiceManager<ViewModelBase>();
-
-            var serviceManagedTypes = exportedTypes
-                .Select(
-                    t => new { t, attributes = t.GetCustomAttributes(typeof(ManagedServiceAttribute), true) }
-                )
-                .Where(t1 => t1.attributes is { Length: > 0 })
-                .Select(t1 => t1.t);
-
-            foreach (var type in serviceManagedTypes)
-            {
-                if (!type.IsAssignableTo(typeof(ViewModelBase)))
-                {
-                    throw new InvalidOperationException(
-                        $"Type {type.Name} with [ManagedService] attribute is not assignable to {nameof(ViewModelBase)}"
-                    );
-                }
-
-                serviceManager.Register(type, () => (ViewModelBase)provider.GetRequiredService(type));
-            }
-
-            return serviceManager;
-        });
-    }
-
     internal static IServiceCollection ConfigureServices()
     {
         var services = new ServiceCollection();
@@ -443,89 +412,17 @@ public sealed class App : Application
             services.AddMessagePipe().AddInMemoryDistributedMessageBroker();
         }
 
-        var exportedTypes = AppDomain
-            .CurrentDomain.GetAssemblies()
-            .Where(a => a.FullName?.StartsWith("StabilityMatrix") == true)
-            .SelectMany(a => a.GetExportedTypes())
-            .ToArray();
-
-        var transientTypes = exportedTypes
-            .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(TransientAttribute), false) })
-            .Where(
-                t1 =>
-                    t1.attributes is { Length: > 0 }
-                    && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
-            )
-            .Select(t1 => new { Type = t1.t, Attribute = (TransientAttribute)t1.attributes[0] });
-
-        foreach (var typePair in transientTypes)
+        using (CodeTimer.StartDebug())
         {
-            if (typePair.Attribute.InterfaceType is null)
-            {
-                services.AddTransient(typePair.Type);
-            }
-            else
-            {
-                services.AddTransient(typePair.Attribute.InterfaceType, typePair.Type);
-            }
-        }
-
-        var singletonTypes = exportedTypes
-            .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(SingletonAttribute), false) })
-            .Where(
-                t1 =>
-                    t1.attributes is { Length: > 0 }
-                    && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
-            )
-            .Select(
-                t1 => new { Type = t1.t, Attributes = t1.attributes.Cast<SingletonAttribute>().ToArray() }
-            );
-
-        foreach (var typePair in singletonTypes)
-        {
-            foreach (var attribute in typePair.Attributes)
-            {
-                if (attribute.InterfaceType is null)
-                {
-                    services.AddSingleton(typePair.Type);
-                }
-                else if (attribute.ImplType is not null)
-                {
-                    services.AddSingleton(attribute.InterfaceType, attribute.ImplType);
-                }
-                else
-                {
-                    services.AddSingleton(attribute.InterfaceType, typePair.Type);
-                }
-
-                // IDisposable registering
-                var serviceType = attribute.InterfaceType ?? typePair.Type;
-
-                if (serviceType == typeof(IDisposable) || serviceType == typeof(IAsyncDisposable))
-                {
-                    continue;
-                }
-
-                if (typePair.Type.IsAssignableTo(typeof(IDisposable)))
-                {
-                    Debug.WriteLine("Registering IDisposable: {Name}", typePair.Type.Name);
-                    services.AddSingleton<IDisposable>(
-                        provider => (IDisposable)provider.GetRequiredService(serviceType)
-                    );
-                }
-
-                if (typePair.Type.IsAssignableTo(typeof(IAsyncDisposable)))
-                {
-                    Debug.WriteLine("Registering IAsyncDisposable: {Name}", typePair.Type.Name);
-                    services.AddSingleton<IAsyncDisposable>(
-                        provider => (IAsyncDisposable)provider.GetRequiredService(serviceType)
-                    );
-                }
-            }
+            // Register services by attributes
+            services.AddServicesByAttributes();
         }
 
         ConfigurePageViewModels(services);
-        ConfigureDialogViewModels(services, exportedTypes);
+
+        services.AddServiceManagerWithCurrentCollectionServices<ViewModelBase>(
+            s => s.ServiceType.GetCustomAttributes<ManagedServiceAttribute>().Any()
+        );
 
         // Other services
         services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();

@@ -104,8 +104,8 @@ foreach (var file in csFiles)
         continue;
     }
     
-    // If file not containing `[ManagedService]` replace using
-    if (!updatedContent.Contains("[ManagedService]"))
+    // If file not containing `[ManagedService]` / `[..., ManagedService] replace using
+    if (!updatedContent.Contains("ManagedService]"))
     {
         updatedContent = Regex.Replace(updatedContent, @"using StabilityMatrix\.Core\.Attributes;", "using Injectio.Attributes;");
     }

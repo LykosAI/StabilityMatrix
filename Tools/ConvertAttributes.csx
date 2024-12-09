@@ -36,37 +36,67 @@ foreach (var file in Directory.GetFiles(projectDirectory, "*.cs", SearchOption.A
     csFiles.Add(file);
 }
 
+var attributePattern = new Regex(@"\[(?<AttributeName>\w+)(?:\((typeof\((?<TypeName>\w+)\))?\))?\]");
+
 var totalFiles = 0;
 
 foreach (var file in csFiles)
 {
     var content = File.ReadAllText(file);
     var updatedContent = content;
-
-    // Check for complex SingletonAttribute arguments
-    var singletonComplexMatch = Regex.Match(content, @"\[Singleton\((.+?)\)\]");
-    if (singletonComplexMatch.Success)
-    {
-        Console.WriteLine($"Warning: Ignored complex SingletonAttribute in file: {file}");
-        continue;
-    }
-
-    // Check for complex TransientAttribute arguments
-    var transientComplexMatch = Regex.Match(content, @"\[Transient\((.+?)\)\]");
-    if (transientComplexMatch.Success)
-    {
-        Console.WriteLine($"Warning: Ignored complex TransientAttribute in file: {file}");
-        continue;
-    }
     
+    var attributeMatches = attributePattern.Matches(content);
+    
+    // Get Singleton and Transient attributes
+    var singletonMatch = attributeMatches.FirstOrDefault(m => m.Groups["AttributeName"].Value == "Singleton");
+    var transientMatch = attributeMatches.FirstOrDefault(m => m.Groups["AttributeName"].Value == "Transient");
+
     // Get type name from file name
     var targetTypeName = Path.GetFileNameWithoutExtension(file);
 
     // Replace SingletonAttribute with RegisterSingletonAttribute
-    updatedContent = Regex.Replace(updatedContent, @"\[Singleton\]", $"[RegisterSingleton<{targetTypeName}>]");
-
-    // Replace TransientAttribute with RegisterTransientAttribute
-    updatedContent = Regex.Replace(updatedContent, @"\[Transient\]", $"[RegisterTransient<{targetTypeName}>]");
+    if (singletonMatch != null)
+    {
+        var interfaceTypeName = singletonMatch.Groups["TypeName"].Value;
+        var isMulti = interfaceTypeName == "BasePackage";
+        
+        var replacement = string.IsNullOrWhiteSpace(interfaceTypeName)
+            ? $"[RegisterSingleton<{targetTypeName}>"
+            : $"[RegisterSingleton<{interfaceTypeName}, {targetTypeName}>";
+        
+        if (isMulti)
+        {
+            replacement += "(Duplicate = DuplicateStrategy.Append)";
+        }
+        
+        replacement += "]";
+        
+        // Replace
+        Console.WriteLine($"Replacing {singletonMatch.Value} with {replacement}");
+        updatedContent = updatedContent.Remove(singletonMatch.Index, singletonMatch.Length);
+        updatedContent = updatedContent.Insert(singletonMatch.Index, replacement);
+    }
+    else if (transientMatch != null)
+    {
+        var interfaceTypeName = transientMatch.Groups["TypeName"].Value;
+        var isMulti = interfaceTypeName == "BasePackage";
+                
+        var replacement = string.IsNullOrWhiteSpace(interfaceTypeName)
+            ? $"[RegisterTransient<{targetTypeName}>"
+            : $"[RegisterTransient<{interfaceTypeName}, {targetTypeName}>";
+        
+        if (isMulti)
+        {
+            replacement += "(Duplicate = DuplicateStrategy.Append)";
+        }
+        
+        replacement += "]";
+        
+        // Replace
+        Console.WriteLine($"Replacing {transientMatch.Value} with {replacement}");
+        updatedContent = updatedContent.Remove(transientMatch.Index, transientMatch.Length);
+        updatedContent = updatedContent.Insert(transientMatch.Index, replacement);
+    }
 
     if (content == updatedContent)
     {
@@ -80,9 +110,9 @@ foreach (var file in csFiles)
     if (checkOnly)
     {
         Console.WriteLine($"Would modify: {file}");
-        Console.WriteLine("<--");
-        Console.WriteLine(updatedContent);
-        Console.WriteLine("-->");
+        // Console.WriteLine("<--");
+        // Console.WriteLine(updatedContent);
+        // Console.WriteLine("-->");
     }
     else
     {

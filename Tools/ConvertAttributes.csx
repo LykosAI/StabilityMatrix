@@ -53,6 +53,10 @@ foreach (var file in csFiles)
 
     // Get type name from file name
     var targetTypeName = Path.GetFileNameWithoutExtension(file);
+    if (targetTypeName.Contains('.'))
+    {
+        targetTypeName = targetTypeName.Split('.').First();
+    }
 
     // Replace SingletonAttribute with RegisterSingletonAttribute
     if (singletonMatch != null)

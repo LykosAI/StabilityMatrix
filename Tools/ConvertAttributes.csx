@@ -104,8 +104,17 @@ foreach (var file in csFiles)
         continue;
     }
     
-    // Replace using directive
-    updatedContent = Regex.Replace(updatedContent, @"using StabilityMatrix\.Core\.Attributes;", "using Injectio.Attributes;");
+    // If file not containing `[ManagedService]` replace using
+    if (!updatedContent.Contains("[ManagedService]"))
+    {
+        updatedContent = Regex.Replace(updatedContent, @"using StabilityMatrix\.Core\.Attributes;", "using Injectio.Attributes;");
+    }
+    else
+    {
+        // Otherwise just add after
+        var originalUsing = Regex.Match(updatedContent, @"using StabilityMatrix\.Core\.Attributes;");
+        updatedContent = updatedContent.Insert(originalUsing.Index + originalUsing.Length, "\nusing Injectio.Attributes;");
+    }
     
     if (checkOnly)
     {

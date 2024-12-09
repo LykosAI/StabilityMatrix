@@ -130,7 +130,7 @@ foreach (var file in csFiles)
     else
     {
         // On Windows, save with UTF-8 BOM
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
         {
             File.WriteAllText(file, updatedContent, new UTF8Encoding(true));
         }

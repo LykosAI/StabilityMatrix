@@ -117,7 +117,7 @@ foreach (var file in csFiles)
     {
         // Otherwise just add after
         var originalUsing = Regex.Match(updatedContent, @"using StabilityMatrix\.Core\.Attributes;");
-        updatedContent = updatedContent.Insert(originalUsing.Index + originalUsing.Length, "\nusing Injectio.Attributes;");
+        updatedContent = updatedContent.Insert(originalUsing.Index + originalUsing.Length, $"{Environment.NewLine}using Injectio.Attributes;");
     }
     
     if (checkOnly)
@@ -129,7 +129,16 @@ foreach (var file in csFiles)
     }
     else
     {
-        File.WriteAllText(file, updatedContent);
+        // On Windows, save with UTF-8 BOM
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            File.WriteAllText(file, updatedContent, new UTF8Encoding(true));
+        }
+        else
+        {
+            File.WriteAllText(file, updatedContent);
+        }
+        
         Console.WriteLine($"Updated file: {file}");
     }
     totalFiles++;

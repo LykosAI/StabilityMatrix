@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup Condition="'$(RuntimeIdentifier)' != 'win-x64'">
         <TargetFramework>net8.0</TargetFramework>
     </PropertyGroup>
@@ -71,6 +71,14 @@
                 Query="//plist/dict" 
                 Value="$(PlistDictOriginalInner)$(PlistDictAppend)"/>
     </Target>
+  
+    <!-- Compile options -->
+    <PropertyGroup>
+        <RegisterServiceMode>Default</RegisterServiceMode>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(RegisterServiceMode) == 'Reflection'">
+        <DefineConstants>$(DefineConstants);REGISTER_SERVICE_REFLECTION;REGISTER_SERVICE_USAGES</DefineConstants>
+    </PropertyGroup>
     
     <ItemGroup>
         <InternalsVisibleTo Include="StabilityMatrix.Tests" />
@@ -123,7 +131,7 @@
         <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.1" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
         <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.7" />
         <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />

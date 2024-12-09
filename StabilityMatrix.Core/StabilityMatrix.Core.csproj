@@ -36,6 +36,7 @@
       <PackageReference Include="ExifLibNet" Version="2.1.4" />
       <PackageReference Include="FreneticLLC.FreneticUtilities" Version="1.0.32" />
       <PackageReference Include="Hardware.Info" Version="100.1.0.1" />
+      <PackageReference Include="Injectio" Version="4.0.0" />
       <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
       <PackageReference Include="KGySoft.Drawing.Core" Version="8.1.0" />
       <PackageReference Include="KGySoft.Drawing.SkiaSharp" Version="8.1.0" />
@@ -43,6 +44,7 @@
       <PackageReference Include="LiteDB.Async" Version="0.1.8" />
       <PackageReference Include="MetadataExtractor" Version="2.8.1" />
       <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
       <PackageReference Include="NLog" Version="5.3.2" />
       <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" />

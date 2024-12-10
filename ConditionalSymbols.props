@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup Label="Compile Options">
+    <!-- CodeGeneration, Reflection -->
+    <RegisterServiceMode>CodeGeneration</RegisterServiceMode>
+  </PropertyGroup>
+
+  <Choose Label="RegisterServiceMode Definitions">
+    <When Condition="'$(RegisterServiceMode)' == 'Reflection'">
+      <PropertyGroup>
+        <DefineConstants>$(DefineConstants);REGISTER_SERVICE_REFLECTION;REGISTER_SERVICE_USAGES</DefineConstants>
+      </PropertyGroup>
+    </When>
+  </Choose>
+</Project>

@@ -7,6 +7,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FuzzySharp;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -18,7 +19,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(LaunchOptionsDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<LaunchOptionsViewModel>]
 public partial class LaunchOptionsViewModel : ContentDialogViewModelBase
 {
     private readonly ILogger<LaunchOptionsViewModel> logger;

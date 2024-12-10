@@ -20,6 +20,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Factory;
@@ -32,7 +33,7 @@ using Resources = StabilityMatrix.Avalonia.Languages.Resources;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(OpenArtBrowserPage))]
-[Singleton]
+[RegisterSingleton<OpenArtBrowserViewModel>]
 public partial class OpenArtBrowserViewModel(
     IOpenArtApi openArtApi,
     INotificationService notificationService,

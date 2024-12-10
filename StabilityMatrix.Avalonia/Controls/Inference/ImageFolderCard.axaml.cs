@@ -2,12 +2,12 @@
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Models.Settings;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-[Transient]
+[RegisterTransient<ImageFolderCard>]
 public class ImageFolderCard : DropTargetTemplatedControlBase
 {
     private ItemsRepeater? imageRepeater;

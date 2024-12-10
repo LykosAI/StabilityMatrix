@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using StabilityMatrix.Avalonia.Extensions;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using TextMateSharp.Grammars;
 using TextMateSharp.Registry;
 
 namespace StabilityMatrix.Avalonia.Models.TagCompletion;
 
-[Singleton(typeof(ITokenizerProvider))]
+[RegisterSingleton<ITokenizerProvider, TokenizerProvider>]
 public class TokenizerProvider : ITokenizerProvider
 {
     private readonly Registry registry = new(new RegistryOptions(ThemeName.DarkPlus));

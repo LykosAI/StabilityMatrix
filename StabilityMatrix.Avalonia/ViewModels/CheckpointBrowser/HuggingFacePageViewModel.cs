@@ -20,6 +20,7 @@ using StabilityMatrix.Avalonia.Models.HuggingFace;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.HuggingFacePage;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
@@ -30,7 +31,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [View(typeof(Views.HuggingFacePage))]
-[Singleton]
+[RegisterSingleton<HuggingFacePageViewModel>]
 public partial class HuggingFacePageViewModel : TabViewModelBase
 {
     private readonly ITrackedDownloadService trackedDownloadService;

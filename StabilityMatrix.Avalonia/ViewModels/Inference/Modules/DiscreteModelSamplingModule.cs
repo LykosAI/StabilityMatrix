@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Avalonia.Models.Inference;
+﻿using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -7,7 +8,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<DiscreteModelSamplingModule>]
 public class DiscreteModelSamplingModule : ModuleBase
 {
     public DiscreteModelSamplingModule(ServiceManager<ViewModelBase> vmFactory)

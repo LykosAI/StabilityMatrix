@@ -11,12 +11,13 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Native;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(ConfirmDeleteDialog))]
-[Transient]
+[RegisterTransient<ConfirmDeleteDialogViewModel>]
 [ManagedService]
 public partial class ConfirmDeleteDialogViewModel(ILogger<ConfirmDeleteDialogViewModel> logger)
     : ContentDialogViewModelBase

@@ -17,7 +17,7 @@ using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
@@ -33,7 +33,7 @@ namespace StabilityMatrix.Avalonia.Services;
 /// Manager for the current inference client
 /// Has observable shared properties for shared info like model names
 /// </summary>
-[Singleton(typeof(IInferenceClientManager))]
+[RegisterSingleton<IInferenceClientManager, InferenceClientManager>]
 public partial class InferenceClientManager : ObservableObject, IInferenceClientManager
 {
     private readonly ILogger<InferenceClientManager> logger;

@@ -10,6 +10,7 @@ using StabilityMatrix.Avalonia.Styles;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Services;
@@ -18,7 +19,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(FirstLaunchSetupWindow))]
 [ManagedService]
-[Singleton]
+[RegisterSingleton<FirstLaunchSetupViewModel>]
 public partial class FirstLaunchSetupViewModel : DisposableViewModelBase
 {
     [ObservableProperty]

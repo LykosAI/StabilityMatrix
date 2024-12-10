@@ -7,6 +7,7 @@ using DynamicData;
 using DynamicData.Alias;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Services;
@@ -24,7 +25,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [View(typeof(PackageInstallBrowserView))]
-[Transient, ManagedService]
+[RegisterTransient<PackageInstallBrowserViewModel>, ManagedService]
 public partial class PackageInstallBrowserViewModel : PageViewModelBase
 {
     private readonly IPackageFactory packageFactory;

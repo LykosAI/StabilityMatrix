@@ -28,6 +28,7 @@ using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
@@ -48,7 +49,7 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(CheckpointsPage))]
-[Singleton]
+[RegisterSingleton<CheckpointsPageViewModel>]
 public partial class CheckpointsPageViewModel(
     ILogger<CheckpointsPageViewModel> logger,
     ISettingsManager settingsManager,

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -22,6 +22,7 @@ using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media;
 using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Windowing;
+using Injectio.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
@@ -31,7 +32,6 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Settings;
@@ -46,7 +46,7 @@ using StabilityMatrix.Avalonia.Diagnostics.Views;
 namespace StabilityMatrix.Avalonia.Views;
 
 [SuppressMessage("ReSharper", "UnusedParameter.Local")]
-[Singleton]
+[RegisterSingleton<MainWindow>]
 public partial class MainWindow : AppWindowBase
 {
     private readonly INotificationService notificationService;

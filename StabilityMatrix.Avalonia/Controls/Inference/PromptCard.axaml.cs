@@ -8,11 +8,11 @@ using AvaloniaEdit.Utils;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-[Transient]
+[RegisterTransient<PromptCard>]
 public class PromptCard : TemplatedControlBase
 {
     /// <inheritdoc />

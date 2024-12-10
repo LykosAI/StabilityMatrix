@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -12,7 +13,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(StackExpander))]
 [ManagedService]
-[Transient]
+[RegisterTransient<StackExpanderViewModel>]
 public partial class StackExpanderViewModel : StackViewModelBase
 {
     public const string ModuleKey = "StackExpander";

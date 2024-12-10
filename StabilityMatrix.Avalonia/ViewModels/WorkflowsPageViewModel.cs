@@ -7,12 +7,13 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(WorkflowsPage))]
-[Singleton]
+[RegisterSingleton<WorkflowsPageViewModel>]
 public partial class WorkflowsPageViewModel : PageViewModelBase
 {
     public override string Title => Resources.Label_Workflows;

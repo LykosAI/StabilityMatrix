@@ -9,7 +9,7 @@ using DesktopNotifications.Windows;
 using Microsoft.Extensions.Logging;
 using Nito.AsyncEx;
 using StabilityMatrix.Avalonia.Extensions;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -19,7 +19,7 @@ using INotificationManager = DesktopNotifications.INotificationManager;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-[Singleton(typeof(INotificationService))]
+[RegisterSingleton<INotificationService, NotificationService>]
 public class NotificationService(ILogger<NotificationService> logger, ISettingsManager settingsManager)
     : INotificationService,
         IDisposable

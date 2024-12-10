@@ -9,6 +9,7 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -20,7 +21,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(DownloadResourceDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<DownloadResourceViewModel>]
 public partial class DownloadResourceViewModel(
     IDownloadService downloadService,
     ISettingsManager settingsManager,

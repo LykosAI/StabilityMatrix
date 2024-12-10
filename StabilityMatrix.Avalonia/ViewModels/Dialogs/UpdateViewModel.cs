@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Semver;
 using StabilityMatrix.Avalonia.Languages;
@@ -26,7 +27,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(UpdateDialog))]
 [ManagedService]
-[Singleton]
+[RegisterSingleton<UpdateViewModel>]
 public partial class UpdateViewModel : ContentDialogViewModelBase
 {
     private readonly ILogger<UpdateViewModel> logger;

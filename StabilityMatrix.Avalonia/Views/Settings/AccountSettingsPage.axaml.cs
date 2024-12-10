@@ -1,9 +1,9 @@
-﻿using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Core.Attributes;
+﻿using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Controls;
 
 namespace StabilityMatrix.Avalonia.Views.Settings;
 
-[Singleton]
+[RegisterSingleton<AccountSettingsPage>]
 public partial class AccountSettingsPage : UserControlBase
 {
     public AccountSettingsPage()

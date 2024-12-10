@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -34,7 +35,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 
 [View(typeof(ProgressManagerPage))]
 [ManagedService]
-[Singleton]
+[RegisterSingleton<ProgressManagerViewModel>]
 public partial class ProgressManagerViewModel : PageViewModelBase
 {
     private readonly ITrackedDownloadService trackedDownloadService;

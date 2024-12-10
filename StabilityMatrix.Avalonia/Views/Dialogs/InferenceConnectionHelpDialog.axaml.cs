@@ -1,10 +1,10 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
-[Transient]
+[RegisterTransient<InferenceConnectionHelpDialog>]
 public partial class InferenceConnectionHelpDialog : UserControl
 {
     public InferenceConnectionHelpDialog()

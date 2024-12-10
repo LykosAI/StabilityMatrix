@@ -1,9 +1,9 @@
-﻿using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Core.Attributes;
+﻿using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Controls;
 
 namespace StabilityMatrix.Avalonia.Views.Settings;
 
-[Singleton]
+[RegisterSingleton<NotificationSettingsPage>]
 public partial class NotificationSettingsPage : UserControlBase
 {
     public NotificationSettingsPage()

@@ -1,11 +1,11 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
-using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views.PackageManager;
 
-[Transient]
+[RegisterTransient<PackageExtensionBrowserView>]
 public partial class PackageExtensionBrowserView : UserControlBase
 {
     public PackageExtensionBrowserView()

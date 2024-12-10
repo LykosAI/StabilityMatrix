@@ -15,7 +15,7 @@ using NLog;
 using StabilityMatrix.Avalonia.Controls.CodeCompletion;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Services;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -26,7 +26,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Models.TagCompletion;
 
-[Singleton(typeof(ICompletionProvider))]
+[RegisterSingleton<ICompletionProvider, CompletionProvider>]
 public partial class CompletionProvider : ICompletionProvider
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

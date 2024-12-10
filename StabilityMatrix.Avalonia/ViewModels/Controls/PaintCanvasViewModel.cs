@@ -16,6 +16,7 @@ using StabilityMatrix.Avalonia.Controls.Models;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using Color = Avalonia.Media.Color;
 using Size = System.Drawing.Size;
@@ -24,7 +25,7 @@ using Size = System.Drawing.Size;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Controls;
 
-[Transient]
+[RegisterTransient<PaintCanvasViewModel>]
 [ManagedService]
 public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) : LoadableViewModelBase
 {

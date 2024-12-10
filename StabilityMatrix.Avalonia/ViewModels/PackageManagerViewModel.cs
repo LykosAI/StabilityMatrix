@@ -9,6 +9,7 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.Views;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Attributes;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
@@ -16,7 +17,7 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(PackageManagerPage))]
-[Singleton]
+[RegisterSingleton<PackageManagerViewModel>]
 public partial class PackageManagerViewModel : PageViewModelBase
 {
     public override string Title => Resources.Label_Packages;

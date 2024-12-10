@@ -4,12 +4,13 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(AnalyticsOptInDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<AnalyticsOptInViewModel>]
 public class AnalyticsOptInViewModel : ContentDialogViewModelBase
 {
     public string ChangeThisBehaviorInSettings =>

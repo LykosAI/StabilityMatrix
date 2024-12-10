@@ -2,12 +2,12 @@
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-[Singleton]
+[RegisterSingleton<FirstLaunchSetupWindow>]
 public partial class FirstLaunchSetupWindow : AppWindowBase
 {
     public ContentDialogResult Result { get; private set; }

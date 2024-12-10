@@ -8,6 +8,7 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.Views;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using Symbol = FluentIcons.Common.Symbol;
@@ -16,7 +17,7 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(CheckpointBrowserPage))]
-[Singleton]
+[RegisterSingleton<CheckpointBrowserViewModel>]
 public partial class CheckpointBrowserViewModel : PageViewModelBase
 {
     public override string Title => Resources.Label_ModelBrowser;

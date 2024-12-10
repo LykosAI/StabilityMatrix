@@ -10,6 +10,7 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Styles;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
@@ -17,7 +18,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 [View(typeof(RefreshBadge))]
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 [ManagedService]
-[Transient]
+[RegisterTransient<RefreshBadgeViewModel>]
 public partial class RefreshBadgeViewModel : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

@@ -1,4 +1,4 @@
-﻿using StabilityMatrix.Core.Attributes;
+﻿using Injectio.Attributes;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
@@ -7,7 +7,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Helper.Factory;
 
-[Singleton(typeof(IPackageFactory))]
+[RegisterSingleton<IPackageFactory, PackageFactory>]
 public class PackageFactory : IPackageFactory
 {
     private readonly IGithubApiCache githubApiCache;

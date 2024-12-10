@@ -73,14 +73,6 @@
                 Query="//plist/dict" 
                 Value="$(PlistDictOriginalInner)$(PlistDictAppend)"/>
     </Target>
-  
-    <!-- Compile options -->
-    <PropertyGroup>
-        <RegisterServiceMode>Default</RegisterServiceMode>
-    </PropertyGroup>
-    <PropertyGroup Condition="$(RegisterServiceMode) == 'Reflection'">
-        <DefineConstants>$(DefineConstants);REGISTER_SERVICE_REFLECTION;REGISTER_SERVICE_USAGES</DefineConstants>
-    </PropertyGroup>
     
     <ItemGroup>
         <InternalsVisibleTo Include="StabilityMatrix.Tests" />

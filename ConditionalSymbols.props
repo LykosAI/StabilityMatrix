@@ -11,11 +11,9 @@
     <DefineConstants>$(DefineConstants);REGISTER_SERVICE_USAGES</DefineConstants>
   </PropertyGroup>
 
-  <Choose Label="RegisterServiceMode Definitions">
-    <When Condition="'$(SM_RegisterServiceMode)' == 'Reflection'">
-      <PropertyGroup>
-        <DefineConstants>$(DefineConstants);REGISTER_SERVICE_REFLECTION;REGISTER_SERVICE_USAGES</DefineConstants>
-      </PropertyGroup>
-    </When>
-  </Choose>
+  <PropertyGroup Label="RegisterServiceMode Definitions">
+    <DefineConstants Condition="'$(SM_RegisterServiceMode)' == 'Reflection'">
+      $(DefineConstants);REGISTER_SERVICE_REFLECTION;REGISTER_SERVICE_USAGES
+    </DefineConstants>
+  </PropertyGroup>
 </Project>

@@ -4,10 +4,10 @@ using System.Diagnostics;
 using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
-using Injectio.Attributes;
 using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;

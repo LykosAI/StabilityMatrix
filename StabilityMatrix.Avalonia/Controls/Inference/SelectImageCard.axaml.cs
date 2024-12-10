@@ -4,8 +4,8 @@ using System.Threading;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using DynamicData.Binding;
-using StabilityMatrix.Avalonia.ViewModels.Inference;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using Size = Avalonia.Size;
 
 namespace StabilityMatrix.Avalonia.Controls;

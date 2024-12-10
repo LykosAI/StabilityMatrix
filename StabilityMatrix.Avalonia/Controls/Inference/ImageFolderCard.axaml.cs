@@ -1,8 +1,8 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
-using StabilityMatrix.Avalonia.ViewModels.Inference;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models.Settings;
 
 namespace StabilityMatrix.Avalonia.Controls;

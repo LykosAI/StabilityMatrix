@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using StabilityMatrix.Avalonia.Extensions;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Extensions;
 using TextMateSharp.Grammars;
 using TextMateSharp.Registry;
 

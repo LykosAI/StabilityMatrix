@@ -8,13 +8,11 @@ namespace StabilityMatrix.Avalonia.Controls;
 [RegisterTransient<StackExpander>]
 public class StackExpander : TemplatedControl
 {
-    public static readonly StyledProperty<bool> IsExpandedProperty = Expander
-        .IsExpandedProperty
-        .AddOwner<StackExpander>();
+    public static readonly StyledProperty<bool> IsExpandedProperty =
+        Expander.IsExpandedProperty.AddOwner<StackExpander>();
 
-    public static readonly StyledProperty<ExpandDirection> ExpandDirectionProperty = Expander
-        .ExpandDirectionProperty
-        .AddOwner<StackExpander>();
+    public static readonly StyledProperty<ExpandDirection> ExpandDirectionProperty =
+        Expander.ExpandDirectionProperty.AddOwner<StackExpander>();
 
     public static readonly StyledProperty<int> SpacingProperty = AvaloniaProperty.Register<StackCard, int>(
         "Spacing",

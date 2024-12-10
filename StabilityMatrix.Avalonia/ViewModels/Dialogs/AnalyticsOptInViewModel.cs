@@ -1,10 +1,10 @@
 ﻿using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
-using Injectio.Attributes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 

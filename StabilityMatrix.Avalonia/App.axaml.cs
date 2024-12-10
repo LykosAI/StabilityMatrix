@@ -28,6 +28,7 @@ using Avalonia.Threading;
 using FluentAvalonia.Interop;
 using FluentAvalonia.UI.Controls;
 using MessagePipe;
+using MessagePipe.Interprocess.Workers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -80,20 +81,24 @@ public sealed class App : Application
 
     private readonly SemaphoreSlim onExitSemaphore = new(1, 1);
 
+    /// <summary>
+    /// True if <see cref="OnShutdownRequested"/> has started async dispose of services.
+    /// </summary>
+    private bool isAsyncDisposeStarted;
+
+    /// <summary>
+    /// True if <see cref="OnShutdownRequested"/> has completed async dispose of services.
+    /// </summary>
     private bool isAsyncDisposeComplete;
 
     private bool isOnExitComplete;
 
-    [NotNull]
-    public static IServiceProvider? Services { get; private set; }
+    private ServiceProvider? serviceProvider;
 
     [NotNull]
     public static Visual? VisualRoot { get; internal set; }
 
     public static TopLevel TopLevel => TopLevel.GetTopLevel(VisualRoot)!;
-
-    internal static bool IsHeadlessMode =>
-        TopLevel.TryGetPlatformHandle()?.HandleDescriptor is null or "STUB";
 
     [NotNull]
     public static IStorageProvider? StorageProvider { get; internal set; }
@@ -126,6 +131,13 @@ public sealed class App : Application
         ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
 
     public static new App? Current => (App?)Application.Current;
+
+    [NotNull]
+    public static IServiceProvider? Services =>
+        Design.IsDesignMode ? DesignData.DesignData.Services : Current?.serviceProvider;
+
+    internal static bool IsHeadlessMode =>
+        TopLevel.TryGetPlatformHandle()?.HandleDescriptor is null or "STUB";
 
     /// <summary>
     /// Called before <see cref="Services"/> is built.
@@ -163,7 +175,7 @@ public sealed class App : Application
         if (Design.IsDesignMode)
         {
             DesignData.DesignData.Initialize();
-            Services = DesignData.DesignData.Services;
+            // serviceProvider = (ServiceProvider?) DesignData.DesignData.Services;
         }
         else
         {
@@ -327,13 +339,14 @@ public sealed class App : Application
         LogManager.AutoShutdown = false;
     }
 
-    private static void ConfigureServiceProvider()
+    [MemberNotNull(nameof(serviceProvider))]
+    private void ConfigureServiceProvider()
     {
         var services = ConfigureServices();
 
         BeforeBuildServiceProvider?.Invoke(null, services);
 
-        Services = services.BuildServiceProvider();
+        serviceProvider = services.BuildServiceProvider();
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
 
@@ -412,11 +425,8 @@ public sealed class App : Application
             services.AddMessagePipe().AddInMemoryDistributedMessageBroker();
         }
 
-        using (CodeTimer.StartDebug())
-        {
-            // Register services by attributes
-            services.AddServicesByAttributes();
-        }
+        // Register services by attributes
+        services.AddServicesByAttributes();
 
         ConfigurePageViewModels(services);
 
@@ -725,44 +735,55 @@ public sealed class App : Application
 
     private void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
     {
-        Debug.WriteLine("Start OnShutdownRequested");
+        Logger.Trace("Start OnShutdownRequested");
 
         if (e.Cancel)
             return;
 
-        // Check if we need to dispose IAsyncDisposables
-        if (
-            isAsyncDisposeComplete
-            || Services.GetServices<IAsyncDisposable>().ToList() is not { Count: > 0 } asyncDisposables
-        )
+        // Skip if Async Dispose already started, shutdown will be handled by it
+        if (isAsyncDisposeStarted)
             return;
 
-        // Cancel shutdown for now
-        e.Cancel = true;
-        isAsyncDisposeComplete = true;
+        // var asyncDisposables = Services.GetServices<IAsyncDisposable>().ToList();
 
-        Debug.WriteLine("OnShutdownRequested Canceled: Disposing IAsyncDisposables");
+        // Cancel shutdown for now to dispose
+        e.Cancel = true;
+        isAsyncDisposeStarted = true;
+
+        Logger.Trace("OnShutdownRequested Canceled: Disposing IAsyncDisposables");
 
         Dispatcher
             .UIThread.InvokeAsync(async () =>
             {
-                foreach (var disposable in asyncDisposables)
+                if (serviceProvider is null)
                 {
-                    Debug.WriteLine($"Disposing IAsyncDisposable ({disposable.GetType().Name})");
-                    try
-                    {
-                        await disposable.DisposeAsync().ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.Fail(ex.ToString());
-                    }
+                    Logger.Warn("Service Provider is null, skipping Async Dispose");
+                    return;
+                }
+
+                Logger.Debug("Disposing App Services IAsyncDisposable");
+
+                // Remove the NamedPipeWorker disposable if present
+                // causes crash on avalonia dispatcher thread for some reason
+                // https://github.com/dotnet/runtime/issues/39902
+                var disposables = serviceProvider.GetDisposables();
+                disposables.RemoveAll(d => d is NamedPipeWorker);
+
+                Logger.Trace("Disposing {Count} Disposables", disposables.Count);
+
+                try
+                {
+                    await serviceProvider.DisposeAsync();
+                }
+                catch (Exception disposeEx)
+                {
+                    Logger.Error(disposeEx, "Failed to dispose ServerProvider");
                 }
             })
             .ContinueWith(_ =>
             {
                 // Shutdown again
-                Debug.WriteLine("Finished disposing IAsyncDisposables, shutting down");
+                Logger.Debug("Finished disposing IAsyncDisposables, shutting down");
 
                 if (Dispatcher.UIThread.SupportsRunLoops)
                 {
@@ -800,40 +821,18 @@ public sealed class App : Application
 
         try
         {
+            if (serviceProvider is null)
+            {
+                Logger.Warn("Service Provider is null, skipping OnExit");
+                return;
+            }
+
             const int timeoutTotalMs = 10000;
             const int timeoutPerDisposeMs = 2000;
 
             var timeoutTotalCts = new CancellationTokenSource(timeoutTotalMs);
 
-            var toDispose = Services.GetServices<IDisposable>().ToImmutableArray();
-
-            Logger.Debug("OnExit: Preparing to Dispose {Count} Services", toDispose.Length);
-
-            // Dispose IDisposable services
-            foreach (var disposable in toDispose)
-            {
-                Logger.Debug("OnExit: Disposing {Name}", disposable.GetType().Name);
-
-                using var instanceCts = CancellationTokenSource.CreateLinkedTokenSource(
-                    timeoutTotalCts.Token,
-                    new CancellationTokenSource(timeoutPerDisposeMs).Token
-                );
-
-                try
-                {
-                    Task.Run(() => disposable.Dispose(), instanceCts.Token).Wait(instanceCts.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    Logger.Warn("OnExit: Timeout disposing {Name}", disposable.GetType().Name);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e, "OnExit: Failed to dispose {Name}", disposable.GetType().Name);
-                }
-            }
-
-            var settingsManager = Services.GetRequiredService<ISettingsManager>();
+            var settingsManager = serviceProvider.GetRequiredService<ISettingsManager>();
 
             // If RemoveFolderLinksOnShutdown is set, delete all package junctions
             if (settingsManager is { IsLibraryDirSet: true, Settings.RemoveFolderLinksOnShutdown: true })

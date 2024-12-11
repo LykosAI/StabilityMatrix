@@ -11,17 +11,12 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Helper;
 
 [RegisterSingleton<ISharedFolders, SharedFolders>]
-public class SharedFolders : ISharedFolders
+[RegisterSingleton<IAsyncDisposable, SharedFolders>]
+public class SharedFolders(ISettingsManager settingsManager, IPackageFactory packageFactory)
+    : ISharedFolders,
+        IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private readonly ISettingsManager settingsManager;
-    private readonly IPackageFactory packageFactory;
-
-    public SharedFolders(ISettingsManager settingsManager, IPackageFactory packageFactory)
-    {
-        this.settingsManager = settingsManager;
-        this.packageFactory = packageFactory;
-    }
 
     /// <summary>
     /// Platform redirect for junctions / symlinks
@@ -234,5 +229,36 @@ public class SharedFolders : ISharedFolders
                 segmDir.Create();
             }
         }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // Skip if library dir is not set or remove folder links on shutdown is disabled
+        if (!settingsManager.IsLibraryDirSet || !settingsManager.Settings.RemoveFolderLinksOnShutdown)
+        {
+            return;
+        }
+
+        // Remove all package junctions
+        Logger.Debug("SharedFolders Dispose: Removing package junctions");
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        try
+        {
+            await Task.Run(RemoveLinksForAllPackages, cts.Token).WaitAsync(cts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            Logger.Warn("SharedFolders Dispose: Timeout removing package junctions");
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "SharedFolders Dispose: Failed to remove package junctions");
+        }
+
+        Logger.Debug("SharedFolders Dispose: Finished removing package junctions");
+
+        GC.SuppressFinalize(this);
     }
 }

@@ -761,6 +761,10 @@ public sealed class App : Application
                     return;
                 }
 
+                // Force materialize SharedFolders so its DisposeAsync is called
+                // since it's not used by anything at the moment
+                _ = serviceProvider.GetService<ISharedFolders>();
+
                 Logger.Debug("Disposing App Services IAsyncDisposable");
 
                 // Remove the NamedPipeWorker disposable if present
@@ -827,44 +831,9 @@ public sealed class App : Application
                 return;
             }
 
-            const int timeoutTotalMs = 10000;
-            const int timeoutPerDisposeMs = 2000;
+            Logger.Debug("OnExit: Disposing App Services");
 
-            var timeoutTotalCts = new CancellationTokenSource(timeoutTotalMs);
-
-            var settingsManager = serviceProvider.GetRequiredService<ISettingsManager>();
-
-            // If RemoveFolderLinksOnShutdown is set, delete all package junctions
-            if (settingsManager is { IsLibraryDirSet: true, Settings.RemoveFolderLinksOnShutdown: true })
-            {
-                Logger.Debug("OnExit: Removing package junctions");
-
-                using var instanceCts = CancellationTokenSource.CreateLinkedTokenSource(
-                    timeoutTotalCts.Token,
-                    new CancellationTokenSource(timeoutPerDisposeMs).Token
-                );
-
-                try
-                {
-                    Task.Run(
-                            () =>
-                            {
-                                var sharedFolders = Services.GetRequiredService<ISharedFolders>();
-                                sharedFolders.RemoveLinksForAllPackages();
-                            },
-                            instanceCts.Token
-                        )
-                        .Wait(instanceCts.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    Logger.Warn("OnExit: Timeout removing package junctions");
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e, "OnExit: Failed to remove package junctions");
-                }
-            }
+            serviceProvider.Dispose();
 
             Logger.Debug("OnExit: Finished");
         }

@@ -18,6 +18,8 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    public bool IsDisposed { get; private set; }
+
     /// <summary>
     /// Platform redirect for junctions / symlinks
     /// </summary>
@@ -233,6 +235,11 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
 
     public async ValueTask DisposeAsync()
     {
+        if (IsDisposed)
+        {
+            return;
+        }
+
         // Skip if library dir is not set or remove folder links on shutdown is disabled
         if (!settingsManager.IsLibraryDirSet || !settingsManager.Settings.RemoveFolderLinksOnShutdown)
         {
@@ -259,6 +266,7 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
 
         Logger.Debug("SharedFolders Dispose: Finished removing package junctions");
 
+        IsDisposed = true;
         GC.SuppressFinalize(this);
     }
 }

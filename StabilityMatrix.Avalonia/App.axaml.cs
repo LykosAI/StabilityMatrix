@@ -778,6 +778,7 @@ public sealed class App : Application
                 try
                 {
                     await serviceProvider.DisposeAsync();
+                    isAsyncDisposeComplete = true;
                 }
                 catch (Exception disposeEx)
                 {
@@ -831,9 +832,13 @@ public sealed class App : Application
                 return;
             }
 
-            Logger.Debug("OnExit: Disposing App Services");
+            // Dispose services only if async dispose has not completed
+            if (!isAsyncDisposeComplete)
+            {
+                Logger.Debug("OnExit: Disposing App Services");
 
-            serviceProvider.Dispose();
+                serviceProvider.Dispose();
+            }
 
             Logger.Debug("OnExit: Finished");
         }

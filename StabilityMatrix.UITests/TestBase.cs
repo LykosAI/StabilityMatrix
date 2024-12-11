@@ -54,8 +54,6 @@ public class TestBase
         window.Height = 900;
 
         App.VisualRoot = window;
-        App.StorageProvider = window.StorageProvider;
-        App.Clipboard = window.Clipboard ?? throw new NullReferenceException("Clipboard is null");
 
         currentMainWindow = (window, viewModel);
         return currentMainWindow.Value;

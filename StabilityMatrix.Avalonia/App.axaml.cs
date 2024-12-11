@@ -98,13 +98,11 @@ public sealed class App : Application
     [NotNull]
     public static Visual? VisualRoot { get; internal set; }
 
-    public static TopLevel TopLevel => TopLevel.GetTopLevel(VisualRoot)!;
+    public static TopLevel TopLevel => TopLevel.GetTopLevel(VisualRoot).Unwrap();
 
-    [NotNull]
-    public static IStorageProvider? StorageProvider { get; internal set; }
+    public static IStorageProvider StorageProvider => TopLevel.StorageProvider;
 
-    [NotNull]
-    public static IClipboard? Clipboard { get; internal set; }
+    public static IClipboard? Clipboard => TopLevel.Clipboard;
 
     // ReSharper disable once MemberCanBePrivate.Global
     [NotNull]
@@ -325,8 +323,6 @@ public sealed class App : Application
         }
 
         VisualRoot = mainWindow;
-        StorageProvider = mainWindow.StorageProvider;
-        Clipboard = mainWindow.Clipboard ?? throw new NullReferenceException("Clipboard is null");
 
         DesktopLifetime.MainWindow = mainWindow;
         DesktopLifetime.Exit += OnApplicationLifetimeExit;
@@ -744,8 +740,6 @@ public sealed class App : Application
         if (isAsyncDisposeStarted)
             return;
 
-        // var asyncDisposables = Services.GetServices<IAsyncDisposable>().ToList();
-
         // Cancel shutdown for now to dispose
         e.Cancel = true;
         isAsyncDisposeStarted = true;
@@ -761,22 +755,12 @@ public sealed class App : Application
                     return;
                 }
 
-                // Force materialize SharedFolders so its DisposeAsync is called
-                // since it's not used by anything at the moment
-                _ = serviceProvider.GetService<ISharedFolders>();
+                var settingsManager = Services.GetRequiredService<ISettingsManager>();
 
-                Logger.Debug("Disposing App Services IAsyncDisposable");
-
-                // Remove the NamedPipeWorker disposable if present
-                // causes crash on avalonia dispatcher thread for some reason
-                // https://github.com/dotnet/runtime/issues/39902
-                var disposables = serviceProvider.GetDisposables();
-                disposables.RemoveAll(d => d is NamedPipeWorker);
-
-                Logger.Trace("Disposing {Count} Disposables", disposables.Count);
-
+                Logger.Debug("Disposing App Services");
                 try
                 {
+                    OnServiceProviderDisposing(serviceProvider);
                     await serviceProvider.DisposeAsync();
                     isAsyncDisposeComplete = true;
                 }
@@ -784,11 +768,22 @@ public sealed class App : Application
                 {
                     Logger.Error(disposeEx, "Failed to dispose ServerProvider");
                 }
+
+                Logger.Debug("Flushing SettingsManager");
+                try
+                {
+                    var cts = new CancellationTokenSource(5000);
+                    await settingsManager.FlushAsync(cts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    Logger.Error("Timeout Flushing SettingsManager");
+                }
             })
             .ContinueWith(_ =>
             {
                 // Shutdown again
-                Logger.Debug("Finished disposing IAsyncDisposables, shutting down");
+                Logger.Debug("Finished async shutdown tasks, shutting down");
 
                 if (Dispatcher.UIThread.SupportsRunLoops)
                 {
@@ -837,6 +832,7 @@ public sealed class App : Application
             {
                 Logger.Debug("OnExit: Disposing App Services");
 
+                OnServiceProviderDisposing(serviceProvider);
                 serviceProvider.Dispose();
             }
 
@@ -849,6 +845,21 @@ public sealed class App : Application
 
             LogManager.Shutdown();
         }
+    }
+
+    private static void OnServiceProviderDisposing(ServiceProvider serviceProvider)
+    {
+        // Force materialize SharedFolders so its DisposeAsync is called
+        // since it's not used by anything at the moment
+        _ = serviceProvider.GetService<ISharedFolders>();
+
+        // Remove the NamedPipeWorker disposable if present
+        // causes crash on avalonia dispatcher thread for some reason
+        // https://github.com/dotnet/runtime/issues/39902
+        var disposables = serviceProvider.GetDisposables();
+        disposables.RemoveAll(d => d is NamedPipeWorker);
+
+        Logger.Trace("Disposing {Count} Disposables", disposables.Count);
     }
 
     private static void TaskScheduler_UnobservedTaskException(

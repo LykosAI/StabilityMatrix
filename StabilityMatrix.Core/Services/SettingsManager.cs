@@ -638,4 +638,26 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             CancellationToken.None
         );
     }
+
+    public Task FlushAsync(CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromCanceled(cancellationToken);
+        }
+
+        if (!isLoaded)
+        {
+            return Task.CompletedTask;
+        }
+
+        // Cancel any delayed save tasks
+        try
+        {
+            Interlocked.Exchange(ref delayedSaveCts, null)?.Cancel();
+        }
+        catch (ObjectDisposedException) { }
+
+        return SaveSettingsAsync(cancellationToken);
+    }
 }

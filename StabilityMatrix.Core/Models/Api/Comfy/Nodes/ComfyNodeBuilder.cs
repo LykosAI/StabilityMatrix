@@ -551,7 +551,11 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "UltralyticsDetectorProvider",
-        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+        RequiredExtensions =
+        [
+            "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
+            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+        ]
     )]
     public record UltralyticsDetectorProvider
         : ComfyTypedNodeBase<BboxDetectorNodeConnection, SegmDetectorNodeConnection>
@@ -561,7 +565,11 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "SAMLoader",
-        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+        RequiredExtensions =
+        [
+            "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
+            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+        ]
     )]
     public record SamLoader : ComfyTypedNodeBase<SamModelNodeConnection>
     {
@@ -575,7 +583,11 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "FaceDetailer",
-        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+        RequiredExtensions =
+        [
+            "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
+            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+        ]
     )]
     public record FaceDetailer : ComfyTypedNodeBase<ImageNodeConnection>
     {

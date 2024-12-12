@@ -16,6 +16,7 @@ public record ComfyExtensionManifest
                     Title = x.Title,
                     Reference = x.Reference,
                     Files = x.Files,
+                    Pip = x.Pip,
                     Description = x.Description,
                     InstallType = x.InstallType
                 }
@@ -31,6 +32,8 @@ public record ComfyExtensionManifest
         public required Uri Reference { get; init; }
 
         public required IEnumerable<Uri> Files { get; init; }
+
+        public IEnumerable<string>? Pip { get; init; }
 
         public string? Description { get; init; }
 

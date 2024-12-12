@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
@@ -14,7 +15,9 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Media.Immutable;
+using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using FluentAvalonia.Styling;
@@ -27,7 +30,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -41,6 +43,7 @@ using StabilityMatrix.Core.Services;
 using TeachingTip = FluentAvalonia.UI.Controls.TeachingTip;
 #if DEBUG
 using StabilityMatrix.Avalonia.Diagnostics.Views;
+using StabilityMatrix.Avalonia.Extensions;
 #endif
 
 namespace StabilityMatrix.Avalonia.Views;
@@ -56,7 +59,7 @@ public partial class MainWindow : AppWindowBase
 
     private FlyoutBase? progressFlyout;
 
-    [DesignOnly(true)]
+    /*[DesignOnly(true)]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public MainWindow()
         : this(
@@ -70,13 +73,14 @@ public partial class MainWindow : AppWindowBase
         {
             throw new InvalidOperationException("Design constructor called in non-design mode");
         }
-    }
+    }*/
 
     public MainWindow(
         INotificationService notificationService,
         INavigationService<MainWindowViewModel> navigationService,
         ISettingsManager settingsManager,
-        ILogger<MainWindow> logger
+        ILogger<MainWindow> logger,
+        Lazy<MainWindowViewModel> lazyViewModel
     )
     {
         this.notificationService = notificationService;
@@ -93,64 +97,125 @@ public partial class MainWindow : AppWindowBase
 #endif
         TitleBar.ExtendsContentIntoTitleBar = true;
         TitleBar.TitleBarHitTestType = TitleBarHitTestType.Complex;
+        ExtendClientAreaChromeHints = Program.Args.NoWindowChromeEffects
+            ? ExtendClientAreaChromeHints.NoChrome
+            : ExtendClientAreaChromeHints.PreferSystemChrome;
 
-        navigationService.TypedNavigation += NavigationService_OnTypedNavigation;
+        // Set position
+        var windowSettings = settingsManager.Settings.WindowSettings;
+        if (windowSettings != null && !Program.Args.ResetWindowPosition)
+        {
+            Position = new PixelPoint(windowSettings.X, windowSettings.Y);
+            Width = windowSettings.Width;
+            Height = windowSettings.Height;
+            WindowState = windowSettings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
+        }
+        else
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
 
-        EventManager.Instance.ToggleProgressFlyout += (_, _) => progressFlyout?.Hide();
-        EventManager.Instance.CultureChanged += (_, _) => SetDefaultFonts();
-        EventManager.Instance.UpdateAvailable += OnUpdateAvailable;
-        EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
-        EventManager.Instance.DownloadsTeachingTipRequested += InstanceOnDownloadsTeachingTipRequested;
+        var appIconStream = Assets.AppIcon.Open();
+        var appIcon = new Bitmap(appIconStream);
+        appIconStream.Dispose();
 
-        SetDefaultFonts();
-
-        Observable
-            .FromEventPattern<SizeChangedEventArgs>(this, nameof(SizeChanged))
-            .Where(x => x.EventArgs.PreviousSize != x.EventArgs.NewSize)
-            .Throttle(TimeSpan.FromMilliseconds(100))
-            .Select(x => x.EventArgs.NewSize)
-            .ObserveOn(SynchronizationContext.Current)
-            .Subscribe(newSize =>
+        SplashScreen = new ApplicationSplashScreen
+        {
+            AppIcon = appIcon,
+            MinimumShowTime = 200,
+            InitApp = async cancellationToken =>
             {
-                var validWindowPosition = Screens.All.Any(screen => screen.Bounds.Contains(Position));
+                using var _ = CodeTimer.StartDebug();
 
-                settingsManager.Transaction(
-                    s =>
-                    {
-                        s.WindowSettings = new WindowSettings(
-                            newSize.Width,
-                            newSize.Height,
-                            validWindowPosition ? Position.X : 0,
-                            validWindowPosition ? Position.Y : 0,
-                            WindowState == WindowState.Maximized
-                        );
-                    },
-                    ignoreMissingLibraryDir: true
-                );
-            });
+                cancellationToken.ThrowIfCancellationRequested();
 
-        Observable
-            .FromEventPattern<PixelPointEventArgs>(this, nameof(PositionChanged))
-            .Where(x => Screens.All.Any(screen => screen.Bounds.Contains(x.EventArgs.Point)))
-            .Throttle(TimeSpan.FromMilliseconds(100))
-            .Select(x => x.EventArgs.Point)
-            .ObserveOn(SynchronizationContext.Current)
-            .Subscribe(position =>
-            {
-                settingsManager.Transaction(
-                    s =>
+                navigationService.TypedNavigation += NavigationService_OnTypedNavigation;
+
+                EventManager.Instance.ToggleProgressFlyout += (_, _) => progressFlyout?.Hide();
+                EventManager.Instance.CultureChanged += (_, _) => SetDefaultFonts();
+                EventManager.Instance.UpdateAvailable += OnUpdateAvailable;
+                EventManager.Instance.NavigateAndFindCivitModelRequested +=
+                    OnNavigateAndFindCivitModelRequested;
+                EventManager.Instance.DownloadsTeachingTipRequested +=
+                    InstanceOnDownloadsTeachingTipRequested;
+
+                SetDefaultFonts();
+
+                Observable
+                    .FromEventPattern<SizeChangedEventArgs>(this, nameof(SizeChanged))
+                    .Where(x => x.EventArgs.PreviousSize != x.EventArgs.NewSize)
+                    .Throttle(TimeSpan.FromMilliseconds(100))
+                    .Select(x => x.EventArgs.NewSize)
+                    .ObserveOn(SynchronizationContext.Current!)
+                    .Subscribe(newSize =>
                     {
-                        s.WindowSettings = new WindowSettings(
-                            Width,
-                            Height,
-                            position.X,
-                            position.Y,
-                            WindowState == WindowState.Maximized
+                        var validWindowPosition = Screens.All.Any(screen => screen.Bounds.Contains(Position));
+
+                        settingsManager.Transaction(
+                            s =>
+                            {
+                                s.WindowSettings = new WindowSettings(
+                                    newSize.Width,
+                                    newSize.Height,
+                                    validWindowPosition ? Position.X : 0,
+                                    validWindowPosition ? Position.Y : 0,
+                                    WindowState == WindowState.Maximized
+                                );
+                            },
+                            ignoreMissingLibraryDir: true
                         );
+                    });
+
+                Observable
+                    .FromEventPattern<PixelPointEventArgs>(this, nameof(PositionChanged))
+                    .Where(x => Screens.All.Any(screen => screen.Bounds.Contains(x.EventArgs.Point)))
+                    .Throttle(TimeSpan.FromMilliseconds(100))
+                    .Select(x => x.EventArgs.Point)
+                    .ObserveOn(SynchronizationContext.Current!)
+                    .Subscribe(position =>
+                    {
+                        settingsManager.Transaction(
+                            s =>
+                            {
+                                s.WindowSettings = new WindowSettings(
+                                    Width,
+                                    Height,
+                                    position.X,
+                                    position.Y,
+                                    WindowState == WindowState.Maximized
+                                );
+                            },
+                            ignoreMissingLibraryDir: true
+                        );
+                    });
+
+                // Load view model
+                await Dispatcher.UIThread.InvokeAsync(
+                    () =>
+                    {
+                        var timer = CodeTimer.StartDebug("Load view model");
+                        var viewModel = lazyViewModel.Value;
+                        DataContext = viewModel;
+                        timer.Dispose();
                     },
-                    ignoreMissingLibraryDir: true
+                    DispatcherPriority.Background,
+                    cancellationToken
                 );
-            });
+
+                // Nav to first page
+                await Dispatcher.UIThread.InvokeAsync(
+                    () =>
+                    {
+                        var timer = CodeTimer.StartDebug("Nav to first page");
+                        var viewModel = ((MainWindowViewModel)DataContext!);
+                        navigationService.NavigateTo(viewModel.Pages[0]);
+                        timer.Dispose();
+                    },
+                    DispatcherPriority.Input,
+                    cancellationToken
+                );
+            }
+        };
     }
 
     private void InstanceOnDownloadsTeachingTipRequested(object? sender, EventArgs e)
@@ -271,18 +336,6 @@ public partial class MainWindow : AppWindowBase
 
         if (DataContext is not MainWindowViewModel vm)
             return;
-
-        // Navigate to first page
-        Dispatcher.UIThread.Post(
-            () =>
-                navigationService.NavigateTo(
-                    vm.Pages[0],
-                    new BetterSlideNavigationTransition
-                    {
-                        Effect = SlideNavigationTransitionEffect.FromBottom
-                    }
-                )
-        );
 
         // Check show update teaching tip
         if (vm.UpdateViewModel.IsUpdateAvailable)

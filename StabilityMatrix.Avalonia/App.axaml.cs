@@ -299,29 +299,7 @@ public sealed class App : Application
         if (DesktopLifetime is null)
             return;
 
-        var mainViewModel = Services.GetRequiredService<MainWindowViewModel>();
-
         var mainWindow = Services.GetRequiredService<MainWindow>();
-        mainWindow.DataContext = mainViewModel;
-
-        mainWindow.ExtendClientAreaChromeHints = Program.Args.NoWindowChromeEffects
-            ? ExtendClientAreaChromeHints.NoChrome
-            : ExtendClientAreaChromeHints.PreferSystemChrome;
-
-        var settingsManager = Services.GetRequiredService<ISettingsManager>();
-        var windowSettings = settingsManager.Settings.WindowSettings;
-        if (windowSettings != null && !Program.Args.ResetWindowPosition)
-        {
-            mainWindow.Position = new PixelPoint(windowSettings.X, windowSettings.Y);
-            mainWindow.Width = windowSettings.Width;
-            mainWindow.Height = windowSettings.Height;
-            mainWindow.WindowState = windowSettings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
-        }
-        else
-        {
-            mainWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        }
-
         VisualRoot = mainWindow;
 
         DesktopLifetime.MainWindow = mainWindow;

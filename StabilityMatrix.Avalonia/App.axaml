@@ -36,6 +36,8 @@
             <ControlRecycling x:Key="ControlRecyclingKey" />
             <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
 
+            <SolidColorBrush x:Key="CoreSplashScreenBackground" Color="#141414" />
+            <SolidColorBrush x:Key="CoreSplashScreenForeground" Color="#9FBDC3" />
             <SolidColorBrush x:Key="ToolTipBackground" Color="#1E1F22" />
             <SolidColorBrush x:Key="ToolTipForeground" Color="#9FBDC3" />
             <FontFamily x:Key="NotoSansJP">avares://StabilityMatrix.Avalonia/Assets/Fonts/NotoSansJP#Noto Sans JP</FontFamily>

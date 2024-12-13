@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed a typo in the Japanese translation - thanks to @mattyatea!
 - Fixed missing package thumbnails due to moved or inaccessible urls
+- Fixed an issue with ComfyUI-Impact-Subpack not being installed when using FaceDetailer in Inference
 ### Supporters
 #### Visionaries
 - Huge thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your unwavering support is very much appreciated!
@@ -77,6 +78,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Supporters
 #### Visionaries
 - A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
+
+## v2.12.5
+### Fixed
+- Fixed an issue with ComfyUI-Impact-Subpack not being installed when using FaceDetailer in Inference
 
 ## v2.12.4
 ### Added

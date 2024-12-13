@@ -54,6 +54,7 @@
     <PackageVersion Include="DiscordRichPresence" Version="1.2.1.24" />
     <PackageVersion Include="DynamicData" Version="9.0.1" />
     <PackageVersion Include="DotNet.Bundle" Version="0.9.13" />
+    <PackageVersion Include="DotNext" Version="5.8.0" />
     <PackageVersion Include="Exceptionless.DateTimeExtensions" Version="3.4.3" />
     <PackageVersion Include="FuzzySharp" Version="2.0.2" />
     <PackageVersion Include="JetBrains.Annotations" Version="2024.2.0" />

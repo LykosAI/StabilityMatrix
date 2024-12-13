@@ -1,7 +1,7 @@
 <Project>
   <ItemGroup>
     <PackageVersion Include="AsyncAwaitBestPractices" Version="8.0.0" />
-    <PackageVersion Include="AutoComplete.Net" Version="1.2211.2014.42"/>
+    <PackageVersion Include="AutoComplete.Net" Version="1.2211.2014.42" />
     <PackageVersion Include="AutoCtor" Version="2.4.1" />
     <PackageVersion Include="Blake3" Version="1.1.0" />
     <PackageVersion Include="CompiledExpressions" Version="1.1.0" />
@@ -64,7 +64,6 @@
     <PackageVersion Include="Semver" Version="3.0.0-beta.1" />
     <PackageVersion Include="Sentry" Version="4.9.0" />
     <PackageVersion Include="Sentry.NLog" Version="4.9.0" />
-    <PackageVersion Include="SoftCircuits.OrderedDictionary" Version="3.2.0" />
     <PackageVersion Include="SharpCompress" Version="0.37.2" />
     <PackageVersion Include="SkiaSharp" Version="3.0.0-preview.4.1" />
     <PackageVersion Include="Sylvan.Common" Version="0.4.3" />
@@ -77,7 +76,6 @@
     <PackageVersion Include="YamlDotNet" Version="16.0.0" />
     <PackageVersion Include="Yoh.Text.Json.NamingPolicies" Version="1.1.2" />
   </ItemGroup>
-
   <ItemGroup Label="Avalonia">
     <PackageVersion Include="AsyncImageLoader.Avalonia" Version="3.2.1" />
     <PackageVersion Include="Avalonia.AvaloniaEdit" Version="11.1.0" />
@@ -110,7 +108,6 @@
     <PackageVersion Include="SpacedGrid-Avalonia" Version="11.0.0" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.0.0-preview.4.1" />
   </ItemGroup>
-
   <ItemGroup Label="Tests">
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.ComponentModel;
-using System.Linq;
 using System.Text.Json.Serialization;
 using Avalonia.Media;
 using Avalonia.Skia;
@@ -11,7 +9,6 @@ using CommunityToolkit.Mvvm.Input;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
-using SoftCircuits.Collections;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.Models;
 using StabilityMatrix.Avalonia.Models;

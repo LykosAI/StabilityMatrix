@@ -1,4 +1,8 @@
 <Project>
+  <PropertyGroup>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+  
   <!-- If a runtime identifier is not specified, 
   the default runtime identifier is decided using the current OS platform. -->
   <Choose>
@@ -17,10 +21,5 @@
         <RuntimeIdentifier>osx-arm64</RuntimeIdentifier>
       </PropertyGroup>
     </When>
-    <Otherwise>
-      <PropertyGroup>
-        <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
-      </PropertyGroup>
-    </Otherwise>
   </Choose>
 </Project>

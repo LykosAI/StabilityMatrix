@@ -132,7 +132,6 @@
         <PackageReference Include="RockLib.Reflection.Optimized" />
         <PackageReference Include="Sentry" />
         <PackageReference Include="Sentry.NLog" />
-        <PackageReference Include="SoftCircuits.OrderedDictionary" />
         <PackageReference Include="SpacedGrid-Avalonia" />
         <PackageReference Include="Sylvan.Common" />
         <PackageReference Include="Sylvan.Data" />

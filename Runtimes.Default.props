@@ -1,0 +1,26 @@
+<Project>
+  <!-- If a runtime identifier is not specified, 
+  the default runtime identifier is decided using the current OS platform. -->
+  <Choose>
+    <When Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+      <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+      </PropertyGroup>
+    </When>
+    <When Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+      <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
+        <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+      </PropertyGroup>
+    </When>
+    <When Condition="$([MSBuild]::IsOSPlatform('OSX'))">
+      <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
+        <RuntimeIdentifier>osx-arm64</RuntimeIdentifier>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+</Project>

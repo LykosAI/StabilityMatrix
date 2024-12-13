@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\ConditionalSymbols.props" />
+    <Import Project="..\Runtimes.Default.props" />
   
     <PropertyGroup Condition="'$(RuntimeIdentifier)' != 'win-x64'">
         <TargetFramework>net8.0</TargetFramework>
@@ -80,76 +81,76 @@
     </ItemGroup>
     
     <ItemGroup>
-        <PackageReference Include="AsyncImageLoader.Avalonia" Version="3.2.1" />
-        <PackageReference Include="AutoComplete.Net" Version="1.2211.2014.42"/>
-        <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.1.0" />
-        <PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="Avalonia.Controls.ItemsRepeater" Version="11.1.4" />
-        <PackageReference Include="Avalonia.Controls.PanAndZoom" Version="11.2.0" />
-        <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="Avalonia.Svg" Version="11.2.0" />
+        <PackageReference Include="AsyncImageLoader.Avalonia" />
+        <PackageReference Include="AutoComplete.Net" />
+        <PackageReference Include="Avalonia.AvaloniaEdit" />
+        <PackageReference Include="Avalonia.Controls.DataGrid" />
+        <PackageReference Include="Avalonia.Controls.ItemsRepeater" />
+        <PackageReference Include="Avalonia.Controls.PanAndZoom" />
+        <PackageReference Include="Avalonia" />
+        <PackageReference Include="Avalonia.Desktop" />
+        <PackageReference Include="Avalonia.Fonts.Inter" />
+        <PackageReference Include="Avalonia.Svg" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="Avalonia.HtmlRenderer" Version="11.0.0" />
-        <PackageReference Include="Avalonia.Labs.Controls" Version="11.2.0" />
-        <PackageReference Include="Avalonia.Xaml.Behaviors" Version="11.2.0" />
-        <PackageReference Include="AvaloniaEdit.TextMate" Version="11.0.6" />
-        <PackageReference Include="bodong.Avalonia.PropertyGrid" Version="11.1.1.1" />
-        <PackageReference Include="bodong.PropertyModels" Version="11.1.1.1" />
-        <PackageReference Include="CommandLineParser" Version="2.9.1" />
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-        <PackageReference Include="DesktopNotifications" Version="1.3.1" />
-        <PackageReference Include="DesktopNotifications.Avalonia" Version="1.3.1" />
-        <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
-        <PackageReference Include="Dock.Avalonia" Version="11.2.0" />
-        <PackageReference Include="Dock.Model.Avalonia" Version="11.2.0" />
-        <PackageReference Include="Dock.Serializer" Version="11.2.0" />
-        <PackageReference Include="DynamicData" Version="9.0.1" />
-        <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
-        <PackageReference Include="Exceptionless.DateTimeExtensions" Version="3.4.3" />
-        <PackageReference Include="FluentAvalonia.BreadcrumbBar" Version="2.0.2" />
-        <PackageReference Include="FluentAvaloniaUI" Version="2.1.0" />
-        <PackageReference Include="FluentIcons.Avalonia" Version="1.1.249" />
-        <PackageReference Include="FluentIcons.Avalonia.Fluent" Version="1.1.249" />
-        <PackageReference Include="FuzzySharp" Version="2.0.2" />
-        <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
-        <PackageReference Include="KeyedSemaphores" Version="5.0.0" />
-        <PackageReference Include="Markdig" Version="0.38.0" />
-        <PackageReference Include="Markdown.Avalonia" Version="11.0.3-a1" />
-        <PackageReference Include="MessagePipe" Version="1.8.1" />
-        <PackageReference Include="MessagePipe.Interprocess" Version="1.8.1" />
-        <PackageReference Include="MetadataExtractor" Version="2.8.1" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.1" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.7" />
-        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
-        <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
-        <PackageReference Include="NLog" Version="5.3.2" />
-        <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" />
-        <PackageReference Include="NSubstitute" Version="5.1.0" />
-        <PackageReference Include="OneOf" Version="3.0.271" />
-        <PackageReference Include="Polly" Version="8.4.1" />
-        <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-        <PackageReference Include="Polly.Extensions.Http" Version="3.0.0" />
-        <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.4.0" />
-        <PackageReference Include="RockLib.Reflection.Optimized" Version="3.0.0" />
-        <PackageReference Include="Sentry" Version="4.9.0" />
-        <PackageReference Include="Sentry.NLog" Version="4.9.0" />
-        <PackageReference Include="SoftCircuits.OrderedDictionary" Version="3.2.0" />
-        <PackageReference Include="SpacedGrid-Avalonia" Version="11.0.0" />
-        <PackageReference Include="Sylvan.Common" Version="0.4.3" />
-        <PackageReference Include="Sylvan.Data" Version="0.2.16" />
-        <PackageReference Include="Sylvan.Data.Csv" Version="1.3.9" />
-        <PackageReference Include="System.Drawing.Common" Version="8.0.7" />
-        <PackageReference Include="System.IO.Hashing" Version="8.0.0" />
-        <PackageReference Include="TextMateSharp.Grammars" Version="1.0.56" />
-        <PackageReference Include="URISchemeTools" Version="1.0.2" />
-        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.0.0-preview.4.1" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" />
+        <PackageReference Include="Avalonia.HtmlRenderer" />
+        <PackageReference Include="Avalonia.Labs.Controls" />
+        <PackageReference Include="Avalonia.Xaml.Behaviors" />
+        <PackageReference Include="AvaloniaEdit.TextMate" />
+        <PackageReference Include="bodong.Avalonia.PropertyGrid" />
+        <PackageReference Include="bodong.PropertyModels" />
+        <PackageReference Include="CommandLineParser" />
+        <PackageReference Include="CommunityToolkit.Mvvm" />
+        <PackageReference Include="DesktopNotifications" />
+        <PackageReference Include="DesktopNotifications.Avalonia" />
+        <PackageReference Include="DiscordRichPresence" />
+        <PackageReference Include="Dock.Avalonia" />
+        <PackageReference Include="Dock.Model.Avalonia" />
+        <PackageReference Include="Dock.Serializer" />
+        <PackageReference Include="DynamicData" />
+        <PackageReference Include="DotNet.Bundle" />
+        <PackageReference Include="Exceptionless.DateTimeExtensions" />
+        <PackageReference Include="FluentAvalonia.BreadcrumbBar" />
+        <PackageReference Include="FluentAvaloniaUI" />
+        <PackageReference Include="FluentIcons.Avalonia" />
+        <PackageReference Include="FluentIcons.Avalonia.Fluent" />
+        <PackageReference Include="FuzzySharp" />
+        <PackageReference Include="JetBrains.Annotations" />
+        <PackageReference Include="KeyedSemaphores" />
+        <PackageReference Include="Markdig" />
+        <PackageReference Include="Markdown.Avalonia" />
+        <PackageReference Include="MessagePipe" />
+        <PackageReference Include="MessagePipe.Interprocess" />
+        <PackageReference Include="MetadataExtractor" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Microsoft.Extensions.Http.Polly" />
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+        <PackageReference Include="Nito.AsyncEx" />
+        <PackageReference Include="NLog" />
+        <PackageReference Include="NLog.Extensions.Logging" />
+        <PackageReference Include="NSubstitute" />
+        <PackageReference Include="OneOf" />
+        <PackageReference Include="Polly" />
+        <PackageReference Include="Polly.Contrib.WaitAndRetry" />
+        <PackageReference Include="Polly.Extensions.Http" />
+        <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" />
+        <PackageReference Include="RockLib.Reflection.Optimized" />
+        <PackageReference Include="Sentry" />
+        <PackageReference Include="Sentry.NLog" />
+        <PackageReference Include="SoftCircuits.OrderedDictionary" />
+        <PackageReference Include="SpacedGrid-Avalonia" />
+        <PackageReference Include="Sylvan.Common" />
+        <PackageReference Include="Sylvan.Data" />
+        <PackageReference Include="Sylvan.Data.Csv" />
+        <PackageReference Include="System.Drawing.Common" />
+        <PackageReference Include="System.IO.Hashing" />
+        <PackageReference Include="TextMateSharp.Grammars" />
+        <PackageReference Include="URISchemeTools" />
+        <PackageReference Include="SkiaSharp.NativeAssets.Linux" Condition="'$(RuntimeIdentifier)' == 'linux-x64'" />
     </ItemGroup>
 
 

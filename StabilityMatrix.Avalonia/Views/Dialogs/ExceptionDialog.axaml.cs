@@ -2,13 +2,13 @@
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using FluentAvalonia.UI.Windowing;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
-using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
-[Transient]
+[RegisterTransient<ExceptionDialog>]
 public partial class ExceptionDialog : AppWindowBase
 {
     public ExceptionDialog()

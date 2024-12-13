@@ -18,6 +18,7 @@ using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -48,7 +49,7 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(CheckpointsPage))]
-[Singleton]
+[RegisterSingleton<CheckpointsPageViewModel>]
 public partial class CheckpointsPageViewModel(
     ILogger<CheckpointsPageViewModel> logger,
     ISettingsManager settingsManager,

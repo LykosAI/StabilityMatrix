@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -23,7 +24,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(InferenceConnectionHelpDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<InferenceConnectionHelpViewModel>]
 public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBase
 {
     private readonly ISettingsManager settingsManager;

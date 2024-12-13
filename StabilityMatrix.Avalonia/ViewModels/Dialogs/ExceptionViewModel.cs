@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using NLog;
 using Sentry;
 using StabilityMatrix.Avalonia.Languages;
@@ -22,7 +23,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(ExceptionDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<ExceptionViewModel>]
 public partial class ExceptionViewModel : ViewModelBase
 {
     public Exception? Exception { get; set; }

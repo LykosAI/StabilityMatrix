@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Navigation;
+using Injectio.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
@@ -14,12 +15,11 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-[Singleton]
+[RegisterSingleton<PackageManagerPage>]
 public partial class PackageManagerPage : UserControlBase, IHandleNavigation
 {
     private readonly INavigationService<PackageManagerViewModel> packageNavigationService;

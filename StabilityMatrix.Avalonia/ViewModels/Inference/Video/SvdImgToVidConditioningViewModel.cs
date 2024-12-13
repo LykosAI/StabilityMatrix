@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -13,7 +14,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 
 [View(typeof(VideoGenerationSettingsCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<SvdImgToVidConditioningViewModel>]
 public partial class SvdImgToVidConditioningViewModel
     : LoadableViewModelBase,
         IParametersLoadableState,

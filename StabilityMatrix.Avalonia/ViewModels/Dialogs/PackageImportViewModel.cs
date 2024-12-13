@@ -9,6 +9,7 @@ using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -24,7 +25,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(PackageImportDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<PackageImportViewModel>]
 public partial class PackageImportViewModel : ContentDialogViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

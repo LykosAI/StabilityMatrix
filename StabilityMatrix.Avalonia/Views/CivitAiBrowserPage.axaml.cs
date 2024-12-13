@@ -2,14 +2,14 @@
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Core.Attributes;
 using CivitAiBrowserViewModel = StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser.CivitAiBrowserViewModel;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-[Singleton]
+[RegisterSingleton<CivitAiBrowserPage>]
 public partial class CivitAiBrowserPage : UserControlBase
 {
     public CivitAiBrowserPage()

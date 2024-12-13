@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
@@ -19,6 +19,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Collections;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -41,7 +42,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [View(typeof(PackageExtensionBrowserView))]
-[Transient]
+[RegisterTransient<PackageExtensionBrowserViewModel>]
 [ManagedService]
 public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposable
 {

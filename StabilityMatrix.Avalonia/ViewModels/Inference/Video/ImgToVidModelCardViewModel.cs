@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -10,7 +11,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 
 [View(typeof(ModelCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<ImgToVidModelCardViewModel>]
 public class ImgToVidModelCardViewModel : ModelCardViewModel
 {
     public ImgToVidModelCardViewModel(

@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Attributes;
@@ -12,7 +13,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 
 [View(typeof(NotificationSettingsPage))]
-[Singleton]
+[RegisterSingleton<NotificationSettingsViewModel>]
 [ManagedService]
 public partial class NotificationSettingsViewModel(ISettingsManager settingsManager) : PageViewModelBase
 {

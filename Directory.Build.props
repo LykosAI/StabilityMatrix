@@ -1,6 +1,14 @@
 ﻿<Project>
     <PropertyGroup>
-        <AvaloniaVersion>11.2.1</AvaloniaVersion>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <AvaloniaVersion>11.2.2</AvaloniaVersion>
     </PropertyGroup>
     
     <PropertyGroup>

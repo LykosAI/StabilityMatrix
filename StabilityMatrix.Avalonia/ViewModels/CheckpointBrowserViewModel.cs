@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
@@ -16,7 +17,7 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(CheckpointBrowserPage))]
-[Singleton]
+[RegisterSingleton<CheckpointBrowserViewModel>]
 public partial class CheckpointBrowserViewModel : PageViewModelBase
 {
     public override string Title => Resources.Label_ModelBrowser;

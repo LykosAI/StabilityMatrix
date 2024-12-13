@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reactive.Disposables;
@@ -7,8 +7,8 @@ using System.Reflection;
 using System.Text.Json;
 using AsyncAwaitBestPractices;
 using CompiledExpressions;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -17,7 +17,7 @@ using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Services;
 
-[Singleton(typeof(ISettingsManager))]
+[RegisterSingleton<ISettingsManager, SettingsManager>]
 public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
 {
     private static string GlobalSettingsPath => Path.Combine(Compat.AppDataHome, "global.json");
@@ -637,5 +637,27 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             },
             CancellationToken.None
         );
+    }
+
+    public Task FlushAsync(CancellationToken cancellationToken)
+    {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return Task.FromCanceled(cancellationToken);
+        }
+
+        if (!isLoaded)
+        {
+            return Task.CompletedTask;
+        }
+
+        // Cancel any delayed save tasks
+        try
+        {
+            Interlocked.Exchange(ref delayedSaveCts, null)?.Cancel();
+        }
+        catch (ObjectDisposedException) { }
+
+        return SaveSettingsAsync(cancellationToken);
     }
 }

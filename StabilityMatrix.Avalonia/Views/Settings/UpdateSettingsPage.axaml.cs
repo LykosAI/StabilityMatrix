@@ -1,14 +1,14 @@
 ﻿using System.Linq;
 using Avalonia.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Avalonia.Views.Settings;
 
-[Singleton]
+[RegisterSingleton<UpdateSettingsPage>]
 public partial class UpdateSettingsPage : UserControlBase
 {
     public UpdateSettingsPage()

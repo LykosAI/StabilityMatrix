@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using Refit;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -18,7 +19,7 @@ using StabilityMatrix.Core.Validators;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(LykosLoginDialog))]
-[Transient, ManagedService]
+[RegisterTransient<LykosLoginViewModel>, ManagedService]
 public partial class LykosLoginViewModel(
     IAccountsService accountsService,
     ServiceManager<ViewModelBase> vmFactory

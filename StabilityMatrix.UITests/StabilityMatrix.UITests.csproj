@@ -1,36 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' != 'win-x64'">
-        <TargetFramework>net8.0</TargetFramework>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-        <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
-    </PropertyGroup>
+    <Import Project="..\Runtimes.Default.props" />
     
     <PropertyGroup>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
-        <PackageReference Include="NSubstitute" Version="5.1.0" />
+        <PackageReference Include="Avalonia.Headless.XUnit" />
+        <PackageReference Include="DotNet.Bundle" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="NSubstitute" />
         <PackageReference Include="System.Drawing.Common" Version="8.0.7" />
-        <PackageReference Include="Verify" Version="26.1.2" />
-        <PackageReference Include="Verify.CommunityToolkit.Mvvm" Version="0.1.0" />
-        <PackageReference Include="Verify.Avalonia" Version="1.1.0" />
-        <PackageReference Include="Verify.Phash" Version="3.1.0" />
-        <PackageReference Include="Verify.Xunit" Version="26.1.2" />
-        <PackageReference Include="xunit" Version="2.9.0" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+        <PackageReference Include="Verify" />
+        <PackageReference Include="Verify.CommunityToolkit.Mvvm" />
+        <PackageReference Include="Verify.Avalonia" />
+        <PackageReference Include="Verify.Phash" />
+        <PackageReference Include="Verify.Xunit" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="coverlet.collector" Version="6.0.2">
+        <PackageReference Include="coverlet.collector">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>

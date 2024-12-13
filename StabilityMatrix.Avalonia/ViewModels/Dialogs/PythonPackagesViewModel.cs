@@ -14,6 +14,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -32,7 +33,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(PythonPackagesDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<PythonPackagesViewModel>]
 [AutoConstruct]
 public partial class PythonPackagesViewModel : ContentDialogViewModelBase
 {

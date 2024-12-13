@@ -8,6 +8,7 @@ using Avalonia.Media;
 using Avalonia.Skia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using SoftCircuits.Collections;
@@ -24,7 +25,7 @@ using Size = System.Drawing.Size;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Controls;
 
-[Transient]
+[RegisterTransient<PaintCanvasViewModel>]
 [ManagedService]
 public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) : LoadableViewModelBase
 {

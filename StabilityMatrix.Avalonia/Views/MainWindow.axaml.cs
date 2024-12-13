@@ -101,9 +101,11 @@ public partial class MainWindow : AppWindowBase
             ? ExtendClientAreaChromeHints.NoChrome
             : ExtendClientAreaChromeHints.PreferSystemChrome;
 
-        // Set position
-        var windowSettings = settingsManager.Settings.WindowSettings;
-        if (windowSettings != null && !Program.Args.ResetWindowPosition)
+        // Load window positions
+        if (
+            settingsManager.Settings.WindowSettings is { } windowSettings
+            && !Program.Args.ResetWindowPosition
+        )
         {
             Position = new PixelPoint(windowSettings.X, windowSettings.Y);
             Width = windowSettings.Width;
@@ -115,107 +117,107 @@ public partial class MainWindow : AppWindowBase
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
         }
 
-        var appIconStream = Assets.AppIcon.Open();
-        var appIcon = new Bitmap(appIconStream);
-        appIconStream.Dispose();
-
-        SplashScreen = new ApplicationSplashScreen
+        if (Program.Args.IsSplashScreenEnabled)
         {
-            AppIcon = appIcon,
-            MinimumShowTime = 200,
-            InitApp = async cancellationToken =>
+            var appIconStream = Assets.AppIcon.Open();
+            var appIcon = new Bitmap(appIconStream);
+            appIconStream.Dispose();
+
+            SplashScreen = new ApplicationSplashScreen
             {
-                using var _ = CodeTimer.StartDebug();
+                AppIcon = appIcon,
+                InitApp = cancellationToken =>
+                {
+                    return Dispatcher
+                        .UIThread.InvokeAsync(() => StartupInitialize(lazyViewModel, cancellationToken))
+                        .GetTask();
+                }
+            };
+        }
+        else
+        {
+            StartupInitialize(lazyViewModel);
+        }
+    }
 
-                cancellationToken.ThrowIfCancellationRequested();
+    /// <summary>
+    /// Run startup initialization.
+    /// This runs on the UI thread.
+    /// </summary>
+    private void StartupInitialize(
+        Lazy<MainWindowViewModel> lazyViewModel,
+        CancellationToken cancellationToken = default
+    )
+    {
+        using var _ = CodeTimer.StartDebug();
 
-                navigationService.TypedNavigation += NavigationService_OnTypedNavigation;
+        Dispatcher.UIThread.VerifyAccess();
 
-                EventManager.Instance.ToggleProgressFlyout += (_, _) => progressFlyout?.Hide();
-                EventManager.Instance.CultureChanged += (_, _) => SetDefaultFonts();
-                EventManager.Instance.UpdateAvailable += OnUpdateAvailable;
-                EventManager.Instance.NavigateAndFindCivitModelRequested +=
-                    OnNavigateAndFindCivitModelRequested;
-                EventManager.Instance.DownloadsTeachingTipRequested +=
-                    InstanceOnDownloadsTeachingTipRequested;
+        cancellationToken.ThrowIfCancellationRequested();
 
-                SetDefaultFonts();
+        navigationService.TypedNavigation += NavigationService_OnTypedNavigation;
 
-                Observable
-                    .FromEventPattern<SizeChangedEventArgs>(this, nameof(SizeChanged))
-                    .Where(x => x.EventArgs.PreviousSize != x.EventArgs.NewSize)
-                    .Throttle(TimeSpan.FromMilliseconds(100))
-                    .Select(x => x.EventArgs.NewSize)
-                    .ObserveOn(SynchronizationContext.Current!)
-                    .Subscribe(newSize =>
+        EventManager.Instance.ToggleProgressFlyout += (_, _) => progressFlyout?.Hide();
+        EventManager.Instance.CultureChanged += (_, _) => SetDefaultFonts();
+        EventManager.Instance.UpdateAvailable += OnUpdateAvailable;
+        EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
+        EventManager.Instance.DownloadsTeachingTipRequested += InstanceOnDownloadsTeachingTipRequested;
+
+        SetDefaultFonts();
+
+        Observable
+            .FromEventPattern<SizeChangedEventArgs>(this, nameof(SizeChanged))
+            .Where(x => x.EventArgs.PreviousSize != x.EventArgs.NewSize)
+            .Throttle(TimeSpan.FromMilliseconds(100))
+            .Select(x => x.EventArgs.NewSize)
+            .ObserveOn(SynchronizationContext.Current!)
+            .Subscribe(newSize =>
+            {
+                var validWindowPosition = Screens.All.Any(screen => screen.Bounds.Contains(Position));
+
+                settingsManager.Transaction(
+                    s =>
                     {
-                        var validWindowPosition = Screens.All.Any(screen => screen.Bounds.Contains(Position));
-
-                        settingsManager.Transaction(
-                            s =>
-                            {
-                                s.WindowSettings = new WindowSettings(
-                                    newSize.Width,
-                                    newSize.Height,
-                                    validWindowPosition ? Position.X : 0,
-                                    validWindowPosition ? Position.Y : 0,
-                                    WindowState == WindowState.Maximized
-                                );
-                            },
-                            ignoreMissingLibraryDir: true
+                        s.WindowSettings = new WindowSettings(
+                            newSize.Width,
+                            newSize.Height,
+                            validWindowPosition ? Position.X : 0,
+                            validWindowPosition ? Position.Y : 0,
+                            WindowState == WindowState.Maximized
                         );
-                    });
+                    },
+                    ignoreMissingLibraryDir: true
+                );
+            });
 
-                Observable
-                    .FromEventPattern<PixelPointEventArgs>(this, nameof(PositionChanged))
-                    .Where(x => Screens.All.Any(screen => screen.Bounds.Contains(x.EventArgs.Point)))
-                    .Throttle(TimeSpan.FromMilliseconds(100))
-                    .Select(x => x.EventArgs.Point)
-                    .ObserveOn(SynchronizationContext.Current!)
-                    .Subscribe(position =>
+        Observable
+            .FromEventPattern<PixelPointEventArgs>(this, nameof(PositionChanged))
+            .Where(x => Screens.All.Any(screen => screen.Bounds.Contains(x.EventArgs.Point)))
+            .Throttle(TimeSpan.FromMilliseconds(100))
+            .Select(x => x.EventArgs.Point)
+            .ObserveOn(SynchronizationContext.Current!)
+            .Subscribe(position =>
+            {
+                settingsManager.Transaction(
+                    s =>
                     {
-                        settingsManager.Transaction(
-                            s =>
-                            {
-                                s.WindowSettings = new WindowSettings(
-                                    Width,
-                                    Height,
-                                    position.X,
-                                    position.Y,
-                                    WindowState == WindowState.Maximized
-                                );
-                            },
-                            ignoreMissingLibraryDir: true
+                        s.WindowSettings = new WindowSettings(
+                            Width,
+                            Height,
+                            position.X,
+                            position.Y,
+                            WindowState == WindowState.Maximized
                         );
-                    });
-
-                // Load view model
-                await Dispatcher.UIThread.InvokeAsync(
-                    () =>
-                    {
-                        var timer = CodeTimer.StartDebug("Load view model");
-                        var viewModel = lazyViewModel.Value;
-                        DataContext = viewModel;
-                        timer.Dispose();
                     },
-                    DispatcherPriority.Background,
-                    cancellationToken
+                    ignoreMissingLibraryDir: true
                 );
+            });
 
-                // Nav to first page
-                await Dispatcher.UIThread.InvokeAsync(
-                    () =>
-                    {
-                        var timer = CodeTimer.StartDebug("Nav to first page");
-                        var viewModel = ((MainWindowViewModel)DataContext!);
-                        navigationService.NavigateTo(viewModel.Pages[0]);
-                        timer.Dispose();
-                    },
-                    DispatcherPriority.Input,
-                    cancellationToken
-                );
-            }
-        };
+        using (CodeTimer.StartDebug("Load view model"))
+        {
+            var viewModel = lazyViewModel.Value;
+            DataContext = viewModel;
+        }
     }
 
     private void InstanceOnDownloadsTeachingTipRequested(object? sender, EventArgs e)
@@ -336,6 +338,18 @@ public partial class MainWindow : AppWindowBase
 
         if (DataContext is not MainWindowViewModel vm)
             return;
+
+        // Navigate to first page
+        Dispatcher.UIThread.Post(
+            () =>
+                navigationService.NavigateTo(
+                    vm.Pages[0],
+                    new BetterSlideNavigationTransition
+                    {
+                        Effect = SlideNavigationTransitionEffect.FromBottom
+                    }
+                )
+        );
 
         // Check show update teaching tip
         if (vm.UpdateViewModel.IsUpdateAvailable)

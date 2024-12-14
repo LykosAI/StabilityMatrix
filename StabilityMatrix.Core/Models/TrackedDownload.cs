@@ -9,7 +9,6 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models;
 
-[JsonSerializable(typeof(TrackedDownload))]
 public class TrackedDownload
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

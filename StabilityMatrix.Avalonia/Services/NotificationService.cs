@@ -225,6 +225,7 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
         }
         catch (Exception e)
         {
+            logger.LogError(e, "{Exception}", e);
             Show(new Notification(title, message ?? e.Message, appearance));
             return new TaskResult<bool>(false, e);
         }

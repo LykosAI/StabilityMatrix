@@ -106,9 +106,41 @@
                                     <input:StandardUICommand
                                         x:Key="CopySeedCommand"
                                         Command="{Binding CopySeedToClipboardCommand}"
-                                        Label="Seed">
+                                        Label="{x:Static lang:Resources.Label_Seed}">
                                         <input:StandardUICommand.IconSource>
                                             <controls:FASymbolIconSource Symbol="fa-solid fa-dice-d20" />
+                                        </input:StandardUICommand.IconSource>
+                                    </input:StandardUICommand>
+                                    <input:StandardUICommand
+                                        x:Key="CopyPromptCommand"
+                                        Command="{Binding CopyPromptToClipboardCommand}"
+                                        Label="{x:Static lang:Resources.Label_Prompt}">
+                                        <input:StandardUICommand.IconSource>
+                                            <controls:FASymbolIconSource Symbol="fa-solid fa-comments" />
+                                        </input:StandardUICommand.IconSource>
+                                    </input:StandardUICommand>
+                                    <input:StandardUICommand
+                                        x:Key="CopyNegativePromptCommand"
+                                        Command="{Binding CopyNegativePromptToClipboardCommand}"
+                                        Label="{x:Static lang:Resources.Label_NegativePrompt}">
+                                        <input:StandardUICommand.IconSource>
+                                            <controls:FASymbolIconSource Symbol="fa-solid fa-comment-slash" />
+                                        </input:StandardUICommand.IconSource>
+                                    </input:StandardUICommand>
+                                    <input:StandardUICommand
+                                        x:Key="CopyModelNameCommand"
+                                        Command="{Binding CopyModelNameToClipboardCommand}"
+                                        Label="Model Name">
+                                        <input:StandardUICommand.IconSource>
+                                            <controls:FASymbolIconSource Symbol="fa-solid fa-font" />
+                                        </input:StandardUICommand.IconSource>
+                                    </input:StandardUICommand>
+                                    <input:StandardUICommand
+                                        x:Key="CopyModelHashCommand"
+                                        Command="{Binding CopyModelHashToClipboardCommand}"
+                                        Label="Model Hash">
+                                        <input:StandardUICommand.IconSource>
+                                            <controls:FASymbolIconSource Symbol="fa-solid fa-hashtag" />
                                         </input:StandardUICommand.IconSource>
                                     </input:StandardUICommand>
                                 </ItemsRepeater.Resources>
@@ -150,6 +182,22 @@
                                                             HotKey="{x:Null}" />
                                                         <ui:MenuFlyoutItem
                                                             Command="{StaticResource CopySeedCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
+                                                        <ui:MenuFlyoutItem
+                                                            Command="{StaticResource CopyPromptCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
+                                                        <ui:MenuFlyoutItem
+                                                            Command="{StaticResource CopyNegativePromptCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
+                                                        <ui:MenuFlyoutItem
+                                                            Command="{StaticResource CopyModelNameCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
+                                                        <ui:MenuFlyoutItem
+                                                            Command="{StaticResource CopyModelHashCommand}"
                                                             CommandParameter="{Binding $self.DataContext}"
                                                             HotKey="{x:Null}" />
                                                     </ui:MenuFlyoutSubItem>

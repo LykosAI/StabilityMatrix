@@ -455,7 +455,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 unetModels = unetModels.Concat(ggufModelNames.Select(HybridModelFile.FromRemote));
             }
 
-            unetModelsSource.EditDiff(unetModels, HybridModelFile.Comparer);
+            unetModelsSource.AddOrUpdate(unetModels, HybridModelFile.Comparer);
         }
 
         // Get CLIP model names from DualCLIPLoader node

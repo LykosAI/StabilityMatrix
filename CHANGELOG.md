@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed a typo in the Japanese translation - thanks to @mattyatea!
 - Fixed missing package thumbnails due to moved or inaccessible urls
 - Fixed an issue with ComfyUI-Impact-Subpack not being installed when using FaceDetailer in Inference
+- Fixed GGUF models not showing in Inference without the GGUF extension installed (this means it will now properly prompt you to install the extension as well)
 ### Supporters
 #### Visionaries
 - Huge thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your unwavering support is very much appreciated!
@@ -82,6 +83,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.12.5
 ### Fixed
 - Fixed an issue with ComfyUI-Impact-Subpack not being installed when using FaceDetailer in Inference
+- Fixed GGUF models not showing in Inference without the GGUF extension installed (this means it will now properly prompt you to install the extension as well)
 
 ## v2.12.4
 ### Added

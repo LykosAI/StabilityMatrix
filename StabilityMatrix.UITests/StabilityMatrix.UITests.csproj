@@ -11,7 +11,7 @@
         <PackageReference Include="DotNet.Bundle" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="NSubstitute" />
-        <PackageReference Include="System.Drawing.Common" Version="8.0.7" />
+        <PackageReference Include="System.Drawing.Common" />
         <PackageReference Include="Verify" />
         <PackageReference Include="Verify.CommunityToolkit.Mvvm" />
         <PackageReference Include="Verify.Avalonia" />

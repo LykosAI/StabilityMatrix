@@ -36,7 +36,6 @@
     <PackageVersion Include="MessagePipe.Interprocess" Version="1.8.1" />
     <PackageVersion Include="MessagePack" Version="2.5.192" Label="CVE-2024-48924" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0" />
@@ -117,11 +116,7 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageVersion Include="MSTest.TestAdapter" Version="3.6.3" />
     <PackageVersion Include="MSTest.TestFramework" Version="3.6.3" />
-    <PackageVersion Include="NSubstitute" Version="5.1.0" />
-    <PackageVersion Include="Polly" Version="8.4.2" />
-    <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
-    <PackageVersion Include="DotNet.Bundle" Version="0.9.13" />
     <PackageVersion Include="Verify" Version="26.1.2" />
     <PackageVersion Include="Verify.CommunityToolkit.Mvvm" Version="0.1.0" />
     <PackageVersion Include="Verify.Avalonia" Version="1.1.0" />

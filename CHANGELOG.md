@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added more formatting options for Inference output filenames - thanks to @yansigit!
 - Added the Discrete Model Sampling addon for Inference samplers, allows selecting different sampling methods, such as v_prediction, lcm, or x0, and optionally adjusts the model’s noise reduction strategy with the zero-shot noise ratio (ZSNR) toggle.
 - Added Default GPU override in Settings -> System Settings -> Default GPU
+- Added the ability to copy more generation parameters from the Inference gallery context menu
 ### Changed
 - Improved Packages Page grid layout to dynamically stretch to fill available space
 ### Fixed

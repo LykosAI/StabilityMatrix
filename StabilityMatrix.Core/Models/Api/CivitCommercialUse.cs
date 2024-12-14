@@ -2,7 +2,7 @@
 
 namespace StabilityMatrix.Core.Models.Api;
 
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<CivitCommercialUse>))]
 public enum CivitCommercialUse
 {
     None,

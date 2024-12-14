@@ -61,7 +61,7 @@ public class TrackedDownload
     [MemberNotNullWhen(true, nameof(ExpectedHashSha256))]
     public bool ValidateHash => ExpectedHashSha256 is not null;
 
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter<ProgressState>))]
     public ProgressState ProgressState { get; set; } = ProgressState.Inactive;
 
     public List<string> ExtraCleanupFileNames { get; init; } = new();

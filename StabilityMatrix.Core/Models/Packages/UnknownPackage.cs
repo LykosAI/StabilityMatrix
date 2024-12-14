@@ -3,10 +3,11 @@ using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-public class UnknownPackage : BasePackage
+public class UnknownPackage(ISettingsManager settingsManager) : BasePackage(settingsManager)
 {
     public static string Key => "unknown-package";
     public override string Name => Key;

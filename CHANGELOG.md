@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.12.5
+### Fixed
+- Fixed an issue with ComfyUI-Impact-Subpack not being installed when using FaceDetailer in Inference
+
 ## v2.12.4
 ### Added
 - Added new package - [CogVideo](https://github.com/THUDM/CogVideo) - many thanks to @NullDev for the contribution!

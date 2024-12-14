@@ -34,6 +34,7 @@
     <PackageVersion Include="MetadataExtractor" Version="2.8.1" />
     <PackageVersion Include="MessagePipe" Version="1.8.1" />
     <PackageVersion Include="MessagePipe.Interprocess" Version="1.8.1" />
+    <PackageVersion Include="MessagePack" Version="2.5.192" Label="CVE-2024-48924" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.1" />
@@ -72,6 +73,7 @@
     <PackageVersion Include="System.Drawing.Common" Version="8.0.7" />
     <PackageVersion Include="System.IO.Hashing" Version="8.0.0" />
     <PackageVersion Include="System.Text.Json" Version="9.0.0" />
+    <PackageVersion Include="System.Private.Uri" Version="4.3.2" Label="CVE-2019-0981" />
     <PackageVersion Include="URISchemeTools" Version="1.0.2" />
     <PackageVersion Include="Websocket.Client" Version="5.1.2" />
     <PackageVersion Include="YamlDotNet" Version="16.0.0" />

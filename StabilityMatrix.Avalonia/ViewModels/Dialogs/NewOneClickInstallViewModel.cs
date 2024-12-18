@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Threading;
@@ -10,6 +11,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models.PackageSteps;
@@ -28,7 +30,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-[Transient]
+[RegisterTransient<NewOneClickInstallViewModel>]
 [ManagedService]
 public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
 {
@@ -70,6 +72,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
 
         var incompatiblePredicate = this.WhenPropertyChanged(vm => vm.ShowIncompatiblePackages)
             .Select(_ => new Func<BasePackage, bool>(p => p.IsCompatible || ShowIncompatiblePackages))
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         AllPackagesCache
@@ -83,6 +86,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
                     .Ascending(p => p.InstallerSortOrder)
                     .ThenByAscending(p => p.DisplayName)
             )
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         AllPackagesCache.AddOrUpdate(packageFactory.GetAllAvailablePackages());

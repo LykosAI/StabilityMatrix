@@ -5,12 +5,31 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.13.0-pre.1
+### Added
+- Added new package - [CogVideo](https://github.com/THUDM/CogVideo) - many thanks to @NullDev for the contribution!
+- Added file sizes to the Checkpoint Manager tab
+- Added more formatting options for Inference output filenames - thanks to @yansigit!
+- Added the Discrete Model Sampling addon for Inference samplers, allows selecting different sampling methods, such as v_prediction, lcm, or x0, and optionally adjusts the model’s noise reduction strategy with the zero-shot noise ratio (ZSNR) toggle.
+- Added Default GPU override in Settings -> System Settings -> Default GPU
+- Added the ability to copy more generation parameters from the Inference gallery context menu
+### Changed
+- Improved Packages Page grid layout to dynamically stretch to fill available space
+### Fixed
+- Fixed a typo in the Japanese translation - thanks to @mattyatea!
+- Fixed missing package thumbnails due to moved or inaccessible urls
+- Fixed an issue with ComfyUI-Impact-Subpack not being installed when using FaceDetailer in Inference
+- Fixed GGUF models not showing in Inference without the GGUF extension installed (this means it will now properly prompt you to install the extension as well)
+### Supporters
+#### Visionaries
+- Huge thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your unwavering support is very much appreciated!
+
 ## v2.13.0-dev.3
 ### Added
 - Added support for SD3.5 in Inference
 - Added CLIP_G to HuggingFace model browser
 - Added search bar to the Installed Workflows tab
-- Added "Search with Google" and "Search with ChatGPT" to the console output context menu
+- Added "Search with Google" and "Search with ChatGPT" to the package console output & install progress console output context menus
 - Added "Date Created" and "Date Last Modified" sorting options to the Checkpoints tab
 ### Changed
 - Text Encoder / CLIP selection in Inference is now enabled via the cogwheel ⚙️ button next to the model selector 
@@ -25,6 +44,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed "Unsupported Torch Version: Cuda" errors when installing a1111
 - Fixed crash when clicking "Remind me Later" on the update dialog
 - Fixed some cases of crashing when GitHub API rate limits are exceeded
+- Fixed Git missing from env vars when running SwarmUI
 ### Supporters
 #### Visionaries
 - Big shoutout to our amazing Visionary-tier Patreon supporter, **Waterclouds**! We are very grateful for your continued support!
@@ -62,12 +82,24 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### Visionaries
 - A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
 
+## v2.12.5
+### Fixed
+- Fixed an issue with ComfyUI-Impact-Subpack not being installed when using FaceDetailer in Inference
+- Fixed GGUF models not showing in Inference without the GGUF extension installed (this means it will now properly prompt you to install the extension as well)
+
 ## v2.12.4
+### Added
+- Added new package - [CogVideo](https://github.com/THUDM/CogVideo) - many thanks to @NullDev for the contribution!
+- Added more formatting options for Inference output filenames - thanks to @yansigit!
 ### Changed
 - Model browser base model types are now loaded dynamically from CivitAI, reducing the need for updates to add new types
 ### Fixed
 - Fixed crash when clicking "Remind me Later" on the update dialog
 - Fixed some cases of crashing when GitHub API rate limits are exceeded
+- Fixed Git missing from env vars when running SwarmUI
+- Fixed missing package thumbnails due to moved or inaccessible urls
+- Fixed an issue with updating FluxGym in certain cases - thanks to @NullDev!
+- Fixed a typo in the Japanese translation - thanks to @mattyatea!
 ### Supporters
 #### Visionaries
 - A huge thank you to our dedicated Visionary-tier Patreon supporter, **Waterclouds**! We’re thrilled to have your ongoing support!
@@ -88,6 +120,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed error when installing Automatic1111 on macOS
 - Fixed some instances of Civitai model browser not loading new results
 - Fixed "Unsupported Torch Version: Cuda" errors when installing a1111
+### Supporters
+#### Visionaries
+- A huge shout-out to our dedicated Visionary-tier Patreon supporter, **Waterclouds**! Your unwavering support is greatly appreciated!
+#### Pioneers
+- We'd also like to express our gratitude to our amazing Pioneer-tier patrons: **tankfox**, **tanangular**, **Mr. Unknown**, and **Szir777**! Your ongoing support means a great deal!
 
 ## v2.12.2
 ### Added

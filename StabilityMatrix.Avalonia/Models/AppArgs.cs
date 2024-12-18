@@ -51,6 +51,12 @@ public class AppArgs
     public bool ResetWindowPosition { get; set; }
 
     /// <summary>
+    /// Flag to enable the splash screen on startup
+    /// </summary>
+    [Option("splash-screen", HelpText = "Enable the startup splash screen")]
+    public bool IsSplashScreenEnabled { get; set; }
+
+    /// <summary>
     /// Flag for disabling hardware acceleration / GPU rendering
     /// </summary>
     [Option("disable-gpu-rendering", HelpText = "Disable hardware acceleration / GPU rendering")]

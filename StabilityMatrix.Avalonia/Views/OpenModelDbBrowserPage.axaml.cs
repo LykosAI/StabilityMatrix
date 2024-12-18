@@ -1,9 +1,11 @@
-﻿using StabilityMatrix.Avalonia.Controls;
+﻿using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-[Singleton]
+[RegisterSingleton<OpenModelDbBrowserPage>]
 public partial class OpenModelDbBrowserPage : UserControlBase
 {
     public OpenModelDbBrowserPage()

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using AsyncAwaitBestPractices;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -11,7 +11,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Core.Services;
 
-[Singleton(typeof(IImageIndexService))]
+[RegisterSingleton<IImageIndexService, ImageIndexService>]
 public class ImageIndexService : IImageIndexService
 {
     private readonly ILogger<ImageIndexService> logger;

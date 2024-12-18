@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
@@ -17,7 +17,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-[Singleton(typeof(IModelImportService))]
+[RegisterSingleton<IModelImportService, ModelImportService>]
 public class ModelImportService(
     IDownloadService downloadService,
     INotificationService notificationService,

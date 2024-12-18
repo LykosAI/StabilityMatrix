@@ -470,6 +470,17 @@ public class ComfyNodeBuilder
         public required LatentNodeConnection LatentImage { get; init; }
     }
 
+    public record ModelSamplingDiscrete : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        /// <summary>
+        /// Options: "eps", "v_prediction", "lcm", "x0"
+        /// </summary>
+        public required string Sampling { get; set; }
+        public required bool Zsnr { get; init; }
+    }
+
     [TypedNodeOptions(
         Name = "CheckpointLoaderNF4",
         RequiredExtensions = ["https://github.com/comfyanonymous/ComfyUI_bitsandbytes_NF4"]
@@ -570,7 +581,11 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "UltralyticsDetectorProvider",
-        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+        RequiredExtensions =
+        [
+            "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
+            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+        ]
     )]
     public record UltralyticsDetectorProvider
         : ComfyTypedNodeBase<BboxDetectorNodeConnection, SegmDetectorNodeConnection>
@@ -580,7 +595,11 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "SAMLoader",
-        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+        RequiredExtensions =
+        [
+            "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
+            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+        ]
     )]
     public record SamLoader : ComfyTypedNodeBase<SamModelNodeConnection>
     {
@@ -594,7 +613,11 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "FaceDetailer",
-        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+        RequiredExtensions =
+        [
+            "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
+            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+        ]
     )]
     public record FaceDetailer : ComfyTypedNodeBase<ImageNodeConnection>
     {

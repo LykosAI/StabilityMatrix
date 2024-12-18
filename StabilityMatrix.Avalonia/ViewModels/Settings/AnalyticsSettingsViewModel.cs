@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -10,7 +11,8 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 
 [View(typeof(AnalyticsSettingsPage))]
-[Singleton, ManagedService]
+[ManagedService]
+[RegisterSingleton<AnalyticsSettingsViewModel>]
 public partial class AnalyticsSettingsViewModel : PageViewModelBase
 {
     public override string Title => Resources.Label_Analytics;

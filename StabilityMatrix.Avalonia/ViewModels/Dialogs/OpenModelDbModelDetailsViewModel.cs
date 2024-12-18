@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 using Avalonia;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -22,7 +19,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(OpenModelDbModelDetailsDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<OpenModelDbModelDetailsViewModel>]
 public partial class OpenModelDbModelDetailsViewModel(
     OpenModelDbManager openModelDbManager,
     IModelIndexService modelIndexService,

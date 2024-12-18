@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using Fusillade;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -24,7 +25,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [View(typeof(OpenModelDbBrowserPage))]
-[Singleton]
+[RegisterSingleton<OpenModelDbBrowserViewModel>]
 public sealed partial class OpenModelDbBrowserViewModel(
     ILogger<OpenModelDbBrowserViewModel> logger,
     ServiceManager<ViewModelBase> vmManager,

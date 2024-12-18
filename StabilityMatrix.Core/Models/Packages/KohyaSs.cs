@@ -1,5 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -10,7 +10,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, KohyaSs>(Duplicate = DuplicateStrategy.Append)]
 public class KohyaSs(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -27,10 +27,7 @@ public class KohyaSs(
     public override string LicenseUrl => "https://github.com/bmaltais/kohya_ss/blob/master/LICENSE.md";
     public override string LaunchCommand => "kohya_gui.py";
 
-    public override Uri PreviewImageUri =>
-        new(
-            "https://camo.githubusercontent.com/5154eea62c113d5c04393e51a0d0f76ef25a723aad29d256dcc85ead1961cd41/68747470733a2f2f696d672e796f75747562652e636f6d2f76692f6b35696d713031757655592f302e6a7067"
-        );
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/kohyass/preview.webp");
     public override string OutputFolderName => string.Empty;
 
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();

@@ -1,10 +1,10 @@
 ﻿using System.Collections.Immutable;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Injectio.Attributes;
 using NLog;
 using Refit;
 using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -17,7 +17,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, InvokeAI>(Duplicate = DuplicateStrategy.Append)]
 public class InvokeAI : BaseGitPackage
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

@@ -1,5 +1,5 @@
-﻿using NLog;
-using StabilityMatrix.Core.Attributes;
+﻿using Injectio.Attributes;
+using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -11,7 +11,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, StableDiffusionDirectMl>(Duplicate = DuplicateStrategy.Append)]
 public class StableDiffusionDirectMl(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,

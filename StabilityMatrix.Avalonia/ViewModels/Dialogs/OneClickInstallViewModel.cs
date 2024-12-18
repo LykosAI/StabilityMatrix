@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -24,7 +25,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<OneClickInstallViewModel>]
 public partial class OneClickInstallViewModel : ContentDialogViewModelBase
 {
     private readonly ISettingsManager settingsManager;

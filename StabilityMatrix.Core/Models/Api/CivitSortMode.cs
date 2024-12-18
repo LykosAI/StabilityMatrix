@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace StabilityMatrix.Core.Models.Api;
 
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<CivitSortMode>))]
 public enum CivitSortMode
 {
     [EnumMember(Value = "Highest Rated")]

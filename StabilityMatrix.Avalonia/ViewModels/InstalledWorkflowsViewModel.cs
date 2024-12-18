@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -13,6 +14,7 @@ using DynamicData;
 using DynamicData.Alias;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using KGySoft.CoreLibraries;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -29,7 +31,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(InstalledWorkflowsPage))]
-[Singleton]
+[RegisterSingleton<InstalledWorkflowsViewModel>]
 public partial class InstalledWorkflowsViewModel(
     ISettingsManager settingsManager,
     INotificationService notificationService
@@ -62,6 +64,7 @@ public partial class InstalledWorkflowsViewModel(
             .Filter(searchPredicate)
             .SortBy(x => x.Index)
             .Bind(DisplayedWorkflows)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         if (Design.IsDesignMode)

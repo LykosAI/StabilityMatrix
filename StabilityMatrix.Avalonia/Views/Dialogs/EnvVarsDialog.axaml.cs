@@ -1,10 +1,10 @@
 ﻿using Avalonia.Markup.Xaml;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
-[Transient]
+[RegisterTransient<EnvVarsDialog>]
 public partial class EnvVarsDialog : UserControlBase
 {
     public EnvVarsDialog()

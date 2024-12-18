@@ -1,11 +1,11 @@
-﻿using StabilityMatrix.Core.Attributes;
+﻿using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, Mashb1tFooocus>(Duplicate = DuplicateStrategy.Append)]
 public class Mashb1tFooocus(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -22,9 +22,6 @@ public class Mashb1tFooocus(
         "The purpose of this fork is to add new features / fix bugs and contribute back to Fooocus.";
 
     public override string LicenseUrl => "https://github.com/mashb1t/Fooocus/blob/main/LICENSE";
-
-    public override Uri PreviewImageUri =>
-        new("https://github.com/lllyasviel/Fooocus/assets/19834515/483fb86d-c9a2-4c20-997c-46dafc124f25");
 
     public override bool ShouldIgnoreReleases => false;
 }

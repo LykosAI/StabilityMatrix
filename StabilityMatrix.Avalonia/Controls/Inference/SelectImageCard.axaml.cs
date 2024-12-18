@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Reactive.Linq;
+using System.Threading;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
-using StabilityMatrix.Core.Attributes;
 using Size = Avalonia.Size;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-[Transient]
+[RegisterTransient<SelectImageCard>]
 public class SelectImageCard : DropTargetTemplatedControlBase
 {
     /// <inheritdoc />
@@ -24,6 +26,7 @@ public class SelectImageCard : DropTargetTemplatedControlBase
 
         imageControl
             .WhenPropertyChanged(x => x.CurrentImage)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe(propertyValue =>
             {
                 if (propertyValue.Value is { } image)

@@ -25,6 +25,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using Microsoft.Win32;
 using NLog;
 using SkiaSharp;
@@ -63,7 +64,8 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 
 [View(typeof(MainSettingsPage))]
-[Singleton, ManagedService]
+[ManagedService]
+[RegisterSingleton<MainSettingsViewModel>]
 public partial class MainSettingsViewModel : PageViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

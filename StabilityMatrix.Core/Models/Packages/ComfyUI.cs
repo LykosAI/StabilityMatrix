@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
+using Injectio.Attributes;
 using NLog;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -20,7 +20,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, ComfyUI>(Duplicate = DuplicateStrategy.Append)]
 public class ComfyUI(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -37,8 +37,7 @@ public class ComfyUI(
     public override string Blurb => "A powerful and modular stable diffusion GUI and backend";
     public override string LaunchCommand => "main.py";
 
-    public override Uri PreviewImageUri =>
-        new("https://github.com/comfyanonymous/ComfyUI/raw/master/comfyui_screenshot.png");
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/comfyui/preview.webp");
     public override bool ShouldIgnoreReleases => true;
     public override bool IsInferenceCompatible => true;
     public override string OutputFolderName => "output";
@@ -500,16 +499,6 @@ public class ComfyUI(
                     .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
                     .ConfigureAwait(false);
 
-                // nf4 hack
-                var nf4Extension = new PackageExtension
-                {
-                    Author = "comfyanonymous",
-                    Files = [new Uri("https://github.com/comfyanonymous/ComfyUI_bitsandbytes_NF4")],
-                    Reference = new Uri("https://github.com/comfyanonymous/ComfyUI_bitsandbytes_NF4"),
-                    Title = "ComfyUI_bitsandbytes_NF4",
-                    InstallType = "git-clone"
-                };
-
                 // Parse json
                 var jsonManifest = JsonSerializer.Deserialize<ComfyExtensionManifest>(
                     content,
@@ -520,13 +509,12 @@ public class ComfyUI(
                     return [];
 
                 var extensions = jsonManifest.GetPackageExtensions().ToList();
-                extensions.Add(nf4Extension);
                 return extensions;
             }
             catch (Exception e)
             {
                 Logger.Error(e, "Failed to get package extensions");
-                return Enumerable.Empty<PackageExtension>();
+                return [];
             }
         }
 
@@ -552,7 +540,13 @@ public class ComfyUI(
 
             var installedDirs = installedExtension.Paths.OfType<DirectoryPath>().Where(dir => dir.Exists);
 
-            await PostInstallAsync(installedPackage, installedDirs, progress, cancellationToken)
+            await PostInstallAsync(
+                    installedPackage,
+                    installedDirs,
+                    installedExtension.Definition!,
+                    progress,
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
         }
 
@@ -584,7 +578,7 @@ public class ComfyUI(
                 .Select(path => cloneRoot.JoinDir(path!))
                 .Where(dir => dir.Exists);
 
-            await PostInstallAsync(installedPackage, installedDirs, progress, cancellationToken)
+            await PostInstallAsync(installedPackage, installedDirs, extension, progress, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -594,10 +588,26 @@ public class ComfyUI(
         private async Task PostInstallAsync(
             InstalledPackage installedPackage,
             IEnumerable<DirectoryPath> installedDirs,
+            PackageExtension extension,
             IProgress<ProgressReport>? progress = null,
             CancellationToken cancellationToken = default
         )
         {
+            // do pip installs
+            if (extension.Pip != null)
+            {
+                await using var venvRunner = await package
+                    .SetupVenvPure(installedPackage.FullPath!)
+                    .ConfigureAwait(false);
+
+                var pipArgs = new PipInstallArgs();
+                pipArgs = extension.Pip.Aggregate(pipArgs, (current, pip) => current.AddArg(pip));
+
+                await venvRunner
+                    .PipInstall(pipArgs, progress?.AsProcessOutputHandler())
+                    .ConfigureAwait(false);
+            }
+
             foreach (var installedDir in installedDirs)
             {
                 cancellationToken.ThrowIfCancellationRequested();

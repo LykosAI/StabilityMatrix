@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -12,6 +14,7 @@ using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Languages;
@@ -34,7 +37,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 /// </summary>
 
 [View(typeof(MainPackageManagerView))]
-[Singleton, ManagedService]
+[ManagedService]
+[RegisterSingleton<MainPackageManagerViewModel>]
 public partial class MainPackageManagerViewModel : PageViewModelBase
 {
     private readonly ISettingsManager settingsManager;
@@ -101,6 +105,7 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
                     })
             )
             .Bind(PackageCards)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         timer = new DispatcherTimer { Interval = TimeSpan.FromMinutes(60), IsEnabled = true };

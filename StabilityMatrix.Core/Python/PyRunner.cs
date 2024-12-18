@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Injectio.Attributes;
 using NLog;
 using Python.Runtime;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -15,7 +15,7 @@ namespace StabilityMatrix.Core.Python;
 public record struct PyVersionInfo(int Major, int Minor, int Micro, string ReleaseLevel, int Serial);
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-[Singleton(typeof(IPyRunner))]
+[RegisterSingleton<IPyRunner, PyRunner>]
 public class PyRunner : IPyRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

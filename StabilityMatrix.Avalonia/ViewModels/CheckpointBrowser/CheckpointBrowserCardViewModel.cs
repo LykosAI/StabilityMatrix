@@ -10,6 +10,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
@@ -30,7 +31,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<CheckpointBrowserCardViewModel>]
 public partial class CheckpointBrowserCardViewModel : ProgressViewModel
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reactive.Linq;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -14,6 +15,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using NLog;
 using Refit;
 using StabilityMatrix.Avalonia.Languages;
@@ -35,7 +37,7 @@ using Notification = Avalonia.Controls.Notifications.Notification;
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [View(typeof(CivitAiBrowserPage))]
-[Singleton]
+[RegisterSingleton<CivitAiBrowserViewModel>]
 public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScroll
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -146,6 +148,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<CheckpointBrowserCardViewModel, bool>)FilterModelCardsPredicate)
             .StartWith(FilterModelCardsPredicate)
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         var sortPredicate = SortExpressionComparer<CheckpointBrowserCardViewModel>.Ascending(
@@ -167,9 +170,15 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             .DisposeMany()
             .Filter(filterPredicate)
             .SortAndBind(ModelCards, sortPredicate)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
-        baseModelCache.Connect().DeferUntilLoaded().SortAndBind(AllBaseModels).Subscribe();
+        baseModelCache
+            .Connect()
+            .DeferUntilLoaded()
+            .SortAndBind(AllBaseModels)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
 
         baseModelCache.AddOrUpdate(Enum.GetValues<CivitBaseModelType>().Select(t => t.GetStringValue()));
 

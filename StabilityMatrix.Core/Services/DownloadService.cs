@@ -1,16 +1,16 @@
 ﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Polly.Contrib.WaitAndRetry;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Core.Services;
 
-[Singleton(typeof(IDownloadService))]
+[RegisterSingleton<IDownloadService, DownloadService>]
 public class DownloadService : IDownloadService
 {
     private readonly ILogger<DownloadService> logger;

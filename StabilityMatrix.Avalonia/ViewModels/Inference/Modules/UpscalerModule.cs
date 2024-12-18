@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -9,7 +10,7 @@ using StabilityMatrix.Core.Extensions;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<UpscalerModule>]
 public class UpscalerModule : ModuleBase
 {
     /// <inheritdoc />

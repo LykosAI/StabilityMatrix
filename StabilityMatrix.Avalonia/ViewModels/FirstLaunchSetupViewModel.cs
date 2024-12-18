@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Styles;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -18,7 +19,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(FirstLaunchSetupWindow))]
 [ManagedService]
-[Singleton]
+[RegisterSingleton<FirstLaunchSetupViewModel>]
 public partial class FirstLaunchSetupViewModel : DisposableViewModelBase
 {
     [ObservableProperty]

@@ -7,15 +7,15 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Navigation;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using MainPackageManagerViewModel = StabilityMatrix.Avalonia.ViewModels.PackageManager.MainPackageManagerViewModel;
 
 namespace StabilityMatrix.Avalonia.Views.PackageManager;
 
-[Singleton]
+[RegisterSingleton<MainPackageManagerView>]
 public partial class MainPackageManagerView : UserControlBase
 {
     public MainPackageManagerView()

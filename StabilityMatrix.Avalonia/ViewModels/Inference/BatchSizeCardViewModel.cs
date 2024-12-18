@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -10,7 +11,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(BatchSizeCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<BatchSizeCardViewModel>]
 public partial class BatchSizeCardViewModel : LoadableViewModelBase, IComfyStep
 {
     [NotifyDataErrorInfo]

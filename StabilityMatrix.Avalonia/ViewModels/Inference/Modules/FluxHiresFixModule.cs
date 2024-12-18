@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Avalonia.Models.Inference;
+﻿using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -9,7 +10,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<FluxHiresFixModule>]
 public class FluxHiresFixModule(ServiceManager<ViewModelBase> vmFactory) : HiresFixModule(vmFactory)
 {
     protected override void OnApplyStep(ModuleApplyStepEventArgs e)

@@ -17,6 +17,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
@@ -46,7 +47,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 
 [Preload]
 [View(typeof(InferencePage))]
-[Singleton]
+[RegisterSingleton<InferenceViewModel>]
 public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

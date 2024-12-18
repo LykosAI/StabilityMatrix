@@ -137,11 +137,24 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [Localizable(false)]
     private Task CopyModelUrl()
     {
-        return CheckpointFile.ConnectedModelInfo?.ModelId == null
-            ? Task.CompletedTask
-            : App.Clipboard.SetTextAsync(
-                $"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}"
-            );
+        if (!CheckpointFile.HasConnectedModel)
+            return Task.CompletedTask;
+
+        return CheckpointFile.ConnectedModelInfo.Source switch
+        {
+            ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId == null
+                => Task.CompletedTask,
+            ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId != null
+                => App.Clipboard.SetTextAsync(
+                    $"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}"
+                ),
+
+            ConnectedModelSource.OpenModelDb
+                => App.Clipboard.SetTextAsync(
+                    $"https://openmodeldb.info/models/{CheckpointFile.ConnectedModelInfo.ModelName}"
+                ),
+            _ => Task.CompletedTask
+        };
     }
 
     [RelayCommand]

@@ -172,15 +172,13 @@
             Grid.Row="2"
             Grid.Column="0"
             Grid.ColumnSpan="3"
+            MaxHeight="300"
             Margin="8,8"
             ExpandDirection="Down"
             Header="{x:Static lang:Resources.Label_ModelDescription}"
             IsExpanded="True">
-            <ScrollViewer MaxHeight="200">
-                <TextBlock
-                    Margin="4"
-                    Text="{Binding Model.Description}"
-                    TextWrapping="Wrap" />
+            <ScrollViewer MaxHeight="300">
+                <controls:MarkdownViewer Text="{Binding Model.Description}" />
             </ScrollViewer>
         </Expander>
 
@@ -202,7 +200,8 @@
                 Classes="accent"
                 Command="{Binding ImportCommand}"
                 CommandParameter="{Binding SelectedResource}"
-                Content="{x:Static lang:Resources.Action_Import}" />
+                Content="{x:Static lang:Resources.Action_Import}"
+                IsVisible="{Binding !SelectedResource.IsInstalled}" />
 
             <!--<Button
                 Margin="8,0"

@@ -123,6 +123,8 @@ public record LocalModelFile
     /// </summary>
     public string? HashBlake3 => ConnectedModelInfo?.Hashes.BLAKE3;
 
+    public string? HashSha256 => ConnectedModelInfo?.Hashes.SHA256;
+
     [BsonIgnore]
     public string? PreviewImageFullPathGlobal =>
         PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.ModelsDir);

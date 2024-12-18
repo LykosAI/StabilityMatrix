@@ -34,8 +34,8 @@ public partial class OpenModelDbModelDetailsViewModel(
 
         public string DisplayName => $"{Resource.Platform} (.{Resource.Type} file)";
 
-        // todo: idk
-        public bool IsInstalled => false;
+        public bool IsInstalled =>
+            modelIndexService.FindBySha256Async(Resource.Sha256).GetAwaiter().GetResult().Any();
     }
 
     [Required]
@@ -81,7 +81,12 @@ public partial class OpenModelDbModelDetailsViewModel(
             sharedFolderType.GetStringValue()
         );
 
-        await modelImportService.DoOpenModelDbImport(Model, resourceVm.Resource, downloadFolder);
+        await modelImportService.DoOpenModelDbImport(
+            Model,
+            resourceVm.Resource,
+            downloadFolder,
+            download => download.ContextAction = new ModelPostDownloadContextAction()
+        );
 
         OnPrimaryButtonClick();
     }

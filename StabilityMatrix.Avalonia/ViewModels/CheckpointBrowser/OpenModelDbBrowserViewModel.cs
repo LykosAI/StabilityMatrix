@@ -91,7 +91,9 @@ public sealed partial class OpenModelDbBrowserViewModel(
         var vm = vmManager.Get<OpenModelDbModelDetailsViewModel>();
         vm.Model = model;
 
-        await vm.GetDialog().ShowAsync();
+        var dialog = vm.GetDialog();
+        dialog.MaxDialogHeight = 800;
+        await dialog.ShowAsync();
     }
 
     /// <summary>

@@ -198,7 +198,8 @@ public class ModelImportService(
             modelFileName,
             downloadFolder,
             model.Images?.SelectImageAbsoluteUris().FirstOrDefault(),
-            configureDownload: configureDownload
+            configureDownload: configureDownload,
+            connectedModelInfo: new ConnectedModelInfo(model, resource, DateTimeOffset.Now)
         );
     }
 

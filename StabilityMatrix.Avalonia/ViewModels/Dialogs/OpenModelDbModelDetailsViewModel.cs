@@ -7,6 +7,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
@@ -31,7 +32,8 @@ public partial class OpenModelDbModelDetailsViewModel(
     IModelIndexService modelIndexService,
     IModelImportService modelImportService,
     INotificationService notificationService,
-    ISettingsManager settingsManager
+    ISettingsManager settingsManager,
+    ServiceManager<ViewModelBase> dialogFactory
 ) : ContentDialogViewModelBase
 {
     public class ModelResourceViewModel(IModelIndexService modelIndexService)
@@ -136,6 +138,72 @@ public partial class OpenModelDbModelDetailsViewModel(
         );
 
         OnPrimaryButtonClick();
+    }
+
+    [RelayCommand]
+    private async Task DeleteModel(ModelResourceViewModel? resourceVm)
+    {
+        if (SelectedResource == null)
+            return;
+
+        var fileToDelete = SelectedResource;
+
+        var hash = fileToDelete.Resource.Sha256;
+        if (string.IsNullOrWhiteSpace(hash))
+        {
+            notificationService.Show(
+                "Error deleting file",
+                "Could not delete model, hash is missing.",
+                NotificationType.Error
+            );
+            return;
+        }
+
+        var matchingModels = (await modelIndexService.FindBySha256Async(hash)).ToList();
+
+        if (matchingModels.Count == 0)
+        {
+            await modelIndexService.RefreshIndex();
+            matchingModels = (await modelIndexService.FindBySha256Async(hash)).ToList();
+
+            if (matchingModels.Count == 0)
+            {
+                notificationService.Show(
+                    "Error deleting file",
+                    "Could not delete model, model not found in index.",
+                    NotificationType.Error
+                );
+                return;
+            }
+        }
+
+        var confirmDeleteVm = dialogFactory.Get<ConfirmDeleteDialogViewModel>();
+        var pathsToDelete = new List<string>();
+        foreach (var localModel in matchingModels)
+        {
+            var checkpointPath = new FilePath(localModel.GetFullPath(settingsManager.ModelsDirectory));
+            var previewPath = localModel.GetPreviewImageFullPath(settingsManager.ModelsDirectory);
+            var cmInfoPath = checkpointPath.ToString().Replace(checkpointPath.Extension, ".cm-info.json");
+
+            pathsToDelete.Add(checkpointPath);
+            pathsToDelete.Add(previewPath);
+            pathsToDelete.Add(cmInfoPath);
+        }
+
+        confirmDeleteVm.PathsToDelete = pathsToDelete;
+
+        if (await confirmDeleteVm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+            return;
+
+        try
+        {
+            await confirmDeleteVm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            notificationService.ShowPersistent("Error deleting folder", e.Message, NotificationType.Error);
+            return;
+        }
     }
 
     partial void OnSelectedInstallLocationChanged(string? value)

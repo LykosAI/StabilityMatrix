@@ -199,14 +199,15 @@
                 Classes="accent"
                 Command="{Binding ImportCommand}"
                 CommandParameter="{Binding SelectedResource}"
-                Content="{x:Static lang:Resources.Action_Import}" />
+                Content="{x:Static lang:Resources.Action_Import}"
+                IsVisible="{Binding !SelectedResource.IsInstalled, TargetNullValue=True, FallbackValue=True}" />
 
-            <!--<Button
+            <Button
                 Margin="8,0"
                 Classes="danger"
-                Command="{Binding Delete}"
+                Command="{Binding DeleteModelCommand}"
                 Content="{x:Static lang:Resources.Action_Delete}"
-                IsVisible="{Binding SelectedFile.IsInstalled, TargetNullValue=False, FallbackValue=False}" />-->
+                IsVisible="{Binding SelectedResource.IsInstalled, TargetNullValue=False, FallbackValue=False}" />
         </StackPanel>
 
     </Grid>

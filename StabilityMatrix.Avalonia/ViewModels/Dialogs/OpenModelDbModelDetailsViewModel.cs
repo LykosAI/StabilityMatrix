@@ -1,6 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Injectio.Attributes;
@@ -10,7 +14,9 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
@@ -55,7 +61,29 @@ public partial class OpenModelDbModelDetailsViewModel(
     [NotifyPropertyChangedFor(nameof(CanImport))]
     private ModelResourceViewModel? selectedResource;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCustomSelected))]
+    [NotifyPropertyChangedFor(nameof(ShowEmptyPathWarning))]
+    private string selectedInstallLocation = string.Empty;
+
+    [ObservableProperty]
+    private ObservableCollection<string> availableInstallLocations = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowEmptyPathWarning))]
+    private string customInstallLocation = string.Empty;
+
+    public bool IsCustomSelected => SelectedInstallLocation == "Custom...";
+    public bool ShowEmptyPathWarning => IsCustomSelected && string.IsNullOrWhiteSpace(CustomInstallLocation);
     public bool CanImport => SelectedResource is { IsInstalled: false };
+
+    public override void OnLoaded()
+    {
+        if (Design.IsDesignMode || !settingsManager.IsLibraryDirSet)
+            return;
+
+        LoadInstallLocations();
+    }
 
     [RelayCommand(CanExecute = nameof(CanImport))]
     private async Task ImportAsync(ModelResourceViewModel? resourceVm)
@@ -79,7 +107,26 @@ public partial class OpenModelDbModelDetailsViewModel(
         var downloadFolder = new DirectoryPath(
             settingsManager.ModelsDirectory,
             sharedFolderType.GetStringValue()
-        );
+        ).ToString();
+
+        var useCustomLocation =
+            !string.IsNullOrWhiteSpace(CustomInstallLocation) && Directory.Exists(CustomInstallLocation);
+
+        if (useCustomLocation)
+        {
+            var customFolder = new DirectoryPath(CustomInstallLocation);
+            customFolder.Create();
+
+            downloadFolder = customFolder.ToString();
+        }
+
+        if (!string.IsNullOrWhiteSpace(SelectedInstallLocation) && SelectedInstallLocation != "Custom...")
+        {
+            var selectedFolder = SelectedInstallLocation
+                .Replace("Models", string.Empty)
+                .Replace(Path.DirectorySeparatorChar.ToString(), string.Empty);
+            downloadFolder = new DirectoryPath(settingsManager.ModelsDirectory, selectedFolder);
+        }
 
         await modelImportService.DoOpenModelDbImport(
             Model,
@@ -91,6 +138,18 @@ public partial class OpenModelDbModelDetailsViewModel(
         OnPrimaryButtonClick();
     }
 
+    partial void OnSelectedInstallLocationChanged(string? value)
+    {
+        if (value?.Equals("Custom...", StringComparison.OrdinalIgnoreCase) is true)
+        {
+            Dispatcher.UIThread.InvokeAsync(SelectCustomFolder);
+        }
+        else
+        {
+            CustomInstallLocation = string.Empty;
+        }
+    }
+
     public override BetterContentDialog GetDialog()
     {
         var dialog = base.GetDialog();
@@ -99,5 +158,58 @@ public partial class OpenModelDbModelDetailsViewModel(
         dialog.FullSizeDesired = true;
         dialog.ContentMargin = new Thickness(8);
         return dialog;
+    }
+
+    public async Task SelectCustomFolder()
+    {
+        var files = await App.StorageProvider.OpenFolderPickerAsync(
+            new FolderPickerOpenOptions
+            {
+                Title = "Select Download Folder",
+                AllowMultiple = false,
+                SuggestedStartLocation = await App.StorageProvider.TryGetFolderFromPathAsync(
+                    Path.Combine(
+                        settingsManager.ModelsDirectory,
+                        Model.GetSharedFolderType().GetStringValue()
+                    )
+                )
+            }
+        );
+
+        if (files.FirstOrDefault()?.TryGetLocalPath() is { } path)
+        {
+            CustomInstallLocation = path;
+        }
+    }
+
+    private void LoadInstallLocations()
+    {
+        var installLocations = new ObservableCollection<string>();
+
+        var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
+
+        var downloadDirectory = new DirectoryPath(
+            rootModelsDirectory,
+            Model.GetSharedFolderType().GetStringValue()
+        );
+
+        if (!downloadDirectory.ToString().EndsWith("Unknown"))
+        {
+            installLocations.Add(downloadDirectory.ToString().Replace(rootModelsDirectory, "Models"));
+            foreach (
+                var directory in downloadDirectory.EnumerateDirectories(
+                    "*",
+                    EnumerationOptionConstants.AllDirectories
+                )
+            )
+            {
+                installLocations.Add(directory.ToString().Replace(rootModelsDirectory, "Models"));
+            }
+        }
+
+        installLocations.Add("Custom...");
+
+        AvailableInstallLocations = installLocations;
+        SelectedInstallLocation = installLocations.FirstOrDefault();
     }
 }

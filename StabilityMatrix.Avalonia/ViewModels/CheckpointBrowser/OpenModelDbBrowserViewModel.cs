@@ -92,7 +92,7 @@ public sealed partial class OpenModelDbBrowserViewModel(
         vm.Model = model;
 
         var dialog = vm.GetDialog();
-        dialog.MaxDialogHeight = 800;
+        dialog.MaxDialogHeight = 920;
         await dialog.ShowAsync();
     }
 

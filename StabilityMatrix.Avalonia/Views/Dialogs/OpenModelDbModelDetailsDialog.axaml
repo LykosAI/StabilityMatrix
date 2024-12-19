@@ -17,7 +17,7 @@
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
     d:DataContext="{x:Static mocks:DesignData.OpenModelDbModelDetailsViewModel}"
-    d:DesignHeight="550"
+    d:DesignHeight="800"
     d:DesignWidth="800"
     x:DataType="vmDialogs:OpenModelDbModelDetailsViewModel"
     mc:Ignorable="d">
@@ -35,7 +35,7 @@
     <Grid
         Margin="8"
         ColumnDefinitions="*,Auto,*"
-        RowDefinitions="Auto, Auto, *, Auto">
+        RowDefinitions="Auto, Auto, Auto, Auto">
 
         <Carousel
             Grid.Row="0"
@@ -130,15 +130,28 @@
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <StackPanel
+        <Expander
             Grid.Row="1"
             Grid.Column="0"
             Grid.ColumnSpan="3"
-            Margin="0,8"
+            Margin="8,8"
+            ExpandDirection="Down"
+            Header="{x:Static lang:Resources.Label_ModelDescription}"
+            IsExpanded="True">
+            <ScrollViewer MaxHeight="300">
+                <controls:MarkdownViewer Text="{Binding Model.Description}" />
+            </ScrollViewer>
+        </Expander>
+
+        <StackPanel
+            Grid.Row="2"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="0,8,0,12"
             HorizontalAlignment="Center"
             IsVisible="{Binding !SelectedResource.IsInstalled}"
             Orientation="Vertical">
-            <!--<TextBlock
+            <TextBlock
                 Margin="0,4"
                 HorizontalAlignment="Center"
                 Text="{x:Static lang:Resources.Label_SelectDownloadLocation}"
@@ -158,35 +171,21 @@
                     Margin="4,0,0,0"
                     VerticalAlignment="Stretch"
                     Command="{Binding SelectCustomFolder}">
-                    <controls1:SymbolIcon Symbol="OpenFolder" />
+                    <ui:SymbolIcon Symbol="OpenFolder" />
                 </Button>
             </StackPanel>
             <TextBlock
                 Foreground="{DynamicResource ThemeRedColor}"
                 IsVisible="{Binding ShowEmptyPathWarning}"
                 Text="{x:Static lang:Resources.Error_PleaseSelectDownloadLocation}"
-                TextAlignment="Center" />-->
+                TextAlignment="Center" />
         </StackPanel>
-
-        <Expander
-            Grid.Row="2"
-            Grid.Column="0"
-            Grid.ColumnSpan="3"
-            MaxHeight="300"
-            Margin="8,8"
-            ExpandDirection="Down"
-            Header="{x:Static lang:Resources.Label_ModelDescription}"
-            IsExpanded="True">
-            <ScrollViewer MaxHeight="300">
-                <controls:MarkdownViewer Text="{Binding Model.Description}" />
-            </ScrollViewer>
-        </Expander>
 
         <StackPanel
             Grid.Row="3"
             Grid.Column="0"
             Grid.ColumnSpan="3"
-            Margin="0,8,0,0"
+            Margin="0,8,0,8"
             HorizontalAlignment="Center"
             Orientation="Horizontal">
             <Button

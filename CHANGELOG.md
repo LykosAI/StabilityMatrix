@@ -15,7 +15,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added the ability to copy more generation parameters from the Inference gallery context menu
 ### Changed
 - Improved Packages Page grid layout to dynamically stretch to fill available space
+- New file format and key derivation for protecting locally encrypted secrets (i.e. Civit / Lykos accounts) that is no longer dependent on the OS Version. This should prevent system updates from clearing account logins.
+- (Internal) Updated to .NET 9 Runtime and Avalonia 11.2.2 for performance improvements, lower memory usage, and bug fixes
 ### Fixed
+- Improved startup performance and resource usage with optimizations to hardware lookups. Moved reflection usages in dependency injection to source generation.
 - Fixed a typo in the Japanese translation - thanks to @mattyatea!
 - Fixed missing package thumbnails due to moved or inaccessible urls
 - Fixed an issue with ComfyUI-Impact-Subpack not being installed when using FaceDetailer in Inference

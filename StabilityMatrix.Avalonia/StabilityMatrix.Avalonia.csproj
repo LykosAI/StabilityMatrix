@@ -130,6 +130,7 @@
         <PackageReference Include="Polly.Extensions.Http" />
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" />
         <PackageReference Include="RockLib.Reflection.Optimized" />
+        <PackageReference Include="Semi.Avalonia"/>
         <PackageReference Include="Sentry" />
         <PackageReference Include="Sentry.NLog" />
         <PackageReference Include="SpacedGrid-Avalonia" />

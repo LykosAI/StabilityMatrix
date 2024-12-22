@@ -122,7 +122,7 @@ public class ComfyUI(
             {
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
+                InitialValue = HardwareHelper.PreferDirectMLOrZluda() && this is not ComfyZluda,
                 Options = ["--directml"]
             },
             new LaunchOptionDefinition

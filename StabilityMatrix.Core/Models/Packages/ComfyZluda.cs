@@ -138,26 +138,29 @@ public class ComfyZluda(
     {
         await SetupVenv(installLocation).ConfigureAwait(false);
         var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
+        var hipPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            "AMD",
+            "ROCm",
+            "5.7"
+        );
+        var hipBinPath = Path.Combine(hipPath, "bin");
         var envVars = new Dictionary<string, string>
         {
             ["ZLUDA_COMGR_LOG_LEVEL"] = "1",
-            ["HIP_PATH"] = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-                "AMD",
-                "ROCm",
-                "5.7"
-            ),
+            ["HIP_PATH"] = hipPath,
+            ["HIP_PATH_57"] = hipPath,
             ["GIT"] = portableGitBin.JoinFile("git.exe")
         };
         envVars.Update(settingsManager.Settings.EnvironmentVariables);
 
         if (envVars.TryGetValue("PATH", out var pathValue))
         {
-            envVars["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, pathValue);
+            envVars["PATH"] = Compat.GetEnvPathWithExtensions(hipBinPath, portableGitBin, pathValue);
         }
         else
         {
-            envVars["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin);
+            envVars["PATH"] = Compat.GetEnvPathWithExtensions(hipBinPath, portableGitBin);
         }
 
         var zludaPath = Path.Combine(installLocation, LaunchCommand);

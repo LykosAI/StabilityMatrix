@@ -40,6 +40,9 @@ public class ComfyZluda(
 
     public override bool IsCompatible => HardwareHelper.PreferDirectMLOrZluda();
 
+    public override IEnumerable<PackagePrerequisite> Prerequisites =>
+        base.Prerequisites.Concat([PackagePrerequisite.HipSdk]);
+
     public override async Task InstallPackage(
         string installLocation,
         InstalledPackage installedPackage,

@@ -162,7 +162,7 @@ public class VladAutomatic(
             {
                 Name = "Force use of ZLUDA backend",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectML(),
+                InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
                 Options = ["--use-zluda"]
             },
             new()

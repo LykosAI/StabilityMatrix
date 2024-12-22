@@ -45,6 +45,8 @@ public class WindowsPrerequisiteHelper(
 
     private const string CppBuildToolsUrl = "https://aka.ms/vs/17/release/vs_BuildTools.exe";
 
+    private const string HipSdkDownloadUrl = "https://cdn.lykos.ai/AMD-HIP-SDK.exe";
+
     private string HomeDir => settingsManager.LibraryDir;
 
     private string VcRedistDownloadPath => Path.Combine(HomeDir, "vcredist.x64.exe");
@@ -82,6 +84,11 @@ public class WindowsPrerequisiteHelper(
             "2022",
             "BuildTools"
         );
+
+    private string HipSdkDownloadPath => Path.Combine(AssetsDir, "AMD-HIP-SDK.exe");
+
+    private string HipInstalledPath =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "AMD", "ROCm", "5.7");
 
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
@@ -192,6 +199,11 @@ public class WindowsPrerequisiteHelper(
         {
             await InstallVcBuildToolsIfNecessary(progress);
         }
+
+        if (prerequisites.Contains(PackagePrerequisite.HipSdk))
+        {
+            await InstallHipSdkIfNecessary(progress);
+        }
     }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -202,6 +214,7 @@ public class WindowsPrerequisiteHelper(
         await InstallGitIfNecessary(progress);
         await InstallNodeIfNecessary(progress);
         await InstallVcBuildToolsIfNecessary(progress);
+        await InstallHipSdkIfNecessary(progress);
     }
 
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -551,6 +564,39 @@ public class WindowsPrerequisiteHelper(
                 )
         );
         await process.WaitForExitAsync();
+    }
+
+    [SupportedOSPlatform("windows")]
+    public async Task InstallHipSdkIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (Directory.Exists(HipInstalledPath))
+            return;
+
+        await downloadService.DownloadToFileAsync(HipSdkDownloadUrl, HipSdkDownloadPath, progress: progress);
+        Logger.Info("Downloaded & installing HIP SDK");
+
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing HIP SDK, this may take a few minutes..."
+            )
+        );
+
+        var info = new ProcessStartInfo
+        {
+            FileName = HipSdkDownloadPath,
+            Arguments = "-install -log hip_install.log",
+            UseShellExecute = true,
+            CreateNoWindow = true,
+            Verb = "runas"
+        };
+
+        if (Process.Start(info) is { } process)
+        {
+            await process.WaitForExitAsync();
+        }
     }
 
     public async Task<Process> RunDotnet(

@@ -264,7 +264,7 @@ public static partial class HardwareHelper
     public static bool PreferRocm() => !HasNvidiaGpu() && HasAmdGpu() && Compat.IsLinux;
 
     // Set DirectML for default if AMD and Windows
-    public static bool PreferDirectML() => !HasNvidiaGpu() && HasAmdGpu() && Compat.IsWindows;
+    public static bool PreferDirectMLOrZluda() => !HasNvidiaGpu() && HasAmdGpu() && Compat.IsWindows;
 
     private static readonly Lazy<bool> IsMemoryInfoAvailableLazy = new(() => TryGetMemoryInfo(out _));
     public static bool IsMemoryInfoAvailable => IsMemoryInfoAvailableLazy.Value;

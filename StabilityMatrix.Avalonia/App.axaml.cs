@@ -452,8 +452,9 @@ public sealed class App : Application
             // if (string.IsNullOrWhiteSpace(githubApiKey))
             //     return client;
             //
-            // client.Credentials =
-            //     new Credentials("");
+            // client.Credentials = new Credentials(
+            //     ""
+            // );
             return client;
         });
 

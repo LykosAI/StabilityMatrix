@@ -34,7 +34,7 @@ public class StableDiffusionDirectMl(
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public override TorchIndex GetRecommendedTorchVersion() =>
-        HardwareHelper.PreferDirectML() ? TorchIndex.DirectMl : base.GetRecommendedTorchVersion();
+        HardwareHelper.PreferDirectMLOrZluda() ? TorchIndex.DirectMl : base.GetRecommendedTorchVersion();
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
 
@@ -49,7 +49,7 @@ public class StableDiffusionDirectMl(
                 {
                     Name = "Use DirectML",
                     Type = LaunchOptionType.Bool,
-                    InitialValue = HardwareHelper.PreferDirectML(),
+                    InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
                     Options = ["--use-directml"]
                 }
             );

@@ -103,7 +103,7 @@
     <PackageVersion Include="Dock.Model.Avalonia" Version="11.2.0" />
     <PackageVersion Include="Dock.Serializer" Version="11.2.0" />
     <PackageVersion Include="FluentAvalonia.BreadcrumbBar" Version="2.0.2" />
-    <PackageVersion Include="FluentAvaloniaUI" Version="2.1.0" />
+    <PackageVersion Include="FluentAvaloniaUI" Version="2.2.0" />
     <PackageVersion Include="FluentIcons.Avalonia" Version="1.1.249" />
     <PackageVersion Include="FluentIcons.Avalonia.Fluent" Version="1.1.249" />
     <PackageVersion Include="Markdown.Avalonia" Version="11.0.3-a1" />

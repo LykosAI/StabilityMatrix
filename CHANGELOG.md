@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.13.0-pre.2
 ### Added
+- Added new package - [ComfyUI-Zluda](https://github.com/patientx/ComfyUI-Zluda) - for AMD GPU users on Windows
 - Added OpenModelDB tab to the Model Browser
 
 ## v2.13.0-pre.1

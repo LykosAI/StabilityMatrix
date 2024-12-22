@@ -146,7 +146,7 @@ public class StableDiffusionUx(
                 Type = LaunchOptionType.Bool,
                 Description = "Do not switch the model to 16-bit floats",
                 InitialValue =
-                    HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML() || Compat.IsMacOS,
+                    HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectMLOrZluda() || Compat.IsMacOS,
                 Options = ["--no-half"]
             },
             new()

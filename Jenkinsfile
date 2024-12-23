@@ -29,7 +29,7 @@ node("Diligence") {
             }
             
             stage('Publish Windows') {
-                sh "dotnet publish ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true -p:VersionPrefix=2.0.0 -p:VersionSuffix=${version} -p:IncludeNativeLibrariesForSelfExtract=true"
+                sh "dotnet publish ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj -c Release -o out -r win-x64 -p:PublishSingleFile=true -p:VersionPrefix=2.0.0 -p:VersionSuffix=${version} -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableWindowsTargeting=true"
             }
 
             stage('Publish Linux') {

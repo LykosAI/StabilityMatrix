@@ -8,7 +8,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.13.0-pre.2
 ### Added
 - Added new package - [ComfyUI-Zluda](https://github.com/patientx/ComfyUI-Zluda) - for AMD GPU users on Windows
-- Added OpenModelDB tab to the Model Browser
+- Added "StableDiffusion" folder as an option when downloading Flux models in the CivitAI model browser
+### Changed
+- Updated pytorch index to `rocm6.2` for AMD users of ComfyUI on Linux
 
 ## v2.13.0-pre.1
 ### Added

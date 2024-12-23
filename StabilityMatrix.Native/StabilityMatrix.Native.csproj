@@ -1,35 +1,34 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\Runtimes.Default.props" />
 
-    <PropertyGroup>
-        <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
-        <IsOSX Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</IsOSX>
-        <IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</IsLinux>
-    </PropertyGroup>
+	<PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+		<DefineConstants>Windows</DefineConstants>
+		<IsWindows>true</IsWindows>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' Or '$(RuntimeIdentifier)' == 'osx-arm64'">
+		<DefineConstants>OSX</DefineConstants>
+		<IsOSX>true</IsOSX>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+		<DefineConstants>Linux</DefineConstants>
+		<IsLinux>true</IsLinux>
+	</PropertyGroup>
 
-    <PropertyGroup Condition="'$(IsWindows)'=='true'">
-        <DefineConstants>Windows</DefineConstants>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(IsOSX)'=='true'">
-        <DefineConstants>OSX</DefineConstants>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(IsLinux)'=='true'">
-        <DefineConstants>Linux</DefineConstants>
-    </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<Optimize>false</Optimize>
+	</PropertyGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\StabilityMatrix.Native.Abstractions\StabilityMatrix.Native.Abstractions.csproj" />
-    </ItemGroup>
-    
-    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-      <ProjectReference Include="..\StabilityMatrix.Native.Windows\StabilityMatrix.Native.Windows.csproj" />
-    </ItemGroup>
-    <ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' Or '$(RuntimeIdentifier)' == 'osx-arm64'">
-        <ProjectReference Include="..\StabilityMatrix.Native.macOS\StabilityMatrix.Native.macOS.csproj" />
-    </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\StabilityMatrix.Native.Abstractions\StabilityMatrix.Native.Abstractions.csproj" />
+	</ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" PrivateAssets="all" />
-    </ItemGroup>
-
+	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+		<ProjectReference Include="..\StabilityMatrix.Native.Windows\StabilityMatrix.Native.Windows.csproj" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' Or '$(RuntimeIdentifier)' == 'osx-arm64'">
+		<ProjectReference Include="..\StabilityMatrix.Native.macOS\StabilityMatrix.Native.macOS.csproj" />
+	</ItemGroup>
+  <ItemGroup>
+      <PackageReference Include="JetBrains.Annotations" PrivateAssets="all" />
+  </ItemGroup>
 </Project>

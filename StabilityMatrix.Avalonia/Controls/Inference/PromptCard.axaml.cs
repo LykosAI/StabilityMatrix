@@ -5,14 +5,14 @@ using Avalonia.Input;
 using AvaloniaEdit;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Utils;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
-using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-[Transient]
+[RegisterTransient<PromptCard>]
 public class PromptCard : TemplatedControlBase
 {
     /// <inheritdoc />

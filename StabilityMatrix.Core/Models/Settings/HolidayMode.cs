@@ -2,7 +2,7 @@
 
 namespace StabilityMatrix.Core.Models.Settings;
 
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<HolidayMode>))]
 public enum HolidayMode
 {
     Automatic,

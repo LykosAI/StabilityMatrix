@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
+using Injectio.Attributes;
 using NLog;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -20,7 +20,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, ComfyUI>(Duplicate = DuplicateStrategy.Append)]
 public class ComfyUI(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,

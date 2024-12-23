@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
 using FreneticUtilities.FreneticDataSyntax;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -14,7 +14,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, StableSwarm>(Duplicate = DuplicateStrategy.Append)]
 public class StableSwarm(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,

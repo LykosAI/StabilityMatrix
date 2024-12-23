@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
@@ -24,7 +25,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(InferenceImageUpscaleView), persistent: true)]
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
 [ManagedService]
-[Transient]
+[RegisterTransient<InferenceImageUpscaleViewModel>]
 public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

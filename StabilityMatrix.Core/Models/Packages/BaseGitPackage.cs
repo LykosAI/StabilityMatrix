@@ -26,7 +26,6 @@ public abstract class BaseGitPackage : BasePackage
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     protected readonly IGithubApiCache GithubApi;
-    protected readonly ISettingsManager SettingsManager;
     protected readonly IDownloadService DownloadService;
     protected readonly IPrerequisiteHelper PrerequisiteHelper;
     public PyVenvRunner? VenvRunner;
@@ -69,9 +68,9 @@ public abstract class BaseGitPackage : BasePackage
         IDownloadService downloadService,
         IPrerequisiteHelper prerequisiteHelper
     )
+        : base(settingsManager)
     {
         GithubApi = githubApi;
-        SettingsManager = settingsManager;
         DownloadService = downloadService;
         PrerequisiteHelper = prerequisiteHelper;
     }

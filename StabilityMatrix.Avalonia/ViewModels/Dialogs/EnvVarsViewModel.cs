@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Avalonia.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -13,7 +14,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(EnvVarsViewModel))]
 [ManagedService]
-[Transient]
+[RegisterTransient<EnvVarsViewModel>]
 public partial class EnvVarsViewModel : ContentDialogViewModelBase
 {
     [ObservableProperty]

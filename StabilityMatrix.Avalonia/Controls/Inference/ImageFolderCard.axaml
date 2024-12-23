@@ -2,16 +2,16 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:dbModels="clr-namespace:StabilityMatrix.Core.Models.Database;assembly=StabilityMatrix.Core"
     xmlns:input="using:FluentAvalonia.UI.Input"
+    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:ui="using:FluentAvalonia.UI.Controls"
-    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
-    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
-    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     x:DataType="vmInference:ImageFolderCardViewModel">
 
     <Design.PreviewWith>
@@ -21,7 +21,7 @@
             </Grid>
         </Panel>
     </Design.PreviewWith>
-    
+
     <converters:FileUriConverter x:Key="FileUriConverter" />
 
     <ControlTheme x:Key="{x:Type controls:ImageFolderCard}" TargetType="controls:ImageFolderCard">
@@ -48,12 +48,12 @@
                     <Grid RowDefinitions="Auto,*">
                         <TextBox
                             x:Name="SearchBox"
-                            Classes="search"
                             Margin="6,4,6,8"
                             HorizontalAlignment="Stretch"
                             VerticalAlignment="Top"
+                            Classes="search"
                             Text="{Binding SearchQuery}"
-                            Watermark="{x:Static lang:Resources.Label_SearchEllipsis}"/>
+                            Watermark="{x:Static lang:Resources.Label_SearchEllipsis}" />
 
                         <scroll:BetterScrollViewer
                             Grid.Row="1"
@@ -62,8 +62,8 @@
                             IsScrollInertiaEnabled="True"
                             VerticalSnapPointsType="Mandatory">
                             <ItemsRepeater
-                                Name="ImageRepeater"
                                 x:Name="ImageRepeater"
+                                Name="ImageRepeater"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Stretch"
                                 ItemsSource="{Binding LocalImages}"
@@ -79,8 +79,8 @@
                                     <input:StandardUICommand
                                         x:Key="ImageCopyCommand"
                                         Command="{Binding ImageCopyCommand}"
-                                        IconSource="Copy"
-                                        Label="Copy" />
+                                        IconSource="Image"
+                                        Label="Image" />
                                     <input:StandardUICommand
                                         x:Key="ImageOpenCommand"
                                         Command="{Binding ImageOpenCommand}"
@@ -103,6 +103,46 @@
                                         x:Key="ImageExportWebpCommand"
                                         Command="{Binding ImageExportWebpCommand}"
                                         Label="Webp" />
+                                    <input:StandardUICommand
+                                        x:Key="CopySeedCommand"
+                                        Command="{Binding CopySeedToClipboardCommand}"
+                                        Label="{x:Static lang:Resources.Label_Seed}">
+                                        <input:StandardUICommand.IconSource>
+                                            <controls:FASymbolIconSource Symbol="fa-solid fa-dice-d20" />
+                                        </input:StandardUICommand.IconSource>
+                                    </input:StandardUICommand>
+                                    <input:StandardUICommand
+                                        x:Key="CopyPromptCommand"
+                                        Command="{Binding CopyPromptToClipboardCommand}"
+                                        Label="{x:Static lang:Resources.Label_Prompt}">
+                                        <input:StandardUICommand.IconSource>
+                                            <controls:FASymbolIconSource Symbol="fa-solid fa-comments" />
+                                        </input:StandardUICommand.IconSource>
+                                    </input:StandardUICommand>
+                                    <input:StandardUICommand
+                                        x:Key="CopyNegativePromptCommand"
+                                        Command="{Binding CopyNegativePromptToClipboardCommand}"
+                                        Label="{x:Static lang:Resources.Label_NegativePrompt}">
+                                        <input:StandardUICommand.IconSource>
+                                            <controls:FASymbolIconSource Symbol="fa-solid fa-comment-slash" />
+                                        </input:StandardUICommand.IconSource>
+                                    </input:StandardUICommand>
+                                    <input:StandardUICommand
+                                        x:Key="CopyModelNameCommand"
+                                        Command="{Binding CopyModelNameToClipboardCommand}"
+                                        Label="Model Name">
+                                        <input:StandardUICommand.IconSource>
+                                            <controls:FASymbolIconSource Symbol="fa-solid fa-font" />
+                                        </input:StandardUICommand.IconSource>
+                                    </input:StandardUICommand>
+                                    <input:StandardUICommand
+                                        x:Key="CopyModelHashCommand"
+                                        Command="{Binding CopyModelHashToClipboardCommand}"
+                                        Label="Model Hash">
+                                        <input:StandardUICommand.IconSource>
+                                            <controls:FASymbolIconSource Symbol="fa-solid fa-hashtag" />
+                                        </input:StandardUICommand.IconSource>
+                                    </input:StandardUICommand>
                                 </ItemsRepeater.Resources>
 
                                 <ItemsRepeater.Layout>
@@ -135,10 +175,33 @@
                                                         Command="{StaticResource ImageDeleteCommand}"
                                                         CommandParameter="{Binding $self.DataContext}"
                                                         HotKey="{x:Null}" />
-                                                    <ui:MenuFlyoutItem
-                                                        Command="{StaticResource ImageCopyCommand}"
-                                                        CommandParameter="{Binding $self.DataContext}"
-                                                        HotKey="{x:Null}" />
+                                                    <ui:MenuFlyoutSubItem IconSource="Copy" Text="Copy">
+                                                        <ui:MenuFlyoutItem
+                                                            Command="{StaticResource ImageCopyCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
+                                                        <ui:MenuFlyoutItem
+                                                            Command="{StaticResource CopySeedCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
+                                                        <ui:MenuFlyoutItem
+                                                            Command="{StaticResource CopyPromptCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
+                                                        <ui:MenuFlyoutItem
+                                                            Command="{StaticResource CopyNegativePromptCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
+                                                        <ui:MenuFlyoutItem
+                                                            Command="{StaticResource CopyModelNameCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
+                                                        <ui:MenuFlyoutItem
+                                                            Command="{StaticResource CopyModelHashCommand}"
+                                                            CommandParameter="{Binding $self.DataContext}"
+                                                            HotKey="{x:Null}" />
+                                                    </ui:MenuFlyoutSubItem>
+
 
                                                     <ui:MenuFlyoutSeparator />
 
@@ -170,18 +233,18 @@
                                             <ToolTip.Tip>
                                                 <StackPanel Spacing="4">
                                                     <StackPanel.Styles>
-                                                        <Style Selector="StackPanel > TextBlock">
-                                                            <Setter Property="Theme" Value="{DynamicResource BodyTextBlockStyle}"/>
+                                                        <Style Selector="StackPanel &gt; TextBlock">
+                                                            <Setter Property="Theme" Value="{DynamicResource BodyTextBlockStyle}" />
                                                         </Style>
                                                         <Style Selector="SelectableTextBlock">
-                                                            <Setter Property="FontSize" Value="13"/>
-                                                            <Setter Property="FontFamily" Value="Cascadia Code,Consolas,Menlo,Monospace"/>
+                                                            <Setter Property="FontSize" Value="13" />
+                                                            <Setter Property="FontFamily" Value="Cascadia Code,Consolas,Menlo,Monospace" />
                                                         </Style>
                                                         <Style Selector="controls|Card">
                                                             <Setter Property="Padding" Value="4,4" />
                                                         </Style>
                                                     </StackPanel.Styles>
-                                                    
+
                                                     <TextBlock Text="{Binding FileName}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
 
                                                     <controls:Card>
@@ -208,8 +271,8 @@
 
                                                     <Border
                                                         Grid.Row="1"
-                                                        MinHeight="20"
                                                         Width="{Binding $parent[ItemsRepeater].((vmInference:ImageFolderCardViewModel)DataContext).ImageSize.Width}"
+                                                        MinHeight="20"
                                                         Padding="4,0,0,0"
                                                         VerticalAlignment="Bottom"
                                                         Classes="theme-dark"

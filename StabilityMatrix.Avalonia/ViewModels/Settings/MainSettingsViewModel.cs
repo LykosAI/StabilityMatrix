@@ -25,11 +25,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using Microsoft.Win32;
 using NLog;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.DesignData;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
@@ -37,12 +39,14 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Git;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
@@ -60,7 +64,8 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 
 [View(typeof(MainSettingsPage))]
-[Singleton, ManagedService]
+[ManagedService]
+[RegisterSingleton<MainSettingsViewModel>]
 public partial class MainSettingsViewModel : PageViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -148,10 +153,19 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool moveFilesOnImport;
 
+    [ObservableProperty]
+    private int maxConcurrentDownloads;
+
     #region System Settings
 
     [ObservableProperty]
     private bool isWindowsLongPathsEnabled;
+
+    [ObservableProperty]
+    private ObservableCollection<GpuInfo> gpuInfoCollection = [];
+
+    [ObservableProperty]
+    private GpuInfo? preferredGpu;
 
     #endregion
 
@@ -184,6 +198,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         $"You are {VersionTapCountThreshold - VersionTapCount} clicks away from enabling Debug options.";
 
     public string DataDirectory => settingsManager.IsLibraryDirSet ? settingsManager.LibraryDir : "Not set";
+    public string ModelsDirectory => settingsManager.ModelsDirectory;
 
     public MainSettingsViewModel(
         INotificationService notificationService,
@@ -278,6 +293,20 @@ public partial class MainSettingsViewModel : PageViewModelBase
             true
         );
 
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.PreferredGpu,
+            settings => settings.PreferredGpu,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.MaxConcurrentDownloads,
+            settings => settings.MaxConcurrentDownloads,
+            true
+        );
+
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 
         hardwareInfoUpdateTimer.Tick += OnHardwareInfoUpdateTimerTick;
@@ -310,6 +339,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
         await base.OnLoadedAsync();
 
         await notificationService.TryAsync(completionProvider.Setup());
+
+        var gpuInfos = HardwareHelper.IterGpuInfo();
+        GpuInfoCollection = new ObservableCollection<GpuInfo>(gpuInfos);
+        PreferredGpu ??=
+            GpuInfos.FirstOrDefault(
+                gpu => gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
+            ) ?? GpuInfos.FirstOrDefault();
 
         // Start accounts update
         accountsService
@@ -416,6 +452,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
     partial void OnRemoveSymlinksOnShutdownChanged(bool value)
     {
         settingsManager.Transaction(s => s.RemoveFolderLinksOnShutdown = value);
+    }
+
+    partial void OnMaxConcurrentDownloadsChanged(int value)
+    {
+        trackedDownloadService.UpdateMaxConcurrentDownloads(value);
     }
 
     public async Task ResetCheckpointCache()
@@ -785,6 +826,33 @@ public partial class MainSettingsViewModel : PageViewModelBase
         }
     }
 
+    public async Task PickNewModelsFolder()
+    {
+        var provider = App.StorageProvider;
+        var result = await provider.OpenFolderPickerAsync(new FolderPickerOpenOptions());
+
+        if (result.Count == 0)
+            return;
+
+        var newPath = (result[0].Path.LocalPath);
+        settingsManager.Transaction(s => s.ModelDirectoryOverride = newPath);
+        SharedFolders.SetupSharedModelFolders(newPath);
+
+        // Restart
+        var restartDialog = new BetterContentDialog
+        {
+            Title = "Restart required",
+            Content = "Stability Matrix must be restarted for the changes to take effect.",
+            PrimaryButtonText = Resources.Action_Restart,
+            DefaultButton = ContentDialogButton.Primary,
+            IsSecondaryButtonEnabled = false,
+        };
+        await restartDialog.ShowAsync();
+
+        Process.Start(Compat.AppCurrentPath);
+        App.Shutdown();
+    }
+
     #endregion
 
     #region Debug Section
@@ -871,6 +939,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
         await Task.Yield();
 
         throw new ApplicationException("Example Message");
+    }
+
+    [RelayCommand]
+    private void DebugThrowDispatcherException()
+    {
+        Dispatcher.UIThread.Post(() => throw new OperationCanceledException("Example Message"));
     }
 
     [RelayCommand]
@@ -982,7 +1056,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             var url = textFields[0].Text;
             var filePath = textFields[1].Text;
             var download = trackedDownloadService.NewDownload(new Uri(url), new FilePath(filePath));
-            download.Start();
+            await trackedDownloadService.TryStartDownload(download);
         }
     }
     #endregion
@@ -1002,7 +1076,36 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugExtractImagePromptsToTxtCommand),
             new CommandItem(DebugShowConfirmDeleteDialogCommand),
             new CommandItem(DebugShowModelMetadataEditorDialogCommand),
+            new CommandItem(DebugNvidiaSmiCommand),
+            new CommandItem(DebugShowGitVersionSelectorDialogCommand),
+            new CommandItem(DebugShowMockGitVersionSelectorDialogCommand),
         ];
+
+    [RelayCommand]
+    private async Task DebugShowGitVersionSelectorDialog()
+    {
+        var vm = new GitVersionSelectorViewModel
+        {
+            GitVersionProvider = new CachedCommandGitVersionProvider(
+                "https://github.com/ltdrdata/ComfyUI-Manager",
+                prerequisiteHelper
+            )
+        };
+        var dialog = vm.GetDialog();
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            notificationService.ShowPersistent("Selected version", $"{vm.SelectedGitVersion}");
+        }
+    }
+
+    [RelayCommand]
+    private async Task DebugShowMockGitVersionSelectorDialog()
+    {
+        var vm = new GitVersionSelectorViewModel { GitVersionProvider = new MockGitVersionProvider() };
+        var dialog = vm.GetDialog();
+        await dialog.ShowAsync();
+    }
 
     [RelayCommand]
     private async Task DebugShowModelMetadataEditorDialog()
@@ -1231,6 +1334,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
         vm.PaintCanvasViewModel.BackgroundImage = bitmap;
 
         await vm.GetDialog().ShowAsync();
+    }
+
+    [RelayCommand]
+    private void DebugNvidiaSmi()
+    {
+        HardwareHelper.IterGpuInfoNvidiaSmi();
     }
 
     #endregion

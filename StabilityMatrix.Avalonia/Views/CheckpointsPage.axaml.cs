@@ -6,18 +6,18 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.Scroll;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Database;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-[Singleton]
+[RegisterSingleton<CheckpointsPage>]
 public partial class CheckpointsPage : UserControlBase
 {
     private Dictionary<CheckpointCategory, DispatcherTimer> dragTimers = new();

@@ -4,6 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
@@ -14,15 +16,12 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-    xmlns:mdxaml="https://github.com/whistyun/Markdown.Avalonia.Tight"
-    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
-    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     d:DataContext="{x:Static mocks:DesignData.PythonPackagesViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vmDialogs:PythonPackagesViewModel"
     mc:Ignorable="d">
-    
+
     <sg:SpacedGrid
         MinHeight="300"
         Margin="8"
@@ -57,40 +56,41 @@
                 </Style>
             </ui:CommandBar.Styles>
             <ui:CommandBar.PrimaryCommands>
-                <ui:CommandBarButton 
-                    IconSource="Add" 
+                <ui:CommandBarButton
                     Command="{Binding InstallPackageCommand}"
+                    IconSource="Add"
                     Label="{x:Static lang:Resources.Action_AddPackage}" />
-                <ui:CommandBarButton 
-                    IconSource="Remove" 
+                <ui:CommandBarButton
                     Command="{Binding UninstallSelectedPackageCommand}"
+                    IconSource="Remove"
                     IsEnabled="{Binding SelectedPackage, Converter={x:Static ObjectConverters.IsNotNull}}"
-                    Label="{x:Static lang:Resources.Action_Uninstall}"/>
+                    Label="{x:Static lang:Resources.Action_Uninstall}" />
                 <ui:CommandBarSeparator />
-                <ui:CommandBarButton 
-                    IconSource="Refresh" 
+                <ui:CommandBarButton
                     Command="{Binding RefreshBackgroundCommand}"
+                    IconSource="Refresh"
                     IsEnabled="{Binding SelectedPackage, Converter={x:Static ObjectConverters.IsNotNull}}"
-                    Label="{x:Static lang:Resources.Action_Refresh}"/>
+                    Label="{x:Static lang:Resources.Action_Refresh}" />
             </ui:CommandBar.PrimaryCommands>
         </ui:CommandBar>
-        
-        <TextBox Grid.Row="2" Grid.Column="0"
-                 Margin="0,0,0,8"
-                 Classes="search"
-                 Watermark="{x:Static lang:Resources.Action_Search}"
-                 Text="{Binding SearchQuery, Mode=TwoWay}"/>
-            
+
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="0"
+            Margin="0,0,0,8"
+            Classes="search"
+            Text="{Binding SearchQuery, Mode=TwoWay}"
+            Watermark="{x:Static lang:Resources.Action_Search}" />
+
         <controls:Card
             Grid.Row="3"
             Grid.Column="0"
-            Padding="0"
             MinWidth="270"
+            Padding="0"
             VerticalAlignment="Stretch"
             VerticalContentAlignment="Stretch"
             Classes="transparent">
-            <ScrollViewer
-                IsVisible="{Binding !IsLoading}">
+            <ScrollViewer IsVisible="{Binding !IsLoading}">
                 <ListBox
                     ItemsSource="{Binding Packages}"
                     SelectedItem="{Binding SelectedPackage}"
@@ -100,7 +100,8 @@
                             <sg:SpacedGrid Margin="0,4" ColumnDefinitions="Auto,Auto">
                                 <TextBlock
                                     VerticalAlignment="Center"
-                                    Text="{Binding Package.Name}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                                    Text="{Binding Package.Name}"
+                                    Theme="{DynamicResource BodyStrongTextBlockStyle}" />
                                 <TextBlock
                                     Grid.Column="1"
                                     VerticalAlignment="Center"
@@ -111,112 +112,99 @@
                             </sg:SpacedGrid>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
-                </ListBox>  
+                </ListBox>
             </ScrollViewer>
         </controls:Card>
-        
+
         <ProgressBar
-            Margin="32,16"
             Grid.Row="3"
             Grid.Column="0"
             Grid.ColumnSpan="3"
-            IsIndeterminate="True"
+            Margin="32,16"
             IsEnabled="{Binding IsLoading}"
-            IsVisible="{Binding IsLoading}"/>
-        
+            IsIndeterminate="True"
+            IsVisible="{Binding IsLoading}" />
+
         <GridSplitter
             Grid.Row="0"
             Grid.RowSpan="4"
             Grid.Column="1"
-            IsEnabled="False"
-            Width="8" />
+            Width="8"
+            IsEnabled="False" />
 
         <TransitioningContentControl
-            Margin="8,0"
             Grid.Row="1"
             Grid.RowSpan="3"
             Grid.Column="2"
+            Margin="8,0"
             HorizontalAlignment="Stretch"
             HorizontalContentAlignment="Stretch"
             Content="{Binding SelectedPackage}">
-            
+
             <TransitioningContentControl.Resources>
-                <input:StandardUICommand 
-                    x:Key="ModifySelectedPackageCommand" 
-                    Command="{Binding ModifySelectedPackageCommand}"/>
+                <input:StandardUICommand x:Key="ModifySelectedPackageCommand" Command="{Binding ModifySelectedPackageCommand}" />
             </TransitioningContentControl.Resources>
-            
+
             <TransitioningContentControl.ContentTemplate>
                 <DataTemplate DataType="{x:Type vmDialogs:PythonPackagesItemViewModel}">
                     <sg:SpacedGrid RowDefinitions="Auto,Auto,*" RowSpacing="16">
-                        <TextBlock 
-                            Text="{Binding Package.Name}"
-                            Theme="{DynamicResource TitleTextBlockStyle}" />
+                        <TextBlock Text="{Binding Package.Name}" Theme="{DynamicResource TitleTextBlockStyle}" />
 
                         <StackPanel
                             Grid.Row="1"
-                            Spacing="4"
-                            Orientation="Horizontal">
-                            <ComboBox
-                                ItemsSource="{Binding AvailableVersions}"
-                                SelectedItem="{Binding SelectedVersion}"/>
-                            
-                            <!-- Upgrade button -->
-                            <Button 
+                            Orientation="Horizontal"
+                            Spacing="4">
+                            <ComboBox ItemsSource="{Binding AvailableVersions}" SelectedItem="{Binding SelectedVersion}" />
+
+                            <!--  Upgrade button  -->
+                            <Button
+                                Padding="5,5"
                                 Command="{StaticResource ModifySelectedPackageCommand}"
                                 CommandParameter="{Binding}"
-                                ToolTip.Tip="{x:Static lang:Resources.Action_Upgrade}"
                                 IsVisible="{Binding CanUpgrade}"
-                                Padding="5,5">
+                                ToolTip.Tip="{x:Static lang:Resources.Action_Upgrade}">
                                 <fluentIcons:SymbolIcon
                                     VerticalAlignment="Center"
                                     FontSize="18"
                                     Foreground="#3592c4"
                                     Symbol="ArrowCircleUpRight" />
                             </Button>
-                            
-                            <!-- Downgrade button -->
-                            <Button 
+
+                            <!--  Downgrade button  -->
+                            <Button
+                                Padding="5,5"
                                 Command="{StaticResource ModifySelectedPackageCommand}"
                                 CommandParameter="{Binding}"
-                                ToolTip.Tip="{x:Static lang:Resources.Action_Downgrade}"
                                 IsVisible="{Binding CanDowngrade}"
-                                Padding="5,5">
+                                ToolTip.Tip="{x:Static lang:Resources.Action_Downgrade}">
                                 <fluentIcons:SymbolIcon
                                     VerticalAlignment="Center"
                                     FontSize="18"
                                     Symbol="ArrowCircleDownRight" />
                             </Button>
-                            
+
                         </StackPanel>
 
-                        
-                        <!-- Loaded content -->
+
+                        <!--  Loaded content  -->
                         <StackPanel
-                            HorizontalAlignment="Left"
+                            Grid.Row="2"
                             MaxWidth="200"
-                            Grid.Row="2" 
+                            HorizontalAlignment="Left"
                             IsVisible="{Binding !IsLoading}">
-                            <TextBlock
-                                TextWrapping="WrapWithOverflow"
-                                Text="{Binding PipShowResult.Author}" />
-                            <TextBlock
-                                TextWrapping="WrapWithOverflow"
-                                Text="{Binding PipShowResult.License}" />
-                            <HyperlinkButton 
-                                NavigateUri="{Binding PipShowResult.HomePage}"/>
-                            <TextBlock
-                                TextWrapping="WrapWithOverflow"
-                                Text="{Binding PipShowResult.Summary}" />
+                            <TextBlock Text="{Binding PipShowResult.Author}" TextWrapping="WrapWithOverflow" />
+                            <TextBlock Text="{Binding PipShowResult.License}" TextWrapping="WrapWithOverflow" />
+                            <HyperlinkButton NavigateUri="{Binding PipShowResult.HomePage}" />
+                            <TextBlock Text="{Binding PipShowResult.Summary}" TextWrapping="WrapWithOverflow" />
                         </StackPanel>
-                        
-                        <!-- Loading indicator -->
+
+                        <!--  Loading indicator  -->
                         <ProgressBar
                             Grid.Row="2"
                             Margin="32,16"
-                            IsIndeterminate="True"
                             IsEnabled="{Binding IsLoading}"
-                            IsVisible="{Binding IsLoading}"/>
+                            IsIndeterminate="True"
+                            IsVisible="{Binding IsLoading}" />
                     </sg:SpacedGrid>
                 </DataTemplate>
             </TransitioningContentControl.ContentTemplate>

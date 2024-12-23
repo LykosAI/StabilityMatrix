@@ -1,5 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -11,7 +11,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, Fooocus>(Duplicate = DuplicateStrategy.Append)]
 public class Fooocus(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -26,7 +26,6 @@ public class Fooocus(
     public override string Author => "lllyasviel";
 
     public override string Blurb => "Fooocus is a rethinking of Stable Diffusion and Midjourney’s designs";
-
     public override string LicenseType => "GPL-3.0";
     public override string LicenseUrl => "https://github.com/lllyasviel/Fooocus/blob/main/LICENSE";
     public override string LaunchCommand => "launch.py";

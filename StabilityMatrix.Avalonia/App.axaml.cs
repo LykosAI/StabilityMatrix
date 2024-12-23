@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -27,6 +28,7 @@ using Avalonia.Threading;
 using FluentAvalonia.Interop;
 using FluentAvalonia.UI.Controls;
 using MessagePipe;
+using MessagePipe.Interprocess.Workers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -79,26 +81,28 @@ public sealed class App : Application
 
     private readonly SemaphoreSlim onExitSemaphore = new(1, 1);
 
+    /// <summary>
+    /// True if <see cref="OnShutdownRequested"/> has started async dispose of services.
+    /// </summary>
+    private bool isAsyncDisposeStarted;
+
+    /// <summary>
+    /// True if <see cref="OnShutdownRequested"/> has completed async dispose of services.
+    /// </summary>
     private bool isAsyncDisposeComplete;
 
     private bool isOnExitComplete;
 
-    [NotNull]
-    public static IServiceProvider? Services { get; private set; }
+    private ServiceProvider? serviceProvider;
 
     [NotNull]
     public static Visual? VisualRoot { get; internal set; }
 
-    public static TopLevel TopLevel => TopLevel.GetTopLevel(VisualRoot)!;
+    public static TopLevel TopLevel => TopLevel.GetTopLevel(VisualRoot).Unwrap();
 
-    internal static bool IsHeadlessMode =>
-        TopLevel.TryGetPlatformHandle()?.HandleDescriptor is null or "STUB";
+    public static IStorageProvider StorageProvider => TopLevel.StorageProvider;
 
-    [NotNull]
-    public static IStorageProvider? StorageProvider { get; internal set; }
-
-    [NotNull]
-    public static IClipboard? Clipboard { get; internal set; }
+    public static IClipboard? Clipboard => TopLevel.Clipboard;
 
     // ReSharper disable once MemberCanBePrivate.Global
     [NotNull]
@@ -125,6 +129,13 @@ public sealed class App : Application
         ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
 
     public static new App? Current => (App?)Application.Current;
+
+    [NotNull]
+    public static IServiceProvider? Services =>
+        Design.IsDesignMode ? DesignData.DesignData.Services : Current?.serviceProvider;
+
+    internal static bool IsHeadlessMode =>
+        TopLevel.TryGetPlatformHandle()?.HandleDescriptor is null or "STUB";
 
     /// <summary>
     /// Called before <see cref="Services"/> is built.
@@ -162,7 +173,7 @@ public sealed class App : Application
         if (Design.IsDesignMode)
         {
             DesignData.DesignData.Initialize();
-            Services = DesignData.DesignData.Services;
+            // serviceProvider = (ServiceProvider?) DesignData.DesignData.Services;
         }
         else
         {
@@ -288,32 +299,8 @@ public sealed class App : Application
         if (DesktopLifetime is null)
             return;
 
-        var mainViewModel = Services.GetRequiredService<MainWindowViewModel>();
-
         var mainWindow = Services.GetRequiredService<MainWindow>();
-        mainWindow.DataContext = mainViewModel;
-
-        mainWindow.ExtendClientAreaChromeHints = Program.Args.NoWindowChromeEffects
-            ? ExtendClientAreaChromeHints.NoChrome
-            : ExtendClientAreaChromeHints.PreferSystemChrome;
-
-        var settingsManager = Services.GetRequiredService<ISettingsManager>();
-        var windowSettings = settingsManager.Settings.WindowSettings;
-        if (windowSettings != null && !Program.Args.ResetWindowPosition)
-        {
-            mainWindow.Position = new PixelPoint(windowSettings.X, windowSettings.Y);
-            mainWindow.Width = windowSettings.Width;
-            mainWindow.Height = windowSettings.Height;
-            mainWindow.WindowState = windowSettings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
-        }
-        else
-        {
-            mainWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        }
-
         VisualRoot = mainWindow;
-        StorageProvider = mainWindow.StorageProvider;
-        Clipboard = mainWindow.Clipboard ?? throw new NullReferenceException("Clipboard is null");
 
         DesktopLifetime.MainWindow = mainWindow;
         DesktopLifetime.Exit += OnApplicationLifetimeExit;
@@ -326,13 +313,14 @@ public sealed class App : Application
         LogManager.AutoShutdown = false;
     }
 
-    private static void ConfigureServiceProvider()
+    [MemberNotNull(nameof(serviceProvider))]
+    private void ConfigureServiceProvider()
     {
         var services = ConfigureServices();
 
         BeforeBuildServiceProvider?.Invoke(null, services);
 
-        Services = services.BuildServiceProvider();
+        serviceProvider = services.BuildServiceProvider();
 
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
 
@@ -394,36 +382,6 @@ public sealed class App : Application
         );
     }
 
-    internal static void ConfigureDialogViewModels(IServiceCollection services, Type[] exportedTypes)
-    {
-        // Dialog factory
-        services.AddSingleton<ServiceManager<ViewModelBase>>(provider =>
-        {
-            var serviceManager = new ServiceManager<ViewModelBase>();
-
-            var serviceManagedTypes = exportedTypes
-                .Select(
-                    t => new { t, attributes = t.GetCustomAttributes(typeof(ManagedServiceAttribute), true) }
-                )
-                .Where(t1 => t1.attributes is { Length: > 0 })
-                .Select(t1 => t1.t);
-
-            foreach (var type in serviceManagedTypes)
-            {
-                if (!type.IsAssignableTo(typeof(ViewModelBase)))
-                {
-                    throw new InvalidOperationException(
-                        $"Type {type.Name} with [ManagedService] attribute is not assignable to {nameof(ViewModelBase)}"
-                    );
-                }
-
-                serviceManager.Register(type, () => (ViewModelBase)provider.GetRequiredService(type));
-            }
-
-            return serviceManager;
-        });
-    }
-
     internal static IServiceCollection ConfigureServices()
     {
         var services = new ServiceCollection();
@@ -441,89 +399,14 @@ public sealed class App : Application
             services.AddMessagePipe().AddInMemoryDistributedMessageBroker();
         }
 
-        var exportedTypes = AppDomain
-            .CurrentDomain.GetAssemblies()
-            .Where(a => a.FullName?.StartsWith("StabilityMatrix") == true)
-            .SelectMany(a => a.GetExportedTypes())
-            .ToArray();
-
-        var transientTypes = exportedTypes
-            .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(TransientAttribute), false) })
-            .Where(
-                t1 =>
-                    t1.attributes is { Length: > 0 }
-                    && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
-            )
-            .Select(t1 => new { Type = t1.t, Attribute = (TransientAttribute)t1.attributes[0] });
-
-        foreach (var typePair in transientTypes)
-        {
-            if (typePair.Attribute.InterfaceType is null)
-            {
-                services.AddTransient(typePair.Type);
-            }
-            else
-            {
-                services.AddTransient(typePair.Attribute.InterfaceType, typePair.Type);
-            }
-        }
-
-        var singletonTypes = exportedTypes
-            .Select(t => new { t, attributes = t.GetCustomAttributes(typeof(SingletonAttribute), false) })
-            .Where(
-                t1 =>
-                    t1.attributes is { Length: > 0 }
-                    && !t1.t.Name.Contains("Mock", StringComparison.OrdinalIgnoreCase)
-            )
-            .Select(
-                t1 => new { Type = t1.t, Attributes = t1.attributes.Cast<SingletonAttribute>().ToArray() }
-            );
-
-        foreach (var typePair in singletonTypes)
-        {
-            foreach (var attribute in typePair.Attributes)
-            {
-                if (attribute.InterfaceType is null)
-                {
-                    services.AddSingleton(typePair.Type);
-                }
-                else if (attribute.ImplType is not null)
-                {
-                    services.AddSingleton(attribute.InterfaceType, attribute.ImplType);
-                }
-                else
-                {
-                    services.AddSingleton(attribute.InterfaceType, typePair.Type);
-                }
-
-                // IDisposable registering
-                var serviceType = attribute.InterfaceType ?? typePair.Type;
-
-                if (serviceType == typeof(IDisposable) || serviceType == typeof(IAsyncDisposable))
-                {
-                    continue;
-                }
-
-                if (typePair.Type.IsAssignableTo(typeof(IDisposable)))
-                {
-                    Debug.WriteLine("Registering IDisposable: {Name}", typePair.Type.Name);
-                    services.AddSingleton<IDisposable>(
-                        provider => (IDisposable)provider.GetRequiredService(serviceType)
-                    );
-                }
-
-                if (typePair.Type.IsAssignableTo(typeof(IAsyncDisposable)))
-                {
-                    Debug.WriteLine("Registering IAsyncDisposable: {Name}", typePair.Type.Name);
-                    services.AddSingleton<IAsyncDisposable>(
-                        provider => (IAsyncDisposable)provider.GetRequiredService(serviceType)
-                    );
-                }
-            }
-        }
+        // Register services by attributes
+        services.AddServicesByAttributes();
 
         ConfigurePageViewModels(services);
-        ConfigureDialogViewModels(services, exportedTypes);
+
+        services.AddServiceManagerWithCurrentCollectionServices<ViewModelBase>(
+            s => s.ServiceType.GetCustomAttributes<ManagedServiceAttribute>().Any()
+        );
 
         // Other services
         services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
@@ -826,44 +709,59 @@ public sealed class App : Application
 
     private void OnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
     {
-        Debug.WriteLine("Start OnShutdownRequested");
+        Logger.Trace("Start OnShutdownRequested");
 
         if (e.Cancel)
             return;
 
-        // Check if we need to dispose IAsyncDisposables
-        if (
-            isAsyncDisposeComplete
-            || Services.GetServices<IAsyncDisposable>().ToList() is not { Count: > 0 } asyncDisposables
-        )
+        // Skip if Async Dispose already started, shutdown will be handled by it
+        if (isAsyncDisposeStarted)
             return;
 
-        // Cancel shutdown for now
+        // Cancel shutdown for now to dispose
         e.Cancel = true;
-        isAsyncDisposeComplete = true;
+        isAsyncDisposeStarted = true;
 
-        Debug.WriteLine("OnShutdownRequested Canceled: Disposing IAsyncDisposables");
+        Logger.Trace("OnShutdownRequested Canceled: Disposing IAsyncDisposables");
 
         Dispatcher
             .UIThread.InvokeAsync(async () =>
             {
-                foreach (var disposable in asyncDisposables)
+                if (serviceProvider is null)
                 {
-                    Debug.WriteLine($"Disposing IAsyncDisposable ({disposable.GetType().Name})");
-                    try
-                    {
-                        await disposable.DisposeAsync().ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.Fail(ex.ToString());
-                    }
+                    Logger.Warn("Service Provider is null, skipping Async Dispose");
+                    return;
+                }
+
+                var settingsManager = Services.GetRequiredService<ISettingsManager>();
+
+                Logger.Debug("Disposing App Services");
+                try
+                {
+                    OnServiceProviderDisposing(serviceProvider);
+                    await serviceProvider.DisposeAsync();
+                    isAsyncDisposeComplete = true;
+                }
+                catch (Exception disposeEx)
+                {
+                    Logger.Error(disposeEx, "Failed to dispose ServerProvider");
+                }
+
+                Logger.Debug("Flushing SettingsManager");
+                try
+                {
+                    var cts = new CancellationTokenSource(5000);
+                    await settingsManager.FlushAsync(cts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    Logger.Error("Timeout Flushing SettingsManager");
                 }
             })
             .ContinueWith(_ =>
             {
                 // Shutdown again
-                Debug.WriteLine("Finished disposing IAsyncDisposables, shutting down");
+                Logger.Debug("Finished async shutdown tasks, shutting down");
 
                 if (Dispatcher.UIThread.SupportsRunLoops)
                 {
@@ -901,71 +799,19 @@ public sealed class App : Application
 
         try
         {
-            const int timeoutTotalMs = 10000;
-            const int timeoutPerDisposeMs = 2000;
-
-            var timeoutTotalCts = new CancellationTokenSource(timeoutTotalMs);
-
-            var toDispose = Services.GetServices<IDisposable>().ToImmutableArray();
-
-            Logger.Debug("OnExit: Preparing to Dispose {Count} Services", toDispose.Length);
-
-            // Dispose IDisposable services
-            foreach (var disposable in toDispose)
+            if (serviceProvider is null)
             {
-                Logger.Debug("OnExit: Disposing {Name}", disposable.GetType().Name);
-
-                using var instanceCts = CancellationTokenSource.CreateLinkedTokenSource(
-                    timeoutTotalCts.Token,
-                    new CancellationTokenSource(timeoutPerDisposeMs).Token
-                );
-
-                try
-                {
-                    Task.Run(() => disposable.Dispose(), instanceCts.Token).Wait(instanceCts.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    Logger.Warn("OnExit: Timeout disposing {Name}", disposable.GetType().Name);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e, "OnExit: Failed to dispose {Name}", disposable.GetType().Name);
-                }
+                Logger.Warn("Service Provider is null, skipping OnExit");
+                return;
             }
 
-            var settingsManager = Services.GetRequiredService<ISettingsManager>();
-
-            // If RemoveFolderLinksOnShutdown is set, delete all package junctions
-            if (settingsManager is { IsLibraryDirSet: true, Settings.RemoveFolderLinksOnShutdown: true })
+            // Dispose services only if async dispose has not completed
+            if (!isAsyncDisposeComplete)
             {
-                Logger.Debug("OnExit: Removing package junctions");
+                Logger.Debug("OnExit: Disposing App Services");
 
-                using var instanceCts = CancellationTokenSource.CreateLinkedTokenSource(
-                    timeoutTotalCts.Token,
-                    new CancellationTokenSource(timeoutPerDisposeMs).Token
-                );
-
-                try
-                {
-                    Task.Run(
-                            () =>
-                            {
-                                var sharedFolders = Services.GetRequiredService<ISharedFolders>();
-                                sharedFolders.RemoveLinksForAllPackages();
-                            },
-                            instanceCts.Token
-                        )
-                        .Wait(instanceCts.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                    Logger.Warn("OnExit: Timeout removing package junctions");
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e, "OnExit: Failed to remove package junctions");
-                }
+                OnServiceProviderDisposing(serviceProvider);
+                serviceProvider.Dispose();
             }
 
             Logger.Debug("OnExit: Finished");
@@ -979,12 +825,27 @@ public sealed class App : Application
         }
     }
 
+    private static void OnServiceProviderDisposing(ServiceProvider serviceProvider)
+    {
+        // Force materialize SharedFolders so its DisposeAsync is called
+        // since it's not used by anything at the moment
+        _ = serviceProvider.GetService<ISharedFolders>();
+
+        // Remove the NamedPipeWorker disposable if present
+        // causes crash on avalonia dispatcher thread for some reason
+        // https://github.com/dotnet/runtime/issues/39902
+        var disposables = serviceProvider.GetDisposables();
+        disposables.RemoveAll(d => d is NamedPipeWorker);
+
+        Logger.Trace("Disposing {Count} Disposables", disposables.Count);
+    }
+
     private static void TaskScheduler_UnobservedTaskException(
         object? sender,
         UnobservedTaskExceptionEventArgs e
     )
     {
-        if (e.Exception is not Exception unobservedEx)
+        if (e.Observed || e.Exception is not Exception unobservedEx)
             return;
 
         try

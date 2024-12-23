@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.CivitTRPC;
@@ -13,7 +13,7 @@ using ApiException = Refit.ApiException;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-[Singleton(typeof(IAccountsService))]
+[RegisterSingleton<IAccountsService, AccountsService>]
 public class AccountsService : IAccountsService
 {
     private readonly ILogger<AccountsService> logger;

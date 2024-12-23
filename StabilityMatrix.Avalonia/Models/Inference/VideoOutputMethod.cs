@@ -2,7 +2,7 @@
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
 
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<VideoOutputMethod>))]
 public enum VideoOutputMethod
 {
     Fastest,

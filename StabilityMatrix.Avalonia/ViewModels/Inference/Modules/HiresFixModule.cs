@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -15,7 +16,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<HiresFixModule>]
 public partial class HiresFixModule : ModuleBase
 {
     /// <inheritdoc />

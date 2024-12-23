@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:FluentIcons.Avalonia;assembly=FluentIcons.Avalonia"
+    xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -11,6 +12,7 @@
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.Views.Dialogs"
     xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
@@ -40,52 +42,69 @@
             Margin="8"
             Orientation="Vertical">
 
-            <controls:HyperlinkIconButton
-                Content="{Binding SelectedPackage.LicenseType}"
-                IsVisible="{Binding SelectedPackage.LicenseUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                NavigateUri="{Binding SelectedPackage.LicenseUrl}" />
 
-            <ToggleSwitch
-                Margin="8,0,8,8"
-                IsChecked="{Binding IsReleaseMode}"
-                IsVisible="{Binding ShowReleaseMode}"
-                OffContent="{x:Static lang:Resources.Label_Branches}"
-                OnContent="{x:Static lang:Resources.Label_Releases}" />
+            <StackPanel Orientation="Horizontal">
+                <controls:HyperlinkIconButton
+                    Content="{Binding SelectedPackage.LicenseType}"
+                    IsVisible="{Binding SelectedPackage.LicenseUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                    NavigateUri="{Binding SelectedPackage.LicenseUrl}" />
+                <controls:HyperlinkIconButton Content="{x:Static lang:Resources.Action_OpenGithub}" NavigateUri="{Binding SelectedPackage.GithubUrl}" />
+            </StackPanel>
 
             <!--  Version Selector  -->
             <Label
-                Margin="8,0"
-                Content="{Binding ReleaseLabelText}"
-                FontSize="14"
-                FontWeight="Light" />
-
-            <controls:BetterComboBox
-                MinWidth="250"
-                Margin="8,0,8,8"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch"
+                Margin="8,4"
+                Content="{x:Static lang:Resources.Label_Version}"
                 FontSize="16"
-                ItemsSource="{Binding AvailableVersions}"
-                SelectedItem="{Binding SelectedVersion}">
-                <controls:BetterComboBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type models:PackageVersion}">
-                        <TextBlock
-                            Name="NameTextBlock"
-                            VerticalAlignment="Center"
-                            Text="{Binding TagName}" />
-                    </DataTemplate>
-                </controls:BetterComboBox.ItemTemplate>
-            </controls:BetterComboBox>
+                FontWeight="Light" />
+            <Grid
+                Margin="8,0,0,16"
+                HorizontalAlignment="Stretch"
+                ColumnDefinitions="Auto, Auto, *">
+                <ToggleButton
+                    Grid.Column="0"
+                    Content="Branches"
+                    CornerRadius="8,0,0,8"
+                    IsChecked="{Binding !IsReleaseMode, Mode=TwoWay}" />
+                <ToggleButton
+                    Grid.Column="1"
+                    markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
+                    Content="Releases"
+                    CornerRadius="0,8,8,0"
+                    IsChecked="{Binding IsReleaseMode, Mode=TwoWay}"
+                    IsEnabled="{Binding ShowReleaseMode}"
+                    ToolTip.Tip="{Binding ReleaseTooltipText}" />
+
+                <controls:BetterComboBox
+                    Grid.Column="2"
+                    MinWidth="250"
+                    Margin="24,0,8,0"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    HorizontalContentAlignment="Stretch"
+                    FontSize="16"
+                    ItemsSource="{Binding AvailableVersions}"
+                    SelectedItem="{Binding SelectedVersion}">
+                    <controls:BetterComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models:PackageVersion}">
+                            <TextBlock
+                                Name="NameTextBlock"
+                                VerticalAlignment="Center"
+                                Text="{Binding TagName}" />
+                        </DataTemplate>
+                    </controls:BetterComboBox.ItemTemplate>
+                </controls:BetterComboBox>
+            </Grid>
 
             <Label
-                Margin="8,0"
+                Margin="8,4"
                 Content="{x:Static lang:Resources.Label_DisplayName}"
-                FontSize="14"
+                FontSize="16"
                 FontWeight="Light"
                 ToolTip.Tip="This will also be the folder name" />
             <TextBox
                 MinWidth="250"
-                Margin="8,0"
+                Margin="8,4,8,4"
                 VerticalAlignment="Stretch"
                 VerticalContentAlignment="Center"
                 FontSize="16"

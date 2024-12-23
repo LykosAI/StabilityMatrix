@@ -7,10 +7,10 @@ namespace StabilityMatrix.Core.Models.Api.Comfy;
 public class ComfyInputInfo
 {
     [JsonPropertyName("required")]
-    public Dictionary<string, JsonValue>? Required { get; set; }
+    public Dictionary<string, JsonNode>? Required { get; set; }
 
     [JsonPropertyName("optional")]
-    public Dictionary<string, JsonValue>? Optional { get; set; }
+    public Dictionary<string, JsonNode>? Optional { get; set; }
 
     public List<string>? GetRequiredValueAsNestedList(string key)
     {

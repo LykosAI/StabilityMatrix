@@ -401,6 +401,7 @@ public static class Program
             ex.SetSentryMechanism("AppDomain.UnhandledException", handled: false);
             sentryId = SentrySdk.CaptureException(ex);
             SentrySdk.FlushAsync().SafeFireAndForget();
+            Logger.Warn(ex, "Unhandled {Type}: {Message}", ex.GetType().Name, ex.Message);
         }
         else
         {
@@ -414,9 +415,8 @@ public static class Program
                 DataContext = new ExceptionViewModel { Exception = ex, SentryId = sentryId }
             };
 
-            var mainWindow = lifetime.MainWindow;
             // We can only show dialog if main window exists, and is visible
-            if (mainWindow is { PlatformImpl: not null, IsVisible: true })
+            if (lifetime.MainWindow is { PlatformImpl: not null, IsVisible: true } mainWindow)
             {
                 // Configure for dialog mode
                 dialog.ShowAsDialog = true;
@@ -454,7 +454,7 @@ public static class Program
     }
 
     [DoesNotReturn]
-    private static void ExitWithException(Exception exception)
+    public static void ExitWithException(Exception exception)
     {
         if (SentrySdk.IsEnabled)
         {

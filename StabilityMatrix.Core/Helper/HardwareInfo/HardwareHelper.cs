@@ -15,6 +15,7 @@ public static partial class HardwareHelper
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private static IReadOnlyList<GpuInfo>? cachedGpuInfos;
+    private static readonly object cachedGpuInfosLock = new();
 
     private static readonly Lazy<IHardwareInfo> HardwareInfoLazy =
         new(() => new Hardware.Info.HardwareInfo());
@@ -134,39 +135,111 @@ public static partial class HardwareHelper
     /// <summary>
     /// Yields GpuInfo for each GPU in the system.
     /// </summary>
-    public static IEnumerable<GpuInfo> IterGpuInfo()
+    /// <param name="forceRefresh">If true, refreshes cached GPU info.</param>
+    public static IEnumerable<GpuInfo> IterGpuInfo(bool forceRefresh = false)
     {
-        if (Compat.IsWindows)
+        // Use cached if available
+        if (!forceRefresh && cachedGpuInfos is not null)
         {
-            return IterGpuInfoWindows();
+            return cachedGpuInfos;
         }
 
-        if (Compat.IsLinux)
+        using var _ = CodeTimer.StartDebug();
+
+        lock (cachedGpuInfosLock)
         {
-            // Since this requires shell commands, fetch cached value if available.
-            if (cachedGpuInfos is not null)
+            if (!forceRefresh && cachedGpuInfos is not null)
             {
                 return cachedGpuInfos;
             }
 
-            // No cache, fetch and cache.
-            cachedGpuInfos = IterGpuInfoLinux().ToList();
-            return cachedGpuInfos;
-        }
-
-        if (Compat.IsMacOS)
-        {
-            if (cachedGpuInfos is not null)
+            if (Compat.IsWindows)
             {
-                return cachedGpuInfos;
+                try
+                {
+                    var smi = IterGpuInfoNvidiaSmi()?.ToList();
+                    if (smi is null)
+                        return cachedGpuInfos = IterGpuInfoWindows().ToList();
+
+                    var newList = smi.Concat(IterGpuInfoWindows().Where(gpu => !gpu.IsNvidia))
+                        .Select(
+                            (gpu, index) =>
+                                new GpuInfo
+                                {
+                                    Name = gpu.Name,
+                                    Index = index,
+                                    MemoryBytes = gpu.MemoryBytes
+                                }
+                        );
+
+                    return cachedGpuInfos = newList.ToList();
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(e, "Failed to get GPU info using nvidia-smi, falling back to registry");
+                    return cachedGpuInfos = IterGpuInfoWindows().ToList();
+                }
             }
 
-            // No cache, fetch and cache.
-            cachedGpuInfos = IterGpuInfoMacos().ToList();
-            return cachedGpuInfos;
+            if (Compat.IsLinux)
+            {
+                return cachedGpuInfos = IterGpuInfoLinux().ToList();
+            }
+
+            if (Compat.IsMacOS)
+            {
+                return cachedGpuInfos = IterGpuInfoMacos().ToList();
+            }
+
+            Logger.Error("Unknown OS, returning empty GPU info list");
+
+            return cachedGpuInfos = [];
+        }
+    }
+
+    public static IEnumerable<GpuInfo>? IterGpuInfoNvidiaSmi()
+    {
+        using var _ = CodeTimer.StartDebug();
+
+        var psi = new ProcessStartInfo
+        {
+            FileName = "nvidia-smi",
+            UseShellExecute = false,
+            Arguments = "--query-gpu name,memory.total --format=csv",
+            RedirectStandardOutput = true,
+            CreateNoWindow = true
+        };
+
+        var process = Process.Start(psi);
+        process?.WaitForExit();
+        var stdout = process?.StandardOutput.ReadToEnd();
+        var split = stdout?.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        var results = split?[1..];
+
+        if (results is null)
+            return null;
+
+        var gpuInfos = new List<GpuInfo>();
+        for (var index = 0; index < results?.Length; index++)
+        {
+            var gpu = results[index];
+            var datas = gpu.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            if (datas is not { Length: 2 })
+                continue;
+
+            var memory = Regex.Replace(datas[1], @"([A-Z])\w+", "").Trim();
+
+            gpuInfos.Add(
+                new GpuInfo
+                {
+                    Name = datas[0],
+                    Index = index,
+                    MemoryBytes = Convert.ToUInt64(memory) * Size.MiB
+                }
+            );
         }
 
-        return Enumerable.Empty<GpuInfo>();
+        return gpuInfos;
     }
 
     /// <summary>

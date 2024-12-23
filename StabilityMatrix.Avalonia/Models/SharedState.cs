@@ -1,12 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 
 namespace StabilityMatrix.Avalonia.Models;
 
 /// <summary>
 /// Singleton DI service for observable shared UI state.
 /// </summary>
-[Singleton]
+[RegisterSingleton<SharedState>]
 public partial class SharedState : ObservableObject
 {
     /// <summary>

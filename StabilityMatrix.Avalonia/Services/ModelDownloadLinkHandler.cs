@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 using System.Web;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
+using Injectio.Attributes;
 using MessagePipe;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
@@ -18,7 +18,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-[Singleton(typeof(IModelDownloadLinkHandler))]
+[RegisterSingleton<IModelDownloadLinkHandler, ModelDownloadLinkHandler>]
 public class ModelDownloadLinkHandler(
     IDistributedSubscriber<string, Uri> uriHandlerSubscriber,
     ILogger<ModelDownloadLinkHandler> logger,

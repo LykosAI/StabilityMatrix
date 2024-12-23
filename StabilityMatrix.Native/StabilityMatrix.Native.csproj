@@ -1,13 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
-		<RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<PlatformTarget>AnyCPU</PlatformTarget>
-	</PropertyGroup>
-
+    <Import Project="..\Runtimes.Default.props" />
 	<PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
 		<DefineConstants>Windows</DefineConstants>
 		<IsWindows>true</IsWindows>
@@ -28,7 +20,9 @@
 	<ItemGroup>
 		<ProjectReference Include="..\StabilityMatrix.Native.Abstractions\StabilityMatrix.Native.Abstractions.csproj" />
 	</ItemGroup>
-
+    <ItemGroup>
+        <PackageReference Include="JetBrains.Annotations" PrivateAssets="all" />
+    </ItemGroup>
 	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
 		<ProjectReference Include="..\StabilityMatrix.Native.Windows\StabilityMatrix.Native.Windows.csproj" />
 	</ItemGroup>

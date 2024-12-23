@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
@@ -19,7 +20,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(ModelMetadataEditorDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<ModelMetadataEditorDialogViewModel>]
 public partial class ModelMetadataEditorDialogViewModel(ISettingsManager settingsManager)
     : ContentDialogViewModelBase,
         IDropTarget

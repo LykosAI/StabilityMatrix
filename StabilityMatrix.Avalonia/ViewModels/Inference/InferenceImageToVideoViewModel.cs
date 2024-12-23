@@ -6,6 +6,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -23,7 +24,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceImageToVideoView), persistent: true)]
 [ManagedService]
-[Transient]
+[RegisterTransient<InferenceImageToVideoViewModel>]
 public partial class InferenceImageToVideoViewModel
     : InferenceGenerationViewModelBase,
         IParametersLoadableState

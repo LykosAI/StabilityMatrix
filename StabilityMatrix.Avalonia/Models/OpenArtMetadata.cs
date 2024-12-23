@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Serialization;
 using Avalonia.Platform.Storage;
@@ -18,5 +19,9 @@ public class OpenArtMetadata
     public List<IStorageFile>? FilePath { get; set; }
 
     [JsonIgnore]
+    [MemberNotNullWhen(true, nameof(Workflow))]
     public bool HasMetadata => Workflow?.Creator != null;
+
+    [JsonIgnore]
+    internal int Index { get; set; }
 }

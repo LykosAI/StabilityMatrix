@@ -1,12 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Injectio.Attributes;
+using Microsoft.Extensions.Logging;
 using Octokit;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Models.Database;
 
 namespace StabilityMatrix.Core.Helper.Cache;
 
-[Singleton(typeof(IGithubApiCache))]
+[RegisterSingleton<IGithubApiCache, GithubApiCache>]
 public class GithubApiCache : IGithubApiCache
 {
     private readonly ILiteDbContext dbContext;
@@ -14,11 +14,7 @@ public class GithubApiCache : IGithubApiCache
     private readonly ILogger<IGithubApiCache> logger;
     private readonly TimeSpan cacheDuration = TimeSpan.FromMinutes(15);
 
-    public GithubApiCache(
-        ILiteDbContext dbContext,
-        IGitHubClient githubApi,
-        ILogger<IGithubApiCache> logger
-    )
+    public GithubApiCache(ILiteDbContext dbContext, IGitHubClient githubApi, ILogger<IGithubApiCache> logger)
     {
         this.dbContext = dbContext;
         this.githubApi = githubApi;
@@ -36,8 +32,8 @@ public class GithubApiCache : IGithubApiCache
 
         try
         {
-            var allReleases = await githubApi.Repository.Release
-                .GetAll(username, repository)
+            var allReleases = await githubApi
+                .Repository.Release.GetAll(username, repository)
                 .ConfigureAwait(false);
             if (allReleases == null)
             {
@@ -56,8 +52,7 @@ public class GithubApiCache : IGithubApiCache
         catch (ApiException ex)
         {
             logger.LogWarning(ex, "Failed to get releases from Github API.");
-            return cacheEntry?.AllReleases.OrderByDescending(x => x.CreatedAt)
-                ?? Enumerable.Empty<Release>();
+            return cacheEntry?.AllReleases.OrderByDescending(x => x.CreatedAt) ?? Enumerable.Empty<Release>();
         }
     }
 
@@ -72,8 +67,8 @@ public class GithubApiCache : IGithubApiCache
 
         try
         {
-            var branches = await githubApi.Repository.Branch
-                .GetAll(username, repository)
+            var branches = await githubApi
+                .Repository.Branch.GetAll(username, repository)
                 .ConfigureAwait(false);
             if (branches == null)
             {
@@ -109,8 +104,8 @@ public class GithubApiCache : IGithubApiCache
 
         try
         {
-            var commits = await githubApi.Repository.Commit
-                .GetAll(
+            var commits = await githubApi
+                .Repository.Commit.GetAll(
                     username,
                     repository,
                     new CommitRequest { Sha = branch },

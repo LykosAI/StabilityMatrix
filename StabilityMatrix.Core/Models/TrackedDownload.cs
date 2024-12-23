@@ -9,7 +9,6 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models;
 
-[JsonSerializable(typeof(TrackedDownload))]
 public class TrackedDownload
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -61,7 +60,7 @@ public class TrackedDownload
     [MemberNotNullWhen(true, nameof(ExpectedHashSha256))]
     public bool ValidateHash => ExpectedHashSha256 is not null;
 
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter<ProgressState>))]
     public ProgressState ProgressState { get; set; } = ProgressState.Inactive;
 
     public List<string> ExtraCleanupFileNames { get; init; } = new();
@@ -172,12 +171,17 @@ public class TrackedDownload
         }
     }
 
-    public void Start()
+    /// <summary>
+    /// This is only intended for use by the download service.
+    /// Please use <see cref="TrackedDownloadService"/>.TryStartDownload instead.
+    /// </summary>
+    /// <exception cref="InvalidOperationException"></exception>
+    internal void Start()
     {
-        if (ProgressState != ProgressState.Inactive)
+        if (ProgressState != ProgressState.Inactive && ProgressState != ProgressState.Pending)
         {
             throw new InvalidOperationException(
-                $"Download state must be inactive to start, not {ProgressState}"
+                $"Download state must be inactive or pending to start, not {ProgressState}"
             );
         }
         Logger.Debug("Starting download {Download}", FileName);
@@ -195,9 +199,9 @@ public class TrackedDownload
         OnProgressStateChanged(ProgressState);
     }
 
-    public void Resume()
+    internal void Resume()
     {
-        if (ProgressState != ProgressState.Inactive)
+        if (ProgressState != ProgressState.Inactive && ProgressState != ProgressState.Paused)
         {
             Logger.Warn(
                 "Attempted to resume download {Download} but it is not paused ({State})",
@@ -243,6 +247,9 @@ public class TrackedDownload
 
         Logger.Debug("Pausing download {Download}", FileName);
         downloadPauseTokenSource?.Cancel();
+        OnProgressStateChanging(ProgressState.Paused);
+        ProgressState = ProgressState.Paused;
+        OnProgressStateChanged(ProgressState);
     }
 
     public void Cancel()
@@ -273,6 +280,13 @@ public class TrackedDownload
             ProgressState = ProgressState.Cancelled;
             OnProgressStateChanged(ProgressState);
         }
+    }
+
+    public void SetPending()
+    {
+        OnProgressStateChanging(ProgressState.Pending);
+        ProgressState = ProgressState.Pending;
+        OnProgressStateChanged(ProgressState);
     }
 
     /// <summary>

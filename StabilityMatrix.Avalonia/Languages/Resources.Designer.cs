@@ -402,6 +402,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open on OpenModelDB.
+        /// </summary>
+        public static string Action_OpenOnOpenModelDb {
+            get {
+                return ResourceManager.GetString("Action_OpenOnOpenModelDb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open Project....
         /// </summary>
         public static string Action_OpenProjectEllipsis {
@@ -618,6 +627,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Log in Explorer.
+        /// </summary>
+        public static string Action_ShowLogInExplorer {
+            get {
+                return ResourceManager.GetString("Action_ShowLogInExplorer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Log in Finder.
+        /// </summary>
+        public static string Action_ShowLogInFinder {
+            get {
+                return ResourceManager.GetString("Action_ShowLogInFinder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Signup.
         /// </summary>
         public static string Action_Signup {
@@ -746,6 +773,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Addons {
             get {
                 return ResourceManager.GetString("Label_Addons", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add to Existing Pack.
+        /// </summary>
+        public static string Label_AddToExistingPack {
+            get {
+                return ResourceManager.GetString("Label_AddToExistingPack", resourceCulture);
             }
         }
         
@@ -1281,6 +1317,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to To create one, simply select the extensions you want from the &apos;Available Extensions&apos; or &apos;Installed Extensions&apos; tab and click &apos;Save&apos;.
+        /// </summary>
+        public static string Label_CreateExtensionPackExplanation {
+            get {
+                return ResourceManager.GetString("Label_CreateExtensionPackExplanation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Current directory:.
         /// </summary>
         public static string Label_CurrentDirectory {
@@ -1551,6 +1596,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Extension Packs.
+        /// </summary>
+        public static string Label_ExtensionPacks {
+            get {
+                return ResourceManager.GetString("Label_ExtensionPacks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Extra Networks (Lora / LyCORIS).
         /// </summary>
         public static string Label_ExtraNetworks {
@@ -1749,6 +1803,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add a .json extension pack file to the ExtensionPacks folder within your Data directory..
+        /// </summary>
+        public static string Label_ImportExtensionPacksExplanation {
+            get {
+                return ResourceManager.GetString("Label_ImportExtensionPacksExplanation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Import Latest -.
         /// </summary>
         public static string Label_ImportLatest {
@@ -1835,6 +1898,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Installed {
             get {
                 return ResourceManager.GetString("Label_Installed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install Extension Pack.
+        /// </summary>
+        public static string Label_InstallExtensionPack {
+            get {
+                return ResourceManager.GetString("Label_InstallExtensionPack", resourceCulture);
             }
         }
         
@@ -2064,6 +2136,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to New Extension Pack.
+        /// </summary>
+        public static string Label_NewExtensionPack {
+            get {
+                return ResourceManager.GetString("Label_NewExtensionPack", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New Folder.
         /// </summary>
         public static string Label_NewFolder {
@@ -2114,6 +2195,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_NodeDetails {
             get {
                 return ResourceManager.GetString("Label_NodeDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Extension Packs Found.
+        /// </summary>
+        public static string Label_NoExtensionPacksFound {
+            get {
+                return ResourceManager.GetString("Label_NoExtensionPacksFound", resourceCulture);
             }
         }
         
@@ -2213,6 +2303,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_OpenArtBrowser {
             get {
                 return ResourceManager.GetString("Label_OpenArtBrowser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open Extension Packs Folder.
+        /// </summary>
+        public static string Label_OpenExtensionPacksFolder {
+            get {
+                return ResourceManager.GetString("Label_OpenExtensionPacksFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to - or -.
+        /// </summary>
+        public static string Label_OrWithHyphensAround {
+            get {
+                return ResourceManager.GetString("Label_OrWithHyphensAround", resourceCulture);
             }
         }
         
@@ -2532,6 +2640,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Releases are unavailable for this package..
+        /// </summary>
+        public static string Label_ReleasesUnavailableForThisPackage {
+            get {
+                return ResourceManager.GetString("Label_ReleasesUnavailableForThisPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove shared checkpoints directory symbolic links on shutdown.
         /// </summary>
         public static string Label_RemoveSymlinksOnShutdown {
@@ -2631,7 +2748,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Does not move existing data.
+        ///   Looks up a localized string similar to Does not move existing data. Requires application restart..
         /// </summary>
         public static string Label_SelectNewDataDirectory_Details {
             get {
@@ -3383,6 +3500,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Text_SomeFilesCouldNotBeDeleted {
             get {
                 return ResourceManager.GetString("Text_SomeFilesCouldNotBeDeleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please let us know about this issue with the details below and attach the zipped log files..
+        /// </summary>
+        public static string Text_UnexpectedError_Description {
+            get {
+                return ResourceManager.GetString("Text_UnexpectedError_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can continue, but full functionality will be available after restart. Please let us know about this issue with the details below and attach the zipped log files..
+        /// </summary>
+        public static string Text_UnexpectedErrorRecoverable_Description {
+            get {
+                return ResourceManager.GetString("Text_UnexpectedErrorRecoverable_Description", resourceCulture);
             }
         }
         

@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -11,7 +12,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(UpscalerCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<UpscalerCardViewModel>]
 public partial class UpscalerCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "Upscaler";

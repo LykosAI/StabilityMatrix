@@ -11,13 +11,13 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Inference;
@@ -33,7 +33,7 @@ namespace StabilityMatrix.Avalonia.Services;
 /// Manager for the current inference client
 /// Has observable shared properties for shared info like model names
 /// </summary>
-[Singleton(typeof(IInferenceClientManager))]
+[RegisterSingleton<IInferenceClientManager, InferenceClientManager>]
 public partial class InferenceClientManager : ObservableObject, IInferenceClientManager
 {
     private readonly ILogger<InferenceClientManager> logger;
@@ -461,10 +461,12 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Get CLIP model names from DualCLIPLoader node
         if (await Client.GetNodeOptionNamesAsync("DualCLIPLoader", "clip_name1") is { } clipModelNames)
         {
-            clipModelsSource.EditDiff(
-                clipModelNames.Select(HybridModelFile.FromRemote),
-                HybridModelFile.Comparer
-            );
+            IEnumerable<HybridModelFile> models =
+            [
+                HybridModelFile.None,
+                ..clipModelNames.Select(HybridModelFile.FromRemote)
+            ];
+            clipModelsSource.EditDiff(models, HybridModelFile.Comparer);
         }
     }
 

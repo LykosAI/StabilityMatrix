@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Styles;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -10,13 +13,14 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(FirstLaunchSetupWindow))]
 [ManagedService]
-[Singleton]
-public partial class FirstLaunchSetupViewModel : ViewModelBase
+[RegisterSingleton<FirstLaunchSetupViewModel>]
+public partial class FirstLaunchSetupViewModel : DisposableViewModelBase
 {
     [ObservableProperty]
     private bool eulaAccepted;
@@ -34,9 +38,33 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
             FailColorBrush = ThemeColors.ThemeYellow,
         };
 
-    public FirstLaunchSetupViewModel()
+    [ObservableProperty]
+    private bool selectDifferentGpu;
+
+    [ObservableProperty]
+    private ObservableCollection<GpuInfo> gpuInfoCollection = [];
+
+    [ObservableProperty]
+    private GpuInfo? selectedGpu;
+
+    public string YouCanChangeThis =>
+        string.Format(
+            Resources.TextTemplate_YouCanChangeThisBehavior,
+            "Settings > System Settings > Default GPU"
+        );
+
+    public FirstLaunchSetupViewModel(ISettingsManager settingsManager)
     {
         CheckHardwareBadge.RefreshFunc = SetGpuInfo;
+
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.SelectedGpu,
+                settings => settings.PreferredGpu,
+                true
+            )
+        );
     }
 
     private async Task<bool> SetGpuInfo()
@@ -47,6 +75,7 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
         {
             // Query GPU info
             gpuInfo = await Task.Run(() => HardwareHelper.IterGpuInfo().ToArray());
+            GpuInfoCollection = new ObservableCollection<GpuInfo>(gpuInfo);
         }
 
         // First Nvidia GPU
@@ -58,6 +87,7 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
         // Otherwise first GPU
         activeGpu ??= gpuInfo.FirstOrDefault();
 
+        SelectedGpu = activeGpu;
         GpuInfoText = activeGpu is null
             ? "No GPU detected"
             : $"{activeGpu.Name} ({Size.FormatBytes(activeGpu.MemoryBytes)})";
@@ -75,5 +105,11 @@ public partial class FirstLaunchSetupViewModel : ViewModelBase
     {
         base.OnLoaded();
         CheckHardwareBadge.RefreshCommand.ExecuteAsync(null).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private void ToggleManualGpu()
+    {
+        SelectDifferentGpu = !SelectDifferentGpu;
     }
 }

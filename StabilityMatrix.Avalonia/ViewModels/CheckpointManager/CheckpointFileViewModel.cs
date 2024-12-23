@@ -50,6 +50,12 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [ObservableProperty]
     private bool hideImage;
 
+    [ObservableProperty]
+    private DateTimeOffset lastModified;
+
+    [ObservableProperty]
+    private DateTimeOffset created;
+
     private readonly ISettingsManager settingsManager;
     private readonly IModelIndexService modelIndexService;
     private readonly INotificationService notificationService;
@@ -93,6 +99,8 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         );
 
         FileSize = GetFileSize(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
+        LastModified = GetLastModified(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
+        Created = GetCreated(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
     }
 
     [RelayCommand]
@@ -129,11 +137,24 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [Localizable(false)]
     private Task CopyModelUrl()
     {
-        return CheckpointFile.ConnectedModelInfo?.ModelId == null
-            ? Task.CompletedTask
-            : App.Clipboard.SetTextAsync(
-                $"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}"
-            );
+        if (!CheckpointFile.HasConnectedModel)
+            return Task.CompletedTask;
+
+        return CheckpointFile.ConnectedModelInfo.Source switch
+        {
+            ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId == null
+                => Task.CompletedTask,
+            ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId != null
+                => App.Clipboard.SetTextAsync(
+                    $"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}"
+                ),
+
+            ConnectedModelSource.OpenModelDb
+                => App.Clipboard.SetTextAsync(
+                    $"https://openmodeldb.info/models/{CheckpointFile.ConnectedModelInfo.ModelName}"
+                ),
+            _ => Task.CompletedTask
+        };
     }
 
     [RelayCommand]
@@ -442,6 +463,24 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
 
         var fileInfo = new FileInfo(filePath);
         return fileInfo.Length;
+    }
+
+    private DateTimeOffset GetLastModified(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return DateTimeOffset.MinValue;
+
+        var fileInfo = new FileInfo(filePath);
+        return fileInfo.LastWriteTime;
+    }
+
+    private DateTimeOffset GetCreated(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return DateTimeOffset.MinValue;
+
+        var fileInfo = new FileInfo(filePath);
+        return fileInfo.CreationTime;
     }
 
     private void UpdateImage()

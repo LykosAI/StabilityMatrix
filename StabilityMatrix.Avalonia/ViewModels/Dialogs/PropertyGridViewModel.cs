@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.PropertyGrid.ViewModels;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using OneOf;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -15,7 +16,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(PropertyGridDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<PropertyGridViewModel>]
 public partial class PropertyGridViewModel : ContentDialogViewModelBase
 {
     [ObservableProperty]

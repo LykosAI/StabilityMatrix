@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Refit;
 using StabilityMatrix.Avalonia.Services;
@@ -24,7 +25,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-[Transient]
+[RegisterTransient<RecommendedModelsViewModel>]
 [ManagedService]
 public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
 {

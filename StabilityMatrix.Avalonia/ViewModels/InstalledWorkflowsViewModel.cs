@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,8 +12,11 @@ using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
+using DynamicData.Alias;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
+using KGySoft.CoreLibraries;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -28,7 +32,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(InstalledWorkflowsPage))]
-[Singleton]
+[RegisterSingleton<InstalledWorkflowsViewModel>]
 public partial class InstalledWorkflowsViewModel(
     ISettingsManager settingsManager,
     INotificationService notificationService
@@ -43,11 +47,26 @@ public partial class InstalledWorkflowsViewModel(
     private IObservableCollection<OpenArtMetadata> displayedWorkflows =
         new ObservableCollectionExtended<OpenArtMetadata>();
 
+    [ObservableProperty]
+    private string searchQuery = string.Empty;
+
     protected override async Task OnInitialLoadedAsync()
     {
         await base.OnInitialLoadedAsync();
 
-        workflowsCache.Connect().DeferUntilLoaded().Bind(DisplayedWorkflows).ObserveOn(SynchronizationContext.Current).Subscribe();
+        var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
+            .Throttle(TimeSpan.FromMilliseconds(100))
+            .DistinctUntilChanged()
+            .Select(_ => (Func<OpenArtMetadata, bool>)FilterWorkflows);
+
+        workflowsCache
+            .Connect()
+            .DeferUntilLoaded()
+            .Filter(searchPredicate)
+            .SortBy(x => x.Index)
+            .Bind(DisplayedWorkflows)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
 
         if (Design.IsDesignMode)
             return;
@@ -65,6 +84,8 @@ public partial class InstalledWorkflowsViewModel(
         {
             Directory.CreateDirectory(settingsManager.WorkflowDirectory);
         }
+
+        var count = 0;
 
         foreach (
             var workflowPath in Directory.EnumerateFiles(
@@ -86,8 +107,9 @@ public partial class InstalledWorkflowsViewModel(
                         Workflow = new OpenArtSearchResult
                         {
                             Id = Guid.NewGuid().ToString(),
-                            Name = Path.GetFileNameWithoutExtension(workflowPath)
-                        }
+                            Name = Path.GetFileNameWithoutExtension(workflowPath),
+                        },
+                        Index = count++,
                     };
                 }
 
@@ -160,6 +182,20 @@ public partial class InstalledWorkflowsViewModel(
             Resources.Label_WorkflowDeleted,
             string.Format(Resources.Label_WorkflowDeletedSuccessfully, metadata?.Workflow?.Name)
         );
+    }
+
+    private bool FilterWorkflows(OpenArtMetadata metadata)
+    {
+        if (string.IsNullOrWhiteSpace(SearchQuery))
+            return true;
+
+        if (metadata.HasMetadata)
+        {
+            return metadata.Workflow.Creator.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
+                || metadata.Workflow.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return metadata.Workflow?.Name.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase) ?? false;
     }
 
     private void OnWorkflowInstalled(object? sender, EventArgs e)

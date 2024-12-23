@@ -23,6 +23,7 @@ public interface ISettingsManager
 
     List<string> PackageInstallsInProgress { get; set; }
     DirectoryPath WorkflowDirectory { get; }
+    DirectoryPath ExtensionPackDirectory { get; }
 
     /// <summary>
     /// Event fired when the library directory is changed
@@ -111,4 +112,9 @@ public interface ISettingsManager
     void SaveLaunchArgs(Guid packageId, IEnumerable<LaunchOption> launchArgs);
     bool IsEulaAccepted();
     void SetEulaAccepted();
+
+    /// <summary>
+    /// Cancels any scheduled delayed save of settings and flushes immediately.
+    /// </summary>
+    Task FlushAsync(CancellationToken cancellationToken);
 }

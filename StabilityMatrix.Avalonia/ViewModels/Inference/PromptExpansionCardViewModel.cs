@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -9,7 +10,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(PromptExpansionCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<PromptExpansionCardViewModel>]
 public partial class PromptExpansionCardViewModel(IInferenceClientManager clientManager)
     : LoadableViewModelBase
 {

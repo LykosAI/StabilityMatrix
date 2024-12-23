@@ -18,6 +18,7 @@ using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Controls;
@@ -46,7 +47,7 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(Views.OutputsPage))]
-[Singleton]
+[RegisterSingleton<OutputsPageViewModel>]
 public partial class OutputsPageViewModel : PageViewModelBase
 {
     private readonly ISettingsManager settingsManager;

@@ -1,0 +1,25 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:TheArtOfDev.HtmlRenderer.Avalonia;assembly=Avalonia.HtmlRenderer"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls">
+    <Design.PreviewWith>
+        <controls:MarkdownViewer
+            MaxWidth="800"
+            MaxHeight="800"
+            Padding="8"
+            Text="## Hello World" />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|MarkdownViewer">
+        <!--  Set Defaults  -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <avalonia:HtmlPanel
+                    x:Name="PART_HtmlPanel"
+                    Background="Transparent"
+                    Text="{TemplateBinding Html}" />
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

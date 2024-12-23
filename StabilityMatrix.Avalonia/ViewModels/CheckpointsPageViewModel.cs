@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Apizr;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -18,6 +19,8 @@ using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Fusillade;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -48,7 +51,7 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(CheckpointsPage))]
-[Singleton]
+[RegisterSingleton<CheckpointsPageViewModel>]
 public partial class CheckpointsPageViewModel(
     ILogger<CheckpointsPageViewModel> logger,
     ISettingsManager settingsManager,
@@ -58,6 +61,7 @@ public partial class CheckpointsPageViewModel(
     INotificationService notificationService,
     IMetadataImportService metadataImportService,
     IModelImportService modelImportService,
+    OpenModelDbManager openModelDbManager,
     ServiceManager<ViewModelBase> dialogFactory
 ) : PageViewModelBase
 {
@@ -278,6 +282,18 @@ public partial class CheckpointsPageViewModel(
                             SelectedSortDirection == ListSortDirection.Ascending
                                 ? comparer.ThenByAscending(vm => vm.FileSize)
                                 : comparer.ThenByDescending(vm => vm.FileSize);
+                        break;
+                    case CheckpointSortMode.Created:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.Created)
+                                : comparer.ThenByDescending(vm => vm.Created);
+                        break;
+                    case CheckpointSortMode.LastModified:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.LastModified)
+                                : comparer.ThenByDescending(vm => vm.LastModified);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -539,7 +555,7 @@ public partial class CheckpointsPageViewModel(
     [RelayCommand]
     private async Task ShowVersionDialog(CheckpointFileViewModel item)
     {
-        if (!item.CheckpointFile.HasCivitMetadata)
+        if (item.CheckpointFile is { HasCivitMetadata: false, HasOpenModelDbMetadata: false })
         {
             notificationService.Show(
                 "Cannot show version dialog",
@@ -549,6 +565,14 @@ public partial class CheckpointsPageViewModel(
             return;
         }
 
+        if (item.CheckpointFile.HasCivitMetadata)
+            await ShowCivitVersionDialog(item);
+        else if (item.CheckpointFile.HasOpenModelDbMetadata)
+            await ShowOpenModelDbDialog(item);
+    }
+
+    private async Task ShowCivitVersionDialog(CheckpointFileViewModel item)
+    {
         var model = item.CheckpointFile.LatestModelInfo;
         if (model is null)
         {
@@ -583,15 +607,15 @@ public partial class CheckpointsPageViewModel(
             IsFooterVisible = false,
             CloseOnClickOutside = true,
             MaxDialogWidth = 750,
-            MaxDialogHeight = 950,
+            MaxDialogHeight = 1000,
         };
 
-        var prunedDescription = Utilities.RemoveHtml(model.Description);
+        var htmlDescription = $"""<html><body class="markdown-body">{model.Description}</body></html>""";
 
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
         viewModel.Dialog = dialog;
         viewModel.Title = model.Name;
-        viewModel.Description = prunedDescription;
+        viewModel.Description = htmlDescription;
         viewModel.CivitModel = model;
         viewModel.Versions = versions
             .Select(version => new ModelVersionViewModel(modelIndexService, version))
@@ -621,7 +645,8 @@ public partial class CheckpointsPageViewModel(
             var subFolder =
                 viewModel?.SelectedInstallLocation
                 ?? Path.Combine(@"Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
-            downloadPath = Path.Combine(settingsManager.LibraryDir, subFolder);
+            subFolder = subFolder.StripStart(@$"Models{Path.DirectorySeparatorChar}");
+            downloadPath = Path.Combine(settingsManager.ModelsDirectory, subFolder);
         }
 
         await Task.Delay(100);
@@ -629,6 +654,36 @@ public partial class CheckpointsPageViewModel(
 
         item.Progress = new ProgressReport(1f, "Import started. Check the downloads tab for progress.");
         DelayedClearViewModelProgress(item, TimeSpan.FromMilliseconds(1000));
+    }
+
+    private async Task ShowOpenModelDbDialog(CheckpointFileViewModel item)
+    {
+        if (!item.CheckpointFile.HasOpenModelDbMetadata)
+            return;
+
+        await openModelDbManager.EnsureMetadataLoadedAsync();
+
+        var response = await openModelDbManager.ExecuteAsync(
+            api => api.GetModels(),
+            options => options.WithPriority(Priority.UserInitiated)
+        );
+
+        var model = response
+            .GetKeyedModels()
+            .FirstOrDefault(x => x.Id == item.CheckpointFile.ConnectedModelInfo.ModelName);
+
+        if (model == null)
+        {
+            notificationService.Show("Model not found", "Could not find model info", NotificationType.Error);
+            return;
+        }
+
+        var vm = dialogFactory.Get<OpenModelDbModelDetailsViewModel>();
+        vm.Model = model;
+
+        var dialog = vm.GetDialog();
+        dialog.MaxDialogHeight = 800;
+        await dialog.ShowAsync();
     }
 
     [RelayCommand]

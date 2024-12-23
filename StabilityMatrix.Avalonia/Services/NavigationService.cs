@@ -4,28 +4,19 @@ using Avalonia.Controls;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Navigation;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-[Singleton(
-    ImplType = typeof(NavigationService<MainWindowViewModel>),
-    InterfaceType = typeof(INavigationService<MainWindowViewModel>)
-)]
-[Singleton(
-    ImplType = typeof(NavigationService<SettingsViewModel>),
-    InterfaceType = typeof(INavigationService<SettingsViewModel>)
-)]
-[Singleton(
-    ImplType = typeof(NavigationService<PackageManagerViewModel>),
-    InterfaceType = typeof(INavigationService<PackageManagerViewModel>)
-)]
+[RegisterSingleton<INavigationService<MainWindowViewModel>, NavigationService<MainWindowViewModel>>]
+[RegisterSingleton<INavigationService<SettingsViewModel>, NavigationService<SettingsViewModel>>]
+[RegisterSingleton<INavigationService<PackageManagerViewModel>, NavigationService<PackageManagerViewModel>>]
 public class NavigationService<T> : INavigationService<T>
 {
     private Frame? _frame;

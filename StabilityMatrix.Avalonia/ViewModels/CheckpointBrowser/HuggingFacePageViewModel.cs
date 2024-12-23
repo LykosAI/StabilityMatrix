@@ -15,6 +15,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.HuggingFace;
 using StabilityMatrix.Avalonia.Services;
@@ -30,7 +31,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [View(typeof(Views.HuggingFacePage))]
-[Singleton]
+[RegisterSingleton<HuggingFacePageViewModel>]
 public partial class HuggingFacePageViewModel : TabViewModelBase
 {
     private readonly ITrackedDownloadService trackedDownloadService;
@@ -172,7 +173,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
                         viewModel.NotifyExistsChanged();
                     }
                 };
-                download.Start();
+                await trackedDownloadService.TryStartDownload(download);
 
                 await Task.Delay(Random.Shared.Next(50, 100));
             }

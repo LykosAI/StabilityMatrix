@@ -2,11 +2,10 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
-    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     x:DataType="vmInference:StackExpanderViewModel">
 
     <Design.PreviewWith>
@@ -21,19 +20,19 @@
 
     <Style Selector="controls|StackExpander">
         <!--  Set Defaults  -->
-        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="CornerRadius" Value="8" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="Template">
             <ControlTemplate>
                 <Expander
                     MinHeight="0"
-                    CornerRadius="{TemplateBinding CornerRadius}"
-                    ExpandDirection="{TemplateBinding ExpandDirection}"
-                    IsExpanded="{TemplateBinding IsExpanded}"
                     HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
                     VerticalAlignment="{TemplateBinding VerticalAlignment}"
                     HorizontalContentAlignment="Stretch"
-                    VerticalContentAlignment="Top">
+                    VerticalContentAlignment="Top"
+                    CornerRadius="{TemplateBinding CornerRadius}"
+                    ExpandDirection="{TemplateBinding ExpandDirection}"
+                    IsExpanded="{TemplateBinding IsExpanded}">
 
                     <Expander.Styles>
                         <Style Selector="Expander /template/ ToggleButton#PART_toggle">
@@ -42,7 +41,7 @@
                     </Expander.Styles>
 
                     <Expander.Header>
-                        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="0,-4">
+                        <Grid Margin="0,-4" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
                             <ToggleSwitch
                                 Margin="2,0,0,4"
                                 VerticalContentAlignment="Center"
@@ -99,7 +98,7 @@
                                     <StackPanel
                                         x:Name="PART_ItemsPanel"
                                         VerticalAlignment="Top"
-                                        Spacing="{TemplateBinding Spacing}" />
+                                        Spacing="{Binding $parent[controls:StackExpander].Spacing}" />
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                         </ItemsControl>

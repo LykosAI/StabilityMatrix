@@ -37,6 +37,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.OpenArt;
+using StabilityMatrix.Core.Models.Api.OpenModelsDb;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -371,9 +372,25 @@ public static class DesignData
             ),
         };
 
-        ProgressManagerViewModel.ProgressItems.AddRange(
-            new ProgressItemViewModelBase[]
+        var packageInstall = new PackageInstallProgressItemViewModel(
+            new PackageModificationRunner
             {
+                CurrentProgress = new ProgressReport(0.5f, "Installing package...", "Installing... 50%"),
+                ModificationCompleteMessage = "Package installed successfully"
+            }
+        )
+        {
+            Progress = new ContentDialogProgressViewModelBase
+            {
+                Value = 50,
+                IsIndeterminate = false,
+                Text = "UwU Install",
+                Description = "Installing...",
+            }
+        };
+
+        ProgressManagerViewModel.ProgressItems.AddRange(
+            [
                 new ProgressItemViewModel(
                     new ProgressItem(
                         Guid.NewGuid(),
@@ -384,20 +401,27 @@ public static class DesignData
                 new MockDownloadProgressItemViewModel(
                     "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
                 ),
-                new PackageInstallProgressItemViewModel(
-                    new PackageModificationRunner
-                    {
-                        CurrentProgress = new ProgressReport(0.5f, "Installing package..."),
-                        ModificationCompleteMessage = "Package installed successfully"
-                    }
+                new MockDownloadProgressItemViewModel(
+                    "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
                 )
-            }
+                {
+                    Progress = new ContentDialogProgressViewModelBase
+                    {
+                        Value = 50,
+                        IsIndeterminate = false,
+                        Text = "Waiting on other downloads to finish",
+                        Description = "Waiting on other downloads to finish",
+                    }
+                },
+                packageInstall
+            ]
         );
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
         UpdateViewModel.CurrentVersionText = "v2.0.0";
         UpdateViewModel.NewVersionText = "v2.0.1";
-        UpdateViewModel.ReleaseNotes = "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature";
+        UpdateViewModel.ReleaseNotes =
+            "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature\n - Did some `--code` stuff";
 
         isInitialized = true;
     }
@@ -555,6 +579,33 @@ public static class DesignData
                         Paths = [new DirectoryPath("example-dir")]
                     },
                     new InstalledPackageExtension { Paths = [new DirectoryPath("example-dir-2")] }
+                ]
+            );
+            vm.AddExtensionPacks(
+                [
+                    new ExtensionPack
+                    {
+                        Name = "Test Pack",
+                        PackageType = "ComfyUI",
+                        Extensions =
+                        [
+                            new SavedPackageExtension
+                            {
+                                PackageExtension = new PackageExtension
+                                {
+                                    Author = "TestAuthor",
+                                    Title = "Test",
+                                    Reference = new Uri("https://github.com/LykosAI/StabilityMatrix"),
+                                    Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")]
+                                },
+                                Version = new PackageExtensionVersion
+                                {
+                                    Branch = "main",
+                                    CommitSha = "abcd123"
+                                }
+                            }
+                        ]
+                    }
                 ]
             );
         });
@@ -940,6 +991,76 @@ The gallery images are often inpainted, but you will get something very similar 
         }
     }
 
+    public static OpenModelDbKeyedModel SampleOpenModelDbKeyedModel =>
+        new()
+        {
+            Id = "test-id",
+            Name = "16x PSNR Prretrained Model",
+            Author = "author123",
+            License = "Apache-2.0",
+            Tags = ["pretrained"],
+            Description =
+                "Pretrained: RRDB_PSNR_x4.pth\n\nThe original RRDB_PSNR_x4.pth model converted to 1x, 2x, 8x and 16x scales, intended to be used as pretrained models for new models at those scales. These are compatible with victor's 4xESRGAN.pth conversions",
+            Date = new DateOnly(2020, 4, 20),
+            Architecture = "esrgan",
+            Size = ["64nf", "23nb"],
+            Scale = 16,
+            InputChannels = 3,
+            OutputChannels = 3,
+            Resources =
+            [
+                new OpenModelDbResource
+                {
+                    Platform = "pytorch",
+                    Type = "pth",
+                    Size = 67254807,
+                    Sha256 = "d7ae3b9a3572a01d1ddfc788ebca253c872d959d3765bcb3b48c65a3ab2f9aba",
+                    Urls = ["https://drive.google.com/open?id=0"]
+                },
+                new OpenModelDbResource
+                {
+                    Platform = "onnx",
+                    Type = "onnx",
+                    Size = 20098601,
+                    Sha256 = "d7ae3b9a3572a01d1ddfc788ebca253c872d959d3765bcb3b48c65a3ab2f9aba",
+                    Urls = ["https://drive.google.com/open?id=0"]
+                }
+            ],
+            Images =
+            [
+                new OpenModelDbImage.Paired
+                {
+                    Lr = new Uri("https://imgsli.com/i/c9978a74-32ee-478b-b228-10744521fc21.jpg"),
+                    Sr = new Uri("https://imgsli.com/i/c90377d5-287d-4f1c-ab4c-96267bfaa04e.jpg"),
+                },
+                new OpenModelDbImage.Paired
+                {
+                    Lr = new Uri("https://imgsli.com/i/7c22ba75-01ca-407a-98b9-16e27ad6de55.jpg"),
+                    Sr = new Uri("https://imgsli.com/i/12aa0959-36db-49a1-8a0c-e58f99226395.jpg"),
+                },
+                new OpenModelDbImage.Paired
+                {
+                    Lr = new Uri("https://imgsli.com/i/83e9600a-a8ee-4f2b-96e7-f42dc7e5ab12.jpg"),
+                    Sr = new Uri("https://imgsli.com/i/a611b9a9-422f-44ed-882a-3ada8f478625.jpg"),
+                }
+            ]
+        };
+
+    public static OpenModelDbBrowserViewModel OpenModelDbBrowserViewModel
+    {
+        get
+        {
+            var vm = Services.GetRequiredService<OpenModelDbBrowserViewModel>();
+            return vm;
+        }
+    }
+
+    public static OpenModelDbModelDetailsViewModel OpenModelDbModelDetailsViewModel =>
+        DialogFactory.Get<OpenModelDbModelDetailsViewModel>(vm =>
+        {
+            vm.Model = SampleOpenModelDbKeyedModel;
+        });
+
     public static IList<ICompletionData> SampleCompletionData =>
         new List<ICompletionData>
         {
@@ -1129,6 +1250,8 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.ModelType = CivitModelType.Checkpoint;
             vm.BaseModelType = CivitBaseModelType.Pony;
         });
+
+    public static MockGitVersionProvider MockGitVersionProvider => new();
 
     public static string CurrentDirectory => Directory.GetCurrentDirectory();
 

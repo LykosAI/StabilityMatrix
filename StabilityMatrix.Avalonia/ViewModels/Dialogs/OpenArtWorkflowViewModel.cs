@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -21,7 +22,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(OpenArtWorkflowDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<OpenArtWorkflowViewModel>]
 public partial class OpenArtWorkflowViewModel(
     ISettingsManager settingsManager,
     IPackageFactory packageFactory

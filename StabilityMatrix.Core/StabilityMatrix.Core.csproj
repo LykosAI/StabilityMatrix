@@ -1,10 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
+  <Import Project="..\ConditionalSymbols.props" />
+  <Import Project="..\Runtimes.Default.props" />
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -20,50 +17,57 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="AsyncAwaitBestPractices" Version="8.0.0" />
-      <PackageReference Include="AutoCtor" Version="2.4.1" />
-      <PackageReference Include="Blake3" Version="1.1.0" />
-      <PackageReference Include="CompiledExpressions" Version="1.1.0" />
-      <PackageReference Include="Crc32.NET" Version="1.2.0" />
-      <PackageReference Include="CSharpDiscriminatedUnion" Version="2.0.1" />
-      <PackageReference Include="DeviceId" Version="6.7.0" />
-      <PackageReference Include="DeviceId.Linux" Version="6.4.0" />
-      <PackageReference Include="DeviceId.Mac" Version="6.3.0" />
-      <PackageReference Include="DeviceId.Windows" Version="6.6.0" />
-      <PackageReference Include="DeviceId.Windows.Wmi" Version="6.6.0" />
-      <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
-      <PackageReference Include="DynamicData" Version="9.0.1" />
-      <PackageReference Include="ExifLibNet" Version="2.1.4" />
-      <PackageReference Include="FreneticLLC.FreneticUtilities" Version="1.0.32" />
-      <PackageReference Include="Hardware.Info" Version="100.1.0.1" />
-      <PackageReference Include="JetBrains.Annotations" Version="2024.2.0" />
-      <PackageReference Include="KGySoft.Drawing.Core" Version="8.1.0" />
-      <PackageReference Include="KGySoft.Drawing.SkiaSharp" Version="8.1.0" />
-      <PackageReference Include="LiteDB" Version="5.0.21" />
-      <PackageReference Include="LiteDB.Async" Version="0.1.8" />
-      <PackageReference Include="MetadataExtractor" Version="2.8.1" />
-      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="8.0.0" />
-      <PackageReference Include="NLog" Version="5.3.2" />
-      <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" />
-      <PackageReference Include="NSec.Cryptography" Version="24.4.0" />
-      <PackageReference Include="Octokit" Version="13.0.1" />
-      <PackageReference Include="OneOf" Version="3.0.271" />
-      <PackageReference Include="OneOf.SourceGenerator" Version="3.0.271" />
-      <PackageReference Include="Polly" Version="8.4.1" />
-      <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-      <PackageReference Include="pythonnet" Version="3.0.3" />
-      <PackageReference Include="Refit" Version="7.1.2" />
-      <PackageReference Include="Refit.HttpClientFactory" Version="7.1.2" />
-      <PackageReference Include="RockLib.Reflection.Optimized" Version="3.0.0" />
-      <PackageReference Include="Salaros.ConfigParser" Version="0.3.8" />
-      <PackageReference Include="Semver" Version="3.0.0-beta.1" />
-      <PackageReference Include="Sentry.NLog" Version="4.9.0" />
-      <PackageReference Include="SharpCompress" Version="0.37.2" />
-      <PackageReference Include="SkiaSharp" Version="3.0.0-preview.4.1" />
-      <PackageReference Include="Websocket.Client" Version="5.1.2" />
-      <PackageReference Include="YamlDotNet" Version="16.0.0" />
-      <PackageReference Include="Yoh.Text.Json.NamingPolicies" Version="1.1.2" />
+      <PackageReference Include="Apizr" />
+      <PackageReference Include="Apizr.Extensions.Microsoft.Caching" />
+      <PackageReference Include="Apizr.Extensions.Microsoft.DependencyInjection" />
+      <PackageReference Include="Apizr.Integrations.Fusillade" />
+      <PackageReference Include="AsyncAwaitBestPractices" />
+      <PackageReference Include="AutoCtor" />
+      <PackageReference Include="Blake3" />
+      <PackageReference Include="CompiledExpressions" />
+      <PackageReference Include="Crc32.NET" />
+      <PackageReference Include="CSharpDiscriminatedUnion" />
+      <PackageReference Include="DeviceId" />
+      <PackageReference Include="DeviceId.Linux" />
+      <PackageReference Include="DeviceId.Mac" />
+      <PackageReference Include="DeviceId.Windows" />
+      <PackageReference Include="DeviceId.Windows.Wmi" />
+      <PackageReference Include="DotNet.Bundle" />
+      <PackageReference Include="DynamicData" />
+      <PackageReference Include="ExifLibNet" />
+      <PackageReference Include="FreneticLLC.FreneticUtilities" />
+      <PackageReference Include="Hardware.Info" />
+      <PackageReference Include="Injectio" />
+      <PackageReference Include="JetBrains.Annotations" />
+      <PackageReference Include="KGySoft.Drawing.Core" />
+      <PackageReference Include="KGySoft.Drawing.SkiaSharp" />
+      <PackageReference Include="LiteDB" />
+      <PackageReference Include="LiteDB.Async" />
+      <PackageReference Include="MetadataExtractor" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+      <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+      <PackageReference Include="NLog" />
+      <PackageReference Include="NLog.Extensions.Logging" />
+      <PackageReference Include="NSec.Cryptography" />
+      <PackageReference Include="Octokit" />
+      <PackageReference Include="OneOf" />
+      <PackageReference Include="OneOf.SourceGenerator" />
+      <PackageReference Include="Polly" />
+      <PackageReference Include="Polly.Contrib.WaitAndRetry" />
+      <PackageReference Include="pythonnet" />
+      <PackageReference Include="Refit" />
+      <PackageReference Include="Refit.HttpClientFactory" />
+      <PackageReference Include="RockLib.Reflection.Optimized" />
+      <PackageReference Include="Salaros.ConfigParser" />
+      <PackageReference Include="Semver" />
+      <PackageReference Include="Sentry.NLog" />
+      <PackageReference Include="SharpCompress" />
+      <PackageReference Include="SkiaSharp" />
+      <PackageReference Include="Websocket.Client" />
+      <PackageReference Include="YamlDotNet" />
+      <PackageReference Include="Yoh.Text.Json.NamingPolicies" />
     </ItemGroup>
 
     <ItemGroup>

@@ -4,11 +4,11 @@ using System.Diagnostics;
 using System.Text;
 using AsyncAwaitBestPractices;
 using AutoCtor;
+using Injectio.Attributes;
 using KGySoft.CoreLibraries;
 using LiteDB;
 using LiteDB.Async;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -20,7 +20,7 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace StabilityMatrix.Core.Services;
 
-[Singleton(typeof(IModelIndexService))]
+[RegisterSingleton<IModelIndexService, ModelIndexService>]
 [AutoConstruct]
 public partial class ModelIndexService : IModelIndexService
 {
@@ -192,6 +192,11 @@ public partial class ModelIndexService : IModelIndexService
     public Task<IEnumerable<LocalModelFile>> FindByHashAsync(string hashBlake3)
     {
         return liteDbContext.LocalModelFiles.FindAsync(m => m.HashBlake3 == hashBlake3);
+    }
+
+    public Task<IEnumerable<LocalModelFile>> FindBySha256Async(string hashSha256)
+    {
+        return liteDbContext.LocalModelFiles.FindAsync(m => m.HashSha256 == hashSha256);
     }
 
     /// <inheritdoc />

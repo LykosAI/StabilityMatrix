@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -22,7 +23,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), IsPersistent = true)]
 [ManagedService]
-[Transient]
+[RegisterTransient<InferenceFluxTextToImageViewModel>]
 public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     private readonly INotificationService notificationService;

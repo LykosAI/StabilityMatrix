@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
@@ -32,7 +33,7 @@ using Resources = StabilityMatrix.Avalonia.Languages.Resources;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(OpenArtBrowserPage))]
-[Singleton]
+[RegisterSingleton<OpenArtBrowserViewModel>]
 public partial class OpenArtBrowserViewModel(
     IOpenArtApi openArtApi,
     INotificationService notificationService,

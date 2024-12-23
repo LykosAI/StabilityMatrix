@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -8,7 +9,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<FreeUModule>]
 public class FreeUModule : ModuleBase
 {
     /// <inheritdoc />
@@ -31,7 +32,7 @@ public class FreeUModule : ModuleBase
 
         foreach (var modelConnections in e.Builder.Connections.Models.Values.Where(m => m.Model is not null))
         {
-            modelConnections.Model = e.Nodes.AddTypedNode(
+            var freeUOutput = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.FreeU
                 {
                     Name = e.Nodes.GetUniqueName($"FreeU_{modelConnections.Name}"),
@@ -42,6 +43,9 @@ public class FreeUModule : ModuleBase
                     S2 = card.S2
                 }
             ).Output;
+
+            modelConnections.Model = freeUOutput;
+            e.Temp.Base.Model = freeUOutput;
         }
     }
 }

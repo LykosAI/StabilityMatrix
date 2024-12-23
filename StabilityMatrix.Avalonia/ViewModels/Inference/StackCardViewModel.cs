@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Text.Json.Nodes;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -11,7 +12,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(StackCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<StackCardViewModel>]
 public class StackCardViewModel : StackViewModelBase
 {
     /// <inheritdoc />

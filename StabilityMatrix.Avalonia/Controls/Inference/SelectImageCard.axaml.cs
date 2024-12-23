@@ -4,13 +4,13 @@ using System.Threading;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
-using StabilityMatrix.Core.Attributes;
 using Size = Avalonia.Size;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-[Transient]
+[RegisterTransient<SelectImageCard>]
 public class SelectImageCard : DropTargetTemplatedControlBase
 {
     /// <inheritdoc />

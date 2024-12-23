@@ -1,4 +1,4 @@
-﻿using StabilityMatrix.Core.Attributes;
+﻿using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -11,7 +11,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, SDWebForge>(Duplicate = DuplicateStrategy.Append)]
 public class SDWebForge(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -99,7 +99,7 @@ public class SDWebForge(
             {
                 Name = "Use DirectML",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectML(),
+                InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
                 Options = ["--directml"]
             },
             new()

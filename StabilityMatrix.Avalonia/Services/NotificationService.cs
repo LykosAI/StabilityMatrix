@@ -6,10 +6,10 @@ using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using DesktopNotifications.FreeDesktop;
 using DesktopNotifications.Windows;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Nito.AsyncEx;
 using StabilityMatrix.Avalonia.Extensions;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
@@ -19,7 +19,7 @@ using INotificationManager = DesktopNotifications.INotificationManager;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-[Singleton(typeof(INotificationService))]
+[RegisterSingleton<INotificationService, NotificationService>]
 public class NotificationService(ILogger<NotificationService> logger, ISettingsManager settingsManager)
     : INotificationService,
         IDisposable
@@ -225,6 +225,7 @@ public class NotificationService(ILogger<NotificationService> logger, ISettingsM
         }
         catch (Exception e)
         {
+            logger.LogError(e, "{Exception}", e);
             Show(new Notification(title, message ?? e.Message, appearance));
             return new TaskResult<bool>(false, e);
         }

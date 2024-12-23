@@ -2,8 +2,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using Injectio.Attributes;
 using NLog;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -17,7 +17,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, A3WebUI>(Duplicate = DuplicateStrategy.Append)]
 public class A3WebUI(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -162,7 +162,7 @@ public class A3WebUI(
                 Type = LaunchOptionType.Bool,
                 Description = "Do not switch the model to 16-bit floats",
                 InitialValue =
-                    HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML() || Compat.IsMacOS,
+                    HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectMLOrZluda() || Compat.IsMacOS,
                 Options = ["--no-half"]
             },
             new()

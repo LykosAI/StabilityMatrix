@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -31,7 +32,8 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 
 [View(typeof(InferenceSettingsPage))]
-[Singleton, ManagedService]
+[ManagedService]
+[RegisterSingleton<InferenceSettingsViewModel>]
 public partial class InferenceSettingsViewModel : PageViewModelBase
 {
     private readonly INotificationService notificationService;

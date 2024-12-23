@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -16,7 +17,7 @@ using StabilityMatrix.Native;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(ConfirmDeleteDialog))]
-[Transient]
+[RegisterTransient<ConfirmDeleteDialogViewModel>]
 [ManagedService]
 public partial class ConfirmDeleteDialogViewModel(ILogger<ConfirmDeleteDialogViewModel> logger)
     : ContentDialogViewModelBase

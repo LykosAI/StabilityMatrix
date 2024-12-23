@@ -99,7 +99,7 @@ public class SDWebForge(
             {
                 Name = "Use DirectML",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectML(),
+                InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
                 Options = ["--directml"]
             },
             new()

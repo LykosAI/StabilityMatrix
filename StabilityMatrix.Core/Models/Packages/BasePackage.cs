@@ -147,7 +147,7 @@ public abstract class BasePackage(ISettingsManager settingsManager)
 
         var preferDirectMl =
             Compat.IsWindows
-            && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferDirectML());
+            && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferDirectMLOrZluda());
         if (AvailableTorchIndices.Contains(TorchIndex.DirectMl) && preferDirectMl)
         {
             return TorchIndex.DirectMl;

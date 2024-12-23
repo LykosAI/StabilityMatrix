@@ -94,6 +94,8 @@ public class PackageFactory : IPackageFactory
                 => new SimpleSDXL(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             "Cogstudio"
                 => new Cogstudio(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "ComfyUI-Zluda"
+                => new ComfyZluda(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage))
         };
     }

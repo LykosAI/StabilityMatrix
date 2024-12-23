@@ -126,7 +126,7 @@ public class Fooocus(
                 Name = "Use DirectML",
                 Type = LaunchOptionType.Bool,
                 Description = "Use pytorch with DirectML support",
-                InitialValue = HardwareHelper.PreferDirectML(),
+                InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
                 Options = { "--directml" }
             },
             new LaunchOptionDefinition

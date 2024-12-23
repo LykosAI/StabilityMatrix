@@ -329,6 +329,15 @@ public partial class SelectModelVersionViewModel(
             }
         }
 
+        if (downloadDirectory.ToString().EndsWith("Unet"))
+        {
+            // also add StableDiffusion in case we have an AIO version
+            var stableDiffusionDirectory = rootModelsDirectory.JoinDir(
+                SharedFolderType.StableDiffusion.GetStringValue()
+            );
+            installLocations.Add(stableDiffusionDirectory.ToString().Replace(rootModelsDirectory, "Models"));
+        }
+
         installLocations.Add("Custom...");
 
         AvailableInstallLocations = installLocations;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -12,7 +13,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<FaceDetailerModule>]
 public class FaceDetailerModule : ModuleBase, IValidatableModule
 {
     public FaceDetailerModule(ServiceManager<ViewModelBase> vmFactory)

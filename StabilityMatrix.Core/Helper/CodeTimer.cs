@@ -1,10 +1,12 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace StabilityMatrix.Core.Helper;
 
+[Localizable(false)]
 public class CodeTimer(string postFix = "", [CallerMemberName] string callerName = "") : IDisposable
 {
     private static readonly Stack<CodeTimer> RunningTimers = new();

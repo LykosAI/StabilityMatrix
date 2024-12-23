@@ -14,6 +14,7 @@ using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Languages;
@@ -36,7 +37,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 /// </summary>
 
 [View(typeof(MainPackageManagerView))]
-[Singleton, ManagedService]
+[ManagedService]
+[RegisterSingleton<MainPackageManagerViewModel>]
 public partial class MainPackageManagerViewModel : PageViewModelBase
 {
     private readonly ISettingsManager settingsManager;

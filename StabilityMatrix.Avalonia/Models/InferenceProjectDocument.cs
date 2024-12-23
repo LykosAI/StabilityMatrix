@@ -19,7 +19,7 @@ public class InferenceProjectDocument : ICloneable
 
     public int Version { get; set; } = 2;
 
-    [JsonConverter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter<InferenceProjectType>))]
     public InferenceProjectType ProjectType { get; set; }
 
     public JsonObject? State { get; set; }

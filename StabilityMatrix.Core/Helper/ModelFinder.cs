@@ -1,8 +1,8 @@
 ﻿using System.Net;
+using Injectio.Attributes;
 using NLog;
 using Refit;
 using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Models.Api;
 
@@ -11,7 +11,7 @@ namespace StabilityMatrix.Core.Helper;
 // return Model, ModelVersion, ModelFile
 public record struct ModelSearchResult(CivitModel Model, CivitModelVersion ModelVersion, CivitFile ModelFile);
 
-[Singleton]
+[RegisterSingleton<ModelFinder>]
 public class ModelFinder
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

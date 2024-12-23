@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -34,9 +35,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Progress;
 
 [View(typeof(ProgressManagerPage))]
 [ManagedService]
-[Singleton]
+[RegisterSingleton<ProgressManagerViewModel>]
 public partial class ProgressManagerViewModel : PageViewModelBase
 {
+    private readonly ITrackedDownloadService trackedDownloadService;
     private readonly INotificationService notificationService;
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly INavigationService<SettingsViewModel> settingsNavService;
@@ -58,6 +60,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         INavigationService<SettingsViewModel> settingsNavService
     )
     {
+        this.trackedDownloadService = trackedDownloadService;
         this.notificationService = notificationService;
         this.navigationService = navigationService;
         this.settingsNavService = settingsNavService;
@@ -186,7 +189,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
             }
         };
 
-        var vm = new DownloadProgressItemViewModel(e);
+        var vm = new DownloadProgressItemViewModel(trackedDownloadService, e);
 
         ProgressItems.Add(vm);
     }
@@ -197,7 +200,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         {
             if (ProgressItems.Any(vm => vm.Id == download.Id))
                 continue;
-            var vm = new DownloadProgressItemViewModel(download);
+            var vm = new DownloadProgressItemViewModel(trackedDownloadService, download);
             ProgressItems.Add(vm);
         }
     }

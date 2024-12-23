@@ -10,6 +10,7 @@ using Exceptionless.DateTimeExtensions;
 using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using Semver;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -27,7 +28,8 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 
 [View(typeof(UpdateSettingsPage))]
-[Singleton, ManagedService]
+[ManagedService]
+[RegisterSingleton<UpdateSettingsViewModel>]
 public partial class UpdateSettingsViewModel : PageViewModelBase
 {
     private readonly IUpdateHelper updateHelper;

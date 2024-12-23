@@ -1,9 +1,9 @@
-﻿using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Core.Attributes;
+﻿using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Controls;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
-[Transient]
+[RegisterTransient<MaskEditorDialog>]
 public partial class MaskEditorDialog : UserControlBase
 {
     public MaskEditorDialog()

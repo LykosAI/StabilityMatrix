@@ -1,13 +1,13 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Injectio.Attributes;
+using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Helper.Analytics;
 
-[Singleton(typeof(IAnalyticsHelper))]
+[RegisterSingleton<IAnalyticsHelper, AnalyticsHelper>]
 public class AnalyticsHelper(
     ILogger<AnalyticsHelper> logger,
     ILykosAnalyticsApi analyticsApi,

@@ -7,6 +7,7 @@ using DynamicData;
 using DynamicData.Alias;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Services;
@@ -24,18 +25,19 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [View(typeof(PackageInstallBrowserView))]
-[Transient, ManagedService]
-public partial class PackageInstallBrowserViewModel : PageViewModelBase
+[ManagedService]
+[RegisterTransient<PackageInstallBrowserViewModel>]
+public partial class PackageInstallBrowserViewModel(
+    IPackageFactory packageFactory,
+    INavigationService<PackageManagerViewModel> packageNavigationService,
+    ISettingsManager settingsManager,
+    INotificationService notificationService,
+    ILogger<PackageInstallDetailViewModel> logger,
+    IPyRunner pyRunner,
+    IPrerequisiteHelper prerequisiteHelper,
+    IAnalyticsHelper analyticsHelper
+) : PageViewModelBase
 {
-    private readonly IPackageFactory packageFactory;
-    private readonly INavigationService<PackageManagerViewModel> packageNavigationService;
-    private readonly ISettingsManager settingsManager;
-    private readonly INotificationService notificationService;
-    private readonly ILogger<PackageInstallDetailViewModel> logger;
-    private readonly IPyRunner pyRunner;
-    private readonly IPrerequisiteHelper prerequisiteHelper;
-    private readonly IAnalyticsHelper analyticsHelper;
-
     [ObservableProperty]
     private bool showIncompatiblePackages;
 
@@ -50,25 +52,12 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
     public IObservableCollection<BasePackage> TrainingPackages { get; } =
         new ObservableCollectionExtended<BasePackage>();
 
-    public PackageInstallBrowserViewModel(
-        IPackageFactory packageFactory,
-        INavigationService<PackageManagerViewModel> packageNavigationService,
-        ISettingsManager settingsManager,
-        INotificationService notificationService,
-        ILogger<PackageInstallDetailViewModel> logger,
-        IPyRunner pyRunner,
-        IPrerequisiteHelper prerequisiteHelper,
-        IAnalyticsHelper analyticsHelper
-    )
+    public override string Title => "Add Package";
+    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Add };
+
+    protected override void OnInitialLoaded()
     {
-        this.packageFactory = packageFactory;
-        this.packageNavigationService = packageNavigationService;
-        this.settingsManager = settingsManager;
-        this.notificationService = notificationService;
-        this.logger = logger;
-        this.pyRunner = pyRunner;
-        this.prerequisiteHelper = prerequisiteHelper;
-        this.analyticsHelper = analyticsHelper;
+        base.OnInitialLoaded();
 
         var incompatiblePredicate = this.WhenPropertyChanged(vm => vm.ShowIncompatiblePackages)
             .Select(_ => new Func<BasePackage, bool>(p => p.IsCompatible || ShowIncompatiblePackages))
@@ -120,9 +109,6 @@ public partial class PackageInstallBrowserViewModel : PageViewModelBase
             (a, b) => a.GithubUrl == b.GithubUrl
         );
     }
-
-    public override string Title => "Add Package";
-    public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Add };
 
     public void OnPackageSelected(BasePackage? package)
     {

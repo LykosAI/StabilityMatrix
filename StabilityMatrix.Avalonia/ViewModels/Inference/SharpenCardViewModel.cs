@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
@@ -8,7 +9,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SharpenCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<SharpenCardViewModel>]
 public partial class SharpenCardViewModel : LoadableViewModelBase
 {
     [Range(1, 31)]

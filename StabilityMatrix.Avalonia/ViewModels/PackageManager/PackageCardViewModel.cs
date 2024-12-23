@@ -14,6 +14,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
@@ -37,7 +38,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<PackageCardViewModel>]
 public partial class PackageCardViewModel(
     ILogger<PackageCardViewModel> logger,
     IPackageFactory packageFactory,

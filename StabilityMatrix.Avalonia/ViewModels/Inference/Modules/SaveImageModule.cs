@@ -1,4 +1,5 @@
-﻿using StabilityMatrix.Avalonia.Languages;
+﻿using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -8,7 +9,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<SaveImageModule>]
 public class SaveImageModule : ModuleBase
 {
     /// <inheritdoc />
@@ -21,15 +22,13 @@ public class SaveImageModule : ModuleBase
     /// <inheritdoc />
     protected override void OnApplyStep(ModuleApplyStepEventArgs e)
     {
-        var preview = e.Builder
-            .Nodes
-            .AddTypedNode(
-                new ComfyNodeBuilder.PreviewImage
-                {
-                    Name = e.Builder.Nodes.GetUniqueName("SaveIntermediateImage"),
-                    Images = e.Builder.GetPrimaryAsImage()
-                }
-            );
+        var preview = e.Builder.Nodes.AddTypedNode(
+            new ComfyNodeBuilder.PreviewImage
+            {
+                Name = e.Builder.Nodes.GetUniqueName("SaveIntermediateImage"),
+                Images = e.Builder.GetPrimaryAsImage()
+            }
+        );
 
         e.Builder.Connections.OutputNodes.Add(preview);
     }

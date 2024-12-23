@@ -7,6 +7,7 @@ using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -27,7 +28,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(PromptCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<PromptCardViewModel>]
 public partial class PromptCardViewModel
     : DisposableLoadableViewModelBase,
         IParametersLoadableState,

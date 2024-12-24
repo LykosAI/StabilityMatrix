@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "StableDiffusion" folder as an option when downloading Flux models in the CivitAI model browser
 ### Changed
 - Updated pytorch index to `rocm6.2` for AMD users of ComfyUI on Linux
+### Supporters
+#### Visionaries
+- Big shoutout to our incredible Visionary-tier Patreon supporter, **Waterclouds**! We're also delighted to introduce our newest Visionary-tier Patreon supporter, **TheTekknician**! Thank you both for your generous support!
 
 ## v2.13.0-pre.1
 ### Added

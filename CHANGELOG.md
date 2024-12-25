@@ -5,6 +5,46 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.13.0
+### Added
+- Added new package - [ComfyUI-Zluda](https://github.com/patientx/ComfyUI-Zluda) - for AMD GPU users on Windows
+- Added file sizes to the Checkpoint Manager tab
+- Added the Discrete Model Sampling addon for Inference samplers, allows selecting different sampling methods, such as v_prediction, lcm, or x0, and optionally adjusts the model’s noise reduction strategy with the zero-shot noise ratio (ZSNR) toggle.
+- Added Default GPU override in Settings -> System Settings -> Default GPU
+- Added new "Copy" menu to the Inference gallery context menu, allowing you to copy generation parameters as well as the image
+- Added "StableDiffusion" folder as an option when downloading Flux models in the CivitAI model browser
+- Added support for SD3.5 in Inference
+- Added CLIP_G to HuggingFace model browser
+- Added search bar to the Installed Workflows tab
+- Added "Search with Google" and "Search with ChatGPT" to the package console output & install progress console output context menus
+- Added "Date Created" and "Date Last Modified" sorting options to the Checkpoints tab
+- Added a new "Extension Packs" section to the extension manager, allowing you to create packs for easier installation of multiple extensions at once
+- Added "Search by Creator" command to Civitai browser context menu
+- Added Beta scheduler to the scheduler selector in Inference
+- Added zipping of log files and "Show Log in Explorer" button on exceptions dialog for easier support
+- Added max concurrent downloads option & download queueing for most downloads
+- Added the ability to change the Models directory separately from the rest of the Data directory. This can be set in `Settings > Select new Models Folder`
+- Added InvokeAI model sharing option
+### Changed
+- Improved Packages Page grid layout to dynamically stretch to fill available space
+- Text Encoder / CLIP selection in Inference is now enabled via the cogwheel ⚙️ button next to the model selector 
+- Updated Civitai model descriptions to properly render the interactive elements
+- Adjusted the Branch/Release toggle during package install flow to be a little more obvious
+- Updated the Dock library used for Inference - fixes some weirdness with resizing / rearranging panels
+- New file format and key derivation for protecting locally encrypted secrets (i.e. Civit / Lykos accounts) that is no longer dependent on the OS Version. This should prevent system updates from clearing account logins.
+- (Internal) Updated to .NET 9 Runtime and Avalonia 11.2.2 for performance improvements, lower memory usage, and bug fixes
+- Updated pytorch index to `rocm6.2` for AMD users of ComfyUI on Linux
+### Fixed
+- Fixed text alignment issues in the Downloads tab for certain long names / progress infos
+- Improved startup performance and resource usage with optimizations to hardware lookups. Moved reflection usages in dependency injection to source generation.
+- Fixed an issue with ComfyUI-Impact-Subpack not being installed when using FaceDetailer in Inference
+- Fixed GGUF models not showing in Inference without the GGUF extension installed (this means it will now properly prompt you to install the extension as well)
+### Supporters
+#### Visionaries
+- We're extremely grateful to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Thank you very much for your unwavering support!
+#### Pioneers
+- Many thanks to our amazing Pioneer-tier Patreon supporters, **tankfox**, **Mr Unknown**, **Szir777**, and our newest Pioneer, **NowFallenAngel**! Your generous support is very much appreciated!
+
 ## v2.13.0-pre.2
 ### Added
 - Added new package - [ComfyUI-Zluda](https://github.com/patientx/ComfyUI-Zluda) - for AMD GPU users on Windows
@@ -94,11 +134,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Supporters
 #### Visionaries
 - A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
-
-## v2.12.5
-### Fixed
-- Fixed an issue with ComfyUI-Impact-Subpack not being installed when using FaceDetailer in Inference
-- Fixed GGUF models not showing in Inference without the GGUF extension installed (this means it will now properly prompt you to install the extension as well)
 
 ## v2.12.4
 ### Added

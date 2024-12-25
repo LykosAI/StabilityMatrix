@@ -1,11 +1,11 @@
 ﻿using Avalonia.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels;
-using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-[Singleton]
+[RegisterSingleton<OutputsPage>]
 public partial class OutputsPage : UserControlBase
 {
     public OutputsPage()

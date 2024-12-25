@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
@@ -11,7 +11,7 @@ using StabilityMatrix.Core.Models.Progress;
 
 namespace StabilityMatrix.Core.Services;
 
-[Transient(typeof(IMetadataImportService))]
+[RegisterTransient<IMetadataImportService, MetadataImportService>]
 public class MetadataImportService(
     ILogger<MetadataImportService> logger,
     IDownloadService downloadService,

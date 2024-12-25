@@ -10,6 +10,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -26,7 +27,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<SelectModelVersionViewModel>]
 public partial class SelectModelVersionViewModel(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
@@ -326,6 +327,15 @@ public partial class SelectModelVersionViewModel(
             {
                 installLocations.Add(directory.ToString().Replace(rootModelsDirectory, "Models"));
             }
+        }
+
+        if (downloadDirectory.ToString().EndsWith("Unet"))
+        {
+            // also add StableDiffusion in case we have an AIO version
+            var stableDiffusionDirectory = rootModelsDirectory.JoinDir(
+                SharedFolderType.StableDiffusion.GetStringValue()
+            );
+            installLocations.Add(stableDiffusionDirectory.ToString().Replace(rootModelsDirectory, "Models"));
         }
 
         installLocations.Add("Custom...");

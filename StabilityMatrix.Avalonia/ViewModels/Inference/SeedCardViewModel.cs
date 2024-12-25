@@ -2,6 +2,7 @@
 using System.Text.Json.Nodes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -11,7 +12,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SeedCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<SeedCardViewModel>]
 public partial class SeedCardViewModel : LoadableViewModelBase
 {
     [ObservableProperty, NotifyPropertyChangedFor(nameof(RandomizeButtonToolTip))]
@@ -41,8 +42,6 @@ public partial class SeedCardViewModel : LoadableViewModelBase
     /// <inheritdoc />
     public override JsonObject SaveStateToJsonObject()
     {
-        return SerializeModel(
-            new SeedCardModel { Seed = Seed, IsRandomizeEnabled = IsRandomizeEnabled }
-        );
+        return SerializeModel(new SeedCardModel { Seed = Seed, IsRandomizeEnabled = IsRandomizeEnabled });
     }
 }

@@ -1,0 +1,19 @@
+<Project>
+  <PropertyGroup Label="Compile Options">
+    <!-- true to include all conditional paths / attributes, mainly for testing -->
+    <SM_IncludeAllConditionals>false</SM_IncludeAllConditionals>
+    <!-- Mode for ServiceProvider registrations: CodeGeneration, Reflection -->
+    <SM_RegisterServiceMode>CodeGeneration</SM_RegisterServiceMode>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(SM_IncludeAllConditionals)' == 'true'">
+    <!-- REGISTER_SERVICE_USAGES: Include Injectio attributes -->
+    <DefineConstants>$(DefineConstants);REGISTER_SERVICE_USAGES</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Label="RegisterServiceMode Definitions">
+    <DefineConstants Condition="'$(SM_RegisterServiceMode)' == 'Reflection'">
+      $(DefineConstants);REGISTER_SERVICE_REFLECTION;REGISTER_SERVICE_USAGES
+    </DefineConstants>
+  </PropertyGroup>
+</Project>

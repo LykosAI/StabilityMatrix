@@ -76,10 +76,10 @@ jobs:
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
-      - name: Set up .NET 8
+      - name: Set up .NET 9
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
       - name: Install PupNet
         run: |
@@ -144,10 +144,10 @@ jobs:
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
 
-      - name: Set up .NET 8
+      - name: Set up .NET 9
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
       - name: Install dependencies
         run: dotnet restore
@@ -203,10 +203,10 @@ jobs:
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
-      - name: Set up .NET 8
+      - name: Set up .NET 9
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
       - name: Install dependencies
         run: dotnet restore -p:PublishReadyToRun=true

@@ -14,6 +14,7 @@ using DynamicData;
 using DynamicData.Binding;
 using FuzzySharp;
 using FuzzySharp.PreProcess;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
@@ -36,7 +37,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ImageFolderCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<ImageFolderCardViewModel>]
 public partial class ImageFolderCardViewModel : DisposableViewModelBase
 {
     private readonly ILogger<ImageFolderCardViewModel> logger;
@@ -377,6 +378,61 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
         }
 
         notificationService.Show("Image Exported", $"Saved to {targetPath}", NotificationType.Success);
+    }
+
+    [RelayCommand]
+    private async Task CopySeedToClipboard(LocalImageFile? item)
+    {
+        if (item?.GenerationParameters is null || App.Clipboard is null)
+        {
+            return;
+        }
+
+        await App.Clipboard.SetTextAsync(item.GenerationParameters.Seed.ToString());
+    }
+
+    [RelayCommand]
+    private async Task CopyPromptToClipboard(LocalImageFile? item)
+    {
+        if (item?.GenerationParameters is null || App.Clipboard is null)
+        {
+            return;
+        }
+
+        await App.Clipboard.SetTextAsync(item.GenerationParameters.PositivePrompt);
+    }
+
+    [RelayCommand]
+    private async Task CopyNegativePromptToClipboard(LocalImageFile? item)
+    {
+        if (item?.GenerationParameters is null || App.Clipboard is null)
+        {
+            return;
+        }
+
+        await App.Clipboard.SetTextAsync(item.GenerationParameters.NegativePrompt);
+    }
+
+    [RelayCommand]
+    private async Task CopyModelNameToClipboard(LocalImageFile? item)
+    {
+        if (item?.GenerationParameters is null || App.Clipboard is null)
+        {
+            return;
+        }
+
+        await App.Clipboard.SetTextAsync(item.GenerationParameters.ModelName);
+    }
+
+    [RelayCommand]
+    private async Task CopyModelHashToClipboard(LocalImageFile? item)
+    {
+        if (item?.GenerationParameters is null || App.Clipboard is null)
+        {
+            return;
+        }
+
+        await App.Clipboard.SetTextAsync(item.GenerationParameters.ModelHash);
     }
 
     [RelayCommand]

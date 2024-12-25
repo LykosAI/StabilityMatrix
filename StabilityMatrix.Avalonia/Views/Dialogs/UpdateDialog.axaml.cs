@@ -1,10 +1,10 @@
 ﻿using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
-[Transient]
+[RegisterTransient<UpdateDialog>]
 public partial class UpdateDialog : UserControl
 {
     public UpdateDialog()

@@ -19,7 +19,6 @@ using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
-using Markdown.Avalonia;
 using NLog;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;

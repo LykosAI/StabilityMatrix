@@ -14,7 +14,10 @@
     x:DataType="inference:ModelCardViewModel">
     <Design.PreviewWith>
         <Panel Width="400" Height="400">
-            <StackPanel Width="300" VerticalAlignment="Center" Spacing="32">
+            <StackPanel
+                Width="300"
+                VerticalAlignment="Center"
+                Spacing="32">
                 <controls:ModelCard DataContext="{x:Static mocks:DesignData.ModelCardViewModel}" />
                 <controls:ModelCard DataContext="{x:Static mocks:DesignData.ImgToVidModelCardViewModel}" />
             </StackPanel>
@@ -44,7 +47,7 @@
                     <sg:SpacedGrid
                         ColumnDefinitions="Auto,*,Auto"
                         ColumnSpacing="8"
-                        RowDefinitions="*,*,*,*,*,*,*,*,*"
+                        RowDefinitions="*,*,*,*,*,*,*,*,*,*,*"
                         RowSpacing="0">
                         <!--  Model  -->
                         <TextBlock
@@ -54,16 +57,16 @@
                             TextAlignment="Left" />
 
                         <controls:BetterComboBox
+                            Name="PART_ModelComboBox"
                             Grid.Row="0"
                             Grid.Column="1"
-                            Name="PART_ModelComboBox"
                             Padding="8,6,4,6"
                             HorizontalAlignment="Stretch"
                             IsVisible="{Binding !IsStandaloneModelLoader}"
                             ItemsSource="{Binding ClientManager.Models}"
                             SelectedItem="{Binding SelectedModel}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
-                        
+
                         <controls:BetterComboBox
                             Grid.Row="0"
                             Grid.Column="1"
@@ -100,10 +103,14 @@
                                         IsChecked="{Binding IsClipSkipEnabled}"
                                         Text="{x:Static lang:Resources.Label_CLIPSkip}" />
                                     <ui:ToggleMenuFlyoutItem
+                                        IconSource="{StaticResource IconTableCellEdit}"
+                                        IsChecked="{Binding IsClipModelSelectionEnabled}"
+                                        Text="Text Encoders" />
+                                    <ui:ToggleMenuFlyoutItem
                                         IconSource="{StaticResource IconCube}"
-                                        IsVisible="{Binding EnableModelLoaderSelection}"
                                         IsChecked="{Binding IsModelLoaderSelectionEnabled}"
-                                        Text="Change Model Loader" />
+                                        IsVisible="{Binding EnableModelLoaderSelection}"
+                                        Text="Model Loader" />
                                     <ui:MenuFlyoutSeparator />
                                     <ui:MenuFlyoutItem
                                         Command="{Binding ConfigClickCommand}"
@@ -134,7 +141,7 @@
                             ItemsSource="{Binding ClientManager.Models}"
                             SelectedItem="{Binding SelectedRefiner}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
-                        
+
                         <!--  model precision  -->
                         <TextBlock
                             Grid.Row="2"
@@ -202,8 +209,8 @@
                             ParsingNumberStyle="Integer"
                             Watermark="1"
                             Value="{Binding ClipSkip, Converter={x:Static converters:NullableDefaultNumericConverters.IntToDecimal}}" />
-                        
-                        <!-- Model Loader Selection -->
+
+                        <!--  Model Loader Selection  -->
                         <TextBlock
                             Grid.Row="5"
                             Grid.Column="0"
@@ -214,18 +221,18 @@
                             TextAlignment="Left" />
 
                         <controls:BetterComboBox
+                            Name="PART_ModelLoaderComboBox"
                             Grid.Row="5"
                             Grid.Column="1"
                             Grid.ColumnSpan="2"
                             Margin="0,8,0,0"
                             Padding="8,6,4,6"
-                            Name="PART_ModelLoaderComboBox"
                             HorizontalAlignment="Stretch"
                             IsVisible="{Binding IsModelLoaderSelectionEnabled}"
                             ItemsSource="{Binding ModelLoaders}"
                             SelectedItem="{Binding SelectedModelLoader}">
                             <controls:BetterComboBox.Resources>
-                                <converters:EnumStringConverter x:Key="EnumStringConverter"/>
+                                <converters:EnumStringConverter x:Key="EnumStringConverter" />
                             </controls:BetterComboBox.Resources>
                             <controls:BetterComboBox.ItemTemplate>
                                 <DataTemplate>
@@ -238,62 +245,102 @@
                                 </DataTemplate>
                             </controls:BetterComboBox.SelectionBoxItemTemplate>
                         </controls:BetterComboBox>
-                        
-                        <!--  CLIP 1  -->
+
+                        <!--  Encooder Type  -->
                         <TextBlock
                             Grid.Row="6"
                             Grid.Column="0"
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
-                            IsVisible="{Binding IsStandaloneModelLoader}"
-                            Text="CLIP 1"
+                            IsVisible="{Binding IsClipModelSelectionEnabled}"
+                            Text="Encoder Type"
+                            TextAlignment="Left" />
+                        <ui:FAComboBox
+                            Grid.Row="6"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsTextSearchEnabled="True"
+                            IsVisible="{Binding IsClipModelSelectionEnabled}"
+                            ItemsSource="{Binding ClipTypes}"
+                            SelectedItem="{Binding SelectedClipType}" />
+
+                        <!--  CLIP 1  -->
+                        <TextBlock
+                            Grid.Row="7"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsClipModelSelectionEnabled}"
+                            Text="Encoder 1"
                             TextAlignment="Left" />
 
                         <controls:BetterDownloadableComboBox
-                            Grid.Row="6"
+                            Grid.Row="7"
                             Grid.Column="1"
                             Grid.ColumnSpan="2"
                             Margin="0,8,0,0"
                             Padding="8,6,4,6"
                             HorizontalAlignment="Stretch"
-                            IsVisible="{Binding IsStandaloneModelLoader}"
+                            IsVisible="{Binding IsClipModelSelectionEnabled}"
                             ItemsSource="{Binding ClientManager.ClipModels}"
                             SelectedItem="{Binding SelectedClip1}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
-                        
+
                         <!--  CLIP 2  -->
                         <TextBlock
-                            Grid.Row="7"
+                            Grid.Row="8"
                             Grid.Column="0"
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
-                            IsVisible="{Binding IsStandaloneModelLoader}"
-                            Text="CLIP 2"
+                            IsVisible="{Binding IsClipModelSelectionEnabled}"
+                            Text="Encoder 2"
                             TextAlignment="Left" />
 
                         <controls:BetterDownloadableComboBox
-                            Grid.Row="7"
+                            Grid.Row="8"
                             Grid.Column="1"
                             Grid.ColumnSpan="2"
                             Margin="0,8,0,0"
                             Padding="8,6,4,6"
                             HorizontalAlignment="Stretch"
-                            IsVisible="{Binding IsStandaloneModelLoader}"
+                            IsVisible="{Binding IsClipModelSelectionEnabled}"
                             ItemsSource="{Binding ClientManager.ClipModels}"
                             SelectedItem="{Binding SelectedClip2}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
 
-                        <!-- Extra Networks  -->
-                        <Panel
-                            IsVisible="{Binding IsExtraNetworksEnabled}"
-                            Grid.Row="8"
+                        <!--  CLIP 3  -->
+                        <TextBlock
+                            Grid.Row="9"
                             Grid.Column="0"
-                            Grid.ColumnSpan="3">
-                            <controls:StackEditableCard
-                                Margin="0,8,0,0"
-                                DataContext="{Binding ExtraNetworksStackCardViewModel}" />
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsSd3Clip}"
+                            Text="Encoder 3"
+                            TextAlignment="Left" />
+
+                        <controls:BetterDownloadableComboBox
+                            Grid.Row="9"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            Padding="8,6,4,6"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsSd3Clip}"
+                            ItemsSource="{Binding ClientManager.ClipModels}"
+                            SelectedItem="{Binding SelectedClip3}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+
+                        <!--  Extra Networks  -->
+                        <Panel
+                            Grid.Row="10"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="3"
+                            IsVisible="{Binding IsExtraNetworksEnabled}">
+                            <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding ExtraNetworksStackCardViewModel}" />
                         </Panel>
-                        
+
                     </sg:SpacedGrid>
                 </controls:Card>
             </ControlTemplate>

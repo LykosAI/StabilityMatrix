@@ -3,8 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace StabilityMatrix.Core.Models.Api;
 
-
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<CivitModelFpType>))]
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 public enum CivitModelFpType
 {

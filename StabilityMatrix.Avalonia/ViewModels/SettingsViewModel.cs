@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DynamicData;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
@@ -15,7 +16,7 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(SettingsPage))]
-[Singleton]
+[RegisterSingleton<SettingsViewModel>]
 public partial class SettingsViewModel : PageViewModelBase
 {
     public override string Title => "Settings";

@@ -11,6 +11,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Extensions;
@@ -25,7 +26,7 @@ using ContentDialogButton = FluentAvalonia.UI.Controls.ContentDialogButton;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-[Transient]
+[RegisterTransient<MaskEditorViewModel>]
 [ManagedService]
 [View(typeof(MaskEditorDialog))]
 public partial class MaskEditorViewModel(ServiceManager<ViewModelBase> vmFactory)

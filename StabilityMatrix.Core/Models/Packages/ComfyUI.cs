@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
+using Injectio.Attributes;
 using NLog;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -20,7 +20,7 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, ComfyUI>(Duplicate = DuplicateStrategy.Append)]
 public class ComfyUI(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -104,6 +104,15 @@ public class ComfyUI(
             },
             new LaunchOptionDefinition
             {
+                Name = "Reserve VRAM",
+                Type = LaunchOptionType.String,
+                InitialValue = Compat.IsWindows && HardwareHelper.HasAmdGpu() ? "0.9" : null,
+                Description =
+                    "Sets the amount of VRAM (in GB) you want to reserve for use by your OS/other software",
+                Options = ["--reserve-vram"]
+            },
+            new LaunchOptionDefinition
+            {
                 Name = "Preview Method",
                 Type = LaunchOptionType.Bool,
                 InitialValue = "--preview-method auto",
@@ -113,7 +122,7 @@ public class ComfyUI(
             {
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectML(),
+                InitialValue = HardwareHelper.PreferDirectMLOrZluda() && this is not ComfyZluda,
                 Options = ["--directml"]
             },
             new LaunchOptionDefinition
@@ -128,7 +137,11 @@ public class ComfyUI(
             {
                 Name = "Cross Attention Method",
                 Type = LaunchOptionType.Bool,
-                InitialValue = Compat.IsMacOS ? "--use-pytorch-cross-attention" : null,
+                InitialValue = Compat.IsMacOS
+                    ? "--use-pytorch-cross-attention"
+                    : (Compat.IsWindows && HardwareHelper.HasAmdGpu())
+                        ? "--use-quad-cross-attention"
+                        : null,
                 Options =
                 [
                     "--use-split-cross-attention",
@@ -207,7 +220,7 @@ public class ComfyUI(
                         {
                             TorchIndex.Cpu => "cpu",
                             TorchIndex.Cuda => "cu124",
-                            TorchIndex.Rocm => "rocm6.1",
+                            TorchIndex.Rocm => "rocm6.2",
                             TorchIndex.Mps => "cpu",
                             _
                                 => throw new ArgumentOutOfRangeException(
@@ -499,16 +512,6 @@ public class ComfyUI(
                     .DownloadService.GetContentAsync(manifest.Uri.ToString(), cancellationToken)
                     .ConfigureAwait(false);
 
-                // nf4 hack
-                var nf4Extension = new PackageExtension
-                {
-                    Author = "comfyanonymous",
-                    Files = [new Uri("https://github.com/comfyanonymous/ComfyUI_bitsandbytes_NF4")],
-                    Reference = new Uri("https://github.com/comfyanonymous/ComfyUI_bitsandbytes_NF4"),
-                    Title = "ComfyUI_bitsandbytes_NF4",
-                    InstallType = "git-clone"
-                };
-
                 // Parse json
                 var jsonManifest = JsonSerializer.Deserialize<ComfyExtensionManifest>(
                     content,
@@ -519,13 +522,12 @@ public class ComfyUI(
                     return [];
 
                 var extensions = jsonManifest.GetPackageExtensions().ToList();
-                extensions.Add(nf4Extension);
                 return extensions;
             }
             catch (Exception e)
             {
                 Logger.Error(e, "Failed to get package extensions");
-                return Enumerable.Empty<PackageExtension>();
+                return [];
             }
         }
 
@@ -551,7 +553,13 @@ public class ComfyUI(
 
             var installedDirs = installedExtension.Paths.OfType<DirectoryPath>().Where(dir => dir.Exists);
 
-            await PostInstallAsync(installedPackage, installedDirs, progress, cancellationToken)
+            await PostInstallAsync(
+                    installedPackage,
+                    installedDirs,
+                    installedExtension.Definition!,
+                    progress,
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
         }
 
@@ -583,7 +591,7 @@ public class ComfyUI(
                 .Select(path => cloneRoot.JoinDir(path!))
                 .Where(dir => dir.Exists);
 
-            await PostInstallAsync(installedPackage, installedDirs, progress, cancellationToken)
+            await PostInstallAsync(installedPackage, installedDirs, extension, progress, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -593,10 +601,26 @@ public class ComfyUI(
         private async Task PostInstallAsync(
             InstalledPackage installedPackage,
             IEnumerable<DirectoryPath> installedDirs,
+            PackageExtension extension,
             IProgress<ProgressReport>? progress = null,
             CancellationToken cancellationToken = default
         )
         {
+            // do pip installs
+            if (extension.Pip != null)
+            {
+                await using var venvRunner = await package
+                    .SetupVenvPure(installedPackage.FullPath!)
+                    .ConfigureAwait(false);
+
+                var pipArgs = new PipInstallArgs();
+                pipArgs = extension.Pip.Aggregate(pipArgs, (current, pip) => current.AddArg(pip));
+
+                await venvRunner
+                    .PipInstall(pipArgs, progress?.AsProcessOutputHandler())
+                    .ConfigureAwait(false);
+            }
+
             foreach (var installedDir in installedDirs)
             {
                 cancellationToken.ThrowIfCancellationRequested();

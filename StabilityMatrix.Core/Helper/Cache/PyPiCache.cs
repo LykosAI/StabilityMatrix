@@ -1,8 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Injectio.Attributes;
+using Microsoft.Extensions.Logging;
 using NLog;
 using Octokit;
 using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Pypi;
@@ -10,7 +10,7 @@ using StabilityMatrix.Core.Models.Database;
 
 namespace StabilityMatrix.Core.Helper.Cache;
 
-[Singleton(typeof(IPyPiCache))]
+[RegisterSingleton<IPyPiCache, PyPiCache>]
 public class PyPiCache(ILiteDbContext dbContext, IPyPiApi pyPiApi, ILogger<PyPiCache> logger) : IPyPiCache
 {
     private readonly TimeSpan cacheDuration = TimeSpan.FromMinutes(15);

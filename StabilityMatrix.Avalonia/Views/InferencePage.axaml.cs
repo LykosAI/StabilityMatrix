@@ -4,14 +4,14 @@ using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-[Singleton]
+[RegisterSingleton<InferencePage>]
 public partial class InferencePage : UserControlBase
 {
     private Button? _addButton;

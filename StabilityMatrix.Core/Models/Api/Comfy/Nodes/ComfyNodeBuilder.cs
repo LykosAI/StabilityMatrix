@@ -481,6 +481,12 @@ public class ComfyNodeBuilder
         public required bool Zsnr { get; init; }
     }
 
+    public record RescaleCFG : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required double Multiplier { get; init; }
+    }
+
     [TypedNodeOptions(
         Name = "CheckpointLoaderNF4",
         RequiredExtensions = ["https://github.com/comfyanonymous/ComfyUI_bitsandbytes_NF4"]

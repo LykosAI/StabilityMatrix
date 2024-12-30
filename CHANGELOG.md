@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.14.0-dev.1
+### Added
+- Added Rescale CFG addon to Inference for rescaling the CFG or somethin idk
 ### Fixed
 - Fixed Inference image selector card buttons taking up the whole height of the card
 

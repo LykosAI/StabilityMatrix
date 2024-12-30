@@ -120,7 +120,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 typeof(ControlNetModule),
                 typeof(LayerDiffuseModule),
                 typeof(FluxGuidanceModule),
-                typeof(DiscreteModelSamplingModule)
+                typeof(DiscreteModelSamplingModule),
+                typeof(RescaleCfgModule)
             ];
         });
     }

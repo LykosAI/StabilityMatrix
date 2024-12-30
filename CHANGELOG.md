@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.14.0-dev.1
 ### Added
-- Added Rescale CFG addon to Inference for rescaling the CFG or somethin idk
+- Added Rescale CFG addon to Inference
 ### Fixed
 - Fixed Inference image selector card buttons taking up the whole height of the card
 

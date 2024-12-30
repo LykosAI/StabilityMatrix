@@ -1,0 +1,101 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.SafetensorMetadataDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+    xmlns:panels="using:Avalonia.Labs.Panels"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    d:DataContext="{x:Static mocks:DesignData.SafetensorMetadataViewModel}"
+    d:DesignHeight="550"
+    d:DesignWidth="700"
+    x:DataType="dialogs:SafetensorMetadataViewModel"
+    mc:Ignorable="d">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+        <TextBlock
+            Margin="8"
+            HorizontalAlignment="Center"
+            FontSize="24"
+            FontWeight="SemiBold"
+            Text="Safetensor Metadata" />
+        <TextBlock
+            Grid.Row="1"
+            Margin="8"
+            HorizontalAlignment="Center"
+            FontSize="16"
+            FontWeight="SemiBold"
+            Text="{Binding ModelName}" />
+
+        <!--  List of tags  -->
+        <TextBlock
+            Grid.Row="2"
+            Margin="8"
+            HorizontalAlignment="Left"
+            FontSize="16"
+            FontWeight="SemiBold"
+            IsVisible="{Binding Metadata.TagFrequency, Converter={x:Static ObjectConverters.IsNotNull}}"
+            Text="Trained Tags" />
+        <ItemsControl
+            Grid.Row="3"
+            Margin="8"
+            IsVisible="{Binding Metadata.TagFrequency, Converter={x:Static ObjectConverters.IsNotNull}}"
+            ItemsSource="{Binding Metadata.TagFrequency}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button
+                        Command="{Binding $parent[ItemsControl].((dialogs:SafetensorMetadataViewModel)DataContext).CopyTagToClipboardCommand}"
+                        CommandParameter="{Binding Name}"
+                        Cursor="Hand">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                            <TextBlock Margin="5,0,0,0" Text="{Binding Frequency}" />
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <panels:FlexPanel
+                        ColumnSpacing="5"
+                        RowSpacing="5"
+                        Wrap="Wrap" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
+
+        <!--  All other metadata  -->
+        <TextBlock
+            Grid.Row="4"
+            Margin="8"
+            HorizontalAlignment="Left"
+            FontSize="16"
+            FontWeight="SemiBold"
+            Text="Other Metadata" />
+
+        <TextBlock
+            Grid.Row="5"
+            Margin="8"
+            FontSize="16"
+            FontStyle="Italic"
+            IsVisible="{Binding !Metadata.OtherMetadata.Count}"
+            Text="No Metadata" />
+        <ItemsControl
+            Grid.Row="5"
+            Margin="8"
+            ItemsSource="{Binding Metadata.OtherMetadata}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Margin="5" Orientation="Vertical">
+                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                        <TextBlock Text="{Binding Value}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+</controls:UserControlBase>

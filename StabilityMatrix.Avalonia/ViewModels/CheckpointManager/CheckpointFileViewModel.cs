@@ -308,6 +308,24 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     }
 
     [RelayCommand]
+    private async Task OpenSafetensorMetadataViewer()
+    {
+        var vm = vmFactory.Get<SafetensorMetadataViewModel>(vm =>
+        {
+            vm.ModelName = CheckpointFile.DisplayModelName;
+            vm.Metadata = CheckpointFile.SafetensorMetadata ?? default;
+        });
+
+        var dialog = vm.GetDialog();
+        dialog.MinDialogHeight = 800;
+        dialog.MinDialogWidth = 700;
+        dialog.CloseButtonText = "Close";
+        dialog.DefaultButton = ContentDialogButton.Close;
+
+        await dialog.ShowAsync();
+    }
+
+    [RelayCommand]
     private async Task OpenMetadataEditor()
     {
         var vm = vmFactory.Get<ModelMetadataEditorDialogViewModel>(vm =>

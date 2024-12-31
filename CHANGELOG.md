@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.14.0-dev.1
 ### Added
 - Added Rescale CFG addon to Inference
+### Changed
+- Improved the quality of Inference inpainting by upgrading the workflow behind the scenes. The workflow remains the same for you — just better results!
 ### Fixed
 - Fixed Inference image selector card buttons taking up the whole height of the card
 

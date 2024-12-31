@@ -15,29 +15,26 @@
     d:DesignWidth="450"
     x:DataType="progress:ProgressManagerViewModel"
     mc:Ignorable="d">
-    <ScrollViewer>
-        <Grid RowDefinitions="Auto, *">
-            <TextBlock
-                Grid.Row="0"
-                VerticalAlignment="Center"
-                FontSize="16"
-                Text="Downloads"
-                TextAlignment="Left"
-                TextDecorations="Underline" />
-            <Button
-                Grid.Row="0"
-                Margin="0,0,8,0"
-                Padding="4"
-                HorizontalAlignment="Right"
-                Classes="transparent"
-                Command="{Binding ClearDownloads}"
-                Content="Clear Finished"
-                IsVisible="{Binding !!ProgressItems.Count}" />
+    <Grid RowDefinitions="Auto, *">
+        <TextBlock
+            Grid.Row="0"
+            VerticalAlignment="Center"
+            FontSize="16"
+            Text="Downloads"
+            TextAlignment="Left"
+            TextDecorations="Underline" />
+        <Button
+            Grid.Row="0"
+            Margin="0,0,8,0"
+            Padding="4"
+            HorizontalAlignment="Right"
+            Classes="transparent"
+            Command="{Binding ClearDownloads}"
+            Content="Clear Finished"
+            IsVisible="{Binding !!ProgressItems.Count}" />
 
-            <ItemsControl
-                Grid.Row="1"
-                Margin="0,4,0,0"
-                ItemsSource="{Binding ProgressItems, Mode=OneWay}">
+        <ScrollViewer Grid.Row="1" Margin="0,4,0,0">
+            <ItemsControl ItemsSource="{Binding ProgressItems, Mode=OneWay}">
                 <ItemsControl.DataTemplates>
 
                     <DataTemplate DataType="{x:Type vmBase:PausableProgressItemViewModelBase}">
@@ -264,6 +261,6 @@
                     </DataTemplate>
                 </ItemsControl.DataTemplates>
             </ItemsControl>
-        </Grid>
-    </ScrollViewer>
+        </ScrollViewer>
+    </Grid>
 </controls:UserControlBase>

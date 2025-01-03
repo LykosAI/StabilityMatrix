@@ -215,7 +215,23 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
                 }
                 else
                 {
-                    layer.Surface.Canvas.Clear(SKColors.Transparent);
+                    // If we need to resize:
+                    var currentInfo = layer.Surface.Canvas.DeviceClipBounds;
+                    if (currentInfo.Width != CanvasSize.Width || currentInfo.Height != CanvasSize.Height)
+                    {
+                        // Dispose the old surface
+                        layer.Surface.Dispose();
+
+                        // Create a brand-new SKSurface with the new size
+                        layer.Surface = SKSurface.Create(
+                            new SKImageInfo(CanvasSize.Width, CanvasSize.Height)
+                        );
+                    }
+                    else
+                    {
+                        // No resize needed, just clear
+                        layer.Surface.Canvas.Clear(SKColors.Transparent);
+                    }
                 }
             }
         }

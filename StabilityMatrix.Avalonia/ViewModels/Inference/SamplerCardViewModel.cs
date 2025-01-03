@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -124,6 +125,12 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 typeof(RescaleCfgModule)
             ];
         });
+    }
+
+    [RelayCommand]
+    private void SwapDimensions()
+    {
+        (Width, Height) = (Height, Width);
     }
 
     /// <inheritdoc />

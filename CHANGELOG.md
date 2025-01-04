@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.13.1
 ### Fixed
+- Fixed [#1078](https://github.com/LykosAI/StabilityMatrix/issues/1078) - "Call from invalid thread" error after one-click install finishes
 - Fixed Inference image selector card buttons taking up the whole height of the card
 
 ## v2.13.0

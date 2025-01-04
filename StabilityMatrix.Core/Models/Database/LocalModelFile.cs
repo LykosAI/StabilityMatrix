@@ -69,6 +69,12 @@ public record LocalModelFile
     public ConnectedModelInfo? ConnectedModelInfo { get; set; }
 
     /// <summary>
+    /// Optional Safetensor metadata.
+    /// </summary>
+    [BsonIgnore]
+    public SafetensorMetadata? SafetensorMetadata { get; set; }
+
+    /// <summary>
     /// Optional preview image relative path.
     /// </summary>
     public string? PreviewImageRelativePath { get; set; }
@@ -150,6 +156,10 @@ public record LocalModelFile
     [BsonIgnore]
     [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
     public bool HasCivitMetadata => HasConnectedModel && ConnectedModelInfo.ModelId != null;
+
+    [BsonIgnore]
+    [MemberNotNullWhen(true, nameof(SafetensorMetadata))]
+    public bool HasSafetensorMetadata => SafetensorMetadata != null;
 
     public string GetFullPath(string rootModelDirectory)
     {

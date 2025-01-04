@@ -430,6 +430,14 @@ public partial class ModelIndexService : IModelIndexService
                 var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(path);
                 var jsonPath = fileDirectory.JoinFile($"{fileNameWithoutExtension}.cm-info.json");
 
+                if (path.EndsWith(".safetensors"))
+                {
+                    if (SafetensorMetadata.TryParse(path, out var metadata))
+                    {
+                        localModel.SafetensorMetadata = metadata;
+                    }
+                }
+
                 if (paths.Contains(jsonPath))
                 {
                     try

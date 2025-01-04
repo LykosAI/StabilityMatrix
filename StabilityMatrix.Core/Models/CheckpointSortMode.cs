@@ -7,6 +7,12 @@ public enum CheckpointSortMode
     [StringValue("Base Model")]
     BaseModel,
 
+    [StringValue("Date Created")]
+    Created,
+
+    [StringValue("Date Last Modified")]
+    LastModified,
+
     [StringValue("File Name")]
     FileName,
 

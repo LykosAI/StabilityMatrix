@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.Core;
+using Injectio.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
@@ -26,7 +27,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(ImageViewerDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<ImageViewerViewModel>]
 public partial class ImageViewerViewModel(
     ILogger<ImageViewerViewModel> logger,
     ISettingsManager settingsManager

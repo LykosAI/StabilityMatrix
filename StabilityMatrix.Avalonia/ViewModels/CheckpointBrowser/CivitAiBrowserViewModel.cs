@@ -15,6 +15,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using NLog;
 using Refit;
 using StabilityMatrix.Avalonia.Languages;
@@ -36,7 +37,7 @@ using Notification = Avalonia.Controls.Notifications.Notification;
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [View(typeof(CivitAiBrowserPage))]
-[Singleton]
+[RegisterSingleton<CivitAiBrowserViewModel>]
 public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScroll
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -208,6 +209,17 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             settings => settings.HideEarlyAccessModels,
             true
         );
+
+        EventManager.Instance.NavigateAndFindCivitAuthorRequested += OnNavigateAndFindCivitAuthorRequested;
+    }
+
+    private void OnNavigateAndFindCivitAuthorRequested(object? sender, string e)
+    {
+        if (string.IsNullOrWhiteSpace(e))
+            return;
+
+        SearchQuery = $"@{e}";
+        SearchModelsCommand.ExecuteAsync(false).SafeFireAndForget();
     }
 
     private void OnNavigateAndFindCivitModelRequested(object? sender, int e)

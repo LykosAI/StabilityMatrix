@@ -1,11 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\Runtimes.Default.props" />
+	
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
 		<LangVersion>latest</LangVersion> 
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks> 
-		<RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<BuiltInComInteropSupport>true</BuiltInComInteropSupport>
 		<EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
@@ -16,9 +14,9 @@
 	</PropertyGroup>
 	
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="SkiaSharp" Version="3.0.0-preview.4.1" />
-	<PackageReference Include="DotNet.Bundle" Version="0.9.13" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="SkiaSharp" />
+	<PackageReference Include="DotNet.Bundle" />
   </ItemGroup>
 
 </Project>

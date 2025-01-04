@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Injectio.Attributes;
 using KGySoft.CoreLibraries;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -12,7 +13,7 @@ using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
-[Transient]
+[RegisterTransient<LayerDiffuseCardViewModel>]
 [ManagedService]
 [View(typeof(LayerDiffuseCard))]
 public partial class LayerDiffuseCardViewModel : LoadableViewModelBase, IComfyStep

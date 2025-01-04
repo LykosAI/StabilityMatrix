@@ -6,12 +6,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Injectio.Attributes;
 using KeyedSemaphores;
 using Microsoft.Extensions.Logging;
 using Nito.Disposables.Internals;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -23,7 +23,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-[Singleton]
+[RegisterSingleton<RunningPackageService>]
 public partial class RunningPackageService(
     ILogger<RunningPackageService> logger,
     IPackageFactory packageFactory,

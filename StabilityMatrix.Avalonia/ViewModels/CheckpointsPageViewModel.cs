@@ -18,6 +18,7 @@ using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -48,7 +49,7 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(CheckpointsPage))]
-[Singleton]
+[RegisterSingleton<CheckpointsPageViewModel>]
 public partial class CheckpointsPageViewModel(
     ILogger<CheckpointsPageViewModel> logger,
     ISettingsManager settingsManager,
@@ -278,6 +279,18 @@ public partial class CheckpointsPageViewModel(
                             SelectedSortDirection == ListSortDirection.Ascending
                                 ? comparer.ThenByAscending(vm => vm.FileSize)
                                 : comparer.ThenByDescending(vm => vm.FileSize);
+                        break;
+                    case CheckpointSortMode.Created:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.Created)
+                                : comparer.ThenByDescending(vm => vm.Created);
+                        break;
+                    case CheckpointSortMode.LastModified:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.LastModified)
+                                : comparer.ThenByDescending(vm => vm.LastModified);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -583,15 +596,15 @@ public partial class CheckpointsPageViewModel(
             IsFooterVisible = false,
             CloseOnClickOutside = true,
             MaxDialogWidth = 750,
-            MaxDialogHeight = 950,
+            MaxDialogHeight = 1000,
         };
 
-        var prunedDescription = Utilities.RemoveHtml(model.Description);
+        var htmlDescription = $"""<html><body class="markdown-body">{model.Description}</body></html>""";
 
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
         viewModel.Dialog = dialog;
         viewModel.Title = model.Name;
-        viewModel.Description = prunedDescription;
+        viewModel.Description = htmlDescription;
         viewModel.CivitModel = model;
         viewModel.Versions = versions
             .Select(version => new ModelVersionViewModel(modelIndexService, version))
@@ -621,7 +634,8 @@ public partial class CheckpointsPageViewModel(
             var subFolder =
                 viewModel?.SelectedInstallLocation
                 ?? Path.Combine(@"Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
-            downloadPath = Path.Combine(settingsManager.LibraryDir, subFolder);
+            subFolder = subFolder.StripStart(@$"Models{Path.DirectorySeparatorChar}");
+            downloadPath = Path.Combine(settingsManager.ModelsDirectory, subFolder);
         }
 
         await Task.Delay(100);

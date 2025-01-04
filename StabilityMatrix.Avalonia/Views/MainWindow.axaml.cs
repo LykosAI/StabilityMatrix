@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
@@ -14,7 +15,9 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Media.Immutable;
+using Avalonia.Platform;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using FluentAvalonia.Styling;
@@ -22,16 +25,15 @@ using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media;
 using FluentAvalonia.UI.Media.Animation;
 using FluentAvalonia.UI.Windowing;
+using Injectio.Attributes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Settings;
@@ -41,12 +43,13 @@ using StabilityMatrix.Core.Services;
 using TeachingTip = FluentAvalonia.UI.Controls.TeachingTip;
 #if DEBUG
 using StabilityMatrix.Avalonia.Diagnostics.Views;
+using StabilityMatrix.Avalonia.Extensions;
 #endif
 
 namespace StabilityMatrix.Avalonia.Views;
 
 [SuppressMessage("ReSharper", "UnusedParameter.Local")]
-[Singleton]
+[RegisterSingleton<MainWindow>]
 public partial class MainWindow : AppWindowBase
 {
     private readonly INotificationService notificationService;
@@ -56,7 +59,7 @@ public partial class MainWindow : AppWindowBase
 
     private FlyoutBase? progressFlyout;
 
-    [DesignOnly(true)]
+    /*[DesignOnly(true)]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public MainWindow()
         : this(
@@ -70,13 +73,14 @@ public partial class MainWindow : AppWindowBase
         {
             throw new InvalidOperationException("Design constructor called in non-design mode");
         }
-    }
+    }*/
 
     public MainWindow(
         INotificationService notificationService,
         INavigationService<MainWindowViewModel> navigationService,
         ISettingsManager settingsManager,
-        ILogger<MainWindow> logger
+        ILogger<MainWindow> logger,
+        Lazy<MainWindowViewModel> lazyViewModel
     )
     {
         this.notificationService = notificationService;
@@ -93,6 +97,63 @@ public partial class MainWindow : AppWindowBase
 #endif
         TitleBar.ExtendsContentIntoTitleBar = true;
         TitleBar.TitleBarHitTestType = TitleBarHitTestType.Complex;
+        ExtendClientAreaChromeHints = Program.Args.NoWindowChromeEffects
+            ? ExtendClientAreaChromeHints.NoChrome
+            : ExtendClientAreaChromeHints.PreferSystemChrome;
+
+        // Load window positions
+        if (
+            settingsManager.Settings.WindowSettings is { } windowSettings
+            && !Program.Args.ResetWindowPosition
+        )
+        {
+            Position = new PixelPoint(windowSettings.X, windowSettings.Y);
+            Width = windowSettings.Width;
+            Height = windowSettings.Height;
+            WindowState = windowSettings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
+        }
+        else
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        }
+
+        if (Program.Args.IsSplashScreenEnabled)
+        {
+            var appIconStream = Assets.AppIcon.Open();
+            var appIcon = new Bitmap(appIconStream);
+            appIconStream.Dispose();
+
+            SplashScreen = new ApplicationSplashScreen
+            {
+                AppIcon = appIcon,
+                InitApp = cancellationToken =>
+                {
+                    return Dispatcher
+                        .UIThread.InvokeAsync(() => StartupInitialize(lazyViewModel, cancellationToken))
+                        .GetTask();
+                }
+            };
+        }
+        else
+        {
+            StartupInitialize(lazyViewModel);
+        }
+    }
+
+    /// <summary>
+    /// Run startup initialization.
+    /// This runs on the UI thread.
+    /// </summary>
+    private void StartupInitialize(
+        Lazy<MainWindowViewModel> lazyViewModel,
+        CancellationToken cancellationToken = default
+    )
+    {
+        using var _ = CodeTimer.StartDebug();
+
+        Dispatcher.UIThread.VerifyAccess();
+
+        cancellationToken.ThrowIfCancellationRequested();
 
         navigationService.TypedNavigation += NavigationService_OnTypedNavigation;
 
@@ -109,7 +170,7 @@ public partial class MainWindow : AppWindowBase
             .Where(x => x.EventArgs.PreviousSize != x.EventArgs.NewSize)
             .Throttle(TimeSpan.FromMilliseconds(100))
             .Select(x => x.EventArgs.NewSize)
-            .ObserveOn(SynchronizationContext.Current)
+            .ObserveOn(SynchronizationContext.Current!)
             .Subscribe(newSize =>
             {
                 var validWindowPosition = Screens.All.Any(screen => screen.Bounds.Contains(Position));
@@ -134,7 +195,7 @@ public partial class MainWindow : AppWindowBase
             .Where(x => Screens.All.Any(screen => screen.Bounds.Contains(x.EventArgs.Point)))
             .Throttle(TimeSpan.FromMilliseconds(100))
             .Select(x => x.EventArgs.Point)
-            .ObserveOn(SynchronizationContext.Current)
+            .ObserveOn(SynchronizationContext.Current!)
             .Subscribe(position =>
             {
                 settingsManager.Transaction(
@@ -151,6 +212,12 @@ public partial class MainWindow : AppWindowBase
                     ignoreMissingLibraryDir: true
                 );
             });
+
+        using (CodeTimer.StartDebug("Load view model"))
+        {
+            var viewModel = lazyViewModel.Value;
+            DataContext = viewModel;
+        }
     }
 
     private void InstanceOnDownloadsTeachingTipRequested(object? sender, EventArgs e)

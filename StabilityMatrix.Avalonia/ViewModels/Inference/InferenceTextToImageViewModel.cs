@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
@@ -27,7 +28,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), IsPersistent = true)]
 [ManagedService]
-[Transient]
+[RegisterTransient<InferenceTextToImageViewModel>]
 public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

@@ -19,13 +19,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
-      <PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
-      <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
-      <PackageReference Include="NLog" Version="5.3.2" />
+      <PackageReference Include="Avalonia" />
+      <PackageReference Include="Avalonia.Controls.DataGrid" />
+      <PackageReference Include="DotNet.Bundle" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+      <PackageReference Include="NLog" />
     </ItemGroup>
 
     <ItemGroup>

@@ -94,6 +94,11 @@
                                 <ui:SymbolIcon Symbol="Open" />
                             </MenuItem.Icon>
                         </MenuItem>
+                        <MenuItem Command="{Binding SearchAuthorCommand}" Header="Search by Creator">
+                            <MenuItem.Icon>
+                                <ui:SymbolIcon Symbol="Find" />
+                            </MenuItem.Icon>
+                        </MenuItem>
                     </MenuFlyout>
                 </Border.ContextFlyout>
                 <Button
@@ -191,6 +196,15 @@
                                 Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
                                 CommandParameter="{Binding CivitModel.Creator.ProfileUrl}"
                                 CornerRadius="16">
+                                <Button.ContextFlyout>
+                                    <MenuFlyout>
+                                        <MenuItem Command="{Binding SearchAuthorCommand}" Header="Search by Creator">
+                                            <MenuItem.Icon>
+                                                <ui:SymbolIcon Symbol="Find" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </MenuFlyout>
+                                </Button.ContextFlyout>
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <vendorLabs:BetterAsyncImage
                                         Width="22"

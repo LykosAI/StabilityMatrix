@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -19,7 +20,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(UnetModelCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<UnetModelCardViewModel>]
 public partial class UnetModelCardViewModel(IInferenceClientManager clientManager)
     : LoadableViewModelBase,
         IParametersLoadableState,

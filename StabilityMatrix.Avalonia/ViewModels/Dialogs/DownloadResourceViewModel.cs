@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -20,7 +21,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(DownloadResourceDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<DownloadResourceViewModel>]
 public partial class DownloadResourceViewModel(
     IDownloadService downloadService,
     ISettingsManager settingsManager,
@@ -90,7 +91,7 @@ public partial class DownloadResourceViewModel(
         download.ExtractRelativePath = Resource.ExtractRelativePath;
 
         download.ContextAction = new ModelPostDownloadContextAction();
-        download.Start();
+        trackedDownloadService.TryStartDownload(download);
 
         EventManager.Instance.OnToggleProgressFlyout();
 

@@ -4,11 +4,11 @@ using System.Diagnostics;
 using System.Text;
 using AsyncAwaitBestPractices;
 using AutoCtor;
+using Injectio.Attributes;
 using KGySoft.CoreLibraries;
 using LiteDB;
 using LiteDB.Async;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -20,7 +20,7 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace StabilityMatrix.Core.Services;
 
-[Singleton(typeof(IModelIndexService))]
+[RegisterSingleton<IModelIndexService, ModelIndexService>]
 [AutoConstruct]
 public partial class ModelIndexService : IModelIndexService
 {

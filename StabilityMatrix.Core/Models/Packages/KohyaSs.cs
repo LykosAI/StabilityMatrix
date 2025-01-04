@@ -1,5 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -10,7 +10,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, KohyaSs>(Duplicate = DuplicateStrategy.Append)]
 public class KohyaSs(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,

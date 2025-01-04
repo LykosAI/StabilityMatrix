@@ -371,9 +371,25 @@ public static class DesignData
             ),
         };
 
-        ProgressManagerViewModel.ProgressItems.AddRange(
-            new ProgressItemViewModelBase[]
+        var packageInstall = new PackageInstallProgressItemViewModel(
+            new PackageModificationRunner
             {
+                CurrentProgress = new ProgressReport(0.5f, "Installing package...", "Installing... 50%"),
+                ModificationCompleteMessage = "Package installed successfully"
+            }
+        )
+        {
+            Progress = new ContentDialogProgressViewModelBase
+            {
+                Value = 50,
+                IsIndeterminate = false,
+                Text = "UwU Install",
+                Description = "Installing...",
+            }
+        };
+
+        ProgressManagerViewModel.ProgressItems.AddRange(
+            [
                 new ProgressItemViewModel(
                     new ProgressItem(
                         Guid.NewGuid(),
@@ -384,20 +400,27 @@ public static class DesignData
                 new MockDownloadProgressItemViewModel(
                     "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
                 ),
-                new PackageInstallProgressItemViewModel(
-                    new PackageModificationRunner
-                    {
-                        CurrentProgress = new ProgressReport(0.5f, "Installing package..."),
-                        ModificationCompleteMessage = "Package installed successfully"
-                    }
+                new MockDownloadProgressItemViewModel(
+                    "Very Long Test File Name Need Even More Longness Thanks That's pRobably good 2.exe"
                 )
-            }
+                {
+                    Progress = new ContentDialogProgressViewModelBase
+                    {
+                        Value = 50,
+                        IsIndeterminate = false,
+                        Text = "Waiting on other downloads to finish",
+                        Description = "Waiting on other downloads to finish",
+                    }
+                },
+                packageInstall
+            ]
         );
 
         UpdateViewModel = Services.GetRequiredService<UpdateViewModel>();
         UpdateViewModel.CurrentVersionText = "v2.0.0";
         UpdateViewModel.NewVersionText = "v2.0.1";
-        UpdateViewModel.ReleaseNotes = "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature";
+        UpdateViewModel.ReleaseNotes =
+            "## v2.0.1\n- Fixed a bug\n- Added a feature\n- Removed a feature\n - Did some `--code` stuff";
 
         isInitialized = true;
     }
@@ -555,6 +578,33 @@ public static class DesignData
                         Paths = [new DirectoryPath("example-dir")]
                     },
                     new InstalledPackageExtension { Paths = [new DirectoryPath("example-dir-2")] }
+                ]
+            );
+            vm.AddExtensionPacks(
+                [
+                    new ExtensionPack
+                    {
+                        Name = "Test Pack",
+                        PackageType = "ComfyUI",
+                        Extensions =
+                        [
+                            new SavedPackageExtension
+                            {
+                                PackageExtension = new PackageExtension
+                                {
+                                    Author = "TestAuthor",
+                                    Title = "Test",
+                                    Reference = new Uri("https://github.com/LykosAI/StabilityMatrix"),
+                                    Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")]
+                                },
+                                Version = new PackageExtensionVersion
+                                {
+                                    Branch = "main",
+                                    CommitSha = "abcd123"
+                                }
+                            }
+                        ]
+                    }
                 ]
             );
         });
@@ -1129,6 +1179,8 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.ModelType = CivitModelType.Checkpoint;
             vm.BaseModelType = CivitBaseModelType.Pony;
         });
+
+    public static MockGitVersionProvider MockGitVersionProvider => new();
 
     public static string CurrentDirectory => Directory.GetCurrentDirectory();
 

@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -20,7 +21,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ControlNetCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<ControlNetCardViewModel>]
 public partial class ControlNetCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "ControlNet";

@@ -1,11 +1,11 @@
-﻿using StabilityMatrix.Core.Attributes;
+﻿using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, Reforge>(Duplicate = DuplicateStrategy.Append)]
 public class Reforge(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,

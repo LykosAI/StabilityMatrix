@@ -6,9 +6,12 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Semver;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -24,7 +27,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(UpdateDialog))]
 [ManagedService]
-[Singleton]
+[RegisterSingleton<UpdateViewModel>]
 public partial class UpdateViewModel : ContentDialogViewModelBase
 {
     private readonly ILogger<UpdateViewModel> logger;
@@ -177,10 +180,14 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         {
             await Task.Run(() =>
             {
-                ProcessRunner.StartApp(
-                    UpdateHelper.ExecutablePath.FullPath,
-                    new[] { "--wait-for-exit-pid", $"{Environment.ProcessId}" }
-                );
+                var args = new[] { "--wait-for-exit-pid", $"{Environment.ProcessId}" };
+
+                if (Program.Args.NoSentry)
+                {
+                    args = args.Append("--no-sentry").ToArray();
+                }
+
+                ProcessRunner.StartApp(UpdateHelper.ExecutablePath.FullPath, args);
             });
         }
 

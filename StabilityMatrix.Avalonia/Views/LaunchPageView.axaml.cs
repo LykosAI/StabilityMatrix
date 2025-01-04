@@ -4,15 +4,15 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using AvaloniaEdit;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-[Singleton]
+[RegisterSingleton<LaunchPageView>]
 public partial class LaunchPageView : UserControlBase
 {
     private const int LineOffset = 5;

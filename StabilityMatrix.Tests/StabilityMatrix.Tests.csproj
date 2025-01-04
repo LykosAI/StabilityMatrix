@@ -1,35 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' != 'win-x64'">
-        <TargetFramework>net8.0</TargetFramework>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
-        <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
-    </PropertyGroup>
+    <Import Project="..\Runtimes.Default.props" />
     
     <PropertyGroup>
-        <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
-        <PackageReference Include="DotNext" Version="5.8.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="8.0.7" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
-        <PackageReference Include="MSTest.TestAdapter" Version="3.5.0" />
-        <PackageReference Include="MSTest.TestFramework" Version="3.5.0" />
-        <PackageReference Include="coverlet.collector" Version="6.0.2">
+        <PackageReference Include="DotNet.Bundle" />
+        <PackageReference Include="DotNext" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+        <PackageReference Include="Microsoft.Extensions.Http.Polly" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="MSTest.TestAdapter" />
+        <PackageReference Include="MSTest.TestFramework" />
+        <PackageReference Include="coverlet.collector">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="NSubstitute" Version="5.1.0" />
-        <PackageReference Include="Polly" Version="8.4.1" />
-        <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
+        <PackageReference Include="NSubstitute" />
+        <PackageReference Include="Polly" />
+        <PackageReference Include="Polly.Contrib.WaitAndRetry" />
     </ItemGroup>
 
     <ItemGroup>

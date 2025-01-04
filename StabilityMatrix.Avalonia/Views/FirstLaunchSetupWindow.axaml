@@ -1,29 +1,33 @@
-﻿<controls:AppWindowBase xmlns="https://github.com/avaloniaui"
-                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                        xmlns:ui="using:FluentAvalonia.UI.Controls"
-                        xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
-                        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                        xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                        d:DataContext="{x:Static mocks:DesignData.FirstLaunchSetupViewModel}"
-                        x:DataType="vm:FirstLaunchSetupViewModel"
-                        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                        Icon="/Assets/Icon.ico"
-                        Width="800"
-                        Height="550"
-                        Title="Stability Matrix"
-                        CornerRadius="4"
-                        WindowStartupLocation="CenterScreen"
-                        x:Class="StabilityMatrix.Avalonia.Views.FirstLaunchSetupWindow">
+﻿<controls:AppWindowBase
+    x:Class="StabilityMatrix.Avalonia.Views.FirstLaunchSetupWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hardwareInfo="clr-namespace:StabilityMatrix.Core.Helper.HardwareInfo;assembly=StabilityMatrix.Core"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    Title="Stability Matrix"
+    Width="800"
+    Height="550"
+    d:DataContext="{x:Static mocks:DesignData.FirstLaunchSetupViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="vm:FirstLaunchSetupViewModel"
+    CornerRadius="4"
+    Icon="/Assets/Icon.ico"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
 
     <Grid ColumnDefinitions="0.8*,*">
         <StackPanel
             Margin="64"
-            Orientation="Vertical"
-            VerticalAlignment="Center">
-            <controls:BetterAdvancedImage Source="/Assets/Icon.png" Width="128" />
+            VerticalAlignment="Center"
+            Orientation="Vertical">
+            <controls:BetterAdvancedImage Width="128" Source="/Assets/Icon.png" />
         </StackPanel>
         <Grid Grid.Column="1">
             <Grid Margin="0,16,32,32" RowDefinitions="0.6*,0.4*">
@@ -32,73 +36,105 @@
                     <TextBlock FontSize="24" Text="{x:Static lang:Resources.Label_LetsGetStarted}" />
                     <!--  Loading icon and text  -->
                     <Grid Margin="0,8,0,0" ColumnDefinitions="0.15*,*">
-                        <controls:RefreshBadge 
-                            VerticalAlignment="Center"
-                            DataContext="{Binding CheckHardwareBadge}" />
+                        <controls:RefreshBadge VerticalAlignment="Center" DataContext="{Binding CheckHardwareBadge}" />
                         <TextBlock
-                            FontSize="14"
                             Grid.Column="1"
                             Margin="8,8"
+                            VerticalAlignment="Center"
+                            FontSize="14"
                             Text="{Binding CheckHardwareBadge.CurrentToolTip}"
-                            TextWrapping="WrapWithOverflow"
-                            VerticalAlignment="Center" />
+                            TextWrapping="WrapWithOverflow" />
                     </Grid>
-                    
-                    <!-- Gpu info -->
-                    <Grid ColumnDefinitions="*,Auto" 
-                          Margin="8,8,0,0"
-                          HorizontalAlignment="Left"
-                          IsVisible="{Binding GpuInfoText, 
-                                Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+
+                    <!--
+                        Gpu info
+                        IsVisible="{Binding GpuInfoText,
+                        Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                    -->
+                    <Grid
+                        Margin="8,8,0,0"
+                        HorizontalAlignment="Left"
+                        ColumnDefinitions="*,Auto">
+                        <Grid.IsVisible>
+                            <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                <Binding Converter="{x:Static StringConverters.IsNotNullOrEmpty}" Path="GpuInfoText" />
+                                <Binding Path="!SelectDifferentGpu" />
+                            </MultiBinding>
+                        </Grid.IsVisible>
                         <Ellipse
-                            HorizontalAlignment="Left"
-                            Margin="8,0"
-                            Fill="{DynamicResource TextFillColorPrimaryBrush}"
+                            Width="8"
                             Height="8"
-                            Width="8" />
+                            Margin="8,0"
+                            HorizontalAlignment="Left"
+                            Fill="{DynamicResource TextFillColorPrimaryBrush}" />
                         <TextBlock
                             Grid.Column="1"
-                            FontSize="14"
                             HorizontalAlignment="Left"
+                            FontSize="14"
                             Text="{Binding GpuInfoText}"
                             TextWrapping="Wrap" />
                     </Grid>
-                    
+
+                    <HyperlinkButton
+                        Margin="0,8"
+                        Command="{Binding ToggleManualGpuCommand}"
+                        Content="Select a different default GPU"
+                        FontSize="11" />
+
+                    <controls:BetterComboBox
+                        HorizontalAlignment="Stretch"
+                        IsVisible="{Binding SelectDifferentGpu}"
+                        ItemsSource="{Binding GpuInfoCollection}"
+                        SelectedItem="{Binding SelectedGpu}">
+                        <controls:BetterComboBox.ItemTemplate>
+                            <DataTemplate DataType="hardwareInfo:GpuInfo">
+                                <TextBlock Text="{Binding Name}" />
+                            </DataTemplate>
+                        </controls:BetterComboBox.ItemTemplate>
+                    </controls:BetterComboBox>
+
+                    <TextBlock
+                        Margin="8,4"
+                        IsVisible="{Binding SelectDifferentGpu}"
+                        Text="{Binding YouCanChangeThis}"
+                        TextWrapping="Wrap" />
+
                 </StackPanel>
                 <!--  Checkbox  -->
                 <!-- <Hyperlink Command="{Binding OpenLicenseLinkCommand}" NavigateUri="">License Agreement.</Hyperlink> -->
 
-                <Grid Grid.Row="1" 
-                      ColumnDefinitions="*,Auto"
-                      HorizontalAlignment="Center">
+                <Grid
+                    Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    ColumnDefinitions="*,Auto">
                     <CheckBox
                         Grid.Column="1"
+                        Margin="16,0,0,0"
                         HorizontalAlignment="Left"
-                        IsChecked="{Binding EulaAccepted, Mode=TwoWay}"
-                        Margin="16,0,0,0">
-                        <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
-                            <TextBlock 
+                        IsChecked="{Binding EulaAccepted, Mode=TwoWay}">
+                        <Grid VerticalAlignment="Center" ColumnDefinitions="*,Auto">
+                            <TextBlock
                                 VerticalAlignment="Top"
                                 FontSize="14"
-                                Text="{x:Static lang:Resources.Label_ReadAndAgree}"/>
-                            
+                                Text="{x:Static lang:Resources.Label_ReadAndAgree}" />
+
                             <HyperlinkButton
-                                VerticalAlignment="Top"
-                                Padding="0"
+                                Grid.Column="1"
                                 Margin="1,0,0,0"
+                                Padding="0"
+                                VerticalAlignment="Top"
                                 Classes="transparent"
-                                NavigateUri="https://lykos.ai/matrix/license"
                                 Content="{x:Static lang:Resources.Label_LicenseAgreement}"
-                                Grid.Column="1" />
+                                NavigateUri="https://lykos.ai/matrix/license" />
                         </Grid>
                     </CheckBox>
                 </Grid>
             </Grid>
             <!--  Buttons  -->
             <UniformGrid
-                HorizontalAlignment="Right"
-                Margin="32,8"
                 MaxWidth="170"
+                Margin="32,8"
+                HorizontalAlignment="Right"
                 VerticalAlignment="Bottom">
                 <Button
                     Classes="danger"
@@ -113,5 +149,5 @@
 
         </Grid>
     </Grid>
-    
+
 </controls:AppWindowBase>

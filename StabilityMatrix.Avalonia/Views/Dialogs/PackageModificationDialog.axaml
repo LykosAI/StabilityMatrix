@@ -1,41 +1,53 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-             xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-             xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
-             xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
-             xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:DataType="base:ContentDialogProgressViewModelBase"
-             x:Class="StabilityMatrix.Avalonia.Views.Dialogs.PackageModificationDialog">
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.PackageModificationDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+    xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="base:ContentDialogProgressViewModelBase"
+    mc:Ignorable="d">
     <Grid Margin="8" RowDefinitions="Auto, Auto, Auto, *, Auto, Auto">
-        <TextBlock Grid.Row="0" Text="{Binding Text}"
-                   FontSize="24"
-                   FontWeight="Light"
-                   Margin="4"
-                   TextWrapping="WrapWithOverflow"
-                   TextAlignment="Center"
-                   HorizontalAlignment="Stretch"/>
-        
-        <TextBlock Grid.Row="1" Text="{Binding Description}"
-                   Margin="4"
-                   TextWrapping="WrapWithOverflow"
-                   TextAlignment="Center"
-                   IsVisible="{Binding !#Expander.IsExpanded}"/>
-        
-        <ProgressBar Grid.Row="2" Value="{Binding Value}"
-                     Margin="8"
-                     IsIndeterminate="{Binding IsIndeterminate}"/>
-        
-        <Expander Grid.Row="3"
-                  Margin="8"
-                  Header="More Details" x:Name="Expander">
+        <TextBlock
+            Grid.Row="0"
+            Margin="4"
+            HorizontalAlignment="Stretch"
+            FontSize="24"
+            FontWeight="Light"
+            Text="{Binding Text}"
+            TextAlignment="Center"
+            TextWrapping="WrapWithOverflow" />
+
+        <TextBlock
+            Grid.Row="1"
+            Margin="4"
+            IsVisible="{Binding !#Expander.IsExpanded}"
+            Text="{Binding Description}"
+            TextAlignment="Center"
+            TextWrapping="WrapWithOverflow" />
+
+        <ProgressBar
+            Grid.Row="2"
+            Margin="8"
+            IsIndeterminate="{Binding IsIndeterminate}"
+            Value="{Binding Value}" />
+
+        <Expander
+            x:Name="Expander"
+            Grid.Row="3"
+            Margin="8"
+            Header="More Details">
             <avaloniaEdit:TextEditor
                 x:Name="Console"
-                Margin="8"
                 MaxHeight="400"
+                Margin="8"
                 DataContext="{Binding Console}"
                 Document="{Binding Document}"
                 FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
@@ -43,18 +55,58 @@
                 LineNumbersForeground="DarkSlateGray"
                 ShowLineNumbers="True"
                 VerticalScrollBarVisibility="Auto"
-                WordWrap="True" />
+                WordWrap="True">
+                <avaloniaEdit:TextEditor.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuItem
+                            Command="{Binding CopySelectionCommand}"
+                            CommandParameter="{Binding ., ElementName=Console}"
+                            Header="{x:Static lang:Resources.Action_Copy}">
+                            <MenuItem.Icon>
+                                <avalonia:Icon Value="fa-solid fa-copy" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding SelectAllCommand}"
+                            CommandParameter="{Binding ., ElementName=Console}"
+                            Header="{x:Static lang:Resources.Action_SelectAll}"
+                            IsEnabled="{Binding CanSelectAll, ElementName=Console}">
+                            <MenuItem.Icon>
+                                <avalonia:Icon Value="fa-solid fa-table-cells" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding SearchWithGoogleCommand}"
+                            CommandParameter="{Binding ., ElementName=Console}"
+                            Header="Search with Google">
+                            <MenuItem.Icon>
+                                <avalonia:Icon Value="fa-brands fa-google" />
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        <MenuItem
+                            Command="{Binding SearchWithChatGptCommand}"
+                            CommandParameter="{Binding ., ElementName=Console}"
+                            Header="Search with ChatGPT"
+                            Icon="{StaticResource OpenAiIcon}" />
+                    </MenuFlyout>
+                </avaloniaEdit:TextEditor.ContextFlyout>
+            </avaloniaEdit:TextEditor>
         </Expander>
-        
-        <CheckBox Grid.Row="4" IsChecked="{Binding CloseWhenFinished}"
-                  HorizontalAlignment="Center"
-                  IsVisible="{Binding !HideCloseButton}"
-                  Margin="4" Content="{x:Static lang:Resources.Label_CloseDialogWhenFinished}"/>
-        
-        <Button Grid.Row="5" Content="{x:Static lang:Resources.Action_Hide}"
-                FontSize="20"
-                HorizontalAlignment="Center"
-                IsVisible="{Binding !HideCloseButton}"
-                Command="{Binding OnCloseButtonClick}"/>
+
+        <CheckBox
+            Grid.Row="4"
+            Margin="4"
+            HorizontalAlignment="Center"
+            Content="{x:Static lang:Resources.Label_CloseDialogWhenFinished}"
+            IsChecked="{Binding CloseWhenFinished}"
+            IsVisible="{Binding !HideCloseButton}" />
+
+        <Button
+            Grid.Row="5"
+            HorizontalAlignment="Center"
+            Command="{Binding OnCloseButtonClick}"
+            Content="{x:Static lang:Resources.Action_Hide}"
+            FontSize="20"
+            IsVisible="{Binding !HideCloseButton}" />
     </Grid>
 </controls:UserControlBase>

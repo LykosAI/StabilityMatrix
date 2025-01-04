@@ -124,11 +124,8 @@ public record LocalModelFile
     public string? HashBlake3 => ConnectedModelInfo?.Hashes.BLAKE3;
 
     [BsonIgnore]
-    public string FullPathGlobal => GetFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
-
-    [BsonIgnore]
     public string? PreviewImageFullPathGlobal =>
-        PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.LibraryDir.JoinDir("Models"));
+        PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.ModelsDir);
 
     [BsonIgnore]
     public Uri? PreviewImageUriGlobal =>

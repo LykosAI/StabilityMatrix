@@ -1,14 +1,14 @@
 ﻿using System;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Views;
 
-[Singleton]
+[RegisterSingleton<OpenArtBrowserPage>]
 public partial class OpenArtBrowserPage : UserControlBase
 {
     private readonly ISettingsManager settingsManager;

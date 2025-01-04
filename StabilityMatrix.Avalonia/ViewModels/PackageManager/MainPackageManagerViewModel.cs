@@ -114,7 +114,7 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
 
     private void OnOneClickInstallFinished(object? sender, bool e)
     {
-        OnLoadedAsync().SafeFireAndForget();
+        Dispatcher.UIThread.Post(() => OnLoadedAsync().SafeFireAndForget());
     }
 
     public void SetPackages(IEnumerable<InstalledPackage> packages)

@@ -1,14 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 using StabilityMatrix.Core.Models.Api.Comfy;
 
 namespace StabilityMatrix.Core.Models;
 
 [JsonSerializable(typeof(GenerationParameters))]
-public partial record GenerationParameters
+public record GenerationParameters
 {
     public string? PositivePrompt { get; set; }
     public string? NegativePrompt { get; set; }
@@ -124,36 +122,139 @@ public partial record GenerationParameters
     /// fields are separated by commas and key-value pairs are separated by colons.
     /// i.e. "key1: value1, key2: value2"
     /// </summary>
-    internal static Dictionary<string, string> ParseLine(string fields)
+    internal static Dictionary<string, string> ParseLine(string line)
     {
         var dict = new Dictionary<string, string>();
 
-        // Values main contain commas or colons
-        foreach (var match in ParametersFieldsRegex().Matches(fields).Cast<Match>())
+        var quoteStack = new Stack<char>();
+        // the Range for the key
+        Range? currentKeyRange = null;
+        // the start of the key or value
+        Index currentStart = 0;
+
+        for (var i = 0; i < line.Length; i++)
         {
-            if (!match.Success)
-                continue;
+            var c = line[i];
 
-            var key = match.Groups[1].Value.Trim();
-            var value = UnquoteValue(match.Groups[2].Value.Trim());
+            switch (c)
+            {
+                case '"':
+                    // if we are in a " quote, pop the stack
+                    if (quoteStack.Count > 0 && quoteStack.Peek() == '"')
+                    {
+                        quoteStack.Pop();
+                    }
+                    else
+                    {
+                        // start of a new quoted section
+                        quoteStack.Push(c);
+                    }
+                    break;
 
-            dict.Add(key, value);
+                case '[':
+                case '{':
+                case '(':
+                case '<':
+                    quoteStack.Push(c);
+                    break;
+
+                case ']':
+                    if (quoteStack.Count > 0 && quoteStack.Peek() == '[')
+                    {
+                        quoteStack.Pop();
+                    }
+                    break;
+                case '}':
+                    if (quoteStack.Count > 0 && quoteStack.Peek() == '{')
+                    {
+                        quoteStack.Pop();
+                    }
+                    break;
+                case ')':
+                    if (quoteStack.Count > 0 && quoteStack.Peek() == '(')
+                    {
+                        quoteStack.Pop();
+                    }
+                    break;
+                case '>':
+                    if (quoteStack.Count > 0 && quoteStack.Peek() == '<')
+                    {
+                        quoteStack.Pop();
+                    }
+                    break;
+
+                case ':':
+                    // : marks the end of the key
+
+                    // if we already have a key, ignore this colon as it is part of the value
+                    // if we are not in a quote, we have a key
+                    if (!currentKeyRange.HasValue && quoteStack.Count == 0)
+                    {
+                        currentKeyRange = new Range(currentStart, i);
+                        currentStart = i + 1;
+                    }
+                    break;
+
+                case ',':
+                    // , marks the end of a key-value pair
+                    // if we are not in a quote, we have a value
+                    if (quoteStack.Count != 0)
+                    {
+                        break;
+                    }
+
+                    if (!currentKeyRange.HasValue)
+                    {
+                        // unexpected comma, reset and start from current position
+                        currentStart = i + 1;
+                        break;
+                    }
+
+                    try
+                    {
+                        // extract the key and value
+                        var key = new string(line.AsSpan()[currentKeyRange!.Value].Trim());
+                        var value = new string(line.AsSpan()[currentStart..i].Trim());
+
+                        // check duplicates and prefer the first occurrence
+                        if (!string.IsNullOrWhiteSpace(key) && !dict.ContainsKey(key))
+                        {
+                            dict[key] = value;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // ignore individual key-value pair errors
+                    }
+
+                    currentKeyRange = null;
+                    currentStart = i + 1;
+                    break;
+                default:
+                    break;
+            } // end of switch
+        } // end of for
+
+        // if we have a key-value pair at the end of the string
+        if (currentKeyRange.HasValue)
+        {
+            try
+            {
+                var key = new string(line.AsSpan()[currentKeyRange!.Value].Trim());
+                var value = new string(line.AsSpan()[currentStart..].Trim());
+
+                if (!string.IsNullOrWhiteSpace(key) && !dict.ContainsKey(key))
+                {
+                    dict[key] = value;
+                }
+            }
+            catch (Exception)
+            {
+                // ignore individual key-value pair errors
+            }
         }
 
         return dict;
-    }
-
-    /// <summary>
-    /// Unquotes a quoted value field if required
-    /// </summary>
-    private static string UnquoteValue(string quotedField)
-    {
-        if (!(quotedField.StartsWith('"') && quotedField.EndsWith('"')))
-        {
-            return quotedField;
-        }
-
-        return JsonNode.Parse(quotedField)?.GetValue<string>() ?? "";
     }
 
     /// <summary>
@@ -213,7 +314,4 @@ public partial record GenerationParameters
             Sampler = "DPM++ 2M Karras"
         };
     }
-
-    [GeneratedRegex("""\s*([\w ]+):\s*("(?:\\.|[^\\"])+"|[^,]*)(?:,|$)""")]
-    private static partial Regex ParametersFieldsRegex();
 }

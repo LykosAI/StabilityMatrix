@@ -169,11 +169,7 @@ public class Settings
 
     public Dictionary<NotificationKey, NotificationOption> NotificationOptions { get; set; } = new();
 
-    public List<string> SelectedBaseModels { get; set; } =
-        Enum.GetValues<CivitBaseModelType>()
-            .Where(x => x != CivitBaseModelType.All)
-            .Select(x => x.GetStringValue())
-            .ToList();
+    public List<string> SelectedBaseModels { get; set; } = [];
 
     public Size InferenceImageSize { get; set; } = new(150, 190);
 

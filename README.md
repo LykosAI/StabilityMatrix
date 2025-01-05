@@ -1,5 +1,4 @@
 # Stability Matrix
-**Please note that we do not have any involvement in cryptocurrencies. Any accounts you see claiming otherwise are scams. Please be careful. The only official source of information for Lykos AI is https://lykos.ai or our [Discord Server](https://discord.com/invite/TUrgfECxHz)**.
 
 [![Build](https://github.com/LykosAI/StabilityMatrix/actions/workflows/build.yml/badge.svg)](https://github.com/LykosAI/StabilityMatrix/actions/workflows/build.yml)
 [![Discord Server](https://img.shields.io/discord/1115555685476868168?logo=discord&logoColor=white&label=Discord%20Server)](https://discord.com/invite/TUrgfECxHz)
@@ -148,6 +147,7 @@ If you would like to contribute a translation, please create an issue or contact
 
 ## Disclaimers
 All trademarks, logos, and brand names are the property of their respective owners. All company, product and service names used in this document and licensed applications are for identification purposes only. Use of these names, trademarks, and brands does not imply endorsement.
+Please note that we do not have any involvement in cryptocurrencies. Any accounts you see claiming otherwise are scams. Please be careful. The only official source of information for Lykos AI is https://lykos.ai or our [Discord Server](https://discord.com/invite/TUrgfECxHz).
 
 ## License
 

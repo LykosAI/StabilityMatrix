@@ -5,24 +5,6 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-<<<<<<< HEAD
-=======
-
-## v2.14.0-dev.1
-### Added
-- Added Rescale CFG addon to Inference
-- Added Swap Dimensions button between the width/height input in Inference
-### Changed
-- Improved the quality of Inference inpainting by upgrading the workflow behind the scenes. The workflow remains the same for you — just better results!
-- Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout
-### Fixed
-- Fixed Inference image selector card buttons taking up the whole height of the card
-- Fixed Inference mask editor failing to paint to the right-most edge on large images
-- Fixed Inference mask editor not showing the entire image in certain circumstances
-- Fixed [#1078](https://github.com/LykosAI/StabilityMatrix/issues/1078) - "Call from invalid thread" error after one-click install finishes
-- Fixed [#1080](https://github.com/LykosAI/StabilityMatrix/issues/1080) - Some models not displayed in Checkpoint Manager
-
->>>>>>> ef7bc395 (Merge pull request #946 from ionite34/fix-checkpoint-filters)
 ## v2.13.1
 ### Changed
 - Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout

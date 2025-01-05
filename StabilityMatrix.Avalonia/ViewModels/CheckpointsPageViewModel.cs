@@ -59,7 +59,6 @@ public partial class CheckpointsPageViewModel(
     INotificationService notificationService,
     IMetadataImportService metadataImportService,
     IModelImportService modelImportService,
-    OpenModelDbManager openModelDbManager,
     ServiceManager<ViewModelBase> dialogFactory,
     ICivitBaseModelTypeService baseModelTypeService
 ) : PageViewModelBase

@@ -42,6 +42,8 @@ public class LiteDbContext : ILiteDbContext
         Database.GetCollection<LocalImageFile>("LocalImageFiles");
     public ILiteCollectionAsync<PyPiCacheEntry> PyPiCache =>
         Database.GetCollection<PyPiCacheEntry>("PyPiCache");
+    public ILiteCollectionAsync<CivitBaseModelTypeCacheEntry> CivitBaseModelTypeCache =>
+        Database.GetCollection<CivitBaseModelTypeCacheEntry>("CivitBaseModelTypeCache");
 
     public LiteDbContext(
         ILogger<LiteDbContext> logger,
@@ -383,6 +385,17 @@ public class LiteDbContext : ILiteDbContext
             }
         }
     }
+
+    public async Task<CivitBaseModelTypeCacheEntry?> GetCivitBaseModelTypeCacheEntry(string id)
+    {
+        if (string.IsNullOrEmpty(id))
+            return null;
+
+        return await CivitBaseModelTypeCache.FindByIdAsync(id).ConfigureAwait(false);
+    }
+
+    public Task<bool> UpsertCivitBaseModelTypeCacheEntry(CivitBaseModelTypeCacheEntry entry) =>
+        CivitBaseModelTypeCache.UpsertAsync(entry);
 
     private readonly record struct HandledExceptionInfo(
         string CollectionName,

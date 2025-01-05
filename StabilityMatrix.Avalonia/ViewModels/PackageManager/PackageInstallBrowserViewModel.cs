@@ -61,7 +61,7 @@ public partial class PackageInstallBrowserViewModel(
 
         var incompatiblePredicate = this.WhenPropertyChanged(vm => vm.ShowIncompatiblePackages)
             .Select(_ => new Func<BasePackage, bool>(p => p.IsCompatible || ShowIncompatiblePackages))
-            .ObserveOn(SynchronizationContext.Current!)
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchFilter)
@@ -71,7 +71,7 @@ public partial class PackageInstallBrowserViewModel(
                         p => p.DisplayName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
                     )
             )
-            .ObserveOn(SynchronizationContext.Current!)
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         packageSource
@@ -86,7 +86,7 @@ public partial class PackageInstallBrowserViewModel(
                     .ThenByAscending(p => p.DisplayName)
             )
             .Bind(InferencePackages)
-            .ObserveOn(SynchronizationContext.Current!)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         packageSource
@@ -101,7 +101,7 @@ public partial class PackageInstallBrowserViewModel(
                     .ThenByAscending(p => p.DisplayName)
             )
             .Bind(TrainingPackages)
-            .ObserveOn(SynchronizationContext.Current!)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         packageSource.EditDiff(

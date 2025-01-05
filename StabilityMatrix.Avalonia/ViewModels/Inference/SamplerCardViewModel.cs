@@ -494,6 +494,12 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         )
             ? res
             : null;
+
+        if (sampler is null && SelectedSampler is not null && SelectedScheduler is not null)
+        {
+            sampler = $"{SelectedSampler?.DisplayName} {SelectedScheduler?.DisplayName}";
+        }
+
         return parameters with
         {
             Width = Width,

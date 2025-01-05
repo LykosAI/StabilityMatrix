@@ -5,6 +5,7 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+
 ## v2.14.0-dev.1
 ### Added
 - Added Rescale CFG addon to Inference
@@ -27,7 +28,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added file sizes to the Checkpoint Manager tab
 - Added the Discrete Model Sampling addon for Inference samplers, allows selecting different sampling methods, such as v_prediction, lcm, or x0, and optionally adjusts the model’s noise reduction strategy with the zero-shot noise ratio (ZSNR) toggle.
 - Added Default GPU override in Settings -> System Settings -> Default GPU
-- Added the ability to copy more generation parameters from the Inference gallery context menu
+- Added new "Copy" menu to the Inference gallery context menu, allowing you to copy generation parameters as well as the image
 - Added "StableDiffusion" folder as an option when downloading Flux models in the CivitAI model browser
 - Added support for SD3.5 in Inference
 - Added CLIP_G to HuggingFace model browser
@@ -40,7 +41,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added zipping of log files and "Show Log in Explorer" button on exceptions dialog for easier support
 - Added max concurrent downloads option & download queueing for most downloads
 - Added the ability to change the Models directory separately from the rest of the Data directory. This can be set in `Settings > Select new Models Folder`
-- Added "Copy" menu to the Inference gallery context menu, allowing you to copy the image or the seed (other params coming soon™️)
 - Added InvokeAI model sharing option
 ### Changed
 - Improved Packages Page grid layout to dynamically stretch to fill available space

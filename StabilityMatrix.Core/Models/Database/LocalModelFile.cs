@@ -123,6 +123,8 @@ public record LocalModelFile
     /// </summary>
     public string? HashBlake3 => ConnectedModelInfo?.Hashes.BLAKE3;
 
+    public string? HashSha256 => ConnectedModelInfo?.Hashes.SHA256;
+
     [BsonIgnore]
     public string? PreviewImageFullPathGlobal =>
         PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.ModelsDir);
@@ -149,7 +151,15 @@ public record LocalModelFile
 
     [BsonIgnore]
     [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
-    public bool HasCivitMetadata => HasConnectedModel && ConnectedModelInfo.ModelId != null;
+    public bool HasCivitMetadata =>
+        HasConnectedModel
+        && ConnectedModelInfo.ModelId != null
+        && ConnectedModelInfo.Source == ConnectedModelSource.Civitai;
+
+    [BsonIgnore]
+    [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
+    public bool HasOpenModelDbMetadata =>
+        HasConnectedModel && ConnectedModelInfo.Source == ConnectedModelSource.OpenModelDb;
 
     public string GetFullPath(string rootModelDirectory)
     {

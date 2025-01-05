@@ -5,6 +5,7 @@
     xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     xmlns:local="using:StabilityMatrix.Avalonia"
+    xmlns:styles="clr-namespace:StabilityMatrix.Avalonia.Styles"
     xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
     Name="Stability Matrix"
     RequestedThemeVariant="Dark">
@@ -24,9 +25,7 @@
                 <ResourceInclude Source="Styles/ContextMenuStyles.axaml" />
                 <ResourceInclude Source="Controls/EditorFlyouts.axaml" />
                 <ResourceInclude Source="Controls/Scroll/BetterScrollViewer.axaml" />
-                <ResourceInclude Source="Styles/ControlThemes/HyperlinkIconButtonStyles.axaml" />
-                <ResourceInclude Source="Styles/ControlThemes/ListBoxStyles.axaml" />
-                <ResourceInclude Source="Styles/ControlThemes/BetterComboBoxStyles.axaml" />
+                <ResourceInclude Source="Styles/ControlThemes/_index.axaml" />
                 <ResourceInclude Source="Styles/ListBoxStyles.axaml" />
                 <ResourceInclude Source="Styles/FAComboBoxStyles.axaml" />
                 <ResourceInclude Source="Controls/Inference/ImageFolderCard.axaml" />
@@ -47,6 +46,7 @@
     </Application.Resources>
 
     <Application.Styles>
+        <styles:SemiStyles />
         <styling:FluentAvaloniaTheme
             PreferUserAccentColor="True"
             TextVerticalAlignmentOverrideBehavior="Disabled"
@@ -95,6 +95,7 @@
         <StyleInclude Source="Controls/Inference/LayerDiffuseCard.axaml" />
         <StyleInclude Source="Controls/Inference/UnetModelCard.axaml" />
         <StyleInclude Source="Controls/Inference/DiscreteModelSamplingCard.axaml" />
+        <StyleInclude Source="Controls/Inference/RescaleCfgCard.axaml" />
         <StyleInclude Source="Controls/Painting/PaintCanvas.axaml" />
         <StyleInclude Source="Controls/MarkdownViewer.axaml" />
         <labs:ControlThemes />

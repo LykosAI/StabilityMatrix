@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Api.OpenModelsDb;
 
 namespace StabilityMatrix.Core.Models;
 
@@ -29,6 +30,8 @@ public class ConnectedModelInfo
     public string? UserTitle { get; set; }
     public string? ThumbnailImageUrl { get; set; }
 
+    public ConnectedModelSource? Source { get; set; } = ConnectedModelSource.Civitai;
+
     public ConnectedModelInfo() { }
 
     public ConnectedModelInfo(
@@ -53,6 +56,24 @@ public class ConnectedModelInfo
         Hashes = civitFile.Hashes;
         TrainedWords = civitModelVersion.TrainedWords;
         Stats = civitModel.Stats;
+        Source = ConnectedModelSource.Civitai;
+    }
+
+    public ConnectedModelInfo(
+        OpenModelDbKeyedModel model,
+        OpenModelDbResource resource,
+        DateTimeOffset importedAt
+    )
+    {
+        ModelName = model.Id;
+        ModelDescription = model.Description ?? string.Empty;
+        VersionName = model.Name ?? string.Empty;
+        Tags = model.Tags?.ToArray() ?? [];
+        ImportedAt = importedAt;
+        Hashes = new CivitFileHashes { SHA256 = resource.Sha256 };
+        ThumbnailImageUrl = resource.Urls?.FirstOrDefault();
+        ModelType = CivitModelType.Upscaler;
+        Source = ConnectedModelSource.OpenModelDb;
     }
 
     public static ConnectedModelInfo? FromJson(string json)

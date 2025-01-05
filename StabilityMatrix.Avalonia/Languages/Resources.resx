@@ -1302,4 +1302,7 @@
   <data name="Label_OrWithHyphensAround" xml:space="preserve">
     <value>- or -</value>
   </data>
+  <data name="Action_OpenOnOpenModelDb" xml:space="preserve">
+    <value>Open on OpenModelDB</value>
+  </data>
 </root>

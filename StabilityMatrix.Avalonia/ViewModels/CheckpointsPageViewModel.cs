@@ -59,13 +59,9 @@ public partial class CheckpointsPageViewModel(
     INotificationService notificationService,
     IMetadataImportService metadataImportService,
     IModelImportService modelImportService,
-<<<<<<< HEAD
-    ServiceManager<ViewModelBase> dialogFactory
-=======
     OpenModelDbManager openModelDbManager,
     ServiceManager<ViewModelBase> dialogFactory,
     ICivitBaseModelTypeService baseModelTypeService
->>>>>>> ef7bc395 (Merge pull request #946 from ionite34/fix-checkpoint-filters)
 ) : PageViewModelBase
 {
     public override string Title => Resources.Label_CheckpointManager;

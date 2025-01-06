@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added Rescale CFG addon to Inference
 - Added Swap Dimensions button between the width/height input in Inference
+- Added Ctrl+Tab/Ctrl+Shift+Tab shortcuts for navigating between Inference tabs
 ### Changed
 - Improved the quality of Inference inpainting by upgrading the workflow behind the scenes. The workflow remains the same for you — just better results!
 - Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout

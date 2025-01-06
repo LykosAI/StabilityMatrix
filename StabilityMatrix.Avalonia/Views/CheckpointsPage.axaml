@@ -34,6 +34,7 @@
         <system:Boolean x:Key="False">False</system:Boolean>
         <system:Boolean x:Key="True">True</system:Boolean>
         <input:StandardUICommand x:Key="ItemClickCommand" Command="{Binding ItemClickCommand}" />
+        <input:StandardUICommand x:Key="BaseModelTypeClickCommand" />
     </controls:UserControlBase.Resources>
 
     <controls:UserControlBase.Styles>
@@ -288,28 +289,27 @@
                         </ui:CommandBarButton.Styles>
                         <ui:CommandBarButton.Flyout>
                             <Flyout>
-                                <StackPanel Orientation="Vertical">
+                                <StackPanel MaxWidth="350" Orientation="Vertical">
                                     <Button
                                         Margin="0,0,0,8"
                                         HorizontalAlignment="Stretch"
                                         Classes="transparent"
                                         Command="{Binding ClearOrSelectAllBaseModelsCommand}"
                                         Content="{Binding ClearButtonText}" />
-                                    <ListBox
-                                        ItemsSource="{Binding BaseModelOptions}"
-                                        SelectedItems="{Binding SelectedBaseModels}"
-                                        SelectionMode="Multiple, Toggle">
-                                        <ListBox.Template>
-                                            <ControlTemplate>
-                                                <ItemsPresenter />
-                                            </ControlTemplate>
-                                        </ListBox.Template>
-                                        <ListBox.ItemTemplate>
+                                    <ui:ItemsRepeater ItemsSource="{Binding BaseModelOptions}">
+                                        <ui:ItemsRepeater.Layout>
+                                            <ui:FlowLayout
+                                                LineAlignment="Center"
+                                                MinColumnSpacing="4"
+                                                MinRowSpacing="4"
+                                                Orientation="Horizontal" />
+                                        </ui:ItemsRepeater.Layout>
+                                        <ui:ItemsRepeater.ItemTemplate>
                                             <DataTemplate DataType="{x:Type checkpointManager:BaseModelOptionViewModel}">
-                                                <TextBlock Text="{Binding ModelType}" />
+                                                <ToggleButton Content="{Binding ModelType}" IsChecked="{Binding IsSelected}" />
                                             </DataTemplate>
-                                        </ListBox.ItemTemplate>
-                                    </ListBox>
+                                        </ui:ItemsRepeater.ItemTemplate>
+                                    </ui:ItemsRepeater>
                                 </StackPanel>
                             </Flyout>
                         </ui:CommandBarButton.Flyout>

@@ -45,6 +45,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     private readonly ISettingsManager settingsManager;
     private readonly ILiteDbContext liteDbContext;
     private readonly INotificationService notificationService;
+    private readonly ICivitBaseModelTypeService baseModelTypeService;
     private bool dontSearch = false;
 
     private readonly SourceCache<OrderedValue<CivitModel>, int> modelCache = new(static ov => ov.Value.Id);
@@ -126,13 +127,15 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
         ILiteDbContext liteDbContext,
-        INotificationService notificationService
+        INotificationService notificationService,
+        ICivitBaseModelTypeService baseModelTypeService
     )
     {
         this.civitApi = civitApi;
         this.settingsManager = settingsManager;
         this.liteDbContext = liteDbContext;
         this.notificationService = notificationService;
+        this.baseModelTypeService = baseModelTypeService;
 
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
 
@@ -727,31 +730,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     [Localizable(false)]
     private async Task<List<string>> GetBaseModelList()
     {
-        try
-        {
-            var baseModelsResponse = await civitApi.GetBaseModelList();
-            var jsonContent = await baseModelsResponse.Content.ReadAsStringAsync();
-            var baseModels = JsonNode.Parse(jsonContent);
-
-            var jArray =
-                baseModels?["error"]?["issues"]?[0]?["unionErrors"]?[0]?["issues"]?[0]?["options"]
-                as JsonArray;
-            var civitBaseModels = jArray?.GetValues<string>().ToList() ?? [];
-
-            civitBaseModels.Insert(0, CivitBaseModelType.All.ToString());
-
-            var filteredResults = civitBaseModels
-                .Where(s => s.Equals("odor", StringComparison.OrdinalIgnoreCase) == false)
-                .OrderBy(s => s)
-                .ToList();
-
-            return filteredResults;
-        }
-        catch (Exception e)
-        {
-            Logger.Error(e, "Failed to get base model list");
-            return [];
-        }
+        return await baseModelTypeService.GetBaseModelTypes();
     }
 
     public override string Header => Resources.Label_CivitAi;

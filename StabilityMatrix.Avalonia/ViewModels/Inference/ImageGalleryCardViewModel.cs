@@ -88,7 +88,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
             PreviewImage = bitmap;
             IsPreviewOverlayEnabled = true;
 
-            currentImage?.Dispose();
+            // currentImage?.Dispose();
         });
     }
 

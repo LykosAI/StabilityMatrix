@@ -291,6 +291,6 @@ public partial class SelectImageCardViewModel(
 
         ImageSource = image;
 
-        current?.Dispose();
+        // current?.Dispose();
     }
 }

@@ -421,7 +421,7 @@ public abstract partial class InferenceGenerationViewModelBase
 
             // Clear progress
             OutputProgress.ClearProgress();
-            ImageGalleryCardViewModel.PreviewImage?.Dispose();
+            // ImageGalleryCardViewModel.PreviewImage?.Dispose();
             ImageGalleryCardViewModel.PreviewImage = null;
             ImageGalleryCardViewModel.IsPreviewOverlayEnabled = false;
 

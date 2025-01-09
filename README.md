@@ -147,6 +147,7 @@ If you would like to contribute a translation, please create an issue or contact
 
 ## Disclaimers
 All trademarks, logos, and brand names are the property of their respective owners. All company, product and service names used in this document and licensed applications are for identification purposes only. Use of these names, trademarks, and brands does not imply endorsement.
+Please note that we do not have any involvement in cryptocurrencies. Any accounts you see claiming otherwise are scams. Please be careful. The only official source of information for Lykos AI is https://lykos.ai or our [Discord Server](https://discord.com/invite/TUrgfECxHz).
 
 ## License
 

@@ -48,7 +48,7 @@
                                 Source="{Binding ImageSource}"
                                 Stretch="Uniform"
                                 StretchDirection="Both" />
-                            
+
                             <!--  Overlay Image  -->
                             <Panel>
                                 <Panel.IsVisible>
@@ -57,13 +57,13 @@
                                         <CompiledBinding Path="IsMaskOverlayEnabled" />
                                     </MultiBinding>
                                 </Panel.IsVisible>
-                                <controls:BetterImage 
+                                <controls:BetterImage
                                     VerticalAlignment="Stretch"
-                                    Stretch="Uniform"
-                                    StretchDirection="Both"
-                                    RenderOptions.BitmapInterpolationMode="HighQuality"
                                     DataContext="{Binding MaskEditorViewModel}"
-                                    Source="{Binding CachedOrNewMaskRenderImage.Bitmap}"/>
+                                    RenderOptions.BitmapInterpolationMode="HighQuality"
+                                    Source="{Binding CachedOrNewMaskRenderImage.Bitmap}"
+                                    Stretch="Uniform"
+                                    StretchDirection="Both" />
                             </Panel>
 
                             <!--  Missing image  -->
@@ -102,16 +102,18 @@
                             <!--  Active Selection Prompt  -->
                             <StackPanel
                                 Margin="4"
-                                Spacing="4"
-                                Orientation="Horizontal"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Top"
-                                IsVisible="{Binding !IsSelectionAvailable}">
-                                <!-- Mask Overlay Toggle -->
+                                IsVisible="{Binding !IsSelectionAvailable}"
+                                Orientation="Horizontal"
+                                Spacing="4">
+                                <!--  Mask Overlay Toggle  -->
                                 <Border
-                                    IsVisible="{Binding IsMaskEditorEnabled}"
+                                    Width="40"
+                                    Height="40"
                                     BoxShadow="inset 1.2 0 80 1.8 #66000000"
-                                    CornerRadius="10">
+                                    CornerRadius="10"
+                                    IsVisible="{Binding IsMaskEditorEnabled}">
                                     <Border.Resources>
                                         <DropShadowEffect
                                             x:Key="TextDropShadowEffect"
@@ -126,9 +128,9 @@
                                     </Border.Resources>
                                     <ToggleButton
                                         Padding="2"
-                                        IsChecked="{Binding IsMaskOverlayEnabled}"
                                         CornerRadius="10"
-                                        FontSize="{TemplateBinding FontSize}">
+                                        FontSize="{TemplateBinding FontSize}"
+                                        IsChecked="{Binding IsMaskOverlayEnabled}">
                                         <ToolTip.Tip>
                                             <MultiBinding StringFormat="{}{0} - {1}">
                                                 <CompiledBinding Source="{x:Static lang:Resources.Label_ClippingMask}" />
@@ -142,11 +144,13 @@
                                             Symbol="Eye" />
                                     </ToggleButton>
                                 </Border>
-                                <!-- Mask Editor -->
+                                <!--  Mask Editor  -->
                                 <Border
-                                    IsVisible="{Binding IsMaskEditorEnabled}"
+                                    Width="40"
+                                    Height="40"
                                     BoxShadow="inset 1.2 0 80 1.8 #66000000"
-                                    CornerRadius="10">
+                                    CornerRadius="10"
+                                    IsVisible="{Binding IsMaskEditorEnabled}">
                                     <Border.Resources>
                                         <DropShadowEffect
                                             x:Key="TextDropShadowEffect"
@@ -178,8 +182,10 @@
                                             Symbol="Layer" />
                                     </Button>
                                 </Border>
-                                <!-- Replace Contents -->
+                                <!--  Replace Contents  -->
                                 <Border
+                                    Width="40"
+                                    Height="40"
                                     BoxShadow="inset 1.2 0 80 1.8 #66000000"
                                     CornerRadius="10">
                                     <Border.Resources>

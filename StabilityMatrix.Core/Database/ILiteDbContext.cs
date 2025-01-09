@@ -14,6 +14,7 @@ public interface ILiteDbContext : IDisposable
     ILiteCollectionAsync<LocalModelFile> LocalModelFiles { get; }
     ILiteCollectionAsync<InferenceProjectEntry> InferenceProjects { get; }
     ILiteCollectionAsync<LocalImageFile> LocalImageFiles { get; }
+    ILiteCollectionAsync<CivitBaseModelTypeCacheEntry> CivitBaseModelTypeCache { get; }
 
     Task<(CivitModel?, CivitModelVersion?)> FindCivitModelFromFileHashAsync(string hashBlake3);
     Task<bool> UpsertCivitModelAsync(CivitModel civitModel);
@@ -44,4 +45,7 @@ public interface ILiteDbContext : IDisposable
 
     Task<PyPiCacheEntry?> GetPyPiCacheEntry(string? cacheKey);
     Task<bool> UpsertPyPiCacheEntry(PyPiCacheEntry cacheEntry);
+
+    Task<CivitBaseModelTypeCacheEntry?> GetCivitBaseModelTypeCacheEntry(string id);
+    Task<bool> UpsertCivitBaseModelTypeCacheEntry(CivitBaseModelTypeCacheEntry entry);
 }

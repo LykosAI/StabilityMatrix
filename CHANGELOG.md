@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Inference image selector card buttons taking up the whole height of the card
 - Fixed Inference mask editor failing to paint to the right-most edge on large images
 - Fixed Inference mask editor not showing the entire image in certain circumstances
+- Fixed crash when dragging & dropping images in Inference (hopefully)
 
 ## v2.13.0
 ### Added

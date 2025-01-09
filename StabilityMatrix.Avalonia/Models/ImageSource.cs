@@ -277,7 +277,7 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
         if (!disposing)
             return;
 
-        Bitmap?.Dispose();
+        Bitmap = null;
     }
 
     /// <inheritdoc />

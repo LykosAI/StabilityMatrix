@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia.Controls.Notifications;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
@@ -206,6 +207,11 @@ public partial class SelectImageCardViewModel(
         if (await ImageSource.GetBitmapAsync() is not { } currentBitmap)
         {
             Logger.Warn("GetBitmapAsync returned null for image {Path}", ImageSource.LocalFile?.FullPath);
+            notificationService.ShowPersistent(
+                "Error Loading Image",
+                "Could not load mask editor for the provided image.",
+                NotificationType.Error
+            );
             return;
         }
         MaskEditorViewModel.PaintCanvasViewModel.BackgroundImage = currentBitmap.ToSKBitmap();

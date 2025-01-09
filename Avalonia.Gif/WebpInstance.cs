@@ -135,7 +135,7 @@ public class WebpInstance : IGifInstance
     {
         IsDisposed = true;
         CurrentCts.Cancel();
-        // _targetBitmap?.Dispose();
+        _targetBitmap?.Dispose();
         _codec?.Dispose();
     }
 

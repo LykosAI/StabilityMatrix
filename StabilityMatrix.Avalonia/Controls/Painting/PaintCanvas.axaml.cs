@@ -260,7 +260,7 @@ public class PaintCanvas : TemplatedControl
         // penPath.Path.LineTo(cursorPosition.ToSKPoint());
 
         // Get bounds for discarding invalid points
-        var canvasBounds = MainCanvas?.Bounds ?? new Rect();
+        var canvasBounds = new Rect(0, 0, MainCanvas?.Bounds.Width ?? 0, MainCanvas?.Bounds.Height ?? 0);
 
         // Add points
         foreach (var point in points)

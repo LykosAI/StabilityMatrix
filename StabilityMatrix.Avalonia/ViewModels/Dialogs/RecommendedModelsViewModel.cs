@@ -115,7 +115,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
                 )
             );
         }
-        catch (ApiException e)
+        catch (Exception e)
         {
             // hide dialog and show error msg
             logger.LogError(e, "Failed to get recommended models");

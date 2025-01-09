@@ -111,7 +111,7 @@ namespace Avalonia.Gif
         {
             IsDisposed = true;
             CurrentCts.Cancel();
-            // _targetBitmap?.Dispose();
+            _targetBitmap?.Dispose();
         }
 
         public bool IsDisposed { get; private set; }

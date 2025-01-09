@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.13.1
 ### Changed
 - Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout
+- "Clear All" button will now remain at the top of the Downloads list regardless of scroll position - thanks to @Genteure!
+- Improved image metadata parsing - thanks to @Genteure!
 ### Fixed
 - Fixed [#1078](https://github.com/LykosAI/StabilityMatrix/issues/1078) - "Call from invalid thread" error after one-click install finishes
 - Fixed [#1080](https://github.com/LykosAI/StabilityMatrix/issues/1080) - Some models not displayed in Checkpoint Manager
@@ -15,6 +17,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Inference mask editor failing to paint to the right-most edge on large images
 - Fixed Inference mask editor not showing the entire image in certain circumstances
 - Fixed crash when dragging & dropping images in Inference (hopefully)
+- Fixed an issue where certain sampler/scheduler combos would not get saved in image metadata - thanks to @yansigit!
+### Supporters
+#### Visionaries
+- A heartfelt thank you to our exceptional Visionary-tier Patreon backers, **Waterclouds** and **TheTekknician**! We truly appreciate your steadfast support!
+#### Pioneers
+- We are also very grateful to our wonderful Pioneer-tier Patreon supporters, **tankfox**, **Mr Unknown**, **Szir777**, **Tigon**, and **NowFallenAngel**! Your support means a lot to us!
 
 ## v2.13.0
 ### Added

@@ -28,6 +28,7 @@ public partial class ModelIndexService : IModelIndexService
     private readonly ISettingsManager settingsManager;
     private readonly ILiteDbContext liteDbContext;
     private readonly ModelFinder modelFinder;
+    private readonly SemaphoreSlim safetensorMetadataParseLock = new(1, 1);
 
     private DateTimeOffset lastUpdateCheck = DateTimeOffset.MinValue;
 
@@ -430,14 +431,6 @@ public partial class ModelIndexService : IModelIndexService
                 var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(path);
                 var jsonPath = fileDirectory.JoinFile($"{fileNameWithoutExtension}.cm-info.json");
 
-                if (path.EndsWith(".safetensors"))
-                {
-                    if (SafetensorMetadata.TryParse(path, out var metadata))
-                    {
-                        localModel.SafetensorMetadata = metadata;
-                    }
-                }
-
                 if (paths.Contains(jsonPath))
                 {
                     try
@@ -551,6 +544,86 @@ public partial class ModelIndexService : IModelIndexService
         );
 
         EventManager.Instance.OnModelIndexChanged();
+
+        Task.Run(LoadSafetensorMetadataAsync)
+            .SafeFireAndForget(ex =>
+            {
+                logger.LogError(ex, "Error loading safetensor metadata");
+            });
+    }
+
+    private async Task LoadSafetensorMetadataAsync()
+    {
+        if (!settingsManager.IsLibraryDirSet)
+        {
+            logger.LogTrace("Safetensor metadata loading skipped, library directory not set");
+            return;
+        }
+
+        if (new DirectoryPath(settingsManager.ModelsDirectory) is not { Exists: true } modelsDir)
+        {
+            logger.LogTrace("Safetensor metadata loading skipped, model directory does not exist");
+            return;
+        }
+
+        await safetensorMetadataParseLock.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var readSuccess = 0;
+            var readFail = 0;
+            logger.LogInformation("Loading safetensor metadata...");
+
+            var models = ModelIndex
+                .Values.SelectMany(x => x)
+                .Where(m => !m.SafetensorMetadataParsed && m.RelativePath.EndsWith(".safetensors"));
+
+            await Parallel
+                .ForEachAsync(
+                    models,
+                    new ParallelOptions
+                    {
+                        MaxDegreeOfParallelism = Math.Max(1, Math.Min(Environment.ProcessorCount / 2, 6)),
+                        TaskScheduler = TaskScheduler.Default,
+                    },
+                    async (model, token) =>
+                    {
+                        if (model.SafetensorMetadataParsed)
+                            return;
+
+                        if (!model.RelativePath.EndsWith(".safetensors"))
+                            return;
+
+                        try
+                        {
+                            var safetensorPath = model.GetFullPath(modelsDir);
+                            var metadata = await SafetensorMetadata
+                                .ParseAsync(safetensorPath)
+                                .ConfigureAwait(false);
+                            model.SafetensorMetadata = metadata;
+                            model.SafetensorMetadataParsed = true;
+
+                            Interlocked.Increment(ref readSuccess);
+                        }
+                        catch
+                        {
+                            Interlocked.Increment(ref readFail);
+                        }
+                    }
+                )
+                .ConfigureAwait(false);
+
+            logger.LogInformation(
+                "Loaded safetensor metadata for {Success} models, failed to load for {Fail} models in {Time:F2}ms",
+                readSuccess,
+                readFail,
+                stopwatch.Elapsed.TotalMilliseconds
+            );
+        }
+        finally
+        {
+            safetensorMetadataParseLock.Release();
+        }
     }
 
     /// <inheritdoc />
@@ -680,7 +753,7 @@ public partial class ModelIndexService : IModelIndexService
         var hashes = new HashSet<string>();
         foreach (var model in models)
         {
-            if (model.ConnectedModelInfo?.Hashes.BLAKE3 is { } hashBlake3)
+            if (model.ConnectedModelInfo?.Hashes?.BLAKE3 is { } hashBlake3)
             {
                 hashes.Add(hashBlake3);
             }

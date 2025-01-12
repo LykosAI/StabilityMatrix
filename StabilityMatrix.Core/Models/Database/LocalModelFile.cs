@@ -69,12 +69,6 @@ public record LocalModelFile
     public ConnectedModelInfo? ConnectedModelInfo { get; set; }
 
     /// <summary>
-    /// Optional Safetensor metadata.
-    /// </summary>
-    [BsonIgnore]
-    public SafetensorMetadata? SafetensorMetadata { get; set; }
-
-    /// <summary>
     /// Optional preview image relative path.
     /// </summary>
     public string? PreviewImageRelativePath { get; set; }
@@ -127,7 +121,10 @@ public record LocalModelFile
     /// <summary>
     /// Blake3 hash of the file.
     /// </summary>
-    public string? HashBlake3 => ConnectedModelInfo?.Hashes.BLAKE3;
+    public string? HashBlake3 => ConnectedModelInfo?.Hashes?.BLAKE3;
+
+    [BsonIgnore]
+    public bool IsSafetensorFile => Path.GetExtension(RelativePath) == ".safetensors";
 
     [BsonIgnore]
     public string? PreviewImageFullPathGlobal =>
@@ -158,8 +155,10 @@ public record LocalModelFile
     public bool HasCivitMetadata => HasConnectedModel && ConnectedModelInfo.ModelId != null;
 
     [BsonIgnore]
-    [MemberNotNullWhen(true, nameof(SafetensorMetadata))]
-    public bool HasSafetensorMetadata => SafetensorMetadata != null;
+    public SafetensorMetadata? SafetensorMetadata { get; set; }
+
+    [BsonIgnore]
+    public bool SafetensorMetadataParsed { get; set; }
 
     public string GetFullPath(string rootModelDirectory)
     {

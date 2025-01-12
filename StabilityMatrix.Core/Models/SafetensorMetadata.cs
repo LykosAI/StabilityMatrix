@@ -1,130 +1,120 @@
 using System.Buffers;
 using System.Buffers.Binary;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 namespace StabilityMatrix.Core.Models;
 
-public readonly record struct SafetensorMetadata
+public record SafetensorMetadata
 {
     // public string? NetworkModule { get; init; }
     // public string? ModelSpecArchitecture { get; init; }
 
     public List<Tag>? TagFrequency { get; init; }
 
-    public List<Metadata> OtherMetadata { get; init; }
+    public required List<Metadata> OtherMetadata { get; init; }
 
-    public static bool TryParse(string safetensorPath, [MaybeNullWhen(false)] out SafetensorMetadata metadata)
+    /// <summary>
+    /// Tries to parse the metadata from a SafeTensor file.
+    /// </summary>
+    /// <param name="safetensorPath">Path to the SafeTensor file.</param>
+    /// <returns>The parsed metadata. Can be <see langword="null"/> if the file does not contain metadata.</returns>
+    public static async Task<SafetensorMetadata?> ParseAsync(string safetensorPath)
     {
-        metadata = default;
-        try
-        {
-            using var stream = new FileStream(safetensorPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            return TryParse(stream, out metadata);
-        }
-        catch (Exception)
-        {
-            return false;
-        }
+        using var stream = new FileStream(safetensorPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        return await ParseAsync(stream);
     }
 
-    public static bool TryParse(
-        Stream safetensorStream,
-        [MaybeNullWhen(false)] out SafetensorMetadata metadata
-    )
+    /// <summary>
+    /// Tries to parse the metadata from a SafeTensor file.
+    /// </summary>
+    /// <param name="safetensorStream">Stream to the SafeTensor file.</param>
+    /// <returns>The parsed metadata. Can be <see langword="null"/> if the file does not contain metadata.</returns>
+    public static async Task<SafetensorMetadata?> ParseAsync(Stream safetensorStream)
     {
-        metadata = default;
+        // 8 bytes unsigned little-endian 64-bit integer
+        // 1 byte start of JSON object '{'
+        Memory<byte> buffer = new byte[9];
+        await safetensorStream.ReadExactlyAsync(buffer).ConfigureAwait(false);
+        var span = buffer.Span;
+
+        const ulong MAX_ALLOWED_JSON_LENGTH = 100 * 1024 * 1024; // 100 MB
+        var jsonLength = BinaryPrimitives.ReadUInt64LittleEndian(span);
+        if (jsonLength > MAX_ALLOWED_JSON_LENGTH)
+        {
+            throw new InvalidDataException("JSON length exceeds the maximum allowed size.");
+        }
+        if (span[8] != '{')
+        {
+            throw new InvalidDataException("JSON does not start with '{'.");
+        }
+
+        // Unfornately Utf8JsonReader does not support reading from a stream directly.
+        // Usually the size of the entire JSON object is less than 500KB,
+        // using a pooled buffer should reduce the number of large allocations.
+        var jsonBytes = ArrayPool<byte>.Shared.Rent((int)jsonLength);
         try
         {
-            // 8 bytes unsigned little-endian 64-bit integer
-            // 1 byte start of JSON object '{'
-            Span<byte> buffer = stackalloc byte[9];
-            safetensorStream.ReadExactly(buffer);
+            // Important: the length of the rented buffer can be larger than jsonLength
+            // and there can be additional junk data at the end.
 
-            const ulong MAX_ALLOWED_JSON_LENGTH = 100 * 1024 * 1024; // 100 MB
-            var jsonLength = BinaryPrimitives.ReadUInt64LittleEndian(buffer);
-            if (jsonLength > MAX_ALLOWED_JSON_LENGTH)
+            // we already read {, so start from index 1
+            jsonBytes[0] = (byte)'{';
+            await safetensorStream
+                .ReadExactlyAsync(jsonBytes, 1, (int)(jsonLength - 1))
+                .ConfigureAwait(false);
+
+            // read the JSON with Utf8JsonReader, then only deserialize what we need
+            // saves us from allocating a bunch of strings then throwing them away
+            var reader = new Utf8JsonReader(jsonBytes.AsSpan(0, (int)jsonLength));
+
+            reader.Read();
+            if (reader.TokenType != JsonTokenType.StartObject)
             {
-                return false;
+                // expecting a JSON object
+                throw new InvalidDataException("JSON does not start with '{'.");
             }
-            if (buffer[8] != '{')
+
+            while (reader.Read())
             {
-                return false;
-            }
-
-            // Unfornately Utf8JsonReader does not support reading from a stream directly.
-            // Usually the size of the entire JSON object is less than 500KB,
-            // using a pooled buffer should reduce the number of large allocations.
-            var jsonBytes = ArrayPool<byte>.Shared.Rent((int)jsonLength);
-            try
-            {
-                // Important: the length of the rented buffer can be larger than jsonLength
-                // and there can be additional junk data at the end.
-
-                // we already read {, so start from index 1
-                jsonBytes[0] = (byte)'{';
-                safetensorStream.ReadExactly(jsonBytes, 1, (int)(jsonLength - 1));
-
-                // read the JSON with Utf8JsonReader, then only deserialize what we need
-                // saves us from allocating a bunch of strings then throwing them away
-                var reader = new Utf8JsonReader(jsonBytes.AsSpan(0, (int)jsonLength));
-
-                reader.Read();
-                if (reader.TokenType != JsonTokenType.StartObject)
+                // for each property in the object
+                if (reader.TokenType == JsonTokenType.EndObject)
                 {
-                    // expecting a JSON object
-                    return false;
+                    // end of the object, no "__metadata__" found
+                    // return true to indicate that we successfully read the JSON
+                    // but it does not contain metadata
+                    return null;
                 }
 
-                while (reader.Read())
+                if (reader.TokenType != JsonTokenType.PropertyName)
                 {
-                    // for each property in the object
-                    if (reader.TokenType == JsonTokenType.EndObject)
-                    {
-                        // end of the object, no "__metadata__" found
-                        return false;
-                    }
-
-                    if (reader.TokenType != JsonTokenType.PropertyName)
-                    {
-                        // expecting a property name
-                        return false;
-                    }
-
-                    if (reader.ValueTextEquals("__metadata__"))
-                    {
-                        if (JsonSerializer.Deserialize<Dictionary<string, string>>(ref reader) is { } dict)
-                        {
-                            if (dict.Count == 0)
-                            {
-                                // got empty dictionary
-                                return false;
-                            }
-
-                            metadata = FromDictionary(dict);
-                            return true;
-                        }
-
-                        // got null
-                        return false;
-                    }
-                    else
-                    {
-                        // skip the property value
-                        reader.Skip();
-                    }
+                    // expecting a property name
+                    throw new InvalidDataException(
+                        $"Invalid metadata JSON, expected property name but got {reader.TokenType}."
+                    );
                 }
-                // should not reach here, json is malformed
-                return false;
+
+                if (reader.ValueTextEquals("__metadata__"))
+                {
+                    if (JsonSerializer.Deserialize<Dictionary<string, string>>(ref reader) is { } dict)
+                    {
+                        return FromDictionary(dict);
+                    }
+
+                    // got null from Deserialize
+                    throw new InvalidDataException("Failed to deserialize metadata.");
+                }
+                else
+                {
+                    // skip the property value
+                    reader.Skip();
+                }
             }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(jsonBytes);
-            }
+            // should not reach here, json is malformed
+            throw new InvalidDataException("Invalid metadata JSON.");
         }
-        catch
+        finally
         {
-            return false;
+            ArrayPool<byte>.Shared.Return(jsonBytes);
         }
     }
 
@@ -229,19 +219,7 @@ public readonly record struct SafetensorMetadata
         return metadata;
     }
 
-    public readonly record struct Tag(string Name, int Frequency)
-    {
-        public static implicit operator Tag((string name, int frequency) value)
-        {
-            return new Tag(value.name, value.frequency);
-        }
-    }
+    public readonly record struct Tag(string Name, int Frequency);
 
-    public readonly record struct Metadata(string Name, string Value)
-    {
-        public static implicit operator Metadata((string name, string value) value)
-        {
-            return new Metadata(value.name, value.value);
-        }
-    }
+    public readonly record struct Metadata(string Name, string Value);
 }

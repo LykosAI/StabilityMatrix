@@ -17,7 +17,7 @@ public partial class SafetensorMetadataViewModel : ContentDialogViewModelBase
     private string? modelName;
 
     [ObservableProperty]
-    private SafetensorMetadata metadata;
+    private SafetensorMetadata? metadata;
 
     [RelayCommand]
     public void CopyTagToClipboard(string tag)

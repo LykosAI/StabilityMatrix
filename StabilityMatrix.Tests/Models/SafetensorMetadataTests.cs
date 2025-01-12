@@ -8,7 +8,7 @@ namespace StabilityMatrix.Tests.Models;
 public class SafetensorMetadataTests
 {
     [TestMethod]
-    public void TestParseStream()
+    public async Task TestParseStreamAsync()
     {
         const string SOURCE_JSON = """
 {
@@ -26,14 +26,15 @@ public class SafetensorMetadataTests
         stream.Write(Encoding.UTF8.GetBytes(SOURCE_JSON));
         stream.Position = 0;
 
-        Assert.IsTrue(SafetensorMetadata.TryParse(stream, out var metadata));
+        var metadata = await SafetensorMetadata.ParseAsync(stream);
 
         // Assert.AreEqual("some network module", metadata.NetworkModule);
         // Assert.AreEqual("some architecture", metadata.ModelSpecArchitecture);
 
+        Assert.IsNotNull(metadata);
         Assert.IsNotNull(metadata.TagFrequency);
         CollectionAssert.AreEqual(
-            new List<SafetensorMetadata.Tag> { ("tag1", 63), ("tag2", 2), ("tag3", 1) },
+            new List<SafetensorMetadata.Tag> { new("tag1", 63), new("tag2", 2), new("tag3", 1) },
             metadata.TagFrequency
         );
     }

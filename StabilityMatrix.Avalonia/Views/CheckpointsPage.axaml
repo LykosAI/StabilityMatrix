@@ -492,7 +492,7 @@
                                     <ui:MenuFlyoutItem
                                         Command="{Binding OpenSafetensorMetadataViewerCommand}"
                                         IconSource="Tag"
-                                        IsVisible="{Binding CheckpointFile.HasSafetensorMetadata}"
+                                        IsVisible="{Binding CheckpointFile.IsSafetensorFile}"
                                         Text="View Safetensor Metadata" />
                                     <ui:MenuFlyoutItem
                                         Command="{Binding OpenMetadataEditorCommand}"

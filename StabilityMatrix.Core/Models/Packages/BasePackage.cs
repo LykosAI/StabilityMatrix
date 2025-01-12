@@ -267,4 +267,30 @@ public abstract class BasePackage(ISettingsManager settingsManager)
     }
 
     public abstract Task<DownloadPackageVersionOptions?> GetUpdate(InstalledPackage installedPackage);
+
+    /// <summary>
+    /// List of known vulnerabilities for this package
+    /// </summary>
+    public virtual IReadOnlyList<PackageVulnerability> KnownVulnerabilities { get; protected set; } =
+        Array.Empty<PackageVulnerability>();
+
+    /// <summary>
+    /// Whether this package has any known vulnerabilities
+    /// </summary>
+    public bool HasVulnerabilities => KnownVulnerabilities.Any();
+
+    /// <summary>
+    /// Whether this package has any critical vulnerabilities
+    /// </summary>
+    public bool HasCriticalVulnerabilities =>
+        KnownVulnerabilities.Any(v => v.Severity == VulnerabilitySeverity.Critical);
+
+    /// <summary>
+    /// Check for any new vulnerabilities from external sources
+    /// </summary>
+    public virtual Task CheckForVulnerabilities(CancellationToken cancellationToken = default)
+    {
+        // Base implementation does nothing - derived classes should implement their own vulnerability checking
+        return Task.CompletedTask;
+    }
 }

@@ -5,34 +5,6 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-<<<<<<< HEAD
-=======
-## v2.14.0-dev.2
-### Fixed
-- Fixed crash when dragging & dropping images in Inference (hopefully)
-
-## v2.14.0-dev.1
-### Added
-- Added Rescale CFG addon to Inference
-- Added Swap Dimensions button between the width/height input in Inference
-- Added Ctrl+Tab/Ctrl+Shift+Tab shortcuts for navigating between Inference tabs
-- Added OpenModelDB tab to the Model Browser
-### Changed
-- Improved the quality of Inference inpainting by upgrading the workflow behind the scenes. The workflow remains the same for you — just better results!
-- Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout
-- "Clear All" button will now remain at the top of the Downloads list regardless of scroll position - thanks to @Genteure!
-- Improved image metadata parsing - thanks to @Genteure!
-### Fixed
-- Fixed Inference image selector card buttons taking up the whole height of the card
-- Fixed Inference mask editor failing to paint to the right-most edge on large images
-- Fixed Inference mask editor not showing the entire image in certain circumstances
-- Fixed an issue where certain sampler/scheduler combos would not get saved in image metadata - thanks to @yansigit!
-- Fixed [#1078](https://github.com/LykosAI/StabilityMatrix/issues/1078) - "Call from invalid thread" error after one-click install finishes
-- Fixed [#1080](https://github.com/LykosAI/StabilityMatrix/issues/1080) - Some models not displayed in Checkpoint Manager
-### Supporters
-#### Visionaries
-- Many thanks to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your support helps us continue to improve Stability Matrix!
-
 ## v2.13.2
 ### Changed
 - Removed SimpleSDXL due to security concerns - thanks to @iwr-redmond for the detailed report. For more information please visit https://github.com/LykosAI/StabilityMatrix/security/advisories.
@@ -42,7 +14,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### Pioneers
 - Shoutout to our Pioneer-tier Patrons, **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, and **NowFallenAngel**! Thank you for your continued support!
 
->>>>>>> 0e9f277f (Merge pull request #959 from ionite34/things-n-stuff)
 ## v2.13.1
 ### Changed
 - Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout

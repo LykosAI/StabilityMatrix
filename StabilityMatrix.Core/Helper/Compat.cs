@@ -189,7 +189,11 @@ public static class Compat
             var appImage = Environment.GetEnvironmentVariable("APPIMAGE");
             if (string.IsNullOrEmpty(appImage))
             {
+#if DEBUG
+                return "DEBUG_NOT_RUNNING_IN_APPIMAGE";
+#else
                 throw new Exception("Could not find APPIMAGE environment variable");
+#endif
             }
             return Path.GetFileName(appImage);
         }

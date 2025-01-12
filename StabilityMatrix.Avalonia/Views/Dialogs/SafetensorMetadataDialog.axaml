@@ -9,7 +9,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
-    xmlns:panels="using:Avalonia.Labs.Panels"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     d:DataContext="{x:Static mocks:DesignData.SafetensorMetadataViewModel}"
     d:DesignHeight="550"
@@ -54,15 +53,22 @@
                 FontWeight="SemiBold"
                 IsVisible="{Binding Metadata.TagFrequency, Converter={x:Static ObjectConverters.IsNotNull}}"
                 Text="Trained Tags" />
-            <ItemsControl
+
+            <ui:ItemsRepeater
                 Grid.Row="1"
                 Margin="8"
                 IsVisible="{Binding Metadata.TagFrequency, Converter={x:Static ObjectConverters.IsNotNull}}"
                 ItemsSource="{Binding Metadata.TagFrequency}">
-                <ItemsControl.ItemTemplate>
+                <ui:ItemsRepeater.Layout>
+                    <ui:FlowLayout
+                        MinColumnSpacing="4"
+                        MinRowSpacing="4"
+                        Orientation="Horizontal" />
+                </ui:ItemsRepeater.Layout>
+                <ui:ItemsRepeater.ItemTemplate>
                     <DataTemplate>
                         <Button
-                            Command="{Binding $parent[ItemsControl].((dialogs:SafetensorMetadataViewModel)DataContext).CopyTagToClipboardCommand}"
+                            Command="{Binding $parent[ui:ItemsRepeater].((dialogs:SafetensorMetadataViewModel)DataContext).CopyTagToClipboardCommand}"
                             CommandParameter="{Binding Name}"
                             Cursor="Hand">
                             <StackPanel Orientation="Horizontal">
@@ -71,16 +77,8 @@
                             </StackPanel>
                         </Button>
                     </DataTemplate>
-                </ItemsControl.ItemTemplate>
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <panels:FlexPanel
-                            ColumnSpacing="5"
-                            RowSpacing="5"
-                            Wrap="Wrap" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-            </ItemsControl>
+                </ui:ItemsRepeater.ItemTemplate>
+            </ui:ItemsRepeater>
 
             <!--  All other metadata  -->
             <TextBlock
@@ -88,22 +86,28 @@
                 Margin="8"
                 FontSize="16"
                 FontWeight="SemiBold"
-                IsVisible="{Binding !!Metadata.OtherMetadata.Count}"
                 Text="Other Metadata" />
-            <ItemsControl
+            <TextBlock
+                Grid.Row="3"
+                Margin="8"
+                FontSize="16"
+                FontStyle="Italic"
+                IsVisible="{Binding !Metadata.OtherMetadata.Count}"
+                Text="No Other Metadata" />
+            <ui:ItemsRepeater
                 Grid.Row="3"
                 Margin="8"
                 IsVisible="{Binding !!Metadata.OtherMetadata.Count}"
                 ItemsSource="{Binding Metadata.OtherMetadata}">
-                <ItemsControl.ItemTemplate>
+                <ui:ItemsRepeater.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Margin="5" Orientation="Vertical">
                             <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
                             <TextBlock Text="{Binding Value}" />
                         </StackPanel>
                     </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                </ui:ItemsRepeater.ItemTemplate>
+            </ui:ItemsRepeater>
         </Grid>
     </Grid>
 </controls:UserControlBase>

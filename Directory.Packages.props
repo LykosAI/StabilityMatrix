@@ -92,7 +92,6 @@
     <PackageVersion Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.HtmlRenderer" Version="11.0.0" />
     <PackageVersion Include="Avalonia.Labs.Controls" Version="11.2.0" />
-    <PackageVersion Include="Avalonia.Labs.Panels" Version="11.2.0" />
     <PackageVersion Include="Avalonia.Xaml.Behaviors" Version="11.2.0" />
     <PackageVersion Include="AvaloniaEdit.TextMate" Version="11.0.6" />
     <PackageVersion Include="TextMateSharp.Grammars" Version="1.0.56" />

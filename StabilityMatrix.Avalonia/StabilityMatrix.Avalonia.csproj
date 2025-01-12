@@ -86,7 +86,6 @@
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" />
         <PackageReference Include="Avalonia.HtmlRenderer" />
         <PackageReference Include="Avalonia.Labs.Controls" />
-        <PackageReference Include="Avalonia.Labs.Panels" />
         <PackageReference Include="Avalonia.Xaml.Behaviors" />
         <PackageReference Include="AvaloniaEdit.TextMate" />
         <PackageReference Include="bodong.Avalonia.PropertyGrid" />

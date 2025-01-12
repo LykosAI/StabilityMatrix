@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### Visionaries
 - Many thanks to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your support helps us continue to improve Stability Matrix!
 
+## v2.13.2
+### Changed
+- Removed SimpleSDXL due to security concerns. For more information please visit https://github.com/LykosAI/StabilityMatrix/security/advisories.
+
 ## v2.13.1
 ### Changed
 - Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout

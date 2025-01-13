@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 using Avalonia.Collections;
 using Avalonia.Threading;
+using StabilityMatrix.Avalonia.ViewModels.Base;
 
 namespace StabilityMatrix.Avalonia.Models;
 
@@ -16,13 +15,14 @@ public class AdvancedObservableList<T> : AvaloniaList<T>
     {
         CollectionChanged += CollectionChangedEventRegistrationHandler;
     }
-    
+
     /// <inheritdoc />
-    public AdvancedObservableList(IEnumerable<T> items) : base(items)
+    public AdvancedObservableList(IEnumerable<T> items)
+        : base(items)
     {
         CollectionChanged += CollectionChangedEventRegistrationHandler;
     }
-    
+
     private void CollectionChangedEventRegistrationHandler(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.OldItems != null)
@@ -40,15 +40,23 @@ public class AdvancedObservableList<T> : AvaloniaList<T>
             }
         }
     }
-    
+
     private void OnItemRemoveRequested(object? sender, EventArgs e)
     {
         if (sender is T item)
         {
-            Dispatcher.UIThread.Post(() => Remove(item));
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (item is ViewModelBase vm)
+                {
+                    vm.OnUnloaded();
+                }
+
+                Remove(item);
+            });
         }
     }
-    
+
     private bool TryRegisterRemovableListItem(T item)
     {
         if (item is IRemovableListItem removableListItem)
@@ -58,7 +66,7 @@ public class AdvancedObservableList<T> : AvaloniaList<T>
         }
         return false;
     }
-    
+
     private bool TryUnregisterRemovableListItem(T item)
     {
         if (item is IRemovableListItem removableListItem)

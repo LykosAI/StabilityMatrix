@@ -365,4 +365,16 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
         base.LoadStateFromJsonObject(state);
     }
+
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+        ModelCardViewModel.OnUnloaded();
+        StackCardViewModel.OnUnloaded();
+        ModulesCardViewModel.OnUnloaded();
+        SamplerCardViewModel.OnUnloaded();
+        PromptCardViewModel.OnUnloaded();
+        BatchSizeCardViewModel.OnUnloaded();
+        SeedCardViewModel.OnUnloaded();
+    }
 }

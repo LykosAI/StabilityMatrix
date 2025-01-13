@@ -183,4 +183,13 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
 
         await RunGeneration(generationArgs, cancellationToken);
     }
+
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+        StackCardViewModel.OnUnloaded();
+        UpscalerCardViewModel.OnUnloaded();
+        SharpenCardViewModel.OnUnloaded();
+        SelectImageCardViewModel.OnUnloaded();
+    }
 }

@@ -111,4 +111,10 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
 
         return mainImages.Concat(samplerImages).Concat(moduleImages);
     }
+
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+        SelectImageCardViewModel.OnUnloaded();
+    }
 }

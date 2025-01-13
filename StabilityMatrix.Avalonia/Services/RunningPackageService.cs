@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using Avalonia.Controls.Notifications;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
@@ -94,10 +95,33 @@ public partial class RunningPackageService(
 
             var dialog = DialogHelper.CreateMarkdownDialog(message, "Security Warning");
 
-            dialog.IsPrimaryButtonEnabled = true;
-            dialog.PrimaryButtonText = "Continue Anyway";
+            dialog.IsPrimaryButtonEnabled = false;
+            dialog.PrimaryButtonText = "Continue Anyway (3)";
             dialog.CloseButtonText = Resources.Action_Cancel;
             dialog.DefaultButton = ContentDialogButton.Close;
+
+            // Start a timer to enable the button after 3 seconds
+            var countdown = 3;
+            var timer = new System.Timers.Timer(1000);
+            timer.Elapsed += (_, _) =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    countdown--;
+                    if (countdown <= 0)
+                    {
+                        dialog.IsPrimaryButtonEnabled = true;
+                        dialog.PrimaryButtonText = "Continue Anyway";
+                        timer.Stop();
+                        timer.Dispose();
+                    }
+                    else
+                    {
+                        dialog.PrimaryButtonText = $"Continue Anyway ({countdown})";
+                    }
+                });
+            };
+            timer.Start();
 
             var result = await dialog.ShowAsync();
             if (result != ContentDialogResult.Primary)
@@ -123,10 +147,33 @@ public partial class RunningPackageService(
 
             var dialog = DialogHelper.CreateMarkdownDialog(message, "Security Notice");
 
-            dialog.IsPrimaryButtonEnabled = true;
-            dialog.PrimaryButtonText = "Continue Anyway";
+            dialog.IsPrimaryButtonEnabled = false;
+            dialog.PrimaryButtonText = "Continue Anyway (3)";
             dialog.CloseButtonText = Resources.Action_Cancel;
             dialog.DefaultButton = ContentDialogButton.Close;
+
+            // Start a timer to enable the button after 3 seconds
+            var countdown = 3;
+            var timer = new System.Timers.Timer(1000);
+            timer.Elapsed += (_, _) =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    countdown--;
+                    if (countdown <= 0)
+                    {
+                        dialog.IsPrimaryButtonEnabled = true;
+                        dialog.PrimaryButtonText = "Continue Anyway";
+                        timer.Stop();
+                        timer.Dispose();
+                    }
+                    else
+                    {
+                        dialog.PrimaryButtonText = $"Continue Anyway ({countdown})";
+                    }
+                });
+            };
+            timer.Start();
 
             var result = await dialog.ShowAsync();
             if (result != ContentDialogResult.Primary)

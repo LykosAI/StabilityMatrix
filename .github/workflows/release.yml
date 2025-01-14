@@ -397,7 +397,7 @@ jobs:
   
   publish-auto-update-github:
     name: Publish Auto-Update Release (GitHub)
-    needs: [ release-linux, release-windows, release-macos ]
+    needs: [ release-linux, release-windows, release-macos, publish-release ]
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.auto-update-release == 'true' && github.event.inputs.auto-update-release-mode == 'github url' }}
     runs-on: ubuntu-latest
     steps:

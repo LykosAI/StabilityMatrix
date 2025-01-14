@@ -79,7 +79,10 @@ jobs:
       - name: Set up .NET 9
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '9.0.x'
+          # Net 8 needed for PupNet
+          dotnet-version: | 
+            8.0.x
+            9.0.x
 
       - name: Install PupNet
         run: |

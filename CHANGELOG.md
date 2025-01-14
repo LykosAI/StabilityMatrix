@@ -5,6 +5,15 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.13.2
+### Changed
+- Removed SimpleSDXL due to security concerns - thanks to @iwr-redmond for the detailed report. For more information please visit https://github.com/LykosAI/StabilityMatrix/security/advisories.
+### Supporters
+#### Visionaries
+- Many thanks to our amazing Visionary-tier Patrons, **Waterclouds** and **TheTekknician**! Your support is greatly appreciated!
+#### Pioneers
+- Shoutout to our Pioneer-tier Patrons, **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, and **NowFallenAngel**! Thank you for your continued support!
+
 ## v2.13.1
 ### Changed
 - Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout

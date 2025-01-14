@@ -102,7 +102,10 @@ public class PackageFactory : IPackageFactory
 
     public IEnumerable<BasePackage> GetAllAvailablePackages()
     {
-        return basePackages.Values.OrderBy(p => p.InstallerSortOrder).ThenBy(p => p.DisplayName);
+        return basePackages
+            .Values.Where(p => !p.HasVulnerabilities)
+            .OrderBy(p => p.InstallerSortOrder)
+            .ThenBy(p => p.DisplayName);
     }
 
     public BasePackage? FindPackageByName(string? packageName)

@@ -9,7 +9,7 @@ namespace StabilityMatrix.Core.Python;
 public partial record PipPackageSpecifier
 {
     [JsonIgnore]
-    public static IReadOnlyList<string> ConstraintOptions => ["", "==", "~=", ">=", "<=", ">", "<"];
+    public static IReadOnlyList<string> ConstraintOptions => ["", "=", "==", "~=", ">=", "<=", ">", "<"];
 
     public string? Name { get; set; }
 

@@ -6,8 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.14.0-dev.2
+### Changed
+- "Remove symbolic links on shutdown" option now also removes links from Output Sharing
 ### Fixed
 - Fixed crash when dragging & dropping images in Inference (hopefully)
+- Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
+- Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
+- Fixed issue when parsing index URLs in Python Dependencies Override menu
 
 ## v2.14.0-dev.1
 ### Added
@@ -30,6 +35,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Supporters
 #### Visionaries
 - Many thanks to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your support helps us continue to improve Stability Matrix!
+
+## v2.13.3
+### Changed
+- "Remove symbolic links on shutdown" option now also removes links from Output Sharing
+### Fixed
+- Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
+- Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
+- Fixed issue when parsing index URLs in Python Dependencies Override menu
 
 ## v2.13.2
 ### Changed

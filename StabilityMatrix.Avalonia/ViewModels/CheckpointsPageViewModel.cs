@@ -1104,9 +1104,22 @@ public partial class CheckpointsPageViewModel(
         )
             return false;
 
-        return ShowModelsInSubfolders
-            ? folderPath.StartsWith(categoryRelativePath)
-            : categoryRelativePath.Equals(folderPath);
+        // If not showing nested models, just check if the file is directly in this folder
+        if (!ShowModelsInSubfolders)
+            return categoryRelativePath.Equals(folderPath, StringComparison.OrdinalIgnoreCase);
+
+        // Split paths into segments
+        var categorySegments = categoryRelativePath.Split(Path.DirectorySeparatorChar);
+        var folderSegments = folderPath.Split(Path.DirectorySeparatorChar);
+
+        // Check if folder is a subfolder of category by comparing path segments
+        if (folderSegments.Length < categorySegments.Length)
+            return false;
+
+        // Compare each segment of the category path with the folder path
+        return !categorySegments
+            .Where((t, i) => !t.Equals(folderSegments[i], StringComparison.OrdinalIgnoreCase))
+            .Any();
     }
 
     private bool FilterCategories(CheckpointCategory category)

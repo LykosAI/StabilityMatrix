@@ -1082,8 +1082,9 @@ public partial class CheckpointsPageViewModel(
     {
         if (SelectedCategory?.Path is null || SelectedCategory?.Path == settingsManager.ModelsDirectory)
             return file.HasConnectedModel
-                ? SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
-                : SelectedBaseModels.Contains("Other");
+                ? SelectedBaseModels.Count == 0
+                    || SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
+                : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other");
 
         var folderPath = Path.GetDirectoryName(file.RelativePath);
         var categoryRelativePath = SelectedCategory
@@ -1097,8 +1098,9 @@ public partial class CheckpointsPageViewModel(
         if (
             (
                 file.HasConnectedModel
-                    ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
-                    : SelectedBaseModels.Contains("Other")
+                    ? SelectedBaseModels.Count == 0
+                        || SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
+                    : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other")
             )
             is false
         )

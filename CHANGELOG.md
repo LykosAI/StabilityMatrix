@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
 - Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
 - Fixed issue when parsing index URLs in Python Dependencies Override menu
+- Fixed ComfyUI-Zluda not respecting pip user overrides
+- Fixed issue with Checkpoint Manager not displaying any models
 
 ## v2.14.0-dev.1
 ### Added

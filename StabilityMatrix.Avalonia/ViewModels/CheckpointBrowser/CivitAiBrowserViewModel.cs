@@ -219,6 +219,9 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe(_ =>
             {
+                if (!settingsManager.IsLibraryDirSet)
+                    return;
+
                 settingsManager.Transaction(
                     settings => settings.SelectedCivitBaseModels = SelectedBaseModels.ToList()
                 );

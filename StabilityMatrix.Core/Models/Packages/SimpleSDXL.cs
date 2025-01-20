@@ -33,6 +33,27 @@ public class SimpleSDXL(
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda];
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
 
+    public override IReadOnlyList<PackageVulnerability> KnownVulnerabilities =>
+        [
+            new()
+            {
+                Id = "GHSA-qq8j-phpf-c63j",
+                Title = "Undisclosed Data Collection and Remote Access in simpleai_base Dependency",
+                Description =
+                    "SimpleSDXL depends on simpleai_base which contains compiled Rust code with:\n"
+                    + "- Undisclosed remote access functionality using rathole\n"
+                    + "- Hidden system information gathering via concealed executable calls\n"
+                    + "- Covert data upload to tokentm.net (blockchain-associated domain)\n"
+                    + "- Undisclosed VPN functionality pointing to servers blocked by Chinese authorities\n\n"
+                    + "This poses significant security and privacy risks as system information is uploaded without consent "
+                    + "and the compiled nature of the code means the full extent of the remote access capabilities cannot be verified.",
+                Severity = VulnerabilitySeverity.Critical,
+                PublishedDate = DateTimeOffset.Parse("2025-01-11"),
+                InfoUrl = new Uri("https://github.com/metercai/SimpleSDXL/issues/97"),
+                AffectedVersions = ["*"], // Affects all versions
+            }
+        ];
+
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
             new()

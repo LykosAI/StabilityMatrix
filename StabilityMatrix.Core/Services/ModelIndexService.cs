@@ -195,6 +195,11 @@ public partial class ModelIndexService : IModelIndexService
         return liteDbContext.LocalModelFiles.FindAsync(m => m.HashBlake3 == hashBlake3);
     }
 
+    public Task<IEnumerable<LocalModelFile>> FindBySha256Async(string hashSha256)
+    {
+        return liteDbContext.LocalModelFiles.FindAsync(m => m.HashSha256 == hashSha256);
+    }
+
     /// <inheritdoc />
     public Task RefreshIndex()
     {

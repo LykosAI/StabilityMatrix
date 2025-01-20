@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.IO;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 
 namespace StabilityMatrix.Avalonia.Extensions;
@@ -178,15 +179,26 @@ public static class ComfyNodeBuilderExtensions
         builder.Connections.Primary = loadImage.Output1;
         builder.Connections.PrimarySize = imageSize;
 
-        // Encode VAE to latent with mask, and replace primary
+        // new betterer inpaint
         builder.Connections.Primary = builder
             .Nodes.AddTypedNode(
-                new ComfyNodeBuilder.VAEEncodeForInpaint
+                new ComfyNodeBuilder.VAEEncode
                 {
                     Name = builder.Nodes.GetUniqueName("VAEEncode"),
                     Pixels = loadImage.Output1,
-                    Mask = loadMask.Output,
                     Vae = builder.Connections.GetDefaultVAE()
+                }
+            )
+            .Output;
+
+        // latent noise mask for betterer inpaint
+        builder.Connections.Primary = builder
+            .Nodes.AddTypedNode(
+                new ComfyNodeBuilder.SetLatentNoiseMask
+                {
+                    Name = builder.Nodes.GetUniqueName("SetLatentNoiseMask"),
+                    Samples = builder.GetPrimaryAsLatent(),
+                    Mask = loadMask.Output
                 }
             )
             .Output;

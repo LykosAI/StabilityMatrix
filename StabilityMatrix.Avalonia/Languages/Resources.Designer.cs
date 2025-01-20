@@ -402,6 +402,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open on OpenModelDB.
+        /// </summary>
+        public static string Action_OpenOnOpenModelDb {
+            get {
+                return ResourceManager.GetString("Action_OpenOnOpenModelDb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open Project....
         /// </summary>
         public static string Action_OpenProjectEllipsis {

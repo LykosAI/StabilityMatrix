@@ -126,6 +126,8 @@ public record LocalModelFile
     [BsonIgnore]
     public bool IsSafetensorFile => Path.GetExtension(RelativePath) == ".safetensors";
 
+    public string? HashSha256 => ConnectedModelInfo?.Hashes.SHA256;
+
     [BsonIgnore]
     public string? PreviewImageFullPathGlobal =>
         PreviewImageFullPath ?? GetPreviewImageFullPath(GlobalConfig.ModelsDir);
@@ -152,7 +154,15 @@ public record LocalModelFile
 
     [BsonIgnore]
     [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
-    public bool HasCivitMetadata => HasConnectedModel && ConnectedModelInfo.ModelId != null;
+    public bool HasCivitMetadata =>
+        HasConnectedModel
+        && ConnectedModelInfo.ModelId != null
+        && ConnectedModelInfo.Source == ConnectedModelSource.Civitai;
+
+    [BsonIgnore]
+    [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
+    public bool HasOpenModelDbMetadata =>
+        HasConnectedModel && ConnectedModelInfo.Source == ConnectedModelSource.OpenModelDb;
 
     [BsonIgnore]
     public SafetensorMetadata? SafetensorMetadata { get; set; }

@@ -4,4 +4,4 @@ using Injectio.Attributes;
 namespace StabilityMatrix.Avalonia.Controls;
 
 [RegisterTransient<PromptExpansionCard>]
-public class PromptExpansionCard : TemplatedControl;
+public class PromptExpansionCard : TemplatedControlBase;

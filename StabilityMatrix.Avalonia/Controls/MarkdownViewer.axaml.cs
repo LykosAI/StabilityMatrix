@@ -6,7 +6,7 @@ using TheArtOfDev.HtmlRenderer.Avalonia;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-public class MarkdownViewer : TemplatedControl
+public class MarkdownViewer : TemplatedControlBase
 {
     public static readonly StyledProperty<string> TextProperty = AvaloniaProperty.Register<
         MarkdownViewer,

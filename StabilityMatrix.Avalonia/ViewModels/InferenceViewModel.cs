@@ -393,8 +393,6 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         // Update the database with the current tab
         SyncTabStateWithDatabase(tab).SafeFireAndForget();
-
-        tab.OnLoaded();
     }
 
     /// <summary>
@@ -682,7 +680,6 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         SelectedTab = vm;
 
         await SyncTabStatesWithDatabase();
-        vm.OnLoaded();
     }
 
     private async Task AddTabFromFileAsync(LocalImageFile imageFile, InferenceProjectType projectType)
@@ -721,8 +718,6 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         SelectedTab = vm;
 
         await SyncTabStatesWithDatabase();
-
-        vm.OnLoaded();
     }
 
     /// <summary>

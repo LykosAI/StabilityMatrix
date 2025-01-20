@@ -45,15 +45,7 @@ public class AdvancedObservableList<T> : AvaloniaList<T>
     {
         if (sender is T item)
         {
-            Dispatcher.UIThread.Post(() =>
-            {
-                if (item is ViewModelBase vm)
-                {
-                    vm.OnUnloaded();
-                }
-
-                Remove(item);
-            });
+            Dispatcher.UIThread.Post(() => Remove(item));
         }
     }
 

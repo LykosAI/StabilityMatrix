@@ -5,7 +5,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-public class TreeFileExplorer : TemplatedControl
+public class TreeFileExplorer : TemplatedControlBase
 {
     public static readonly StyledProperty<TreeFileExplorerDirectory?> RootItemProperty =
         AvaloniaProperty.Register<TreeFileExplorer, TreeFileExplorerDirectory?>("RootItem");

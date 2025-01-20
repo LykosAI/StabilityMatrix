@@ -258,17 +258,4 @@ public partial class InferenceImageToVideoViewModel
             LoadStateFromJsonObject(state);
         }
     }
-
-    public override void OnUnloaded()
-    {
-        base.OnUnloaded();
-        ModelCardViewModel.OnUnloaded();
-        StackCardViewModel.OnUnloaded();
-        SamplerCardViewModel.OnUnloaded();
-        BatchSizeCardViewModel.OnUnloaded();
-        SeedCardViewModel.OnUnloaded();
-        SelectImageCardViewModel.OnUnloaded();
-        SvdImgToVidConditioningViewModel.OnUnloaded();
-        VideoOutputSettingsCardViewModel.OnUnloaded();
-    }
 }

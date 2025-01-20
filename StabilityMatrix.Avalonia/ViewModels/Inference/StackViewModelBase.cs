@@ -60,7 +60,6 @@ public abstract class StackViewModelBase : LoadableViewModelBase
         {
             Cards.Add(card);
             OnCardAdded(card);
-            card.OnLoaded();
         }
     }
 

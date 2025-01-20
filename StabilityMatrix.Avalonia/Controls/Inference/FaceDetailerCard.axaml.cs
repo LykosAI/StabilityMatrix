@@ -4,4 +4,4 @@ using Injectio.Attributes;
 namespace StabilityMatrix.Avalonia.Controls;
 
 [RegisterTransient<FaceDetailerCard>]
-public class FaceDetailerCard : TemplatedControl;
+public class FaceDetailerCard : TemplatedControlBase;

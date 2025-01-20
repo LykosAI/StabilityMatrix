@@ -105,7 +105,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
             {
                 if (sources.Count == 0)
                 {
-                    SelectedImageIndex = -1;
+                    SelectedImageIndex = 0;
                 }
                 else if (SelectedImageIndex == -1)
                 {

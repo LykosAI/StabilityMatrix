@@ -6,8 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.14.0-dev.2
+### Added
+- Added Align Your Steps scheduler to Inference
+### Changed
+- FaceDetailers in Inference will now inherit the primary sampler/scheduler/etc. by default. You can still manually set these by enabling the options via the ⚙️ button on the FaceDetailer card
+- Slightly rearranged the FaceDetailer card layout due to the above change
 ### Fixed
 - Fixed crash when dragging & dropping images in Inference (hopefully)
+- Fixed HiresFix Inference addon not inheriting sampler/scheduler properly
+- Fixed some plus (+) buttons getting cut off in the Inference UI 
 
 ## v2.14.0-dev.1
 ### Added

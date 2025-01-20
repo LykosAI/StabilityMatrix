@@ -41,6 +41,9 @@ public partial class ModelCardViewModel(
     private bool isRefinerSelectionEnabled;
 
     [ObservableProperty]
+    private bool showRefinerOption = true;
+
+    [ObservableProperty]
     private HybridModelFile? selectedRefiner = HybridModelFile.None;
 
     [ObservableProperty]
@@ -233,6 +236,7 @@ public partial class ModelCardViewModel(
                 SelectedClipType = SelectedClipType,
                 IsClipModelSelectionEnabled = IsClipModelSelectionEnabled,
                 ModelLoader = SelectedModelLoader,
+                ShowRefinerOption = ShowRefinerOption,
                 ExtraNetworks = ExtraNetworksStackCardViewModel.SaveStateToJsonObject()
             }
         );
@@ -284,6 +288,7 @@ public partial class ModelCardViewModel(
 
         IsVaeSelectionEnabled = model.IsVaeSelectionEnabled;
         IsRefinerSelectionEnabled = model.IsRefinerSelectionEnabled;
+        ShowRefinerOption = model.ShowRefinerOption;
         IsClipSkipEnabled = model.IsClipSkipEnabled;
         IsExtraNetworksEnabled = model.IsExtraNetworksEnabled;
         IsModelLoaderSelectionEnabled = model.IsModelLoaderSelectionEnabled;
@@ -559,6 +564,7 @@ public partial class ModelCardViewModel(
         public bool IsExtraNetworksEnabled { get; init; }
         public bool IsModelLoaderSelectionEnabled { get; init; }
         public bool IsClipModelSelectionEnabled { get; init; }
+        public bool ShowRefinerOption { get; init; }
 
         public JsonObject? ExtraNetworks { get; init; }
     }

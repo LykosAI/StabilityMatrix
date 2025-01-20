@@ -493,6 +493,30 @@ public class ComfyNodeBuilder
         public required ImageMaskConnection Mask { get; init; }
     }
 
+    public record AlignYourStepsScheduler : ComfyTypedNodeBase<SigmasNodeConnection>
+    {
+        /// <summary>
+        /// options: SD1, SDXL, SVD
+        /// </summary>
+        public required string ModelType { get; init; }
+
+        [Range(1, 10000)]
+        public required int Steps { get; init; }
+
+        [Range(0.0d, 1.0d)]
+        public required double Denoise { get; init; }
+    }
+
+    public record CFGGuider : ComfyTypedNodeBase<GuiderNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; set; }
+        public required ConditioningNodeConnection Positive { get; set; }
+        public required ConditioningNodeConnection Negative { get; set; }
+
+        [Range(0.0d, 100.0d)]
+        public required double Cfg { get; set; }
+    }
+
     [TypedNodeOptions(
         Name = "CheckpointLoaderNF4",
         RequiredExtensions = ["https://github.com/comfyanonymous/ComfyUI_bitsandbytes_NF4"]
@@ -1159,6 +1183,9 @@ public class ComfyNodeBuilder
 
         public int BatchSize { get; set; } = 1;
         public int? BatchIndex { get; set; }
+        public int? PrimarySteps { get; set; }
+        public double? PrimaryCfg { get; set; }
+        public string? PrimaryModelType { get; set; }
 
         public OneOf<string, StringNodeConnection> PositivePrompt { get; set; }
         public OneOf<string, StringNodeConnection> NegativePrompt { get; set; }

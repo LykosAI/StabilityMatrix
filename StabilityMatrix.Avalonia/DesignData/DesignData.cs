@@ -1167,6 +1167,24 @@ The gallery images are often inpainted, but you will get something very similar 
             }
         };
 
+    public static SafetensorMetadataViewModel SafetensorMetadataViewModel =>
+        DialogFactory.Get<SafetensorMetadataViewModel>(vm =>
+        {
+            vm.Metadata = new SafetensorMetadata
+            {
+                TagFrequency = Enumerable
+                    .Range(1, 100)
+                    .Select(i => new SafetensorMetadata.Tag("tag" + i, i))
+                    .ToList(),
+                OtherMetadata = new List<SafetensorMetadata.Metadata>
+                {
+                    new("Name1", "Value1"),
+                    new("Name2", "Value2"),
+                    new("Name3", "Value3"),
+                }
+            };
+        });
+
     public static ModelMetadataEditorDialogViewModel MetadataEditorDialogViewModel =>
         DialogFactory.Get<ModelMetadataEditorDialogViewModel>(vm =>
         {

@@ -321,6 +321,55 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     }
 
     [RelayCommand]
+    private async Task OpenSafetensorMetadataViewer()
+    {
+        if (!CheckpointFile.SafetensorMetadataParsed)
+        {
+            if (
+                !settingsManager.IsLibraryDirSet
+                || new DirectoryPath(settingsManager.ModelsDirectory) is not { Exists: true } modelsDir
+            )
+            {
+                return;
+            }
+
+            try
+            {
+                var safetensorPath = CheckpointFile.GetFullPath(modelsDir);
+
+                var metadata = await SafetensorMetadata.ParseAsync(safetensorPath);
+
+                CheckpointFile.SafetensorMetadataParsed = true;
+                CheckpointFile.SafetensorMetadata = metadata;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to parse safetensor metadata");
+                return;
+            }
+        }
+
+        if (!CheckpointFile.SafetensorMetadataParsed)
+        {
+            return;
+        }
+
+        var vm = vmFactory.Get<SafetensorMetadataViewModel>(vm =>
+        {
+            vm.ModelName = CheckpointFile.DisplayModelName;
+            vm.Metadata = CheckpointFile.SafetensorMetadata;
+        });
+
+        var dialog = vm.GetDialog();
+        dialog.MinDialogHeight = 800;
+        dialog.MinDialogWidth = 700;
+        dialog.CloseButtonText = "Close";
+        dialog.DefaultButton = ContentDialogButton.Close;
+
+        await dialog.ShowAsync();
+    }
+
+    [RelayCommand]
     private async Task OpenMetadataEditor()
     {
         var vm = vmFactory.Get<ModelMetadataEditorDialogViewModel>(vm =>

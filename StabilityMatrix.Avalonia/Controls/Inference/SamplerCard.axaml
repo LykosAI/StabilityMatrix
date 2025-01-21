@@ -21,7 +21,7 @@
             <ControlTemplate>
                 <controls:Card HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
                     <StackPanel HorizontalAlignment="{TemplateBinding HorizontalAlignment}" Spacing="8">
-                        <Grid ColumnDefinitions="Auto,5,*" RowDefinitions="*,*,*,*,*">
+                        <Grid ColumnDefinitions="Auto,5,*" RowDefinitions="*,*,*,*,*,*">
                             <!--  Sampler  -->
                             <TextBlock
                                 Grid.Row="0"
@@ -57,23 +57,39 @@
                                 ItemsSource="{Binding ClientManager.Schedulers}"
                                 SelectedItem="{Binding SelectedScheduler}" />
 
-                            <!--  Steps (Normal)  -->
                             <TextBlock
                                 Grid.Row="2"
+                                Grid.Column="0"
+                                Margin="0,0,0,8"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding IsModelTypeSelectionEnabled}"
+                                Text="{x:Static lang:Resources.Label_ModelType}" />
+                            <ui:FAComboBox
+                                Grid.Row="2"
+                                Grid.Column="2"
+                                Margin="8,0,0,8"
+                                HorizontalAlignment="Stretch"
+                                IsVisible="{Binding IsModelTypeSelectionEnabled}"
+                                ItemsSource="{Binding ModelTypes}"
+                                SelectedItem="{Binding SelectedModelType}" />
+
+                            <!--  Steps (Normal)  -->
+                            <TextBlock
+                                Grid.Row="3"
                                 Grid.Column="0"
                                 Margin="0,0,0,8"
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding !IsRefinerStepsEnabled}"
                                 Text="{x:Static lang:Resources.Label_Steps}" />
                             <TextBlock
-                                Grid.Row="2"
+                                Grid.Row="3"
                                 Grid.Column="0"
                                 Margin="0,0,0,8"
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding IsRefinerStepsEnabled}"
                                 Text="{x:Static lang:Resources.Label_StepsBase}" />
                             <ui:NumberBox
-                                Grid.Row="2"
+                                Grid.Row="3"
                                 Grid.Column="2"
                                 Margin="8,0,0,8"
                                 HorizontalAlignment="Stretch"
@@ -83,14 +99,14 @@
 
                             <!--  Steps (Refiner)  -->
                             <TextBlock
-                                Grid.Row="3"
+                                Grid.Row="4"
                                 Grid.Column="0"
                                 Margin="0,0,0,8"
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding IsRefinerStepsEnabled}"
                                 Text="{x:Static lang:Resources.Label_StepsRefiner}" />
                             <ui:NumberBox
-                                Grid.Row="3"
+                                Grid.Row="4"
                                 Grid.Column="2"
                                 Margin="8,0,0,8"
                                 HorizontalAlignment="Stretch"
@@ -101,13 +117,13 @@
 
                             <!--  CFG Scale  -->
                             <TextBlock
-                                Grid.Row="4"
+                                Grid.Row="5"
                                 Grid.Column="0"
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding IsCfgScaleEnabled}"
                                 Text="{x:Static lang:Resources.Label_CFGScale}" />
                             <ui:NumberBox
-                                Grid.Row="4"
+                                Grid.Row="5"
                                 Grid.Column="2"
                                 Margin="8,0,0,0"
                                 HorizontalAlignment="Stretch"

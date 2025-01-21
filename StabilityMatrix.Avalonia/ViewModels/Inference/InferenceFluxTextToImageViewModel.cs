@@ -138,7 +138,7 @@ public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBas
         PromptCardViewModel.ApplyStep(applyArgs);
 
         // Do custom Sampler setup
-        SamplerCardViewModel.ApplyStepsInitialFluxSampler(applyArgs);
+        SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
 
         // Apply steps from our modules
         foreach (var module in ModulesCardViewModel.Cards.Cast<ModuleBase>())

@@ -37,7 +37,16 @@ public class RescaleCfgModule : ModuleBase
             );
 
             modelConnections.Model = rescaleCfg.Output;
-            e.Temp.Base.Model = rescaleCfg.Output;
+
+            switch (modelConnections.Name)
+            {
+                case "Base":
+                    e.Temp.Base.Model = rescaleCfg.Output;
+                    break;
+                case "Refiner":
+                    e.Temp.Refiner.Model = rescaleCfg.Output;
+                    break;
+            }
         }
     }
 }

@@ -12,7 +12,7 @@ using FluentIcons.Common;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-public class StarsRating : TemplatedControl
+public class StarsRating : TemplatedControlBase
 {
     private SymbolIcon? StarFilledIcon => Resources["StarFilledIcon"] as SymbolIcon;
 

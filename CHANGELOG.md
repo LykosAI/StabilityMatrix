@@ -5,6 +5,61 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
+=======
+## v2.14.0-dev.2
+### Added
+- Added Align Your Steps scheduler to Inference
+### Changed
+- Updated the Civitai Model Browser base model selector to match the new Checkpoint Manager filter UI 
+- FaceDetailers in Inference will now inherit the primary sampler/scheduler/etc. by default. You can still manually set these by enabling the options via the ⚙️ button on the FaceDetailer card
+- Slightly rearranged the FaceDetailer card layout due to the above change
+- "Remove symbolic links on shutdown" option now also removes links from Output Sharing
+### Fixed
+- Fixed crash when dragging & dropping images in Inference (hopefully)
+- Fixed HiresFix Inference addon not inheriting sampler/scheduler properly
+- Fixed some plus (+) buttons getting cut off in the Inference UI
+- Fixed CFG Rescale addon interfering with refiner model in Inference
+- Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
+- Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
+- Fixed issue when parsing index URLs in Python Dependencies Override menu
+- Fixed ComfyUI-Zluda not respecting pip user overrides
+- Fixed issue with Checkpoint Manager not displaying any models
+### Supporters
+#### Visionaries
+- A huge thank you to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your generous support is greatly appreciated!
+
+## v2.14.0-dev.1
+### Added
+- Added Rescale CFG addon to Inference
+- Added Swap Dimensions button between the width/height input in Inference
+- Added Ctrl+Tab/Ctrl+Shift+Tab shortcuts for navigating between Inference tabs
+- Added OpenModelDB tab to the Model Browser
+### Changed
+- Improved the quality of Inference inpainting by upgrading the workflow behind the scenes. The workflow remains the same for you — just better results!
+- Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout
+- "Clear All" button will now remain at the top of the Downloads list regardless of scroll position - thanks to @Genteure!
+- Improved image metadata parsing - thanks to @Genteure!
+### Fixed
+- Fixed Inference image selector card buttons taking up the whole height of the card
+- Fixed Inference mask editor failing to paint to the right-most edge on large images
+- Fixed Inference mask editor not showing the entire image in certain circumstances
+- Fixed an issue where certain sampler/scheduler combos would not get saved in image metadata - thanks to @yansigit!
+- Fixed [#1078](https://github.com/LykosAI/StabilityMatrix/issues/1078) - "Call from invalid thread" error after one-click install finishes
+- Fixed [#1080](https://github.com/LykosAI/StabilityMatrix/issues/1080) - Some models not displayed in Checkpoint Manager
+### Supporters
+#### Visionaries
+- Many thanks to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your support helps us continue to improve Stability Matrix!
+
+## v2.13.3
+### Changed
+- "Remove symbolic links on shutdown" option now also removes links from Output Sharing
+### Fixed
+- Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
+- Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
+- Fixed issue when parsing index URLs in Python Dependencies Override menu
+
+>>>>>>> fb81ebbb (Merge pull request #966 from ionite34/fixes-n-stuff)
 ## v2.13.2
 ### Changed
 - Removed SimpleSDXL due to security concerns - thanks to @iwr-redmond for the detailed report. For more information please visit https://github.com/LykosAI/StabilityMatrix/security/advisories.

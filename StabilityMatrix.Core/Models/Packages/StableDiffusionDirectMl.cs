@@ -36,7 +36,7 @@ public class StableDiffusionDirectMl(
     public override TorchIndex GetRecommendedTorchVersion() =>
         HardwareHelper.PreferDirectMLOrZluda() ? TorchIndex.DirectMl : base.GetRecommendedTorchVersion();
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
 
     public override List<LaunchOptionDefinition> LaunchOptions
     {

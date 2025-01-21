@@ -2649,7 +2649,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remove shared checkpoints directory symbolic links on shutdown.
+        ///   Looks up a localized string similar to Remove shared folder symbolic links on shutdown.
         /// </summary>
         public static string Label_RemoveSymlinksOnShutdown {
             get {
@@ -2658,7 +2658,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select this option if you&apos;re having problems moving Stability Matrix to another drive.
+        ///   Looks up a localized string similar to Removes both model and output folder symbolic links when closing Stability Matrix. Select this option if you&apos;re having problems moving Stability Matrix to another drive.
         /// </summary>
         public static string Label_RemoveSymlinksOnShutdown_Details {
             get {

@@ -4,4 +4,4 @@ using Injectio.Attributes;
 namespace StabilityMatrix.Avalonia.Controls;
 
 [RegisterTransient<LayerDiffuseCard>]
-public class LayerDiffuseCard : TemplatedControl;
+public class LayerDiffuseCard : TemplatedControlBase;

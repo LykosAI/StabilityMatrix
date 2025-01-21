@@ -6,4 +6,4 @@ using Injectio.Attributes;
 namespace StabilityMatrix.Avalonia.Controls;
 
 [RegisterTransient<RescaleCfgCard>]
-public class RescaleCfgCard : TemplatedControl { }
+public class RescaleCfgCard : TemplatedControlBase { }

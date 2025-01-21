@@ -14,7 +14,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed crash when dragging & dropping images in Inference (hopefully)
 - Fixed HiresFix Inference addon not inheriting sampler/scheduler properly
-- Fixed some plus (+) buttons getting cut off in the Inference UI 
+- Fixed some plus (+) buttons getting cut off in the Inference UI
+- Fixed CFG Rescale addon interfering with refiner model in Inference
+### Supporters
+#### Visionaries
+- A huge thank you to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your generous support is greatly appreciated!
 
 ## v2.14.0-dev.1
 ### Added

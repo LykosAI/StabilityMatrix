@@ -15,7 +15,7 @@ namespace StabilityMatrix.Avalonia.Controls;
 
 [PseudoClasses(":editEnabled")]
 [RegisterTransient<StackEditableCard>]
-public class StackEditableCard : TemplatedControl
+public class StackEditableCard : TemplatedControlBase
 {
     private ListBox? listBoxPart;
 

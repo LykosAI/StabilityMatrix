@@ -4,4 +4,4 @@ using Injectio.Attributes;
 namespace StabilityMatrix.Avalonia.Controls;
 
 [RegisterTransient<BatchSizeCard>]
-public class BatchSizeCard : TemplatedControl { }
+public class BatchSizeCard : TemplatedControlBase { }

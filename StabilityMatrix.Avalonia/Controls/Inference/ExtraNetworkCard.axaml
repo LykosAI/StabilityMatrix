@@ -37,7 +37,7 @@
                             Grid.Column="1"
                             Padding="8,6,4,6"
                             HorizontalAlignment="Stretch"
-                            ItemsSource="{Binding ClientManager.LoraModels}"
+                            ItemsSource="{Binding LoraModels}"
                             SelectedItem="{Binding SelectedModel}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
 

@@ -1,67 +1,77 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-        xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
-        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-        xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
-        xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
-        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-        xmlns:modules="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference.Modules"
-        xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
-        x:DataType="vmInference:StackEditableCardViewModel">
-    
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:local="clr-namespace:StabilityMatrix.Avalonia"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:modules="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference.Modules"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:StackEditableCardViewModel">
+
     <Design.PreviewWith>
-        <Grid Width="500" Height="600">
-            <controls:StackEditableCard
-                DataContext="{x:Static mocks:DesignData.StackEditableCardViewModel}"/>
+        <Grid Width="250" Height="600">
+            <controls:StackEditableCard DataContext="{x:Static mocks:DesignData.StackEditableCardViewModel}" />
         </Grid>
     </Design.PreviewWith>
-    
-    <!-- Like StackCard but draggable items -->
+
+    <!--  Like StackCard but draggable items  -->
     <Style Selector="controls|StackEditableCard">
-        <Setter Property="IsListBoxEditEnabled" Value="{Binding IsEditEnabled, Mode=TwoWay}"/>
+        <Setter Property="IsListBoxEditEnabled" Value="{Binding IsEditEnabled, Mode=TwoWay}" />
         <Setter Property="Template">
             <ControlTemplate>
                 <ScrollViewer>
                     <Grid RowDefinitions="Auto,*">
-                        <controls:Card 
-                            Classes="transparent"
-                            Margin="0,0,0,3" 
-                            Padding="0,4">
-                            <sg:SpacedGrid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
-                                <TextBlock Text="{Binding Title}" VerticalAlignment="Center"/>
-                                <GridSplitter ShowsPreview="False" IsEnabled="False" MaxHeight="10" Grid.Column="1" />
-                                <!-- Edit button -->
-                                <ToggleButton Grid.Column="2"
-                                        Name="PART_EditButton"
-                                        VerticalAlignment="Bottom"
-                                        CornerRadius="4"
-                                        Padding="12,4"
-                                        IsEnabled="{Binding !!Cards.Count}"
-                                        IsChecked="{Binding IsEditEnabled}">
-                                    <fluentIcons:SymbolIcon Symbol="Edit" FontSize="14" />
+                        <controls:Card
+                            Margin="0,0,0,3"
+                            Padding="0,4"
+                            Classes="transparent">
+                            <Grid ColumnDefinitions="*,Auto,Auto">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Text="{Binding Title}"
+                                    TextWrapping="Wrap" />
+
+                                <!--  Edit button  -->
+                                <ToggleButton
+                                    Name="PART_EditButton"
+                                    Grid.Column="1"
+                                    Margin="4,0"
+                                    Padding="12,4"
+                                    VerticalAlignment="Bottom"
+                                    CornerRadius="4"
+                                    IsChecked="{Binding IsEditEnabled}"
+                                    IsEnabled="{Binding !!Cards.Count}">
+                                    <fluentIcons:SymbolIcon FontSize="14" Symbol="Edit" />
                                 </ToggleButton>
-                                <!-- Add button -->
-                                <Button Grid.Column="3"
-                                        Name="PART_AddButton"
-                                        VerticalAlignment="Bottom"
-                                        CornerRadius="4"
-                                        Padding="12,4" >
-                                    <fluentIcons:SymbolIcon Symbol="Add" IconVariant="Filled" FontSize="14" />
+                                <!--  Add button  -->
+                                <Button
+                                    Name="PART_AddButton"
+                                    Grid.Column="2"
+                                    Margin="4,0"
+                                    Padding="12,4"
+                                    VerticalAlignment="Bottom"
+                                    CornerRadius="4">
+                                    <fluentIcons:SymbolIcon
+                                        FontSize="14"
+                                        IconVariant="Filled"
+                                        Symbol="Add" />
                                 </Button>
-                            </sg:SpacedGrid>
+                            </Grid>
 
                         </controls:Card>
-                        
+
                         <ListBox
                             x:Name="PART_ListBox"
                             Grid.Row="1"
-                            Theme="{StaticResource DraggableListBoxTheme}"
-                            ItemsSource="{Binding Cards}">
+                            ItemsSource="{Binding Cards}"
+                            Theme="{StaticResource DraggableListBoxTheme}">
                             <ListBox.DataTemplates>
-                                <local:ViewLocator/>
+                                <local:ViewLocator />
                             </ListBox.DataTemplates>
-                            
+
                             <ListBox.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <StackPanel Spacing="0" />
@@ -74,7 +84,7 @@
                 </ScrollViewer>
             </ControlTemplate>
         </Setter>
-        
+
         <!--<Style Selector="^:editEnabled">
             <Style Selector="^ /template/ Expander">
                 <Setter Property="IsEnabled" Value="False" />

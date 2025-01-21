@@ -78,7 +78,11 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Gguf or ModelLoader.Unet;
         if (isUnetLoader)
         {
-            SamplerCardViewModel.ApplyStepsInitialFluxSampler(applyArgs);
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
+        }
+        else if (SamplerCardViewModel.SelectedScheduler?.Name is "align_your_steps")
+        {
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, false);
         }
         else
         {

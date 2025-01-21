@@ -60,16 +60,16 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     private bool isCfgScaleEnabled;
 
     [ObservableProperty]
-    private double cfgScale = 7;
+    private double cfgScale = 5;
 
     [ObservableProperty]
     private bool isDimensionsEnabled;
 
     [ObservableProperty]
-    private int width = 512;
+    private int width = 1024;
 
     [ObservableProperty]
-    private int height = 512;
+    private int height = 1024;
 
     [ObservableProperty]
     [property: Category("Settings")]
@@ -86,7 +86,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     private bool isSchedulerSelectionEnabled;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsDenoiseStrengthTempEnabled))]
+    [NotifyPropertyChangedFor(nameof(IsDenoiseStrengthTempEnabled), nameof(IsModelTypeSelectionEnabled))]
     [Required]
     private ComfyScheduler? selectedScheduler = ComfyScheduler.Normal;
 
@@ -98,8 +98,17 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     [ObservableProperty]
     private bool enableAddons = true;
 
+    [ObservableProperty]
+    private string selectedModelType = "SDXL";
+
     [JsonPropertyName("Modules")]
     public StackEditableCardViewModel ModulesCardViewModel { get; }
+
+    [JsonIgnore]
+    public bool IsModelTypeSelectionEnabled => SelectedScheduler?.Name == ComfyScheduler.AlignYourSteps.Name;
+
+    [JsonIgnore]
+    public List<string> ModelTypes => ["SD1", "SDXL"];
 
     [JsonIgnore]
     public IInferenceClientManager ClientManager { get; }
@@ -179,10 +188,13 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         }
     }
 
-    public void ApplyStepsInitialFluxSampler(ModuleApplyStepEventArgs e)
+    public void ApplyStepsInitialCustomSampler(ModuleApplyStepEventArgs e, bool useFluxGuidance)
     {
         // Provide temp values
         e.Temp = e.CreateTempFromBuilder();
+
+        // Apply steps from our addons
+        ApplyAddonSteps(e);
 
         // Get primary as latent using vae
         var primaryLatent = e.Builder.GetPrimaryAsLatent(
@@ -197,6 +209,11 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         var primaryScheduler = SelectedScheduler ?? throw new ValidationException("Scheduler not selected");
         e.Builder.Connections.PrimaryScheduler = primaryScheduler;
 
+        // for later inheritance if needed
+        e.Builder.Connections.PrimaryCfg = CfgScale;
+        e.Builder.Connections.PrimarySteps = Steps;
+        e.Builder.Connections.PrimaryModelType = SelectedModelType;
+
         // KSamplerSelect
         var kSamplerSelect = e.Nodes.AddTypedNode(
             new ComfyNodeBuilder.KSamplerSelect
@@ -209,18 +226,35 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         e.Builder.Connections.PrimarySamplerNode = kSamplerSelect.Output;
 
         // Scheduler/Sigmas
-        var basicScheduler = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.BasicScheduler
-            {
-                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.BasicScheduler)),
-                Model = e.Builder.Connections.Base.Model.Unwrap(),
-                Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
-                Denoise = IsDenoiseStrengthEnabled ? DenoiseStrength : 1.0d,
-                Steps = Steps
-            }
-        );
+        if (e.Builder.Connections.PrimaryScheduler?.Name is "align_your_steps")
+        {
+            var alignYourSteps = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.AlignYourStepsScheduler
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.AlignYourStepsScheduler)),
+                    ModelType = SelectedModelType,
+                    Steps = Steps,
+                    Denoise = IsDenoiseStrengthEnabled ? DenoiseStrength : 1.0d,
+                }
+            );
 
-        e.Builder.Connections.PrimarySigmas = basicScheduler.Output;
+            e.Builder.Connections.PrimarySigmas = alignYourSteps.Output;
+        }
+        else
+        {
+            var basicScheduler = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.BasicScheduler
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.BasicScheduler)),
+                    Model = e.Temp.Base.Model.Unwrap(),
+                    Scheduler = e.Builder.Connections.PrimaryScheduler?.Name!,
+                    Denoise = IsDenoiseStrengthEnabled ? DenoiseStrength : 1.0d,
+                    Steps = Steps
+                }
+            );
+
+            e.Builder.Connections.PrimarySigmas = basicScheduler.Output;
+        }
 
         // Noise
         var randomNoise = e.Nodes.AddTypedNode(
@@ -233,32 +267,52 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
         e.Builder.Connections.PrimaryNoise = randomNoise.Output;
 
-        // Guidance
-        var fluxGuidance = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.FluxGuidance
-            {
-                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.FluxGuidance)),
-                Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning().Positive,
-                Guidance = CfgScale
-            }
-        );
+        if (useFluxGuidance)
+        {
+            // Guidance
+            var fluxGuidance = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.FluxGuidance
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.FluxGuidance)),
+                    Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning().Positive,
+                    Guidance = CfgScale
+                }
+            );
 
-        e.Builder.Connections.Base.Conditioning = new ConditioningConnections(
-            fluxGuidance.Output,
-            e.Builder.Connections.GetRefinerOrBaseConditioning().Negative
-        );
+            e.Builder.Connections.Base.Conditioning = new ConditioningConnections(
+                fluxGuidance.Output,
+                e.Builder.Connections.GetRefinerOrBaseConditioning().Negative
+            );
 
-        // Guider
-        var basicGuider = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.BasicGuider
-            {
-                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.BasicGuider)),
-                Model = e.Builder.Connections.Base.Model.Unwrap(),
-                Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning().Positive
-            }
-        );
+            // Guider
+            var basicGuider = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.BasicGuider
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.BasicGuider)),
+                    Model = e.Builder.Connections.Base.Model.Unwrap(),
+                    Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning().Positive
+                }
+            );
 
-        e.Builder.Connections.PrimaryGuider = basicGuider.Output;
+            e.Builder.Connections.PrimaryGuider = basicGuider.Output;
+        }
+        else
+        {
+            e.Builder.Connections.Base.Conditioning = e.Builder.Connections.GetRefinerOrBaseConditioning();
+
+            var cfgGuider = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.CFGGuider
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CFGGuider)),
+                    Model = e.Temp.Base.Model.Unwrap(),
+                    Positive = e.Builder.Connections.Base.Conditioning.Positive,
+                    Negative = e.Builder.Connections.Base.Conditioning.Negative,
+                    Cfg = CfgScale
+                }
+            );
+
+            e.Builder.Connections.PrimaryGuider = cfgGuider.Output;
+        }
 
         // SamplerCustomAdvanced
         var sampler = e.Nodes.AddTypedNode(
@@ -292,6 +346,11 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
         var primaryScheduler = SelectedScheduler ?? throw new ValidationException("Scheduler not selected");
         e.Builder.Connections.PrimaryScheduler = primaryScheduler;
+
+        // for later inheritance if needed
+        e.Builder.Connections.PrimaryCfg = CfgScale;
+        e.Builder.Connections.PrimarySteps = Steps;
+        e.Builder.Connections.PrimaryModelType = SelectedModelType;
 
         // Use Temp Conditioning that may be modified by addons
         var conditioning = e.Temp.Base.Conditioning.Unwrap();

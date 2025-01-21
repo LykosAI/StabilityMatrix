@@ -18,6 +18,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Services;
 using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView;
@@ -123,6 +124,22 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                         e.Sender is { IsRefinerSelectionEnabled: true, SelectedRefiner: not null };
                 })
         );
+
+        AddDisposable(
+            SamplerCardViewModel
+                .WhenPropertyChanged(x => x.SelectedScheduler)
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe(next =>
+                {
+                    var isAlignYourSteps = next.Value is { Name: "align_your_steps" };
+                    ModelCardViewModel.ShowRefinerOption = !isAlignYourSteps;
+
+                    if (isAlignYourSteps)
+                    {
+                        ModelCardViewModel.IsRefinerSelectionEnabled = false;
+                    }
+                })
+        );
     }
 
     /// <inheritdoc />
@@ -176,7 +193,11 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Setup Sampler and Refiner if enabled
         if (isUnetLoader)
         {
-            SamplerCardViewModel.ApplyStepsInitialFluxSampler(applyArgs);
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
+        }
+        else if (SamplerCardViewModel.SelectedScheduler?.Name is "align_your_steps")
+        {
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, false);
         }
         else
         {

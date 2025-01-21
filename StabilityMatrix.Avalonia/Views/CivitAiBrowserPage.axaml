@@ -5,6 +5,7 @@
     xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
     xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
+    xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -501,19 +502,62 @@
                     Grid.Column="3"
                     Margin="4,8,4,0"
                     Content="{x:Static lang:Resources.Label_BaseModel}" />
-                <ComboBox
+                <Button
                     Grid.Row="1"
                     Grid.Column="3"
-                    MinWidth="100"
+                    Height="32"
                     Margin="4,0,4,8"
-                    ItemsSource="{Binding AllBaseModels}"
-                    SelectedItem="{Binding SelectedBaseModelType}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate x:DataType="system:String">
-                            <TextBlock MinWidth="100" Text="{Binding .}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    VerticalContentAlignment="Center"
+                    BorderBrush="{DynamicResource ComboBoxBorderBrush}"
+                    BorderThickness="1">
+                    <Button.Content>
+                        <Grid HorizontalAlignment="Stretch" ColumnDefinitions="1*, 32">
+                            <TextBlock IsVisible="{Binding ShowFilterNumber}">
+                                <Run Text="Filter" />
+                                <Run Text="(" /><Run Text="{Binding SelectedBaseModels.Count}" /><Run Text=")" />
+                            </TextBlock>
+                            <TextBlock
+                                Grid.Column="0"
+                                IsVisible="{Binding !ShowFilterNumber}"
+                                Text="Filter" />
+                            <ui:SymbolIcon
+                                Grid.Column="1"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextFillColorSecondary}"
+                                Symbol="ChevronDown" />
+                        </Grid>
+                    </Button.Content>
+                    <Button.Flyout>
+                        <Flyout>
+                            <StackPanel MaxWidth="350" Orientation="Vertical">
+                                <Button
+                                    Margin="0,0,0,8"
+                                    HorizontalAlignment="Stretch"
+                                    Classes="transparent"
+                                    Command="{Binding ClearOrSelectAllBaseModelsCommand}"
+                                    Content="{Binding ClearButtonText}" />
+                                <ui:ItemsRepeater ItemsSource="{Binding AllBaseModels}">
+                                    <ui:ItemsRepeater.Layout>
+                                        <ui:FlowLayout
+                                            LineAlignment="Center"
+                                            MinColumnSpacing="4"
+                                            MinRowSpacing="4"
+                                            Orientation="Horizontal" />
+                                    </ui:ItemsRepeater.Layout>
+                                    <ui:ItemsRepeater.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type checkpointManager:BaseModelOptionViewModel}">
+                                            <ToggleButton Content="{Binding ModelType}" IsChecked="{Binding IsSelected}" />
+                                        </DataTemplate>
+                                    </ui:ItemsRepeater.ItemTemplate>
+                                </ui:ItemsRepeater>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
 
                 <ui:CommandBar
                     Grid.Row="0"

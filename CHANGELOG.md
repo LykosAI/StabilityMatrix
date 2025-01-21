@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added Align Your Steps scheduler to Inference
 ### Changed
+- Updated the Civitai Model Browser base model selector to match the new Checkpoint Manager filter UI 
 - FaceDetailers in Inference will now inherit the primary sampler/scheduler/etc. by default. You can still manually set these by enabling the options via the ⚙️ button on the FaceDetailer card
 - Slightly rearranged the FaceDetailer card layout due to the above change
 ### Fixed

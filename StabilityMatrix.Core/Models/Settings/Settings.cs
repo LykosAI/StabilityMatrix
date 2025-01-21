@@ -170,6 +170,7 @@ public class Settings
     public Dictionary<NotificationKey, NotificationOption> NotificationOptions { get; set; } = new();
 
     public List<string> SelectedBaseModels { get; set; } = [];
+    public List<string> SelectedCivitBaseModels { get; set; } = [];
 
     public Size InferenceImageSize { get; set; } = new(150, 190);
 

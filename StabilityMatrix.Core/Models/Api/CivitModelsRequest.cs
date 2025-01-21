@@ -115,7 +115,8 @@ public class CivitModelsRequest
     /// SDXL 1.0
     /// </summary>
     [AliasAs("baseModels")]
-    public string? BaseModel { get; set; }
+    [Query(CollectionFormat.Multi)]
+    public string[]? BaseModels { get; set; }
 
     [AliasAs("ids")]
     public string CommaSeparatedModelIds { get; set; }
@@ -134,7 +135,7 @@ public class CivitModelsRequest
             + $"Period: {Period}, "
             + $"Rating: {Rating}, "
             + $"Nsfw: {Nsfw}, "
-            + $"BaseModel: {BaseModel}, "
+            + $"BaseModel: {string.Join(",", BaseModels ?? [])}, "
             + $"CommaSeparatedModelIds: {CommaSeparatedModelIds}";
     }
 }

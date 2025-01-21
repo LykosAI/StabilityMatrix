@@ -37,7 +37,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(FluxGuidanceModule))]
 [JsonDerivedType(typeof(DiscreteModelSamplingModule))]
 [JsonDerivedType(typeof(RescaleCfgModule))]
-public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
+public abstract class LoadableViewModelBase : DisposableViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

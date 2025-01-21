@@ -79,7 +79,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
-    private readonly SourceCache<HybridModelFile, string> loraModelsSource = new(p => p.GetId());
+    public readonly SourceCache<HybridModelFile, string> LoraModelsSource = new(p => p.GetId());
 
     public IObservableCollection<HybridModelFile> LoraModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
@@ -181,7 +181,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
-        loraModelsSource
+        LoraModelsSource
             .Connect()
             .DeferUntilLoaded()
             .SortAndBind(
@@ -350,7 +350,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Get Lora model names
         if (await Client.GetNodeOptionNamesAsync("LoraLoader", "lora_name") is { } loraModelNames)
         {
-            loraModelsSource.EditDiff(
+            LoraModelsSource.EditDiff(
                 loraModelNames.Select(HybridModelFile.FromRemote),
                 HybridModelFile.Comparer
             );
@@ -496,7 +496,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         downloadableControlNetModelsSource.EditDiff(downloadableControlNets, HybridModelFile.Comparer);
 
         // Load local Lora / LyCORIS models
-        loraModelsSource.EditDiff(
+        LoraModelsSource.EditDiff(
             modelIndexService
                 .FindByModelType(SharedFolderType.Lora | SharedFolderType.LyCORIS)
                 .Select(HybridModelFile.FromLocal),

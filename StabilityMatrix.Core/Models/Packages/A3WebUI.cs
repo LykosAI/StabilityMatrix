@@ -39,7 +39,7 @@ public class A3WebUI(
         new("https://github.com/AUTOMATIC1111/stable-diffusion-webui/raw/master/screenshot.png");
     public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 

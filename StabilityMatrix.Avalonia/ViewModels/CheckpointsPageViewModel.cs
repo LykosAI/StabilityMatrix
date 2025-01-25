@@ -1041,8 +1041,9 @@ public partial class CheckpointsPageViewModel(
     {
         if (SelectedCategory?.Path is null || SelectedCategory?.Path == settingsManager.ModelsDirectory)
             return file.HasConnectedModel
-                ? SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
-                : SelectedBaseModels.Contains("Other");
+                ? SelectedBaseModels.Count == 0
+                    || SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
+                : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other");
 
         var folderPath = Path.GetDirectoryName(file.RelativePath);
         var categoryRelativePath = SelectedCategory
@@ -1056,16 +1057,30 @@ public partial class CheckpointsPageViewModel(
         if (
             (
                 file.HasConnectedModel
-                    ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
-                    : SelectedBaseModels.Contains("Other")
+                    ? SelectedBaseModels.Count == 0
+                        || SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
+                    : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other")
             )
             is false
         )
             return false;
 
-        return ShowModelsInSubfolders
-            ? folderPath.StartsWith(categoryRelativePath)
-            : categoryRelativePath.Equals(folderPath);
+        // If not showing nested models, just check if the file is directly in this folder
+        if (!ShowModelsInSubfolders)
+            return categoryRelativePath.Equals(folderPath, StringComparison.OrdinalIgnoreCase);
+
+        // Split paths into segments
+        var categorySegments = categoryRelativePath.Split(Path.DirectorySeparatorChar);
+        var folderSegments = folderPath.Split(Path.DirectorySeparatorChar);
+
+        // Check if folder is a subfolder of category by comparing path segments
+        if (folderSegments.Length < categorySegments.Length)
+            return false;
+
+        // Compare each segment of the category path with the folder path
+        return !categorySegments
+            .Where((t, i) => !t.Equals(folderSegments[i], StringComparison.OrdinalIgnoreCase))
+            .Any();
     }
 
     private bool FilterCategories(CheckpointCategory category)

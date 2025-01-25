@@ -195,6 +195,12 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
                     .RemoveModelFolderLinks(package.FullPath, sharedFolderMethod)
                     .GetAwaiter()
                     .GetResult();
+
+                // Remove output folder links if enabled
+                if (package.UseSharedOutputFolder)
+                {
+                    basePackage.RemoveOutputFolderLinks(package.FullPath).GetAwaiter().GetResult();
+                }
             }
             catch (Exception e)
             {

@@ -231,6 +231,43 @@
         }
       ]
     },
+    "wildcard": {
+      "begin": "\\{",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.wildcard.begin.prompt"
+        }
+      },
+      "end": "\\}|$",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.wildcard.end.prompt"
+        }
+      },
+      "name": "meta.structure.wildcard.prompt",
+      "patterns": [
+        {
+          "match": "\\|\\|+|\\|(?=\\})|(?<=\\{)\\||\\|\\s*\\|",
+          "name": "invalid.illegal.empty-option.prompt"
+        },
+        {
+          "match": "\\|",
+          "name": "keyword.operator.choice.prompt"
+        },
+        {
+          "match": "[^\\{\\}\\|]+",
+          "name": "string.unquoted.wildcard-option.prompt"
+        },
+        {
+          "match": "\\{",
+          "name": "invalid.illegal.nested-wildcard-open.prompt"
+        },
+        {
+          "match": "$",
+          "name": "invalid.illegal.unclosed-brace.prompt"
+        }
+      ]
+    },
     "value": {
       "patterns": [
         {
@@ -247,6 +284,9 @@
         },
         {
           "include": "#network"
+        },
+        {
+          "include": "#wildcard"
         },
         {
           "include": "#separator"

@@ -408,10 +408,10 @@ public record Prompt
             match =>
             {
                 var options = match.Value.Trim('{', '}');
-                var splitOptions = SplitPreservingNested(options, '|');
 
-                // More robust whitespace handling
-                var trimmedOptions = splitOptions
+                // Simple split by pipe character
+                var trimmedOptions = options
+                    .Split('|')
                     .Select(opt => opt.Trim())
                     .Where(opt => !string.IsNullOrEmpty(opt))
                     .ToArray();
@@ -429,43 +429,6 @@ public record Prompt
                 return trimmedOptions[randomIndex];
             }
         );
-    }
-
-    /// <summary>
-    /// Splits a string by a delimiter while preserving nested structures
-    /// </summary>
-    private static string[] SplitPreservingNested(string input, char delimiter)
-    {
-        var result = new List<string>();
-        var current = new StringBuilder(input.Length);
-        var nestLevel = 0;
-
-        foreach (var c in input)
-        {
-            if (c == '{')
-                nestLevel++;
-            else if (c == '}')
-                nestLevel--;
-
-            if (c == delimiter && nestLevel == 0)
-            {
-                AddCurrent();
-                continue;
-            }
-
-            current.Append(c);
-        }
-
-        AddCurrent();
-        return result.ToArray();
-
-        void AddCurrent()
-        {
-            if (current.Length <= 0)
-                return;
-            result.Add(current.ToString());
-            current.Clear();
-        }
     }
 
     public string GetDebugText()

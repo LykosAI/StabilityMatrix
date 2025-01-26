@@ -25,6 +25,8 @@ public record Prompt
 
     public required ITokenizeLineResult TokenizeResult { get; init; }
 
+    public required ITokenizerProvider Tokenizer { get; init; }
+
     [MemberNotNullWhen(true, nameof(ExtraNetworks), nameof(ProcessedText))]
     public bool IsProcessed { get; private set; }
 
@@ -40,12 +42,12 @@ public record Prompt
     public string? ProcessedText { get; private set; }
 
     [MemberNotNull(nameof(ExtraNetworks), nameof(ProcessedText))]
-    public void Process()
+    public void Process(bool processWildcards = true)
     {
         if (IsProcessed)
             return;
 
-        var (promptExtraNetworks, processedText) = GetExtraNetworks();
+        var (promptExtraNetworks, processedText) = GetExtraNetworks(processWildcards: processWildcards);
         ExtraNetworks = promptExtraNetworks;
         ProcessedText = processedText;
     }
@@ -56,7 +58,7 @@ public record Prompt
     /// <exception cref="PromptValidationError">Thrown if a filename does not exist</exception>
     public void ValidateExtraNetworks(IModelIndexService indexService)
     {
-        GetExtraNetworks(indexService);
+        GetExtraNetworks(indexService, false);
     }
 
     /// <summary>
@@ -100,7 +102,8 @@ public record Prompt
     }
 
     private (List<PromptExtraNetwork> promptExtraNetworks, string processedText) GetExtraNetworks(
-        IModelIndexService? indexService = null
+        IModelIndexService? indexService = null,
+        bool processWildcards = true
     )
     {
         // Parse tokens "meta.structure.network.prompt"
@@ -111,9 +114,10 @@ public record Prompt
         // ">": "punctuation.definition.network.end.prompt"
         using var tokens = TokenizeResult.Tokens.Cast<IToken>().GetEnumerator();
 
-        // Store non-network tokens
+        // Maintain both token and text stacks for validation
         var outputTokens = new Stack<IToken>();
         var outputText = new Stack<string>();
+        var wildcardStack = new Stack<StringBuilder>();
 
         // Store extra networks
         var promptExtraNetworks = new List<PromptExtraNetwork>();
@@ -136,6 +140,67 @@ public record Prompt
             // Comments - ignore
             if (currentToken.Scopes.Any(s => s.Contains("comment.line")))
             {
+                continue;
+            }
+
+            // Handle wildcard start
+            if (
+                processWildcards
+                && currentToken.Scopes.Contains("punctuation.definition.wildcard.begin.prompt")
+            )
+            {
+                wildcardStack.Push(new StringBuilder());
+                continue;
+            }
+
+            // Handle wildcard end
+            if (
+                processWildcards && currentToken.Scopes.Contains("punctuation.definition.wildcard.end.prompt")
+            )
+            {
+                if (wildcardStack.Count == 0)
+                    continue;
+
+                var wildcardContent = wildcardStack.Pop();
+                var options = wildcardContent
+                    .ToString()
+                    .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(o => o.Trim())
+                    .ToList();
+
+                if (options.Count == 0)
+                {
+                    outputTokens.Push(currentToken);
+                    outputText.Push(string.Empty);
+                    continue;
+                }
+
+                // Process wildcard selection
+                var selectedIndex = RandomNumberGenerator.GetInt32(options.Count);
+                var selectedOption = options[selectedIndex];
+
+                // Process selected option
+                var tempPrompt = FromRawText(selectedOption, Tokenizer);
+                tempPrompt.Process();
+
+                // Collect networks from selected option
+                if (tempPrompt.ExtraNetworks is { Count: > 0 } networks)
+                {
+                    promptExtraNetworks.AddRange(networks);
+                }
+
+                outputTokens.Push(currentToken);
+                outputText.Push(tempPrompt.ProcessedText ?? string.Empty);
+                continue;
+            }
+
+            // Handle wildcard content
+            if (processWildcards && wildcardStack.Count > 0)
+            {
+                var currentWildcard = wildcardStack.Peek();
+                currentWildcard.Append(
+                    RawText[currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)]
+                );
                 continue;
             }
 
@@ -313,32 +378,26 @@ public record Prompt
                 }
             }
 
-            // For embeddings, we add to the prompt, and not to the extra networks list
+            // Modified embedding handling with stack validation
             if (parsedNetworkType is PromptExtraNetworkType.Embedding)
             {
-                // Push to output in Comfy format
-                // <embedding:model> -> embedding:model
-                // <embedding:model:weight> -> (embedding:model:weight)
                 outputTokens.Push(currentToken);
-
                 outputText.Push(
                     weight is null ? $"embedding:{modelName}" : $"(embedding:{modelName}:{weight:F2})"
                 );
             }
-            // Cleanups for separate extra networks
             else
             {
-                // If last entry on stack is a separator, remove it
+                // Original colon cleanup logic
                 if (
-                    outputTokens.TryPeek(out var lastToken2)
-                    && lastToken2.Scopes.Contains("punctuation.separator.variable.prompt")
+                    outputTokens.TryPeek(out var lastToken)
+                    && lastToken.Scopes.Contains("punctuation.separator.variable.prompt")
                 )
                 {
                     outputTokens.Pop();
                     outputText.Pop();
                 }
 
-                // Add to output
                 promptExtraNetworks.Add(
                     new PromptExtraNetwork
                     {
@@ -350,85 +409,9 @@ public record Prompt
             }
         }
 
-        var processedText = string.Join("", outputText.Reverse());
-
-        // Process wildcards after other tokens are handled
-        processedText = ProcessWildcards(processedText);
-
+        // Build final text maintaining original order
+        var processedText = string.Concat(outputText.Reverse());
         return (promptExtraNetworks, processedText);
-    }
-
-    /// <summary>
-    /// Processes wildcard patterns in the format {option1|option2|option3} and randomly selects one option
-    /// </summary>
-    private string ProcessWildcards(string input)
-    {
-        // Pre-check for performance
-        if (!input.Contains('{'))
-        {
-            return input;
-        }
-
-        // First validate that all braces are properly closed
-        var braceCount = 0;
-        var lastOpenBraceIndex = -1;
-
-        for (var i = 0; i < input.Length; i++)
-        {
-            if (input[i] == '{')
-            {
-                braceCount++;
-                lastOpenBraceIndex = i;
-            }
-            else if (input[i] == '}')
-            {
-                braceCount--;
-                if (braceCount < 0)
-                {
-                    throw new PromptValidationError("Unexpected closing brace", i, i + 1);
-                }
-            }
-        }
-
-        if (braceCount > 0)
-        {
-            throw new PromptValidationError(
-                "Unclosed brace in wildcard",
-                lastOpenBraceIndex,
-                lastOpenBraceIndex + 1
-            );
-        }
-
-        // Use precompiled regex for better performance
-        const string pattern = @"\{(?:[^{}]|(?<Open>\{)|(?<Close-Open>\}))+(?(Open)(?!))\}";
-        var regex = new Regex(pattern, RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
-
-        return regex.Replace(
-            input,
-            match =>
-            {
-                var options = match.Value.Trim('{', '}');
-
-                // Simple split by pipe character
-                var trimmedOptions = options
-                    .Split('|')
-                    .Select(opt => opt.Trim())
-                    .Where(opt => !string.IsNullOrEmpty(opt))
-                    .ToArray();
-
-                if (trimmedOptions.Length == 0)
-                {
-                    throw new PromptValidationError(
-                        "No valid options in wildcard choice",
-                        match.Index,
-                        match.Index + match.Length
-                    );
-                }
-
-                var randomIndex = RandomNumberGenerator.GetInt32(trimmedOptions.Length);
-                return trimmedOptions[randomIndex];
-            }
-        );
     }
 
     public string GetDebugText()
@@ -466,6 +449,11 @@ public record Prompt
 
         var result = tokenizer.TokenizeLine(text);
 
-        return new Prompt { RawText = text, TokenizeResult = result };
+        return new Prompt
+        {
+            RawText = text,
+            TokenizeResult = result,
+            Tokenizer = tokenizer
+        };
     }
 }

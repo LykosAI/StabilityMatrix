@@ -247,6 +247,9 @@
       "name": "meta.structure.wildcard.prompt",
       "patterns": [
         {
+          "include": "#network"
+        },
+        {
           "match": "\\|\\|+|\\|(?=\\})|(?<=\\{)\\||\\|\\s*\\|",
           "name": "invalid.illegal.empty-option.prompt"
         },
@@ -257,6 +260,10 @@
         {
           "match": "[^\\{\\}\\|]+",
           "name": "string.unquoted.wildcard-option.prompt"
+        },
+        {
+          "match": "\\}",
+          "name": "invalid.illegal.nested-wildcard-close.prompt"
         },
         {
           "match": "\\{",

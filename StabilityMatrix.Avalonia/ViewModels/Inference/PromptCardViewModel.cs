@@ -223,7 +223,7 @@ public partial class PromptCardViewModel
         try
         {
             var prompt = GetOrCachePrompt(promptText);
-            prompt.Process();
+            prompt.Process(processWildcards: false);
             prompt.ValidateExtraNetworks(modelIndexService);
         }
         catch (PromptError e)

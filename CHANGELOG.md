@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.14.0-dev.2
 ### Added
 - Added Align Your Steps scheduler to Inference
+- Added wildcards to Inference prompts, e.g. `{blue|green|red}` will randomly select one of the colors
 ### Changed
 - Updated the Civitai Model Browser base model selector to match the new Checkpoint Manager filter UI 
 - FaceDetailers in Inference will now inherit the primary sampler/scheduler/etc. by default. You can still manually set these by enabling the options via the ⚙️ button on the FaceDetailer card

@@ -4,7 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
@@ -350,7 +352,83 @@ public record Prompt
 
         var processedText = string.Join("", outputText.Reverse());
 
+        // Process wildcards after other tokens are handled
+        processedText = ProcessWildcards(processedText);
+
         return (promptExtraNetworks, processedText);
+    }
+
+    /// <summary>
+    /// Processes wildcard patterns in the format {option1|option2|option3} and randomly selects one option
+    /// </summary>
+    private string ProcessWildcards(string input)
+    {
+        // Pre-check for performance
+        if (!input.Contains('{'))
+        {
+            return input;
+        }
+
+        // First validate that all braces are properly closed
+        var braceCount = 0;
+        var lastOpenBraceIndex = -1;
+
+        for (var i = 0; i < input.Length; i++)
+        {
+            if (input[i] == '{')
+            {
+                braceCount++;
+                lastOpenBraceIndex = i;
+            }
+            else if (input[i] == '}')
+            {
+                braceCount--;
+                if (braceCount < 0)
+                {
+                    throw new PromptValidationError("Unexpected closing brace", i, i + 1);
+                }
+            }
+        }
+
+        if (braceCount > 0)
+        {
+            throw new PromptValidationError(
+                "Unclosed brace in wildcard",
+                lastOpenBraceIndex,
+                lastOpenBraceIndex + 1
+            );
+        }
+
+        // Use precompiled regex for better performance
+        const string pattern = @"\{(?:[^{}]|(?<Open>\{)|(?<Close-Open>\}))+(?(Open)(?!))\}";
+        var regex = new Regex(pattern, RegexOptions.Compiled, TimeSpan.FromMilliseconds(100));
+
+        return regex.Replace(
+            input,
+            match =>
+            {
+                var options = match.Value.Trim('{', '}');
+
+                // Simple split by pipe character
+                var trimmedOptions = options
+                    .Split('|')
+                    .Select(opt => opt.Trim())
+                    .Where(opt => !string.IsNullOrEmpty(opt))
+                    .ToArray();
+
+                if (trimmedOptions.Length == 0)
+                {
+                    throw new PromptValidationError(
+                        "No valid options in wildcard choice",
+                        match.Index,
+                        match.Index + match.Length
+                    );
+                }
+
+                var randomIndex = RandomNumberGenerator.GetInt32(trimmedOptions.Length);
+                return trimmedOptions[randomIndex];
+            }
+        );
     }
 
     public string GetDebugText()

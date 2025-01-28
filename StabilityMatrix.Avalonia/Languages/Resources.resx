@@ -1305,4 +1305,7 @@
   <data name="Action_OpenOnOpenModelDb" xml:space="preserve">
     <value>Open on OpenModelDB</value>
   </data>
+  <data name="Label_Wildcards" xml:space="preserve">
+    <value>Wildcards</value>
+  </data>
 </root>

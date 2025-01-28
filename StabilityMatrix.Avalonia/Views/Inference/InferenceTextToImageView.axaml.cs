@@ -21,13 +21,14 @@ public partial class InferenceTextToImageView : DockUserControlBase
     {
         base.OnAttachedToVisualTree(e);
 
+        // TODO: this
         // get LoraGallery ToolDock
-        var dock = this.FindControl<DockControl>("Dock");
-        var dockable = this.Find<Tool>("LoraGalleryTool");
-        if (dockable != null && !hasMovedLoraDock)
-        {
-            dock?.Factory?.PinDockable(dockable);
-            hasMovedLoraDock = true;
-        }
+        // var dock = this.FindControl<DockControl>("Dock");
+        // var dockable = this.Find<Tool>("LoraGalleryTool");
+        // if (dockable == null || hasMovedLoraDock)
+        //     return;
+        //
+        // dock?.Factory?.PinDockable(dockable);
+        // hasMovedLoraDock = true;
     }
 }

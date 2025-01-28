@@ -3162,6 +3162,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Wildcards.
+        /// </summary>
+        public static string Label_Wildcards {
+            get {
+                return ResourceManager.GetString("Label_Wildcards", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Not yet available.
         /// </summary>
         public static string Label_WipFeature {

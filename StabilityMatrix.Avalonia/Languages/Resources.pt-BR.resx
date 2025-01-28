@@ -184,7 +184,7 @@
     <value>Comentários</value>
   </data>
   <data name="Label_ShowPixelGridAtHighZoomLevels" xml:space="preserve">
-    <value>Exibir grade de pixels em altos níveis de zoom</value>
+    <value>Exibir grade de pixels com altos níveis de zoom</value>
   </data>
   <data name="Label_Steps" xml:space="preserve">
     <value>Etapas</value>
@@ -235,7 +235,7 @@
     <value>Seja um apoiador</value>
   </data>
   <data name="Label_JoinDiscord" xml:space="preserve">
-    <value>Junte-se ao nosso servidor do Discord</value>
+    <value>Junte-se ao servidor do Discord</value>
   </data>
   <data name="Label_Downloads" xml:space="preserve">
     <value>Downloads</value>
@@ -254,6 +254,7 @@
   </data>
   <data name="Label_DisplayName" xml:space="preserve">
     <value>Nome de Exibição</value>
+    <comment>Can I get some context on this?</comment>
   </data>
   <data name="Label_InstallationWithThisNameExists" xml:space="preserve">
     <value>Já existe uma instalação do Stability Matrix com este nome.</value>
@@ -269,6 +270,7 @@
   </data>
   <data name="Label_SharedModelFolderStrategy" xml:space="preserve">
     <value>Uso Compartilhado da Pasta de Modelos</value>
+    <comment>Please, Can I get some context?</comment>
   </data>
   <data name="Label_PyTorchVersion" xml:space="preserve">
     <value>Versão do PyTorch</value>
@@ -418,7 +420,7 @@
     <value>Gerenciador de checkpoints</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown" xml:space="preserve">
-    <value>Remover links simbólicos da pasta de checkpoints compartilhados ao fechar o programa</value>
+    <value>Remover links simbólicos do diretório de checkpoints compartilhados ao desligar</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
     <value>Selecione esta opção se houver problemas ao mover o Stability Matrix para outra unidade</value>
@@ -457,10 +459,10 @@
     <value>Adicionar o Stability Matrix ao menu Iniciar</value>
   </data>
   <data name="Label_AddToStartMenu_Details" xml:space="preserve">
-    <value>Usa o local atual do programa. Se você movê-lo, poderá executar esta ação novamente</value>
+    <value>Usa a localização atual do aplicativo, você pode executar isso novamente se mover o aplicativo</value>
   </data>
   <data name="Label_OnlyAvailableOnWindows" xml:space="preserve">
-    <value>Disponível apenas no Windows</value>
+    <value>Disponível apenas para Windows</value>
   </data>
   <data name="Action_AddForCurrentUser" xml:space="preserve">
     <value>Adicionar para o usuário atual</value>
@@ -472,7 +474,7 @@
     <value>Selecionar nova pasta de dados</value>
   </data>
   <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
-    <value>Os dados existentes não são movidos</value>
+    <value>Os dados existentes não serão movidos. É necessário reiniciar o aplicativo.</value>
   </data>
   <data name="Action_SelectDirectory" xml:space="preserve">
     <value>Selecionar pasta</value>
@@ -484,7 +486,7 @@
     <value>Stability Matrix</value>
   </data>
   <data name="Label_LicenseAndOpenSourceNotices" xml:space="preserve">
-    <value>Licença e Avisos de Código Aberto</value>
+    <value>Licença e Informações sobre Código Aberto</value>
   </data>
   <data name="TeachingTip_ClickLaunchToGetStarted" xml:space="preserve">
     <value>Clique em &quot;Iniciar&quot; para começar!</value>
@@ -578,6 +580,7 @@
   </data>
   <data name="Label_Callstack" xml:space="preserve">
     <value>Callstack</value>
+    <comment>Referring to the term in the programming, no translation is necessary, as the word Callstack is widely known</comment>
   </data>
   <data name="Label_InnerException" xml:space="preserve">
     <value>Exceção interna</value>
@@ -607,7 +610,7 @@
     <value>Desinstalando o pacote...</value>
   </data>
   <data name="Label_PackageUninstalled" xml:space="preserve">
-    <value>Pacote desinstalado com sucesso!</value>
+    <value>Pacote desinstalado com sucesso</value>
   </data>
   <data name="Text_SomeFilesCouldNotBeDeleted" xml:space="preserve">
     <value>Não foi possível excluir alguns arquivos. Feche qualquer arquivo aberto na pasta do pacote e tente novamente.</value>
@@ -640,7 +643,7 @@
     <value>Ramificação</value>
   </data>
   <data name="Label_AutoScrollToEnd" xml:space="preserve">
-    <value>Ir automaticamente para o final do terminal</value>
+    <value>Ir automaticamente para o fim do console</value>
   </data>
   <data name="Label_License" xml:space="preserve">
     <value>Licença</value>
@@ -683,6 +686,7 @@
   </data>
   <data name="Label_BatchIndex" xml:space="preserve">
     <value>Número do lote</value>
+    <comment>Batch is also a word useded in PT-BR tech community</comment>
   </data>
   <data name="Action_Copy" xml:space="preserve">
     <value>Copiar</value>
@@ -716,27 +720,17 @@
   </data>
   <data name="Label_Inpainting" xml:space="preserve">
     <value>Inpainting</value>
+    <comment>There is no word that directly translates &apos;Inpainting&apos; into PT-BR, the closest would be &apos;image reconstruction&apos;. So I decided to keep the original term.</comment>
   </data>
   <data name="Label_Upscale" xml:space="preserve">
     <value>Ampliar</value>
+    <comment>There is no word that directly translates &apos;upscale&apos; into PT-BR, the closest would be &apos;Enhance Image&apos;. So I decided to keep the original term</comment>
   </data>
   <data name="Label_OutputsPageTitle" xml:space="preserve">
     <value>Gerenciador de Resultados</value>
   </data>
   <data name="Label_OneImageSelected" xml:space="preserve">
     <value>1 imagem selecionada</value>
-  </data>
-  <data name="Label_Preprocessor" xml:space="preserve">
-    <value>Pré-processador</value>
-  </data>
-  <data name="Label_Strength" xml:space="preserve">
-    <value>Intensidade</value>
-  </data>
-  <data name="Label_ControlWeight" xml:space="preserve">
-    <value>Influência do Controle</value>
-  </data>
-  <data name="Label_ControlSteps" xml:space="preserve">
-    <value>Nível de Controle</value>
   </data>
   <data name="Label_PythonPackages" xml:space="preserve">
     <value>Pacotes do Python</value>
@@ -844,10 +838,12 @@
     <value>Atualizar Metadados</value>
   </data>
   <data name="Label_General" xml:space="preserve">
-    <value>Geral</value><comment>A general settings category</comment>
+    <value>Geral</value>
+    <comment>A general settings category</comment>
   </data>
   <data name="Label_Inference" xml:space="preserve">
-    <value>Inferência</value><comment>The Inference feature page</comment>
+    <value>Inferência</value>
+    <comment>The Inference feature page</comment>
   </data>
   <data name="Label_Prompt" xml:space="preserve">
     <value>Prompt</value>
@@ -911,7 +907,8 @@
     <value>Arquivo de imagem não encontrado</value>
   </data>
   <data name="Label_HolidayMode" xml:space="preserve">
-    <value>Modo Festivo</value>
+    <value>Modo Feriado</value>
+    <comment>Do we have some context?</comment>
   </data>
   <data name="Label_CLIPSkip" xml:space="preserve">
     <value>Ignorar CLIP</value>
@@ -927,6 +924,7 @@
   </data>
   <data name="Label_Lossless" xml:space="preserve">
     <value>Sem perdas</value>
+    <comment>There is no term that translates directly into PT-BR. The word &apos;lossless&apos; is widely used.</comment>
   </data>
   <data name="Label_Frames" xml:space="preserve">
     <value>Quadros</value>
@@ -958,23 +956,17 @@
   <data name="Action_CopyDetails" xml:space="preserve">
     <value>Copiar Detalhes</value>
   </data>
-  <data name="Label_Notifications" xml:space="preserve">
-    <value>Notificações</value>
-  </data>
-  <data name="Label_NotificationOption_None" xml:space="preserve">
-    <value>Nenhum</value>
-  </data>
   <data name="Action_Download" xml:space="preserve">
     <value>Baixar</value>
   </data>
   <data name="TeachingTip_DownloadsExplanation" xml:space="preserve">
-    <value>Acompanhe o progresso da instalação de pacotes e download de modelos aqui.</value>
+    <value>Confira aqui o progresso da instalação dos seus pacotes e do download dos modelos.</value>
   </data>
   <data name="Label_RecommendedModels" xml:space="preserve">
     <value>Modelos recomendados</value>
   </data>
   <data name="Label_RecommendedModelsSubText" xml:space="preserve">
-    <value>Enquanto o pacote é instalado, veja alguns modelos para você começar.</value>
+    <value>Enquanto instalamos seu pacote, veja alguns modelos recomendados para dar os primeiros passos.</value>
   </data>
   <data name="Label_Notifications" xml:space="preserve">
     <value>Notificações</value>
@@ -1028,7 +1020,7 @@
     <value>Tudo parece estar certo!</value>
   </data>
   <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
-    <value>Recomendamos uma GPU com CUDA para melhor desempenho. Sem ela, alguns pacotes podem não funcionar e o processamento será mais lento.</value>
+    <value>Para uma experiência otimizada, recomendamos uma GPU com suporte a CUDA. É possível continuar sem uma GPU, mas alguns pacotes podem apresentar falhas e a inferência pode demorar mais.</value>
   </data>
   <data name="Label_Checkpoints" xml:space="preserve">
     <value>Checkpoints</value>
@@ -1115,7 +1107,7 @@
     <value>Mover para a lixeira</value>
   </data>
   <data name="Label_AreYouSureDeleteModels" xml:space="preserve">
-    <value>TTem certeza que deseja apagar {0} modelos?</value>
+    <value>Tem certeza que deseja apagar {0} modelos?</value>
   </data>
   <data name="Label_AutoSearchOnLoad" xml:space="preserve">
     <value>Pesquisar ao carregar</value>
@@ -1124,7 +1116,7 @@
     <value>Pesquisar automaticamente ao abrir o gerenciador de modelos</value>
   </data>
   <data name="Action_ToggleVisibility" xml:space="preserve">
-    <value>Mostrar/Ocultar</value>
+    <value>Alternar visibilidade</value>
   </data>
   <data name="Label_ClippingMask" xml:space="preserve">
     <value>Máscara de corte</value>
@@ -1138,9 +1130,6 @@
   <data name="Label_AppData" xml:space="preserve">
     <value>Dados do programa</value>
   </data>
-  <data name="Warning_PleaseExtractFirst" xml:space="preserve">
-    <value>EXTRAIA O PROGRAMA DO ARQUIVO ZIP ANTES DE EXECUTAR O STABILITY MATRIX</value>
-  </data>
   <data name="TextTemplate_PackageUpdatedToSelected" xml:space="preserve">
     <value>{0} atualizado para a versão escolhida</value>
   </data>
@@ -1149,5 +1138,147 @@
   </data>
   <data name="Label_DisableUpdateCheck" xml:space="preserve">
     <value>Desativar atualização automática</value>
+  </data>
+  <data name="Warning_PleaseExtractFirst" xml:space="preserve">
+    <value>EXTRAIA O PROGRAMA DO ARQUIVO ZIP ANTES DE EXECUTAR O STABILITY MATRIX</value>
+  </data>
+  <data name="Label_HistorySize" xml:space="preserve">
+    <value>Tamanho do Histórico</value>
+  </data>
+  <data name="Label_HistorySize_Description" xml:space="preserve">
+    <value>O número de linhas acima daquelas exibidas no console em que você pode rolar de volta</value>
+  </data>
+  <data name="Label_ConnectAccountFailed" xml:space="preserve">
+    <value>Nós tivemos algum problema para conectar sua conta</value>
+  </data>
+  <data name="Label_EditModelMetadata" xml:space="preserve">
+    <value>Editar Metadados do Modelo</value>
+  </data>
+  <data name="Label_NSFW" xml:space="preserve">
+    <value>NSFW</value>
+  </data>
+  <data name="Label_Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Label_VersionName" xml:space="preserve">
+    <value>Nome de Versão</value>
+  </data>
+  <data name="Label_TrainedWords" xml:space="preserve">
+    <value>Palavras Treinadas</value>
+  </data>
+  <data name="Label_PreviewImage" xml:space="preserve">
+    <value>Pré-visualizar imagem</value>
+  </data>
+  <data name="Label_BatchSize" xml:space="preserve">
+    <value>Tamanho do Lote</value>
+  </data>
+  <data name="Label_Batches" xml:space="preserve">
+    <value>Lotes</value>
+  </data>
+  <data name="Label_Sampler" xml:space="preserve">
+    <value>Amostrador</value>
+  </data>
+  <data name="Label_Scheduler" xml:space="preserve">
+    <value>Agendador</value>
+  </data>
+  <data name="Label_MaxSize" xml:space="preserve">
+    <value>Tamanho máximo</value>
+  </data>
+  <data name="Label_UseSeparatePrompt" xml:space="preserve">
+    <value>Usar prompt separado</value>
+  </data>
+  <data name="Label_Seed" xml:space="preserve">
+    <value>Semente</value>
+  </data>
+  <data name="Label_NegativePrompt" xml:space="preserve">
+    <value>Prompt Negativo</value>
+  </data>
+  <data name="Label_NewFolder" xml:space="preserve">
+    <value>Nova Pasta</value>
+  </data>
+  <data name="Label_CopyLinkToClipboard" xml:space="preserve">
+    <value>Copiar Link para a Área de Transferência</value>
+  </data>
+  <data name="TextTemplate_OAuthLoginTitle" xml:space="preserve">
+    <value>Entrar com {0}</value>
+    <comment>e.g. &apos;Sign in with Google&apos;</comment>
+  </data>
+  <data name="Text_AllowBrowserOpenAppLink" xml:space="preserve">
+    <value>Permita que seu navegador abra este aplicativo quando solicitado.</value>
+  </data>
+  <data name="Text_OAuthLoginDescription" xml:space="preserve">
+    <value>Abra o link no seu navegador e siga as instruções para conectar sua conta.</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Title" xml:space="preserve">
+    <value>Substituir dependências do Python</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Description" xml:space="preserve">
+    <value>Adicione, substitua ou remova dependências para instalação e atualização</value>
+  </data>
+  <data name="Label_DependencySpecifiers" xml:space="preserve">
+    <value>Especificadores de dependência</value>
+  </data>
+  <data name="AnalyticsExample_InstallData" xml:space="preserve">
+    <value>{
+  &quot;packageName&quot;: &quot;stable-diffusion-webui&quot;,
+  &quot;packageVersion&quot;: &quot;v1.10.0&quot;,
+  &quot;isSuccess&quot;: true,
+  &quot;type&quot;: &quot;install&quot;,
+  &quot;timestamp&quot;: &quot;2024-09-04T02:14:04.1967404+00:00&quot;
+}</value>
+  </data>
+  <data name="Label_Analytics" xml:space="preserve">
+    <value>Dados Analíticos</value>
+  </data>
+  <data name="TextTemplate_YouCanChangeThisBehavior" xml:space="preserve">
+    <value>Você sempre pode alterar esse comportamento em {0}.</value>
+    <comment>e.g. &apos;You can always change this behavior in Settings &gt; Category &gt; Item.&apos;</comment>
+  </data>
+  <data name="Text_AnalyticsDescription" xml:space="preserve">
+    <value>Ajude-nos a melhorar o Stability Matrix enviando dados anônimos sobre recursos usados, versões de sistema operacional, tipos de pacotes instalados, etc. Os dados enviados nunca serão associados a você ou à sua conta e não incluirão dados pessoais ou qualquer informação sensível.</value>
+  </data>
+  <data name="Text_AnalyticsDescriptionShort" xml:space="preserve">
+    <value>Ajude-nos a melhorar o Stability Matrix enviando dados anônimos sobre recursos usados, versões de sistema operacional, tipos de pacotes instalados, etc.</value>
+  </data>
+  <data name="Text_AnalyticsDataPrivacyInfo" xml:space="preserve">
+    <value>Os dados enviados nunca serão associados a você ou à sua conta e não incluirão dados pessoais ou qualquer informação sensível.</value>
+  </data>
+  <data name="Label_UsageData" xml:space="preserve">
+    <value>Dados de Uso</value>
+  </data>
+  <data name="Label_PrivacyPolicy" xml:space="preserve">
+    <value>Política de Privacidade</value>
+  </data>
+  <data name="Label_ImageHidden" xml:space="preserve">
+    <value>Imagem ocultada</value>
+  </data>
+  <data name="Label_NoImageFound" xml:space="preserve">
+    <value>Nenhuma imagem encontrada</value>
+  </data>
+  <data name="Label_HideEmptyCategories" xml:space="preserve">
+    <value>Ocultar categorias vazias</value>
+  </data>
+  <data name="Label_ShowNsfwImages" xml:space="preserve">
+    <value>Mostrar imagens NSFW</value>
+  </data>
+  <data name="Label_EnableLongPaths" xml:space="preserve">
+    <value>Habilitar caminhos longos</value>
+    <comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_EnableLongPathsDescription" xml:space="preserve">
+    <value>Remover limitações MAX_PATH de funções comuns de arquivo e diretório do Win32</value>
+    <comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_SystemSettings" xml:space="preserve">
+    <value>Configurações do Sistema</value>
+  </data>
+  <data name="Label_ChangesApplied" xml:space="preserve">
+    <value>Alterações Aplicadas</value>
+  </data>
+  <data name="Text_RestartMayBeRequiredForSystemChanges" xml:space="preserve">
+    <value>Uma reinicialização pode ser necessária para que as alterações do sistema tenham efeito.</value>
+  </data>
+  <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
+    <value>Este pacote não possui versões disponíveis.</value>
   </data>
 </root>

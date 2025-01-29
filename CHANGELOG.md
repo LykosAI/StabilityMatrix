@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added Align Your Steps scheduler to Inference
 - Added wildcards to Inference prompts, e.g. `{blue|green|red}` will randomly select one of the colors
+- Added Safetensor Metadata viewer to the Checkpoint Manager context menu - thanks to @genteure!
 ### Changed
 - Updated the Civitai Model Browser base model selector to match the new Checkpoint Manager filter UI 
 - FaceDetailers in Inference will now inherit the primary sampler/scheduler/etc. by default. You can still manually set these by enabling the options via the ⚙️ button on the FaceDetailer card
 - Slightly rearranged the FaceDetailer card layout due to the above change
 - "Remove symbolic links on shutdown" option now also removes links from Output Sharing
+- Inference "Extra Networks" selector now filters extra networks based on the selected base model
 ### Fixed
 - Fixed crash when dragging & dropping images in Inference (hopefully)
 - Fixed HiresFix Inference addon not inheriting sampler/scheduler properly
@@ -27,7 +29,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - (dev.2 re-release) Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
 ### Supporters
 #### Visionaries
-- A huge thank you to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your generous support is greatly appreciated!
+- A huge thank you to our incredible Visionary-tier Patreon supporters, **Waterclouds**, **TheTekknician**, and our newest Visionary, **Corey**! Your generous support is greatly appreciated!
 
 ## v2.14.0-dev.1
 ### Added

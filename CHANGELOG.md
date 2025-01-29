@@ -27,7 +27,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed issue when parsing index URLs in Python Dependencies Override menu
 - Fixed ComfyUI-Zluda not respecting pip user overrides
 - Fixed issue with Checkpoint Manager not displaying any models
-- (dev.2 re-release) Fixed autocomplete not showing in certain cases when using wildcards 
+- (dev.2 re-release) Fixed autocomplete not showing in certain cases when using wildcards
+- (dev.2 re-release) Fixed package restart button not working 
 ### Supporters
 #### Visionaries
 - A huge thank you to our incredible Visionary-tier Patreon supporters, **Waterclouds**, **TheTekknician**, and our newest Visionary, **Corey**! Your generous support is greatly appreciated!

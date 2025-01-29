@@ -225,10 +225,23 @@ public partial class PackageCardViewModel(
         }
     }
 
-    public override void OnUnloaded()
+    protected override void Dispose(bool disposing)
     {
+        if (!disposing)
+            return;
+
         EventManager.Instance.PackageRelaunchRequested -= InstanceOnPackageRelaunchRequested;
         runningPackageService.RunningPackages.CollectionChanged -= RunningPackagesOnCollectionChanged;
+
+        // Cleanup any running package event handlers
+        if (
+            Package?.Id != null
+            && runningPackageService.RunningPackages.TryGetValue(Package.Id, out var runningPackageVm)
+        )
+        {
+            runningPackageVm.RunningPackage.BasePackage.Exited -= BasePackageOnExited;
+            runningPackageVm.RunningPackage.BasePackage.StartupComplete -= RunningPackageOnStartupComplete;
+        }
     }
 
     public async Task Launch()

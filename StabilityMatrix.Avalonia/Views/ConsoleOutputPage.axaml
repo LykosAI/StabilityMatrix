@@ -115,8 +115,11 @@
                     <MenuItem
                         Command="{Binding SearchWithChatGptCommand}"
                         CommandParameter="{Binding ., ElementName=Console}"
-                        Header="Search with ChatGPT"
-                        Icon="{StaticResource OpenAiIcon}" />
+                        Header="Search with ChatGPT">
+                        <MenuItem.Icon>
+                            <controls:BetterAdvancedImage Source="avares://StabilityMatrix.Avalonia/Assets/openai-white-logomark.png" />
+                        </MenuItem.Icon>
+                    </MenuItem>
                 </MenuFlyout>
             </avaloniaEdit:TextEditor.ContextFlyout>
         </avaloniaEdit:TextEditor>

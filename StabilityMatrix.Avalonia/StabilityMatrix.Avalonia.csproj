@@ -150,6 +150,7 @@
         <AvaloniaResource Include="Assets\hf-packages.json" />
         <AvaloniaResource Include="Assets\santahat.png" />
         <AvaloniaResource Include="Assets\markdown.css" />
+        <AvaloniaResource Include="Assets\openai-white-logomark.png" />
     </ItemGroup>
 
     <ItemGroup>

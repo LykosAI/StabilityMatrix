@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed issue when parsing index URLs in Python Dependencies Override menu
 - Fixed ComfyUI-Zluda not respecting pip user overrides
 - Fixed issue with Checkpoint Manager not displaying any models
+- (dev.2 re-release) Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
 ### Supporters
 #### Visionaries
 - A huge thank you to our incredible Visionary-tier Patreon supporters, **Waterclouds**, **TheTekknician**, and our newest Visionary, **Corey**! Your generous support is greatly appreciated!
@@ -59,6 +60,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
 - Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
 - Fixed issue when parsing index URLs in Python Dependencies Override menu
+- Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
 
 ## v2.13.2
 ### Changed

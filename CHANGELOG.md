@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Slightly rearranged the FaceDetailer card layout due to the above change
 - "Remove symbolic links on shutdown" option now also removes links from Output Sharing
 - Inference "Extra Networks" selector now filters extra networks based on the selected base model
+- Updated Japanese, Brazilian Portuguese, Chinese, and Russian translations
 ### Fixed
 - Fixed crash when dragging & dropping images in Inference (hopefully)
 - Fixed HiresFix Inference addon not inheriting sampler/scheduler properly
@@ -26,6 +27,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed issue when parsing index URLs in Python Dependencies Override menu
 - Fixed ComfyUI-Zluda not respecting pip user overrides
 - Fixed issue with Checkpoint Manager not displaying any models
+- (dev.2 re-release) Fixed autocomplete not showing in certain cases when using wildcards
+- (dev.2 re-release) Fixed package restart button not working 
 - (dev.2 re-release) Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
 ### Supporters
 #### Visionaries

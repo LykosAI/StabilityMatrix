@@ -232,7 +232,7 @@
       ]
     },
     "wildcard": {
-      "begin": "\\{",
+      "begin": "(?<!\\\\)\\{",
       "beginCaptures": {
         "0": {
           "name": "punctuation.definition.wildcard.begin.prompt"
@@ -258,20 +258,27 @@
           "name": "keyword.operator.choice.prompt"
         },
         {
-          "match": "[^\\{\\}\\|]+",
+          "match": "\\s+",
+          "name": "meta.embedded.whitespace"
+        },
+        {
+          "include": "#escape"
+        },
+        {
+          "include": "#parenthesized"
+        },
+        {
+          "include": "#array"
+        },
+        {
+          "include": "#separator"
+        },
+        {
+          "include": "#keyword"
+        },
+        {
+          "match": "[^\\{\\}\\|\\s,]+",
           "name": "string.unquoted.wildcard-option.prompt"
-        },
-        {
-          "match": "\\}",
-          "name": "invalid.illegal.nested-wildcard-close.prompt"
-        },
-        {
-          "match": "\\{",
-          "name": "invalid.illegal.nested-wildcard-open.prompt"
-        },
-        {
-          "match": "$",
-          "name": "invalid.illegal.unclosed-brace.prompt"
         }
       ]
     },
@@ -284,6 +291,9 @@
           "include": "#escape"
         },
         {
+          "include": "#wildcard"
+        },
+        {
           "include": "#parenthesized"
         },
         {
@@ -291,9 +301,6 @@
         },
         {
           "include": "#network"
-        },
-        {
-          "include": "#wildcard"
         },
         {
           "include": "#separator"

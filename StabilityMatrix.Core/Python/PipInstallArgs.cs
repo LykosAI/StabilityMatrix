@@ -65,6 +65,11 @@ public record PipInstallArgs : ProcessArgsBuilder
             if (string.IsNullOrWhiteSpace(pipOverride.Name))
                 continue;
 
+            if (pipOverride.Name is "--extra-index-url" or "--index-url")
+            {
+                pipOverride.Constraint = "=";
+            }
+
             var pipOverrideArg = pipOverride.ToArgument();
 
             if (pipOverride.Action is PipPackageSpecifierOverrideAction.Update)

@@ -71,6 +71,11 @@ public class ComfyZluda(
 
         pipArgs = pipArgs.AddArg("numpy==1.26.0");
 
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
         progress?.Report(
             new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
         );

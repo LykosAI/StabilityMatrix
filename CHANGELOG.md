@@ -5,6 +5,24 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.13.3
+### Added
+- Added Safetensor Metadata viewer to the Checkpoint Manager context menu - thanks to @genteure!
+### Changed
+- "Remove symbolic links on shutdown" option now also removes links from Output Sharing
+### Fixed
+- Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
+- Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
+- Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
+- Fixed issue when parsing index URLs in Python Dependencies Override menu
+- Fixed issue where models were filtered incorrectly in the Checkpoint Manager
+- Fixed ComfyUI-Zluda not using the user-defined pip overrides
+### Supporters
+#### Visionaries
+- A heartfelt thank you to our incredible Visionary-tier Patrons, **Waterclouds**, **TheTekknician**, and **Corey**! Your unwavering support means the world to us!
+#### Pioneers
+- A big shoutout to our outstanding Pioneer-tier Patrons, **tankfox**, **Mr. Unknown**, **Szir777**, and **NowFallenAngel**! We deeply appreciate your ongoing support and dedication!
+
 ## v2.13.2
 ### Changed
 - Removed SimpleSDXL due to security concerns - thanks to @iwr-redmond for the detailed report. For more information please visit https://github.com/LykosAI/StabilityMatrix/security/advisories.

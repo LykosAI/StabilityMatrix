@@ -5,6 +5,13 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.14.0-dev.3
+### Changed
+- Upgraded ComfyUI CUDA torch to 12.6
+### Fixed
+- Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
+- Fixed ROCm torch indexes for ComfyUI & Forge
+
 ## v2.14.0-dev.2
 ### Added
 - Added Align Your Steps scheduler to Inference
@@ -55,6 +62,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Supporters
 #### Visionaries
 - Many thanks to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your support helps us continue to improve Stability Matrix!
+
+## v2.13.4
+### Changed
+- Upgraded ComfyUI CUDA torch to 12.6
+### Fixed
+- Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
+- Fixed ROCm torch indexes for ComfyUI & Forge
 
 ## v2.13.3
 ### Changed

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -16,7 +17,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(StackEditableCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<StackEditableCardViewModel>]
 public partial class StackEditableCardViewModel : StackViewModelBase, IComfyStep
 {
     private readonly ServiceManager<ViewModelBase> vmFactory;

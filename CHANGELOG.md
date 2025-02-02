@@ -5,6 +5,190 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.14.0-dev.2
+### Added
+- Added Align Your Steps scheduler to Inference
+- Added wildcards to Inference prompts, e.g. `{blue|green|red}` will randomly select one of the colors
+- Added Safetensor Metadata viewer to the Checkpoint Manager context menu - thanks to @genteure!
+### Changed
+- Updated the Civitai Model Browser base model selector to match the new Checkpoint Manager filter UI 
+- FaceDetailers in Inference will now inherit the primary sampler/scheduler/etc. by default. You can still manually set these by enabling the options via the ⚙️ button on the FaceDetailer card
+- Slightly rearranged the FaceDetailer card layout due to the above change
+- "Remove symbolic links on shutdown" option now also removes links from Output Sharing
+- Inference "Extra Networks" selector now filters extra networks based on the selected base model
+- Updated Japanese, Brazilian Portuguese, Chinese, and Russian translations
+### Fixed
+- Fixed crash when dragging & dropping images in Inference (hopefully)
+- Fixed HiresFix Inference addon not inheriting sampler/scheduler properly
+- Fixed some plus (+) buttons getting cut off in the Inference UI
+- Fixed CFG Rescale addon interfering with refiner model in Inference
+- Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
+- Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
+- Fixed issue when parsing index URLs in Python Dependencies Override menu
+- Fixed ComfyUI-Zluda not respecting pip user overrides
+- Fixed issue with Checkpoint Manager not displaying any models
+- (dev.2 re-release) Fixed autocomplete not showing in certain cases when using wildcards
+- (dev.2 re-release) Fixed package restart button not working 
+- (dev.2 re-release) Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
+### Supporters
+#### Visionaries
+- A huge thank you to our incredible Visionary-tier Patreon supporters, **Waterclouds**, **TheTekknician**, and our newest Visionary, **Corey**! Your generous support is greatly appreciated!
+
+## v2.14.0-dev.1
+### Added
+- Added Rescale CFG addon to Inference
+- Added Swap Dimensions button between the width/height input in Inference
+- Added Ctrl+Tab/Ctrl+Shift+Tab shortcuts for navigating between Inference tabs
+- Added OpenModelDB tab to the Model Browser
+### Changed
+- Improved the quality of Inference inpainting by upgrading the workflow behind the scenes. The workflow remains the same for you — just better results!
+- Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout
+- "Clear All" button will now remain at the top of the Downloads list regardless of scroll position - thanks to @Genteure!
+- Improved image metadata parsing - thanks to @Genteure!
+### Fixed
+- Fixed Inference image selector card buttons taking up the whole height of the card
+- Fixed Inference mask editor failing to paint to the right-most edge on large images
+- Fixed Inference mask editor not showing the entire image in certain circumstances
+- Fixed an issue where certain sampler/scheduler combos would not get saved in image metadata - thanks to @yansigit!
+- Fixed [#1078](https://github.com/LykosAI/StabilityMatrix/issues/1078) - "Call from invalid thread" error after one-click install finishes
+- Fixed [#1080](https://github.com/LykosAI/StabilityMatrix/issues/1080) - Some models not displayed in Checkpoint Manager
+### Supporters
+#### Visionaries
+- Many thanks to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your support helps us continue to improve Stability Matrix!
+
+## v2.13.3
+### Changed
+- "Remove symbolic links on shutdown" option now also removes links from Output Sharing
+### Fixed
+- Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
+- Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
+- Fixed issue when parsing index URLs in Python Dependencies Override menu
+- Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
+
+## v2.13.2
+### Changed
+- Removed SimpleSDXL due to security concerns - thanks to @iwr-redmond for the detailed report. For more information please visit https://github.com/LykosAI/StabilityMatrix/security/advisories.
+### Supporters
+#### Visionaries
+- Many thanks to our amazing Visionary-tier Patrons, **Waterclouds** and **TheTekknician**! Your support is greatly appreciated!
+#### Pioneers
+- Shoutout to our Pioneer-tier Patrons, **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, and **NowFallenAngel**! Thank you for your continued support!
+
+## v2.13.1
+### Changed
+- Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout
+- "Clear All" button will now remain at the top of the Downloads list regardless of scroll position - thanks to @Genteure!
+- Improved image metadata parsing - thanks to @Genteure!
+### Fixed
+- Fixed [#1078](https://github.com/LykosAI/StabilityMatrix/issues/1078) - "Call from invalid thread" error after one-click install finishes
+- Fixed [#1080](https://github.com/LykosAI/StabilityMatrix/issues/1080) - Some models not displayed in Checkpoint Manager
+- Fixed Inference image selector card buttons taking up the whole height of the card
+- Fixed Inference mask editor failing to paint to the right-most edge on large images
+- Fixed Inference mask editor not showing the entire image in certain circumstances
+- Fixed crash when dragging & dropping images in Inference (hopefully)
+- Fixed an issue where certain sampler/scheduler combos would not get saved in image metadata - thanks to @yansigit!
+### Supporters
+#### Visionaries
+- A heartfelt thank you to our exceptional Visionary-tier Patreon backers, **Waterclouds** and **TheTekknician**! We truly appreciate your steadfast support!
+#### Pioneers
+- We are also very grateful to our wonderful Pioneer-tier Patreon supporters, **tankfox**, **Mr Unknown**, **Szir777**, **Tigon**, and **NowFallenAngel**! Your support means a lot to us!
+
+## v2.13.0
+### Added
+- Added new package - [ComfyUI-Zluda](https://github.com/patientx/ComfyUI-Zluda) - for AMD GPU users on Windows
+- Added file sizes to the Checkpoint Manager tab
+- Added the Discrete Model Sampling addon for Inference samplers, allows selecting different sampling methods, such as v_prediction, lcm, or x0, and optionally adjusts the model’s noise reduction strategy with the zero-shot noise ratio (ZSNR) toggle.
+- Added Default GPU override in Settings -> System Settings -> Default GPU
+- Added new "Copy" menu to the Inference gallery context menu, allowing you to copy generation parameters as well as the image
+- Added "StableDiffusion" folder as an option when downloading Flux models in the CivitAI model browser
+- Added support for SD3.5 in Inference
+- Added CLIP_G to HuggingFace model browser
+- Added search bar to the Installed Workflows tab
+- Added "Search with Google" and "Search with ChatGPT" to the package console output & install progress console output context menus
+- Added "Date Created" and "Date Last Modified" sorting options to the Checkpoints tab
+- Added a new "Extension Packs" section to the extension manager, allowing you to create packs for easier installation of multiple extensions at once
+- Added "Search by Creator" command to Civitai browser context menu
+- Added Beta scheduler to the scheduler selector in Inference
+- Added zipping of log files and "Show Log in Explorer" button on exceptions dialog for easier support
+- Added max concurrent downloads option & download queueing for most downloads
+- Added the ability to change the Models directory separately from the rest of the Data directory. This can be set in `Settings > Select new Models Folder`
+- Added InvokeAI model sharing option
+### Changed
+- Improved Packages Page grid layout to dynamically stretch to fill available space
+- Text Encoder / CLIP selection in Inference is now enabled via the cogwheel ⚙️ button next to the model selector 
+- Updated Civitai model descriptions to properly render the interactive elements
+- Adjusted the Branch/Release toggle during package install flow to be a little more obvious
+- Updated the Dock library used for Inference - fixes some weirdness with resizing / rearranging panels
+- New file format and key derivation for protecting locally encrypted secrets (i.e. Civit / Lykos accounts) that is no longer dependent on the OS Version. This should prevent system updates from clearing account logins.
+- (Internal) Updated to .NET 9 Runtime and Avalonia 11.2.2 for performance improvements, lower memory usage, and bug fixes
+- Updated pytorch index to `rocm6.2` for AMD users of ComfyUI on Linux
+### Fixed
+- Fixed text alignment issues in the Downloads tab for certain long names / progress infos
+- Improved startup performance and resource usage with optimizations to hardware lookups. Moved reflection usages in dependency injection to source generation.
+- Fixed an issue with ComfyUI-Impact-Subpack not being installed when using FaceDetailer in Inference
+- Fixed GGUF models not showing in Inference without the GGUF extension installed (this means it will now properly prompt you to install the extension as well)
+### Supporters
+#### Visionaries
+- We're extremely grateful to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Thank you very much for your unwavering support!
+#### Pioneers
+- Many thanks to our amazing Pioneer-tier Patreon supporters, **tankfox**, **Mr Unknown**, **Szir777**, and our newest Pioneer, **NowFallenAngel**! Your generous support is very much appreciated!
+
+## v2.13.0-pre.2
+### Added
+- Added new package - [ComfyUI-Zluda](https://github.com/patientx/ComfyUI-Zluda) - for AMD GPU users on Windows
+- Added "StableDiffusion" folder as an option when downloading Flux models in the CivitAI model browser
+### Changed
+- Updated pytorch index to `rocm6.2` for AMD users of ComfyUI on Linux
+### Supporters
+#### Visionaries
+- Big shoutout to our incredible Visionary-tier Patreon supporter, **Waterclouds**! We're also delighted to introduce our newest Visionary-tier Patreon supporter, **TheTekknician**! Thank you both for your generous support!
+
+## v2.13.0-pre.1
+### Added
+- Added new package - [CogVideo](https://github.com/THUDM/CogVideo) - many thanks to @NullDev for the contribution!
+- Added file sizes to the Checkpoint Manager tab
+- Added more formatting options for Inference output filenames - thanks to @yansigit!
+- Added the Discrete Model Sampling addon for Inference samplers, allows selecting different sampling methods, such as v_prediction, lcm, or x0, and optionally adjusts the model’s noise reduction strategy with the zero-shot noise ratio (ZSNR) toggle.
+- Added Default GPU override in Settings -> System Settings -> Default GPU
+- Added the ability to copy more generation parameters from the Inference gallery context menu
+### Changed
+- Improved Packages Page grid layout to dynamically stretch to fill available space
+- New file format and key derivation for protecting locally encrypted secrets (i.e. Civit / Lykos accounts) that is no longer dependent on the OS Version. This should prevent system updates from clearing account logins.
+- (Internal) Updated to .NET 9 Runtime and Avalonia 11.2.2 for performance improvements, lower memory usage, and bug fixes
+### Fixed
+- Improved startup performance and resource usage with optimizations to hardware lookups. Moved reflection usages in dependency injection to source generation.
+- Fixed a typo in the Japanese translation - thanks to @mattyatea!
+- Fixed missing package thumbnails due to moved or inaccessible urls
+- Fixed an issue with ComfyUI-Impact-Subpack not being installed when using FaceDetailer in Inference
+- Fixed GGUF models not showing in Inference without the GGUF extension installed (this means it will now properly prompt you to install the extension as well)
+### Supporters
+#### Visionaries
+- Huge thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your unwavering support is very much appreciated!
+
+## v2.13.0-dev.3
+### Added
+- Added support for SD3.5 in Inference
+- Added CLIP_G to HuggingFace model browser
+- Added search bar to the Installed Workflows tab
+- Added "Search with Google" and "Search with ChatGPT" to the package console output & install progress console output context menus
+- Added "Date Created" and "Date Last Modified" sorting options to the Checkpoints tab
+### Changed
+- Text Encoder / CLIP selection in Inference is now enabled via the cogwheel ⚙️ button next to the model selector 
+- Added more base model types to the CivitAI Model Browser & Checkpoint Manager
+- Model browser base model types are now loaded dynamically from CivitAI, reducing the need for updates to add new types
+- Updated Civitai model descriptions to properly render the interactive elements
+- Updated Russian translations thanks to @vanja-san
+- Updated Simplified Chinese translations thanks to @QL-boy
+- (Internal) Updated to Avalonia 11.2.0
+### Fixed
+- Fixed some instances of Civitai model browser not loading new results
+- Fixed "Unsupported Torch Version: Cuda" errors when installing a1111
+- Fixed crash when clicking "Remind me Later" on the update dialog
+- Fixed some cases of crashing when GitHub API rate limits are exceeded
+- Fixed Git missing from env vars when running SwarmUI
+### Supporters
+#### Visionaries
+- Big shoutout to our amazing Visionary-tier Patreon supporter, **Waterclouds**! We are very grateful for your continued support!
 
 ## v2.13.0-dev.2
 ### Added
@@ -39,14 +223,44 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### Visionaries
 - A heartfelt thank you to our incredible Visionary-tier Patreon supporter, **Waterclouds**! Your ongoing support means a lot to us, and we’re grateful to have you with us on this journey!
 
+## v2.12.4
+### Added
+- Added new package - [CogVideo](https://github.com/THUDM/CogVideo) - many thanks to @NullDev for the contribution!
+- Added more formatting options for Inference output filenames - thanks to @yansigit!
+### Changed
+- Model browser base model types are now loaded dynamically from CivitAI, reducing the need for updates to add new types
+### Fixed
+- Fixed crash when clicking "Remind me Later" on the update dialog
+- Fixed some cases of crashing when GitHub API rate limits are exceeded
+- Fixed Git missing from env vars when running SwarmUI
+- Fixed missing package thumbnails due to moved or inaccessible urls
+- Fixed an issue with updating FluxGym in certain cases - thanks to @NullDev!
+- Fixed a typo in the Japanese translation - thanks to @mattyatea!
+### Supporters
+#### Visionaries
+- A huge thank you to our dedicated Visionary-tier Patreon supporter, **Waterclouds**! We’re thrilled to have your ongoing support!
+#### Pioneers
+- Shoutout to our great Pioneer-tier patrons: **tankfox**, **tanangular**, **Mr. Unknown**, **Szir777**, and our newest Pioneer, **Tigon**!. Your continued support is greatly appreciated!
+
 ## v2.12.3
 ### Added
 - Added new package - [SimpleSDXL](https://github.com/metercai/SimpleSDXL) - many thanks to @NullDev for the contribution!
 - Added new package - [FluxGym](https://github.com/cocktailpeanut/fluxgym) - many thanks to @NullDev for the contribution!
+- Added more base model types to the CivitAI Model Browser & Checkpoint Manager
+### Changed
+- Updated Russian translations thanks to @vanja-san
+- Updated Simplified Chinese translations thanks to @QL-boy
 ### Fixed
 - Fixed some cases of FileTransferExists error when running re/Forge or Automatic1111
 - Fixed update check not happening on startup for some users
 - Fixed error when installing Automatic1111 on macOS
+- Fixed some instances of Civitai model browser not loading new results
+- Fixed "Unsupported Torch Version: Cuda" errors when installing a1111
+### Supporters
+#### Visionaries
+- A huge shout-out to our dedicated Visionary-tier Patreon supporter, **Waterclouds**! Your unwavering support is greatly appreciated!
+#### Pioneers
+- We'd also like to express our gratitude to our amazing Pioneer-tier patrons: **tankfox**, **tanangular**, **Mr. Unknown**, and **Szir777**! Your ongoing support means a great deal!
 
 ## v2.12.2
 ### Added

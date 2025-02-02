@@ -1,9 +1,9 @@
 ﻿using Avalonia.Controls;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
-[Transient]
+[RegisterTransient<ConfirmDeleteDialog>]
 public partial class ConfirmDeleteDialog : UserControl
 {
     public ConfirmDeleteDialog()

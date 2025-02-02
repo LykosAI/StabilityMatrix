@@ -1,9 +1,9 @@
 ﻿using System.Text.Json;
 using System.Web;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Configs;
@@ -14,7 +14,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Updater;
 
-[Singleton(typeof(IUpdateHelper))]
+[RegisterSingleton<IUpdateHelper, UpdateHelper>]
 public class UpdateHelper : IUpdateHelper
 {
     private readonly ILogger<UpdateHelper> logger;

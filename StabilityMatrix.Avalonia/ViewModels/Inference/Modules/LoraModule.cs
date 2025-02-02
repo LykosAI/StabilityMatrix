@@ -1,6 +1,10 @@
 ﻿using System.Linq;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData.Binding;
+using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -12,7 +16,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<LoraModule>]
 public partial class LoraModule : ModuleBase
 {
     /// <inheritdoc />
@@ -25,14 +29,39 @@ public partial class LoraModule : ModuleBase
         : base(vmFactory)
     {
         Title = "Lora";
-        AddCards(
-            vmFactory.Get<ExtraNetworkCardViewModel>(card =>
-            {
-                card.IsModelWeightEnabled = true;
-                // Disable clip weight by default, but allow user to enable it
-                card.IsClipWeightToggleEnabled = true;
-                card.IsClipWeightEnabled = false;
-            })
+
+        var extraNetworksVm = vmFactory.Get<ExtraNetworkCardViewModel>(card =>
+        {
+            card.IsModelWeightEnabled = true;
+            // Disable clip weight by default, but allow user to enable it
+            card.IsClipWeightToggleEnabled = true;
+            card.IsClipWeightEnabled = false;
+        });
+
+        AddCards(extraNetworksVm);
+
+        AddDisposable(
+            extraNetworksVm
+                .WhenPropertyChanged(vm => vm.SelectedModel)
+                .Throttle(TimeSpan.FromMilliseconds(50))
+                .Subscribe(next =>
+                {
+                    var model = next.Value;
+                    if (model is null)
+                    {
+                        Title = Resources.Label_ExtraNetworks;
+                        return;
+                    }
+
+                    if (model.Local?.HasConnectedModel ?? false)
+                    {
+                        Title = model.Local.ConnectedModelInfo.ModelName;
+                    }
+                    else
+                    {
+                        Title = model.ShortDisplayName;
+                    }
+                })
         );
     }
 

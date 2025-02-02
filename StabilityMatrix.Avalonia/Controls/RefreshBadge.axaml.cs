@@ -1,9 +1,9 @@
 ﻿using Avalonia.Markup.Xaml;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-[Transient]
+[RegisterTransient<RefreshBadge>]
 public partial class RefreshBadge : UserControlBase
 {
     public RefreshBadge()

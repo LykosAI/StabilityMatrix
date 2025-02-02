@@ -1,10 +1,10 @@
 ﻿using System.Collections.Immutable;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Injectio.Attributes;
 using NLog;
 using Refit;
 using StabilityMatrix.Core.Api;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -17,12 +17,12 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, InvokeAI>(Duplicate = DuplicateStrategy.Append)]
 public class InvokeAI : BaseGitPackage
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private const string RelativeRootPath = "invokeai-root";
-    private string RelativeFrontendBuildPath = Path.Combine("invokeai", "frontend", "web", "dist");
+    private readonly string relativeFrontendBuildPath = Path.Combine("invokeai", "frontend", "web", "dist");
 
     public override string Name => "InvokeAI";
     public override string DisplayName { get; set; } = "InvokeAI";
@@ -35,7 +35,7 @@ public class InvokeAI : BaseGitPackage
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Nightmare;
 
     public override IReadOnlyList<string> ExtraLaunchCommands =>
-        new[] { "invokeai-db-maintenance", "invokeai-import-images", };
+        ["invokeai-db-maintenance", "invokeai-import-images"];
 
     public override Uri PreviewImageUri =>
         new("https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png");
@@ -57,80 +57,50 @@ public class InvokeAI : BaseGitPackage
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = new[]
-            {
-                Path.Combine(RelativeRootPath, "autoimport", "main")
-            },
-            [SharedFolderType.Lora] = new[] { Path.Combine(RelativeRootPath, "autoimport", "lora") },
-            [SharedFolderType.TextualInversion] = new[]
-            {
-                Path.Combine(RelativeRootPath, "autoimport", "embedding")
-            },
-            [SharedFolderType.ControlNet] = new[]
-            {
-                Path.Combine(RelativeRootPath, "autoimport", "controlnet")
-            },
-            [SharedFolderType.InvokeIpAdapters15] = new[]
-            {
+            [SharedFolderType.StableDiffusion] = [Path.Combine(RelativeRootPath, "autoimport", "main")],
+            [SharedFolderType.Lora] = [Path.Combine(RelativeRootPath, "autoimport", "lora")],
+            [SharedFolderType.TextualInversion] = [Path.Combine(RelativeRootPath, "autoimport", "embedding")],
+            [SharedFolderType.ControlNet] = [Path.Combine(RelativeRootPath, "autoimport", "controlnet")],
+            [SharedFolderType.InvokeIpAdapters15] =
+            [
                 Path.Combine(RelativeRootPath, "models", "sd-1", "ip_adapter")
-            },
-            [SharedFolderType.InvokeIpAdaptersXl] = new[]
-            {
+            ],
+            [SharedFolderType.InvokeIpAdaptersXl] =
+            [
                 Path.Combine(RelativeRootPath, "models", "sdxl", "ip_adapter")
-            },
-            [SharedFolderType.InvokeClipVision] = new[]
-            {
+            ],
+            [SharedFolderType.InvokeClipVision] =
+            [
                 Path.Combine(RelativeRootPath, "models", "any", "clip_vision")
-            },
-            [SharedFolderType.T2IAdapter] = new[]
-            {
-                Path.Combine(RelativeRootPath, "autoimport", "t2i_adapter")
-            }
+            ],
+            [SharedFolderType.T2IAdapter] = [Path.Combine(RelativeRootPath, "autoimport", "t2i_adapter")]
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
-        new() { [SharedOutputType.Text2Img] = new[] { Path.Combine("invokeai-root", "outputs", "images") } };
+        new() { [SharedOutputType.Text2Img] = [Path.Combine("invokeai-root", "outputs", "images")] };
 
     public override string OutputFolderName => Path.Combine("invokeai-root", "outputs", "images");
 
     // https://github.com/invoke-ai/InvokeAI/blob/main/docs/features/CONFIGURATION.md
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
-            new LaunchOptionDefinition
+            new()
             {
-                Name = "Host",
+                Name = "Root Directory",
                 Type = LaunchOptionType.String,
-                DefaultValue = "localhost",
-                Options = ["--host"]
+                Options = ["--root"]
             },
-            new LaunchOptionDefinition
+            new()
             {
-                Name = "Port",
+                Name = "Config File",
                 Type = LaunchOptionType.String,
-                DefaultValue = "9090",
-                Options = ["--port"]
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Allow Origins",
-                Description =
-                    "List of host names or IP addresses that are allowed to connect to the "
-                    + "InvokeAI API in the format ['host1','host2',...]",
-                Type = LaunchOptionType.String,
-                DefaultValue = "[]",
-                Options = ["--allow-origins"]
-            },
-            new LaunchOptionDefinition
-            {
-                Name = "Precision",
-                Type = LaunchOptionType.Bool,
-                Options = ["--precision auto", "--precision float16", "--precision float32"]
+                Options = ["--config"]
             },
             LaunchOptionDefinition.Extras
         ];
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
-        new[] { TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps };
+        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps];
 
     public override TorchIndex GetRecommendedTorchVersion()
     {
@@ -325,7 +295,7 @@ public class InvokeAI : BaseGitPackage
         VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installedPackagePath));
 
         // fix frontend build missing for people who updated to v3.6 before the fix
-        var frontendExistsPath = Path.Combine(installedPackagePath, RelativeFrontendBuildPath);
+        var frontendExistsPath = Path.Combine(installedPackagePath, relativeFrontendBuildPath);
         if (!Directory.Exists(frontendExistsPath))
         {
             await SetupAndBuildInvokeFrontend(
@@ -422,6 +392,11 @@ public class InvokeAI : BaseGitPackage
     )
     {
         var invokeAiUrl = match.Value;
+        if (invokeAiUrl.Contains("0.0.0.0"))
+        {
+            invokeAiUrl = invokeAiUrl.Replace("0.0.0.0", "127.0.0.1");
+        }
+
         var invokeAiApi = RestService.For<IInvokeAiApi>(
             invokeAiUrl,
             new RefitSettings

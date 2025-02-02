@@ -1,20 +1,18 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-[Transient]
-public class StackExpander : TemplatedControl
+[RegisterTransient<StackExpander>]
+public class StackExpander : TemplatedControlBase
 {
-    public static readonly StyledProperty<bool> IsExpandedProperty = Expander
-        .IsExpandedProperty
-        .AddOwner<StackExpander>();
+    public static readonly StyledProperty<bool> IsExpandedProperty =
+        Expander.IsExpandedProperty.AddOwner<StackExpander>();
 
-    public static readonly StyledProperty<ExpandDirection> ExpandDirectionProperty = Expander
-        .ExpandDirectionProperty
-        .AddOwner<StackExpander>();
+    public static readonly StyledProperty<ExpandDirection> ExpandDirectionProperty =
+        Expander.ExpandDirectionProperty.AddOwner<StackExpander>();
 
     public static readonly StyledProperty<int> SpacingProperty = AvaloniaProperty.Register<StackCard, int>(
         "Spacing",

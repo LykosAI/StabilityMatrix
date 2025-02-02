@@ -1,205 +1,230 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
-        xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
-        xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-        x:DataType="vmInference:SamplerCardViewModel"
-        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages">
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:SamplerCardViewModel">
     <Design.PreviewWith>
         <StackPanel MinWidth="350" Spacing="16">
-            <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModel}"/>
-            <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModelScaleMode}"/>
-            <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModelRefinerMode}"/>
+            <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModel}" />
+            <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModelScaleMode}" />
+            <controls:SamplerCard DataContext="{x:Static mocks:DesignData.SamplerCardViewModelRefinerMode}" />
         </StackPanel>
     </Design.PreviewWith>
 
     <Style Selector="controls|SamplerCard">
-        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="Template">
             <ControlTemplate>
-                <controls:Card
-                    HorizontalAlignment="{TemplateBinding HorizontalAlignment}" >
-                    <StackPanel 
-                        HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-                        Spacing="8">
-                        <Grid ColumnDefinitions="Auto,5,*" RowDefinitions="*,*,*,*,*">
-                            <!-- Sampler -->
+                <controls:Card HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
+                    <StackPanel HorizontalAlignment="{TemplateBinding HorizontalAlignment}" Spacing="8">
+                        <Grid ColumnDefinitions="Auto,5,*" RowDefinitions="*,*,*,*,*,*">
+                            <!--  Sampler  -->
                             <TextBlock
                                 Grid.Row="0"
                                 Grid.Column="0"
-                                IsVisible="{Binding IsSamplerSelectionEnabled}"
                                 Margin="0,0,0,8"
                                 VerticalAlignment="Center"
+                                IsVisible="{Binding IsSamplerSelectionEnabled}"
                                 Text="{x:Static lang:Resources.Label_Sampler}" />
                             <ui:FAComboBox
                                 Grid.Row="0"
                                 Grid.Column="2"
+                                Margin="8,0,0,8"
+                                HorizontalAlignment="Stretch"
+                                DisplayMemberBinding="{Binding DisplayName}"
                                 IsVisible="{Binding IsSamplerSelectionEnabled}"
                                 ItemsSource="{Binding ClientManager.Samplers}"
-                                SelectedItem="{Binding SelectedSampler}"
-                                DisplayMemberBinding="{Binding DisplayName}"
-                                Margin="8,0,0,8"
-                                HorizontalAlignment="Stretch"/>
-                            <!-- Scheduler -->
+                                SelectedItem="{Binding SelectedSampler}" />
+                            <!--  Scheduler  -->
                             <TextBlock
                                 Grid.Row="1"
                                 Grid.Column="0"
-                                IsVisible="{Binding IsSchedulerSelectionEnabled}"
                                 Margin="0,0,0,8"
                                 VerticalAlignment="Center"
+                                IsVisible="{Binding IsSchedulerSelectionEnabled}"
                                 Text="{x:Static lang:Resources.Label_Scheduler}" />
                             <ui:FAComboBox
                                 Grid.Row="1"
                                 Grid.Column="2"
-                                IsVisible="{Binding IsSchedulerSelectionEnabled}"
-                                ItemsSource="{Binding ClientManager.Schedulers}"
-                                SelectedItem="{Binding SelectedScheduler}"
-                                DisplayMemberBinding="{Binding DisplayName}"
-                                Margin="8,0,0,8"
-                                HorizontalAlignment="Stretch"/>
-                            
-                            <!-- Steps (Normal) -->
-                            <TextBlock
-                                Grid.Row="2"
-                                Grid.Column="0"
-                                IsVisible="{Binding !IsRefinerStepsEnabled}"
-                                Margin="0,0,0,8"
-                                VerticalAlignment="Center"
-                                Text="{x:Static lang:Resources.Label_Steps}" />
-                            <TextBlock
-                                Grid.Row="2"
-                                Grid.Column="0"
-                                IsVisible="{Binding IsRefinerStepsEnabled}"
-                                Margin="0,0,0,8"
-                                VerticalAlignment="Center"
-                                Text="{x:Static lang:Resources.Label_StepsBase}" />
-                            <ui:NumberBox
-                                Grid.Row="2"
-                                Grid.Column="2"
-                                SelectionHighlightColor="Transparent"
-                                Value="{Binding Steps}"
                                 Margin="8,0,0,8"
                                 HorizontalAlignment="Stretch"
-                                SpinButtonPlacementMode="Inline"/>
-                            
-                            <!-- Steps (Refiner) -->
+                                DisplayMemberBinding="{Binding DisplayName}"
+                                IsVisible="{Binding IsSchedulerSelectionEnabled}"
+                                ItemsSource="{Binding ClientManager.Schedulers}"
+                                SelectedItem="{Binding SelectedScheduler}" />
+
+                            <TextBlock
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                Margin="0,0,0,8"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding IsModelTypeSelectionEnabled}"
+                                Text="{x:Static lang:Resources.Label_ModelType}" />
+                            <ui:FAComboBox
+                                Grid.Row="2"
+                                Grid.Column="2"
+                                Margin="8,0,0,8"
+                                HorizontalAlignment="Stretch"
+                                IsVisible="{Binding IsModelTypeSelectionEnabled}"
+                                ItemsSource="{Binding ModelTypes}"
+                                SelectedItem="{Binding SelectedModelType}" />
+
+                            <!--  Steps (Normal)  -->
                             <TextBlock
                                 Grid.Row="3"
+                                Grid.Column="0"
+                                Margin="0,0,0,8"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding !IsRefinerStepsEnabled}"
+                                Text="{x:Static lang:Resources.Label_Steps}" />
+                            <TextBlock
+                                Grid.Row="3"
+                                Grid.Column="0"
+                                Margin="0,0,0,8"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding IsRefinerStepsEnabled}"
+                                Text="{x:Static lang:Resources.Label_StepsBase}" />
+                            <ui:NumberBox
+                                Grid.Row="3"
+                                Grid.Column="2"
+                                Margin="8,0,0,8"
+                                HorizontalAlignment="Stretch"
+                                SelectionHighlightColor="Transparent"
+                                SpinButtonPlacementMode="Inline"
+                                Value="{Binding Steps}" />
+
+                            <!--  Steps (Refiner)  -->
+                            <TextBlock
+                                Grid.Row="4"
                                 Grid.Column="0"
                                 Margin="0,0,0,8"
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding IsRefinerStepsEnabled}"
                                 Text="{x:Static lang:Resources.Label_StepsRefiner}" />
                             <ui:NumberBox
-                                Grid.Row="3"
+                                Grid.Row="4"
                                 Grid.Column="2"
-                                SelectionHighlightColor="Transparent"
-                                Value="{Binding RefinerSteps}"
                                 Margin="8,0,0,8"
                                 HorizontalAlignment="Stretch"
                                 IsVisible="{Binding IsRefinerStepsEnabled}"
-                                SpinButtonPlacementMode="Inline"/>
-                            
-                            <!-- CFG Scale -->
+                                SelectionHighlightColor="Transparent"
+                                SpinButtonPlacementMode="Inline"
+                                Value="{Binding RefinerSteps}" />
+
+                            <!--  CFG Scale  -->
                             <TextBlock
-                                Grid.Row="4"
+                                Grid.Row="5"
                                 Grid.Column="0"
-                                IsVisible="{Binding IsCfgScaleEnabled}"
                                 VerticalAlignment="Center"
+                                IsVisible="{Binding IsCfgScaleEnabled}"
                                 Text="{x:Static lang:Resources.Label_CFGScale}" />
                             <ui:NumberBox
-                                Grid.Row="4"
+                                Grid.Row="5"
                                 Grid.Column="2"
+                                Margin="8,0,0,0"
+                                HorizontalAlignment="Stretch"
                                 IsVisible="{Binding IsCfgScaleEnabled}"
                                 SelectionHighlightColor="Transparent"
-                                Value="{Binding CfgScale}"
-                                Margin="8,0,0,0"
                                 SimpleNumberFormat="F2"
                                 SmallChange="0.25"
-                                HorizontalAlignment="Stretch"
-                                SpinButtonPlacementMode="Inline"/>
+                                SpinButtonPlacementMode="Inline"
+                                Value="{Binding CfgScale}" />
                         </Grid>
-                        
+
                         <StackPanel>
-                            <!-- Denoise Strength -->
+                            <!--  Denoise Strength  -->
                             <StackPanel>
                                 <StackPanel.IsVisible>
                                     <MultiBinding Converter="{x:Static BoolConverters.Or}">
-                                        <Binding Path="IsDenoiseStrengthEnabled"/>
-                                        <Binding Path="IsDenoiseStrengthTempEnabled"/>
+                                        <Binding Path="IsDenoiseStrengthEnabled" />
+                                        <Binding Path="IsDenoiseStrengthTempEnabled" />
                                     </MultiBinding>
                                 </StackPanel.IsVisible>
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock 
-                                        VerticalAlignment="Center"
-                                        Text="{x:Static lang:Resources.Label_DenoisingStrength}"/>
+                                    <TextBlock VerticalAlignment="Center" Text="{x:Static lang:Resources.Label_DenoisingStrength}" />
                                     <ui:NumberBox
                                         Grid.Column="1"
-                                        Margin="4,0,0,0"
-                                        ValidationMode="InvalidInputOverwritten"
-                                        SmallChange="0.01"
-                                        SimpleNumberFormat="F2"
-                                        Value="{Binding DenoiseStrength}"
-                                        HorizontalAlignment="Stretch"
                                         MinWidth="70"
-                                        SpinButtonPlacementMode="Compact"/>
+                                        Margin="4,0,0,0"
+                                        HorizontalAlignment="Stretch"
+                                        SimpleNumberFormat="F2"
+                                        SmallChange="0.01"
+                                        SpinButtonPlacementMode="Compact"
+                                        ValidationMode="InvalidInputOverwritten"
+                                        Value="{Binding DenoiseStrength}" />
                                 </Grid>
-                                <Slider 
-                                    Minimum="0"
-                                    Maximum="1"
-                                    Value="{Binding DenoiseStrength}"
-                                    TickFrequency="1"
+                                <Slider
                                     Margin="0,0,0,-4"
-                                    TickPlacement="BottomRight"/>
+                                    Maximum="1"
+                                    Minimum="0"
+                                    TickFrequency="1"
+                                    TickPlacement="BottomRight"
+                                    Value="{Binding DenoiseStrength}" />
                             </StackPanel>
-                            
-                            <!-- Dimensions (Absolute) -->
-                            <Grid 
-                                IsVisible="{Binding IsDimensionsEnabled}"
+
+                            <!--  Dimensions (Absolute)  -->
+                            <Grid
                                 Margin="0,4,0,0"
-                                ColumnDefinitions="*,Auto,*" 
+                                ColumnDefinitions="*,Auto,*"
+                                IsVisible="{Binding IsDimensionsEnabled}"
                                 RowDefinitions="Auto,*">
                                 <TextBlock
                                     Grid.Row="0"
                                     Grid.Column="0"
                                     Margin="0,0,4,4"
-                                    Text="{x:Static lang:Resources.Label_Width}"/>
+                                    Text="{x:Static lang:Resources.Label_Width}" />
                                 <ui:NumberBox
                                     Grid.Row="1"
                                     Grid.Column="0"
                                     Margin="0,0,4,0"
+                                    HorizontalAlignment="Stretch"
                                     PlaceholderText="128"
                                     SmallChange="128"
+                                    SpinButtonPlacementMode="Compact"
                                     ValidationMode="InvalidInputOverwritten"
-                                    Value="{Binding Width}"
-                                    HorizontalAlignment="Stretch"
-                                    SpinButtonPlacementMode="Compact"/>
+                                    Value="{Binding Width}" />
                                 <TextBlock
                                     Grid.Row="0"
                                     Grid.Column="2"
                                     Margin="4,0,0,4"
-                                    Text="{x:Static lang:Resources.Label_Height}"/>
+                                    Text="{x:Static lang:Resources.Label_Height}" />
                                 <ui:NumberBox
                                     Grid.Row="1"
                                     Grid.Column="2"
                                     Margin="4,0,0,0"
+                                    HorizontalAlignment="Stretch"
                                     PlaceholderText="128"
                                     SmallChange="128"
+                                    SpinButtonPlacementMode="Compact"
                                     ValidationMode="InvalidInputOverwritten"
-                                    Value="{Binding Height}"
-                                    HorizontalAlignment="Stretch"
-                                    SpinButtonPlacementMode="Compact"/>
+                                    Value="{Binding Height}" />
+                                <Button
+                                    Grid.Row="1"
+                                    Grid.Column="1"
+                                    Padding="4"
+                                    VerticalAlignment="Stretch"
+                                    VerticalContentAlignment="Center"
+                                    Command="{Binding SwapDimensionsCommand}"
+                                    ToolTip.Tip="Swap Image Dimensions">
+                                    <ui:SymbolIcon
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="18"
+                                        Symbol="RepeatAll" />
+                                </Button>
                             </Grid>
-                            
-                            <!-- Conditioning Modules -->
-                            <Grid 
-                                IsVisible="{Binding EnableAddons}"
+
+                            <!--  Conditioning Modules  -->
+                            <Grid
                                 Margin="0,8,0,0"
-                                ColumnDefinitions="*" 
+                                ColumnDefinitions="*"
+                                IsVisible="{Binding EnableAddons}"
                                 RowDefinitions="*">
-                                <controls:StackEditableCard
-                                    DataContext="{Binding ModulesCardViewModel}"/>
+                                <controls:StackEditableCard DataContext="{Binding ModulesCardViewModel}" />
                             </Grid>
                         </StackPanel>
                     </StackPanel>

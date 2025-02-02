@@ -50,6 +50,12 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [ObservableProperty]
     private bool hideImage;
 
+    [ObservableProperty]
+    private DateTimeOffset lastModified;
+
+    [ObservableProperty]
+    private DateTimeOffset created;
+
     private readonly ISettingsManager settingsManager;
     private readonly IModelIndexService modelIndexService;
     private readonly INotificationService notificationService;
@@ -93,6 +99,8 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         );
 
         FileSize = GetFileSize(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
+        LastModified = GetLastModified(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
+        Created = GetCreated(CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
     }
 
     [RelayCommand]
@@ -129,11 +137,24 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [Localizable(false)]
     private Task CopyModelUrl()
     {
-        return CheckpointFile.ConnectedModelInfo?.ModelId == null
-            ? Task.CompletedTask
-            : App.Clipboard.SetTextAsync(
-                $"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}"
-            );
+        if (!CheckpointFile.HasConnectedModel)
+            return Task.CompletedTask;
+
+        return CheckpointFile.ConnectedModelInfo.Source switch
+        {
+            ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId == null
+                => Task.CompletedTask,
+            ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId != null
+                => App.Clipboard.SetTextAsync(
+                    $"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}"
+                ),
+
+            ConnectedModelSource.OpenModelDb
+                => App.Clipboard.SetTextAsync(
+                    $"https://openmodeldb.info/models/{CheckpointFile.ConnectedModelInfo.ModelName}"
+                ),
+            _ => Task.CompletedTask
+        };
     }
 
     [RelayCommand]
@@ -300,6 +321,55 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     }
 
     [RelayCommand]
+    private async Task OpenSafetensorMetadataViewer()
+    {
+        if (!CheckpointFile.SafetensorMetadataParsed)
+        {
+            if (
+                !settingsManager.IsLibraryDirSet
+                || new DirectoryPath(settingsManager.ModelsDirectory) is not { Exists: true } modelsDir
+            )
+            {
+                return;
+            }
+
+            try
+            {
+                var safetensorPath = CheckpointFile.GetFullPath(modelsDir);
+
+                var metadata = await SafetensorMetadata.ParseAsync(safetensorPath);
+
+                CheckpointFile.SafetensorMetadataParsed = true;
+                CheckpointFile.SafetensorMetadata = metadata;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Failed to parse safetensor metadata");
+                return;
+            }
+        }
+
+        if (!CheckpointFile.SafetensorMetadataParsed)
+        {
+            return;
+        }
+
+        var vm = vmFactory.Get<SafetensorMetadataViewModel>(vm =>
+        {
+            vm.ModelName = CheckpointFile.DisplayModelName;
+            vm.Metadata = CheckpointFile.SafetensorMetadata;
+        });
+
+        var dialog = vm.GetDialog();
+        dialog.MinDialogHeight = 800;
+        dialog.MinDialogWidth = 700;
+        dialog.CloseButtonText = "Close";
+        dialog.DefaultButton = ContentDialogButton.Close;
+
+        await dialog.ShowAsync();
+    }
+
+    [RelayCommand]
     private async Task OpenMetadataEditor()
     {
         var vm = vmFactory.Get<ModelMetadataEditorDialogViewModel>(vm =>
@@ -442,6 +512,24 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
 
         var fileInfo = new FileInfo(filePath);
         return fileInfo.Length;
+    }
+
+    private DateTimeOffset GetLastModified(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return DateTimeOffset.MinValue;
+
+        var fileInfo = new FileInfo(filePath);
+        return fileInfo.LastWriteTime;
+    }
+
+    private DateTimeOffset GetCreated(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return DateTimeOffset.MinValue;
+
+        var fileInfo = new FileInfo(filePath);
+        return fileInfo.CreationTime;
     }
 
     private void UpdateImage()

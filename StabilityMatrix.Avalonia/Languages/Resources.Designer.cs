@@ -411,6 +411,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open on OpenModelDB.
+        /// </summary>
+        public static string Action_OpenOnOpenModelDb {
+            get {
+                return ResourceManager.GetString("Action_OpenOnOpenModelDb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Open Project....
         /// </summary>
         public static string Action_OpenProjectEllipsis {
@@ -2649,7 +2658,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remove shared checkpoints directory symbolic links on shutdown.
+        ///   Looks up a localized string similar to Remove shared folder symbolic links on shutdown.
         /// </summary>
         public static string Label_RemoveSymlinksOnShutdown {
             get {
@@ -2658,7 +2667,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select this option if you&apos;re having problems moving Stability Matrix to another drive.
+        ///   Looks up a localized string similar to Removes both model and output folder symbolic links when closing Stability Matrix. Select this option if you&apos;re having problems moving Stability Matrix to another drive.
         /// </summary>
         public static string Label_RemoveSymlinksOnShutdown_Details {
             get {
@@ -3158,6 +3167,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Width {
             get {
                 return ResourceManager.GetString("Label_Width", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wildcards.
+        /// </summary>
+        public static string Label_Wildcards {
+            get {
+                return ResourceManager.GetString("Label_Wildcards", resourceCulture);
             }
         }
         

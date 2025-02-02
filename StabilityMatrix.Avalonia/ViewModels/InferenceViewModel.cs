@@ -17,6 +17,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
@@ -46,7 +47,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 
 [Preload]
 [View(typeof(InferencePage))]
-[Singleton]
+[RegisterSingleton<InferenceViewModel>]
 public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -618,6 +619,32 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         }
 
         notificationService.Show("Saved", $"Saved project to {projectFile.Name}", NotificationType.Success);
+    }
+
+    [RelayCommand]
+    private void GoForwardTabWithLooping()
+    {
+        if (SelectedTabIndex == Tabs.Count - 1)
+        {
+            SelectedTabIndex = 0;
+        }
+        else
+        {
+            SelectedTabIndex++;
+        }
+    }
+
+    [RelayCommand]
+    private void GoBackwardsTabWithLooping()
+    {
+        if (SelectedTabIndex == 0)
+        {
+            SelectedTabIndex = Tabs.Count - 1;
+        }
+        else
+        {
+            SelectedTabIndex--;
+        }
     }
 
     private async Task AddTabFromFile(FilePath file)

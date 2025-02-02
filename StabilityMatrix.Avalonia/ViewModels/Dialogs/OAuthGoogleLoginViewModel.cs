@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Web;
 using Avalonia.Controls;
 using DeviceId.Encoders;
+using Injectio.Attributes;
 using MessagePipe;
 using Microsoft.Extensions.Logging;
 using NSec.Cryptography;
@@ -20,7 +21,7 @@ using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-[Transient]
+[RegisterTransient<OAuthGoogleLoginViewModel>]
 [ManagedService]
 [View(typeof(OAuthLoginDialog))]
 public class OAuthGoogleLoginViewModel(

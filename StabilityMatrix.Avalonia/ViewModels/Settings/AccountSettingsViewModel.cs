@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
 using OpenIddict.Client;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -32,7 +33,8 @@ using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 
 [View(typeof(AccountSettingsPage))]
-[Singleton, ManagedService]
+[ManagedService]
+[RegisterSingleton<AccountSettingsViewModel>]
 public partial class AccountSettingsViewModel : PageViewModelBase
 {
     private readonly IAccountsService accountsService;

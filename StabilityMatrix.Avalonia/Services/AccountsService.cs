@@ -3,6 +3,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -22,7 +23,7 @@ using ApiException = Refit.ApiException;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-[Singleton(typeof(IAccountsService))]
+[RegisterSingleton<IAccountsService, AccountsService>]
 public class AccountsService : IAccountsService
 {
     private readonly ILogger<AccountsService> logger;

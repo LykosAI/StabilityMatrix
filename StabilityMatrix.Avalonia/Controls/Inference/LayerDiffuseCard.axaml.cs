@@ -1,7 +1,7 @@
 ﻿using Avalonia.Controls.Primitives;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-[Transient]
-public class LayerDiffuseCard : TemplatedControl;
+[RegisterTransient<LayerDiffuseCard>]
+public class LayerDiffuseCard : TemplatedControlBase;

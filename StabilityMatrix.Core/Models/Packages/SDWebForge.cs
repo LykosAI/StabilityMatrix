@@ -1,4 +1,4 @@
-﻿using StabilityMatrix.Core.Attributes;
+﻿using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -11,7 +11,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, SDWebForge>(Duplicate = DuplicateStrategy.Append)]
 public class SDWebForge(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -29,10 +29,7 @@ public class SDWebForge(
     public override string LicenseUrl =>
         "https://github.com/lllyasviel/stable-diffusion-webui-forge/blob/main/LICENSE.txt";
 
-    public override Uri PreviewImageUri =>
-        new(
-            "https://github.com/lllyasviel/stable-diffusion-webui-forge/assets/19834515/ca5e05ed-bd86-4ced-8662-f41034648e8c"
-        );
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/sdwebforge/preview.webp");
 
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
@@ -102,7 +99,7 @@ public class SDWebForge(
             {
                 Name = "Use DirectML",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectML(),
+                InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
                 Options = ["--directml"]
             },
             new()

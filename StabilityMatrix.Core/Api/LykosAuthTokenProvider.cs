@@ -1,14 +1,25 @@
-﻿using OpenIddict.Client;
+using OpenIddict.Client;
 using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Models.Api.Lykos;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Api;
 
-[Singleton]
-public class LykosAuthTokenProvider(ISecretsManager secretsManager, OpenIddictClientService openIdClient)
-    : ITokenProvider
+
+[RegisterSingleton<LykosAuthTokenProvider>]
+public class LykosAuthTokenProvider : ITokenProvider
 {
+    private readonly ISecretsManager secretsManager;
+    private readonly Lazy<ILykosAuthApi> lazyLykosAuthApi;
+
+    public LykosAuthTokenProvider(Lazy<ILykosAuthApi> lazyLykosAuthApi, ISecretsManager secretsManager)
+    {
+        // Lazy as instantiating requires the current class to be instantiated.
+        this.lazyLykosAuthApi = lazyLykosAuthApi;
+        this.secretsManager = secretsManager;
+    }
+
     /// <inheritdoc />
     public async Task<string> GetAccessTokenAsync()
     {

@@ -418,10 +418,10 @@
     <value>Checkpoint Manager</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown" xml:space="preserve">
-    <value>Remove shared checkpoints directory symbolic links on shutdown</value>
+    <value>Remove shared folder symbolic links on shutdown</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
-    <value>Select this option if you&apos;re having problems moving Stability Matrix to another drive</value>
+    <value>Removes both model and output folder symbolic links when closing Stability Matrix. Select this option if you're having problems moving Stability Matrix to another drive</value>
   </data>
   <data name="Label_ResetCheckpointsCache" xml:space="preserve">
     <value>Reset Checkpoints Cache</value>
@@ -1307,5 +1307,10 @@
   </data>
   <data name="Action_CopyAndOpen" xml:space="preserve">
     <value>Copy and Open</value>
+  <data name="Action_OpenOnOpenModelDb" xml:space="preserve">
+    <value>Open on OpenModelDB</value>
+  </data>
+  <data name="Label_Wildcards" xml:space="preserve">
+    <value>Wildcards</value>
   </data>
 </root>

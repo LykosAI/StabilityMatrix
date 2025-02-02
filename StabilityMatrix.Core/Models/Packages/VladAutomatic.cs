@@ -3,8 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using Injectio.Attributes;
 using NLog;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -18,7 +18,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, VladAutomatic>(Duplicate = DuplicateStrategy.Append)]
 public class VladAutomatic(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -36,8 +36,7 @@ public class VladAutomatic(
     public override string Blurb => "Stable Diffusion implementation with advanced features and modern UI";
     public override string LaunchCommand => "launch.py";
 
-    public override Uri PreviewImageUri =>
-        new("https://github.com/vladmandic/automatic/raw/master/html/screenshot-modernui.jpg");
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/vladautomatic/preview.webp");
     public override bool ShouldIgnoreReleases => true;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
@@ -163,7 +162,7 @@ public class VladAutomatic(
             {
                 Name = "Force use of ZLUDA backend",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectML(),
+                InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
                 Options = ["--use-zluda"]
             },
             new()

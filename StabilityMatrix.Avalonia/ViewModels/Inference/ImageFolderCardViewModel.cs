@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
@@ -13,6 +14,7 @@ using DynamicData;
 using DynamicData.Binding;
 using FuzzySharp;
 using FuzzySharp.PreProcess;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using StabilityMatrix.Avalonia.Controls;
@@ -35,7 +37,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ImageFolderCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<ImageFolderCardViewModel>]
 public partial class ImageFolderCardViewModel : DisposableViewModelBase
 {
     private readonly ILogger<ImageFolderCardViewModel> logger;
@@ -76,6 +78,7 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(50))!
             .Select(property => searcher.GetPredicate(property.Value))
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         imageIndexService
@@ -84,6 +87,7 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
             .Filter(searchPredicate)
             .SortBy(file => file.LastModifiedAt, SortDirection.Descending)
             .Bind(LocalImages)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         AddDisposable(
@@ -191,6 +195,7 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
                 vm,
                 nameof(ImageViewerViewModel.NavigationRequested)
             )
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe(ctx =>
             {
                 Dispatcher
@@ -378,12 +383,56 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
     [RelayCommand]
     private async Task CopySeedToClipboard(LocalImageFile? item)
     {
-        if (item?.GenerationParameters is null)
+        if (item?.GenerationParameters is null || App.Clipboard is null)
         {
             return;
         }
 
         await App.Clipboard.SetTextAsync(item.GenerationParameters.Seed.ToString());
+    }
+
+    [RelayCommand]
+    private async Task CopyPromptToClipboard(LocalImageFile? item)
+    {
+        if (item?.GenerationParameters is null || App.Clipboard is null)
+        {
+            return;
+        }
+
+        await App.Clipboard.SetTextAsync(item.GenerationParameters.PositivePrompt);
+    }
+
+    [RelayCommand]
+    private async Task CopyNegativePromptToClipboard(LocalImageFile? item)
+    {
+        if (item?.GenerationParameters is null || App.Clipboard is null)
+        {
+            return;
+        }
+
+        await App.Clipboard.SetTextAsync(item.GenerationParameters.NegativePrompt);
+    }
+
+    [RelayCommand]
+    private async Task CopyModelNameToClipboard(LocalImageFile? item)
+    {
+        if (item?.GenerationParameters is null || App.Clipboard is null)
+        {
+            return;
+        }
+
+        await App.Clipboard.SetTextAsync(item.GenerationParameters.ModelName);
+    }
+
+    [RelayCommand]
+    private async Task CopyModelHashToClipboard(LocalImageFile? item)
+    {
+        if (item?.GenerationParameters is null || App.Clipboard is null)
+        {
+            return;
+        }
+
+        await App.Clipboard.SetTextAsync(item.GenerationParameters.ModelHash);
     }
 
     [RelayCommand]

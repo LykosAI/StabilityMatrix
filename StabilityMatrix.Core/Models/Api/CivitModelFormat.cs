@@ -10,5 +10,6 @@ public enum CivitModelFormat
     SafeTensor,
     PickleTensor,
     Diffusers,
+    GGUF,
     Other
 }

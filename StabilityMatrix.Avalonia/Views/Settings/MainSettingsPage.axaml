@@ -455,7 +455,7 @@
                     Grid.Row="4"
                     Margin="8,0,8,0"
                     Description="Limits the number of simultaneous downloads. Does not apply to package installs. Set to 0 for unlimited."
-                    Header="Maximum Simulatenous Downloads">
+                    Header="Maximum Simultaneous Downloads">
                     <ui:SettingsExpander.IconSource>
                         <fluentIcons:SymbolIconSource FontSize="10" Symbol="ArrowDownload" />
                     </ui:SettingsExpander.IconSource>

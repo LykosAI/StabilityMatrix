@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Net.Http;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -13,12 +9,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using NLog;
 using Refit;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
@@ -34,7 +32,7 @@ using Notification = Avalonia.Controls.Notifications.Notification;
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [View(typeof(CivitAiBrowserPage))]
-[Singleton]
+[RegisterSingleton<CivitAiBrowserViewModel>]
 public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScroll
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -42,6 +40,8 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     private readonly ISettingsManager settingsManager;
     private readonly ILiteDbContext liteDbContext;
     private readonly INotificationService notificationService;
+    private readonly ICivitBaseModelTypeService baseModelTypeService;
+    private bool dontSearch = false;
 
     private readonly SourceCache<OrderedValue<CivitModel>, int> modelCache = new(static ov => ov.Value.Id);
 
@@ -80,7 +80,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     private string noResultsText = string.Empty;
 
     [ObservableProperty]
-    private string selectedBaseModelType = "All";
+    private ObservableCollection<string> selectedBaseModels = [];
 
     [ObservableProperty]
     private bool showSantaHats = true;
@@ -98,6 +98,12 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     [NotifyPropertyChangedFor(nameof(StatsResizeFactor))]
     private double resizeFactor;
 
+    private readonly SourceCache<string, string> baseModelCache = new(static s => s);
+
+    [ObservableProperty]
+    private IObservableCollection<BaseModelOptionViewModel> allBaseModels =
+        new ObservableCollectionExtended<BaseModelOptionViewModel>();
+
     public double StatsResizeFactor => Math.Clamp(ResizeFactor, 0.75d, 1.25d);
 
     public IEnumerable<CivitPeriod> AllCivitPeriods =>
@@ -111,24 +117,32 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             .Where(t => t == CivitModelType.All || t.ConvertTo<SharedFolderType>() > 0)
             .OrderBy(t => t.ToString());
 
-    public IEnumerable<string> BaseModelOptions =>
-        Enum.GetValues<CivitBaseModelType>().Select(t => t.GetStringValue());
+    public string ClearButtonText =>
+        SelectedBaseModels.Count == AllBaseModels.Count
+            ? Resources.Action_ClearSelection
+            : Resources.Action_SelectAll;
+
+    public bool ShowFilterNumber =>
+        SelectedBaseModels.Count > 0 && SelectedBaseModels.Count < AllBaseModels.Count;
 
     public CivitAiBrowserViewModel(
         ICivitApi civitApi,
-        IDownloadService downloadService,
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> dialogFactory,
         ILiteDbContext liteDbContext,
-        INotificationService notificationService
+        INotificationService notificationService,
+        ICivitBaseModelTypeService baseModelTypeService
     )
     {
         this.civitApi = civitApi;
         this.settingsManager = settingsManager;
         this.liteDbContext = liteDbContext;
         this.notificationService = notificationService;
+        this.baseModelTypeService = baseModelTypeService;
 
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
+
+        var settingsSelectedBaseModels = settingsManager.Settings.SelectedCivitBaseModels;
 
         var filterPredicate = Observable
             .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
@@ -142,61 +156,124 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<CheckpointBrowserCardViewModel, bool>)FilterModelCardsPredicate)
             .StartWith(FilterModelCardsPredicate)
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         var sortPredicate = SortExpressionComparer<CheckpointBrowserCardViewModel>.Ascending(
             static x => x.Order
         );
 
-        modelCache
-            .Connect()
-            .DeferUntilLoaded()
-            .Transform(
-                ov =>
-                    dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
-                    {
-                        vm.CivitModel = ov.Value;
-                        vm.Order = ov.Order;
-                        return vm;
-                    })
+        AddDisposable(
+            modelCache
+                .Connect()
+                .DeferUntilLoaded()
+                .Transform(
+                    ov =>
+                        dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
+                        {
+                            vm.CivitModel = ov.Value;
+                            vm.Order = ov.Order;
+                            return vm;
+                        })
+                )
+                .DisposeMany()
+                .Filter(filterPredicate)
+                .SortAndBind(ModelCards, sortPredicate)
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe()
+        );
+
+        AddDisposable(
+            baseModelCache
+                .Connect()
+                .DeferUntilLoaded()
+                .Transform(
+                    baseModel =>
+                        new BaseModelOptionViewModel
+                        {
+                            ModelType = baseModel,
+                            IsSelected = settingsSelectedBaseModels.Contains(baseModel)
+                        }
+                )
+                .Bind(AllBaseModels)
+                .WhenPropertyChanged(p => p.IsSelected)
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe(next =>
+                {
+                    if (next.Sender.IsSelected)
+                        SelectedBaseModels.Add(next.Sender.ModelType);
+                    else
+                        SelectedBaseModels.Remove(next.Sender.ModelType);
+
+                    OnPropertyChanged(nameof(ClearButtonText));
+                    OnPropertyChanged(nameof(SelectedBaseModels));
+                    OnPropertyChanged(nameof(ShowFilterNumber));
+                })
+        );
+
+        if (Design.IsDesignMode)
+            return;
+
+        var settingsTransactionObservable = this.WhenPropertyChanged(x => x.SelectedBaseModels)
+            .Throttle(TimeSpan.FromMilliseconds(50))
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe(_ =>
+            {
+                if (!settingsManager.IsLibraryDirSet)
+                    return;
+
+                settingsManager.Transaction(
+                    settings => settings.SelectedCivitBaseModels = SelectedBaseModels.ToList()
+                );
+
+                if (!dontSearch)
+                {
+                    TrySearchAgain().SafeFireAndForget();
+                }
+            });
+
+        AddDisposable(settingsTransactionObservable);
+
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                model => model.ShowNsfw,
+                settings => settings.ModelBrowserNsfwEnabled,
+                true
             )
-            .DisposeMany()
-            .Filter(filterPredicate)
-            .SortAndBind(ModelCards, sortPredicate, new SortAndBindOptions { UseBinarySearch = true })
-            .Subscribe();
-
-        settingsManager.RelayPropertyFor(
-            this,
-            model => model.ShowNsfw,
-            settings => settings.ModelBrowserNsfwEnabled,
-            true
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            model => model.HideInstalledModels,
-            settings => settings.HideInstalledModelsInModelBrowser,
-            true
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                model => model.HideInstalledModels,
+                settings => settings.HideInstalledModelsInModelBrowser,
+                true
+            )
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            model => model.ResizeFactor,
-            settings => settings.CivitBrowserResizeFactor,
-            true
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                model => model.ResizeFactor,
+                settings => settings.CivitBrowserResizeFactor,
+                true
+            )
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            model => model.HideEarlyAccessModels,
-            settings => settings.HideEarlyAccessModels,
-            true
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                model => model.HideEarlyAccessModels,
+                settings => settings.HideEarlyAccessModels,
+                true
+            )
         );
 
         EventManager.Instance.NavigateAndFindCivitAuthorRequested += OnNavigateAndFindCivitAuthorRequested;
     }
 
-    private void OnNavigateAndFindCivitAuthorRequested(object? sender, string e)
+    private void OnNavigateAndFindCivitAuthorRequested(object? sender, string? e)
     {
         if (string.IsNullOrWhiteSpace(e))
             return;
@@ -230,7 +307,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                         SelectedPeriod,
                         SortMode,
                         CivitModelType.Checkpoint,
-                        SelectedBaseModelType
+                        string.Empty
                     )
             );
             searchOptions = settingsManager.Settings.ModelSearchOptions;
@@ -239,12 +316,31 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         SelectedPeriod = searchOptions?.SelectedPeriod ?? CivitPeriod.AllTime;
         SortMode = searchOptions?.SortMode ?? CivitSortMode.HighestRated;
         SelectedModelType = searchOptions?.SelectedModelType ?? CivitModelType.Checkpoint;
-        SelectedBaseModelType = searchOptions?.SelectedBaseModelType ?? "All";
+
+        base.OnLoaded();
+    }
+
+    protected override async Task OnInitialLoadedAsync()
+    {
+        if (Design.IsDesignMode)
+            return;
+
+        await base.OnInitialLoadedAsync();
 
         if (settingsManager.Settings.AutoLoadCivitModels)
         {
-            SearchModelsCommand.ExecuteAsync(false);
+            await SearchModelsCommand.ExecuteAsync(false);
         }
+
+        var baseModels = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
+        if (baseModels.Count == 0)
+        {
+            return;
+        }
+
+        dontSearch = true;
+        baseModelCache.AddOrUpdate(baseModels);
+        dontSearch = false;
     }
 
     /// <summary>
@@ -351,7 +447,22 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                 }
             );
 
-            UpdateModelCards(models, isInfiniteScroll);
+            if (cacheNew)
+            {
+                var doesBaseModelTypeMatch =
+                    SelectedBaseModels.Count == 0
+                        ? request.BaseModels == null || request.BaseModels.Length == 0
+                        : SelectedBaseModels.SequenceEqual(request.BaseModels);
+                var doesModelTypeMatch =
+                    SelectedModelType == CivitModelType.All
+                        ? request.Types == null || request.Types.Length == 0
+                        : SelectedModelType == request.Types?.FirstOrDefault();
+
+                if (doesBaseModelTypeMatch && doesModelTypeMatch)
+                {
+                    UpdateModelCards(models, isInfiniteScroll);
+                }
+            }
 
             NextPageCursor = modelsResponse?.Metadata?.NextCursor;
         }
@@ -456,9 +567,9 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             modelRequest.Types = [SelectedModelType];
         }
 
-        if (SelectedBaseModelType != "All")
+        if (SelectedBaseModels.Count > 0 && SelectedBaseModels.Count < AllBaseModels.Count)
         {
-            modelRequest.BaseModel = SelectedBaseModelType;
+            modelRequest.BaseModels = SelectedBaseModels.ToArray();
         }
 
         if (SearchQuery.StartsWith("#"))
@@ -472,7 +583,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         else if (SearchQuery.StartsWith("$#"))
         {
             modelRequest.Period = CivitPeriod.AllTime;
-            modelRequest.BaseModel = null;
+            modelRequest.BaseModels = null;
             modelRequest.Types = null;
             modelRequest.CommaSeparatedModelIds = SearchQuery[2..];
 
@@ -566,6 +677,15 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         UpdateResultsText();
     }
 
+    [RelayCommand]
+    private void ClearOrSelectAllBaseModels()
+    {
+        if (SelectedBaseModels.Count == AllBaseModels.Count)
+            AllBaseModels.ForEach(x => x.IsSelected = false);
+        else
+            AllBaseModels.ForEach(x => x.IsSelected = true);
+    }
+
     public void ClearSearchQuery()
     {
         SearchQuery = string.Empty;
@@ -588,7 +708,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                     value,
                     SortMode,
                     SelectedModelType,
-                    SelectedBaseModelType
+                    string.Empty
                 )
         );
         NextPageCursor = null;
@@ -603,7 +723,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                     SelectedPeriod,
                     value,
                     SelectedModelType,
-                    SelectedBaseModelType
+                    string.Empty
                 )
         );
         NextPageCursor = null;
@@ -613,28 +733,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     {
         TrySearchAgain().SafeFireAndForget();
         settingsManager.Transaction(
-            s =>
-                s.ModelSearchOptions = new ModelSearchOptions(
-                    SelectedPeriod,
-                    SortMode,
-                    value,
-                    SelectedBaseModelType
-                )
-        );
-        NextPageCursor = null;
-    }
-
-    partial void OnSelectedBaseModelTypeChanged(string value)
-    {
-        TrySearchAgain().SafeFireAndForget();
-        settingsManager.Transaction(
-            s =>
-                s.ModelSearchOptions = new ModelSearchOptions(
-                    SelectedPeriod,
-                    SortMode,
-                    SelectedModelType,
-                    value
-                )
+            s => s.ModelSearchOptions = new ModelSearchOptions(SelectedPeriod, SortMode, value, string.Empty)
         );
         NextPageCursor = null;
     }
@@ -643,6 +742,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     {
         if (!HasSearched)
             return;
+
         modelCache.Clear();
 
         if (shouldUpdatePageNumber)

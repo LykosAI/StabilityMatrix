@@ -10,6 +10,8 @@ public record PackageExtension
 
     public required IEnumerable<Uri> Files { get; init; }
 
+    public IEnumerable<string>? Pip { get; init; }
+
     public string? Description { get; init; }
 
     public string? InstallType { get; init; }

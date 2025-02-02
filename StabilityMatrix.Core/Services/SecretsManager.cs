@@ -1,6 +1,6 @@
 ﻿using System.Reactive.Concurrency;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 
@@ -10,7 +10,7 @@ namespace StabilityMatrix.Core.Services;
 /// Default implementation of <see cref="ISecretsManager"/>.
 /// Data is encrypted at rest in %APPDATA%\StabilityMatrix\user-secrets.data
 /// </summary>
-[Singleton(typeof(ISecretsManager))]
+[RegisterSingleton<ISecretsManager, SecretsManager>]
 public class SecretsManager : ISecretsManager
 {
     private readonly ILogger<SecretsManager> logger;

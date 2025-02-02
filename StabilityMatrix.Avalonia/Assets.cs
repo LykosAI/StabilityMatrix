@@ -34,6 +34,9 @@ internal static class Assets
     public static AvaloniaResource HfPackagesJson =>
         new("avares://StabilityMatrix.Avalonia/Assets/hf-packages.json");
 
+    public static AvaloniaResource MarkdownCss =>
+        new("avares://StabilityMatrix.Avalonia/Assets/markdown.css");
+
     private const UnixFileMode Unix755 =
         UnixFileMode.UserRead
         | UnixFileMode.UserWrite

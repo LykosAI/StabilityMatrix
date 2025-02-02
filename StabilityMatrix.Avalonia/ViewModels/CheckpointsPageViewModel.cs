@@ -6,7 +6,9 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Apizr;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
@@ -17,6 +19,8 @@ using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Fusillade;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -47,7 +51,7 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(CheckpointsPage))]
-[Singleton]
+[RegisterSingleton<CheckpointsPageViewModel>]
 public partial class CheckpointsPageViewModel(
     ILogger<CheckpointsPageViewModel> logger,
     ISettingsManager settingsManager,
@@ -57,7 +61,9 @@ public partial class CheckpointsPageViewModel(
     INotificationService notificationService,
     IMetadataImportService metadataImportService,
     IModelImportService modelImportService,
-    ServiceManager<ViewModelBase> dialogFactory
+    OpenModelDbManager openModelDbManager,
+    ServiceManager<ViewModelBase> dialogFactory,
+    ICivitBaseModelTypeService baseModelTypeService
 ) : PageViewModelBase
 {
     public override string Title => Resources.Label_CheckpointManager;
@@ -115,14 +121,6 @@ public partial class CheckpointsPageViewModel(
     private bool isDragOver;
 
     [ObservableProperty]
-    private ObservableCollection<string> baseModelOptions =
-        new(
-            Enum.GetValues<CivitBaseModelType>()
-                .Where(x => x != CivitBaseModelType.All)
-                .Select(x => x.GetStringValue())
-        );
-
-    [ObservableProperty]
     private ObservableCollection<string> selectedBaseModels = [];
 
     [ObservableProperty]
@@ -154,26 +152,65 @@ public partial class CheckpointsPageViewModel(
             ? Resources.Label_OneImageSelected.Replace("images ", "")
             : string.Format(Resources.Label_NumImagesSelected, NumItemsSelected).Replace("images ", "");
 
-    protected override void OnInitialLoaded()
+    private SourceCache<string, string> BaseModelCache { get; } = new(s => s);
+
+    public IObservableCollection<BaseModelOptionViewModel> BaseModelOptions { get; set; } =
+        new ObservableCollectionExtended<BaseModelOptionViewModel>();
+
+    protected override async Task OnInitialLoadedAsync()
     {
         if (Design.IsDesignMode)
             return;
 
-        base.OnInitialLoaded();
+        await base.OnInitialLoadedAsync();
 
-        SelectedBaseModels = new ObservableCollection<string>(BaseModelOptions);
-        SelectedBaseModels.CollectionChanged += (_, _) =>
-        {
-            OnPropertyChanged(nameof(ClearButtonText));
-            OnPropertyChanged(nameof(SelectedBaseModels));
-            settingsManager.Transaction(
-                settings => settings.SelectedBaseModels = SelectedBaseModels.ToList()
-            );
-        };
+        var settingsSelectedBaseModels = settingsManager.Settings.SelectedBaseModels;
+
+        AddDisposable(
+            BaseModelCache
+                .Connect()
+                .DeferUntilLoaded()
+                .Transform(
+                    baseModel =>
+                        new BaseModelOptionViewModel
+                        {
+                            ModelType = baseModel,
+                            IsSelected = settingsSelectedBaseModels.Contains(baseModel)
+                        }
+                )
+                .Bind(BaseModelOptions)
+                .WhenPropertyChanged(p => p.IsSelected)
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe(next =>
+                {
+                    if (next.Sender.IsSelected)
+                        SelectedBaseModels.Add(next.Sender.ModelType);
+                    else
+                        SelectedBaseModels.Remove(next.Sender.ModelType);
+
+                    OnPropertyChanged(nameof(ClearButtonText));
+                    OnPropertyChanged(nameof(SelectedBaseModels));
+                })
+        );
+
+        var settingsTransactionObservable = this.WhenPropertyChanged(x => x.SelectedBaseModels)
+            .Throttle(TimeSpan.FromMilliseconds(50))
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe(_ =>
+            {
+                settingsManager.Transaction(
+                    settings => settings.SelectedBaseModels = SelectedBaseModels.ToList()
+                );
+            });
+
+        AddDisposable(settingsTransactionObservable);
+
+        var baseModelTypes = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
+        BaseModelCache.EditDiff(baseModelTypes);
 
         // Observable predicate from SearchQuery changes
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
-            .Throttle(TimeSpan.FromMilliseconds(100))!
+            .Throttle(TimeSpan.FromMilliseconds(100))
             .Select(
                 _ =>
                     (Func<LocalModelFile, bool>)(
@@ -196,6 +233,7 @@ public partial class CheckpointsPageViewModel(
                             )
                     )
             )
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         var filterPredicate = Observable
@@ -209,6 +247,7 @@ public partial class CheckpointsPageViewModel(
             )
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<LocalModelFile, bool>)FilterModels)
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         var comparerObservable = Observable
@@ -224,9 +263,7 @@ public partial class CheckpointsPageViewModel(
             {
                 var comparer = new SortExpressionComparer<CheckpointFileViewModel>();
                 if (SortConnectedModelsFirst)
-                {
                     comparer = comparer.ThenByDescending(vm => vm.CheckpointFile.HasConnectedModel);
-                }
 
                 switch (SelectedSortOption)
                 {
@@ -276,38 +313,54 @@ public partial class CheckpointsPageViewModel(
                                 ? comparer.ThenByAscending(vm => vm.FileSize)
                                 : comparer.ThenByDescending(vm => vm.FileSize);
                         break;
+                    case CheckpointSortMode.Created:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.Created)
+                                : comparer.ThenByDescending(vm => vm.Created);
+                        break;
+                    case CheckpointSortMode.LastModified:
+                        comparer =
+                            SelectedSortDirection == ListSortDirection.Ascending
+                                ? comparer.ThenByAscending(vm => vm.LastModified)
+                                : comparer.ThenByDescending(vm => vm.LastModified);
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
 
                 return comparer;
             })
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
-        ModelsCache
-            .Connect()
-            .DeferUntilLoaded()
-            .Filter(filterPredicate)
-            .Filter(searchPredicate)
-            .Transform(
-                x =>
-                    new CheckpointFileViewModel(
-                        settingsManager,
-                        modelIndexService,
-                        notificationService,
-                        downloadService,
-                        dialogFactory,
-                        logger,
-                        x
-                    )
-            )
-            .SortAndBind(Models, comparerObservable)
-            .WhenPropertyChanged(p => p.IsSelected)
-            .Throttle(TimeSpan.FromMilliseconds(50))
-            .Subscribe(_ =>
-            {
-                NumItemsSelected = Models.Count(o => o.IsSelected);
-            });
+        AddDisposable(
+            ModelsCache
+                .Connect()
+                .DeferUntilLoaded()
+                .Filter(filterPredicate)
+                .Filter(searchPredicate)
+                .Transform(
+                    x =>
+                        new CheckpointFileViewModel(
+                            settingsManager,
+                            modelIndexService,
+                            notificationService,
+                            downloadService,
+                            dialogFactory,
+                            logger,
+                            x
+                        )
+                )
+                .SortAndBind(Models, comparerObservable)
+                .WhenPropertyChanged(p => p.IsSelected)
+                .Throttle(TimeSpan.FromMilliseconds(50))
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe(_ =>
+                {
+                    NumItemsSelected = Models.Count(o => o.IsSelected);
+                })
+        );
 
         var categoryFilterPredicate = Observable
             .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
@@ -315,32 +368,40 @@ public partial class CheckpointsPageViewModel(
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<CheckpointCategory, bool>)FilterCategories)
             .StartWith(FilterCategories)
+            .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
-        categoriesCache
-            .Connect()
-            .DeferUntilLoaded()
-            .Filter(categoryFilterPredicate)
-            .SortAndBind(
-                Categories,
-                SortExpressionComparer<CheckpointCategory>
-                    .Descending(x => x.Name == "All Models")
-                    .ThenByAscending(x => x.Name)
-            )
-            .Subscribe();
-
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.IsImportAsConnectedEnabled,
-            s => s.IsImportAsConnected,
-            true
+        AddDisposable(
+            categoriesCache
+                .Connect()
+                .DeferUntilLoaded()
+                .Filter(categoryFilterPredicate)
+                .SortAndBind(
+                    Categories,
+                    SortExpressionComparer<CheckpointCategory>
+                        .Descending(x => x.Name == "All Models")
+                        .ThenByAscending(x => x.Name)
+                )
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe()
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.ResizeFactor,
-            s => s.CheckpointsPageResizeFactor,
-            true
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.IsImportAsConnectedEnabled,
+                s => s.IsImportAsConnected,
+                true
+            )
+        );
+
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.ResizeFactor,
+                s => s.CheckpointsPageResizeFactor,
+                true
+            )
         );
 
         Refresh().SafeFireAndForget();
@@ -354,53 +415,67 @@ public partial class CheckpointsPageViewModel(
             );
         };
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.SortConnectedModelsFirst,
-            settings => settings.SortConnectedModelsFirst,
-            true
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.SortConnectedModelsFirst,
+                settings => settings.SortConnectedModelsFirst,
+                true
+            )
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.SelectedSortOption,
-            settings => settings.CheckpointSortMode,
-            true
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.SelectedSortOption,
+                settings => settings.CheckpointSortMode,
+                true
+            )
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.SelectedSortDirection,
-            settings => settings.CheckpointSortDirection,
-            true
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.SelectedSortDirection,
+                settings => settings.CheckpointSortDirection,
+                true
+            )
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.ShowModelsInSubfolders,
-            settings => settings.ShowModelsInSubfolders,
-            true
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.ShowModelsInSubfolders,
+                settings => settings.ShowModelsInSubfolders,
+                true
+            )
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.DragMovesAllSelected,
-            settings => settings.DragMovesAllSelected,
-            true
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.DragMovesAllSelected,
+                settings => settings.DragMovesAllSelected,
+                true
+            )
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.HideEmptyRootCategories,
-            settings => settings.HideEmptyRootCategories,
-            true
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.HideEmptyRootCategories,
+                settings => settings.HideEmptyRootCategories,
+                true
+            )
         );
 
-        settingsManager.RelayPropertyFor(
-            this,
-            vm => vm.ShowNsfwImages,
-            settings => settings.ShowNsfwInCheckpointsPage,
-            true
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.ShowNsfwImages,
+                settings => settings.ShowNsfwInCheckpointsPage,
+                true
+            )
         );
 
         // make sure a sort happens
@@ -424,9 +499,7 @@ public partial class CheckpointsPageViewModel(
     {
         var selected = Models.Where(x => x.IsSelected).ToList();
         foreach (var model in selected)
-        {
             model.IsSelected = false;
-        }
 
         NumItemsSelected = 0;
     }
@@ -439,9 +512,7 @@ public partial class CheckpointsPageViewModel(
             || Models.Where(o => o.IsSelected).Select(vm => vm.CheckpointFile).ToList()
                 is not { Count: > 0 } selectedModelFiles
         )
-        {
             return;
-        }
 
         var pathsToDelete = selectedModelFiles
             .SelectMany(x => x.GetDeleteFullPaths(settingsManager.ModelsDirectory))
@@ -451,9 +522,7 @@ public partial class CheckpointsPageViewModel(
         confirmDeleteVm.PathsToDelete = pathsToDelete;
 
         if (await confirmDeleteVm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
-        {
             return;
-        }
 
         try
         {
@@ -514,17 +583,11 @@ public partial class CheckpointsPageViewModel(
     {
         // Select item if we're in "select mode"
         if (NumItemsSelected > 0)
-        {
             item.IsSelected = !item.IsSelected;
-        }
         else if (item.CheckpointFile.HasConnectedModel)
-        {
             return ShowVersionDialog(item);
-        }
         else
-        {
             item.IsSelected = !item.IsSelected;
-        }
 
         return Task.CompletedTask;
     }
@@ -532,7 +595,7 @@ public partial class CheckpointsPageViewModel(
     [RelayCommand]
     private async Task ShowVersionDialog(CheckpointFileViewModel item)
     {
-        if (!item.CheckpointFile.HasCivitMetadata)
+        if (item.CheckpointFile is { HasCivitMetadata: false, HasOpenModelDbMetadata: false })
         {
             notificationService.Show(
                 "Cannot show version dialog",
@@ -542,6 +605,14 @@ public partial class CheckpointsPageViewModel(
             return;
         }
 
+        if (item.CheckpointFile.HasCivitMetadata)
+            await ShowCivitVersionDialog(item);
+        else if (item.CheckpointFile.HasOpenModelDbMetadata)
+            await ShowOpenModelDbDialog(item);
+    }
+
+    private async Task ShowCivitVersionDialog(CheckpointFileViewModel item)
+    {
         var model = item.CheckpointFile.LatestModelInfo;
         if (model is null)
         {
@@ -576,15 +647,15 @@ public partial class CheckpointsPageViewModel(
             IsFooterVisible = false,
             CloseOnClickOutside = true,
             MaxDialogWidth = 750,
-            MaxDialogHeight = 950,
+            MaxDialogHeight = 1000
         };
 
-        var prunedDescription = Utilities.RemoveHtml(model.Description);
+        var htmlDescription = $"""<html><body class="markdown-body">{model.Description}</body></html>""";
 
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
         viewModel.Dialog = dialog;
         viewModel.Title = model.Name;
-        viewModel.Description = prunedDescription;
+        viewModel.Description = htmlDescription;
         viewModel.CivitModel = model;
         viewModel.Versions = versions
             .Select(version => new ModelVersionViewModel(modelIndexService, version))
@@ -625,18 +696,43 @@ public partial class CheckpointsPageViewModel(
         DelayedClearViewModelProgress(item, TimeSpan.FromMilliseconds(1000));
     }
 
+    private async Task ShowOpenModelDbDialog(CheckpointFileViewModel item)
+    {
+        if (!item.CheckpointFile.HasOpenModelDbMetadata)
+            return;
+
+        await openModelDbManager.EnsureMetadataLoadedAsync();
+
+        var response = await openModelDbManager.ExecuteAsync(
+            api => api.GetModels(),
+            options => options.WithPriority(Priority.UserInitiated)
+        );
+
+        var model = response
+            .GetKeyedModels()
+            .FirstOrDefault(x => x.Id == item.CheckpointFile.ConnectedModelInfo.ModelName);
+
+        if (model == null)
+        {
+            notificationService.Show("Model not found", "Could not find model info", NotificationType.Error);
+            return;
+        }
+
+        var vm = dialogFactory.Get<OpenModelDbModelDetailsViewModel>();
+        vm.Model = model;
+
+        var dialog = vm.GetDialog();
+        dialog.MaxDialogHeight = 800;
+        await dialog.ShowAsync();
+    }
+
     [RelayCommand]
     private void ClearOrSelectAllBaseModels()
     {
         if (SelectedBaseModels.Count == BaseModelOptions.Count)
-        {
-            SelectedBaseModels.Clear();
-        }
+            BaseModelOptions.ForEach(x => x.IsSelected = false);
         else
-        {
-            SelectedBaseModels.Clear();
-            SelectedBaseModels.AddRange(BaseModelOptions);
-        }
+            BaseModelOptions.ForEach(x => x.IsSelected = true);
     }
 
     [RelayCommand]
@@ -681,10 +777,12 @@ public partial class CheckpointsPageViewModel(
     }
 
     [RelayCommand]
-    private Task OpenFolderFromTreeview(object? treeViewItem) =>
-        treeViewItem is CheckpointCategory category && !string.IsNullOrWhiteSpace(category.Path)
+    private Task OpenFolderFromTreeview(object? treeViewItem)
+    {
+        return treeViewItem is CheckpointCategory category && !string.IsNullOrWhiteSpace(category.Path)
             ? ProcessRunner.OpenFolderBrowser(category.Path)
             : Task.CompletedTask;
+    }
 
     [RelayCommand]
     private async Task DeleteFolderAsync(object? treeViewItem)
@@ -806,19 +904,13 @@ public partial class CheckpointsPageViewModel(
 
             // Move files
             if (File.Exists(sourcePath))
-            {
                 await FileTransfers.MoveFileAsync(sourcePath, destinationFilePath);
-            }
 
             if (File.Exists(sourceCmInfoPath))
-            {
                 await FileTransfers.MoveFileAsync(sourceCmInfoPath, destinationCmInfoPath);
-            }
 
             if (File.Exists(sourcePreviewPath))
-            {
                 await FileTransfers.MoveFileAsync(sourcePreviewPath, destinationPreviewPath);
-            }
 
             notificationService.Show(
                 "Model moved successfully",
@@ -872,7 +964,6 @@ public partial class CheckpointsPageViewModel(
             .ToList();
 
         foreach (var checkpointCategory in modelCategories.SelectMany(c => c.Flatten()))
-        {
             checkpointCategory.Count = Directory
                 .EnumerateFileSystemEntries(
                     checkpointCategory.Path,
@@ -880,13 +971,12 @@ public partial class CheckpointsPageViewModel(
                     EnumerationOptionConstants.AllDirectories
                 )
                 .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(x)));
-        }
 
         var rootCategory = new CheckpointCategory
         {
             Path = settingsManager.ModelsDirectory,
             Name = "All Models",
-            Count = modelIndexService.ModelIndex.Values.SelectMany(x => x).Count(),
+            Count = modelIndexService.ModelIndex.Values.SelectMany(x => x).Count()
         };
 
         categoriesCache.Edit(updater =>
@@ -908,9 +998,7 @@ public partial class CheckpointsPageViewModel(
                 .SelectMany(x => x.Flatten())
                 .FirstOrDefault(x => x.Path == dirPath.FullPath);
             if (category != null)
-            {
                 category.IsExpanded = true;
-            }
 
             dirPath = dirPath.Parent;
         }
@@ -946,13 +1034,11 @@ public partial class CheckpointsPageViewModel(
                 Path = dir,
                 Count = new DirectoryInfo(dir)
                     .EnumerateFileSystemInfos("*", EnumerationOptionConstants.AllDirectories)
-                    .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(x.Extension)),
+                    .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(x.Extension))
             };
 
             if (Directory.GetDirectories(dir, "*", EnumerationOptionConstants.TopLevelOnly).Length > 0)
-            {
                 category.SubDirectories = GetSubfolders(dir);
-            }
 
             subfolders.Add(category);
         }
@@ -963,11 +1049,9 @@ public partial class CheckpointsPageViewModel(
     private string GetConnectedModelInfoFilePath(string filePath)
     {
         if (string.IsNullOrEmpty(filePath))
-        {
             throw new InvalidOperationException(
                 "Cannot get connected model info file path when filePath is empty"
             );
-        }
 
         var modelNameNoExt = Path.GetFileNameWithoutExtension((string?)filePath);
         var modelDir = Path.GetDirectoryName((string?)filePath) ?? "";
@@ -997,11 +1081,10 @@ public partial class CheckpointsPageViewModel(
     private bool FilterModels(LocalModelFile file)
     {
         if (SelectedCategory?.Path is null || SelectedCategory?.Path == settingsManager.ModelsDirectory)
-        {
             return file.HasConnectedModel
-                ? SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
-                : SelectedBaseModels.Contains("Other");
-        }
+                ? SelectedBaseModels.Count == 0
+                    || SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
+                : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other");
 
         var folderPath = Path.GetDirectoryName(file.RelativePath);
         var categoryRelativePath = SelectedCategory
@@ -1010,25 +1093,35 @@ public partial class CheckpointsPageViewModel(
             .TrimStart(Path.DirectorySeparatorChar);
 
         if (categoryRelativePath == null || folderPath == null)
-        {
             return false;
-        }
 
         if (
             (
                 file.HasConnectedModel
-                    ? SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
-                    : SelectedBaseModels.Contains("Other")
+                    ? SelectedBaseModels.Count == 0
+                        || SelectedBaseModels.Contains(file.ConnectedModelInfo?.BaseModel ?? "Other")
+                    : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other")
             )
             is false
         )
-        {
             return false;
-        }
 
-        return ShowModelsInSubfolders
-            ? folderPath.StartsWith(categoryRelativePath)
-            : categoryRelativePath.Equals(folderPath);
+        // If not showing nested models, just check if the file is directly in this folder
+        if (!ShowModelsInSubfolders)
+            return categoryRelativePath.Equals(folderPath, StringComparison.OrdinalIgnoreCase);
+
+        // Split paths into segments
+        var categorySegments = categoryRelativePath.Split(Path.DirectorySeparatorChar);
+        var folderSegments = folderPath.Split(Path.DirectorySeparatorChar);
+
+        // Check if folder is a subfolder of category by comparing path segments
+        if (folderSegments.Length < categorySegments.Length)
+            return false;
+
+        // Compare each segment of the category path with the folder path
+        return !categorySegments
+            .Where((t, i) => !t.Equals(folderSegments[i], StringComparison.OrdinalIgnoreCase))
+            .Any();
     }
 
     private bool FilterCategories(CheckpointCategory category)

@@ -2,8 +2,10 @@
     x:Class="StabilityMatrix.Avalonia.App"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     xmlns:local="using:StabilityMatrix.Avalonia"
+    xmlns:styles="clr-namespace:StabilityMatrix.Avalonia.Styles"
     xmlns:styling="clr-namespace:FluentAvalonia.Styling;assembly=FluentAvalonia"
     Name="Stability Matrix"
     RequestedThemeVariant="Dark">
@@ -23,9 +25,7 @@
                 <ResourceInclude Source="Styles/ContextMenuStyles.axaml" />
                 <ResourceInclude Source="Controls/EditorFlyouts.axaml" />
                 <ResourceInclude Source="Controls/Scroll/BetterScrollViewer.axaml" />
-                <ResourceInclude Source="Styles/ControlThemes/HyperlinkIconButtonStyles.axaml" />
-                <ResourceInclude Source="Styles/ControlThemes/ListBoxStyles.axaml" />
-                <ResourceInclude Source="Styles/ControlThemes/BetterComboBoxStyles.axaml" />
+                <ResourceInclude Source="Styles/ControlThemes/_index.axaml" />
                 <ResourceInclude Source="Styles/ListBoxStyles.axaml" />
                 <ResourceInclude Source="Styles/FAComboBoxStyles.axaml" />
                 <ResourceInclude Source="Controls/Inference/ImageFolderCard.axaml" />
@@ -35,6 +35,8 @@
             <ControlRecycling x:Key="ControlRecyclingKey" />
             <x:Double x:Key="ContentDialogMaxWidth">700</x:Double>
 
+            <SolidColorBrush x:Key="CoreSplashScreenBackground" Color="#141414" />
+            <SolidColorBrush x:Key="CoreSplashScreenForeground" Color="#9FBDC3" />
             <SolidColorBrush x:Key="ToolTipBackground" Color="#1E1F22" />
             <SolidColorBrush x:Key="ToolTipForeground" Color="#9FBDC3" />
             <FontFamily x:Key="NotoSansJP">avares://StabilityMatrix.Avalonia/Assets/Fonts/NotoSansJP#Noto Sans JP</FontFamily>
@@ -42,6 +44,7 @@
     </Application.Resources>
 
     <Application.Styles>
+        <styles:SemiStyles />
         <styling:FluentAvaloniaTheme
             PreferUserAccentColor="True"
             TextVerticalAlignmentOverrideBehavior="Disabled"
@@ -89,7 +92,10 @@
         <StyleInclude Source="Controls/Inference/ExtraNetworkCard.axaml" />
         <StyleInclude Source="Controls/Inference/LayerDiffuseCard.axaml" />
         <StyleInclude Source="Controls/Inference/UnetModelCard.axaml" />
+        <StyleInclude Source="Controls/Inference/DiscreteModelSamplingCard.axaml" />
+        <StyleInclude Source="Controls/Inference/RescaleCfgCard.axaml" />
         <StyleInclude Source="Controls/Painting/PaintCanvas.axaml" />
+        <StyleInclude Source="Controls/MarkdownViewer.axaml" />
         <labs:ControlThemes />
 
         <Style Selector="DockControl">

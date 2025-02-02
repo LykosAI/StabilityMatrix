@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Linq;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DynamicData.Binding;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -25,7 +20,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ModelCard))]
 [ManagedService]
-[Transient]
+[RegisterTransient<ModelCardViewModel>]
 public partial class ModelCardViewModel(
     IInferenceClientManager clientManager,
     ServiceManager<ViewModelBase> vmFactory
@@ -39,6 +34,9 @@ public partial class ModelCardViewModel(
 
     [ObservableProperty]
     private bool isRefinerSelectionEnabled;
+
+    [ObservableProperty]
+    private bool showRefinerOption = true;
 
     [ObservableProperty]
     private HybridModelFile? selectedRefiner = HybridModelFile.None;
@@ -77,12 +75,23 @@ public partial class ModelCardViewModel(
     private HybridModelFile? selectedClip2;
 
     [ObservableProperty]
+    private HybridModelFile? selectedClip3;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSd3Clip))]
+    private string? selectedClipType;
+
+    [ObservableProperty]
     private string? selectedDType;
 
     [ObservableProperty]
     private bool enableModelLoaderSelection = true;
 
+    [ObservableProperty]
+    private bool isClipModelSelectionEnabled;
+
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e5m2"];
+    public List<string> ClipTypes { get; set; } = ["flux", "sd3"];
 
     public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
         new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
@@ -93,6 +102,24 @@ public partial class ModelCardViewModel(
 
     public bool IsStandaloneModelLoader => SelectedModelLoader is ModelLoader.Unet or ModelLoader.Gguf;
     public bool ShowPrecisionSelection => SelectedModelLoader is ModelLoader.Unet;
+    public bool IsSd3Clip => SelectedClipType == "sd3";
+
+    protected override void OnInitialLoaded()
+    {
+        base.OnInitialLoaded();
+        ExtraNetworksStackCardViewModel.CardAdded += ExtraNetworksStackCardViewModelOnCardAdded;
+    }
+
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+        ExtraNetworksStackCardViewModel.CardAdded -= ExtraNetworksStackCardViewModelOnCardAdded;
+    }
+
+    private void ExtraNetworksStackCardViewModelOnCardAdded(object? sender, LoadableViewModelBase e)
+    {
+        OnSelectedModelChanged(SelectedModel);
+    }
 
     [RelayCommand]
     private static async Task OnConfigClickAsync()
@@ -217,7 +244,11 @@ public partial class ModelCardViewModel(
                 IsModelLoaderSelectionEnabled = IsModelLoaderSelectionEnabled,
                 SelectedClip1Name = SelectedClip1?.RelativePath,
                 SelectedClip2Name = SelectedClip2?.RelativePath,
+                SelectedClip3Name = SelectedClip3?.RelativePath,
+                SelectedClipType = SelectedClipType,
+                IsClipModelSelectionEnabled = IsClipModelSelectionEnabled,
                 ModelLoader = SelectedModelLoader,
+                ShowRefinerOption = ShowRefinerOption,
                 ExtraNetworks = ExtraNetworksStackCardViewModel.SaveStateToJsonObject()
             }
         );
@@ -259,13 +290,21 @@ public partial class ModelCardViewModel(
             ? HybridModelFile.None
             : ClientManager.ClipModels.FirstOrDefault(x => x.RelativePath == model.SelectedClip2Name);
 
+        SelectedClip3 = model.SelectedClip3Name is null
+            ? HybridModelFile.None
+            : ClientManager.ClipModels.FirstOrDefault(x => x.RelativePath == model.SelectedClip3Name);
+
+        SelectedClipType = model.SelectedClipType;
+
         ClipSkip = model.ClipSkip;
 
         IsVaeSelectionEnabled = model.IsVaeSelectionEnabled;
         IsRefinerSelectionEnabled = model.IsRefinerSelectionEnabled;
+        ShowRefinerOption = model.ShowRefinerOption;
         IsClipSkipEnabled = model.IsClipSkipEnabled;
         IsExtraNetworksEnabled = model.IsExtraNetworksEnabled;
         IsModelLoaderSelectionEnabled = model.IsModelLoaderSelectionEnabled;
+        IsClipModelSelectionEnabled = model.IsClipModelSelectionEnabled;
 
         if (model.ExtraNetworks is not null)
         {
@@ -333,9 +372,30 @@ public partial class ModelCardViewModel(
 
     partial void OnSelectedModelLoaderChanged(ModelLoader value)
     {
-        if (value is ModelLoader.Unet or ModelLoader.Gguf && IsVaeSelectionEnabled is false)
+        if (value is ModelLoader.Unet or ModelLoader.Gguf)
         {
-            IsVaeSelectionEnabled = true;
+            if (!IsVaeSelectionEnabled)
+                IsVaeSelectionEnabled = true;
+
+            if (!IsClipModelSelectionEnabled)
+                IsClipModelSelectionEnabled = true;
+        }
+    }
+
+    partial void OnSelectedModelChanged(HybridModelFile? value)
+    {
+        if (!IsExtraNetworksEnabled)
+            return;
+
+        foreach (var card in ExtraNetworksStackCardViewModel.Cards)
+        {
+            if (card is not LoraModule loraModule)
+                continue;
+
+            if (loraModule.GetCard<ExtraNetworkCardViewModel>() is not { } cardViewModel)
+                continue;
+
+            cardViewModel.SelectedBaseModel = value;
         }
     }
 
@@ -377,17 +437,26 @@ public partial class ModelCardViewModel(
         );
         e.Builder.Connections.Base.VAE = vaeLoader.Output;
 
-        // DualCLIPLoader
-        var clipLoader = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.DualCLIPLoader
-            {
-                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoader)),
-                ClipName1 = SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
-                ClipName2 = SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
-                Type = "flux"
-            }
-        );
-        e.Builder.Connections.Base.Clip = clipLoader.Output;
+        if (SelectedClipType == "flux")
+        {
+            // DualCLIPLoader
+            var clipLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.DualCLIPLoader
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoader)),
+                    ClipName1 =
+                        SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
+                    ClipName2 =
+                        SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
+                    Type = SelectedClipType ?? throw new ValidationException("No Clip Type Selected")
+                }
+            );
+            e.Builder.Connections.Base.Clip = clipLoader.Output;
+        }
+        else
+        {
+            SetupClipLoaders(e);
+        }
     }
 
     private void SetupDefaultModelLoader(ModuleApplyStepEventArgs e)
@@ -410,8 +479,16 @@ public partial class ModelCardViewModel(
         var baseLoader = e.Nodes.AddTypedNode(loaderNode);
 
         e.Builder.Connections.Base.Model = baseLoader.Output1;
-        e.Builder.Connections.Base.Clip = baseLoader.Output2;
         e.Builder.Connections.Base.VAE = baseLoader.Output3;
+
+        if (IsClipModelSelectionEnabled)
+        {
+            SetupClipLoaders(e);
+        }
+        else
+        {
+            e.Builder.Connections.Base.Clip = baseLoader.Output2;
+        }
 
         // Load refiner if enabled
         if (IsRefinerSelectionEnabled && SelectedRefiner is { IsNone: false })
@@ -446,6 +523,58 @@ public partial class ModelCardViewModel(
         }
     }
 
+    private void SetupClipLoaders(ModuleApplyStepEventArgs e)
+    {
+        if (
+            SelectedClip3 is { IsNone: false }
+            && SelectedClip2 is { IsNone: false }
+            && SelectedClip1 is { IsNone: false }
+        )
+        {
+            var clipLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.TripleCLIPLoader
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.TripleCLIPLoader)),
+                    ClipName1 =
+                        SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
+                    ClipName2 =
+                        SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
+                    ClipName3 =
+                        SelectedClip3?.RelativePath ?? throw new ValidationException("No Clip3 Selected")
+                }
+            );
+            e.Builder.Connections.Base.Clip = clipLoader.Output;
+        }
+        else if (SelectedClip2 is { IsNone: false } && SelectedClip1 is { IsNone: false })
+        {
+            var clipLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.DualCLIPLoader
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.DualCLIPLoader)),
+                    ClipName1 =
+                        SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
+                    ClipName2 =
+                        SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
+                    Type = SelectedClipType ?? throw new ValidationException("No Clip Type Selected")
+                }
+            );
+            e.Builder.Connections.Base.Clip = clipLoader.Output;
+        }
+        else if (SelectedClip1 is { IsNone: false })
+        {
+            var clipLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.CLIPLoader()
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoader)),
+                    ClipName =
+                        SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
+                    Type = SelectedClipType ?? throw new ValidationException("No Clip Type Selected")
+                }
+            );
+            e.Builder.Connections.Base.Clip = clipLoader.Output;
+        }
+    }
+
     internal class ModelCardModel
     {
         public string? SelectedModelName { get; init; }
@@ -453,6 +582,8 @@ public partial class ModelCardViewModel(
         public string? SelectedVaeName { get; init; }
         public string? SelectedClip1Name { get; init; }
         public string? SelectedClip2Name { get; init; }
+        public string? SelectedClip3Name { get; init; }
+        public string? SelectedClipType { get; init; }
         public ModelLoader ModelLoader { get; init; }
         public int ClipSkip { get; init; } = 1;
 
@@ -461,6 +592,8 @@ public partial class ModelCardViewModel(
         public bool IsClipSkipEnabled { get; init; }
         public bool IsExtraNetworksEnabled { get; init; }
         public bool IsModelLoaderSelectionEnabled { get; init; }
+        public bool IsClipModelSelectionEnabled { get; init; }
+        public bool ShowRefinerOption { get; init; }
 
         public JsonObject? ExtraNetworks { get; init; }
     }

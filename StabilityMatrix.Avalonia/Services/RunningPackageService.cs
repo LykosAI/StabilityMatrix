@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections.Immutable;
 using Avalonia.Controls.Notifications;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using KeyedSemaphores;
 using Microsoft.Extensions.Logging;
 using Nito.Disposables.Internals;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -23,7 +21,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.Services;
 
-[Singleton]
+[RegisterSingleton<RunningPackageService>]
 public partial class RunningPackageService(
     ILogger<RunningPackageService> logger,
     IPackageFactory packageFactory,
@@ -77,6 +75,111 @@ public partial class RunningPackageService(
                 )
             );
             return null;
+        }
+
+        // Show warning if critical vulnerabilities are found
+        if (basePackage.HasCriticalVulnerabilities)
+        {
+            var vulns = basePackage
+                .KnownVulnerabilities.Where(v => v.Severity == VulnerabilitySeverity.Critical)
+                .Select(
+                    v =>
+                        $"**{v.Id}**: {v.Title}\n  - Severity: {v.Severity}\n  - Description: {v.Description}"
+                )
+                .ToList();
+
+            var message =
+                $"# ⚠️ Critical Security Vulnerabilities\n\nThis package has critical security vulnerabilities that may put your system at risk:\n\n{string.Join("\n\n", vulns)}";
+            message +=
+                "\n\nFor more information, please visit the [GitHub Security Advisory page](https://github.com/LykosAI/StabilityMatrix/security/advisories).";
+
+            var dialog = DialogHelper.CreateMarkdownDialog(message, "Security Warning");
+
+            dialog.IsPrimaryButtonEnabled = false;
+            dialog.PrimaryButtonText = "Continue Anyway (3)";
+            dialog.CloseButtonText = Resources.Action_Cancel;
+            dialog.DefaultButton = ContentDialogButton.Close;
+
+            // Start a timer to enable the button after 3 seconds
+            var countdown = 3;
+            var timer = new System.Timers.Timer(1000);
+            timer.Elapsed += (_, _) =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    countdown--;
+                    if (countdown <= 0)
+                    {
+                        dialog.IsPrimaryButtonEnabled = true;
+                        dialog.PrimaryButtonText = "Continue Anyway";
+                        timer.Stop();
+                        timer.Dispose();
+                    }
+                    else
+                    {
+                        dialog.PrimaryButtonText = $"Continue Anyway ({countdown})";
+                    }
+                });
+            };
+            timer.Start();
+
+            var result = await dialog.ShowAsync();
+            if (result != ContentDialogResult.Primary)
+            {
+                return null;
+            }
+        }
+        // Show warning if any vulnerabilities are found
+        else if (basePackage.HasVulnerabilities)
+        {
+            var vulns = basePackage
+                .KnownVulnerabilities.Select(
+                    v =>
+                        $"**{v.Id}**: {v.Title}\n  - Severity: {v.Severity}\n  - Description: {v.Description}"
+                )
+                .ToList();
+
+            var message =
+                $"# ⚠️ Security Notice\n\nThis package has known vulnerabilities:\n\n{string.Join("\n\n", vulns)}";
+
+            message +=
+                "\n\nFor more information, please visit the [GitHub Security Advisory page](https://github.com/LykosAI/StabilityMatrix/security/advisories).";
+
+            var dialog = DialogHelper.CreateMarkdownDialog(message, "Security Notice");
+
+            dialog.IsPrimaryButtonEnabled = false;
+            dialog.PrimaryButtonText = "Continue Anyway (3)";
+            dialog.CloseButtonText = Resources.Action_Cancel;
+            dialog.DefaultButton = ContentDialogButton.Close;
+
+            // Start a timer to enable the button after 3 seconds
+            var countdown = 3;
+            var timer = new System.Timers.Timer(1000);
+            timer.Elapsed += (_, _) =>
+            {
+                Dispatcher.UIThread.Post(() =>
+                {
+                    countdown--;
+                    if (countdown <= 0)
+                    {
+                        dialog.IsPrimaryButtonEnabled = true;
+                        dialog.PrimaryButtonText = "Continue Anyway";
+                        timer.Stop();
+                        timer.Dispose();
+                    }
+                    else
+                    {
+                        dialog.PrimaryButtonText = $"Continue Anyway ({countdown})";
+                    }
+                });
+            };
+            timer.Start();
+
+            var result = await dialog.ShowAsync();
+            if (result != ContentDialogResult.Primary)
+            {
+                return null;
+            }
         }
 
         // If this is the first launch (LaunchArgs is null),

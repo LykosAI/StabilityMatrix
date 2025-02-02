@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Text.RegularExpressions;
 using FreneticUtilities.FreneticDataSyntax;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -14,7 +14,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, StableSwarm>(Duplicate = DuplicateStrategy.Append)]
 public class StableSwarm(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -257,12 +257,23 @@ public class StableSwarm(
         CancellationToken cancellationToken = default
     )
     {
+        var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
         var aspEnvVars = new Dictionary<string, string>
         {
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
-            ["ASPNETCORE_URLS"] = "http://*:7801"
+            ["ASPNETCORE_URLS"] = "http://*:7801",
+            ["GIT"] = portableGitBin.JoinFile("git.exe")
         };
         aspEnvVars.Update(settingsManager.Settings.EnvironmentVariables);
+
+        if (aspEnvVars.TryGetValue("PATH", out var pathValue))
+        {
+            aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin, pathValue);
+        }
+        else
+        {
+            aspEnvVars["PATH"] = Compat.GetEnvPathWithExtensions(portableGitBin);
+        }
 
         void HandleConsoleOutput(ProcessOutput s)
         {

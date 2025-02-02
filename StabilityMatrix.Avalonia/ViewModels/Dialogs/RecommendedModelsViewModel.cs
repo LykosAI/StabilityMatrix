@@ -1,12 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Refit;
 using StabilityMatrix.Avalonia.Services;
@@ -22,7 +25,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-[Transient]
+[RegisterTransient<RecommendedModelsViewModel>]
 [ManagedService]
 public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
 {
@@ -73,6 +76,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
             .DeferUntilLoaded()
             .Filter(f => f.ModelVersion.BaseModel == "SD 1.5")
             .Bind(Sd15Models)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         CivitModels
@@ -80,6 +84,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
             .DeferUntilLoaded()
             .Filter(f => f.ModelVersion.BaseModel == "SDXL 1.0" || f.ModelVersion.BaseModel == "Pony")
             .Bind(SdxlModels)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
     }
 
@@ -110,7 +115,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
                 )
             );
         }
-        catch (ApiException e)
+        catch (Exception e)
         {
             // hide dialog and show error msg
             logger.LogError(e, "Failed to get recommended models");

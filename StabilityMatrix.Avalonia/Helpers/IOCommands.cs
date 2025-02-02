@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using System;
+using CommunityToolkit.Mvvm.Input;
 using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.Helpers;
@@ -15,6 +16,18 @@ public static class IOCommands
                 ProcessRunner.OpenUrl(url);
             },
             url => !string.IsNullOrWhiteSpace(url)
+        );
+
+    public static RelayCommand<Uri?> OpenUriCommand { get; } =
+        new(
+            url =>
+            {
+                if (url is null)
+                    return;
+
+                ProcessRunner.OpenUrl(url);
+            },
+            url => url is not null
         );
 
     public static AsyncRelayCommand<string?> OpenFileBrowserCommand { get; } =

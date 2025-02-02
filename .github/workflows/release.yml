@@ -76,10 +76,13 @@ jobs:
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
-      - name: Set up .NET 8
+      - name: Set up .NET 9
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          # Net 8 needed for PupNet
+          dotnet-version: | 
+            8.0.x
+            9.0.x
 
       - name: Install PupNet
         run: |
@@ -144,10 +147,10 @@ jobs:
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $env:GITHUB_ENV
 
-      - name: Set up .NET 8
+      - name: Set up .NET 9
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
       - name: Install dependencies
         run: dotnet restore
@@ -203,10 +206,10 @@ jobs:
           echo "Using version ${{ github.event.inputs.version }}"
           echo "RELEASE_VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
 
-      - name: Set up .NET 8
+      - name: Set up .NET 9
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
       - name: Install dependencies
         run: dotnet restore -p:PublishReadyToRun=true
@@ -394,7 +397,7 @@ jobs:
   
   publish-auto-update-github:
     name: Publish Auto-Update Release (GitHub)
-    needs: [ release-linux, release-windows, release-macos ]
+    needs: [ release-linux, release-windows, release-macos, publish-release ]
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.auto-update-release == 'true' && github.event.inputs.auto-update-release-mode == 'github url' }}
     runs-on: ubuntu-latest
     steps:

@@ -173,6 +173,7 @@
   </data>
   <data name="Label_Deemphasis" xml:space="preserve">
     <value>减权</value>
+    <comment>I am not sure about this, need to know what background are we talking about</comment>
   </data>
   <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
     <value>嵌入 / 文本倒置</value>
@@ -191,6 +192,7 @@
   </data>
   <data name="Label_StepsBase" xml:space="preserve">
     <value>迭代步数 - Base</value>
+    <comment>base and refiner are words that closely relates to the model SDXL (base model and refiner model appears in the checkpoint&apos;s file）so I think it will be ok the keep it the original text. Or, the translation for base can be &quot;基础模型&quot;(which means base model to be more precise)，and the refiner will be &quot;精炼模型&quot; (which means refiner model to be more precise)</comment>
   </data>
   <data name="Label_StepsRefiner" xml:space="preserve">
     <value>迭代步数 - Refiner</value>
@@ -209,6 +211,7 @@
   </data>
   <data name="Label_Refiner" xml:space="preserve">
     <value>精炼</value>
+    <comment>need to know where does this appear in the ai</comment>
   </data>
   <data name="Label_VAE" xml:space="preserve">
     <value>VAE</value>
@@ -235,7 +238,7 @@
     <value>成为赞助商</value>
   </data>
   <data name="Label_JoinDiscord" xml:space="preserve">
-    <value>加入Discord 服务器</value>
+    <value>加入 Discord 服务器</value>
   </data>
   <data name="Label_Downloads" xml:space="preserve">
     <value>下载</value>
@@ -266,6 +269,7 @@
   </data>
   <data name="Label_Commit" xml:space="preserve">
     <value>提交</value>
+    <comment>are we talking about submit something? if there was the case, then &quot;提交&quot; seems proper</comment>
   </data>
   <data name="Label_SharedModelFolderStrategy" xml:space="preserve">
     <value>共享模型文件夹方案</value>
@@ -283,7 +287,7 @@
     <value>这里将安装模型，LORA，Web UIs，设置等等。</value>
   </data>
   <data name="Label_FatWarning" xml:space="preserve">
-    <value>使用 FAT32或exFAT硬盘时可能会遭遇错误。请选择不同的硬盘，以获得更流畅的体验。</value>
+    <value>使用 FAT32 或 exFAT 硬盘时可能会遭遇错误。请选择不同的硬盘，以获得更流畅的体验。</value>
   </data>
   <data name="Label_PortableMode" xml:space="preserve">
     <value>便携模式</value>
@@ -304,7 +308,7 @@
     <value>模型描述</value>
   </data>
   <data name="Label_NewVersionAvailable" xml:space="preserve">
-    <value>新版Stability Matrix已发布！</value>
+    <value>新版 Stability Matrix 已发布！</value>
   </data>
   <data name="Label_ImportLatest" xml:space="preserve">
     <value>导入最新版本</value>
@@ -331,10 +335,10 @@
     <value>基础模型</value>
   </data>
   <data name="Label_ShowNsfwContent" xml:space="preserve">
-    <value>显示NSFW内容</value>
+    <value>显示 NSFW 内容</value>
   </data>
   <data name="Label_DataProvidedByCivitAi" xml:space="preserve">
-    <value>数据由CivitAI提供</value>
+    <value>数据由 CivitAI 提供</value>
   </data>
   <data name="Label_Page" xml:space="preserve">
     <value>页次</value>
@@ -358,10 +362,10 @@
     <value>删除</value>
   </data>
   <data name="Action_OpenOnCivitAi" xml:space="preserve">
-    <value>在CivitAI上打开</value>
+    <value>在 CivitAI 上打开</value>
   </data>
   <data name="Label_ConnectedModel" xml:space="preserve">
-    <value>已连接CivitAI元数据</value>
+    <value>已连接 CivitAI 元数据</value>
   </data>
   <data name="Label_LocalModel" xml:space="preserve">
     <value>本地模型</value>
@@ -423,7 +427,7 @@
     <value>关闭时删除共享模型目录的符号链接</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
-    <value>如果您在将Stability Matrix移至另一个驱动器时遇到问题，请选择此选项</value>
+    <value>如果您在将 Stability Matrix 移至另一个驱动器时遇到问题，请选择此选项</value>
   </data>
   <data name="Label_ResetCheckpointsCache" xml:space="preserve">
     <value>重置模型缓存</value>
@@ -441,7 +445,7 @@
     <value>环境变量</value>
   </data>
   <data name="Label_EmbeddedPython" xml:space="preserve">
-    <value>嵌入式Python</value>
+    <value>嵌入式 Python</value>
   </data>
   <data name="Action_CheckVersion" xml:space="preserve">
     <value>检查版本</value>
@@ -451,12 +455,13 @@
   </data>
   <data name="Label_DiscordRichPresence" xml:space="preserve">
     <value>Discord Rich Presence</value>
+    <comment>this seems to be a product name in discord and i can not find a good translation for it</comment>
   </data>
   <data name="Label_System" xml:space="preserve">
     <value>系统</value>
   </data>
   <data name="Label_AddToStartMenu" xml:space="preserve">
-    <value>将Stability Matrix添加到开始菜单</value>
+    <value>将 Stability Matrix 添加到开始菜单</value>
   </data>
   <data name="Label_AddToStartMenu_Details" xml:space="preserve">
     <value>使用当前应用程序的位置，如果应用程序移动了，可以再次运行此功能</value>
@@ -475,6 +480,7 @@
   </data>
   <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
     <value>不移动现有数据</value>
+    <comment>Fuzzy</comment>
   </data>
   <data name="Action_SelectDirectory" xml:space="preserve">
     <value>选择目录</value>
@@ -484,6 +490,7 @@
   </data>
   <data name="Label_StabilityMatrix" xml:space="preserve">
     <value>Stability Matrix</value>
+    <comment>I think this is the product, and should not directly translate to Chinese right?</comment>
   </data>
   <data name="Label_LicenseAndOpenSourceNotices" xml:space="preserve">
     <value>许可证和开放源代码声明</value>
@@ -516,13 +523,14 @@
     <value>否</value>
   </data>
   <data name="Action_OpenWebUI" xml:space="preserve">
-    <value>打开Web UI</value>
+    <value>打开 Web UI</value>
   </data>
   <data name="Text_WelcomeToStabilityMatrix" xml:space="preserve">
-    <value>欢迎使用Stability Matrix！</value>
+    <value>欢迎使用 Stability Matrix！</value>
   </data>
   <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
     <value>选择您喜欢的交互界面，然后点击安装开始使用</value>
+    <comment>Fuzzy</comment>
   </data>
   <data name="Label_Installing" xml:space="preserve">
     <value>正在安装</value>
@@ -549,7 +557,7 @@
     <value>在资源管理器中打开</value>
   </data>
   <data name="Action_OpenInFinder" xml:space="preserve">
-    <value>在Finder中打开</value>
+    <value>在 Finder 中打开</value>
   </data>
   <data name="Action_Uninstall" xml:space="preserve">
     <value>卸载</value>
@@ -589,6 +597,7 @@
   </data>
   <data name="Action_OK" xml:space="preserve">
     <value>好</value>
+    <comment>need to know more background</comment>
   </data>
   <data name="Action_Retry" xml:space="preserve">
     <value>重试</value>
@@ -640,7 +649,7 @@
   </data>
   <data name="Label_Branch" xml:space="preserve">
     <value>分支</value>
-      </data>
+  </data>
   <data name="Label_AutoScrollToEnd" xml:space="preserve">
     <value>自动滚动到控制台输出的底部。</value>
   </data>
@@ -728,18 +737,6 @@
   <data name="Label_OneImageSelected" xml:space="preserve">
     <value>已选择 1 张图片</value>
   </data>
-  <data name="Label_Preprocessor" xml:space="preserve">
-    <value>预处理</value>
-  </data>
-  <data name="Label_Strength" xml:space="preserve">
-    <value>强度</value>
-  </data>
-  <data name="Label_ControlWeight" xml:space="preserve">
-    <value>控制权重</value>
-  </data>
-  <data name="Label_ControlSteps" xml:space="preserve">
-    <value>控制步骤</value>
-  </data>
   <data name="Label_PythonPackages" xml:space="preserve">
     <value>Python 包</value>
   </data>
@@ -762,7 +759,7 @@
     <value>降级</value>
   </data>
   <data name="Action_OpenGithub" xml:space="preserve">
-    <value>在GitHub上打开</value>
+    <value>在 GitHub 上打开</value>
   </data>
   <data name="Label_Connected" xml:space="preserve">
     <value>已连接</value>
@@ -794,8 +791,20 @@
   <data name="Label_Accounts" xml:space="preserve">
     <value>账户</value>
   </data>
+  <data name="Label_Preprocessor" xml:space="preserve">
+    <value>预处理</value>
+  </data>
+  <data name="Label_Strength" xml:space="preserve">
+    <value>强度</value>
+  </data>
+  <data name="Label_ControlWeight" xml:space="preserve">
+    <value>控制权重</value>
+  </data>
+  <data name="Label_ControlSteps" xml:space="preserve">
+    <value>控制步骤</value>
+  </data>
   <data name="Label_CivitAiLoginRequired" xml:space="preserve">
-    <value>您必须登录才能下载此检查点。请在设置中输入CivitAI API密钥。</value>
+    <value>您必须登录才能下载此检查点。请在设置中输入 CivitAI API 密钥。</value>
   </data>
   <data name="Label_DownloadFailed" xml:space="preserve">
     <value>下载失败</value>
@@ -825,22 +834,25 @@
     <value>触发词：</value>
   </data>
   <data name="TeachingTip_MoreCheckpointCategories" xml:space="preserve">
-    <value>可以在此启用其他文件夹，如IPAdapters和TextualInversions（嵌入）</value>
+    <value>可以在此启用其他文件夹，如 IPAdapters 和 TextualInversions（嵌入）</value>
   </data>
   <data name="Action_OpenOnHuggingFace" xml:space="preserve">
-    <value>在Hugging Face上打开</value>
+    <value>在 Hugging Face 上打开</value>
   </data>
   <data name="Action_UpdateExistingMetadata" xml:space="preserve">
     <value>更新现有元数据</value>
   </data>
   <data name="Label_General" xml:space="preserve">
-    <value>常规</value><comment>常规设置类别</comment>
+    <value>常规</value>
+    <comment>A general settings category</comment>
   </data>
   <data name="Label_Inference" xml:space="preserve">
-    <value>推理</value><comment>推理功能页面</comment>
+    <value>推理</value>
+    <comment>The Inference feature page</comment>
   </data>
   <data name="Label_Prompt" xml:space="preserve">
-    <value>提示</value><comment>推理生成提示的设置类别</comment>
+    <value>提示</value>
+    <comment>A settings category for Inference generation prompts</comment>
   </data>
   <data name="Label_OutputImageFiles" xml:space="preserve">
     <value>输出图像文件</value>
@@ -855,7 +867,8 @@
     <value>插入补全时用空格替换下划线</value>
   </data>
   <data name="Label_PromptTags" xml:space="preserve">
-    <value>提示标签</value><comment>图像生成提示的标签</comment>
+    <value>提示标签</value>
+    <comment>Tags for image generation prompts</comment>
   </data>
   <data name="Label_PromptTagsImport" xml:space="preserve">
     <value>导入提示标签</value>
@@ -873,10 +886,12 @@
     <value>Hugging Face</value>
   </data>
   <data name="Label_Addons" xml:space="preserve">
-    <value>插件</value><comment>推理采样器插件</comment>
+    <value>插件</value>
+    <comment>Inference Sampler Addons</comment>
   </data>
   <data name="Label_SaveIntermediateImage" xml:space="preserve">
-    <value>保存中间图像</value><comment>推理模块步骤，用于保存中间图像</comment>
+    <value>保存中间图像</value>
+    <comment>Inference module step to save an intermediate image</comment>
   </data>
   <data name="Label_Settings" xml:space="preserve">
     <value>设置</value>
@@ -944,12 +959,6 @@
   <data name="Action_CopyDetails" xml:space="preserve">
     <value>复制详情</value>
   </data>
-  <data name="Label_Notifications" xml:space="preserve">
-    <value>通知</value>
-  </data>
-  <data name="Label_NotificationOption_None" xml:space="preserve">
-    <value>无</value>
-  </data>
   <data name="Action_Download" xml:space="preserve">
     <value>下载</value>
   </data>
@@ -961,6 +970,12 @@
   </data>
   <data name="Label_RecommendedModelsSubText" xml:space="preserve">
     <value>当您的包正在安装时，这里有一些我们推荐的模型，可以帮助您开始。</value>
+  </data>
+  <data name="Label_Notifications" xml:space="preserve">
+    <value>通知</value>
+  </data>
+  <data name="Label_NotificationOption_None" xml:space="preserve">
+    <value>无</value>
   </data>
   <data name="Label_ComfyRequiredTitle" xml:space="preserve">
     <value>需要 ComfyUI</value>
@@ -974,32 +989,8 @@
   <data name="Label_SelectDownloadLocation" xml:space="preserve">
     <value>选择下载位置：</value>
   </data>
-  <data name="Label_Workflows" xml:space="preserve">
-    <value>工作流</value>
-  </data>
-  <data name="Label_InfiniteScrolling" xml:space="preserve">
-    <value>无限滚动</value>
-  </data>
-  <data name="Label_WorkflowBrowser" xml:space="preserve">
-    <value>工作流浏览器</value>
-  </data>
   <data name="Label_Config" xml:space="preserve">
     <value>配置</value>
-  </data>
-  <data name="Action_OpenOnOpenArt" xml:space="preserve">
-    <value>在OpenArt上打开</value>
-  </data>
-  <data name="Label_NodeDetails" xml:space="preserve">
-    <value>节点详情</value>
-  </data>
-  <data name="Label_WorkflowDescription" xml:space="preserve">
-    <value>工作流描述</value>
-  </data>
-  <data name="Label_OpenArtBrowser" xml:space="preserve">
-    <value>OpenArt浏览器</value>
-  </data>
-  <data name="Action_PreviewPreprocessor" xml:space="preserve">
-    <value>预览预处理</value>
   </data>
   <data name="Label_ToggleAutoScrolling" xml:space="preserve">
     <value>自动滚动到底部</value>
@@ -1032,7 +1023,7 @@
     <value>一切看起来都很好！</value>
   </data>
   <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
-    <value>我们推荐具有CUDA支持的GPU以获得最佳体验。您可以继续不使用GPU，但某些包可能无法工作，推理速度可能会较慢。</value>
+    <value>我们推荐具有 CUDA 支持的 GPU 以获得最佳体验。您可以继续不使用 GPU，但某些包可能无法工作，推理速度可能会较慢。</value>
   </data>
   <data name="Label_Checkpoints" xml:space="preserve">
     <value>检查点</value>
@@ -1040,14 +1031,38 @@
   <data name="Label_ModelBrowser" xml:space="preserve">
     <value>模型浏览器</value>
   </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>工作流</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>无限滚动</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>工作流浏览器</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>在 OpenArt 上打开</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>节点详情</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>工作流描述</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>OpenArt 浏览器</value>
+  </data>
+  <data name="Action_PreviewPreprocessor" xml:space="preserve">
+    <value>预览预处理</value>
+  </data>
   <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
-    <value>'打开Web UI'按钮已移动到命令栏</value>
+    <value>&apos;打开 Web UI&apos;按钮已移动到命令栏</value>
   </data>
   <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
-    <value>另一个Stability Matrix实例已经在运行。请在启动新实例之前关闭它。</value>
+    <value>另一个 Stability Matrix 实例已经在运行。请在启动新实例之前关闭它。</value>
   </data>
   <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
-    <value>Stability Matrix已经在运行</value>
+    <value>Stability Matrix 已经在运行</value>
   </data>
   <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
     <value>{0} 删除成功</value>
@@ -1118,7 +1133,200 @@
   <data name="Label_AppData" xml:space="preserve">
     <value>应用程序数据</value>
   </data>
+  <data name="TextTemplate_PackageUpdatedToSelected" xml:space="preserve">
+    <value>{0} 已更新为选定版本</value>
+  </data>
+  <data name="Action_CopyAsBitmap" xml:space="preserve">
+    <value>复制为位图</value>
+  </data>
+  <data name="Label_DisableUpdateCheck" xml:space="preserve">
+    <value>禁用更新检查</value>
+  </data>
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
-    <value>请在运行Stability Matrix之前从ZIP文件中提取应用程序</value>
+    <value>请在运行 Stability Matrix 之前从ZIP文件中提取应用程序</value>
+  </data>
+  <data name="Label_HistorySize" xml:space="preserve">
+    <value>历史记录大小</value>
+  </data>
+  <data name="Label_HistorySize_Description" xml:space="preserve">
+    <value>您可以在控制台中向上滚动以查看的行数</value>
+  </data>
+  <data name="Label_ConnectAccountFailed" xml:space="preserve">
+    <value>我们连接您的账户时遇到了一些问题</value>
+  </data>
+  <data name="Label_EditModelMetadata" xml:space="preserve">
+    <value>编辑模型元数据</value>
+  </data>
+  <data name="Label_NSFW" xml:space="preserve">
+    <value>NSFW</value>
+  </data>
+  <data name="Label_Tags" xml:space="preserve">
+    <value>标签</value>
+  </data>
+  <data name="Label_VersionName" xml:space="preserve">
+    <value>版本名称</value>
+  </data>
+  <data name="Label_TrainedWords" xml:space="preserve">
+    <value>训练词汇</value>
+  </data>
+  <data name="Label_PreviewImage" xml:space="preserve">
+    <value>预览图像</value>
+  </data>
+  <data name="Label_BatchSize" xml:space="preserve">
+    <value>批次大小</value>
+  </data>
+  <data name="Label_Batches" xml:space="preserve">
+    <value>批次</value>
+  </data>
+  <data name="Label_Sampler" xml:space="preserve">
+    <value>采样器</value>
+  </data>
+  <data name="Label_Scheduler" xml:space="preserve">
+    <value>调度器</value>
+  </data>
+  <data name="Label_MaxSize" xml:space="preserve">
+    <value>最大尺寸</value>
+  </data>
+  <data name="Label_UseSeparatePrompt" xml:space="preserve">
+    <value>使用单独提示</value>
+  </data>
+  <data name="Label_Seed" xml:space="preserve">
+    <value>种子</value>
+  </data>
+  <data name="Label_NegativePrompt" xml:space="preserve">
+    <value>负面提示</value>
+  </data>
+  <data name="Label_NewFolder" xml:space="preserve">
+    <value>新建文件夹</value>
+  </data>
+  <data name="Label_CopyLinkToClipboard" xml:space="preserve">
+    <value>复制链接到剪贴板</value>
+  </data>
+  <data name="TextTemplate_OAuthLoginTitle" xml:space="preserve">
+    <value>使用 {0} 登录</value>
+    <comment>e.g. &apos;Sign in with Google&apos;</comment>
+  </data>
+  <data name="Text_AllowBrowserOpenAppLink" xml:space="preserve">
+    <value>请允许您的浏览器在提示时打开此应用程序。</value>
+  </data>
+  <data name="Text_OAuthLoginDescription" xml:space="preserve">
+    <value>在浏览器中打开链接并按照说明连接您的账户。</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Title" xml:space="preserve">
+    <value>Python 依赖项覆盖</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Description" xml:space="preserve">
+    <value>为安装和更新添加、替换或删除依赖项</value>
+  </data>
+  <data name="Label_DependencySpecifiers" xml:space="preserve">
+    <value>依赖项说明符</value>
+  </data>
+  <data name="AnalyticsExample_InstallData" xml:space="preserve">
+    <value>{
+  &quot;packageName&quot;: &quot;stable-diffusion-webui&quot;,
+  &quot;packageVersion&quot;: &quot;v1.10.0&quot;,
+  &quot;isSuccess&quot;: true,
+  &quot;type&quot;: &quot;install&quot;,
+  &quot;timestamp&quot;: &quot;2024-09-04T02:14:04.1967404+00:00&quot;
+}</value>
+  </data>
+  <data name="Label_Analytics" xml:space="preserve">
+    <value>分析</value>
+  </data>
+  <data name="TextTemplate_YouCanChangeThisBehavior" xml:space="preserve">
+    <value>您可以在 {0} 中随时更改此行为。</value>
+    <comment>e.g. &apos;You can always change this behavior in Settings &gt; Category &gt; Item.&apos;</comment>
+  </data>
+  <data name="Text_AnalyticsDescription" xml:space="preserve">
+    <value>通过发送有关使用功能、操作系统版本、安装的软件包类型等匿名数据来帮助我们改进 Stability Matrix。发送的数据永远不会与您或您的账户关联，也不会包含个人数据或任何敏感信息。</value>
+  </data>
+  <data name="Text_AnalyticsDescriptionShort" xml:space="preserve">
+    <value>通过发送有关使用功能、操作系统版本、安装的软件包类型等匿名数据来帮助我们改进 Stability Matrix。</value>
+  </data>
+  <data name="Text_AnalyticsDataPrivacyInfo" xml:space="preserve">
+    <value>发送的数据永远不会与您或您的账户关联，也不会包含个人数据或任何敏感信息。</value>
+  </data>
+  <data name="Label_UsageData" xml:space="preserve">
+    <value>使用数据</value>
+  </data>
+  <data name="Label_PrivacyPolicy" xml:space="preserve">
+    <value>隐私政策</value>
+  </data>
+  <data name="Label_ImageHidden" xml:space="preserve">
+    <value>图像已隐藏</value>
+  </data>
+  <data name="Label_NoImageFound" xml:space="preserve">
+    <value>未找到图像</value>
+  </data>
+  <data name="Label_HideEmptyCategories" xml:space="preserve">
+    <value>隐藏空类别</value>
+  </data>
+  <data name="Label_ShowNsfwImages" xml:space="preserve">
+    <value>显示 NSFW 图像</value>
+  </data>
+  <data name="Label_EnableLongPaths" xml:space="preserve">
+    <value>启用长路径</value>
+    <comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_EnableLongPathsDescription" xml:space="preserve">
+    <value>从常见的 Win32 文件和目录函数中移除 MAX_PATH 限制</value>
+    <comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_SystemSettings" xml:space="preserve">
+    <value>系统设置</value>
+  </data>
+  <data name="Label_ChangesApplied" xml:space="preserve">
+    <value>更改已应用</value>
+  </data>
+  <data name="Text_RestartMayBeRequiredForSystemChanges" xml:space="preserve">
+    <value>系统更改可能需要重启才能生效。</value>
+  </data>
+  <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Text_UnexpectedError_Description" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Text_UnexpectedErrorRecoverable_Description" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Action_ShowLogInExplorer" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Action_ShowLogInFinder" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Label_ExtensionPacks" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Label_NoExtensionPacksFound" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Label_OpenExtensionPacksFolder" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Label_InstallExtensionPack" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Label_AddToExistingPack" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Label_NewExtensionPack" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Label_CreateExtensionPackExplanation" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Label_ImportExtensionPacksExplanation" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Label_OrWithHyphensAround" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Action_OpenOnOpenModelDb" xml:space="preserve">
+    <value></value>
+  </data>
+  <data name="Label_Wildcards" xml:space="preserve">
+    <value></value>
   </data>
 </root>

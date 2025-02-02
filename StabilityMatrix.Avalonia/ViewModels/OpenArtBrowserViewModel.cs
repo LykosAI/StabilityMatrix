@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
@@ -10,6 +12,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Models;
@@ -30,7 +33,7 @@ using Resources = StabilityMatrix.Avalonia.Languages.Resources;
 namespace StabilityMatrix.Avalonia.ViewModels;
 
 [View(typeof(OpenArtBrowserPage))]
-[Singleton]
+[RegisterSingleton<OpenArtBrowserViewModel>]
 public partial class OpenArtBrowserViewModel(
     IOpenArtApi openArtApi,
     INotificationService notificationService,
@@ -86,7 +89,12 @@ public partial class OpenArtBrowserViewModel(
 
     protected override void OnInitialLoaded()
     {
-        searchResultsCache.Connect().DeferUntilLoaded().Bind(SearchResults).Subscribe();
+        searchResultsCache
+            .Connect()
+            .DeferUntilLoaded()
+            .Bind(SearchResults)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
         SelectedSortMode = AllSortModes.First();
         DoSearch().SafeFireAndForget();
     }

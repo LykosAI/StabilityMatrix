@@ -4,6 +4,7 @@ using System.Web;
 using AsyncAwaitBestPractices;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Injectio.Attributes;
 using MessagePipe;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
@@ -17,7 +18,7 @@ using StabilityMatrix.Core.Attributes;
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(OAuthConnectDialog))]
-[Transient, ManagedService]
+[RegisterTransient<OAuthConnectViewModel>, ManagedService]
 public partial class OAuthConnectViewModel : ContentDialogViewModelBase
 {
     private readonly ILogger<OAuthConnectViewModel> logger;

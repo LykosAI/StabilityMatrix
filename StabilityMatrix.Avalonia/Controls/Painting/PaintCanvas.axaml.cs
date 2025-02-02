@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -21,7 +23,7 @@ using StabilityMatrix.Avalonia.ViewModels.Controls;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-public class PaintCanvas : TemplatedControl
+public class PaintCanvas : TemplatedControlBase
 {
     private ConcurrentDictionary<long, PenPath> TemporaryPaths => ViewModel!.TemporaryPaths;
 
@@ -108,6 +110,7 @@ public class PaintCanvas : TemplatedControl
             viewModelSubscription?.Dispose();
             viewModelSubscription = viewModel
                 .WhenPropertyChanged(vm => vm.CanvasSize)
+                .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(change =>
                 {
                     if (MainCanvas is not null && !change.Value.IsEmpty)
@@ -257,7 +260,7 @@ public class PaintCanvas : TemplatedControl
         // penPath.Path.LineTo(cursorPosition.ToSKPoint());
 
         // Get bounds for discarding invalid points
-        var canvasBounds = MainCanvas?.Bounds ?? new Rect();
+        var canvasBounds = new Rect(0, 0, MainCanvas?.Bounds.Width ?? 0, MainCanvas?.Bounds.Height ?? 0);
 
         // Add points
         foreach (var point in points)

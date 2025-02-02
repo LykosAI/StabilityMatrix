@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using MessagePipe;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
@@ -24,7 +26,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 /// Like <see cref="OAuthConnectViewModel"/>, but for handling full code responses from OAuth providers,
 /// instead of being able to just close and refresh state.
 /// </summary>
-[Transient]
+[RegisterTransient<OAuthLoginViewModel>]
 [ManagedService]
 [View(typeof(OAuthLoginDialog))]
 [Localizable(false)]

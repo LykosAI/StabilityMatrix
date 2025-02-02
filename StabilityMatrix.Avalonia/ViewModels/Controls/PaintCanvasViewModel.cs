@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.ComponentModel;
-using System.Linq;
 using System.Text.Json.Serialization;
 using Avalonia.Media;
 using Avalonia.Skia;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
-using SoftCircuits.Collections;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Controls.Models;
 using StabilityMatrix.Avalonia.Models;
@@ -24,7 +22,7 @@ using Size = System.Drawing.Size;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Controls;
 
-[Transient]
+[RegisterTransient<PaintCanvasViewModel>]
 [ManagedService]
 public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) : LoadableViewModelBase
 {
@@ -217,7 +215,23 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
                 }
                 else
                 {
-                    layer.Surface.Canvas.Clear(SKColors.Transparent);
+                    // If we need to resize:
+                    var currentInfo = layer.Surface.Canvas.DeviceClipBounds;
+                    if (currentInfo.Width != CanvasSize.Width || currentInfo.Height != CanvasSize.Height)
+                    {
+                        // Dispose the old surface
+                        layer.Surface.Dispose();
+
+                        // Create a brand-new SKSurface with the new size
+                        layer.Surface = SKSurface.Create(
+                            new SKImageInfo(CanvasSize.Width, CanvasSize.Height)
+                        );
+                    }
+                    else
+                    {
+                        // No resize needed, just clear
+                        layer.Surface.Canvas.Clear(SKColors.Transparent);
+                    }
                 }
             }
         }

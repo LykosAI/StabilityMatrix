@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
@@ -15,7 +16,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<HiresFixModule>]
 public partial class HiresFixModule : ModuleBase
 {
     /// <inheritdoc />
@@ -89,31 +90,85 @@ public partial class HiresFixModule : ModuleBase
             e.Temp = e.CreateTempFromBuilder();
         }
 
-        var hiresSampler = builder.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.KSampler
-            {
-                Name = builder.Nodes.GetUniqueName("HiresFix_Sampler"),
-                Model = builder.Connections.GetRefinerOrBaseModel(),
-                Seed = builder.Connections.Seed,
-                Steps = samplerCard.Steps,
-                Cfg = samplerCard.CfgScale,
-                SamplerName =
-                    samplerCard.SelectedSampler?.Name
-                    ?? e.Builder.Connections.PrimarySampler?.Name
-                    ?? throw new ArgumentException("No PrimarySampler"),
-                Scheduler =
-                    samplerCard.SelectedScheduler?.Name
-                    ?? e.Builder.Connections.PrimaryScheduler?.Name
-                    ?? throw new ArgumentException("No PrimaryScheduler"),
-                Positive = e.Temp.GetRefinerOrBaseConditioning().Positive,
-                Negative = e.Temp.GetRefinerOrBaseConditioning().Negative,
-                LatentImage = builder.GetPrimaryAsLatent(),
-                Denoise = samplerCard.DenoiseStrength
-            }
-        );
+        var samplerName =
+            (
+                samplerCard.IsSamplerSelectionEnabled
+                    ? samplerCard.SelectedSampler?.Name
+                    : e.Builder.Connections.PrimarySampler?.Name
+            ) ?? throw new ArgumentException("No PrimarySampler");
 
-        // Set as primary
-        builder.Connections.Primary = hiresSampler.Output;
+        var schedulerName =
+            (
+                samplerCard.IsSchedulerSelectionEnabled
+                    ? samplerCard.SelectedScheduler?.Name
+                    : e.Builder.Connections.PrimaryScheduler?.Name
+            ) ?? throw new ArgumentException("No PrimaryScheduler");
+
+        var cfg = samplerCard.IsCfgScaleEnabled
+            ? samplerCard.CfgScale
+            : e.Builder.Connections.PrimaryCfg ?? throw new ArgumentException("No CFG");
+
+        if (schedulerName == "align_your_steps")
+        {
+            var samplerSelect = builder.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.KSamplerSelect
+                {
+                    Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.KSamplerSelect)),
+                    SamplerName = samplerName
+                }
+            );
+
+            var alignYourStepsScheduler = builder.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.AlignYourStepsScheduler
+                {
+                    Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.AlignYourStepsScheduler)),
+                    ModelType = samplerCard.SelectedModelType,
+                    Denoise = samplerCard.DenoiseStrength,
+                    Steps = samplerCard.Steps
+                }
+            );
+
+            var hiresCustomSampler = builder.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.SamplerCustom
+                {
+                    Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.SamplerCustom)),
+                    Model = builder.Connections.GetRefinerOrBaseModel(),
+                    AddNoise = true,
+                    NoiseSeed = builder.Connections.Seed,
+                    Cfg = cfg,
+                    Sampler = samplerSelect.Output,
+                    Sigmas = alignYourStepsScheduler.Output,
+                    Positive = e.Temp.GetRefinerOrBaseConditioning().Positive,
+                    Negative = e.Temp.GetRefinerOrBaseConditioning().Negative,
+                    LatentImage = builder.GetPrimaryAsLatent(),
+                }
+            );
+
+            builder.Connections.Primary = hiresCustomSampler.Output1;
+        }
+        else
+        {
+            var hiresSampler = builder.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.KSampler
+                {
+                    Name = builder.Nodes.GetUniqueName("HiresFix_Sampler"),
+                    Model = builder.Connections.GetRefinerOrBaseModel(),
+                    Seed = builder.Connections.Seed,
+                    Steps = samplerCard.Steps,
+                    Cfg = cfg,
+                    SamplerName = samplerName ?? throw new ArgumentException("No PrimarySampler"),
+                    Scheduler = schedulerName ?? throw new ArgumentException("No PrimaryScheduler"),
+                    Positive = e.Temp.GetRefinerOrBaseConditioning().Positive,
+                    Negative = e.Temp.GetRefinerOrBaseConditioning().Negative,
+                    LatentImage = builder.GetPrimaryAsLatent(),
+                    Denoise = samplerCard.DenoiseStrength
+                }
+            );
+
+            // Set as primary
+            builder.Connections.Primary = hiresSampler.Output;
+        }
+
         builder.Connections.PrimarySize = hiresSize;
     }
 }

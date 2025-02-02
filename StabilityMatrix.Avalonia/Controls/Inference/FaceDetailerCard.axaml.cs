@@ -1,7 +1,7 @@
 ﻿using Avalonia.Controls.Primitives;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-[Transient]
-public class FaceDetailerCard : TemplatedControl;
+[RegisterTransient<FaceDetailerCard>]
+public class FaceDetailerCard : TemplatedControlBase;

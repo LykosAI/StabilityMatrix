@@ -1,4 +1,5 @@
 ﻿using System;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -8,7 +9,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<PromptExpansionModule>]
 public class PromptExpansionModule : ModuleBase
 {
     public PromptExpansionModule(ServiceManager<ViewModelBase> vmFactory)

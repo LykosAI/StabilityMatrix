@@ -14,6 +14,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
@@ -37,7 +38,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<PackageCardViewModel>]
 public partial class PackageCardViewModel(
     ILogger<PackageCardViewModel> logger,
     IPackageFactory packageFactory,
@@ -224,10 +225,23 @@ public partial class PackageCardViewModel(
         }
     }
 
-    public override void OnUnloaded()
+    protected override void Dispose(bool disposing)
     {
+        if (!disposing)
+            return;
+
         EventManager.Instance.PackageRelaunchRequested -= InstanceOnPackageRelaunchRequested;
         runningPackageService.RunningPackages.CollectionChanged -= RunningPackagesOnCollectionChanged;
+
+        // Cleanup any running package event handlers
+        if (
+            Package?.Id != null
+            && runningPackageService.RunningPackages.TryGetValue(Package.Id, out var runningPackageVm)
+        )
+        {
+            runningPackageVm.RunningPackage.BasePackage.Exited -= BasePackageOnExited;
+            runningPackageVm.RunningPackage.BasePackage.StartupComplete -= RunningPackageOnStartupComplete;
+        }
     }
 
     public async Task Launch()

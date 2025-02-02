@@ -387,6 +387,16 @@ public class ComfyNodeBuilder
         public required string WeightDtype { get; init; }
     }
 
+    public record CLIPLoader : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required string ClipName { get; init; }
+
+        /// <summary>
+        /// possible values: "stable_diffusion", "stable_cascade", "sd3", "stable_audio", "mochi"
+        /// </summary>
+        public required string Type { get; init; }
+    }
+
     public record DualCLIPLoader : ComfyTypedNodeBase<ClipNodeConnection>
     {
         public required string ClipName1 { get; init; }
@@ -396,6 +406,15 @@ public class ComfyNodeBuilder
         /// possible values: "sdxl", "sd3", "flux"
         /// </summary>
         public required string Type { get; init; }
+    }
+
+    public record TripleCLIPLoader : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required string ClipName1 { get; init; }
+        public required string ClipName2 { get; init; }
+        public required string ClipName3 { get; init; }
+
+        // no type, always sd3 I guess?
     }
 
     public record FluxGuidance : ComfyTypedNodeBase<ConditioningNodeConnection>
@@ -449,6 +468,53 @@ public class ComfyNodeBuilder
         public required SamplerNodeConnection Sampler { get; init; }
         public required SigmasNodeConnection Sigmas { get; init; }
         public required LatentNodeConnection LatentImage { get; init; }
+    }
+
+    public record ModelSamplingDiscrete : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        /// <summary>
+        /// Options: "eps", "v_prediction", "lcm", "x0"
+        /// </summary>
+        public required string Sampling { get; set; }
+        public required bool Zsnr { get; init; }
+    }
+
+    public record RescaleCFG : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required double Multiplier { get; init; }
+    }
+
+    public record SetLatentNoiseMask : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required LatentNodeConnection Samples { get; init; }
+        public required ImageMaskConnection Mask { get; init; }
+    }
+
+    public record AlignYourStepsScheduler : ComfyTypedNodeBase<SigmasNodeConnection>
+    {
+        /// <summary>
+        /// options: SD1, SDXL, SVD
+        /// </summary>
+        public required string ModelType { get; init; }
+
+        [Range(1, 10000)]
+        public required int Steps { get; init; }
+
+        [Range(0.0d, 1.0d)]
+        public required double Denoise { get; init; }
+    }
+
+    public record CFGGuider : ComfyTypedNodeBase<GuiderNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; set; }
+        public required ConditioningNodeConnection Positive { get; set; }
+        public required ConditioningNodeConnection Negative { get; set; }
+
+        [Range(0.0d, 100.0d)]
+        public required double Cfg { get; set; }
     }
 
     [TypedNodeOptions(
@@ -551,7 +617,11 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "UltralyticsDetectorProvider",
-        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+        RequiredExtensions =
+        [
+            "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
+            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+        ]
     )]
     public record UltralyticsDetectorProvider
         : ComfyTypedNodeBase<BboxDetectorNodeConnection, SegmDetectorNodeConnection>
@@ -561,7 +631,11 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "SAMLoader",
-        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+        RequiredExtensions =
+        [
+            "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
+            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+        ]
     )]
     public record SamLoader : ComfyTypedNodeBase<SamModelNodeConnection>
     {
@@ -575,7 +649,11 @@ public class ComfyNodeBuilder
 
     [TypedNodeOptions(
         Name = "FaceDetailer",
-        RequiredExtensions = ["https://github.com/ltdrdata/ComfyUI-Impact-Pack"]
+        RequiredExtensions =
+        [
+            "https://github.com/ltdrdata/ComfyUI-Impact-Pack",
+            "https://github.com/ltdrdata/ComfyUI-Impact-Subpack"
+        ]
     )]
     public record FaceDetailer : ComfyTypedNodeBase<ImageNodeConnection>
     {
@@ -1105,6 +1183,9 @@ public class ComfyNodeBuilder
 
         public int BatchSize { get; set; } = 1;
         public int? BatchIndex { get; set; }
+        public int? PrimarySteps { get; set; }
+        public double? PrimaryCfg { get; set; }
+        public string? PrimaryModelType { get; set; }
 
         public OneOf<string, StringNodeConnection> PositivePrompt { get; set; }
         public OneOf<string, StringNodeConnection> NegativePrompt { get; set; }

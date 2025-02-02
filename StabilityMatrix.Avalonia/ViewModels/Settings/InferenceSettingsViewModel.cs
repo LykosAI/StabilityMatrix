@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Platform.Storage;
@@ -12,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -30,7 +32,8 @@ using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 namespace StabilityMatrix.Avalonia.ViewModels.Settings;
 
 [View(typeof(InferenceSettingsPage))]
-[Singleton, ManagedService]
+[ManagedService]
+[RegisterSingleton<InferenceSettingsViewModel>]
 public partial class InferenceSettingsViewModel : PageViewModelBase
 {
     private readonly INotificationService notificationService;
@@ -122,6 +125,7 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
 
         this.WhenPropertyChanged(vm => vm.OutputImageFileNameFormat)
             .Throttle(TimeSpan.FromMilliseconds(50))
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe(formatProperty =>
             {
                 var provider = FileNameFormatProvider.GetSample();

@@ -1,14 +1,17 @@
-﻿using System;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
+using System.Reactive.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
+using DynamicData.Binding;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
@@ -16,8 +19,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ExtraNetworkCard))]
 [ManagedService]
-[Transient]
-public partial class ExtraNetworkCardViewModel(IInferenceClientManager clientManager) : LoadableViewModelBase
+[RegisterTransient<ExtraNetworkCardViewModel>]
+public partial class ExtraNetworkCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "ExtraNetwork";
 
@@ -51,11 +54,48 @@ public partial class ExtraNetworkCardViewModel(IInferenceClientManager clientMan
     [ObservableProperty]
     private double clipWeight = 1.0;
 
+    [ObservableProperty]
+    private HybridModelFile? selectedBaseModel;
+
+    public readonly SourceCache<HybridModelFile, string> LoraModelsSource = new(p => p.GetId());
+
+    /// <inheritdoc/>
+    public ExtraNetworkCardViewModel(IInferenceClientManager clientManager)
+    {
+        ClientManager = clientManager;
+
+        var filterPredicate = this.WhenPropertyChanged(vm => vm.SelectedBaseModel)
+            .Throttle(TimeSpan.FromMilliseconds(50))
+            .DistinctUntilChanged()
+            .ObserveOn(SynchronizationContext.Current)
+            .Select(_ => (Func<HybridModelFile, bool>)FilterCompatibleLoras);
+
+        AddDisposable(
+            LoraModelsSource
+                .Connect()
+                .DeferUntilLoaded()
+                .Filter(filterPredicate)
+                .SortAndBind(
+                    LoraModels,
+                    SortExpressionComparer<HybridModelFile>
+                        .Ascending(f => f.Type)
+                        .ThenByAscending(f => f.SortKey)
+                )
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe()
+        );
+
+        LoraModelsSource.EditDiff(clientManager.LoraModels);
+    }
+
+    public IObservableCollection<HybridModelFile> LoraModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     public string TriggerWords =>
         SelectedModel?.Local?.ConnectedModelInfo?.TrainedWordsString ?? string.Empty;
     public bool ShowTriggerWords => !string.IsNullOrWhiteSpace(TriggerWords);
 
-    public IInferenceClientManager ClientManager { get; } = clientManager;
+    public IInferenceClientManager ClientManager { get; }
 
     /// <inheritdoc />
     public override JsonObject SaveStateToJsonObject()
@@ -94,6 +134,15 @@ public partial class ExtraNetworkCardViewModel(IInferenceClientManager clientMan
             return;
 
         App.Clipboard.SetTextAsync(TriggerWords);
+    }
+
+    private bool FilterCompatibleLoras(HybridModelFile? lora)
+    {
+        return SelectedBaseModel is null
+            || lora?.Local?.ConnectedModelInfo == null
+            || SelectedBaseModel.Local?.ConnectedModelInfo == null
+            || lora.Local?.ConnectedModelInfo?.BaseModel
+                == SelectedBaseModel.Local?.ConnectedModelInfo?.BaseModel;
     }
 
     internal class ExtraNetworkCardModel

@@ -8,11 +8,14 @@ using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-public abstract class BasePackage
+public abstract class BasePackage(ISettingsManager settingsManager)
 {
+    protected readonly ISettingsManager SettingsManager = settingsManager;
+
     public string ByAuthor => $"By {Author}";
 
     public abstract string Name { get; }
@@ -117,27 +120,35 @@ public abstract class BasePackage
             return AvailableTorchIndices.First();
         }
 
-        if (HardwareHelper.HasNvidiaGpu() && AvailableTorchIndices.Contains(TorchIndex.Cuda))
+        var preferNvidia = SettingsManager.Settings.PreferredGpu?.IsNvidia ?? HardwareHelper.HasNvidiaGpu();
+        if (AvailableTorchIndices.Contains(TorchIndex.Cuda) && preferNvidia)
         {
             return TorchIndex.Cuda;
         }
 
-        if (HardwareHelper.HasAmdGpu() && AvailableTorchIndices.Contains(TorchIndex.Zluda))
+        var preferAmd = SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.HasAmdGpu();
+        if (AvailableTorchIndices.Contains(TorchIndex.Zluda) && preferAmd)
         {
             return TorchIndex.Zluda;
         }
 
-        if (HardwareHelper.HasIntelGpu() && AvailableTorchIndices.Contains(TorchIndex.Ipex))
+        var preferIntel = SettingsManager.Settings.PreferredGpu?.IsIntel ?? HardwareHelper.HasIntelGpu();
+        if (AvailableTorchIndices.Contains(TorchIndex.Ipex) && preferIntel)
         {
             return TorchIndex.Ipex;
         }
 
-        if (HardwareHelper.PreferRocm() && AvailableTorchIndices.Contains(TorchIndex.Rocm))
+        var preferRocm =
+            Compat.IsLinux && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferRocm());
+        if (AvailableTorchIndices.Contains(TorchIndex.Rocm) && preferRocm)
         {
             return TorchIndex.Rocm;
         }
 
-        if (HardwareHelper.PreferDirectML() && AvailableTorchIndices.Contains(TorchIndex.DirectMl))
+        var preferDirectMl =
+            Compat.IsWindows
+            && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferDirectMLOrZluda());
+        if (AvailableTorchIndices.Contains(TorchIndex.DirectMl) && preferDirectMl)
         {
             return TorchIndex.DirectMl;
         }
@@ -188,7 +199,7 @@ public abstract class BasePackage
         int page = 1,
         int perPage = 10
     );
-    public abstract Task<DownloadPackageVersionOptions> GetLatestVersion(bool includePrerelease = false);
+    public abstract Task<DownloadPackageVersionOptions?> GetLatestVersion(bool includePrerelease = false);
     public abstract string MainBranch { get; }
     public event EventHandler<int>? Exited;
     public event EventHandler<string>? StartupComplete;
@@ -256,4 +267,30 @@ public abstract class BasePackage
     }
 
     public abstract Task<DownloadPackageVersionOptions?> GetUpdate(InstalledPackage installedPackage);
+
+    /// <summary>
+    /// List of known vulnerabilities for this package
+    /// </summary>
+    public virtual IReadOnlyList<PackageVulnerability> KnownVulnerabilities { get; protected set; } =
+        Array.Empty<PackageVulnerability>();
+
+    /// <summary>
+    /// Whether this package has any known vulnerabilities
+    /// </summary>
+    public bool HasVulnerabilities => KnownVulnerabilities.Any();
+
+    /// <summary>
+    /// Whether this package has any critical vulnerabilities
+    /// </summary>
+    public bool HasCriticalVulnerabilities =>
+        KnownVulnerabilities.Any(v => v.Severity == VulnerabilitySeverity.Critical);
+
+    /// <summary>
+    /// Check for any new vulnerabilities from external sources
+    /// </summary>
+    public virtual Task CheckForVulnerabilities(CancellationToken cancellationToken = default)
+    {
+        // Base implementation does nothing - derived classes should implement their own vulnerability checking
+        return Task.CompletedTask;
+    }
 }

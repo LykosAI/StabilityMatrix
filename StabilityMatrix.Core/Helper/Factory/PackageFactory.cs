@@ -1,4 +1,4 @@
-﻿using StabilityMatrix.Core.Attributes;
+﻿using Injectio.Attributes;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
@@ -7,7 +7,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Helper.Factory;
 
-[Singleton(typeof(IPackageFactory))]
+[RegisterSingleton<IPackageFactory, PackageFactory>]
 public class PackageFactory : IPackageFactory
 {
     private readonly IGithubApiCache githubApiCache;
@@ -92,13 +92,20 @@ public class PackageFactory : IPackageFactory
             "FluxGym" => new FluxGym(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             "SimpleSDXL"
                 => new SimpleSDXL(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "Cogstudio"
+                => new Cogstudio(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "ComfyUI-Zluda"
+                => new ComfyZluda(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage))
         };
     }
 
     public IEnumerable<BasePackage> GetAllAvailablePackages()
     {
-        return basePackages.Values.OrderBy(p => p.InstallerSortOrder).ThenBy(p => p.DisplayName);
+        return basePackages
+            .Values.Where(p => !p.HasVulnerabilities)
+            .OrderBy(p => p.InstallerSortOrder)
+            .ThenBy(p => p.DisplayName);
     }
 
     public BasePackage? FindPackageByName(string? packageName)

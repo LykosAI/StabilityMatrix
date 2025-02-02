@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
@@ -19,6 +19,7 @@ using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Collections;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -41,7 +42,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 
 [View(typeof(PackageExtensionBrowserView))]
-[Transient]
+[RegisterTransient<PackageExtensionBrowserViewModel>]
 [ManagedService]
 public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposable
 {
@@ -134,6 +135,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             .AutoRefresh(item => item.IsSelected)
             .Filter(item => item.IsSelected)
             .Bind(SelectedAvailableItems)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         var installedItemsChangeSet = installedExtensionsSource
@@ -146,12 +148,13 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             .AutoRefresh(item => item.IsSelected)
             .Filter(item => item.IsSelected)
             .Bind(SelectedInstalledItems)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         extensionPackSource
             .Connect()
-            .ObserveOn(SynchronizationContext.Current!)
             .Bind(ExtensionPacks)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         var extensionPackExtensionsChangeSet = extensionPackExtensionsSource
@@ -164,6 +167,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             .AutoRefresh(item => item.IsSelected)
             .Filter(item => item.IsSelected)
             .Bind(SelectedExtensionPackExtensions)
+            .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
         cleanUp = new CompositeDisposable(

@@ -2,8 +2,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using Injectio.Attributes;
 using NLog;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -17,7 +17,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, A3WebUI>(Duplicate = DuplicateStrategy.Append)]
 public class A3WebUI(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -39,7 +39,7 @@ public class A3WebUI(
         new("https://github.com/AUTOMATIC1111/stable-diffusion-webui/raw/master/screenshot.png");
     public string RelativeArgsDefinitionScriptPath => "modules.cmd_args";
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
@@ -162,7 +162,7 @@ public class A3WebUI(
                 Type = LaunchOptionType.Bool,
                 Description = "Do not switch the model to 16-bit floats",
                 InitialValue =
-                    HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectML() || Compat.IsMacOS,
+                    HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectMLOrZluda() || Compat.IsMacOS,
                 Options = ["--no-half"]
             },
             new()
@@ -212,7 +212,7 @@ public class A3WebUI(
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        var pipArgs = options.PythonOptions.TorchIndex switch
+        var pipArgs = torchVersion switch
         {
             TorchIndex.Mps
                 => new PipInstallArgs()
@@ -227,7 +227,7 @@ public class A3WebUI(
                     .WithTorch("==2.1.2")
                     .WithTorchVision("==0.16.2")
                     .WithTorchExtraIndex(
-                        options.PythonOptions.TorchIndex switch
+                        torchVersion switch
                         {
                             TorchIndex.Cpu => "cpu",
                             TorchIndex.Cuda => "cu121",

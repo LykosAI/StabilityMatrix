@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -11,7 +11,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, OneTrainer>(Duplicate = DuplicateStrategy.Append)]
 public class OneTrainer(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -56,7 +56,8 @@ public class OneTrainer(
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));
-        var requirementsFileName = options.PythonOptions.TorchIndex switch
+        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var requirementsFileName = torchVersion switch
         {
             TorchIndex.Cuda => "requirements-cuda.txt",
             TorchIndex.Rocm => "requirements-rocm.txt",

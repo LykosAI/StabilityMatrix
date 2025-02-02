@@ -1,5 +1,24 @@
 ﻿<Project>
     <PropertyGroup>
-        <AvaloniaVersion>11.1.4</AvaloniaVersion>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <AvaloniaVersion>11.2.2</AvaloniaVersion>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <!-- AVLN3001: Not using the default Avalonia runtime loader so this doesn't matter -->
+        <NoWarn>$(NoWarn);AVLN3001</NoWarn>
+    </PropertyGroup>
+    
+    <PropertyGroup>
+        <!--Some bug with SDK 8.0.403 
+        https://github.com/dotnet/sdk/issues/44026-->
+        <NoWarn>$(NoWarn);CsWinRT1028</NoWarn>
     </PropertyGroup>
 </Project>

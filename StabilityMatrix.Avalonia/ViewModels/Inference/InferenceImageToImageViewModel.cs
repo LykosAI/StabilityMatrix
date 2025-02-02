@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
@@ -16,7 +17,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceImageToImageView), IsPersistent = true)]
-[Transient, ManagedService]
+[RegisterTransient<InferenceImageToImageViewModel>, ManagedService]
 public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
 {
     [JsonPropertyName("SelectImage")]
@@ -77,7 +78,11 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Gguf or ModelLoader.Unet;
         if (isUnetLoader)
         {
-            SamplerCardViewModel.ApplyStepsInitialFluxSampler(applyArgs);
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
+        }
+        else if (SamplerCardViewModel.SelectedScheduler?.Name is "align_your_steps")
+        {
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, false);
         }
         else
         {

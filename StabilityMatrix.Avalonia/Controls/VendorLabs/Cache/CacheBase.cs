@@ -35,6 +35,7 @@ internal abstract class CacheBase<T>
     private ConcurrentDictionary<string, ConcurrentRequest> _concurrentTasks =
         new ConcurrentDictionary<string, ConcurrentRequest>();
 
+    private HttpMessageHandler? _httpMessageHandler;
     private HttpClient? _httpClient = null;
 
     /// <summary>
@@ -44,10 +45,14 @@ internal abstract class CacheBase<T>
     {
         options ??= CacheOptions.Default;
         _baseFolder = options.BaseCachePath ?? null;
+        _cacheFolderName = options.CacheFolderName ?? null;
 
         CacheDuration = options.CacheDuration ?? TimeSpan.FromDays(1);
         MaxMemoryCacheCount = options.MaxMemoryCacheCount ?? 0;
         RetryCount = 1;
+
+        _httpMessageHandler = options.HttpMessageHandler;
+        _httpClient = options.HttpClient;
     }
 
     /// <summary>
@@ -82,9 +87,7 @@ internal abstract class CacheBase<T>
         {
             if (_httpClient == null)
             {
-                var messageHandler = new HttpClientHandler();
-
-                _httpClient = new HttpClient(messageHandler);
+                _httpClient = new HttpClient(_httpMessageHandler ?? new HttpClientHandler());
             }
 
             return _httpClient;

@@ -8,6 +8,7 @@ using AsyncAwaitBestPractices;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -20,7 +21,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
 [View(typeof(SelectDataDirectoryDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<SelectDataDirectoryViewModel>]
 public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

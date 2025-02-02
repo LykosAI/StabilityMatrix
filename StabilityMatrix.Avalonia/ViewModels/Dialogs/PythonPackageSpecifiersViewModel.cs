@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -20,7 +21,7 @@ using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
-[Transient]
+[RegisterTransient<PythonPackageSpecifiersViewModel>]
 [ManagedService]
 [View(typeof(PythonPackageSpecifiersDialog))]
 public partial class PythonPackageSpecifiersViewModel : ContentDialogViewModelBase

@@ -1,4 +1,4 @@
-﻿using StabilityMatrix.Core.Attributes;
+﻿using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -10,7 +10,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, SimpleSDXL>(Duplicate = DuplicateStrategy.Append)]
 public class SimpleSDXL(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -24,8 +24,7 @@ public class SimpleSDXL(
     public override string Blurb =>
         "Enhanced version of Fooocus for SDXL, more suitable for Chinese and Cloud. Supports Flux.";
     public override string LicenseUrl => "https://github.com/metercai/SimpleSDXL/blob/SimpleSDXL/LICENSE";
-    public override Uri PreviewImageUri =>
-        new("https://github.com/user-attachments/assets/98715a4d-9f4a-4846-ae62-eb8d69793d31");
+    public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/simplesdxl/preview.webp");
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         [SharedFolderMethod.Configuration, SharedFolderMethod.Symlink, SharedFolderMethod.None];
@@ -33,6 +32,27 @@ public class SimpleSDXL(
     public override string MainBranch => "SimpleSDXL";
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda];
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
+
+    public override IReadOnlyList<PackageVulnerability> KnownVulnerabilities =>
+        [
+            new()
+            {
+                Id = "GHSA-qq8j-phpf-c63j",
+                Title = "Undisclosed Data Collection and Remote Access in simpleai_base Dependency",
+                Description =
+                    "SimpleSDXL depends on simpleai_base which contains compiled Rust code with:\n"
+                    + "- Undisclosed remote access functionality using rathole\n"
+                    + "- Hidden system information gathering via concealed executable calls\n"
+                    + "- Covert data upload to tokentm.net (blockchain-associated domain)\n"
+                    + "- Undisclosed VPN functionality pointing to servers blocked by Chinese authorities\n\n"
+                    + "This poses significant security and privacy risks as system information is uploaded without consent "
+                    + "and the compiled nature of the code means the full extent of the remote access capabilities cannot be verified.",
+                Severity = VulnerabilitySeverity.Critical,
+                PublishedDate = DateTimeOffset.Parse("2025-01-11"),
+                InfoUrl = new Uri("https://github.com/metercai/SimpleSDXL/issues/97"),
+                AffectedVersions = ["*"], // Affects all versions
+            }
+        ];
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [

@@ -15,25 +15,25 @@ jobs:
     steps:
       - uses: actions/stale@v9
         with:
-          stale-issue-message: 'This issue is pending because it has been awaiting a response for 14 days with no activity. Remove the pending label or comment, else this will be closed in 5 days.'
-          close-issue-message: 'This issue was closed because it has been pending for 5 days with no activity.'
+          stale-issue-message: 'This issue is pending because it has been awaiting a response for 30 days with no activity. Remove the pending label or comment, else this will be closed in 7 days.'
+          close-issue-message: 'This issue was closed because it has been pending for 7 days with no activity.'
           only-labels: 'awaiting-feedback'
           stale-issue-label: 'pending'
-          exempt-issue-labels: 'planned,milestone,work-in-progress'
-          days-before-issue-stale: 14
-          days-before-issue-close: 5
+          exempt-issue-labels: 'planned,milestone,work-in-progress,enhancement,crash'
+          days-before-issue-stale: 30
+          days-before-issue-close: 7
           days-before-pr-close: -1
           days-before-pr-stale: -1
           operations-per-run: 45
         
       - uses: actions/stale@v9
         with:
-          stale-issue-message: 'This issue is stale because it has been open 30 days with no activity. Remove the stale label or comment, else this will be closed in 5 days.'
-          close-issue-message: 'This issue was closed because it has been stale for 5 days with no activity.'
+          stale-issue-message: 'This issue is stale because it has been open 60 days with no activity. Remove the stale label or comment, else this will be closed in 7 days.'
+          close-issue-message: 'This issue was closed because it has been stale for 7 days with no activity.'
           stale-issue-label: 'stale'
-          exempt-issue-labels: 'planned,milestone,work-in-progress'
-          days-before-issue-stale: 30
-          days-before-issue-close: 5
+          exempt-issue-labels: 'planned,milestone,work-in-progress,enhancement,crash'
+          days-before-issue-stale: 60
+          days-before-issue-close: 7
           days-before-pr-close: -1
           days-before-pr-stale: -1
           operations-per-run: 45

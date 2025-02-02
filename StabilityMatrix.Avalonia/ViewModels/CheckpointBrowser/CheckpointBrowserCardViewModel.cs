@@ -10,6 +10,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
@@ -30,7 +31,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 
 [ManagedService]
-[Transient]
+[RegisterTransient<CheckpointBrowserCardViewModel>]
 public partial class CheckpointBrowserCardViewModel : ProgressViewModel
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -242,15 +243,16 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             IsFooterVisible = false,
             CloseOnClickOutside = true,
             MaxDialogWidth = 750,
-            MaxDialogHeight = 950,
+            MaxDialogHeight = 1000,
         };
 
-        var prunedDescription = Utilities.RemoveHtml(model.Description);
+        var htmlDescription = $"""<html><body class="markdown-body">{model.Description}</body></html>""";
 
         var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
         viewModel.Dialog = dialog;
         viewModel.Title = model.Name;
-        viewModel.Description = prunedDescription;
+
+        viewModel.Description = htmlDescription;
         viewModel.CivitModel = model;
         viewModel.Versions = versions
             .Where(v => !settingsManager.Settings.HideEarlyAccessModels || !v.IsEarlyAccess)

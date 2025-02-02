@@ -6,16 +6,16 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
-using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.Controls;
 
 [PseudoClasses(":editEnabled")]
-[Transient]
-public class StackEditableCard : TemplatedControl
+[RegisterTransient<StackEditableCard>]
+public class StackEditableCard : TemplatedControlBase
 {
     private ListBox? listBoxPart;
 

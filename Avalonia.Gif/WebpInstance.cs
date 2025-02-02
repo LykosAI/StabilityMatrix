@@ -54,14 +54,18 @@ public class WebpInstance : IGifInstance
 
         var pixSize = new PixelSize(_codec.Info.Width, _codec.Info.Height);
 
-        _targetBitmap = new WriteableBitmap(pixSize, new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Opaque);
+        _targetBitmap = new WriteableBitmap(
+            pixSize,
+            new Vector(96, 96),
+            PixelFormat.Bgra8888,
+            AlphaFormat.Opaque
+        );
         GifPixelSize = pixSize;
 
         _totalTime = TimeSpan.Zero;
 
         _frameTimes = _codec
-            .FrameInfo
-            .Select(frame =>
+            .FrameInfo.Select(frame =>
             {
                 _totalTime = _totalTime.Add(TimeSpan.FromMilliseconds(frame.Duration));
                 return _totalTime;

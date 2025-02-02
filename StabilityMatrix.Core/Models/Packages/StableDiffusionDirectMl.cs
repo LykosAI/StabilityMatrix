@@ -1,5 +1,5 @@
-﻿using NLog;
-using StabilityMatrix.Core.Attributes;
+﻿using Injectio.Attributes;
+using NLog;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -11,7 +11,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, StableDiffusionDirectMl>(Duplicate = DuplicateStrategy.Append)]
 public class StableDiffusionDirectMl(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -34,9 +34,9 @@ public class StableDiffusionDirectMl(
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
     public override TorchIndex GetRecommendedTorchVersion() =>
-        HardwareHelper.PreferDirectML() ? TorchIndex.DirectMl : base.GetRecommendedTorchVersion();
+        HardwareHelper.PreferDirectMLOrZluda() ? TorchIndex.DirectMl : base.GetRecommendedTorchVersion();
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
 
     public override List<LaunchOptionDefinition> LaunchOptions
     {
@@ -49,7 +49,7 @@ public class StableDiffusionDirectMl(
                 {
                     Name = "Use DirectML",
                     Type = LaunchOptionType.Bool,
-                    InitialValue = HardwareHelper.PreferDirectML(),
+                    InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
                     Options = ["--use-directml"]
                 }
             );

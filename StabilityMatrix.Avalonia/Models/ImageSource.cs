@@ -150,7 +150,7 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
     /// </summary>
     public async Task<Bitmap?> GetBitmapAsync()
     {
-        if (Bitmap is not null)
+        if (Bitmap?.Format != null)
             return Bitmap;
 
         var loader = ImageLoader.AsyncImageLoader;
@@ -277,7 +277,7 @@ public record ImageSource : IDisposable, ITemplateKey<ImageSourceTemplateType>
         if (!disposing)
             return;
 
-        Bitmap?.Dispose();
+        Bitmap = null;
     }
 
     /// <inheritdoc />

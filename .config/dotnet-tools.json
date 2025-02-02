@@ -3,7 +3,7 @@
   "isRoot": true,
   "tools": {
     "husky": {
-      "version": "0.6.0",
+      "version": "0.7.2",
       "commands": [
         "husky"
       ],
@@ -27,6 +27,13 @@
       "version": "1.4.1",
       "commands": [
         "refitter"
+      ],
+      "rollForward": false
+    },
+    "dotnet-script": {
+      "version": "1.6.0",
+      "commands": [
+        "dotnet-script"
       ],
       "rollForward": false
     }

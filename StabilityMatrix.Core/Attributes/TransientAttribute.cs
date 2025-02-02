@@ -3,7 +3,8 @@ using JetBrains.Annotations;
 
 namespace StabilityMatrix.Core.Attributes;
 
-[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors), MeansImplicitUse]
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
+[MeansImplicitUse(ImplicitUseKindFlags.Access, ImplicitUseTargetFlags.Itself)]
 [AttributeUsage(AttributeTargets.Class)]
 public class TransientAttribute : Attribute
 {

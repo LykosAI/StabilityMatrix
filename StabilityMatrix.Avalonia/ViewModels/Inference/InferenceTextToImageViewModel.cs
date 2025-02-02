@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using DynamicData.Binding;
+using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models;
@@ -16,6 +18,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Services;
 using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView;
@@ -26,7 +29,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), IsPersistent = true)]
 [ManagedService]
-[Transient]
+[RegisterTransient<InferenceTextToImageViewModel>]
 public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -114,10 +117,27 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         AddDisposable(
             ModelCardViewModel
                 .WhenPropertyChanged(x => x.IsRefinerSelectionEnabled)
+                .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(e =>
                 {
                     SamplerCardViewModel.IsRefinerStepsEnabled =
                         e.Sender is { IsRefinerSelectionEnabled: true, SelectedRefiner: not null };
+                })
+        );
+
+        AddDisposable(
+            SamplerCardViewModel
+                .WhenPropertyChanged(x => x.SelectedScheduler)
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe(next =>
+                {
+                    var isAlignYourSteps = next.Value is { Name: "align_your_steps" };
+                    ModelCardViewModel.ShowRefinerOption = !isAlignYourSteps;
+
+                    if (isAlignYourSteps)
+                    {
+                        ModelCardViewModel.IsRefinerSelectionEnabled = false;
+                    }
                 })
         );
     }
@@ -173,7 +193,11 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Setup Sampler and Refiner if enabled
         if (isUnetLoader)
         {
-            SamplerCardViewModel.ApplyStepsInitialFluxSampler(applyArgs);
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
+        }
+        else if (SamplerCardViewModel.SelectedScheduler?.Name is "align_your_steps")
+        {
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, false);
         }
         else
         {

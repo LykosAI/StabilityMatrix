@@ -1,5 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-using StabilityMatrix.Core.Attributes;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -11,7 +11,7 @@ using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
-[Singleton(typeof(BasePackage))]
+[RegisterSingleton<BasePackage, FluxGym>(Duplicate = DuplicateStrategy.Append)]
 public class FluxGym(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
@@ -85,14 +85,24 @@ public class FluxGym(
         CancellationToken cancellationToken = default
     )
     {
-        progress?.Report(new ProgressReport(-1f, "Cloning sd-scripts", isIndeterminate: true));
-        await prerequisiteHelper
-            .RunGit(
-                ["clone", "-b", "sd3", "https://github.com/kohya-ss/sd-scripts"],
-                onConsoleOutput,
-                installLocation
-            )
-            .ConfigureAwait(false);
+        progress?.Report(new ProgressReport(-1f, "Cloning / updating sd-scripts", isIndeterminate: true));
+        // check if sd-scripts is already installed - if so: pull, else: clone
+        if (Directory.Exists(Path.Combine(installLocation, "sd-scripts")))
+        {
+            await prerequisiteHelper
+                .RunGit(["pull"], onConsoleOutput, Path.Combine(installLocation, "sd-scripts"))
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            await prerequisiteHelper
+                .RunGit(
+                    ["clone", "-b", "sd3", "https://github.com/kohya-ss/sd-scripts"],
+                    onConsoleOutput,
+                    installLocation
+                )
+                .ConfigureAwait(false);
+        }
 
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);

@@ -1307,6 +1307,7 @@
   </data>
   <data name="Action_CopyAndOpen" xml:space="preserve">
     <value>Copy and Open</value>
+  </data>
   <data name="Action_OpenOnOpenModelDb" xml:space="preserve">
     <value>Open on OpenModelDB</value>
   </data>

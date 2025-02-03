@@ -22,7 +22,7 @@
     <sg:SpacedGrid
         Margin="8,4"
         ColumnDefinitions="*,Auto"
-        RowDefinitions="Auto,Auto,Auto"
+        RowDefinitions="Auto,Auto,Auto,Auto,Auto"
         RowSpacing="8">
         <TextBlock
             Grid.Row="0"
@@ -53,9 +53,21 @@
             </TextBox.InnerRightContent>
         </TextBox>
 
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="8,8,0,0"
+            HorizontalAlignment="Center"
+            IsVisible="{Binding IsLoading}"
+            Text="Authenticating..."
+            TextAlignment="Center" />
+
         <ProgressBar
-            Grid.Row="2"
-            Margin="0,16,0,0"
+            Grid.Row="4"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="8"
             IsEnabled="{Binding IsLoading}"
             IsIndeterminate="True"
             IsVisible="{Binding IsLoading}" />

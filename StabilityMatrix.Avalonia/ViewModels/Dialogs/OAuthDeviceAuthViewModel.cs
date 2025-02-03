@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using OpenIddict.Client;
 using StabilityMatrix.Avalonia.Controls;
@@ -21,7 +22,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 /// </summary>
 [View(typeof(OAuthDeviceAuthDialog))]
 [ManagedService]
-[Transient]
+[RegisterTransient<OAuthDeviceAuthViewModel>]
 public partial class OAuthDeviceAuthViewModel(
     ILogger<OAuthDeviceAuthViewModel> logger,
     OpenIddictClientService openIdClient
@@ -80,6 +81,7 @@ public partial class OAuthDeviceAuthViewModel(
         }
 
         ProcessRunner.OpenUrl(VerificationUri);
+        IsLoading = true;
     }
 
     /*/// <summary>
@@ -176,6 +178,10 @@ public partial class OAuthDeviceAuthViewModel(
             logger.LogWarning(e, "Device authentication error");
             AuthenticationResult = null;
             await CloseDialogWithErrorResultAsync(e.Message);
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 

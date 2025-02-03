@@ -57,6 +57,8 @@
     <PackageVersion Include="Octokit" Version="13.0.1" />
     <PackageVersion Include="OneOf" Version="3.0.271" />
     <PackageVersion Include="OneOf.SourceGenerator" Version="3.0.271" />
+    <PackageVersion Include="OpenIddict.Client" Version="5.8.0" />
+    <PackageVersion Include="OpenIddict.Client.SystemNetHttp" Version="5.8.0" />
     <PackageVersion Include="Polly" Version="8.5.0" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="Polly.Extensions.Http" Version="3.0.0" />

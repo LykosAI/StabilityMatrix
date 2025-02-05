@@ -161,7 +161,7 @@ public class SDWebForge(
                     {
                         TorchIndex.Cpu => "cpu",
                         TorchIndex.Cuda => "cu121",
-                        TorchIndex.Rocm => "rocm5.6",
+                        TorchIndex.Rocm => "rocm5.7",
                         TorchIndex.Mps => "cpu",
                         _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                     }

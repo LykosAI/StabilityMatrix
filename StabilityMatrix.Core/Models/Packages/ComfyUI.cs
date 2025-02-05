@@ -219,8 +219,8 @@ public class ComfyUI(
                         torchVersion switch
                         {
                             TorchIndex.Cpu => "cpu",
-                            TorchIndex.Cuda => "cu124",
-                            TorchIndex.Rocm => "rocm6.2",
+                            TorchIndex.Cuda => "cu126",
+                            TorchIndex.Rocm => "rocm6.2.4",
                             TorchIndex.Mps => "cpu",
                             _
                                 => throw new ArgumentOutOfRangeException(

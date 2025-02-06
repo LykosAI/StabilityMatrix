@@ -5,11 +5,8 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Injectio.Attributes;
-<<<<<<< HEAD
-=======
 using Python.Runtime;
 using StabilityMatrix.Core.Extensions;
->>>>>>> 894c1abe (Merge pull request #980 from ionite34/fix-model-overwrite)
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -186,9 +183,6 @@ public class ModelImportService(
 
         await trackedDownloadService.TryStartDownload(download);
     }
-<<<<<<< HEAD
-=======
-
     public Task DoOpenModelDbImport(
         OpenModelDbKeyedModel model,
         OpenModelDbResource resource,
@@ -319,5 +313,4 @@ public class ModelImportService(
 
         return newFileName;
     }
->>>>>>> 894c1abe (Merge pull request #980 from ionite34/fix-model-overwrite)
 }

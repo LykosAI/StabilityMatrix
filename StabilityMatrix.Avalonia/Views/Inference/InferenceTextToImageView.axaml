@@ -231,20 +231,20 @@
 
 
                     <!--  bottom pane  -->
-                    <ToolDock
-                        x:Name="LoraGallery"
-                        Alignment="Bottom"
-                        CanClose="False"
-                        Id="LoraGallery"
-                        IsCollapsable="True"
-                        IsExpanded="False">
-                        <Tool
-                            x:Name="LoraGalleryTool"
-                            Title="Lora Gallery"
-                            x:DataType="Tool"
-                            CanClose="True"
-                            Id="LoraGalleryTool" />
-                    </ToolDock>
+                    <!--  <ToolDock  -->
+                    <!--  x:Name="LoraGallery"  -->
+                    <!--  Alignment="Bottom"  -->
+                    <!--  CanClose="False"  -->
+                    <!--  Id="LoraGallery"  -->
+                    <!--  IsCollapsable="True"  -->
+                    <!--  IsExpanded="False">  -->
+                    <!--  <Tool  -->
+                    <!--  x:Name="LoraGalleryTool"  -->
+                    <!--  Title="Lora Gallery"  -->
+                    <!--  x:DataType="Tool"  -->
+                    <!--  CanClose="True"  -->
+                    <!--  Id="LoraGalleryTool" />  -->
+                    <!-- </ToolDock> -->
 
                 </ProportionalDock>
             </RootDock>

@@ -412,7 +412,7 @@
     <value>使用許諾契約書</value>
   </data>
   <data name="Label_FindConnectedMetadata" xml:space="preserve">
-    <value>メタデータが見つかりました</value>
+    <value>メタデータを探す</value>
   </data>
   <data name="Label_ShowModelImages" xml:space="preserve">
     <value>モデルの見出し画像を表示</value>
@@ -484,6 +484,7 @@
   </data>
   <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
     <value>既にあるデータは移動しません</value>
+    <comment>Fuzzy</comment>
   </data>
   <data name="Action_SelectDirectory" xml:space="preserve">
     <value>フォルダを選択</value>
@@ -1032,7 +1033,7 @@
     <value>Checkpoints</value>
   </data>
   <data name="Label_ModelBrowser" xml:space="preserve">
-    <value>Model Browser</value>
+    <value>Model Brouser</value>
   </data>
   <data name="Label_Workflows" xml:space="preserve">
     <value>ワークフロー</value>
@@ -1147,5 +1148,93 @@
   </data>
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>Stability Matrixを実行する前に、ZIPファイルからアプリを抽出してください</value>
+  </data>
+  <data name="Label_HistorySize_Description" xml:space="preserve">
+    <value>コンソールに表示されている行より上にスクロールして戻ることができる行数</value>
+  </data>
+  <data name="Label_ConnectAccountFailed" xml:space="preserve">
+    <value>アカウント接続に問題が発生しました</value>
+  </data>
+  <data name="Label_EditModelMetadata" xml:space="preserve">
+    <value>モデルメタデータの編集</value>
+  </data>
+  <data name="Label_VersionName" xml:space="preserve">
+    <value>バージョン名</value>
+  </data>
+  <data name="Label_CopyLinkToClipboard" xml:space="preserve">
+    <value>リンクをクリップボードにコピー</value>
+  </data>
+  <data name="TextTemplate_OAuthLoginTitle" xml:space="preserve">
+    <value>{0} でサインイン</value>
+    <comment>e.g. &apos;Sign in with Google&apos;</comment>
+  </data>
+  <data name="Text_OAuthLoginDescription" xml:space="preserve">
+    <value>ブラウザのリンクを開き、指示に従ってアカウントを接続してください</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Title" xml:space="preserve">
+    <value>Python Dependencies Override</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Description" xml:space="preserve">
+    <value>インストールと更新時に依存関係を追加・置換・削除</value>
+  </data>
+  <data name="Label_DependencySpecifiers" xml:space="preserve">
+    <value>Dependency Specifiers</value>
+  </data>
+  <data name="AnalyticsExample_InstallData" xml:space="preserve">
+    <value>{
+  &quot;packageName&quot;: &quot;stable-diffusion-webui&quot;,
+  &quot;packageVersion&quot;: &quot;v1.10.0&quot;,
+  &quot;isSuccess&quot;: true,
+  &quot;type&quot;: &quot;install&quot;,
+  &quot;timestamp&quot;: &quot;2024-09-04T02:14:04.1967404+00:00&quot;
+}</value>
+  </data>
+  <data name="TextTemplate_YouCanChangeThisBehavior" xml:space="preserve">
+    <value>この動作はいつでも {0} の手順で変更できます。</value>
+    <comment>e.g. &apos;You can always change this behavior in Settings &gt; Category &gt; Item.&apos;</comment>
+  </data>
+  <data name="Text_AnalyticsDescription" xml:space="preserve">
+    <value>Stability Matrixの改善にご協力ください。OS, パッケージの種類など改善に必要なデータのみ匿名で送信し、あなた及びあなたのアカウントとの関連付けはいたしません、また個人データ・機密情報は決して送信しません。</value>
+  </data>
+  <data name="Text_AnalyticsDescriptionShort" xml:space="preserve">
+    <value>使用された機能、OSのバージョン、インストールされているパッケージの種類などについての匿名データを送信して、Stability Matrixの改善にご協力ください。</value>
+  </data>
+  <data name="Text_AnalyticsDataPrivacyInfo" xml:space="preserve">
+    <value>送信されたデータは、あなたまたはあなたのアカウントとは決して関連付けられず、個人データや機密情報を含みません。</value>
+  </data>
+  <data name="Label_UsageData" xml:space="preserve">
+    <value>使用状況のデータ</value>
+  </data>
+  <data name="Label_PrivacyPolicy" xml:space="preserve">
+    <value>プライバシーポリシー</value>
+  </data>
+  <data name="Label_NoImageFound" xml:space="preserve">
+    <value>画像が見つかりません</value>
+  </data>
+  <data name="Label_HideEmptyCategories" xml:space="preserve">
+    <value>非表示のカテゴリを非表示</value>
+  </data>
+  <data name="Label_ShowNsfwImages" xml:space="preserve">
+    <value>NSFW画像を表示</value>
+  </data>
+  <data name="Label_EnableLongPaths" xml:space="preserve">
+    <value>長いファイル名を有効にする</value>
+    <comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_EnableLongPathsDescription" xml:space="preserve">
+    <value>MAX_PATH limitations を削除する(Windows で長いファイルパスを有効にする設定)</value>
+    <comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_SystemSettings" xml:space="preserve">
+    <value>システム設定</value>
+  </data>
+  <data name="Label_ChangesApplied" xml:space="preserve">
+    <value>変更を適用する</value>
+  </data>
+  <data name="Text_RestartMayBeRequiredForSystemChanges" xml:space="preserve">
+    <value>変更を有効にするには、再起動が必要になる場合があります。</value>
+  </data>
+  <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
+    <value>このパッケージではこのリリースを利用できません。</value>
   </data>
 </root>

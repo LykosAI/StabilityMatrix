@@ -5,15 +5,25 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.14.0-dev.3
+### Changed
+- Upgraded ComfyUI CUDA torch to 12.6
+### Fixed
+- Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
+- Fixed ROCm torch indexes for ComfyUI & Forge
+
 ## v2.14.0-dev.2
 ### Added
 - Added Align Your Steps scheduler to Inference
 - Added wildcards to Inference prompts, e.g. `{blue|green|red}` will randomly select one of the colors
+- Added Safetensor Metadata viewer to the Checkpoint Manager context menu - thanks to @genteure!
 ### Changed
 - Updated the Civitai Model Browser base model selector to match the new Checkpoint Manager filter UI 
 - FaceDetailers in Inference will now inherit the primary sampler/scheduler/etc. by default. You can still manually set these by enabling the options via the ⚙️ button on the FaceDetailer card
 - Slightly rearranged the FaceDetailer card layout due to the above change
 - "Remove symbolic links on shutdown" option now also removes links from Output Sharing
+- Inference "Extra Networks" selector now filters extra networks based on the selected base model
+- Updated Japanese, Brazilian Portuguese, Chinese, and Russian translations
 ### Fixed
 - Fixed crash when dragging & dropping images in Inference (hopefully)
 - Fixed HiresFix Inference addon not inheriting sampler/scheduler properly
@@ -24,9 +34,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed issue when parsing index URLs in Python Dependencies Override menu
 - Fixed ComfyUI-Zluda not respecting pip user overrides
 - Fixed issue with Checkpoint Manager not displaying any models
+- (dev.2 re-release) Fixed autocomplete not showing in certain cases when using wildcards
+- (dev.2 re-release) Fixed package restart button not working 
+- (dev.2 re-release) Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
 ### Supporters
 #### Visionaries
-- A huge thank you to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your generous support is greatly appreciated!
+- A huge thank you to our incredible Visionary-tier Patreon supporters, **Waterclouds**, **TheTekknician**, and our newest Visionary, **Corey**! Your generous support is greatly appreciated!
 
 ## v2.14.0-dev.1
 ### Added
@@ -50,6 +63,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### Visionaries
 - Many thanks to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your support helps us continue to improve Stability Matrix!
 
+## v2.13.4
+### Changed
+- Upgraded ComfyUI CUDA torch to 12.6
+### Fixed
+- Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
+- Fixed ROCm torch indexes for ComfyUI & Forge
+
 ## v2.13.3
 ### Changed
 - "Remove symbolic links on shutdown" option now also removes links from Output Sharing
@@ -57,6 +77,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
 - Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
 - Fixed issue when parsing index URLs in Python Dependencies Override menu
+- Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
 
 ## v2.13.2
 ### Changed

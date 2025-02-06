@@ -251,19 +251,19 @@ public partial class PromptCardViewModel
     [RelayCommand]
     private async Task ShowHelpDialog()
     {
-        var md = $"""
-                  ## {Resources.Label_Emphasis}
+        var md = $$"""
+                  ## {{Resources.Label_Emphasis}}
                   ```prompt
                   (keyword)
                   (keyword:1.0)
                   ```
                   
-                  ## {Resources.Label_Deemphasis}
+                  ## {{Resources.Label_Deemphasis}}
                   ```prompt
                   [keyword]
                   ```
                   
-                  ## {Resources.Label_EmbeddingsOrTextualInversion}
+                  ## {{Resources.Label_EmbeddingsOrTextualInversion}}
                   They may be used in either the positive or negative prompts. 
                   Essentially they are text presets, so the position where you place them 
                   could make a difference. 
@@ -272,7 +272,7 @@ public partial class PromptCardViewModel
                   <embedding:model:1.0>
                   ```
                   
-                  ## {Resources.Label_NetworksLoraOrLycoris}
+                  ## {{Resources.Label_NetworksLoraOrLycoris}}
                   Unlike embeddings, network tags do not get tokenized to the model, 
                   so the position in the prompt where you place them does not matter.
                   ```prompt
@@ -282,13 +282,26 @@ public partial class PromptCardViewModel
                   <lyco:model:1.0>
                   ```
                   
-                  ## {Resources.Label_Comments}
+                  ## {{Resources.Label_Comments}}
                   Inline comments can be marked by a hashtag ‘#’. 
                   All text after a ‘#’ on a line will be disregarded during generation.
                   ```prompt
                   # comments
                   a red cat # also comments
                   detailed
+                  ```
+                  
+                  ## {{Resources.Label_Wildcards}}
+                  Wildcards can be used to select a random value from a list of options.
+                  ```prompt
+                  {red|green|blue} cat
+                  ```
+                  In this example, a color will be randomly chosen at the start of each generation. 
+                  The final output could be “red cat”, “green cat”, or “blue cat”.
+                  
+                  You can also use networks and embeddings in wildcards. For example:
+                  ```prompt
+                  {<lora:model:1>|<embedding:model>} cat
                   ```
                   """;
 

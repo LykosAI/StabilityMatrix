@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
 - Fixed ROCm torch indexes for ComfyUI & Forge
+- Fixed model browser sometimes downloading to `ModelsLora` or `ModelsStableDiffusion` folders instead of the correct folder
 
 ## v2.14.0-dev.2
 ### Added

@@ -317,7 +317,9 @@ public partial class SelectModelVersionViewModel(
 
         if (!downloadDirectory.ToString().EndsWith("Unknown"))
         {
-            installLocations.Add(downloadDirectory.ToString().Replace(rootModelsDirectory, "Models"));
+            installLocations.Add(
+                Path.Combine("Models", Path.GetRelativePath(rootModelsDirectory, downloadDirectory))
+            );
             foreach (
                 var directory in downloadDirectory.EnumerateDirectories(
                     "*",
@@ -325,7 +327,9 @@ public partial class SelectModelVersionViewModel(
                 )
             )
             {
-                installLocations.Add(directory.ToString().Replace(rootModelsDirectory, "Models"));
+                installLocations.Add(
+                    Path.Combine("Models", Path.GetRelativePath(rootModelsDirectory, directory))
+                );
             }
         }
 
@@ -335,7 +339,9 @@ public partial class SelectModelVersionViewModel(
             var stableDiffusionDirectory = rootModelsDirectory.JoinDir(
                 SharedFolderType.StableDiffusion.GetStringValue()
             );
-            installLocations.Add(stableDiffusionDirectory.ToString().Replace(rootModelsDirectory, "Models"));
+            installLocations.Add(
+                Path.Combine("Models", Path.GetRelativePath(rootModelsDirectory, stableDiffusionDirectory))
+            );
         }
 
         installLocations.Add("Custom...");

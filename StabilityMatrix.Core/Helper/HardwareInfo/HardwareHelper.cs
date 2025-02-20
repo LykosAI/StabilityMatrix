@@ -250,6 +250,17 @@ public static partial class HardwareHelper
         return IterGpuInfo().Any(gpu => gpu.IsNvidia);
     }
 
+    public static bool HasBlackwellGpu()
+    {
+        return IterGpuInfo()
+            .Any(
+                gpu =>
+                    gpu is { IsNvidia: true, Name: not null }
+                    && gpu.Name.Contains("RTX 50", StringComparison.OrdinalIgnoreCase)
+                    && !gpu.Name.Contains("RTX 5000", StringComparison.OrdinalIgnoreCase)
+            );
+    }
+
     /// <summary>
     /// Return true if the system has at least one AMD GPU.
     /// </summary>

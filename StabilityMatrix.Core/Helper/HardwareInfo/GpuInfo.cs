@@ -27,6 +27,16 @@ public record GpuInfo
         }
     }
 
+    public bool IsBlackwellGpu()
+    {
+        if (Name is null)
+            return false;
+
+        return IsNvidia
+            && Name.Contains("RTX 50", StringComparison.OrdinalIgnoreCase)
+            && !Name.Contains("RTX 5000", StringComparison.OrdinalIgnoreCase);
+    }
+
     public bool IsAmd => Name?.Contains("amd", StringComparison.OrdinalIgnoreCase) ?? false;
     public bool IsIntel => Name?.Contains("arc", StringComparison.OrdinalIgnoreCase) ?? false;
 

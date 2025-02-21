@@ -1,0 +1,138 @@
+﻿using System.Text.RegularExpressions;
+using Injectio.Attributes;
+using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Services;
+
+namespace StabilityMatrix.Core.Models.Packages;
+
+[RegisterSingleton<BasePackage, ForgeAmdGpu>(Duplicate = DuplicateStrategy.Append)]
+public class ForgeAmdGpu(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper
+) : SDWebForge(githubApi, settingsManager, downloadService, prerequisiteHelper)
+{
+    public override string Name => "stable-diffusion-webui-amdgpu-forge";
+    public override string DisplayName => "Stable Diffusion WebUI AMDGPU Forge";
+    public override string Author => "lshqqytiger";
+    public override string RepositoryName => "stable-diffusion-webui-amdgpu-forge";
+    public override string Blurb => "A fork of Stable Diffusion WebUI Forge with support for AMD GPUs";
+
+    public override string LicenseUrl =>
+        "https://github.com/lshqqytiger/stable-diffusion-webui-amdgpu-forge/blob/main/LICENSE.txt";
+
+    public override string Disclaimer =>
+        "Prerequisite install may require admin privileges and a reboot."
+        + "AMD GPUs under the RX 6800 may require additional manual setup.";
+
+    public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Zluda];
+
+    public override TorchIndex GetRecommendedTorchVersion() => TorchIndex.Zluda;
+
+    public override bool IsCompatible => HardwareHelper.PreferDirectMLOrZluda();
+
+    public override IEnumerable<PackagePrerequisite> Prerequisites =>
+        base.Prerequisites.Concat([PackagePrerequisite.HipSdk]);
+
+    public override List<LaunchOptionDefinition> LaunchOptions =>
+        base.LaunchOptions.Concat(
+            [
+                new LaunchOptionDefinition
+                {
+                    Name = "Use ZLUDA",
+                    Description = "Use ZLUDA for CUDA acceleration on AMD GPUs",
+                    Type = LaunchOptionType.Bool,
+                    InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
+                    Options = ["--use-zluda"]
+                }
+            ]
+        )
+            .ToList();
+
+    public override async Task InstallPackage(
+        string installLocation,
+        InstalledPackage installedPackage,
+        InstallPackageOptions options,
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
+        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
+        progress?.Report(new ProgressReport(1, "Install finished", isIndeterminate: false));
+    }
+
+    public override async Task RunPackage(
+        string installLocation,
+        InstalledPackage installedPackage,
+        RunPackageOptions options,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await SetupVenv(installLocation).ConfigureAwait(false);
+        var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
+        var hipPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            "AMD",
+            "ROCm",
+            "5.7"
+        );
+        var hipBinPath = Path.Combine(hipPath, "bin");
+        var envVars = new Dictionary<string, string>
+        {
+            ["ZLUDA_COMGR_LOG_LEVEL"] = "1",
+            ["HIP_PATH"] = hipPath,
+            ["HIP_PATH_57"] = hipPath,
+            ["GIT"] = portableGitBin.JoinFile("git.exe")
+        };
+        envVars.Update(settingsManager.Settings.EnvironmentVariables);
+
+        if (envVars.TryGetValue("PATH", out var pathValue))
+        {
+            envVars["PATH"] = Compat.GetEnvPathWithExtensions(hipBinPath, portableGitBin, pathValue);
+        }
+        else
+        {
+            envVars["PATH"] = Compat.GetEnvPathWithExtensions(hipBinPath, portableGitBin);
+        }
+
+        VenvRunner.EnvironmentVariables.Update(envVars);
+
+        VenvRunner.RunDetached(
+            [
+                Path.Combine(installLocation, options.Command ?? LaunchCommand),
+                ..options.Arguments,
+                ..ExtraLaunchArguments
+            ],
+            HandleConsoleOutput,
+            OnExit
+        );
+        return;
+
+        void HandleConsoleOutput(ProcessOutput s)
+        {
+            onConsoleOutput?.Invoke(s);
+
+            if (!s.Text.Contains("Running on", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
+            var match = regex.Match(s.Text);
+            if (!match.Success)
+                return;
+
+            WebUrl = match.Value;
+            OnStartupComplete(WebUrl);
+        }
+    }
+}

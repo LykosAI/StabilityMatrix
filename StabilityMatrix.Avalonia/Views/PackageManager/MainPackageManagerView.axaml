@@ -76,13 +76,12 @@
                                 </Border>
                                 <Grid
                                     Grid.Column="1"
-                                    ColumnDefinitions="Auto, *"
+                                    ColumnDefinitions="*, Auto"
                                     RowDefinitions="Auto, Auto, Auto, *">
                                     <TextBlock
                                         Grid.Row="0"
                                         Grid.Column="0"
-                                        MaxWidth="200"
-                                        Margin="8,0,8,0"
+                                        Margin="8,0,0,0"
                                         FontSize="16"
                                         FontWeight="SemiBold"
                                         Text="{Binding Package.DisplayName}"
@@ -102,7 +101,7 @@
                                         Grid.Row="0"
                                         Grid.Column="1"
                                         Width="24"
-                                        Margin="4,0,0,0"
+                                        Margin="0,0,0,0"
                                         Padding="4"
                                         HorizontalAlignment="Right"
                                         VerticalAlignment="Top"

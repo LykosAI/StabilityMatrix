@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Collections.Immutable;
+using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -106,7 +107,7 @@ public class ForgeAmdGpu(
             envVars["PATH"] = Compat.GetEnvPathWithExtensions(hipBinPath, portableGitBin);
         }
 
-        VenvRunner.EnvironmentVariables.Update(envVars);
+        VenvRunner.UpdateEnvironmentVariables(env => envVars.ToImmutableDictionary());
 
         VenvRunner.RunDetached(
             [

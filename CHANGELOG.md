@@ -6,11 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.14.0-dev.3
+### Added
+- Added support for RTX 5000-series GPUs in ComfyUI
 ### Changed
 - Upgraded ComfyUI CUDA torch to 12.6
 ### Fixed
 - Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
 - Fixed ROCm torch indexes for ComfyUI & Forge
+- Fixed model browser sometimes downloading to `ModelsLora` or `ModelsStableDiffusion` folders instead of the correct folder
+- Fixed incorrect Unet folder path for ComfyUI users on Linux/macOS
+- Fixed [#1157](https://github.com/LykosAI/StabilityMatrix/issues/1157) - crash when broken symlinks exist in model directories
+- Fixed [#1154](https://github.com/LykosAI/StabilityMatrix/issues/1154) - increased width for package name on the package cards
 
 ## v2.14.0-dev.2
 ### Added
@@ -69,6 +75,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
 - Fixed ROCm torch indexes for ComfyUI & Forge
+- Fixed model browser sometimes downloading to `ModelsLora` or `ModelsStableDiffusion` folders instead of the correct folder
 
 ## v2.13.3
 ### Changed

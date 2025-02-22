@@ -1028,12 +1028,19 @@ public partial class CheckpointsPageViewModel(
 
         foreach (var dir in directories)
         {
+            var dirInfo = new DirectoryPath(dir);
+            if (dirInfo.IsSymbolicLink)
+            {
+                if (!Directory.Exists(dirInfo.Info.LinkTarget))
+                    continue;
+            }
+
             var category = new CheckpointCategory
             {
                 Name = Path.GetFileName(dir),
                 Path = dir,
-                Count = new DirectoryInfo(dir)
-                    .EnumerateFileSystemInfos("*", EnumerationOptionConstants.AllDirectories)
+                Count = dirInfo
+                    .Info.EnumerateFileSystemInfos("*", EnumerationOptionConstants.AllDirectories)
                     .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(x.Extension))
             };
 

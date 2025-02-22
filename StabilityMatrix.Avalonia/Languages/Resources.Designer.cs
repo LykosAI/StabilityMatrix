@@ -258,6 +258,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Go to Settings.
+        /// </summary>
+        public static string Action_GoToSettings {
+            get {
+                return ResourceManager.GetString("Action_GoToSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Hide.
         /// </summary>
         public static string Action_Hide {
@@ -3455,6 +3464,23 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Text_DeleteFollowingItems {
             get {
                 return ResourceManager.GetString("Text_DeleteFollowingItems", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ## Heads Up: Lykos Account Sign-Out &amp; Security Upgrade
+        ///
+        ///We&apos;ve made some important behind-the-scenes improvements to how Stability Matrix handles Lykos accounts, upgrading to a more secure and convenient login system **(OAuth 2.0 with OpenID Connect)**. Because of this, you&apos;ve been signed out of your Lykos account.
+        ///
+        ///### Why the change?
+        ///
+        ///Your security and privacy are important to us. This upgrade brings:
+        ///
+        ///*   **Streamlined Experience:** Sign in once to [account.lykos.ai](https://account.lykos.ai) to c [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string Text_LykosAccountUpgradeNotice {
+            get {
+                return ResourceManager.GetString("Text_LykosAccountUpgradeNotice", resourceCulture);
             }
         }
         

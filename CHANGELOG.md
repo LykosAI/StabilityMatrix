@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.14.0-dev.3
 ### Added
+- Added new package - [Stable Diffusion WebUI AMDGPU Forge](https://github.com/lshqqytiger/stable-diffusion-webui-amdgpu-forge)
 - Added support for RTX 5000-series GPUs in ComfyUI
 ### Changed
 - Upgraded ComfyUI CUDA torch to 12.6

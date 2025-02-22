@@ -97,13 +97,6 @@ public class SDWebForge(
             },
             new()
             {
-                Name = "Use DirectML",
-                Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
-                Options = ["--directml"]
-            },
-            new()
-            {
                 Name = "Skip Torch CUDA Test",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS,
@@ -120,7 +113,7 @@ public class SDWebForge(
         ];
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
-        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
+        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps];
 
     public override async Task InstallPackage(
         string installLocation,
@@ -147,26 +140,19 @@ public class SDWebForge(
         var pipArgs = new PipInstallArgs("setuptools==69.5.1");
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        if (torchVersion is TorchIndex.DirectMl)
-        {
-            pipArgs = pipArgs.WithTorchDirectML();
-        }
-        else
-        {
-            pipArgs = pipArgs
-                .WithTorch("==2.3.1")
-                .WithTorchVision("==0.18.1")
-                .WithTorchExtraIndex(
-                    torchVersion switch
-                    {
-                        TorchIndex.Cpu => "cpu",
-                        TorchIndex.Cuda => "cu121",
-                        TorchIndex.Rocm => "rocm5.7",
-                        TorchIndex.Mps => "cpu",
-                        _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
-                    }
-                );
-        }
+        pipArgs = pipArgs
+            .WithTorch("==2.3.1")
+            .WithTorchVision("==0.18.1")
+            .WithTorchExtraIndex(
+                torchVersion switch
+                {
+                    TorchIndex.Cpu => "cpu",
+                    TorchIndex.Cuda => "cu121",
+                    TorchIndex.Rocm => "rocm5.7",
+                    TorchIndex.Mps => "cpu",
+                    _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                }
+            );
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
 

@@ -14,17 +14,21 @@ public class TokenAuthHeaderHandler : DelegatingHandler
     private readonly AsyncRetryPolicy<HttpResponseMessage> policy;
     private readonly ITokenProvider tokenProvider;
 
+    public Func<HttpRequestMessage, bool> RequestFilter { get; set; } =
+        request => request.Headers.Authorization is { Scheme: "Bearer" };
+
+    public Func<HttpResponseMessage, bool> ResponseFilter { get; set; } =
+        response =>
+            response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden
+            && response.RequestMessage?.Headers.Authorization is { Scheme: "Bearer", Parameter: { } param }
+            && !string.IsNullOrWhiteSpace(param);
+
     public TokenAuthHeaderHandler(ITokenProvider tokenProvider)
     {
         this.tokenProvider = tokenProvider;
 
         policy = Policy
-            .HandleResult<HttpResponseMessage>(
-                r =>
-                    r.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden
-                    && r.RequestMessage?.Headers.Authorization is { Scheme: "Bearer", Parameter: { } param }
-                    && !string.IsNullOrWhiteSpace(param)
-            )
+            .HandleResult(ResponseFilter)
             .RetryAsync(
                 async (result, _) =>
                 {
@@ -55,7 +59,7 @@ public class TokenAuthHeaderHandler : DelegatingHandler
         {
             // Only add if Authorization is already set to Bearer and access token is not empty
             // this allows some routes to not use the access token
-            if (request.Headers.Authorization is { Scheme: "Bearer" })
+            if (RequestFilter(request))
             {
                 var accessToken = await tokenProvider.GetAccessTokenAsync().ConfigureAwait(false);
 

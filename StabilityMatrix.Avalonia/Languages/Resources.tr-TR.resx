@@ -1192,4 +1192,7 @@
   <data name="Label_CopyLinkToClipboard" xml:space="preserve">
     <value>Bağlantıyı Panoya Kopyala</value>
   </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>Ayarlara Git</value>
+  </data>
 </root>

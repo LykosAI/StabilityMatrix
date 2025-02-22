@@ -1150,4 +1150,153 @@
   <data name="Label_DisableUpdateCheck" xml:space="preserve">
     <value>Desativar atualização automática</value>
   </data>
+<<<<<<< HEAD
 </root>
+=======
+  <data name="Warning_PleaseExtractFirst" xml:space="preserve">
+    <value>EXTRAIA O PROGRAMA DO ARQUIVO ZIP ANTES DE EXECUTAR O STABILITY MATRIX</value>
+  </data>
+  <data name="Label_HistorySize" xml:space="preserve">
+    <value>Tamanho do Histórico</value>
+  </data>
+  <data name="Label_HistorySize_Description" xml:space="preserve">
+    <value>O número de linhas acima daquelas exibidas no console em que você pode rolar de volta</value>
+  </data>
+  <data name="Label_ConnectAccountFailed" xml:space="preserve">
+    <value>Nós tivemos algum problema para conectar sua conta</value>
+  </data>
+  <data name="Label_EditModelMetadata" xml:space="preserve">
+    <value>Editar Metadados do Modelo</value>
+  </data>
+  <data name="Label_NSFW" xml:space="preserve">
+    <value>NSFW</value>
+  </data>
+  <data name="Label_Tags" xml:space="preserve">
+    <value>Tags</value>
+  </data>
+  <data name="Label_VersionName" xml:space="preserve">
+    <value>Nome de Versão</value>
+  </data>
+  <data name="Label_TrainedWords" xml:space="preserve">
+    <value>Palavras Treinadas</value>
+  </data>
+  <data name="Label_PreviewImage" xml:space="preserve">
+    <value>Pré-visualizar imagem</value>
+  </data>
+  <data name="Label_BatchSize" xml:space="preserve">
+    <value>Tamanho do Lote</value>
+  </data>
+  <data name="Label_Batches" xml:space="preserve">
+    <value>Lotes</value>
+  </data>
+  <data name="Label_Sampler" xml:space="preserve">
+    <value>Amostrador</value>
+  </data>
+  <data name="Label_Scheduler" xml:space="preserve">
+    <value>Agendador</value>
+  </data>
+  <data name="Label_MaxSize" xml:space="preserve">
+    <value>Tamanho máximo</value>
+  </data>
+  <data name="Label_UseSeparatePrompt" xml:space="preserve">
+    <value>Usar prompt separado</value>
+  </data>
+  <data name="Label_Seed" xml:space="preserve">
+    <value>Semente</value>
+  </data>
+  <data name="Label_NegativePrompt" xml:space="preserve">
+    <value>Prompt Negativo</value>
+  </data>
+  <data name="Label_NewFolder" xml:space="preserve">
+    <value>Nova Pasta</value>
+  </data>
+  <data name="Label_CopyLinkToClipboard" xml:space="preserve">
+    <value>Copiar Link para a Área de Transferência</value>
+  </data>
+  <data name="TextTemplate_OAuthLoginTitle" xml:space="preserve">
+    <value>Entrar com {0}</value>
+    <comment>e.g. &apos;Sign in with Google&apos;</comment>
+  </data>
+  <data name="Text_AllowBrowserOpenAppLink" xml:space="preserve">
+    <value>Permita que seu navegador abra este aplicativo quando solicitado.</value>
+  </data>
+  <data name="Text_OAuthLoginDescription" xml:space="preserve">
+    <value>Abra o link no seu navegador e siga as instruções para conectar sua conta.</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Title" xml:space="preserve">
+    <value>Substituir dependências do Python</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Description" xml:space="preserve">
+    <value>Adicione, substitua ou remova dependências para instalação e atualização</value>
+  </data>
+  <data name="Label_DependencySpecifiers" xml:space="preserve">
+    <value>Especificadores de dependência</value>
+  </data>
+  <data name="AnalyticsExample_InstallData" xml:space="preserve">
+    <value>{
+  &quot;packageName&quot;: &quot;stable-diffusion-webui&quot;,
+  &quot;packageVersion&quot;: &quot;v1.10.0&quot;,
+  &quot;isSuccess&quot;: true,
+  &quot;type&quot;: &quot;install&quot;,
+  &quot;timestamp&quot;: &quot;2024-09-04T02:14:04.1967404+00:00&quot;
+}</value>
+  </data>
+  <data name="Label_Analytics" xml:space="preserve">
+    <value>Dados Analíticos</value>
+  </data>
+  <data name="TextTemplate_YouCanChangeThisBehavior" xml:space="preserve">
+    <value>Você sempre pode alterar esse comportamento em {0}.</value>
+    <comment>e.g. &apos;You can always change this behavior in Settings &gt; Category &gt; Item.&apos;</comment>
+  </data>
+  <data name="Text_AnalyticsDescription" xml:space="preserve">
+    <value>Ajude-nos a melhorar o Stability Matrix enviando dados anônimos sobre recursos usados, versões de sistema operacional, tipos de pacotes instalados, etc. Os dados enviados nunca serão associados a você ou à sua conta e não incluirão dados pessoais ou qualquer informação sensível.</value>
+  </data>
+  <data name="Text_AnalyticsDescriptionShort" xml:space="preserve">
+    <value>Ajude-nos a melhorar o Stability Matrix enviando dados anônimos sobre recursos usados, versões de sistema operacional, tipos de pacotes instalados, etc.</value>
+  </data>
+  <data name="Text_AnalyticsDataPrivacyInfo" xml:space="preserve">
+    <value>Os dados enviados nunca serão associados a você ou à sua conta e não incluirão dados pessoais ou qualquer informação sensível.</value>
+  </data>
+  <data name="Label_UsageData" xml:space="preserve">
+    <value>Dados de Uso</value>
+  </data>
+  <data name="Label_PrivacyPolicy" xml:space="preserve">
+    <value>Política de Privacidade</value>
+  </data>
+  <data name="Label_ImageHidden" xml:space="preserve">
+    <value>Imagem ocultada</value>
+  </data>
+  <data name="Label_NoImageFound" xml:space="preserve">
+    <value>Nenhuma imagem encontrada</value>
+  </data>
+  <data name="Label_HideEmptyCategories" xml:space="preserve">
+    <value>Ocultar categorias vazias</value>
+  </data>
+  <data name="Label_ShowNsfwImages" xml:space="preserve">
+    <value>Mostrar imagens NSFW</value>
+  </data>
+  <data name="Label_EnableLongPaths" xml:space="preserve">
+    <value>Habilitar caminhos longos</value>
+    <comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_EnableLongPathsDescription" xml:space="preserve">
+    <value>Remover limitações MAX_PATH de funções comuns de arquivo e diretório do Win32</value>
+    <comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_SystemSettings" xml:space="preserve">
+    <value>Configurações do Sistema</value>
+  </data>
+  <data name="Label_ChangesApplied" xml:space="preserve">
+    <value>Alterações Aplicadas</value>
+  </data>
+  <data name="Text_RestartMayBeRequiredForSystemChanges" xml:space="preserve">
+    <value>Uma reinicialização pode ser necessária para que as alterações do sistema tenham efeito.</value>
+  </data>
+  <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
+    <value>Este pacote não possui versões disponíveis.</value>
+  </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>Ir para Configurações</value>
+  </data>
+</root>
+>>>>>>> ebfff1b1 (Merge pull request #979 from ionite34/openid)

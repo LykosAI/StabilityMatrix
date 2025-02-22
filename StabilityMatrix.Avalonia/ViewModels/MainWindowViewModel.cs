@@ -349,7 +349,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 });
 
                 // Mark as seen
-                // settingsManager.Transaction(s => s.SeenTeachingTips.Add(TeachingTip.LykosAccountMigrateTip));
+                settingsManager.Transaction(s => s.SeenTeachingTips.Add(TeachingTip.LykosAccountMigrateTip));
             })
             .SafeFireAndForget(ex =>
             {

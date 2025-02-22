@@ -1329,4 +1329,30 @@
   <data name="Label_Wildcards" xml:space="preserve">
     <value></value>
   </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>前往设置</value>
+  </data>
+  <data name="Text_LykosAccountUpgradeNotice" xml:space="preserve">
+    <value>## 重要提示：Lykos 帐户登出和安全升级
+
+我们对 Stability Matrix 处理 Lykos 帐户的方式进行了一些重要的幕后改进，升级到更安全、更便捷的登录系统 **(OAuth 2.0 with OpenID Connect)**。 因此，您已登出 Lykos 帐户。
+
+### 为什么进行此更改？
+
+您的安全和隐私对我们很重要。 此升级带来：
+
+*   **简化的体验：** 登录 [account.lykos.ai](https://account.lykos.ai) 一次即可连接到 Stability Matrix 和其他 Lykos AI 服务。
+*   **更多登录方式：** 使用您现有的 [lykos.ai](https://lykos.ai) 帐户，或使用 **Apple**、**GitHub** 或 **Google** 登录。
+*   **增强的隐私：** Stability Matrix 仅请求其所需的权限。
+*   **行业标准安全性：** 我们正在使用 OAuth 2.0，这是安全登录的黄金标准。
+*   **为未来做好准备：** 这允许与其他应用程序和服务进行安全连接。
+
+### 我需要做什么？
+
+单击**“转到设置”**按钮，然后单击**“Lykos 帐户”**旁边的**“连接”**。
+
+### Lykos 帐户是必需的吗？
+
+不，Stability Matrix 在没有帐户的情况下仍然可以正常运行。 但是，您的 Lykos 帐户可以启用一些额外的连接功能，例如为我们的 Patreon 支持者自动更新到开发版本（以及更多即将推出的功能）。</value>
+  </data>
 </root>

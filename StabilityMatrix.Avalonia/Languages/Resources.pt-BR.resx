@@ -1281,4 +1281,7 @@
   <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
     <value>Este pacote não possui versões disponíveis.</value>
   </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>Ir para Configurações</value>
+  </data>
 </root>

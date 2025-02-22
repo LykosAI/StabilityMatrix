@@ -1273,4 +1273,7 @@
   <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
     <value>Релизы для этого пакета недоступны.</value>
   </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>Перейти к настройкам</value>
+  </data>
 </root>

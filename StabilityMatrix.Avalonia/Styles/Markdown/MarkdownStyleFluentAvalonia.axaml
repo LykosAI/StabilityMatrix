@@ -39,21 +39,23 @@
     <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock">
         <Style.Setters>
             <Setter Property="SelectionBrush" Value="{DynamicResource TextControlSelectionHighlightColor}" />
-            <Setter Property="FontSize" Value="{mde:Multiply ControlContentThemeFontSize, 1}" />
+            <Setter Property="FontSize" Value="14" />
             <Setter Property="Margin" Value="0,5" />
         </Style.Setters>
     </Style>
     <Style Selector=".Markdown_Avalonia_MarkdownViewer TextBlock">
         <Style.Setters>
-            <Setter Property="FontSize" Value="{mde:Multiply ControlContentThemeFontSize, 1}" />
+            <Setter Property="Margin" Value="0, 7, 0, 14" />
+            <Setter Property="FontSize" Value="14" />
         </Style.Setters>
     </Style>
 
     <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock.Heading1">
         <Style.Setters>
-            <Setter Property="FontSize" Value="{mde:Multiply ControlContentThemeFontSize, 3.2}" />
+            <Setter Property="Margin" Value="{StaticResource ContentDialogTitleMargin}" />
+            <Setter Property="FontSize" Value="20" />
             <Setter Property="Foreground" Value="{mde:Alpha TextFillColorPrimaryBrush}" />
-            <Setter Property="FontWeight" Value="Light" />
+            <Setter Property="FontWeight" Value="SemiBold" />
         </Style.Setters>
     </Style>
 
@@ -67,7 +69,7 @@
 
     <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock.Heading3">
         <Style.Setters>
-            <Setter Property="FontSize" Value="{mde:Multiply ControlContentThemeFontSize, 1.6}" />
+            <Setter Property="FontSize" Value="{mde:Multiply ControlContentThemeFontSize, 1.4}" />
             <Setter Property="Foreground" Value="{mde:Alpha TextFillColorPrimaryBrush, 0.7}" />
             <Setter Property="FontWeight" Value="Light" />
         </Style.Setters>
@@ -75,6 +77,7 @@
 
     <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock.Heading4">
         <Style.Setters>
+            <Setter Property="Margin" Value="0, 0, 10, 0" />
             <Setter Property="FontSize" Value="{mde:Multiply ControlContentThemeFontSize, 1.2}" />
             <Setter Property="Foreground" Value="{mde:Alpha TextFillColorPrimaryBrush, 0.7}" />
             <Setter Property="FontWeight" Value="Light" />
@@ -180,7 +183,7 @@
 
     <Style Selector=".Markdown_Avalonia_MarkdownViewer Grid.List">
         <Style.Setters>
-            <Setter Property="Margin" Value="40,0,0,0" />
+            <Setter Property="Margin" Value="16,0,0,0" />
         </Style.Setters>
     </Style>
     <Style Selector=".Markdown_Avalonia_MarkdownViewer ctxt|CTextBlock.ListMarker">

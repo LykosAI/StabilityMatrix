@@ -12,3 +12,13 @@ public readonly record struct Secrets
 
     public LykosAccountV2Tokens? LykosAccountV2 { get; init; }
 }
+
+public static class SecretsExtensions
+{
+    public static bool HasLegacyLykosAccount(this Secrets secrets)
+    {
+#pragma warning disable CS0618 // Type or member is obsolete
+        return secrets.LykosAccount is not null;
+#pragma warning restore CS0618 // Type or member is obsolete
+    }
+}

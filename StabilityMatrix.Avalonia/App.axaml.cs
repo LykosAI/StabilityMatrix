@@ -380,7 +380,10 @@ public sealed class App : Application
                     provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
                     provider.GetRequiredService<INotificationService>(),
                     provider.GetRequiredService<IAnalyticsHelper>(),
-                    provider.GetRequiredService<IUpdateHelper>()
+                    provider.GetRequiredService<IUpdateHelper>(),
+                    provider.GetRequiredService<ISecretsManager>(),
+                    provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),
+                    provider.GetRequiredService<INavigationService<SettingsViewModel>>()
                 )
                 {
                     Pages =

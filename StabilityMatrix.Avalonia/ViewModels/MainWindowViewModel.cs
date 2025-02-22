@@ -1,36 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Media.Animation;
 using NLog;
-using Sentry;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
+using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Analytics;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
+using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -48,6 +47,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly INotificationService notificationService;
     private readonly IAnalyticsHelper analyticsHelper;
     private readonly IUpdateHelper updateHelper;
+    private readonly ISecretsManager secretsManager;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
+    private readonly INavigationService<SettingsViewModel> settingsNavService;
     public string Greeting => "Welcome to Avalonia!";
 
     [ObservableProperty]
@@ -89,7 +91,10 @@ public partial class MainWindowViewModel : ViewModelBase
         Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler,
         INotificationService notificationService,
         IAnalyticsHelper analyticsHelper,
-        IUpdateHelper updateHelper
+        IUpdateHelper updateHelper,
+        ISecretsManager secretsManager,
+        INavigationService<MainWindowViewModel> navigationService,
+        INavigationService<SettingsViewModel> settingsNavService
     )
     {
         this.settingsManager = settingsManager;
@@ -101,6 +106,9 @@ public partial class MainWindowViewModel : ViewModelBase
         this.notificationService = notificationService;
         this.analyticsHelper = analyticsHelper;
         this.updateHelper = updateHelper;
+        this.secretsManager = secretsManager;
+        this.navigationService = navigationService;
+        this.settingsNavService = settingsNavService;
         ProgressManagerViewModel = dialogFactory.Get<ProgressManagerViewModel>();
         UpdateViewModel = dialogFactory.Get<UpdateViewModel>();
     }
@@ -300,6 +308,53 @@ public partial class MainWindowViewModel : ViewModelBase
                 })
                 .SafeFireAndForget();
         }
+
+        // Account migration notice
+        Task.Run(async () =>
+            {
+                if (settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.LykosAccountMigrateTip))
+                {
+                    return;
+                }
+
+                var secrets = await secretsManager.LoadAsync();
+                if (!secrets.HasLegacyLykosAccount() || secrets.LykosAccountV2 is not null)
+                {
+                    return;
+                }
+
+                // Show dialog
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    var dialog = DialogHelper.CreateMarkdownDialog(Resources.Text_LykosAccountUpgradeNotice);
+
+                    dialog.MaxDialogWidth = 600;
+                    dialog.ContentMargin = new Thickness(32, 0);
+                    dialog.PrimaryButtonText = Resources.Action_GoToSettings;
+                    dialog.IsPrimaryButtonEnabled = true;
+                    dialog.CloseButtonText = Resources.Action_Close;
+                    dialog.DefaultButton = ContentDialogButton.Primary;
+
+                    // Show dialog, nav to settings if primary
+                    if (await dialog.ShowAsync() is ContentDialogResult.Primary)
+                    {
+                        navigationService.NavigateTo<SettingsViewModel>(
+                            new SuppressNavigationTransitionInfo()
+                        );
+                        await Task.Delay(100);
+                        settingsNavService.NavigateTo<AccountSettingsViewModel>(
+                            new SuppressNavigationTransitionInfo()
+                        );
+                    }
+                });
+
+                // Mark as seen
+                // settingsManager.Transaction(s => s.SeenTeachingTips.Add(TeachingTip.LykosAccountMigrateTip));
+            })
+            .SafeFireAndForget(ex =>
+            {
+                Logger.Error(ex, "Error during account migration notice check");
+            });
     }
 
     private void PreloadPages()

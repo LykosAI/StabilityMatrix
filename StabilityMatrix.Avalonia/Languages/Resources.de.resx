@@ -937,4 +937,7 @@
   <data name="Label_CLIPStrength" xml:space="preserve">
     <value>CLIP Stärke</value>
   </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>Zu den Einstellungen</value>
+  </data>
 </root>

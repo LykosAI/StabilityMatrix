@@ -23,6 +23,13 @@
       ],
       "rollForward": false
     },
+    "refitter": {
+      "version": "1.4.1",
+      "commands": [
+        "refitter"
+      ],
+      "rollForward": false
+    },
     "dotnet-script": {
       "version": "1.6.0",
       "commands": [

@@ -54,6 +54,8 @@
       <PackageReference Include="Octokit" />
       <PackageReference Include="OneOf" />
       <PackageReference Include="OneOf.SourceGenerator" />
+      <PackageReference Include="OpenIddict.Client" />
+      <PackageReference Include="OpenIddict.Client.SystemNetHttp" />
       <PackageReference Include="Polly" />
       <PackageReference Include="Polly.Contrib.WaitAndRetry" />
       <PackageReference Include="pythonnet" />

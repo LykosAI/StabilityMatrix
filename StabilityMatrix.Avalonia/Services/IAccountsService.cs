@@ -13,13 +13,21 @@ public interface IAccountsService
 
     LykosAccountStatusUpdateEventArgs? LykosStatus { get; }
 
+    [Obsolete]
     Task LykosSignupAsync(string email, string password, string username);
 
+    [Obsolete]
     Task LykosLoginAsync(string email, string password);
 
+    [Obsolete]
     Task LykosLoginViaGoogleOAuthAsync(string code, string state, string codeVerifier);
 
+    [Obsolete]
     Task LykosLogoutAsync();
+
+    Task LykosAccountV2LoginAsync(LykosAccountV2Tokens tokens);
+
+    Task LykosAccountV2LogoutAsync();
 
     Task LykosPatreonOAuthLogoutAsync();
 

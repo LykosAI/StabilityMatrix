@@ -13,6 +13,12 @@
          "command": "dotnet",
          "args": [ "xstyler", "-f", "${staged}" ],
          "include": [ "**/*.axaml" ]
+      },
+      {
+         "name": "Run refitter for LykosAuthApi",
+         "group": "generate-openapi",
+         "command": "dotnet",
+         "args": ["refitter", "--settings-file", "./StabilityMatrix.Core/Api/LykosAuthApi/.refitter"]
       }
    ]
 }

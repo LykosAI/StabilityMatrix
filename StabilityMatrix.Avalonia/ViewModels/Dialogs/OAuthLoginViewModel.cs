@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 using AsyncAwaitBestPractices;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -13,7 +15,6 @@ using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
-using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -28,6 +29,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [RegisterTransient<OAuthLoginViewModel>]
 [ManagedService]
 [View(typeof(OAuthLoginDialog))]
+[Localizable(false)]
 public partial class OAuthLoginViewModel(
     ILogger<OAuthConnectViewModel> logger,
     IDistributedSubscriber<string, Uri> uriHandlerSubscriber
@@ -56,6 +58,8 @@ public partial class OAuthLoginViewModel(
 
     // ReSharper disable once LocalizableElement
     public virtual string CallbackUriPath { get; set; } = "/oauth/default/callback";
+
+    public virtual Uri? IconUri { get; set; }
 
     [ObservableProperty]
     private bool isLoading = true;
@@ -133,5 +137,17 @@ public partial class OAuthLoginViewModel(
         }
 
         GC.SuppressFinalize(this);
+    }
+
+    protected static (string Challenge, string Verifier) GeneratePkceSha256ChallengePair()
+    {
+        var verifier = RandomNumberGenerator.GetHexString(128, true);
+
+        var hash = SHA256.HashData(Encoding.ASCII.GetBytes(verifier));
+
+        // Convert to base64url
+        var base64UrlHash = Convert.ToBase64String(hash).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
+        return (base64UrlHash, verifier);
     }
 }

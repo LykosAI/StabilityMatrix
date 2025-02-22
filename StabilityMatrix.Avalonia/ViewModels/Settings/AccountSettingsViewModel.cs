@@ -10,6 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
+using OpenIddict.Client;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -18,6 +19,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Api.LykosAuthApi;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api;
@@ -39,7 +41,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly ServiceManager<ViewModelBase> vmFactory;
     private readonly INotificationService notificationService;
-    private readonly ILykosAuthApi lykosAuthApi;
+    private readonly ILykosAuthApiV2 lykosAuthApi;
 
     /// <inheritdoc />
     public override string Title => "Accounts";
@@ -67,12 +69,14 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private CivitAccountStatusUpdateEventArgs civitStatus = CivitAccountStatusUpdateEventArgs.Disconnected;
 
+    public string LykosAccountManageUrl => new Uri(App.LykosAccountApiBaseUrl).Append("/manage").ToString();
+
     public AccountSettingsViewModel(
         IAccountsService accountsService,
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> vmFactory,
         INotificationService notificationService,
-        ILykosAuthApi lykosAuthApi
+        ILykosAuthApiV2 lykosAuthApi
     )
     {
         this.accountsService = accountsService;
@@ -154,14 +158,25 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         if (!await BeforeConnectCheck())
             return;
 
-        var vm = vmFactory.Get<LykosLoginViewModel>();
+        var vm = vmFactory.Get<OAuthDeviceAuthViewModel>();
+        vm.ChallengeRequest = new OpenIddictClientModels.DeviceChallengeRequest
+        {
+            ProviderName = OpenIdClientConstants.LykosAccount.ProviderName
+        };
         await vm.ShowDialogAsync();
+
+        if (vm.AuthenticationResult is { } result)
+        {
+            await accountsService.LykosAccountV2LoginAsync(
+                new LykosAccountV2Tokens(result.AccessToken, result.RefreshToken, result.IdentityToken)
+            );
+        }
     }
 
     [RelayCommand]
     private Task DisconnectLykos()
     {
-        return accountsService.LykosLogoutAsync();
+        return accountsService.LykosAccountV2LogoutAsync();
     }
 
     [RelayCommand(CanExecute = nameof(IsInitialUpdateFinished))]
@@ -174,9 +189,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
             return;
 
         var urlResult = await notificationService.TryAsync(
-            lykosAuthApi.GetPatreonOAuthUrl(
-                Program.MessagePipeUri.Append("/oauth/patreon/callback").ToString()
-            )
+            lykosAuthApi.ApiV2OauthPatreonLink(Program.MessagePipeUri.Append("/oauth/patreon/callback"))
         );
 
         if (!urlResult.IsSuccessful || urlResult.Result is not { } url)
@@ -188,7 +201,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 
         var dialogVm = vmFactory.Get<OAuthConnectViewModel>();
         dialogVm.Title = "Connect Patreon Account";
-        dialogVm.Url = url;
+        dialogVm.Url = url.ToString();
 
         if (await dialogVm.GetDialog().ShowAsync() == ContentDialogResult.Primary)
         {
@@ -263,7 +276,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     /// </summary>
     partial void OnLykosStatusChanged(LykosAccountStatusUpdateEventArgs value)
     {
-        if (value.User?.Id is { } userEmail)
+        if (value.Email is { } userEmail)
         {
             userEmail = userEmail.Trim().ToLowerInvariant();
 

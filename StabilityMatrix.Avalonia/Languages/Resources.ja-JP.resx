@@ -1237,4 +1237,7 @@
   <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
     <value>このパッケージではこのリリースを利用できません。</value>
   </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>設定に移動</value>
+  </data>
 </root>

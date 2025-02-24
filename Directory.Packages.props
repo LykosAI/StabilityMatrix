@@ -20,7 +20,7 @@
     <PackageVersion Include="DynamicData" Version="9.0.1" />
     <PackageVersion Include="ExifLibNet" Version="2.1.4" />
     <PackageVersion Include="Exceptionless.DateTimeExtensions" Version="3.4.3" />
-    <PackageVersion Include="FreneticLLC.FreneticUtilities" Version="1.0.32" />
+    <PackageVersion Include="FreneticLLC.FreneticUtilities" Version="1.0.35" />
     <PackageVersion Include="FuzzySharp" Version="2.0.2" />
     <PackageVersion Include="Hardware.Info" Version="100.1.0.1" />
     <PackageVersion Include="Injectio" Version="4.0.0" />

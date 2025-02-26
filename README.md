@@ -51,7 +51,7 @@ Multi-Platform Package Manager and Inference UI for Stable Diffusion
 
 ### 🖱️ One click install and update for Stable Diffusion Web UI Packages
 - Supports:
-  - [Stable Diffusion WebUI reForge][reforge], [Stable Diffusion WebUI Forge][forge], [Stable Difufsion WebUI AMDGPU Forge][amdforge] [Automatic 1111][auto1111], [Automatic 1111 DirectML][auto1111-directml], [SD Web UI-UX][webui-ux], [SD.Next][sdnext]
+  - [Stable Diffusion WebUI reForge][reforge], [Stable Diffusion WebUI Forge][forge], [Stable Diffusion WebUI AMDGPU Forge][amdforge] [Automatic 1111][auto1111], [Automatic 1111 DirectML][auto1111-directml], [SD Web UI-UX][webui-ux], [SD.Next][sdnext]
   - [Fooocus][fooocus], [Fooocus MRE][fooocus-mre], [Fooocus ControlNet SDXL][fooocus-controlnet], [Ruined Fooocus][ruined-fooocus], [Fooocus - mashb1t's 1-Up Edition][fooocus-mashb1t], [SimpleSDXL][simplesdxl]
   - [ComfyUI][comfy]
   - [StableSwarmUI][stable-swarm]

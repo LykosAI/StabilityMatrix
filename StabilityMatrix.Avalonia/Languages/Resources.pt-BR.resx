@@ -1150,9 +1150,6 @@
   <data name="Label_DisableUpdateCheck" xml:space="preserve">
     <value>Desativar atualização automática</value>
   </data>
-<<<<<<< HEAD
-</root>
-=======
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>EXTRAIA O PROGRAMA DO ARQUIVO ZIP ANTES DE EXECUTAR O STABILITY MATRIX</value>
   </data>
@@ -1299,4 +1296,3 @@
     <value>Ir para Configurações</value>
   </data>
 </root>
->>>>>>> ebfff1b1 (Merge pull request #979 from ionite34/openid)

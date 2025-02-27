@@ -1,4 +1,48 @@
-# Stability Matrix Code Style Guidelines
+# Building
+## Running & Debug
+- If building using managed IDEs like Rider or Visual Studio, ensure that a valid `--runtime ...` argument is being passed to `dotnet`, or `RuntimeIdentifier=...` is set for calling `msbuild`. This is required for runtime-specific resources to be included in the build. Stability Matrix currently supports building for the `win-x64`, `linux-x64` and `osx-arm64` runtimes.
+- You can also build the `StabilityMatrix.Avalonia` project using `dotnet`:
+```bash
+dotnet build ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj -r win-x64 -c Debug
+```
+- Note that on Windows, the `net8.0-windows10.0.17763.0` framework is used, build outputs will be in `StabilityMatrix.Avalonia/bin/Debug/net8.0-windows10.0.17763.0/win-x64`. On other platforms the `net8.0` framework is used.
+
+## Building to single file for release
+(Replace `$RELEASE_VERSION` with a non v-prefixed semver version number, e.g. `2.10.0`, `2.11.0-dev.1`, etc.)
+### Windows
+```bash
+dotnet publish ./StabilityMatrix.Avalonia/StabilityMatrix.Avalonia.csproj -r win-x64 -c Release -p:Version=$env:RELEASE_VERSION -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishReadyToRun=true
+```
+### macOS
+The `output_dir` environment variable can be specified or defaults to `./out/osx-arm64/`
+```bash
+./Build/build_macos_app.sh -v $RELEASE_VERSION
+```
+### Linux
+```bash
+sudo apt-get -y install libfuse2
+dotnet tool install -g KuiperZone.PupNet
+pupnet -r linux-x64 -c Release --kind appimage --app-version $RELEASE_VERSION --clean
+```
+
+# Scripts
+## Install Husky.Net & Pre-commit hooks
+- Building the `StabilityMatrix.Avalonia` project once should also install Husky.Net, or run the following command:
+```bash
+dotnet tool restore && dotnet husky install
+```
+## Adding Husky pre-commit hooks
+```bash
+dotnet husky install
+```
+## Generated OpenApi clients
+- Refitter is used to generate some OpenApi clients. New clients should be added to `./.husky/task-runner.json`.
+- To regenerate clients, run the following command:
+```bash
+dotnet husky run -g generate-openapi
+```
+
+# Style Guidelines
 These are just guidelines, mostly following the official C# style guidelines, except in a few cases. We might not adhere to these 100% ourselves, but lets try our best :)
 
 ## Naming conventions

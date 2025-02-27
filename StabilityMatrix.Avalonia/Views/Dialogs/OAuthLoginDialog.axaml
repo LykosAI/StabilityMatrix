@@ -10,9 +10,9 @@
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
     d:DataContext="{x:Static mocks:DesignData.OAuthLoginViewModel}"
     d:DesignHeight="400"
     d:DesignWidth="500"
@@ -26,13 +26,12 @@
             </Style>
         </Grid.Styles>
 
-        <!-- Content  -->
-        <StackPanel 
-            Grid.Row="0" 
-            Spacing="16"
+        <!--  Content  -->
+        <StackPanel
+            Grid.Row="0"
             IsEnabled="{Binding !IsLoading}"
             IsVisible="{Binding !IsLoading}"
-            >
+            Spacing="16">
             <HyperlinkButton
                 Padding="6,0"
                 Content="{Binding Url}"
@@ -42,40 +41,51 @@
                 Margin="6,0"
                 Text="{Binding Description}"
                 TextWrapping="WrapWithOverflow" />
-        
+
             <TextBlock
                 Margin="6,0"
                 Text="{Binding AppLinkInstructions}"
                 TextWrapping="WrapWithOverflow" />
         </StackPanel>
-        
+
         <!--  Loading  -->
         <StackPanel
             Grid.Row="0"
-            Spacing="16"
             Margin="16,64"
             IsEnabled="{Binding IsLoading}"
-            IsVisible="{Binding IsLoading}">
+            IsVisible="{Binding IsLoading}"
+            Spacing="16">
             <Border
-                Background="#131314"
-                VerticalAlignment="Center"
                 HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Background="White"
                 CornerRadius="24">
-                <Svg
+                <!--<Image
                     VerticalAlignment="Center"
                     Margin="12,12"
                     Height="24"
                     Width="24"
-                    Path="/Assets/brands-google-oauth-icon.svg"/>
+                    Source="{Binding IconUri}"/>-->
+                <!--<Svg
+                    VerticalAlignment="Center"
+                    Margin="12,12"
+                    Height="24"
+                    Width="24"
+                    Path="/Assets/brands-google-oauth-icon.svg"/>-->
+                <Svg
+                    Width="24"
+                    Height="24"
+                    Margin="12,12"
+                    VerticalAlignment="Center"
+                    Path="{Binding IconUri}" />
             </Border>
         </StackPanel>
-        
-        <ProgressBar 
-            Grid.Row="1" 
-            Margin="0,16,0,0" 
-            IsIndeterminate="True"
+
+        <ProgressBar
+            Grid.Row="1"
+            Margin="0,16,0,0"
             IsEnabled="{Binding IsLoading}"
-            IsVisible="{Binding IsLoading}"
-            />
+            IsIndeterminate="True"
+            IsVisible="{Binding IsLoading}" />
     </Grid>
 </controls:UserControlBase>

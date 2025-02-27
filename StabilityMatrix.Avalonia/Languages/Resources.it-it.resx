@@ -683,4 +683,7 @@
   <data name="Label_CivitAi" xml:space="preserve">
     <value>CivitAI</value>
   </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>Vai alle impostazioni</value>
+  </data>
 </root>

@@ -5,15 +5,16 @@
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:sm="clr-namespace:StabilityMatrix.Avalonia"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmSettings="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Settings"
-    xmlns:sm="clr-namespace:StabilityMatrix.Avalonia"
     d:DataContext="{x:Static mocks:DesignData.AccountSettingsViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"
@@ -61,7 +62,7 @@
                 </DrawingGroup>
             </DrawingGroup>
         </DrawingImage>
-        
+
         <SolidColorBrush x:Key="BrushB0" Color="#FFFFFFFF" />
         <DrawingImage x:Key="BrandsPatreonSymbolWhite">
             <DrawingGroup>
@@ -76,34 +77,54 @@
             <sg:SpacedGrid Margin="0,4,0,16" ColumnDefinitions="*,*">
                 <StackPanel Orientation="Horizontal" Spacing="16">
                     <fluentIcons:SymbolIcon
-                        IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNullOrEmpty}}"
                         Width="64"
                         Height="64"
-                        IconVariant="Filled"
                         FontSize="64"
+                        IconVariant="Filled"
+                        IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNullOrEmpty}}"
                         Symbol="Person" />
-                    <HyperlinkButton
-                        ToolTip.Tip="Edit on Gravatar"
-                        NavigateUri="http://gravatar.com/emails/"
-                        IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                    <Button
                         Padding="2"
-                        CornerRadius="8" 
                         HorizontalAlignment="Left"
-                        Classes="transparent-full">
+                        Classes="transparent-full"
+                        CornerRadius="8"
+                        IsVisible="{Binding LykosProfileImageUrl, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <Button.Flyout>
+                            <ui:FAMenuFlyout>
+                                <ui:MenuFlyoutItem
+                                    Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                                    CommandParameter="{Binding LykosAccountManageUrl}"
+                                    HotKey="{x:Null}"
+                                    IconSource="Link"
+                                    Text="Manage your Lykos Account" />
+                                <ui:MenuFlyoutItem
+                                    Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                                    CommandParameter="http://gravatar.com/emails/"
+                                    HotKey="{x:Null}"
+                                    IconSource="Link"
+                                    Text="Edit Profile Image on Gravatar" />
+                                <ui:MenuFlyoutSeparator />
+                                <ui:MenuFlyoutItem
+                                    Command="{x:Static helpers:ClipboardCommands.CopyTextCommand}"
+                                    CommandParameter="{Binding LykosStatus.Id}"
+                                    IconSource="Copy"
+                                    Text="Copy User ID" />
+                            </ui:FAMenuFlyout>
+                        </Button.Flyout>
                         <controls:BetterAdvancedImage
-                            Source="{Binding LykosProfileImageUrl}"
                             Width="64"
                             Height="64"
-                            CornerRadius="8" /> 
-                    </HyperlinkButton>
+                            CornerRadius="8"
+                            Source="{Binding LykosProfileImageUrl}" />
+                    </Button>
 
 
                     <StackPanel>
                         <TextBlock
                             Margin="-1,0,0,0"
-                            Text="{Binding LykosStatus.User.Account.Name, FallbackValue=''}"
+                            Text="{Binding LykosStatus.DisplayName, FallbackValue=''}"
                             Theme="{DynamicResource SubtitleTextBlockStyle}" />
-                        <TextBlock Text="{Binding LykosStatus.User.Id, FallbackValue=''}" />
+                        <TextBlock Text="{Binding LykosStatus.Email, FallbackValue=''}" />
                     </StackPanel>
                 </StackPanel>
             </sg:SpacedGrid>
@@ -125,14 +146,14 @@
                     </MultiBinding>
                 </controls:SettingsAccountLinkExpander.IsLoading>
             </controls:SettingsAccountLinkExpander>
-            
+
             <controls:SettingsAccountLinkExpander
                 ConnectCommand="{Binding ConnectPatreonCommand}"
                 DisconnectCommand="{Binding DisconnectPatreonCommand}"
                 Header="Patreon"
-                IsEnabled="{Binding LykosStatus.IsConnected}"
                 HeaderTargetUri="{x:Static sm:Assets.PatreonUrl}"
                 IsConnected="{Binding IsPatreonConnected}"
+                IsEnabled="{Binding LykosStatus.IsConnected}"
                 OffDescription="Access Preview and Dev release channels for auto-updates">
                 <controls:SettingsAccountLinkExpander.IconSource>
                     <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
@@ -145,12 +166,15 @@
                 </controls:SettingsAccountLinkExpander.IsLoading>
             </controls:SettingsAccountLinkExpander>
 
-            <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4" Margin="0,6,0,0">
+            <sg:SpacedGrid
+                Margin="0,6,0,0"
+                RowDefinitions="Auto,*,*"
+                RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
                     Text="{x:Static lang:Resources.Label_Integrations}" />
-                
+
                 <controls:SettingsAccountLinkExpander
                     Grid.Row="2"
                     ConnectCommand="{Binding ConnectCivitCommand}"
@@ -158,8 +182,8 @@
                     Header="CivitAI"
                     HeaderTargetUri="{x:Static sm:Assets.CivitAIUrl}"
                     IsConnected="{Binding CivitStatus.IsConnected}"
-                    OnDescriptionExtra="{Binding CivitStatus.UsernameWithParentheses}"
-                    OffDescription="Connect to Download Models that require login">
+                    OffDescription="Connect to Download Models that require login"
+                    OnDescriptionExtra="{Binding CivitStatus.UsernameWithParentheses}">
                     <controls:SettingsAccountLinkExpander.IconSource>
                         <ui:BitmapIconSource UriSource="avares://StabilityMatrix.Avalonia/Assets/brands-civitai.png" />
                     </controls:SettingsAccountLinkExpander.IconSource>

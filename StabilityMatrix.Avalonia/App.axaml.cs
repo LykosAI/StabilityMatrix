@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -37,6 +38,8 @@ using NLog.Config;
 using NLog.Extensions.Logging;
 using NLog.Targets;
 using Octokit;
+using OpenIddict.Abstractions;
+using OpenIddict.Client;
 using Polly;
 using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
@@ -52,6 +55,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Api.LykosAuthApi;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
@@ -67,6 +71,7 @@ using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
 using Logger = NLog.Logger;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using ProductHeaderValue = Octokit.ProductHeaderValue;
 #if DEBUG
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer;
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Extensions;
@@ -122,6 +127,14 @@ public sealed class App : Application
         Config?["LykosAnalyticsApiBaseUrl"] ?? "https://analytics.lykos.ai";
 #else
     public const string LykosAnalyticsApiBaseUrl = "https://analytics.lykos.ai";
+#endif
+#if DEBUG
+    // ReSharper disable twice LocalizableElement
+    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+    public static string LykosAccountApiBaseUrl =>
+        Config?["LykosAccountApiBaseUrl"] ?? "https://account.lykos.ai/";
+#else
+    public const string LykosAccountApiBaseUrl = "https://account.lykos.ai/";
 #endif
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -365,7 +378,10 @@ public sealed class App : Application
                     provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
                     provider.GetRequiredService<INotificationService>(),
                     provider.GetRequiredService<IAnalyticsHelper>(),
-                    provider.GetRequiredService<IUpdateHelper>()
+                    provider.GetRequiredService<IUpdateHelper>(),
+                    provider.GetRequiredService<ISecretsManager>(),
+                    provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),
+                    provider.GetRequiredService<INavigationService<SettingsViewModel>>()
                 )
                 {
                     Pages =
@@ -594,11 +610,26 @@ public sealed class App : Application
             .AddPolicyHandler(retryPolicyLonger);
 
         services
-            .AddRefitClient<ILykosAuthApi>(defaultRefitSettings)
+            .AddRefitClient<ILykosAuthApiV1>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri(LykosAuthApiBaseUrl);
                 c.Timeout = TimeSpan.FromHours(1);
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddPolicyHandler(retryPolicy)
+            .AddHttpMessageHandler(
+                serviceProvider =>
+                    new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
+            );
+
+        services
+            .AddRefitClient<ILykosAuthApiV2>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri(LykosAuthApiBaseUrl);
+                c.Timeout = TimeSpan.FromHours(1);
+                c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
             })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy)
@@ -642,6 +673,37 @@ public sealed class App : Application
                     RefitSettings = apiFactoryRefitSettings,
                 }
         );
+
+        // Add OpenId
+        services
+            .AddOpenIddict()
+            .AddClient(options =>
+            {
+                options.AllowDeviceCodeFlow().AllowRefreshTokenFlow();
+
+                options.DisableTokenStorage();
+                options.AddEphemeralEncryptionKey().AddEphemeralSigningKey();
+
+                options.UseSystemNetHttp().SetProductInformation("StabilityMatrix", "2.0");
+
+                options.AddRegistration(
+                    new OpenIddictClientRegistration
+                    {
+                        ProviderName = OpenIdClientConstants.LykosAccount.ProviderName,
+                        Issuer = new Uri(LykosAccountApiBaseUrl),
+                        ClientId = "ai.lykos.stabilitymatrix",
+                        Scopes =
+                        {
+                            OpenIddictConstants.Scopes.Profile,
+                            OpenIddictConstants.Scopes.Email,
+                            OpenIddictConstants.Scopes.OpenId,
+                            "api",
+                            OpenIddictConstants.Scopes.OfflineAccess
+                        },
+                        RedirectUri = Program.MessagePipeUri.Append("/callback/login/lykos")
+                    }
+                );
+            });
 
         ConditionalAddLogViewer(services);
 

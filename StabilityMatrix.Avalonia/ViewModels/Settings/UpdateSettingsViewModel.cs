@@ -111,7 +111,8 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
 
         accountsService.LykosAccountStatusUpdate += (_, args) =>
         {
-            var isBetaChannelsEnabled = args.User?.IsActiveSupporter == true;
+            var isBetaChannelsEnabled =
+                args.User?.Permissions.Contains("read:stabilitymatrix.builds.preview") == true;
 
             foreach (
                 var card in AvailableUpdateChannelCards.Where(c => c.UpdateChannel > UpdateChannel.Stable)
@@ -160,7 +161,10 @@ public partial class UpdateSettingsViewModel : PageViewModelBase
             return true;
         }
 
-        if (accountsService.LykosStatus?.User?.IsActiveSupporter == true)
+        if (
+            accountsService.LykosStatus?.User is { } user
+            && user.Permissions.Any(p => p.StartsWith("read:stabilitymatrix.builds."))
+        )
         {
             return true;
         }

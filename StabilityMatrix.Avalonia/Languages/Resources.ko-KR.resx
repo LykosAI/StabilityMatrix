@@ -1188,4 +1188,7 @@
   <data name="Label_CopyLinkToClipboard" xml:space="preserve">
     <value>클립보드에 링크 복사</value>
   </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>설정으로 이동</value>
+  </data>
 </root>

@@ -1,0 +1,75 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.OAuthDeviceAuthDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+    xmlns:icExt="clr-namespace:FluentIcons.Avalonia.Fluent.MarkupExtensions;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    d:DataContext="{x:Static mocks:DesignData.OAuthDeviceAuthViewModel}"
+    d:DesignHeight="400"
+    d:DesignWidth="500"
+    x:DataType="vmDialogs:OAuthDeviceAuthViewModel"
+    mc:Ignorable="d">
+
+    <sg:SpacedGrid
+        Margin="8,4"
+        ColumnDefinitions="*,Auto"
+        RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+        RowSpacing="8">
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Text="{Binding Description}"
+            TextWrapping="Wrap" />
+
+        <controls:HyperlinkIconButton
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Content="{Binding VerificationUri}"
+            NavigateUri="{Binding VerificationUri}" />
+
+        <TextBox
+            Grid.Row="2"
+            Grid.Column="0"
+            Margin="16,0"
+            IsReadOnly="True"
+            Text="{Binding UserCode}">
+            <TextBox.InnerRightContent>
+                <Button
+                    Classes="transparent-full"
+                    Command="{x:Static helpers:ClipboardCommands.CopyTextCommand}"
+                    CommandParameter="{Binding UserCode}"
+                    Content="{icExt:SymbolIcon Symbol=Copy}" />
+            </TextBox.InnerRightContent>
+        </TextBox>
+
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="8,8,0,0"
+            HorizontalAlignment="Center"
+            IsVisible="{Binding IsLoading}"
+            Text="Authenticating..."
+            TextAlignment="Center" />
+
+        <ProgressBar
+            Grid.Row="4"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="8"
+            IsEnabled="{Binding IsLoading}"
+            IsIndeterminate="True"
+            IsVisible="{Binding IsLoading}" />
+    </sg:SpacedGrid>
+</controls:UserControlBase>

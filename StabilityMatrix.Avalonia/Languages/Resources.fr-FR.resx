@@ -1029,4 +1029,7 @@
   <data name="Label_WorkflowImportComplete" xml:space="preserve">
     <value>Le workflow et les custom nodes ont été importés.</value>
   </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>Aller aux paramètres</value>
+  </data>
 </root>

@@ -1262,57 +1262,6 @@
   <data name="Text_RestartMayBeRequiredForSystemChanges" xml:space="preserve">
     <value>系统更改可能需要重启才能生效。</value>
   </data>
-<<<<<<< HEAD
-</root>
-=======
-  <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Text_UnexpectedError_Description" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Text_UnexpectedErrorRecoverable_Description" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Action_ShowLogInExplorer" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Action_ShowLogInFinder" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_ExtensionPacks" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_NoExtensionPacksFound" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_OpenExtensionPacksFolder" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_InstallExtensionPack" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_AddToExistingPack" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_NewExtensionPack" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_CreateExtensionPackExplanation" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_ImportExtensionPacksExplanation" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_OrWithHyphensAround" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Action_OpenOnOpenModelDb" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_Wildcards" xml:space="preserve">
-    <value></value>
-  </data>
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>前往设置</value>
   </data>
@@ -1340,4 +1289,3 @@
 不，Stability Matrix 在没有帐户的情况下仍然可以正常运行。 但是，您的 Lykos 帐户可以启用一些额外的连接功能，例如为我们的 Patreon 支持者自动更新到开发版本（以及更多即将推出的功能）。</value>
   </data>
 </root>
->>>>>>> ebfff1b1 (Merge pull request #979 from ionite34/openid)

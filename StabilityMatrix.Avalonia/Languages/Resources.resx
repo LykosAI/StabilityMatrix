@@ -1302,8 +1302,6 @@
   <data name="Label_OrWithHyphensAround" xml:space="preserve">
     <value>- or -</value>
   </data>
-<<<<<<< HEAD
-=======
   <data name="Text_OAuthDeviceAuthDescription" xml:space="preserve">
     <value>Open the link in your browser and enter the following code to authorize your account with Stability Matrix.</value>
   </data>
@@ -1343,5 +1341,4 @@ Nope! Stability Matrix is still fully functional without one. But, your Lykos ac
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>Go to Settings</value>
   </data>
->>>>>>> ebfff1b1 (Merge pull request #979 from ionite34/openid)
 </root>

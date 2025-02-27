@@ -1148,9 +1148,6 @@
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>Stability Matrixを実行する前に、ZIPファイルからアプリを抽出してください</value>
   </data>
-<<<<<<< HEAD
-</root>
-=======
   <data name="Label_HistorySize_Description" xml:space="preserve">
     <value>コンソールに表示されている行より上にスクロールして戻ることができる行数</value>
   </data>
@@ -1243,4 +1240,3 @@
     <value>設定に移動</value>
   </data>
 </root>
->>>>>>> ebfff1b1 (Merge pull request #979 from ionite34/openid)

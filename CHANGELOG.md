@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added support for RTX 5000-series GPUs in ComfyUI
 ### Changed
 - Upgraded ComfyUI CUDA torch to 12.6
+- Upgraded Lykos account connection to use OAuth 2.0 device flow 
 ### Fixed
 - Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
 - Fixed ROCm torch indexes for ComfyUI & Forge

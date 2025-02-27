@@ -133,14 +133,14 @@ public class AccountsService : IAccountsService
     public async Task LykosPatreonOAuthLogoutAsync()
     {
         var secrets = await secretsManager.SafeLoadAsync();
-        if (secrets.LykosAccount is null)
+        if (secrets.LykosAccountV2 is null)
         {
             throw new InvalidOperationException(
                 "Lykos account must be connected in to manage OAuth connections"
             );
         }
 
-        await lykosAuthApi.DeletePatreonOAuth();
+        await lykosAuthApiV2.ApiV2OauthPatreon();
 
         await RefreshLykosAsync(secrets);
     }

@@ -7,19 +7,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   
 ## v2.13.4
 ### Added
-<<<<<<< HEAD
-- Added support for RTX 5000-series GPUs in ComfyUI
-### Changed
-- Upgraded ComfyUI CUDA torch to 12.6
-=======
-- Added new package - [Stable Diffusion WebUI AMDGPU Forge](https://github.com/lshqqytiger/stable-diffusion-webui-amdgpu-forge)
 - Added support for RTX 5000-series GPUs in ComfyUI, Forge, and reForge
 - Added "Rebuild .NET Project" command to SwarmUI installs - available via the 3-dots menu -> Package Commands -> Rebuild .NET Project
 ### Changed
 - Upgraded ComfyUI CUDA torch to 12.6
 - Upgraded Lykos account connection to use OAuth 2.0 device flow
 - (Internal) Updated Avalonia to 11.2.5
->>>>>>> 17f068b3 (Merge pull request #993 from ionite34/fixes-n-stuf)
 ### Fixed
 - Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
 - Fixed ROCm torch indexes for ComfyUI & Forge
@@ -27,74 +20,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed incorrect Unet folder path for ComfyUI users on Linux/macOS
 - Fixed [#1157](https://github.com/LykosAI/StabilityMatrix/issues/1157) - crash when broken symlinks exist in model directories
 - Fixed [#1154](https://github.com/LykosAI/StabilityMatrix/issues/1154) - increased width for package name on the package cards
-<<<<<<< HEAD
-=======
 - Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI
 - Fixed SwarmUI showing Python options in the 3-dots menu
 - Fixed SD.Next install failures in certain cases when using Zluda
-### Supporters
-#### Visionaries
-- Many thanks to our amazing Visionary-tier Patreon supporters, **Waterclouds**, **TheTekknician**, and **Corey T**! Your unwavering support is very much appreciated!
-
-## v2.14.0-dev.2
-### Added
-- Added Align Your Steps scheduler to Inference
-- Added wildcards to Inference prompts, e.g. `{blue|green|red}` will randomly select one of the colors
-- Added Safetensor Metadata viewer to the Checkpoint Manager context menu - thanks to @genteure!
-### Changed
-- Updated the Civitai Model Browser base model selector to match the new Checkpoint Manager filter UI 
-- FaceDetailers in Inference will now inherit the primary sampler/scheduler/etc. by default. You can still manually set these by enabling the options via the ⚙️ button on the FaceDetailer card
-- Slightly rearranged the FaceDetailer card layout due to the above change
-- "Remove symbolic links on shutdown" option now also removes links from Output Sharing
-- Inference "Extra Networks" selector now filters extra networks based on the selected base model
-- Updated Japanese, Brazilian Portuguese, Chinese, and Russian translations
-### Fixed
-- Fixed crash when dragging & dropping images in Inference (hopefully)
-- Fixed HiresFix Inference addon not inheriting sampler/scheduler properly
-- Fixed some plus (+) buttons getting cut off in the Inference UI
-- Fixed CFG Rescale addon interfering with refiner model in Inference
-- Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
-- Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
-- Fixed issue when parsing index URLs in Python Dependencies Override menu
-- Fixed ComfyUI-Zluda not respecting pip user overrides
-- Fixed issue with Checkpoint Manager not displaying any models
-- (dev.2 re-release) Fixed autocomplete not showing in certain cases when using wildcards
-- (dev.2 re-release) Fixed package restart button not working 
-- (dev.2 re-release) Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
-### Supporters
-#### Visionaries
-- A huge thank you to our incredible Visionary-tier Patreon supporters, **Waterclouds**, **TheTekknician**, and our newest Visionary, **Corey**! Your generous support is greatly appreciated!
-
-## v2.14.0-dev.1
-### Added
-- Added Rescale CFG addon to Inference
-- Added Swap Dimensions button between the width/height input in Inference
-- Added Ctrl+Tab/Ctrl+Shift+Tab shortcuts for navigating between Inference tabs
-- Added OpenModelDB tab to the Model Browser
-### Changed
-- Improved the quality of Inference inpainting by upgrading the workflow behind the scenes. The workflow remains the same for you — just better results!
-- Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout
-- "Clear All" button will now remain at the top of the Downloads list regardless of scroll position - thanks to @Genteure!
-- Improved image metadata parsing - thanks to @Genteure!
-### Fixed
-- Fixed Inference image selector card buttons taking up the whole height of the card
-- Fixed Inference mask editor failing to paint to the right-most edge on large images
-- Fixed Inference mask editor not showing the entire image in certain circumstances
-- Fixed an issue where certain sampler/scheduler combos would not get saved in image metadata - thanks to @yansigit!
-- Fixed [#1078](https://github.com/LykosAI/StabilityMatrix/issues/1078) - "Call from invalid thread" error after one-click install finishes
-- Fixed [#1080](https://github.com/LykosAI/StabilityMatrix/issues/1080) - Some models not displayed in Checkpoint Manager
-### Supporters
-#### Visionaries
-- Many thanks to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your support helps us continue to improve Stability Matrix!
-
-## v2.13.4
-### Changed
-- Upgraded ComfyUI CUDA torch to 12.6
-### Fixed
-- Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
-- Fixed ROCm torch indexes for ComfyUI & Forge
-- Fixed model browser sometimes downloading to `ModelsLora` or `ModelsStableDiffusion` folders instead of the correct folder
->>>>>>> 17f068b3 (Merge pull request #993 from ionite34/fixes-n-stuf)
 
 ## v2.13.3
 ### Changed

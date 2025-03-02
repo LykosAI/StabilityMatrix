@@ -102,6 +102,15 @@ public partial class PackageCardViewModel(
     [ObservableProperty]
     private bool dontCheckForUpdates;
 
+    [ObservableProperty]
+    private bool usesVenv;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowExtraCommands))]
+    private List<ExtraPackageCommand>? extraCommands;
+
+    public bool ShowExtraCommands => ExtraCommands is { Count: > 0 };
+
     private void RunningPackagesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (runningPackageService.RunningPackages.Select(x => x.Value) is not { } runningPackages)
@@ -141,7 +150,7 @@ public partial class PackageCardViewModel(
         {
             IsUnknownPackage = false;
 
-            var basePackage = packageFactory[value.PackageName];
+            var basePackage = packageFactory[value.PackageName!];
             CardImageSource = basePackage?.PreviewImageUri ?? Assets.NoImage;
             InstalledVersion = value.Version?.DisplayVersion ?? "Unknown";
             CanUseConfigMethod =
@@ -152,6 +161,11 @@ public partial class PackageCardViewModel(
             CanUseSharedOutput = basePackage?.SharedOutputFolders != null;
             CanUseExtensions = basePackage?.SupportsExtensions ?? false;
             DontCheckForUpdates = Package?.DontCheckForUpdates ?? false;
+            UsesVenv = basePackage?.UsesVenv ?? true;
+
+            // Set the extra commands if available from the package
+            var packageExtraCommands = basePackage?.GetExtraCommands();
+            ExtraCommands = packageExtraCommands?.Count > 0 ? packageExtraCommands : null;
 
             runningPackageService.RunningPackages.CollectionChanged += RunningPackagesOnCollectionChanged;
             EventManager.Instance.PackageRelaunchRequested += InstanceOnPackageRelaunchRequested;
@@ -797,6 +811,39 @@ public partial class PackageCardViewModel(
             // Save config
             var args = viewModel.AsLaunchArgs();
             settingsManager.SaveLaunchArgs(Package.Id, args);
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExecuteExtraCommand(string commandName)
+    {
+        var command = ExtraCommands?.FirstOrDefault(cmd => cmd.CommandName == commandName);
+        if (command == null)
+            return;
+
+        Text = $"Executing {commandName}...";
+        IsIndeterminate = true;
+        Value = -1;
+
+        try
+        {
+            await command.Command(Package!);
+            notificationService.Show("Command executed successfully", commandName, NotificationType.Success);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error executing command {CommandName}", commandName);
+            notificationService.ShowPersistent(
+                $"Error during {commandName} operation",
+                ex.Message,
+                NotificationType.Error
+            );
+        }
+        finally
+        {
+            Text = "";
+            IsIndeterminate = false;
+            Value = 0;
         }
     }
 

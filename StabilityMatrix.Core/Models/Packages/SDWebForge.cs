@@ -139,20 +139,36 @@ public class SDWebForge(
 
         var pipArgs = new PipInstallArgs("setuptools==69.5.1");
 
+        var isBlackwell =
+            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        pipArgs = pipArgs
-            .WithTorch("==2.3.1")
-            .WithTorchVision("==0.18.1")
-            .WithTorchExtraIndex(
-                torchVersion switch
-                {
-                    TorchIndex.Cpu => "cpu",
-                    TorchIndex.Cuda => "cu121",
-                    TorchIndex.Rocm => "rocm5.7",
-                    TorchIndex.Mps => "cpu",
-                    _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
-                }
-            );
+
+        if (isBlackwell && torchVersion is TorchIndex.Cuda)
+        {
+            pipArgs = pipArgs
+                .AddArg(
+                    "https://huggingface.co/w-e-w/torch-2.6.0-cu128.nv/resolve/main/torch-2.6.0%2Bcu128.nv-cp310-cp310-win_amd64.whl"
+                )
+                .AddArg(
+                    "https://huggingface.co/w-e-w/torch-2.6.0-cu128.nv/resolve/main/torchvision-0.20.0a0%2Bcu128.nv-cp310-cp310-win_amd64.whl"
+                );
+        }
+        else
+        {
+            pipArgs = pipArgs
+                .WithTorch("==2.3.1")
+                .WithTorchVision("==0.18.1")
+                .WithTorchExtraIndex(
+                    torchVersion switch
+                    {
+                        TorchIndex.Cpu => "cpu",
+                        TorchIndex.Cuda => "cu121",
+                        TorchIndex.Rocm => "rocm5.7",
+                        TorchIndex.Mps => "cpu",
+                        _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                    }
+                );
+        }
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
 

@@ -201,6 +201,8 @@ public class VladAutomatic(
         // Setup venv
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
+        await venvRunner.PipInstall("numpy==1.26.4").ConfigureAwait(false);
+
         if (installedPackage.PipOverrides != null)
         {
             var pipArgs = new PipInstallArgs().WithUserOverrides(installedPackage.PipOverrides);

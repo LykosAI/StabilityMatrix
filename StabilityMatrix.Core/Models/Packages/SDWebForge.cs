@@ -149,11 +149,6 @@ public class SDWebForge(
         var isBlackwell =
             SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-<<<<<<< HEAD
-        if (torchVersion is TorchIndex.DirectMl)
-        {
-            pipArgs = pipArgs.WithTorchDirectML();
-=======
 
         if (isBlackwell && torchVersion is TorchIndex.Cuda)
         {
@@ -164,7 +159,6 @@ public class SDWebForge(
                 .AddArg(
                     "https://huggingface.co/w-e-w/torch-2.6.0-cu128.nv/resolve/main/torchvision-0.20.0a0%2Bcu128.nv-cp310-cp310-win_amd64.whl"
                 );
->>>>>>> 17f068b3 (Merge pull request #993 from ionite34/fixes-n-stuf)
         }
         else
         {

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Rebuild .NET Project" command to SwarmUI installs - available via the 3-dots menu -> Package Commands -> Rebuild .NET Project
 ### Changed
 - Upgraded ComfyUI CUDA torch to 12.6
+- Upgraded Lykos account connection to use OAuth 2.0 device flow
 - (Internal) Updated Avalonia to 11.2.5
 ### Fixed
 - Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name

@@ -149,7 +149,25 @@ public class SDWebForge(
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         if (torchVersion is TorchIndex.DirectMl)
         {
+<<<<<<< HEAD
             pipArgs = pipArgs.WithTorchDirectML();
+=======
+            pipArgs = pipArgs
+                .AddArg("--upgrade")
+                .AddArg("--pre")
+                .WithTorch()
+                .WithTorchVision()
+                .WithTorchExtraIndex("nightly/cu128");
+
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Torch for your shiny new GPU...", isIndeterminate: true)
+            );
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+>>>>>>> 7ab289c8 (Merge pull request #996 from ionite34/more-blackwell-updates)
         }
         else
         {
@@ -166,6 +184,11 @@ public class SDWebForge(
                         _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                     }
                 );
+        }
+
+        if (isBlackwell && torchVersion is TorchIndex.Cuda)
+        {
+            pipArgs = new PipInstallArgs();
         }
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");

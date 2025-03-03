@@ -42,6 +42,32 @@ public class StableSwarm(
         [SharedFolderMethod.Symlink, SharedFolderMethod.Configuration, SharedFolderMethod.None];
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
     public override bool OfferInOneClickInstaller => false;
+    public override bool UsesVenv => false;
+
+    public override List<ExtraPackageCommand> GetExtraCommands() =>
+        [
+            new()
+            {
+                CommandName = "Rebuild .NET Project",
+                Command = async installedPackage =>
+                {
+                    if (installedPackage == null || string.IsNullOrEmpty(installedPackage.FullPath))
+                    {
+                        throw new InvalidOperationException("Package not found or not installed correctly");
+                    }
+
+                    var srcFolder = Path.Combine(installedPackage.FullPath, "src");
+                    var csprojName = "StableSwarmUI.csproj";
+                    if (File.Exists(Path.Combine(srcFolder, "SwarmUI.csproj")))
+                    {
+                        csprojName = "SwarmUI.csproj";
+                    }
+
+                    await RebuildDotnetProject(installedPackage.FullPath, csprojName, null)
+                        .ConfigureAwait(false);
+                }
+            }
+        ];
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
@@ -135,7 +161,7 @@ public class StableSwarm(
         progress?.Report(new ProgressReport(-1f, "Installing SwarmUI...", isIndeterminate: true));
 
         var comfy = settingsManager.Settings.InstalledPackages.FirstOrDefault(
-            x => x.PackageName == nameof(ComfyUI)
+            x => x.PackageName is nameof(ComfyUI) or "ComfyUI-Zluda"
         );
 
         if (comfy == null)
@@ -233,16 +259,45 @@ public class StableSwarm(
                     .Where(arg => !string.IsNullOrWhiteSpace(arg))
             );
 
-            dataSection.Set(
-                "settings",
-                new ComfyUiSelfStartSettings
-                {
-                    StartScript = $"../{comfy.DisplayName}/main.py",
-                    DisableInternalArgs = false,
-                    AutoUpdate = false,
-                    ExtraArgs = comfyArgs
-                }.Save(true)
-            );
+            if (comfy.PackageName == "ComfyUI-Zluda")
+            {
+                var fullComfyZludaPath = Path.Combine(SettingsManager.LibraryDir, comfy.LibraryPath);
+                var zludaPath = Path.Combine(fullComfyZludaPath, "zluda", "zluda.exe");
+                var comfyVenvPath = Path.Combine(
+                    fullComfyZludaPath,
+                    "venv",
+                    Compat.Switch(
+                        (PlatformKind.Windows, Path.Combine("Scripts", "python.exe")),
+                        (PlatformKind.Unix, Path.Combine("bin", "python3"))
+                    )
+                );
+
+                ProcessArgs args = ["--", comfyVenvPath, "main.py", comfyArgs];
+
+                dataSection.Set(
+                    "settings",
+                    new ComfyUiSelfStartSettings
+                    {
+                        StartScript = zludaPath,
+                        DisableInternalArgs = false,
+                        AutoUpdate = false,
+                        ExtraArgs = args
+                    }.Save(true)
+                );
+            }
+            else
+            {
+                dataSection.Set(
+                    "settings",
+                    new ComfyUiSelfStartSettings
+                    {
+                        StartScript = $"../{comfy.DisplayName}/main.py",
+                        DisableInternalArgs = false,
+                        AutoUpdate = false,
+                        ExtraArgs = comfyArgs
+                    }.Save(true)
+                );
+            }
 
             backendsFile.Set("0", dataSection);
             backendsFile.SaveToFile(GetBackendsPath(installLocation));
@@ -383,6 +438,29 @@ public class StableSwarm(
 
         dotnetProcess = null;
         GC.SuppressFinalize(this);
+    }
+
+    public async Task RebuildDotnetProject(
+        string installLocation,
+        string csprojName,
+        Action<ProcessOutput>? onConsoleOutput
+    )
+    {
+        await prerequisiteHelper
+            .RunDotnet(
+                [
+                    "build",
+                    $"src/{csprojName}",
+                    "--no-incremental",
+                    "--configuration",
+                    "Release",
+                    "-o",
+                    "src/bin/live_release"
+                ],
+                workingDirectory: installLocation,
+                onProcessOutput: onConsoleOutput
+            )
+            .ConfigureAwait(false);
     }
 
     private Task SetupModelFoldersConfig(DirectoryPath installDirectory)

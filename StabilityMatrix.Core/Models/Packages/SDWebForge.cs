@@ -146,12 +146,12 @@ public class SDWebForge(
 
         var pipArgs = new PipInstallArgs("setuptools==69.5.1");
 
+        var isBlackwell =
+            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        if (torchVersion is TorchIndex.DirectMl)
+
+        if (isBlackwell && torchVersion is TorchIndex.Cuda)
         {
-<<<<<<< HEAD
-            pipArgs = pipArgs.WithTorchDirectML();
-=======
             pipArgs = pipArgs
                 .AddArg("--upgrade")
                 .AddArg("--pre")
@@ -167,7 +167,6 @@ public class SDWebForge(
                 new ProgressReport(-1f, "Installing Torch for your shiny new GPU...", isIndeterminate: true)
             );
             await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
->>>>>>> 7ab289c8 (Merge pull request #996 from ionite34/more-blackwell-updates)
         }
         else
         {

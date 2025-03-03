@@ -53,6 +53,13 @@ public abstract class BasePackage(ISettingsManager settingsManager)
     public abstract PackageDifficulty InstallerSortOrder { get; }
 
     public virtual PackageType PackageType => PackageType.SdInference;
+    public virtual bool UsesVenv => true;
+
+    /// <summary>
+    /// Returns a list of extra commands that can be executed for this package.
+    /// The function takes an InstalledPackage parameter to operate on a specific installation.
+    /// </summary>
+    public virtual List<ExtraPackageCommand> GetExtraCommands() => [];
 
     public abstract Task DownloadPackage(
         string installLocation,

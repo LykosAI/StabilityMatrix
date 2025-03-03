@@ -153,12 +153,20 @@ public class SDWebForge(
         if (isBlackwell && torchVersion is TorchIndex.Cuda)
         {
             pipArgs = pipArgs
-                .AddArg(
-                    "https://huggingface.co/w-e-w/torch-2.6.0-cu128.nv/resolve/main/torch-2.6.0%2Bcu128.nv-cp310-cp310-win_amd64.whl"
-                )
-                .AddArg(
-                    "https://huggingface.co/w-e-w/torch-2.6.0-cu128.nv/resolve/main/torchvision-0.20.0a0%2Bcu128.nv-cp310-cp310-win_amd64.whl"
-                );
+                .AddArg("--upgrade")
+                .AddArg("--pre")
+                .WithTorch()
+                .WithTorchVision()
+                .WithTorchExtraIndex("nightly/cu128");
+
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Torch for your shiny new GPU...", isIndeterminate: true)
+            );
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         }
         else
         {
@@ -175,6 +183,11 @@ public class SDWebForge(
                         _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                     }
                 );
+        }
+
+        if (isBlackwell && torchVersion is TorchIndex.Cuda)
+        {
+            pipArgs = new PipInstallArgs();
         }
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");

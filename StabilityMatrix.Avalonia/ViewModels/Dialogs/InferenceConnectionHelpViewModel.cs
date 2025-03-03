@@ -70,7 +70,7 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
 
         // Get comfy type installed packages
         var comfyPackages = this.settingsManager.Settings.InstalledPackages.Where(
-            p => p.PackageName == "ComfyUI"
+            p => p.PackageName is "ComfyUI" or "ComfyUI-Zluda"
         )
             .ToImmutableArray();
 
@@ -88,7 +88,7 @@ public partial class InferenceConnectionHelpViewModel : ContentDialogViewModelBa
             // Use active package if its comfy, otherwise use the first comfy type
             if (
                 this.settingsManager.Settings.ActiveInstalledPackage is
-                { PackageName: "ComfyUI" } activePackage
+                { PackageName: "ComfyUI" or "ComfyUI-Zluda" } activePackage
             )
             {
                 SelectedPackage = activePackage;

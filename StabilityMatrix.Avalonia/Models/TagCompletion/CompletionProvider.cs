@@ -178,7 +178,7 @@ public partial class CompletionProvider : ICompletionProvider
                 );
             }
 
-            var defaultFile = tagsDir.JoinFile("danbooru.csv");
+            var defaultFile = tagsDir.JoinFile("danbooru_e621_merged.csv");
             if (!defaultFile.Exists)
             {
                 Logger.Warn("Failed to download default tag source");
@@ -191,6 +191,32 @@ public partial class CompletionProvider : ICompletionProvider
 
             // Load default file
             BackgroundLoadFromFile(defaultFile);
+        }
+        else
+        {
+            var newDefaultFile = tagsDir.JoinFile("danbooru_e621_merged.csv");
+            if (newDefaultFile.Exists)
+            {
+                return;
+            }
+
+            var newRemoteCsv = Assets.DefaultCompletionTags[^1];
+            var fileName = newRemoteCsv.Url.Segments.Last();
+            Logger.Info(
+                "Downloading new default tag source {Name} [{Hash}]",
+                fileName,
+                newRemoteCsv.HashSha256[..7]
+            );
+            await downloadService.DownloadToFileAsync(
+                newRemoteCsv.Url.ToString(),
+                tagsDir.JoinFile(fileName)
+            );
+
+            notificationService.Show(
+                "New autocomplete tag source downloaded",
+                "You can activate this in Settings -> Inference -> Auto Completion",
+                expiration: TimeSpan.FromSeconds(8)
+            );
         }
     }
 

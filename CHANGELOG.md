@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added new package - [Stable Diffusion WebUI AMDGPU Forge](https://github.com/lshqqytiger/stable-diffusion-webui-amdgpu-forge)
 - Added support for RTX 5000-series GPUs in ComfyUI, Forge, and reForge
 - Added "Rebuild .NET Project" command to SwarmUI installs - available via the 3-dots menu -> Package Commands -> Rebuild .NET Project
+- Added new autocomplete tag source to Inference - [Danbooru/e621 merged tags](https://civitai.com/models/950325?modelVersionId=1419692)
 ### Changed
 - Upgraded ComfyUI CUDA torch to 12.6
 - Upgraded Lykos account connection to use OAuth 2.0 device flow

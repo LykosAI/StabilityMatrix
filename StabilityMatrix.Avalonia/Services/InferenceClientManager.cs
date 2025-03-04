@@ -142,6 +142,13 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<HybridModelFile> ClipModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    private readonly SourceCache<HybridModelFile, string> clipVisionModelsSource = new(p => p.GetId());
+    private readonly SourceCache<HybridModelFile, string> downloadableClipVisionModelsSource =
+        new(p => p.GetId());
+
+    public IObservableCollection<HybridModelFile> ClipVisionModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     public InferenceClientManager(
         ILogger<InferenceClientManager> logger,
         IApiFactory apiFactory,
@@ -252,6 +259,19 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(ClipModels)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
+
+        clipVisionModelsSource
+            .Connect()
+            .Or(downloadableClipVisionModelsSource.Connect())
+            .SortBy(
+                f => f.ShortDisplayName,
+                SortDirection.Ascending,
+                SortOptimisations.ComparesImmutableValuesOnly
+            )
+            .DeferUntilLoaded()
+            .Bind(ClipVisionModels)
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -468,6 +488,17 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             ];
             clipModelsSource.EditDiff(models, HybridModelFile.Comparer);
         }
+
+        // Get CLIP Vision model names from CLIPVisionLoader node
+        if (await Client.GetNodeOptionNamesAsync("CLIPVisionLoader", "clip_name") is { } clipVisionModelNames)
+        {
+            IEnumerable<HybridModelFile> models =
+            [
+                HybridModelFile.None,
+                ..clipVisionModelNames.Select(HybridModelFile.FromRemote)
+            ];
+            clipVisionModelsSource.EditDiff(models, HybridModelFile.Comparer);
+        }
     }
 
     /// <summary>
@@ -569,6 +600,18 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             u => !clipModelsSource.Lookup(u.GetId()).HasValue
         );
         downloadableClipModelsSource.EditDiff(downloadableClipModels, HybridModelFile.Comparer);
+
+        clipVisionModelsSource.EditDiff(
+            modelIndexService
+                .FindByModelType(SharedFolderType.InvokeClipVision)
+                .Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
+
+        var downloadableClipVisionModels = RemoteModels.ClipVisionModelFiles.Where(
+            u => !clipVisionModelsSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableClipVisionModelsSource.EditDiff(downloadableClipVisionModels, HybridModelFile.Comparer);
 
         samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
 

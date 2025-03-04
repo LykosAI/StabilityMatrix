@@ -823,6 +823,9 @@ The gallery images are often inpainted, but you will get something very similar 
     public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
         DialogFactory.Get<InferenceImageUpscaleViewModel>();
 
+    public static InferenceWanImageToVideoViewModel InferenceWanImageToVideoViewModel =>
+        DialogFactory.Get<InferenceWanImageToVideoViewModel>();
+
     public static PackageImportViewModel PackageImportViewModel =>
         DialogFactory.Get<PackageImportViewModel>();
 
@@ -851,6 +854,7 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.IsCfgScaleEnabled = true;
             vm.IsSamplerSelectionEnabled = true;
             vm.IsDimensionsEnabled = true;
+            vm.IsLengthEnabled = true;
             vm.SelectedSampler = new ComfySampler("euler");
         });
 
@@ -870,6 +874,7 @@ The gallery images are often inpainted, but you will get something very similar 
         });
 
     public static ModelCardViewModel ModelCardViewModel => DialogFactory.Get<ModelCardViewModel>();
+    public static WanModelCardViewModel WanModelCardViewModel => DialogFactory.Get<WanModelCardViewModel>();
 
     public static ImgToVidModelCardViewModel ImgToVidModelCardViewModel =>
         DialogFactory.Get<ImgToVidModelCardViewModel>();

@@ -251,6 +251,10 @@
         <DependentUpon>MainPackageManagerView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+      <Compile Update="Views\Inference\InferenceWanTextToVideoView.axaml.cs">
+        <DependentUpon>InferenceWanTextToVideoView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
     </ItemGroup>
 
     <!-- set HUSKY to 0 to disable, or opt-in during CI by setting HUSKY to 1 -->

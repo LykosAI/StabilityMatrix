@@ -823,6 +823,8 @@ The gallery images are often inpainted, but you will get something very similar 
     public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
         DialogFactory.Get<InferenceImageUpscaleViewModel>();
 
+    public static InferenceWanTextToVideoViewModel InferenceWanTextToVideoViewModel =>
+        DialogFactory.Get<InferenceWanTextToVideoViewModel>();
     public static InferenceWanImageToVideoViewModel InferenceWanImageToVideoViewModel =>
         DialogFactory.Get<InferenceWanImageToVideoViewModel>();
 

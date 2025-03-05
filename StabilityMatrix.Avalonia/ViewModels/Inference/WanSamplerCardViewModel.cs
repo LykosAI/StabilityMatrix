@@ -26,8 +26,7 @@ public class WanSamplerCardViewModel : SamplerCardViewModel
         IsLengthEnabled = true;
         SelectedSampler = ComfySampler.UniPC;
         SelectedScheduler = ComfyScheduler.Simple;
-        Width = 512;
-        Height = 512;
+        Length = 33;
     }
 
     public override void ApplyStep(ModuleApplyStepEventArgs e)
@@ -100,15 +99,9 @@ public class WanSamplerCardViewModel : SamplerCardViewModel
         }
         else
         {
-            var emptyHunyuanLatent = e.Nodes.AddTypedNode(
-                new ComfyNodeBuilder.EmptyHunyuanLatentVideo
-                {
-                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.EmptyHunyuanLatentVideo)),
-                    Width = Width,
-                    Height = Height,
-                    Length = Length,
-                    BatchSize = e.Builder.Connections.BatchSize
-                }
+            var primaryLatent = e.Builder.GetPrimaryAsLatent(
+                e.Temp.Primary!.Unwrap(),
+                e.Builder.Connections.GetDefaultVAE()
             );
 
             var kSampler = e.Nodes.AddTypedNode(
@@ -123,7 +116,7 @@ public class WanSamplerCardViewModel : SamplerCardViewModel
                     Cfg = CfgScale,
                     Positive = conditioning.Positive,
                     Negative = conditioning.Negative,
-                    LatentImage = emptyHunyuanLatent.Output,
+                    LatentImage = primaryLatent,
                     Denoise = DenoiseStrength,
                 }
             );

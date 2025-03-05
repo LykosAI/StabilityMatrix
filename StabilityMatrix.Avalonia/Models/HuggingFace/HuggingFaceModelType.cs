@@ -40,7 +40,7 @@ public enum HuggingFaceModelType
     [ConvertTo<SharedFolderType>(SharedFolderType.InvokeIpAdaptersXl)]
     DiffusersIpAdapterXl,
 
-    [Description("CLIP Vision (Diffusers)")]
+    [Description("CLIP Vision")]
     [ConvertTo<SharedFolderType>(SharedFolderType.InvokeClipVision)]
     DiffusersClipVision,
 
@@ -59,4 +59,12 @@ public enum HuggingFaceModelType
     [Description("SAM Models")]
     [ConvertTo<SharedFolderType>(SharedFolderType.Sams)]
     Sams,
+
+    [Description("UNet-Only Models")]
+    [ConvertTo<SharedFolderType>(SharedFolderType.Unet)]
+    Unet,
+
+    [Description("VAE")]
+    [ConvertTo<SharedFolderType>(SharedFolderType.VAE)]
+    Vae,
 }

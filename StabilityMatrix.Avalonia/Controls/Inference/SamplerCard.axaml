@@ -149,6 +149,7 @@
                                 HorizontalAlignment="Stretch"
                                 IsVisible="{Binding IsLengthEnabled}"
                                 SelectionHighlightColor="Transparent"
+                                SmallChange="4"
                                 SpinButtonPlacementMode="Inline"
                                 Value="{Binding Length}" />
                         </Grid>

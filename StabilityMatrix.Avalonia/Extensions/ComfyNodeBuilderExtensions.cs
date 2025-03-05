@@ -1,9 +1,12 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.IO;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
 namespace StabilityMatrix.Avalonia.Extensions;
 
@@ -14,59 +17,60 @@ public static class ComfyNodeBuilderExtensions
         int width,
         int height,
         int batchSize = 1,
-        int? batchIndex = null
+        int? batchIndex = null,
+        int? length = null,
+        LatentType latentType = LatentType.Default
     )
     {
-        var emptyLatent = builder.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.EmptyLatentImage
-            {
-                Name = "EmptyLatentImage",
-                BatchSize = batchSize,
-                Height = height,
-                Width = width
-            }
-        );
-
-        builder.Connections.Primary = emptyLatent.Output;
-        builder.Connections.PrimarySize = new Size(width, height);
-
-        // If batch index is selected, add a LatentFromBatch
-        if (batchIndex is not null)
+        var primaryNodeConnection = latentType switch
         {
-            builder.Connections.Primary = builder
-                .Nodes.AddTypedNode(
-                    new ComfyNodeBuilder.LatentFromBatch
-                    {
-                        Name = "LatentFromBatch",
-                        Samples = builder.GetPrimaryAsLatent(),
-                        // remote expects a 0-based index, vm is 1-based
-                        BatchIndex = batchIndex.Value - 1,
-                        Length = 1
-                    }
-                )
-                .Output;
-        }
-    }
+            LatentType.Default
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.EmptyLatentImage
+                        {
+                            Name = "EmptyLatentImage",
+                            BatchSize = batchSize,
+                            Height = height,
+                            Width = width
+                        }
+                    )
+                    .Output,
+            LatentType.Sd3
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.EmptySD3LatentImage
+                        {
+                            Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.EmptySD3LatentImage)),
+                            BatchSize = batchSize,
+                            Height = height,
+                            Width = width
+                        }
+                    )
+                    .Output,
+            LatentType.Hunyuan
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.EmptyHunyuanLatentVideo
+                        {
+                            Name = builder.Nodes.GetUniqueName(
+                                nameof(ComfyNodeBuilder.EmptyHunyuanLatentVideo)
+                            ),
+                            BatchSize = batchSize,
+                            Height = height,
+                            Width = width,
+                            Length =
+                                length
+                                ?? throw new ValidationException(
+                                    "Length cannot be null when latentType is Hunyuan"
+                                )
+                        }
+                    )
+                    .Output,
+            _ => throw new ArgumentOutOfRangeException(nameof(latentType), latentType, null)
+        };
 
-    public static void SetupEmptySd3LatentSource(
-        this ComfyNodeBuilder builder,
-        int width,
-        int height,
-        int batchSize = 1,
-        int? batchIndex = null
-    )
-    {
-        var emptyLatent = builder.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.EmptySD3LatentImage
-            {
-                Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.EmptySD3LatentImage)),
-                BatchSize = batchSize,
-                Height = height,
-                Width = width
-            }
-        );
-
-        builder.Connections.Primary = emptyLatent.Output;
+        builder.Connections.Primary = primaryNodeConnection;
         builder.Connections.PrimarySize = new Size(width, height);
 
         // If batch index is selected, add a LatentFromBatch

@@ -72,11 +72,19 @@
                     </ui:CommandBarButton.IconSource>
                 </ui:CommandBarButton>
                 <ui:CommandBarButton
+                    Click="AddTabMenu_WanTextToVideo_OnClick"
+                    Label="Wan Text to Video"
+                    ToolTip.Tip="Wan Text to Video">
+                    <ui:CommandBarButton.IconSource>
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="Video" />
+                    </ui:CommandBarButton.IconSource>
+                </ui:CommandBarButton>
+                <ui:CommandBarButton
                     Click="AddTabMenu_WanImgToVideo_OnClick"
                     Label="Wan Image to Video"
                     ToolTip.Tip="Wan Image to Video">
                     <ui:CommandBarButton.IconSource>
-                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="Video" />
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="VideoAdd" />
                     </ui:CommandBarButton.IconSource>
                 </ui:CommandBarButton>
                 <ui:CommandBarButton
@@ -84,7 +92,7 @@
                     Label="SVD Image to Video"
                     ToolTip.Tip="SVD Image to Video">
                     <ui:CommandBarButton.IconSource>
-                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="Video" />
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="VideoRecording" />
                     </ui:CommandBarButton.IconSource>
                 </ui:CommandBarButton>
             </ui:CommandBarFlyout.SecondaryCommands>

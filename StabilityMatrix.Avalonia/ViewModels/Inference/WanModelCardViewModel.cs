@@ -2,10 +2,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
@@ -42,6 +44,10 @@ public partial class WanModelCardViewModel(
     private double shift = 8.0d;
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
+
+    public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
+        new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
+
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e4m3fn_fast", "fp8_e5m2"];
 
     public async Task<bool> ValidateModel()
@@ -101,6 +107,11 @@ public partial class WanModelCardViewModel(
         );
         e.Builder.Connections.Base.VAE = vaeLoader.Output;
         e.Builder.Connections.PrimaryVAE = vaeLoader.Output;
+
+        if (ExtraNetworksStackCardViewModel.Cards.OfType<LoraModule>().Any(x => x.IsEnabled))
+        {
+            ExtraNetworksStackCardViewModel.ApplyStep(e);
+        }
 
         if (!IsClipVisionEnabled)
             return;

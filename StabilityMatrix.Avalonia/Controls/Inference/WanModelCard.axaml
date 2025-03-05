@@ -39,7 +39,7 @@
                     <sg:SpacedGrid
                         ColumnDefinitions="Auto,*"
                         ColumnSpacing="8"
-                        RowDefinitions="*,*,*,*,*,*"
+                        RowDefinitions="*,*,*,*,*,*,*"
                         RowSpacing="0">
                         <!--  Model  -->
                         <TextBlock
@@ -152,6 +152,13 @@
                             SpinButtonPlacementMode="Inline"
                             Value="{Binding Shift}" />
 
+                        <!--  Extra Networks  -->
+                        <Panel
+                            Grid.Row="6"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2">
+                            <controls:StackEditableCard Margin="0,8,0,0" DataContext="{Binding ExtraNetworksStackCardViewModel}" />
+                        </Panel>
                     </sg:SpacedGrid>
                 </controls:Card>
             </ControlTemplate>

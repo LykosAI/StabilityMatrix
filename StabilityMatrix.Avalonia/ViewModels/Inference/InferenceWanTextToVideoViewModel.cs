@@ -50,10 +50,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
         SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
         SeedCardViewModel.GenerateNewSeed();
 
-        ModelCardViewModel = vmFactory.Get<WanModelCardViewModel>(vm =>
-        {
-            vm.IsClipVisionEnabled = true;
-        });
+        ModelCardViewModel = vmFactory.Get<WanModelCardViewModel>();
 
         SamplerCardViewModel = vmFactory.Get<WanSamplerCardViewModel>(samplerCard =>
         {

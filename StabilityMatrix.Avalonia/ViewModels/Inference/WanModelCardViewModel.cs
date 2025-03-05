@@ -52,15 +52,47 @@ public partial class WanModelCardViewModel(
 
     public async Task<bool> ValidateModel()
     {
-        if (SelectedModel != null)
-            return true;
+        if (SelectedModel == null)
+        {
+            var dialog = DialogHelper.CreateMarkdownDialog(
+                "Please select a model to continue.",
+                "No Model Selected"
+            );
+            await dialog.ShowAsync();
+            return false;
+        }
 
-        var dialog = DialogHelper.CreateMarkdownDialog(
-            "Please select a model to continue.",
-            "No Model Selected"
-        );
-        await dialog.ShowAsync();
-        return false;
+        if (SelectedVae == null)
+        {
+            var dialog = DialogHelper.CreateMarkdownDialog(
+                "Please select a VAE model to continue.",
+                "No VAE Model Selected"
+            );
+            await dialog.ShowAsync();
+            return false;
+        }
+
+        if (SelectedClipModel == null)
+        {
+            var dialog = DialogHelper.CreateMarkdownDialog(
+                "Please select a CLIP model to continue.",
+                "No CLIP Model Selected"
+            );
+            await dialog.ShowAsync();
+            return false;
+        }
+
+        if (IsClipVisionEnabled && SelectedClipVisionModel == null)
+        {
+            var dialog = DialogHelper.CreateMarkdownDialog(
+                "Please select a CLIP Vision model to continue.",
+                "No CLIP Vision Model Selected"
+            );
+            await dialog.ShowAsync();
+            return false;
+        }
+
+        return true;
     }
 
     public void ApplyStep(ModuleApplyStepEventArgs e)

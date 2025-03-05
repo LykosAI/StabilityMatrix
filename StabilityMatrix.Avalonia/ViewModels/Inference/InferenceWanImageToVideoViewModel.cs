@@ -25,9 +25,12 @@ public class InferenceWanImageToVideoViewModel : InferenceWanTextToVideoViewMode
         : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
     {
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>();
+
         SamplerCardViewModel.IsDenoiseStrengthEnabled = true;
         SamplerCardViewModel.Width = 512;
         SamplerCardViewModel.Height = 512;
+
+        ModelCardViewModel.IsClipVisionEnabled = true;
     }
 
     [JsonPropertyName("ImageLoader")]

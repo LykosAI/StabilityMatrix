@@ -101,6 +101,12 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     [ObservableProperty]
     private string selectedModelType = "SDXL";
 
+    [ObservableProperty]
+    private bool isLengthEnabled;
+
+    [ObservableProperty]
+    private int length;
+
     [JsonPropertyName("Modules")]
     public StackEditableCardViewModel ModulesCardViewModel { get; }
 
@@ -143,7 +149,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     }
 
     /// <inheritdoc />
-    public void ApplyStep(ModuleApplyStepEventArgs e)
+    public virtual void ApplyStep(ModuleApplyStepEventArgs e)
     {
         // Resample the current primary if size does not match the selected size
         if (

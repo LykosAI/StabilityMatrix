@@ -169,11 +169,12 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
         if (useSd3Latent)
         {
-            builder.SetupEmptySd3LatentSource(
+            builder.SetupEmptyLatentSource(
                 SamplerCardViewModel.Width,
                 SamplerCardViewModel.Height,
                 BatchSizeCardViewModel.BatchSize,
-                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
+                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null,
+                latentType: LatentType.Sd3
             );
         }
         else

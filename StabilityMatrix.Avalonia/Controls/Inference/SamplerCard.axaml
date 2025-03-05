@@ -21,7 +21,7 @@
             <ControlTemplate>
                 <controls:Card HorizontalAlignment="{TemplateBinding HorizontalAlignment}">
                     <StackPanel HorizontalAlignment="{TemplateBinding HorizontalAlignment}" Spacing="8">
-                        <Grid ColumnDefinitions="Auto,5,*" RowDefinitions="*,*,*,*,*,*">
+                        <Grid ColumnDefinitions="Auto,5,*" RowDefinitions="*,*,*,*,*,*,*">
                             <!--  Sampler  -->
                             <TextBlock
                                 Grid.Row="0"
@@ -133,6 +133,25 @@
                                 SmallChange="0.25"
                                 SpinButtonPlacementMode="Inline"
                                 Value="{Binding CfgScale}" />
+
+                            <!--  Length (Frame Count)  -->
+                            <TextBlock
+                                Grid.Row="6"
+                                Grid.Column="0"
+                                Margin="0,8,0,0"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding IsLengthEnabled}"
+                                Text="{x:Static lang:Resources.Label_Frames}" />
+                            <ui:NumberBox
+                                Grid.Row="6"
+                                Grid.Column="2"
+                                Margin="8,8,0,0"
+                                HorizontalAlignment="Stretch"
+                                IsVisible="{Binding IsLengthEnabled}"
+                                SelectionHighlightColor="Transparent"
+                                SmallChange="4"
+                                SpinButtonPlacementMode="Inline"
+                                Value="{Binding Length}" />
                         </Grid>
 
                         <StackPanel>

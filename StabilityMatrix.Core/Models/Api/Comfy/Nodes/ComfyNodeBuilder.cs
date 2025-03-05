@@ -136,6 +136,14 @@ public class ComfyNodeBuilder
         public required int Width { get; init; }
     }
 
+    public record EmptyHunyuanLatentVideo : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required int Width { get; init; }
+        public required int Height { get; init; }
+        public required int Length { get; init; }
+        public required int BatchSize { get; init; }
+    }
+
     public record CLIPSetLastLayer : ComfyTypedNodeBase<ClipNodeConnection>
     {
         public required ClipNodeConnection Clip { get; init; }
@@ -417,6 +425,18 @@ public class ComfyNodeBuilder
         // no type, always sd3 I guess?
     }
 
+    public record CLIPVisionLoader : ComfyTypedNodeBase<ClipVisionNodeConnection>
+    {
+        public required string ClipName { get; init; }
+    }
+
+    public record CLIPVisionEncode : ComfyTypedNodeBase<ClipVisionOutputNodeConnection>
+    {
+        public required ClipVisionNodeConnection ClipVision { get; init; }
+        public required ImageNodeConnection Image { get; init; }
+        public required string Crop { get; set; }
+    }
+
     public record FluxGuidance : ComfyTypedNodeBase<ConditioningNodeConnection>
     {
         public required ConditioningNodeConnection Conditioning { get; init; }
@@ -481,6 +501,14 @@ public class ComfyNodeBuilder
         public required bool Zsnr { get; init; }
     }
 
+    public record ModelSamplingSD3 : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        [Range(0, 100)]
+        public required double Shift { get; init; }
+    }
+
     public record RescaleCFG : ComfyTypedNodeBase<ModelNodeConnection>
     {
         public required ModelNodeConnection Model { get; init; }
@@ -515,6 +543,23 @@ public class ComfyNodeBuilder
 
         [Range(0.0d, 100.0d)]
         public required double Cfg { get; set; }
+    }
+
+    /// <summary>
+    /// outputs: positive, negative, latent
+    /// </summary>
+    public record WanImageToVideo
+        : ComfyTypedNodeBase<ConditioningNodeConnection, ConditioningNodeConnection, LatentNodeConnection>
+    {
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+        public required ClipVisionOutputNodeConnection ClipVisionOutput { get; init; }
+        public required ImageNodeConnection StartImage { get; init; }
+        public required int Width { get; init; }
+        public required int Height { get; init; }
+        public required int Length { get; init; }
+        public required int BatchSize { get; init; }
     }
 
     [TypedNodeOptions(

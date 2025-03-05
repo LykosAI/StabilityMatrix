@@ -128,11 +128,12 @@ public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBas
         BatchSizeCardViewModel.ApplyStep(applyArgs);
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        builder.SetupEmptySd3LatentSource(
+        builder.SetupEmptyLatentSource(
             SamplerCardViewModel.Width,
             SamplerCardViewModel.Height,
             BatchSizeCardViewModel.BatchSize,
-            BatchSizeCardViewModel.BatchIndex
+            BatchSizeCardViewModel.BatchIndex,
+            latentType: LatentType.Sd3
         );
 
         PromptCardViewModel.ApplyStep(applyArgs);

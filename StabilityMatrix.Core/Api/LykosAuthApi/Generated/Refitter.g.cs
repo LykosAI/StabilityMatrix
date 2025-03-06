@@ -37,6 +37,32 @@ namespace StabilityMatrix.Core.Api.LykosAuthApi
         [Get("/api/v2/Accounts/me")]
         Task<AccountResponse> ApiV2AccountsMe();
 
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">
+        /// Thrown when the request returns a non-success status code:
+        /// <list type="table">
+        /// <listheader>
+        /// <term>Status</term>
+        /// <description>Description</description>
+        /// </listheader>
+        /// <item>
+        /// <term>400</term>
+        /// <description>Bad Request</description>
+        /// </item>
+        /// <item>
+        /// <term>401</term>
+        /// <description>Unauthorized</description>
+        /// </item>
+        /// <item>
+        /// <term>403</term>
+        /// <description>Forbidden</description>
+        /// </item>
+        /// </list>
+        /// </exception>
+        [Headers("Accept: text/plain, application/json, text/json")]
+        [Get("/api/v2/files/download")]
+        Task<FilesDownloadResponse> ApiV2FilesDownload([Query] string path);
+
         /// <returns>A <see cref="Task"/> that completes when the request is finished.</returns>
         /// <exception cref="ApiException">
         /// Thrown when the request returns a non-success status code:
@@ -171,6 +197,18 @@ namespace StabilityMatrix.Core.Api.LykosAuthApi
 
         [JsonPropertyName("patreonId")]
         public string PatreonId { get; set; }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.2.0.0 (NJsonSchema v11.1.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FilesDownloadResponse
+    {
+
+        [JsonPropertyName("downloadUrl")]
+        public System.Uri DownloadUrl { get; set; }
+
+        [JsonPropertyName("expiresAt")]
+        public System.DateTimeOffset? ExpiresAt { get; set; }
 
     }
 

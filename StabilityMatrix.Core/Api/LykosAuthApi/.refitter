@@ -1,5 +1,5 @@
 {
-  "openApiPath": "https://stableauthentication-dev.azurewebsites.net/swagger/v2/swagger.json",
+  "openApiPath": "https://auth.lykos.ai/swagger/v2/swagger.json",
   "outputFolder": "./StabilityMatrix.Core/Api/LykosAuthApi/Generated",
   "outputFilename": "Refitter.g.cs",
   "namespace": "StabilityMatrix.Core.Api.LykosAuthApi",
@@ -9,7 +9,8 @@
   },
   "includePathMatches": [
     "^/api/v2/Accounts/me$",
-    "^/api/v2/oauth/patreon"
+    "^/api/v2/oauth/patreon",
+    "^/api/v2/files/download"
   ],
   "trimUnusedSchema": true,
   "operationNameGenerator": "SingleClientFromPathSegments"

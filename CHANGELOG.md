@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI
 - Fixed SwarmUI showing Python options in the 3-dots menu
 - Fixed SD.Next install failures in certain cases when using Zluda
+### Supporters
+#### Visionaries
+- Huge thanks to our amazing Visionary-tier Patrons, **Waterclouds** and **Corey T**! We're truly grateful for your continued generosity and support!
+#### Pioneers
+- Special appreciation to our fantastic Pioneer-tier Patrons: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, **NowFallenAngel**, and our newest addition, **Al Gorithm**! Thank you all for your incredible commitment and ongoing encouragement!
 
 ## v2.13.3
 ### Changed

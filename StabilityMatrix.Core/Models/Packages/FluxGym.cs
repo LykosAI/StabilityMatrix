@@ -89,13 +89,13 @@ public class FluxGym(
         // check if sd-scripts is already installed - if so: pull, else: clone
         if (Directory.Exists(Path.Combine(installLocation, "sd-scripts")))
         {
-            await prerequisiteHelper
+            await PrerequisiteHelper
                 .RunGit(["pull"], onConsoleOutput, Path.Combine(installLocation, "sd-scripts"))
                 .ConfigureAwait(false);
         }
         else
         {
-            await prerequisiteHelper
+            await PrerequisiteHelper
                 .RunGit(
                     ["clone", "-b", "sd3", "https://github.com/kohya-ss/sd-scripts"],
                     onConsoleOutput,

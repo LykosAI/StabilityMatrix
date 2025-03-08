@@ -146,10 +146,27 @@ public class SDWebForge(
 
         var pipArgs = new PipInstallArgs("setuptools==69.5.1");
 
+        var isBlackwell =
+            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        if (torchVersion is TorchIndex.DirectMl)
+
+        if (isBlackwell && torchVersion is TorchIndex.Cuda)
         {
-            pipArgs = pipArgs.WithTorchDirectML();
+            pipArgs = pipArgs
+                .AddArg("--upgrade")
+                .AddArg("--pre")
+                .WithTorch()
+                .WithTorchVision()
+                .WithTorchExtraIndex("nightly/cu128");
+
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Torch for your shiny new GPU...", isIndeterminate: true)
+            );
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         }
         else
         {
@@ -161,11 +178,16 @@ public class SDWebForge(
                     {
                         TorchIndex.Cpu => "cpu",
                         TorchIndex.Cuda => "cu121",
-                        TorchIndex.Rocm => "rocm5.6",
+                        TorchIndex.Rocm => "rocm5.7",
                         TorchIndex.Mps => "cpu",
                         _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
                     }
                 );
+        }
+
+        if (isBlackwell && torchVersion is TorchIndex.Cuda)
+        {
+            pipArgs = new PipInstallArgs();
         }
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");

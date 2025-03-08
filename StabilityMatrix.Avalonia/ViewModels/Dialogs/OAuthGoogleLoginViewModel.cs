@@ -28,13 +28,16 @@ public class OAuthGoogleLoginViewModel(
     ILogger<OAuthConnectViewModel> baseLogger,
     IDistributedSubscriber<string, Uri> uriHandlerSubscriber,
     ILogger<OAuthGoogleLoginViewModel> logger,
-    ILykosAuthApi lykosAuthApi,
+    ILykosAuthApiV1 lykosAuthApi,
     IAccountsService accountsService
 ) : OAuthLoginViewModel(baseLogger, uriHandlerSubscriber)
 {
     private string? challenge;
     private string? verifier;
     private string? state;
+
+    public override Uri? IconUri { get; set; } =
+        new("avares://StabilityMatrix.Avalonia/Assets/brands-google-oauth-icon.svg");
 
     // ReSharper disable once LocalizableElement
     public override string ServiceName { get; set; } = "Google";
@@ -151,17 +154,5 @@ public class OAuthGoogleLoginViewModel(
         Url = link.ToString();
 
         logger.LogInformation("Generated Google OAuth URL: {Url}", Url);
-    }
-
-    private static (string Challenge, string Verifier) GeneratePkceSha256ChallengePair()
-    {
-        var verifier = RandomNumberGenerator.GetHexString(128, true);
-
-        var hash = SHA256.HashData(Encoding.ASCII.GetBytes(verifier));
-
-        // Convert to base64url
-        var base64UrlHash = Convert.ToBase64String(hash).TrimEnd('=').Replace('+', '-').Replace('/', '_');
-
-        return (base64UrlHash, verifier);
     }
 }

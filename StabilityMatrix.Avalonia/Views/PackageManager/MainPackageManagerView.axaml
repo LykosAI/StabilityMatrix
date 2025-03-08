@@ -6,10 +6,13 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Runtime"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
@@ -76,13 +79,12 @@
                                 </Border>
                                 <Grid
                                     Grid.Column="1"
-                                    ColumnDefinitions="Auto, *"
+                                    ColumnDefinitions="*, Auto"
                                     RowDefinitions="Auto, Auto, Auto, *">
                                     <TextBlock
                                         Grid.Row="0"
                                         Grid.Column="0"
-                                        MaxWidth="200"
-                                        Margin="8,0,8,0"
+                                        Margin="8,0,0,0"
                                         FontSize="16"
                                         FontWeight="SemiBold"
                                         Text="{Binding Package.DisplayName}"
@@ -102,7 +104,7 @@
                                         Grid.Row="0"
                                         Grid.Column="1"
                                         Width="24"
-                                        Margin="4,0,0,0"
+                                        Margin="0,0,0,0"
                                         Padding="4"
                                         HorizontalAlignment="Right"
                                         VerticalAlignment="Top"
@@ -161,7 +163,7 @@
                                                 <MenuItem
                                                     Command="{Binding OpenPythonPackagesDialogCommand}"
                                                     Header="{x:Static lang:Resources.Label_PythonPackages}"
-                                                    IsVisible="{Binding !IsUnknownPackage}">
+                                                    IsVisible="{Binding UsesVenv}">
                                                     <MenuItem.Icon>
                                                         <icons:Icon Value="fa-brands fa-python" />
                                                     </MenuItem.Icon>
@@ -169,7 +171,7 @@
                                                 <MenuItem
                                                     Command="{Binding OpenPythonDependenciesOverrideDialogCommand}"
                                                     Header="{x:Static lang:Resources.Label_PythonDependenciesOverride_Title}"
-                                                    IsVisible="{Binding !IsUnknownPackage}">
+                                                    IsVisible="{Binding UsesVenv}">
                                                     <MenuItem.Icon>
                                                         <icons:Icon Value="fa-solid fa-bandage" />
                                                     </MenuItem.Icon>
@@ -268,6 +270,34 @@
                                                 </MenuItem>
 
                                                 <Separator IsVisible="{Binding !IsUnknownPackage}" />
+
+                                                <!--  Package-specific extra commands section  -->
+                                                <MenuItem
+                                                    Classes="SubItems"
+                                                    Header="Package Commands"
+                                                    IsVisible="{Binding ShowExtraCommands}">
+                                                    <MenuItem.Resources>
+                                                        <input:StandardUICommand x:Key="ExecuteExtraCommandCommand" Command="{Binding ExecuteExtraCommandCommand}" />
+                                                    </MenuItem.Resources>
+
+                                                    <MenuItem.Icon>
+                                                        <icons:Icon Value="fa-solid fa-toolbox" />
+                                                    </MenuItem.Icon>
+
+                                                    <MenuItem.ItemsSource>
+                                                        <Binding Path="ExtraCommands" />
+                                                    </MenuItem.ItemsSource>
+
+                                                    <MenuItem.Styles>
+                                                        <Style x:DataType="models:ExtraPackageCommand" Selector="MenuItem.SubItems MenuItem">
+                                                            <Setter Property="Header" Value="{Binding CommandName}" />
+                                                            <Setter Property="Command" Value="{StaticResource ExecuteExtraCommandCommand}" />
+                                                            <Setter Property="CommandParameter" Value="{Binding CommandName}" />
+                                                        </Style>
+                                                    </MenuItem.Styles>
+                                                </MenuItem>
+
+                                                <Separator IsVisible="{Binding ShowExtraCommands}" />
 
                                                 <MenuItem
                                                     Command="{Binding Uninstall}"

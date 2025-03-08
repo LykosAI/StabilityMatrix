@@ -3,7 +3,7 @@ using System.Web;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Api.LykosAuthApi;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Configs;
@@ -21,7 +21,7 @@ public class UpdateHelper : IUpdateHelper
     private readonly IHttpClientFactory httpClientFactory;
     private readonly IDownloadService downloadService;
     private readonly ISettingsManager settingsManager;
-    private readonly ILykosAuthApi lykosAuthApi;
+    private readonly ILykosAuthApiV2 lykosAuthApi;
     private readonly DebugOptions debugOptions;
     private readonly System.Timers.Timer timer = new(TimeSpan.FromMinutes(60));
 
@@ -45,7 +45,7 @@ public class UpdateHelper : IUpdateHelper
         IDownloadService downloadService,
         IOptions<DebugOptions> debugOptions,
         ISettingsManager settingsManager,
-        ILykosAuthApi lykosAuthApi
+        ILykosAuthApiV2 lykosAuthApi
     )
     {
         this.logger = logger;
@@ -101,7 +101,7 @@ public class UpdateHelper : IUpdateHelper
                 var path = updateInfo.Url.PathAndQuery.StripStart(authedPathPrefix);
                 path = HttpUtility.UrlDecode(path);
                 url = (
-                    await lykosAuthApi.GetFilesDownload(path).ConfigureAwait(false)
+                    await lykosAuthApi.ApiV2FilesDownload(path).ConfigureAwait(false)
                 ).DownloadUrl.ToString();
             }
 

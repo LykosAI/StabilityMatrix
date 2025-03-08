@@ -5,11 +5,14 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Injectio.Attributes;
+using Python.Runtime;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
+using Dispatcher = Avalonia.Threading.Dispatcher;
 
 namespace StabilityMatrix.Avalonia.Services;
 
@@ -117,6 +120,23 @@ public class ModelImportService(
         modelFile.Name = Path.GetInvalidFileNameChars()
             .Aggregate(modelFile.Name, (current, c) => current.Replace(c, '_'));
 
+        // New code: Ensure unique file name
+        var originalFileName = modelFile.Name;
+        var uniqueFileName = GenerateUniqueFileName(downloadFolder.ToString(), originalFileName);
+        if (!uniqueFileName.Equals(originalFileName, StringComparison.Ordinal))
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                notificationService.Show(
+                    new Notification(
+                        "File renamed",
+                        $"A file with the name \"{originalFileName}\" already exists. The model will be saved as \"{uniqueFileName}\"."
+                    )
+                );
+            });
+            modelFile.Name = uniqueFileName;
+        }
+
         var downloadPath = downloadFolder.JoinFile(modelFile.Name);
 
         // Download model info and preview first
@@ -162,5 +182,26 @@ public class ModelImportService(
         download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
 
         await trackedDownloadService.TryStartDownload(download);
+    }
+
+    private string GenerateUniqueFileName(string folder, string fileName)
+    {
+        var fullPath = Path.Combine(folder, fileName);
+        if (!File.Exists(fullPath))
+            return fileName;
+
+        var name = Path.GetFileNameWithoutExtension(fileName);
+        var extension = Path.GetExtension(fileName);
+        var count = 1;
+        string newFileName;
+
+        do
+        {
+            newFileName = $"{name} ({count}){extension}";
+            fullPath = Path.Combine(folder, newFileName);
+            count++;
+        } while (File.Exists(fullPath));
+
+        return newFileName;
     }
 }

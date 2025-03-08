@@ -4,10 +4,32 @@ All notable changes to Stability Matrix will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
+  
+## v2.13.4
+### Added
+- Added support for RTX 5000-series GPUs in ComfyUI, Forge, and reForge
+- Added "Rebuild .NET Project" command to SwarmUI installs - available via the 3-dots menu -> Package Commands -> Rebuild .NET Project
+### Changed
+- Upgraded ComfyUI CUDA torch to 12.6
+- Upgraded Lykos account connection to use OAuth 2.0 device flow
+- (Internal) Updated Avalonia to 11.2.5
+### Fixed
+- Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
+- Fixed ROCm torch indexes for ComfyUI & Forge
+- Fixed model browser sometimes downloading to `ModelsLora` or `ModelsStableDiffusion` folders instead of the correct folder
+- Fixed incorrect Unet folder path for ComfyUI users on Linux/macOS
+- Fixed [#1157](https://github.com/LykosAI/StabilityMatrix/issues/1157) - crash when broken symlinks exist in model directories
+- Fixed [#1154](https://github.com/LykosAI/StabilityMatrix/issues/1154) - increased width for package name on the package cards
+- Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI
+- Fixed SwarmUI showing Python options in the 3-dots menu
+- Fixed SD.Next install failures in certain cases when using Zluda
+### Supporters
+#### Visionaries
+- Huge thanks to our amazing Visionary-tier Patrons, **Waterclouds** and **Corey T**! We're truly grateful for your continued generosity and support!
+#### Pioneers
+- Special appreciation to our fantastic Pioneer-tier Patrons: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, **NowFallenAngel**, and our newest addition, **Al Gorithm**! Thank you all for your incredible commitment and ongoing encouragement!
 
 ## v2.13.3
-### Added
-- Added Safetensor Metadata viewer to the Checkpoint Manager context menu - thanks to @genteure!
 ### Changed
 - "Remove symbolic links on shutdown" option now also removes links from Output Sharing
 ### Fixed

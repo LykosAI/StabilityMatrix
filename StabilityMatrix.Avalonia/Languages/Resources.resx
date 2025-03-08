@@ -1302,4 +1302,43 @@
   <data name="Label_OrWithHyphensAround" xml:space="preserve">
     <value>- or -</value>
   </data>
+  <data name="Text_OAuthDeviceAuthDescription" xml:space="preserve">
+    <value>Open the link in your browser and enter the following code to authorize your account with Stability Matrix.</value>
+  </data>
+  <data name="Action_CopyAndOpen" xml:space="preserve">
+    <value>Copy and Open</value>
+  </data>
+  <data name="Action_OpenOnOpenModelDb" xml:space="preserve">
+    <value>Open on OpenModelDB</value>
+  </data>
+  <data name="Label_Wildcards" xml:space="preserve">
+    <value>Wildcards</value>
+  </data>
+  <data name="Text_LykosAccountUpgradeNotice" xml:space="preserve">
+    <value>## Heads Up: Lykos Account Sign-Out &amp; Security Upgrade
+
+We've made some important behind-the-scenes improvements to how Stability Matrix handles Lykos accounts, upgrading to a more secure and convenient login system **(OAuth 2.0 with OpenID Connect)**. Because of this, you've been signed out of your Lykos account.
+
+### Why the change?
+
+Your security and privacy are important to us. This upgrade brings:
+
+*   **Streamlined Experience:** Sign in once to [account.lykos.ai](https://account.lykos.ai) to connect with Stability Matrix and other Lykos AI services.
+*   **More Ways to Sign In:** Use your existing [lykos.ai](https://lykos.ai) account, or sign in with **Apple**, **GitHub**, or **Google**.
+*   **Enhanced Privacy:** Stability Matrix only requests the permissions it needs.
+*   **Industry Standard Security:** We're using OAuth 2.0, the gold standard for secure logins.
+*   **Ready for the Future:** This allows for secure connections with other apps and services.
+
+### What do I need to do?
+
+Click the **"Go to Settings"** button, then click **"Connect"** next to **"Lykos account"**.
+
+### Is a Lykos account required?
+
+Nope! Stability Matrix is still fully functional without one. But, your Lykos account enables some extra connected features, such as automatic updates to development builds for our Patreon supporters (and more to come!).
+</value>
+  </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>Go to Settings</value>
+  </data>
 </root>

@@ -207,36 +207,65 @@ public class ComfyUI(
 
         var pipArgs = new PipInstallArgs();
 
-        pipArgs = torchVersion switch
+        var isBlackwell =
+            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
+
+        if (isBlackwell && torchVersion is TorchIndex.Cuda)
         {
-            TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
-            _
-                => pipArgs
-                    .AddArg("--upgrade")
-                    .WithTorch()
-                    .WithTorchVision()
-                    .WithTorchExtraIndex(
-                        torchVersion switch
-                        {
-                            TorchIndex.Cpu => "cpu",
-                            TorchIndex.Cuda => "cu124",
-                            TorchIndex.Rocm => "rocm6.2",
-                            TorchIndex.Mps => "cpu",
-                            _
-                                => throw new ArgumentOutOfRangeException(
-                                    nameof(torchVersion),
-                                    torchVersion,
-                                    null
-                                )
-                        }
-                    )
-        };
+            pipArgs = pipArgs
+                .AddArg("--upgrade")
+                .AddArg("--pre")
+                .WithTorch()
+                .WithTorchVision()
+                .WithTorchExtraIndex("nightly/cu128");
+
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Torch for your shiny new GPU...", isIndeterminate: true)
+            );
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        }
+        else
+        {
+            pipArgs = torchVersion switch
+            {
+                TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
+                _
+                    => pipArgs
+                        .AddArg("--upgrade")
+                        .WithTorch()
+                        .WithTorchVision()
+                        .WithTorchExtraIndex(
+                            torchVersion switch
+                            {
+                                TorchIndex.Cpu => "cpu",
+                                TorchIndex.Cuda => "cu126",
+                                TorchIndex.Rocm => "rocm6.2.4",
+                                TorchIndex.Mps => "cpu",
+                                _
+                                    => throw new ArgumentOutOfRangeException(
+                                        nameof(torchVersion),
+                                        torchVersion,
+                                        null
+                                    )
+                            }
+                        )
+            };
+        }
+
+        if (isBlackwell && torchVersion is TorchIndex.Cuda)
+        {
+            pipArgs = new PipInstallArgs();
+        }
 
         var requirements = new FilePath(installLocation, "requirements.txt");
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(
             await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-            excludePattern: "torch$|numpy"
+            excludePattern: isBlackwell ? "torch$|torchvision$|numpy" : "torch$|numpy"
         );
 
         // https://github.com/comfyanonymous/ComfyUI/pull/4121
@@ -385,7 +414,7 @@ public class ComfyUI(
             nodeValue.Children["ultralytics_bbox"] = Path.Combine(modelsDir, "Ultralytics", "bbox");
             nodeValue.Children["ultralytics_segm"] = Path.Combine(modelsDir, "Ultralytics", "segm");
             nodeValue.Children["sams"] = Path.Combine(modelsDir, "Sams");
-            nodeValue.Children["diffusion_models"] = Path.Combine(modelsDir, "unet");
+            nodeValue.Children["diffusion_models"] = Path.Combine(modelsDir, "Unet");
         }
         else
         {
@@ -429,7 +458,7 @@ public class ComfyUI(
                     { "ultralytics_bbox", Path.Combine(modelsDir, "Ultralytics", "bbox") },
                     { "ultralytics_segm", Path.Combine(modelsDir, "Ultralytics", "segm") },
                     { "sams", Path.Combine(modelsDir, "Sams") },
-                    { "diffusion_models", Path.Combine(modelsDir, "unet") }
+                    { "diffusion_models", Path.Combine(modelsDir, "Unet") }
                 }
             );
         }

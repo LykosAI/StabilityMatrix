@@ -642,4 +642,30 @@
   <data name="Label_CivitAi" xml:space="preserve">
     <value>CivitAI</value>
   </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>前往設定</value>
+  </data>
+  <data name="Text_LykosAccountUpgradeNotice" xml:space="preserve">
+    <value>## 重要提示：Lykos 帳戶登出和安全性升級
+
+我們對 Stability Matrix 處理 Lykos 帳戶的方式進行了一些重要的幕後改進，升級到更安全、更便捷的登入系統 **(OAuth 2.0 with OpenID Connect)**。 因此，您已登出 Lykos 帳戶。
+
+### 為什麼進行此變更？
+
+您的安全和隱私對我們很重要。 此升級帶來：
+
+*   **簡化的體驗：** 登入 [account.lykos.ai](https://account.lykos.ai) 一次即可連接到 Stability Matrix 和其他 Lykos AI 服務。
+*   **更多登入方式：** 使用您現有的 [lykos.ai](https://lykos.ai) 帳戶，或使用 **Apple**、**GitHub** 或 **Google** 登入。
+*   **增強的隱私：** Stability Matrix 僅請求其所需的權限。
+*   **行業標準安全性：** 我們正在使用 OAuth 2.0，這是安全登入的黃金標準。
+*   **為未來做好準備：** 這允許與其他應用程式和服務進行安全連接。
+
+### 我需要做什麼？
+
+點擊**「前往設定」**按鈕，然後點擊**「Lykos 帳戶」**旁邊的**「連線」**。
+
+### Lykos 帳戶是必需的嗎？
+
+不，Stability Matrix 在沒有帳戶的情況下仍然可以正常運作。 但是，您的 Lykos 帳戶可以啟用一些額外的連接功能，例如為我們的 Patreon 支持者自動更新到開發版本（以及更多即將推出的功能）。</value>
+  </data>
 </root>

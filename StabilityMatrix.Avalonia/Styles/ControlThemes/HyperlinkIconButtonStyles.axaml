@@ -3,21 +3,20 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls">
 
     <Design.PreviewWith>
         <StackPanel Margin="8" Spacing="6">
-            <controls:HyperlinkIconButton Content="Link"/>
-            <controls:HyperlinkIconButton Content="Disabled" IsEnabled="False"/>
-            <controls:HyperlinkIconButton Content="File" Icon="Open"/>
+            <controls:HyperlinkIconButton Content="Link" />
+            <controls:HyperlinkIconButton Content="Disabled" IsEnabled="False" />
+            <controls:HyperlinkIconButton Content="File" Icon="Open" />
         </StackPanel>
     </Design.PreviewWith>
-    
-    <!-- ReSharper disable once Xaml.StaticResourceNotResolved -->
-    <ControlTheme
-        x:Key="{x:Type controls:HyperlinkIconButton}"
-        TargetType="controls:HyperlinkIconButton">
-        
+
+    <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
+    <ControlTheme x:Key="{x:Type controls:HyperlinkIconButton}" TargetType="controls:HyperlinkIconButton">
+
         <Setter Property="Background" Value="{DynamicResource HyperlinkButtonBackground}" />
         <Setter Property="Foreground" Value="{DynamicResource HyperlinkButtonForeground}" />
         <Setter Property="BorderBrush" Value="{DynamicResource HyperlinkButtonBorderBrush}" />
@@ -29,42 +28,42 @@
         <Setter Property="FontSize" Value="{DynamicResource ControlContentThemeFontSize}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
-        
-        <Setter Property="Icon" Value="Link"/>
-        
+
+        <Setter Property="Icon" Value="Link" />
+
         <Setter Property="ContentTemplate">
-            <DataTemplate DataType="x:String">
+            <DataTemplate DataType="system:Object">
                 <StackPanel Orientation="Horizontal">
                     <fluentIcons:SymbolIcon
-                        VerticalAlignment="Center"
                         Margin="0,1,4,0"
+                        VerticalAlignment="Center"
                         FontSize="15"
                         Foreground="{DynamicResource HyperlinkButtonForeground}"
                         Symbol="{Binding $parent[controls:HyperlinkIconButton].Icon}" />
-                    <TextBlock 
-                        Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding}" />
-                </StackPanel>                
+                    <ContentPresenter Content="" Foreground="{DynamicResource HyperlinkButtonForeground}" />
+                    <TextBlock Foreground="{DynamicResource HyperlinkButtonForeground}" Text="{Binding}" />
+                </StackPanel>
             </DataTemplate>
         </Setter>
-        
-        <!-- Override template to not set Underline TextDecoration -->
+
+        <!--  Override template to not set Underline TextDecoration  -->
         <Setter Property="Template">
             <ControlTemplate>
-                <ContentPresenter Name="ContentPresenter"
-                                  Background="{TemplateBinding Background}"
-                                  BorderBrush="{TemplateBinding BorderBrush}"
-                                  BorderThickness="{TemplateBinding BorderThickness}"
-                                  Content="{TemplateBinding Content}"
-                                  ContentTemplate="{TemplateBinding ContentTemplate}"
-                                  Padding="{TemplateBinding Padding}"
-                                  CornerRadius="{TemplateBinding CornerRadius}"
-                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                                  Foreground="{TemplateBinding Foreground}">
-                </ContentPresenter>
+                <ContentPresenter
+                    Name="ContentPresenter"
+                    Padding="{TemplateBinding Padding}"
+                    HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                    VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    Content="{TemplateBinding Content}"
+                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                    CornerRadius="{TemplateBinding CornerRadius}"
+                    Foreground="{TemplateBinding Foreground}" />
             </ControlTemplate>
         </Setter>
-        
+
         <Style Selector="^:pointerover /template/ ContentPresenter#ContentPresenter">
             <Setter Property="Foreground" Value="{DynamicResource HyperlinkButtonForegroundPointerOver}" />
             <Setter Property="Background" Value="{DynamicResource HyperlinkButtonBackgroundPointerOver}" />
@@ -80,7 +79,7 @@
             <Setter Property="Background" Value="{DynamicResource HyperlinkButtonBackgroundDisabled}" />
             <Setter Property="BorderBrush" Value="{DynamicResource HyperlinkButtonBorderBrushDisabled}" />
         </Style>
-        
+
     </ControlTheme>
 
 </ResourceDictionary>

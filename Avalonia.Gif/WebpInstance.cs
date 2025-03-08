@@ -121,9 +121,18 @@ public class WebpInstance : IGifInstance
 
         if (!uriString.StartsWith("resm") && !uriString.StartsWith("avares"))
         {
-            return new FileStream(uriString, FileMode.Open, FileAccess.Read);
+            // Local file
+            using var fs = new FileStream(uriString, FileMode.Open, FileAccess.Read);
+
+            // Copy to memory stream then return
+            var memoryStream = new MemoryStream();
+            fs.CopyTo(memoryStream);
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            return memoryStream;
         }
 
+        // Internal Avalonia resources
         return AssetLoader.Open(uri);
     }
 

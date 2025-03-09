@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - (macOS) Fixed `FileNotFoundException` crash when navigating to Inference tab after deleting a Webp animation file previously opened in the Image Viewer Dialog.
   - (Windows) Fixed Webp animation files unable to be deleted without closing the app first.
 - Fixed Image Viewer `FileNotFoundException` on fetching image size, if navigating to a deleted image file.
+- (macOS) Fixed Webp / Gif animations RGB colors flipped.
 
 ## v2.14.0-dev.3
 ### Added

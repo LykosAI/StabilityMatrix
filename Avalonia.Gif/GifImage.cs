@@ -18,30 +18,28 @@ namespace Avalonia.Gif
             string
         >("SourceUriRaw");
 
-        public static readonly StyledProperty<Uri> SourceUriProperty = AvaloniaProperty.Register<GifImage, Uri>(
-            "SourceUri"
-        );
+        public static readonly StyledProperty<Uri> SourceUriProperty = AvaloniaProperty.Register<
+            GifImage,
+            Uri
+        >("SourceUri");
 
         public static readonly StyledProperty<Stream> SourceStreamProperty = AvaloniaProperty.Register<
             GifImage,
             Stream
         >("SourceStream");
 
-        public static readonly StyledProperty<IterationCount> IterationCountProperty = AvaloniaProperty.Register<
-            GifImage,
-            IterationCount
-        >("IterationCount", IterationCount.Infinite);
+        public static readonly StyledProperty<IterationCount> IterationCountProperty =
+            AvaloniaProperty.Register<GifImage, IterationCount>("IterationCount", IterationCount.Infinite);
 
         private IGifInstance? _gifInstance;
 
-        public static readonly StyledProperty<StretchDirection> StretchDirectionProperty = AvaloniaProperty.Register<
-            GifImage,
-            StretchDirection
-        >("StretchDirection");
+        public static readonly StyledProperty<StretchDirection> StretchDirectionProperty =
+            AvaloniaProperty.Register<GifImage, StretchDirection>("StretchDirection");
 
-        public static readonly StyledProperty<Stretch> StretchProperty = AvaloniaProperty.Register<GifImage, Stretch>(
-            "Stretch"
-        );
+        public static readonly StyledProperty<Stretch> StretchProperty = AvaloniaProperty.Register<
+            GifImage,
+            Stretch
+        >("Stretch");
 
         private CompositionCustomVisual? _customVisual;
 
@@ -288,10 +286,19 @@ namespace Avalonia.Gif
         private void UpdateGifInstance(object source)
         {
             _gifInstance?.Dispose();
-            _gifInstance = new WebpInstance(source);
-            // _gifInstance = new GifInstance(source);
-            _gifInstance.IterationCount = IterationCount;
-            _customVisual?.SendHandlerMessage(_gifInstance);
+
+            try
+            {
+                _gifInstance = new WebpInstance(source);
+                // _gifInstance = new GifInstance(source);
+
+                _gifInstance.IterationCount = IterationCount;
+                _customVisual?.SendHandlerMessage(_gifInstance);
+            }
+            catch (Exception e)
+            {
+                Logger.Sink?.Log(LogEventLevel.Warning, "GifImage Update Source ", this, e.ToString());
+            }
         }
     }
 }

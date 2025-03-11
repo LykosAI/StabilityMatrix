@@ -54,12 +54,17 @@ public class WebpInstance : IGifInstance
 
         var pixSize = new PixelSize(_codec.Info.Width, _codec.Info.Height);
 
-        _targetBitmap = new WriteableBitmap(
-            pixSize,
-            new Vector(96, 96),
-            PixelFormat.Bgra8888,
-            AlphaFormat.Opaque
-        );
+        // Different on os: https://github.com/mono/SkiaSharp/issues/1492#issuecomment-689015409
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        var format = SKImageInfo.PlatformColorType switch
+        {
+            SKColorType.Bgra8888 => PixelFormat.Bgra8888,
+            SKColorType.Rgba8888 => PixelFormat.Rgba8888,
+            _ => throw new NotSupportedException($"Unsupported color type: {SKImageInfo.PlatformColorType}")
+        };
+
+        _targetBitmap = new WriteableBitmap(pixSize, new Vector(96, 96), format, AlphaFormat.Opaque);
+
         GifPixelSize = pixSize;
 
         _totalTime = TimeSpan.Zero;
@@ -121,9 +126,18 @@ public class WebpInstance : IGifInstance
 
         if (!uriString.StartsWith("resm") && !uriString.StartsWith("avares"))
         {
-            return new FileStream(uriString, FileMode.Open, FileAccess.Read);
+            // Local file
+            using var fs = new FileStream(uriString, FileMode.Open, FileAccess.Read);
+
+            // Copy to memory stream then return
+            var memoryStream = new MemoryStream();
+            fs.CopyTo(memoryStream);
+            memoryStream.Seek(0, SeekOrigin.Begin);
+
+            return memoryStream;
         }
 
+        // Internal Avalonia resources
         return AssetLoader.Open(uri);
     }
 

@@ -8,6 +8,7 @@ using Avalonia.Animation;
 using Avalonia.Gif.Decoding;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using SkiaSharp;
 
 namespace Avalonia.Gif
 {

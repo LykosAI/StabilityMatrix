@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - (Windows) Fixed Webp animation files unable to be deleted without closing the app first.
 - Fixed Image Viewer `FileNotFoundException` on fetching image size, if navigating to a deleted image file.
 - (macOS) Fixed Webp / Gif animations RGB colors flipped.
+- Fixed Package Updates and Change Version not using stored PyTorch index and instead using the default recommended index.
 
 ## v2.14.0-dev.3
 ### Added

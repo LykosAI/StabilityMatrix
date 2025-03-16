@@ -147,11 +147,12 @@ public class SDWebForge(
         if (isBlackwell && torchVersion is TorchIndex.Cuda)
         {
             pipArgs = pipArgs
-                .AddArg("--upgrade")
                 .AddArg("--pre")
                 .WithTorch()
                 .WithTorchVision()
-                .WithTorchExtraIndex("nightly/cu128");
+                .WithTorchAudio()
+                .WithTorchExtraIndex("nightly/cu128")
+                .AddArg("--upgrade");
 
             if (installedPackage.PipOverrides != null)
             {

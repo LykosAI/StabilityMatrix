@@ -281,6 +281,7 @@ public class StableSwarm(
                         StartScript = zludaPath,
                         DisableInternalArgs = false,
                         AutoUpdate = false,
+                        UpdateManagedNodes = "true",
                         ExtraArgs = args
                     }.Save(true)
                 );
@@ -294,6 +295,7 @@ public class StableSwarm(
                         StartScript = $"../{comfy.DisplayName}/main.py",
                         DisableInternalArgs = false,
                         AutoUpdate = false,
+                        UpdateManagedNodes = "true",
                         ExtraArgs = comfyArgs
                     }.Save(true)
                 );

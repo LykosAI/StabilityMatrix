@@ -5,13 +5,18 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-## v2.14.0-dev.4
+## v2.14.0-pre.1
+### Changed
+- Improved window state handling
 ### Fixed
+- Fixed RTX 5000-series GPU detection in certain cases
 - Fixed Image Viewer animation loader keeping file handles open, which resolves 2 different issues (OSes are fun):
   - (macOS) Fixed `FileNotFoundException` crash when navigating to Inference tab after deleting a Webp animation file previously opened in the Image Viewer Dialog.
   - (Windows) Fixed Webp animation files unable to be deleted without closing the app first.
 - Fixed Image Viewer `FileNotFoundException` on fetching image size, if navigating to a deleted image file.
 - (macOS) Fixed Webp / Gif animations RGB colors flipped.
+- Fixed some cases of missing custom nodes in SwarmUI
+- Fixed window disappearing on macOS when the saved window size is very small
 
 ## v2.14.0-dev.3
 ### Added

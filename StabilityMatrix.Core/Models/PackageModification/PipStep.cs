@@ -15,6 +15,8 @@ public class PipStep : IPackageStep
 
     public IReadOnlyDictionary<string, string>? EnvironmentVariables { get; init; }
 
+    public PyBaseInstall? BaseInstall { get; set; }
+
     /// <inheritdoc />
     public string ProgressTitle =>
         Args switch
@@ -28,7 +30,8 @@ public class PipStep : IPackageStep
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        await using var venvRunner = PyBaseInstall.Default.CreateVenvRunner(
+        BaseInstall ??= PyBaseInstall.Default;
+        await using var venvRunner = BaseInstall.CreateVenvRunner(
             VenvDirectory,
             workingDirectory: WorkingDirectory,
             environmentVariables: EnvironmentVariables

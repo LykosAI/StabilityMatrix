@@ -39,8 +39,12 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
 {
     private readonly ILogger<PythonPackagesViewModel> logger;
     private readonly ISettingsManager settingsManager;
+    private readonly IPyInstallationManager pyInstallationManager;
+    private PyBaseInstall? pyBaseInstall;
 
     public DirectoryPath? VenvPath { get; set; }
+
+    public PyVersion? PythonVersion { get; set; }
 
     [ObservableProperty]
     private bool isLoading;
@@ -100,7 +104,13 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             }
             else
             {
-                await using var venvRunner = await PyBaseInstall.Default.CreateVenvRunnerAsync(
+                pyBaseInstall ??= new PyBaseInstall(
+                    pyInstallationManager.GetInstallation(
+                        PythonVersion ?? PyInstallationManager.Python_3_10_11
+                    )
+                );
+
+                await using var venvRunner = await pyBaseInstall.CreateVenvRunnerAsync(
                     VenvPath,
                     workingDirectory: VenvPath.Parent,
                     environmentVariables: settingsManager.Settings.EnvironmentVariables
@@ -126,7 +136,10 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         if (VenvPath is null)
             return;
 
-        await using var venvRunner = await PyBaseInstall.Default.CreateVenvRunnerAsync(
+        pyBaseInstall ??= new PyBaseInstall(
+            pyInstallationManager.GetInstallation(PythonVersion ?? PyInstallationManager.Python_3_10_11)
+        );
+        await using var venvRunner = await pyBaseInstall.CreateVenvRunnerAsync(
             VenvPath,
             workingDirectory: VenvPath.Parent,
             environmentVariables: settingsManager.Settings.EnvironmentVariables
@@ -227,7 +240,8 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             {
                 VenvDirectory = VenvPath,
                 WorkingDirectory = VenvPath.Parent,
-                Args = args
+                Args = args,
+                BaseInstall = pyBaseInstall
             }
         };
 
@@ -271,7 +285,9 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             {
                 VenvDirectory = VenvPath,
                 WorkingDirectory = VenvPath.Parent,
-                Args = new ProcessArgs(packageArgs).Prepend("install")
+                Args = new ProcessArgs(packageArgs).Prepend("install"),
+                BaseInstall = pyBaseInstall,
+                EnvironmentVariables = settingsManager.Settings.EnvironmentVariables
             }
         };
 
@@ -314,7 +330,8 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             {
                 VenvDirectory = VenvPath,
                 WorkingDirectory = VenvPath.Parent,
-                Args = new[] { "uninstall", "--yes", package.Name }
+                Args = new[] { "uninstall", "--yes", package.Name },
+                BaseInstall = pyBaseInstall
             }
         };
 

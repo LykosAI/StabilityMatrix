@@ -119,7 +119,11 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
         var steps = new List<IPackageStep>
         {
             new SetPackageInstallingStep(settingsManager, selectedPackage.Name),
-            new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, selectedPackage)
+            new SetupPrerequisitesStep(
+                prerequisiteHelper,
+                selectedPackage,
+                PyInstallationManager.Python_3_10_16
+            )
         };
 
         // get latest version & download & install
@@ -155,7 +159,8 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
             LaunchCommand = selectedPackage.LaunchCommand,
             LastUpdateCheck = DateTimeOffset.Now,
             PreferredTorchIndex = torchVersion,
-            PreferredSharedFolderMethod = recommendedSharedFolderMethod
+            PreferredSharedFolderMethod = recommendedSharedFolderMethod,
+            PythonVersion = PyInstallationManager.Python_3_10_16.StringValue
         };
 
         var downloadStep = new DownloadPackageVersionStep(

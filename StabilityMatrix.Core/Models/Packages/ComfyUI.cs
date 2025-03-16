@@ -25,8 +25,9 @@ public class ComfyUI(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     public override string Name => "ComfyUI";
@@ -199,7 +200,11 @@ public class ComfyUI(
     )
     {
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
@@ -213,11 +218,12 @@ public class ComfyUI(
         if (isBlackwell && torchVersion is TorchIndex.Cuda)
         {
             pipArgs = pipArgs
-                .AddArg("--upgrade")
                 .AddArg("--pre")
                 .WithTorch()
                 .WithTorchVision()
-                .WithTorchExtraIndex("nightly/cu128");
+                .WithTorchAudio()
+                .WithTorchExtraIndex("nightly/cu128")
+                .AddArg("--upgrade");
 
             if (installedPackage.PipOverrides != null)
             {
@@ -265,7 +271,7 @@ public class ComfyUI(
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(
             await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-            excludePattern: isBlackwell ? "torch$|torchvision$|numpy" : "torch$|numpy"
+            excludePattern: isBlackwell ? "torch$|torchvision$|torchaudio$|numpy" : "torch$|numpy"
         );
 
         // https://github.com/comfyanonymous/ComfyUI/pull/4121
@@ -293,7 +299,9 @@ public class ComfyUI(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        // Use the same Python version that was used for installation
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],

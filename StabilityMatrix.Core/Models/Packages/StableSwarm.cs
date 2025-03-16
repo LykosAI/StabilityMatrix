@@ -10,6 +10,7 @@ using StabilityMatrix.Core.Models.FDS;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -19,8 +20,9 @@ public class StableSwarm(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     private Process? dotnetProcess;
 
@@ -281,6 +283,7 @@ public class StableSwarm(
                         StartScript = zludaPath,
                         DisableInternalArgs = false,
                         AutoUpdate = false,
+                        UpdateManagedNodes = "true",
                         ExtraArgs = args
                     }.Save(true)
                 );
@@ -294,6 +297,7 @@ public class StableSwarm(
                         StartScript = $"../{comfy.DisplayName}/main.py",
                         DisableInternalArgs = false,
                         AutoUpdate = false,
+                        UpdateManagedNodes = "true",
                         ExtraArgs = comfyArgs
                     }.Save(true)
                 );

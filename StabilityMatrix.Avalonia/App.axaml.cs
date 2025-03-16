@@ -68,6 +68,7 @@ using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using Application = Avalonia.Application;
@@ -300,6 +301,12 @@ public sealed class App : Application
 
         // Setup uri handler for `stabilitymatrix://` protocol
         Program.UriHandler.RegisterUriScheme();
+
+        // Migrate Python legacy directories if needed
+        Services
+            .GetRequiredService<IPyInstallationManager>()
+            .MigrateFromLegacyDirectories()
+            .SafeFireAndForget(ex => Logger.Error(ex, "Failed to migrate Python legacy directories"));
 
         // Setup activation protocol handlers (uri handler on macOS)
         if (Compat.IsMacOS && this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)

@@ -16,9 +16,10 @@ public class Fooocus(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
 )
-    : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper),
+    : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager),
         ISharedFolderLayoutPackage
 {
     public override string Name => "Fooocus";

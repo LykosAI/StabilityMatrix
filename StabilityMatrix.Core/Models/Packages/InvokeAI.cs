@@ -50,9 +50,10 @@ public class InvokeAI : BaseGitPackage
         IGithubApiCache githubApi,
         ISettingsManager settingsManager,
         IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
+        IPrerequisiteHelper prerequisiteHelper,
+        IPyInstallationManager pyInstallationManager
     )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper) { }
+        : base(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager) { }
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()

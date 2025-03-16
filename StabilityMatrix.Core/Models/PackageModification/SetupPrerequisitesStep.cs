@@ -5,26 +5,35 @@ using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
-public class SetupPrerequisitesStep : IPackageStep
+public class SetupPrerequisitesStep(
+    IPrerequisiteHelper prerequisiteHelper,
+    BasePackage package,
+    PyVersion? pythonVersion = null
+) : IPackageStep
 {
-    private readonly IPrerequisiteHelper prerequisiteHelper;
-    private readonly IPyRunner pyRunner;
-    private readonly BasePackage package;
-
-    public SetupPrerequisitesStep(
-        IPrerequisiteHelper prerequisiteHelper,
-        IPyRunner pyRunner,
-        BasePackage package
-    )
-    {
-        this.prerequisiteHelper = prerequisiteHelper;
-        this.pyRunner = pyRunner;
-        this.package = package;
-    }
-
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        // package and platform-specific requirements install
+        // If user has selected a specific Python version, make sure it's installed
+        if (pythonVersion.HasValue)
+        {
+            if (
+                package.Prerequisites.Contains(PackagePrerequisite.Python310)
+                || package.Prerequisites.Contains(PackagePrerequisite.Python31016)
+            )
+            {
+                await prerequisiteHelper
+                    .InstallPythonIfNecessary(pythonVersion.Value, progress)
+                    .ConfigureAwait(false);
+                await prerequisiteHelper
+                    .InstallTkinterIfNecessary(pythonVersion.Value, progress)
+                    .ConfigureAwait(false);
+                await prerequisiteHelper
+                    .InstallVirtualenvIfNecessary(pythonVersion.Value, progress)
+                    .ConfigureAwait(false);
+            }
+        }
+
+        // package and platform-specific requirements install (default behavior)
         await prerequisiteHelper.InstallPackageRequirements(package, progress).ConfigureAwait(false);
     }
 

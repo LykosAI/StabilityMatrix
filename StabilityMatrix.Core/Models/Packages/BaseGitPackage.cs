@@ -28,6 +28,7 @@ public abstract class BaseGitPackage : BasePackage
     protected readonly IGithubApiCache GithubApi;
     protected readonly IDownloadService DownloadService;
     protected readonly IPrerequisiteHelper PrerequisiteHelper;
+    protected readonly IPyInstallationManager PyInstallationManager;
     public PyVenvRunner? VenvRunner;
 
     public virtual string RepositoryName => Name;
@@ -66,13 +67,15 @@ public abstract class BaseGitPackage : BasePackage
         IGithubApiCache githubApi,
         ISettingsManager settingsManager,
         IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
+        IPrerequisiteHelper prerequisiteHelper,
+        IPyInstallationManager pyInstallationManager
     )
         : base(settingsManager)
     {
         GithubApi = githubApi;
         DownloadService = downloadService;
         PrerequisiteHelper = prerequisiteHelper;
+        PyInstallationManager = pyInstallationManager;
     }
 
     public override async Task<DownloadPackageVersionOptions?> GetLatestVersion(
@@ -163,7 +166,8 @@ public abstract class BaseGitPackage : BasePackage
         string installedPackagePath,
         string venvName = "venv",
         bool forceRecreate = false,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        PyVersion? pythonVersion = null
     )
     {
         if (Interlocked.Exchange(ref VenvRunner, null) is { } oldRunner)
@@ -171,7 +175,13 @@ public abstract class BaseGitPackage : BasePackage
             await oldRunner.DisposeAsync().ConfigureAwait(false);
         }
 
-        var venvRunner = await SetupVenvPure(installedPackagePath, venvName, forceRecreate, onConsoleOutput)
+        var venvRunner = await SetupVenvPure(
+                installedPackagePath,
+                venvName,
+                forceRecreate,
+                onConsoleOutput,
+                pythonVersion
+            )
             .ConfigureAwait(false);
 
         if (Interlocked.Exchange(ref VenvRunner, venvRunner) is { } oldRunner2)
@@ -192,11 +202,17 @@ public abstract class BaseGitPackage : BasePackage
         string installedPackagePath,
         string venvName = "venv",
         bool forceRecreate = false,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        PyVersion? pythonVersion = null
     )
     {
-        var venvRunner = await PyBaseInstall
-            .Default.CreateVenvRunnerAsync(
+        // Use either the specific version or the default one
+        var baseInstall = pythonVersion.HasValue
+            ? new PyBaseInstall(PyInstallationManager.GetInstallation(pythonVersion.Value))
+            : PyBaseInstall.Default;
+
+        var venvRunner = await baseInstall
+            .CreateVenvRunnerAsync(
                 Path.Combine(installedPackagePath, venvName),
                 workingDirectory: installedPackagePath,
                 environmentVariables: SettingsManager.Settings.EnvironmentVariables,

@@ -4,6 +4,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Helper;
 
@@ -181,4 +182,7 @@ public interface IPrerequisiteHelper
     );
 
     Task<bool> FixGitLongPaths();
+    Task InstallPythonIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
+    Task InstallVirtualenvIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
+    Task InstallTkinterIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
 }

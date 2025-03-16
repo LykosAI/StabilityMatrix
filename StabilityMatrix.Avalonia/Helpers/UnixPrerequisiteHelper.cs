@@ -489,4 +489,19 @@ public class UnixPrerequisiteHelper(
     {
         throw new PlatformNotSupportedException();
     }
+
+    public Task InstallPythonIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task InstallVirtualenvIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task InstallTkinterIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null)
+    {
+        throw new NotImplementedException();
+    }
 }

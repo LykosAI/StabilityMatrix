@@ -33,6 +33,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
@@ -688,6 +689,7 @@ public partial class PackageCardViewModel(
         var vm = vmFactory.Get<PythonPackagesViewModel>(vm =>
         {
             vm.VenvPath = new DirectoryPath(Package.FullPath, "venv");
+            vm.PythonVersion = PyVersion.Parse(Package.PythonVersion);
         });
 
         await vm.GetDialog().ShowAsync();

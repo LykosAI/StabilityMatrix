@@ -96,6 +96,12 @@ public partial class PackageInstallDetailViewModel(
     [ObservableProperty]
     private bool canInstall;
 
+    [ObservableProperty]
+    private ObservableCollection<PyVersion> availablePythonVersions = new();
+
+    [ObservableProperty]
+    private PyVersion selectedPythonVersion;
+
     public PythonPackageSpecifiersViewModel PythonPackageSpecifiersViewModel { get; } =
         new() { Title = null };
 
@@ -112,6 +118,14 @@ public partial class PackageInstallDetailViewModel(
 
         SelectedTorchIndex = SelectedPackage.GetRecommendedTorchVersion();
         SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
+
+        // Initialize Python versions
+        AvailablePythonVersions = new ObservableCollection<PyVersion>
+        {
+            PyInstallationManager.Python_3_10_11,
+            PyInstallationManager.Python_3_10_16
+        };
+        SelectedPythonVersion = PyInstallationManager.DefaultVersion;
 
         allOptions = await SelectedPackage.GetAllVersionOptions();
         if (ShowReleaseMode)
@@ -233,13 +247,14 @@ public partial class PackageInstallDetailViewModel(
             PreferredTorchIndex = SelectedTorchIndex,
             PreferredSharedFolderMethod = SelectedSharedFolderMethod,
             UseSharedOutputFolder = IsOutputSharingEnabled,
-            PipOverrides = pipOverrides.Count > 0 ? pipOverrides : null
+            PipOverrides = pipOverrides.Count > 0 ? pipOverrides : null,
+            PythonVersion = SelectedPythonVersion.StringValue
         };
 
         var steps = new List<IPackageStep>
         {
             new SetPackageInstallingStep(settingsManager, InstallName),
-            new SetupPrerequisitesStep(prerequisiteHelper, pyRunner, SelectedPackage),
+            new SetupPrerequisitesStep(prerequisiteHelper, SelectedPackage, SelectedPythonVersion),
             new DownloadPackageVersionStep(
                 SelectedPackage,
                 installLocation,
@@ -254,7 +269,7 @@ public partial class PackageInstallDetailViewModel(
                 {
                     SharedFolderMethod = SelectedSharedFolderMethod,
                     VersionOptions = downloadOptions,
-                    PythonOptions = { TorchIndex = SelectedTorchIndex }
+                    PythonOptions = { TorchIndex = SelectedTorchIndex, PythonVersion = SelectedPythonVersion }
                 }
             ),
             new SetupModelFoldersStep(SelectedPackage, SelectedSharedFolderMethod, installLocation)

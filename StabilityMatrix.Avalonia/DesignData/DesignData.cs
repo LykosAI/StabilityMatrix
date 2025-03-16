@@ -88,7 +88,8 @@ public static class DesignData
                                 PackageName = "stable-diffusion-webui",
                                 Version = new InstalledPackageVersion { InstalledReleaseVersion = "v1.0.0" },
                                 LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
-                                LastUpdateCheck = DateTimeOffset.Now
+                                LastUpdateCheck = DateTimeOffset.Now,
+                                PythonVersion = PyInstallationManager.Python_3_10_16.StringValue
                             },
                             new()
                             {
@@ -101,7 +102,8 @@ public static class DesignData
                                     InstalledCommitSha = "abc12uwu345568972abaedf7g7e679a98879e879f87ga8"
                                 },
                                 LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
-                                LastUpdateCheck = DateTimeOffset.Now
+                                LastUpdateCheck = DateTimeOffset.Now,
+                                PythonVersion = PyInstallationManager.Python_3_10_16.StringValue
                             },
                             new()
                             {
@@ -114,7 +116,8 @@ public static class DesignData
                                     InstalledCommitSha = "abc12uwu345568972abaedf7g7e679a98879e879f87ga8"
                                 },
                                 LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
-                                LastUpdateCheck = DateTimeOffset.Now
+                                LastUpdateCheck = DateTimeOffset.Now,
+                                PythonVersion = PyInstallationManager.Python_3_10_16.StringValue
                             }
                         },
                         ActiveInstalledPackageId = activePackageId

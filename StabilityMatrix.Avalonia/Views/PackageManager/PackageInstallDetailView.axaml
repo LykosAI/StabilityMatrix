@@ -200,6 +200,21 @@
                             VerticalContentAlignment="Center"
                             IsChecked="{Binding IsOutputSharingEnabled}" />
                     </StackPanel>
+
+                    <StackPanel Margin="0,4,24,0" Orientation="Vertical">
+                        <Label Content="Python Version" />
+                        <controls:BetterComboBox
+                            MinWidth="150"
+                            MinHeight="38"
+                            ItemsSource="{Binding AvailablePythonVersions}"
+                            SelectedItem="{Binding SelectedPythonVersion}">
+                            <controls:BetterComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type python:PyVersion}">
+                                    <TextBlock Margin="8,4,0,4" Text="{Binding StringValue}" />
+                                </DataTemplate>
+                            </controls:BetterComboBox.ItemTemplate>
+                        </controls:BetterComboBox>
+                    </StackPanel>
                 </WrapPanel>
             </Expander>
 

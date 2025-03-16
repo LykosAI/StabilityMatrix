@@ -55,4 +55,9 @@ public class ComfyUiSelfStartSettings : AutoConfiguration
 
     [ConfigComment("How many extra requests may queue up on this backend while one is processing.")]
     public int OverQueue = 1;
+
+    [ConfigComment(
+        "Whether the Comfy backend should automatically update nodes within Swarm's managed nodes folder.\nYou can update every launch, never update automatically, or force-update (bypasses some common git issues)."
+    )]
+    public string UpdateManagedNodes = "true";
 }

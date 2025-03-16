@@ -213,11 +213,12 @@ public class ComfyUI(
         if (isBlackwell && torchVersion is TorchIndex.Cuda)
         {
             pipArgs = pipArgs
-                .AddArg("--upgrade")
                 .AddArg("--pre")
                 .WithTorch()
                 .WithTorchVision()
-                .WithTorchExtraIndex("nightly/cu128");
+                .WithTorchAudio()
+                .WithTorchExtraIndex("nightly/cu128")
+                .AddArg("--upgrade");
 
             if (installedPackage.PipOverrides != null)
             {
@@ -265,7 +266,7 @@ public class ComfyUI(
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(
             await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-            excludePattern: isBlackwell ? "torch$|torchvision$|numpy" : "torch$|numpy"
+            excludePattern: isBlackwell ? "torch$|torchvision$|torchaudio$|numpy" : "torch$|numpy"
         );
 
         // https://github.com/comfyanonymous/ComfyUI/pull/4121

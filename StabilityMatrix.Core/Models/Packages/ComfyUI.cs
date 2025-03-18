@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using NLog;
+using Python.Runtime;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -647,7 +648,10 @@ public class ComfyUI(
             if (extension.Pip != null)
             {
                 await using var venvRunner = await package
-                    .SetupVenvPure(installedPackage.FullPath!)
+                    .SetupVenvPure(
+                        installedPackage.FullPath!,
+                        pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                    )
                     .ConfigureAwait(false);
 
                 var pipArgs = new PipInstallArgs();
@@ -680,7 +684,10 @@ public class ComfyUI(
                         );
 
                         await using var venvRunner = await package
-                            .SetupVenvPure(installedPackage.FullPath!)
+                            .SetupVenvPure(
+                                installedPackage.FullPath!,
+                                pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                            )
                             .ConfigureAwait(false);
 
                         var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(requirementsContent);
@@ -709,7 +716,10 @@ public class ComfyUI(
                     );
 
                     await using var venvRunner = await package
-                        .SetupVenvPure(installedPackage.FullPath!)
+                        .SetupVenvPure(
+                            installedPackage.FullPath!,
+                            pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                        )
                         .ConfigureAwait(false);
 
                     venvRunner.WorkingDirectory = installScript.Directory;

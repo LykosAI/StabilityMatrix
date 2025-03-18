@@ -181,7 +181,11 @@ public class SimpleSDXL(
         CancellationToken cancellationToken = default
     )
     {
-        await using var venvRunner = await SetupVenvPure(installLocation, forceRecreate: true)
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                forceRecreate: true,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
             .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));

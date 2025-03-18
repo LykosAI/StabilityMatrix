@@ -155,7 +155,11 @@ public class VoltaML(
     {
         // Setup venv
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         // Install requirements
         progress?.Report(new ProgressReport(-1, "Installing Package Requirements", isIndeterminate: true));
@@ -179,7 +183,8 @@ public class VoltaML(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         var foundIndicator = false;
 

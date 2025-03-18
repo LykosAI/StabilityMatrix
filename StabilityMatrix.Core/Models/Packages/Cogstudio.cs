@@ -62,7 +62,11 @@ public class Cogstudio(
             "https://raw.githubusercontent.com/pinokiofactory/cogstudio/refs/heads/main/cogstudio.py";
 
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Setting up Cogstudio files", isIndeterminate: true));
         var gradioCompositeDemo = new FilePath(installLocation, "inference/gradio_composite_demo");
@@ -136,7 +140,8 @@ public class Cogstudio(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {

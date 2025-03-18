@@ -200,7 +200,11 @@ public class VladAutomatic(
     {
         progress?.Report(new ProgressReport(-1f, "Installing package...", isIndeterminate: true));
         // Setup venv
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         await venvRunner.PipInstall("numpy==1.26.4").ConfigureAwait(false);
 
@@ -305,7 +309,8 @@ public class VladAutomatic(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -348,7 +353,10 @@ public class VladAutomatic(
         )
             .ConfigureAwait(false);
 
-        await using var venvRunner = await SetupVenvPure(installedPackage.FullPath!.Unwrap())
+        await using var venvRunner = await SetupVenvPure(
+                installedPackage.FullPath!.Unwrap(),
+                pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+            )
             .ConfigureAwait(false);
 
         await venvRunner.CustomInstall("launch.py --upgrade --test", onConsoleOutput).ConfigureAwait(false);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
@@ -110,10 +111,18 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
                     )
                 );
 
+                var envVars = new Dictionary<string, string>();
+                if (pyBaseInstall.Version == PyInstallationManager.Python_3_10_11)
+                {
+                    envVars["SETUPTOOLS_USE_DISTUTILS"] = "stdlib";
+                }
+
+                envVars.Update(settingsManager.Settings.EnvironmentVariables);
+
                 await using var venvRunner = await pyBaseInstall.CreateVenvRunnerAsync(
                     VenvPath,
                     workingDirectory: VenvPath.Parent,
-                    environmentVariables: settingsManager.Settings.EnvironmentVariables
+                    environmentVariables: envVars
                 );
 
                 var packages = await venvRunner.PipList();

@@ -86,7 +86,11 @@ public class Sdfx(
     {
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         // Setup venv
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
         venvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
         progress?.Report(
@@ -126,7 +130,11 @@ public class Sdfx(
         CancellationToken cancellationToken = default
     )
     {
-        var venvRunner = await SetupVenv(installLocation).ConfigureAwait(false);
+        var venvRunner = await SetupVenv(
+                installLocation,
+                pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+            )
+            .ConfigureAwait(false);
         venvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
         void HandleConsoleOutput(ProcessOutput s)

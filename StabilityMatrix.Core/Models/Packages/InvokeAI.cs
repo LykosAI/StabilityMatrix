@@ -136,7 +136,11 @@ public class InvokeAI : BaseGitPackage
         var venvPath = Path.Combine(installLocation, "venv");
         var exists = Directory.Exists(venvPath);
 
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
         venvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installLocation));
 
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
@@ -291,7 +295,8 @@ public class InvokeAI : BaseGitPackage
             throw new InvalidOperationException("Cannot spam 3 if not running detached");
         }
 
-        await SetupVenv(installedPackagePath).ConfigureAwait(false);
+        await SetupVenv(installedPackagePath, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installedPackagePath));
 

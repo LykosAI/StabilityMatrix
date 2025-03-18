@@ -129,7 +129,11 @@ public class KohyaSs(
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
         // Setup venv
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         // Extra dep needed before running setup since v23.0.x
         var pipArgs = new PipInstallArgs("rich", "packaging");
@@ -170,7 +174,8 @@ public class KohyaSs(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {

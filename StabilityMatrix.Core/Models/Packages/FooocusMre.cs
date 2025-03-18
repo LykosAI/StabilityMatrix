@@ -111,7 +111,11 @@ public class FooocusMre(
         CancellationToken cancellationToken = default
     )
     {
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
 
@@ -160,7 +164,8 @@ public class FooocusMre(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {

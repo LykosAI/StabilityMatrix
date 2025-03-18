@@ -54,7 +54,11 @@ public class OneTrainer(
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
@@ -83,7 +87,8 @@ public class OneTrainer(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         VenvRunner.RunDetached(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],

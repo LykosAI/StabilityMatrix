@@ -141,6 +141,16 @@ internal static class Assets
                     ),
                     HashSha256 = "e9502814cf831be43b98908bc46ef1d70c6f97a80fc9f93224119a1a25ac8bf5"
                 }
+            ),
+            (
+                PlatformKind.Linux | PlatformKind.X64,
+                new RemoteResource
+                {
+                    Url = new Uri(
+                        "https://github.com/astral-sh/python-build-standalone/releases/download/20250311/cpython-3.10.16+20250311-x86_64-unknown-linux-gnu-install_only.tar.gz"
+                    ),
+                    HashSha256 = "fa6a4f258af00a1dcd6c89dcc13f77b752249dddf91eb02e30bc2620c325f93f"
+                }
             )
         );
 

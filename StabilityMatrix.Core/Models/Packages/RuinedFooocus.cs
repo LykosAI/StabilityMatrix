@@ -85,7 +85,11 @@ public class RuinedFooocus(
 
         if (torchVersion == TorchIndex.Cuda)
         {
-            await using var venvRunner = await SetupVenvPure(installLocation, forceRecreate: true)
+            await using var venvRunner = await SetupVenvPure(
+                    installLocation,
+                    forceRecreate: true,
+                    pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                )
                 .ConfigureAwait(false);
 
             progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));

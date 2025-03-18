@@ -28,7 +28,7 @@ public class PyInstallationManager() : IPyInstallationManager
     /// <summary>
     /// The default Python version to use if none is specified
     /// </summary>
-    public static readonly PyVersion DefaultVersion = Python_3_10_11;
+    public static readonly PyVersion DefaultVersion = Python_3_10_16;
 
     /// <summary>
     /// Gets all available Python installations

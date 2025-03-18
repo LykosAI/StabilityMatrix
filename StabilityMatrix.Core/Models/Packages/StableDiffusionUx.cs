@@ -192,7 +192,11 @@ public class StableDiffusionUx(
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         var pipArgs = new PipInstallArgs();
@@ -248,7 +252,8 @@ public class StableDiffusionUx(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {

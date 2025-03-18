@@ -120,11 +120,11 @@ public partial class PackageInstallDetailViewModel(
         SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
 
         // Initialize Python versions
-        AvailablePythonVersions = new ObservableCollection<PyVersion>
-        {
+        AvailablePythonVersions =
+        [
             PyInstallationManager.Python_3_10_11,
             PyInstallationManager.Python_3_10_16
-        };
+        ];
         SelectedPythonVersion = PyInstallationManager.DefaultVersion;
 
         allOptions = await SelectedPackage.GetAllVersionOptions();

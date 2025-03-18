@@ -355,34 +355,6 @@ public class WindowsPrerequisiteHelper(
                 Directory.Delete(pythonDir, true);
             }
 
-            // Unzip python
-            if (version == PyInstallationManager.Python_3_10_11)
-            {
-                await ArchiveHelper.Extract7Z(pythonDownloadPath, pythonDir);
-            }
-            else
-            {
-                await ArchiveHelper.Extract7ZTar(pythonDownloadPath, pythonDir);
-                // it gets extracted into a folder named `python`, we need to move the contents to this pythonDir
-                var extractedDir = Path.Combine(pythonDir, "python");
-                if (Directory.Exists(extractedDir))
-                {
-                    foreach (var file in Directory.GetFiles(extractedDir))
-                    {
-                        var destFile = Path.Combine(pythonDir, Path.GetFileName(file));
-                        File.Move(file, destFile);
-                    }
-
-                    foreach (var dir in Directory.GetDirectories(extractedDir))
-                    {
-                        var destDir = Path.Combine(pythonDir, Path.GetFileName(dir));
-                        Directory.Move(dir, destDir);
-                    }
-
-                    Directory.Delete(extractedDir, true);
-                }
-            }
-
             // For Python 3.10.11, we need to handle embedded venv folder
             if (version == PyInstallationManager.Python_3_10_11)
             {
@@ -417,22 +389,44 @@ public class WindowsPrerequisiteHelper(
                 }
             }
 
-            // Extract get-pip.pyc
-            await Assets.PyScriptGetPip.ExtractToDir(pythonDir);
-
-            // We need to uncomment the #import site line in python._pth for pip to work
-            var pythonPthPath = Path.Combine(pythonDir, $"python{version.Major}{version.Minor}._pth");
-            var pythonPthContent = await File.ReadAllTextAsync(pythonPthPath);
-            pythonPthContent = pythonPthContent.Replace("#import site", "import site");
-            await File.WriteAllTextAsync(pythonPthPath, pythonPthContent);
-
-            // Only install Tkinter for Python 3.10.11 for now
+            // Unzip python
             if (version == PyInstallationManager.Python_3_10_11)
             {
+                await ArchiveHelper.Extract7Z(pythonDownloadPath, pythonDir);
+                // We need to uncomment the #import site line in python._pth for pip to work
+                var pythonPthPath = Path.Combine(pythonDir, $"python{version.Major}{version.Minor}._pth");
+                var pythonPthContent = await File.ReadAllTextAsync(pythonPthPath);
+                pythonPthContent = pythonPthContent.Replace("#import site", "import site");
+                await File.WriteAllTextAsync(pythonPthPath, pythonPthContent);
+
                 // Install TKinter
                 await InstallTkinterIfNecessary(version, progress);
             }
+            else
+            {
+                await ArchiveHelper.Extract7ZTar(pythonDownloadPath, pythonDir);
+                // it gets extracted into a folder named `python`, we need to move the contents to this pythonDir
+                var extractedDir = Path.Combine(pythonDir, "python");
+                if (Directory.Exists(extractedDir))
+                {
+                    foreach (var file in Directory.GetFiles(extractedDir))
+                    {
+                        var destFile = Path.Combine(pythonDir, Path.GetFileName(file));
+                        File.Move(file, destFile);
+                    }
 
+                    foreach (var dir in Directory.GetDirectories(extractedDir))
+                    {
+                        var destDir = Path.Combine(pythonDir, Path.GetFileName(dir));
+                        Directory.Move(dir, destDir);
+                    }
+
+                    Directory.Delete(extractedDir, true);
+                }
+            }
+
+            // Extract get-pip.pyc
+            await Assets.PyScriptGetPip.ExtractToDir(pythonDir);
             progress?.Report(new ProgressReport(1f, $"Python {version} install complete"));
         }
         finally

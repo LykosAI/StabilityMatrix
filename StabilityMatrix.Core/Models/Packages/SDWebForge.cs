@@ -127,7 +127,11 @@ public class SDWebForge(
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 

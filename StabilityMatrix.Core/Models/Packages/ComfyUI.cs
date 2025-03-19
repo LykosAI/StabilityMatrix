@@ -76,21 +76,21 @@ public class ComfyUI(
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "127.0.0.1",
                 Options = ["--listen"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "8188",
                 Options = ["--port"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
@@ -102,7 +102,7 @@ public class ComfyUI(
                 },
                 Options = ["--highvram", "--normalvram", "--lowvram", "--novram"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Reserve VRAM",
                 Type = LaunchOptionType.String,
@@ -111,21 +111,21 @@ public class ComfyUI(
                     "Sets the amount of VRAM (in GB) you want to reserve for use by your OS/other software",
                 Options = ["--reserve-vram"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Preview Method",
                 Type = LaunchOptionType.Bool,
                 InitialValue = "--preview-method auto",
                 Options = ["--preview-method auto", "--preview-method latent2rgb", "--preview-method taesd"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.PreferDirectMLOrZluda() && this is not ComfyZluda,
                 Options = ["--directml"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Use CPU only",
                 Type = LaunchOptionType.Bool,
@@ -133,7 +133,7 @@ public class ComfyUI(
                     !Compat.IsMacOS && !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
                 Options = ["--cpu"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Cross Attention Method",
                 Type = LaunchOptionType.Bool,
@@ -149,33 +149,33 @@ public class ComfyUI(
                     "--use-pytorch-cross-attention"
                 ]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Force Floating Point Precision",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS ? "--force-fp16" : null,
                 Options = ["--force-fp32", "--force-fp16"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "VAE Precision",
                 Type = LaunchOptionType.Bool,
                 Options = ["--fp16-vae", "--fp32-vae", "--bf16-vae"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Disable Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
                 Options = ["--disable-xformers"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Disable upcasting of attention",
                 Type = LaunchOptionType.Bool,
                 Options = ["--dont-upcast-attention"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Auto-Launch",
                 Type = LaunchOptionType.Bool,
@@ -188,6 +188,21 @@ public class ComfyUI(
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
+
+    public override List<ExtraPackageCommand> GetExtraCommands() =>
+        [
+            new()
+            {
+                CommandName = "Rebuild .NET Project",
+                Command = async installedPackage =>
+                {
+                    if (installedPackage == null || string.IsNullOrEmpty(installedPackage.FullPath))
+                    {
+                        throw new InvalidOperationException("Package not found or not installed correctly");
+                    }
+                }
+            }
+        ];
 
     public override async Task InstallPackage(
         string installLocation,
@@ -736,5 +751,37 @@ public class ComfyUI(
                 }
             }
         }
+    }
+
+    private async Task InstallTritonAndSageAttention(InstalledPackage installedPackage)
+    {
+        if (!Compat.IsWindows)
+        {
+            throw new PlatformNotSupportedException(
+                "This method of installing Triton and SageAttention is only supported on Windows"
+            );
+        }
+
+        var clPath = await Utilities.WhichAsync("cl").ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(clPath))
+        {
+            throw new MissingPrerequisiteException(
+                "Visual Studio 2022 Build Tools",
+                "Could not find Visual Studio 2022 Build Tools. Please install them from the link below.",
+                "https://aka.ms/vs/17/release/vs_BuildTools.exe"
+            );
+        }
+
+        var nvccPath = await Utilities.WhichAsync("nvcc").ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(nvccPath))
+        {
+            throw new MissingPrerequisiteException(
+                "CUDA Toolkit",
+                "Could not find CUDA Toolkit. Please install it from the link below.",
+                "https://developer.nvidia.com/cuda-downloads?target_os=Windows&target_arch=x86_64"
+            );
+        }
+
+        var venvRunner = await SetupVenvPure(installedPackage.FullPath!).ConfigureAwait(false);
     }
 }

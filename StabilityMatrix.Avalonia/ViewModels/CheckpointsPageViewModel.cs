@@ -213,6 +213,15 @@ public partial class CheckpointsPageViewModel(
                     (Func<LocalModelFile, bool>)(
                         file =>
                             string.IsNullOrWhiteSpace(SearchQuery)
+                            || (
+                                SearchQuery.StartsWith("#")
+                                && (
+                                    file.ConnectedModelInfo?.Tags.Contains(
+                                        SearchQuery.Substring(1),
+                                        StringComparer.OrdinalIgnoreCase
+                                    ) ?? false
+                                )
+                            )
                             || file.DisplayModelFileName.Contains(
                                 SearchQuery,
                                 StringComparison.OrdinalIgnoreCase

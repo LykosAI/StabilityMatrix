@@ -59,4 +59,26 @@ public static class EnumerableExtensions
             action(item);
         }
     }
+
+    // Concat an element if not null
+    public static IEnumerable<T> AppendIfNotNull<T>(this IEnumerable<T> source, T? element)
+        where T : class
+    {
+        if (element != null)
+        {
+            return source.Append(element);
+        }
+        return source;
+    }
+
+    // Concat an enumerable if not null
+    public static IEnumerable<T> ConcatIfNotNull<T>(this IEnumerable<T> source, IEnumerable<T>? elements)
+        where T : class
+    {
+        if (elements != null)
+        {
+            return source.Concat(elements);
+        }
+        return source;
+    }
 }

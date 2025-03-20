@@ -8,6 +8,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -193,13 +194,15 @@ public class ComfyUI(
         [
             new()
             {
-                CommandName = "Rebuild .NET Project",
+                CommandName = "Install Triton and SageAttention",
                 Command = async installedPackage =>
                 {
                     if (installedPackage == null || string.IsNullOrEmpty(installedPackage.FullPath))
                     {
                         throw new InvalidOperationException("Package not found or not installed correctly");
                     }
+
+                    await InstallTritonAndSageAttention(installedPackage).ConfigureAwait(false);
                 }
             }
         ];
@@ -755,33 +758,22 @@ public class ComfyUI(
 
     private async Task InstallTritonAndSageAttention(InstalledPackage installedPackage)
     {
-        if (!Compat.IsWindows)
-        {
-            throw new PlatformNotSupportedException(
-                "This method of installing Triton and SageAttention is only supported on Windows"
-            );
-        }
+        if (installedPackage?.FullPath is null)
+            return;
 
-        var clPath = await Utilities.WhichAsync("cl").ConfigureAwait(false);
-        if (string.IsNullOrWhiteSpace(clPath))
+        var installSageStep = new InstallSageAttentionStep(DownloadService, PrerequisiteHelper)
         {
-            throw new MissingPrerequisiteException(
-                "Visual Studio 2022 Build Tools",
-                "Could not find Visual Studio 2022 Build Tools. Please install them from the link below.",
-                "https://aka.ms/vs/17/release/vs_BuildTools.exe"
-            );
-        }
+            InstalledPackage = installedPackage,
+            WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
+            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables
+        };
 
-        var nvccPath = await Utilities.WhichAsync("nvcc").ConfigureAwait(false);
-        if (string.IsNullOrWhiteSpace(nvccPath))
+        var runner = new PackageModificationRunner
         {
-            throw new MissingPrerequisiteException(
-                "CUDA Toolkit",
-                "Could not find CUDA Toolkit. Please install it from the link below.",
-                "https://developer.nvidia.com/cuda-downloads?target_os=Windows&target_arch=x86_64"
-            );
-        }
-
-        var venvRunner = await SetupVenvPure(installedPackage.FullPath!).ConfigureAwait(false);
+            ShowDialogOnStart = true,
+            ModificationCompleteMessage = "Triton and SageAttention installed successfully",
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps([installSageStep]).ConfigureAwait(false);
     }
 }

@@ -192,21 +192,26 @@ public class ComfyUI(
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
 
     public override List<ExtraPackageCommand> GetExtraCommands() =>
-        [
-            new()
-            {
-                CommandName = "Install Triton and SageAttention",
-                Command = async installedPackage =>
+        Compat.IsWindows
+            ?
+            [
+                new ExtraPackageCommand
                 {
-                    if (installedPackage == null || string.IsNullOrEmpty(installedPackage.FullPath))
+                    CommandName = "Install Triton and SageAttention",
+                    Command = async installedPackage =>
                     {
-                        throw new InvalidOperationException("Package not found or not installed correctly");
-                    }
+                        if (installedPackage == null || string.IsNullOrEmpty(installedPackage.FullPath))
+                        {
+                            throw new InvalidOperationException(
+                                "Package not found or not installed correctly"
+                            );
+                        }
 
-                    await InstallTritonAndSageAttention(installedPackage).ConfigureAwait(false);
+                        await InstallTritonAndSageAttention(installedPackage).ConfigureAwait(false);
+                    }
                 }
-            }
-        ];
+            ]
+            : [];
 
     public override async Task InstallPackage(
         string installLocation,

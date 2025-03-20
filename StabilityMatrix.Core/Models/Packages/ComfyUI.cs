@@ -147,7 +147,8 @@ public class ComfyUI(
                 [
                     "--use-split-cross-attention",
                     "--use-quad-cross-attention",
-                    "--use-pytorch-cross-attention"
+                    "--use-pytorch-cross-attention",
+                    "--use-sage-attention"
                 ]
             },
             new()

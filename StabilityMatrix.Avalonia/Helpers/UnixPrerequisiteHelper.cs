@@ -59,6 +59,8 @@ public class UnixPrerequisiteHelper(
     // Cached store of whether or not git is installed
     private bool? isGitInstalled;
 
+    public bool IsVcBuildToolsInstalled => false;
+
     private async Task<bool> CheckIsGitInstalled()
     {
         var result = await ProcessRunner.RunBashCommand("git --version");

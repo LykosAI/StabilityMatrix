@@ -28,8 +28,7 @@ public class InstallSageAttentionStep(
             );
         }
 
-        var clPath = await Utilities.WhichAsync("cl").ConfigureAwait(false);
-        if (string.IsNullOrWhiteSpace(clPath))
+        if (!prerequisiteHelper.IsVcBuildToolsInstalled)
         {
             throw new MissingPrerequisiteException(
                 "Visual Studio 2022 Build Tools",
@@ -41,11 +40,25 @@ public class InstallSageAttentionStep(
         var nvccPath = await Utilities.WhichAsync("nvcc").ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(nvccPath))
         {
-            throw new MissingPrerequisiteException(
-                "CUDA Toolkit",
-                "Could not find CUDA Toolkit. Please install version 12.6 or newer from the link below.",
-                "https://developer.nvidia.com/cuda-downloads?target_os=Windows&target_arch=x86_64"
+            var cuda126ExpectedPath = new DirectoryPath(
+                @"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\bin"
             );
+            var cuda128ExpectedPath = new DirectoryPath(
+                @"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8\bin"
+            );
+
+            if (!cuda126ExpectedPath.Exists && !cuda128ExpectedPath.Exists)
+            {
+                throw new MissingPrerequisiteException(
+                    "CUDA Toolkit",
+                    "Could not find CUDA Toolkit. Please install version 12.6 or newer from the link below.",
+                    "https://developer.nvidia.com/cuda-downloads?target_os=Windows&target_arch=x86_64"
+                );
+            }
+
+            nvccPath = cuda128ExpectedPath.Exists
+                ? cuda128ExpectedPath.JoinFile("nvcc.exe").ToString()
+                : cuda126ExpectedPath.JoinFile("nvcc.exe").ToString();
         }
 
         var venvDir = WorkingDirectory.JoinDir("venv");
@@ -101,7 +114,7 @@ public class InstallSageAttentionStep(
 
         await venvRunner
             .PipInstall(
-                WorkingDirectory.JoinDir("SageAttention").ToString(),
+                [WorkingDirectory.JoinDir("SageAttention").ToString()],
                 progress.AsProcessOutputHandler()
             )
             .ConfigureAwait(false);

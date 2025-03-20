@@ -74,8 +74,8 @@ public class InstallSageAttentionStep(
             var cudaBinPath = Path.GetDirectoryName(nvccPath)!;
             var cudaHome = Path.GetDirectoryName(cudaBinPath)!;
 
-            env = env.TryGetValue("PATH", out var pathvalue)
-                ? env.SetItem("PATH", $"{cudaBinPath}{Path.PathSeparator}{pathvalue}")
+            env = env.TryGetValue("PATH", out var pathValue)
+                ? env.SetItem("PATH", $"{cudaBinPath}{Path.PathSeparator}{pathValue}")
                 : env.Add("PATH", cudaBinPath);
 
             if (!env.ContainsKey("CUDA_HOME"))
@@ -86,17 +86,25 @@ public class InstallSageAttentionStep(
             return env;
         });
 
+        progress?.Report(new ProgressReport(-1f, message: "Installing Triton", isIndeterminate: true));
+
         await venvRunner
             .PipInstall("triton-windows", progress.AsProcessOutputHandler())
             .ConfigureAwait(false);
 
         venvRunner.UpdateEnvironmentVariables(env => env.SetItem("SETUPTOOLS_USE_DISTUTILS", "setuptools"));
 
+        progress?.Report(
+            new ProgressReport(-1f, message: "Downloading Python libraries", isIndeterminate: true)
+        );
         var downloadPath = WorkingDirectory.JoinFile("python_libs_for_sage.zip");
         await downloadService
             .DownloadToFileAsync(PythonLibsDownloadUrl, downloadPath, progress)
             .ConfigureAwait(false);
 
+        progress?.Report(
+            new ProgressReport(-1f, message: "Extracting Python libraries", isIndeterminate: true)
+        );
         await ArchiveHelper.Extract7Z(downloadPath, venvDir, progress).ConfigureAwait(false);
 
         var includeFolder = venvDir.JoinDir("include");
@@ -107,11 +115,15 @@ public class InstallSageAttentionStep(
 
         if (!sageDir.Exists)
         {
+            progress?.Report(
+                new ProgressReport(-1f, message: "Downloading SageAttention", isIndeterminate: true)
+            );
             await prerequisiteHelper
                 .RunGit(["clone", "https://github.com/thu-ml/SageAttention.git", sageDir.ToString()])
                 .ConfigureAwait(false);
         }
 
+        progress?.Report(new ProgressReport(-1f, message: "Installing SageAttention", isIndeterminate: true));
         await venvRunner
             .PipInstall(
                 [WorkingDirectory.JoinDir("SageAttention").ToString()],

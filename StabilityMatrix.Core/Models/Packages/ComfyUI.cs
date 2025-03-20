@@ -776,5 +776,43 @@ public class ComfyUI(
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps([installSageStep]).ConfigureAwait(false);
+
+        if (runner.Failed)
+            return;
+
+        await using var transaction = settingsManager.BeginTransaction();
+        var attentionOptions = transaction
+            .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
+            .LaunchArgs?.Where(opt => opt.Name.Contains("attention"));
+
+        if (attentionOptions is not null)
+        {
+            foreach (var option in attentionOptions)
+            {
+                option.OptionValue = false;
+            }
+        }
+
+        var sageAttention = transaction
+            .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
+            .LaunchArgs?.FirstOrDefault(opt => opt.Name.Contains("sage-attention"));
+
+        if (sageAttention is not null)
+        {
+            sageAttention.OptionValue = true;
+        }
+        else
+        {
+            transaction
+                .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
+                .LaunchArgs?.Add(
+                    new LaunchOption
+                    {
+                        Name = "--use-sage-attention",
+                        Type = LaunchOptionType.Bool,
+                        OptionValue = true
+                    }
+                );
+        }
     }
 }

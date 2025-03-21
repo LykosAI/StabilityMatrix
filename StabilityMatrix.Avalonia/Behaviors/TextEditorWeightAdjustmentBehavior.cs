@@ -155,7 +155,10 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
                 .ToList();
 
             // Go up and find the first parenthesized node, if any
-            var parenthesizedNode = smallestNodes
+            // (Considering only the first and last of the smallest nodes)
+            var parenthesisTargets = smallestNodes.Take(1).Concat(smallestNodes.TakeLast(1)).ToList();
+
+            var parenthesizedNode = parenthesisTargets
                 .SelectMany(x => x.AncestorsAndSelf())
                 .OfType<ParenthesizedNode>()
                 .FirstOrDefault();

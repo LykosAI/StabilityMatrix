@@ -92,6 +92,7 @@ public class WindowsPrerequisiteHelper(
 
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
+    public bool IsVcBuildToolsInstalled => Directory.Exists(VcBuildToolsExistsPath);
 
     public async Task RunGit(
         ProcessArgs args,

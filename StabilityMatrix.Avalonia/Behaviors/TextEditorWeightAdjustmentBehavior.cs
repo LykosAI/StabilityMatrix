@@ -1,14 +1,9 @@
-﻿using System;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
 using Avalonia;
-using Avalonia.Controls.Documents;
 using Avalonia.Input;
 using Avalonia.Xaml.Interactivity;
 using AvaloniaEdit;
-using AvaloniaEdit.Document;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
@@ -17,6 +12,7 @@ using TextMateSharp.Grammars;
 
 namespace StabilityMatrix.Avalonia.Behaviors;
 
+[Localizable(false)]
 public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -88,27 +84,8 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
         }
     }
 
-    [Localizable(false)]
-    private static string FormatWeight(double weight)
-    {
-        // Format the weight to one decimal place
-        var formattedWeight = weight.ToString("F1", CultureInfo.InvariantCulture);
-
-        // Strip trailing 0
-        if (formattedWeight.EndsWith(".0", StringComparison.InvariantCulture))
-        {
-            formattedWeight = formattedWeight[..^2];
-        }
-
-        return formattedWeight;
-    }
-
-    [Localizable(false)]
     private void TextEditor_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (TokenizerProvider is null || textEditor is null)
-            return;
-
         if (!e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.Key is not (Key.Up or Key.Down))
             return;
 
@@ -116,6 +93,22 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
 
         // Calculate the weight delta
         var delta = e.Key == Key.Up ? WeightIncrement : -WeightIncrement;
+
+        try
+        {
+            HandleWeightAdjustment(delta);
+        }
+        catch (Exception exception)
+        {
+            Logger.Warn(exception, "Failed to handle weight adjustment: {Msg}", exception.Message);
+        }
+    }
+
+    [Localizable(false)]
+    private void HandleWeightAdjustment(double delta)
+    {
+        if (TokenizerProvider is null || textEditor is null)
+            return;
 
         // Backup the current caret position
         var caretOffset = textEditor.CaretOffset;
@@ -130,103 +123,113 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
             editorSelectionSegment
         );
 
-        if (
-            (editorSelectionSegment != null ? GetSelectedTokenSpan() : GetCaretTokenSpan())
-            is not { } tokenSegment
-        )
-            return;
-
-        // 2. Tokenize the entire text
-        var text = textEditor.Document.Text;
-        var tokenizeResult = TokenizerProvider.TokenizeLine(text);
-
-        // 3. Build the AST
-        PromptSyntaxTree ast;
         try
         {
+            if (
+                (editorSelectionSegment != null ? GetSelectedTokenSpan() : GetCaretTokenSpan())
+                is not { } tokenSegment
+            )
+                return;
+
+            // 2. Tokenize the entire text
+            var text = textEditor.Document.Text;
+            var tokenizeResult = TokenizerProvider.TokenizeLine(text);
+
+            // 3. Build the AST
             var astBuilder = new PromptSyntaxBuilder(tokenizeResult, text);
-            ast = astBuilder.BuildAST();
-        }
-        catch (Exception exception)
-        {
-            Logger.Warn(exception, "Failed to build AST: {Msg}", exception.Message);
-            return;
-        }
+            var ast = astBuilder.BuildAST();
 
-        // Find *all* nodes that intersect the selection/caret range
+            // Find *all* nodes that intersect the selection/caret range
+            var selectedNodes = ast.RootNode.Content.Where(node => node.Span.IntersectsWith(tokenSegment))
+                .ToList();
 
-        // Find smallest containing node
-        var selectedNode = ast.RootNodes.First(node => node.Span.Contains(tokenSegment))
-            .FindSmallestContainingDescendant(tokenSegment);
+            // Find smallest containing nodes
+            var smallestNodes = selectedNodes
+                .Select(node =>
+                {
+                    // For nodes that *fully contain* the selection, get smallest containing descendant instead
+                    if (!node.Span.Contains(tokenSegment))
+                        return node;
+                    return node.FindSmallestContainingDescendant(tokenSegment);
+                })
+                .ToList();
 
-        // Go up and find the first parenthesized node, if any
-        var parenthesizedNode = selectedNode.AncestorsAndSelf().OfType<ParenthesizedNode>().FirstOrDefault();
+            // Go up and find the first parenthesized node, if any
+            var parenthesizedNode = smallestNodes
+                .SelectMany(x => x.AncestorsAndSelf())
+                .OfType<ParenthesizedNode>()
+                .FirstOrDefault();
 
-        var currentWeight = 1.0;
-        int replacementOffset;
-        int replacementLength;
-        string newText;
+            var currentWeight = 1.0;
+            int replacementOffset; // Offset to start replacing text
+            int replacementLength; // Length of text to replace (0 if inserting)
+            string newText;
 
-        if (parenthesizedNode != null)
-        {
-            // We're inside parentheses.  Get the existing weight, if any.
-            currentWeight = (double?)parenthesizedNode.Weight?.Value ?? 1.0;
-
-            // Calculate new weight
-            var newWeight = Math.Clamp(currentWeight + delta, MinWeight, MaxWeight);
-
-            if (parenthesizedNode.Weight is not null) // if the weight exists
+            if (parenthesizedNode != null)
             {
-                // Replace existing weight
-                replacementOffset = parenthesizedNode.Weight.StartIndex;
-                replacementLength = parenthesizedNode.Weight.Length;
-                newText = FormatWeight(newWeight);
+                // We're inside parentheses.  Get the existing weight, if any.
+                currentWeight = (double?)parenthesizedNode.Weight?.Value ?? 1.0;
+
+                // Calculate new weight
+                var newWeight = Math.Clamp(currentWeight + delta, MinWeight, MaxWeight);
+
+                if (parenthesizedNode.Weight is not null) // if the weight exists
+                {
+                    // Replace existing weight
+                    replacementOffset = parenthesizedNode.Weight.StartIndex;
+                    replacementLength = parenthesizedNode.Weight.Length;
+                    newText = FormatWeight(newWeight);
+                }
+                else
+                {
+                    // Insert the weight before the closing parenthesis.
+                    replacementOffset = parenthesizedNode.EndIndex; // Insert at the end of parenthesized node
+                    replacementLength = 0; // insert
+                    newText = $":{FormatWeight(newWeight)}";
+                }
             }
             else
             {
-                // Insert the weight before the closing parenthesis.
-                replacementOffset = parenthesizedNode.EndIndex; // Insert at the end of parenthesized node
-                replacementLength = 0; // insert
-                newText = $":{FormatWeight(newWeight)}";
+                // Not inside parentheses. Wrap the selected tokens and add the weight.
+                var selectedText = ast.GetSourceText(tokenSegment);
+
+                var newWeight = Math.Clamp(currentWeight + delta, MinWeight, MaxWeight);
+
+                replacementOffset = tokenSegment.Start;
+                replacementLength = tokenSegment.Length;
+                newText = $"({selectedText}:{FormatWeight(newWeight)})";
+            }
+
+            // 8. Replace the text.
+            textEditor.Document.Replace(replacementOffset, replacementLength, newText);
+
+            // Plus 1 to caret if we added parenthesis
+            if (parenthesizedNode == null)
+            {
+                caretOffset += 1;
+            }
+
+            // 9. Update caret/selection.
+            if (editorSelectionSegment is not null)
+            {
+                // Restore the caret position
+                textEditor.CaretOffset = caretOffset;
+
+                // textEditor.SelectionStart = tokenSegment.Offset;
+                // TODO: textEditor.SelectionEnd = tokenSegment.Offset + newText.Length;
+            }
+            else
+            {
+                // Restore the caret position
+                textEditor.CaretOffset = caretOffset;
+
+                // Put it inside the parenthesis
+                // textEditor.CaretOffset = replacementOffset + newText.Length;
             }
         }
-        else
+        catch (Exception exception)
         {
-            // Not inside parentheses. Wrap the selected tokens and add the weight.
-            var selectedText = ast.GetSourceText(tokenSegment);
-
-            var newWeight = Math.Clamp(currentWeight + delta, MinWeight, MaxWeight);
-
-            replacementOffset = tokenSegment.Start;
-            replacementLength = tokenSegment.Length;
-            newText = $"({selectedText}:{FormatWeight(newWeight)})";
-        }
-
-        // 8. Replace the text.
-        textEditor.Document.Replace(replacementOffset, replacementLength, newText);
-
-        // Plus 1 to caret if we added parenthesis
-        if (parenthesizedNode == null)
-        {
-            caretOffset += 1;
-        }
-
-        // 9. Update caret/selection.
-        if (editorSelectionSegment is not null)
-        {
-            // Restore the caret position
-            textEditor.CaretOffset = caretOffset;
-
-            // textEditor.SelectionStart = tokenSegment.Offset;
-            // TODO: textEditor.SelectionEnd = tokenSegment.Offset + newText.Length;
-        }
-        else
-        {
-            // Restore the caret position
-            textEditor.CaretOffset = caretOffset;
-
-            // Put it inside the parenthesis
-            // textEditor.CaretOffset = replacementOffset + newText.Length;
+            Logger.Warn(exception, "Failed to handle weight adjustment: {Msg}", exception.Message);
         }
     }
 
@@ -279,7 +282,10 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
         if (startToken is null || endToken is null)
             return null;
 
-        return TextSpan.FromBounds(startToken.StartIndex, endToken.EndIndex);
+        // Ensure end index is within length of text
+        var endIndex = Math.Min(endToken.EndIndex + startLine.Offset, textEditor.Document.TextLength);
+
+        return TextSpan.FromBounds(startToken.StartIndex, endIndex);
     }
 
     private TextSpan? GetCaretTokenSpan()
@@ -331,5 +337,20 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
 
         // Cap the offsets by the line offsets
         return TextSpan.FromBounds(Math.Max(startOffset, line.Offset), Math.Min(endOffset, line.EndOffset));
+    }
+
+    [Localizable(false)]
+    private static string FormatWeight(double weight)
+    {
+        // Format the weight to one decimal place
+        var formattedWeight = weight.ToString("F1", CultureInfo.InvariantCulture);
+
+        // Strip trailing 0
+        if (formattedWeight.EndsWith(".0", StringComparison.InvariantCulture))
+        {
+            formattedWeight = formattedWeight[..^2];
+        }
+
+        return formattedWeight;
     }
 }

@@ -22,7 +22,16 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
             SetParents(node);
         }
 
-        return new PromptSyntaxTree(sourceText, nodes, tokenizeResult.Tokens.ToList());
+        var startIndex = nodes.FirstOrDefault()?.Span.Start ?? 0;
+        // Ensure we don't exceed source text
+        var endIndex = Math.Min(nodes.LastOrDefault()?.Span.End ?? sourceText.Length, sourceText.Length);
+        var rootNode = new DocumentNode
+        {
+            Span = new TextSpan(startIndex, endIndex - startIndex),
+            Content = nodes
+        };
+
+        return new PromptSyntaxTree(sourceText, rootNode, tokenizeResult.Tokens.ToList());
     }
 
     private static void SetParents(PromptNode node)
@@ -347,7 +356,24 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
     {
         if (currentTokenIndex < tokenizeResult.Tokens.Length)
         {
-            return tokenizeResult.Tokens[currentTokenIndex];
+            var result = tokenizeResult.Tokens[currentTokenIndex];
+
+            // If this is the last token, ensure it doesn't exceed the source text length
+            if (currentTokenIndex == tokenizeResult.Tokens.Length - 1)
+            {
+                if (result.EndIndex > sourceText.Length)
+                {
+                    result = new Token
+                    {
+                        StartIndex = result.StartIndex,
+                        EndIndex = sourceText.Length,
+                        Length = sourceText.Length - result.StartIndex,
+                        Scopes = result.Scopes
+                    };
+                }
+            }
+
+            return result;
         }
         return null;
     }
@@ -357,11 +383,36 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
         if (!MoreTokens())
             throw new InvalidOperationException("No more tokens to consume.");
 
-        return tokenizeResult.Tokens[currentTokenIndex++];
+        var result = tokenizeResult.Tokens[currentTokenIndex++];
+
+        // If this is the last token, ensure it doesn't exceed the source text length
+        if (currentTokenIndex == tokenizeResult.Tokens.Length - 1)
+        {
+            if (result.EndIndex > sourceText.Length)
+            {
+                result = new Token
+                {
+                    StartIndex = result.StartIndex,
+                    EndIndex = sourceText.Length,
+                    Length = sourceText.Length - result.StartIndex,
+                    Scopes = result.Scopes
+                };
+            }
+        }
+
+        return result;
     }
 
     private bool MoreTokens()
     {
         return currentTokenIndex < tokenizeResult.Tokens.Length;
+    }
+
+    private class Token : IToken
+    {
+        public int StartIndex { get; set; }
+        public int EndIndex { get; init; }
+        public int Length { get; init; }
+        public List<string> Scopes { get; init; } = [];
     }
 }

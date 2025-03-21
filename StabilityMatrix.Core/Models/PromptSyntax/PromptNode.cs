@@ -119,7 +119,10 @@ public abstract class PromptNode
         // Ensure the current node contains the target span
         if (!Span.Contains(span))
         {
-            throw new ArgumentOutOfRangeException(nameof(span));
+            throw new ArgumentOutOfRangeException(
+                nameof(span),
+                $"Node span {Span} does not contain the target span {span}"
+            );
         }
 
         var bestMatch = this;
@@ -145,6 +148,13 @@ public abstract class PromptNode
     {
         return GetType().Name + ToString();
     }
+}
+
+public class DocumentNode : PromptNode, IHasChildren
+{
+    public List<PromptNode> Content { get; init; } = [];
+
+    IEnumerable<PromptNode> IHasChildren.Children => Content;
 }
 
 public class IdentifierNode : PromptNode

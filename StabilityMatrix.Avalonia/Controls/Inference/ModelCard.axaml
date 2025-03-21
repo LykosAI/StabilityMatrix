@@ -15,7 +15,7 @@
     <Design.PreviewWith>
         <Panel Width="400" Height="400">
             <StackPanel
-                Width="300"
+                Width="400"
                 VerticalAlignment="Center"
                 Spacing="32">
                 <controls:ModelCard DataContext="{x:Static mocks:DesignData.ModelCardViewModel}" />
@@ -89,6 +89,7 @@
                                     <ui:ToggleMenuFlyoutItem
                                         IconSource="{StaticResource IconCube}"
                                         IsChecked="{Binding IsRefinerSelectionEnabled}"
+                                        IsVisible="{Binding ShowRefinerOption}"
                                         Text="{x:Static lang:Resources.Label_Refiner}" />
                                     <ui:ToggleMenuFlyoutItem
                                         IconSource="{StaticResource IconCube}"

@@ -29,7 +29,7 @@ public partial class HuggingfaceItemViewModel : ViewModelBase
                 ModelsDir,
                 Item.ModelCategory.ConvertTo<SharedFolderType>().ToString(),
                 Item.Subfolder ?? string.Empty,
-                Item.Files[0]
+                Path.GetFileName(Item.Files[0])
             )
         );
 

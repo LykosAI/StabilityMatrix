@@ -6,7 +6,7 @@ using Injectio.Attributes;
 namespace StabilityMatrix.Avalonia.Controls;
 
 [RegisterTransient<StackExpander>]
-public class StackExpander : TemplatedControl
+public class StackExpander : TemplatedControlBase
 {
     public static readonly StyledProperty<bool> IsExpandedProperty =
         Expander.IsExpandedProperty.AddOwner<StackExpander>();

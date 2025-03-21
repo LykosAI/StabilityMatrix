@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace StabilityMatrix.Core.Helper;
@@ -63,6 +64,21 @@ public static partial class Utilities
         stream.Position = 0;
 
         return stream;
+    }
+
+    public static async Task<string> WhichAsync(string arg)
+    {
+        using var process = new Process();
+        process.StartInfo.FileName = Compat.IsWindows ? "where.exe" : "which";
+        process.StartInfo.Arguments = arg;
+        process.StartInfo.UseShellExecute = false;
+        process.StartInfo.CreateNoWindow = true;
+        process.StartInfo.RedirectStandardOutput = true;
+
+        process.Start();
+        await process.WaitForExitAsync().ConfigureAwait(false);
+
+        return await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
     }
 
     public static string RemoveHtml(string? stringWithHtml)

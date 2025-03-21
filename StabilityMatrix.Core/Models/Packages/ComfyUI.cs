@@ -8,6 +8,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -76,21 +77,21 @@ public class ComfyUI(
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "127.0.0.1",
                 Options = ["--listen"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "8188",
                 Options = ["--port"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
@@ -102,7 +103,7 @@ public class ComfyUI(
                 },
                 Options = ["--highvram", "--normalvram", "--lowvram", "--novram"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Reserve VRAM",
                 Type = LaunchOptionType.String,
@@ -111,21 +112,21 @@ public class ComfyUI(
                     "Sets the amount of VRAM (in GB) you want to reserve for use by your OS/other software",
                 Options = ["--reserve-vram"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Preview Method",
                 Type = LaunchOptionType.Bool,
                 InitialValue = "--preview-method auto",
                 Options = ["--preview-method auto", "--preview-method latent2rgb", "--preview-method taesd"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.PreferDirectMLOrZluda() && this is not ComfyZluda,
                 Options = ["--directml"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Use CPU only",
                 Type = LaunchOptionType.Bool,
@@ -133,7 +134,7 @@ public class ComfyUI(
                     !Compat.IsMacOS && !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
                 Options = ["--cpu"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Cross Attention Method",
                 Type = LaunchOptionType.Bool,
@@ -146,36 +147,37 @@ public class ComfyUI(
                 [
                     "--use-split-cross-attention",
                     "--use-quad-cross-attention",
-                    "--use-pytorch-cross-attention"
+                    "--use-pytorch-cross-attention",
+                    "--use-sage-attention"
                 ]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Force Floating Point Precision",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS ? "--force-fp16" : null,
                 Options = ["--force-fp32", "--force-fp16"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "VAE Precision",
                 Type = LaunchOptionType.Bool,
                 Options = ["--fp16-vae", "--fp32-vae", "--bf16-vae"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Disable Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
                 Options = ["--disable-xformers"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Disable upcasting of attention",
                 Type = LaunchOptionType.Bool,
                 Options = ["--dont-upcast-attention"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Auto-Launch",
                 Type = LaunchOptionType.Bool,
@@ -188,6 +190,28 @@ public class ComfyUI(
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
+
+    public override List<ExtraPackageCommand> GetExtraCommands() =>
+        Compat.IsWindows
+            ?
+            [
+                new ExtraPackageCommand
+                {
+                    CommandName = "Install Triton and SageAttention",
+                    Command = async installedPackage =>
+                    {
+                        if (installedPackage == null || string.IsNullOrEmpty(installedPackage.FullPath))
+                        {
+                            throw new InvalidOperationException(
+                                "Package not found or not installed correctly"
+                            );
+                        }
+
+                        await InstallTritonAndSageAttention(installedPackage).ConfigureAwait(false);
+                    }
+                }
+            ]
+            : [];
 
     public override async Task InstallPackage(
         string installLocation,
@@ -213,11 +237,12 @@ public class ComfyUI(
         if (isBlackwell && torchVersion is TorchIndex.Cuda)
         {
             pipArgs = pipArgs
-                .AddArg("--upgrade")
                 .AddArg("--pre")
                 .WithTorch()
                 .WithTorchVision()
-                .WithTorchExtraIndex("nightly/cu128");
+                .WithTorchAudio()
+                .WithTorchExtraIndex("nightly/cu128")
+                .AddArg("--upgrade");
 
             if (installedPackage.PipOverrides != null)
             {
@@ -265,7 +290,7 @@ public class ComfyUI(
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(
             await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-            excludePattern: isBlackwell ? "torch$|torchvision$|numpy" : "torch$|numpy"
+            excludePattern: isBlackwell ? "torch$|torchvision$|torchaudio$|numpy" : "torch$|numpy"
         );
 
         // https://github.com/comfyanonymous/ComfyUI/pull/4121
@@ -734,6 +759,65 @@ public class ComfyUI(
                     progress?.Report(new ProgressReport(1f, $"Ran launch.py for {installedDir.Name}"));
                 }
             }
+        }
+    }
+
+    private async Task InstallTritonAndSageAttention(InstalledPackage installedPackage)
+    {
+        if (installedPackage?.FullPath is null)
+            return;
+
+        var installSageStep = new InstallSageAttentionStep(DownloadService, PrerequisiteHelper)
+        {
+            InstalledPackage = installedPackage,
+            WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
+            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables
+        };
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteMessage = "Triton and SageAttention installed successfully",
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps([installSageStep]).ConfigureAwait(false);
+
+        if (runner.Failed)
+            return;
+
+        await using var transaction = settingsManager.BeginTransaction();
+        var attentionOptions = transaction
+            .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
+            .LaunchArgs?.Where(opt => opt.Name.Contains("attention"));
+
+        if (attentionOptions is not null)
+        {
+            foreach (var option in attentionOptions)
+            {
+                option.OptionValue = false;
+            }
+        }
+
+        var sageAttention = transaction
+            .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
+            .LaunchArgs?.FirstOrDefault(opt => opt.Name.Contains("sage-attention"));
+
+        if (sageAttention is not null)
+        {
+            sageAttention.OptionValue = true;
+        }
+        else
+        {
+            transaction
+                .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
+                .LaunchArgs?.Add(
+                    new LaunchOption
+                    {
+                        Name = "--use-sage-attention",
+                        Type = LaunchOptionType.Bool,
+                        OptionValue = true
+                    }
+                );
         }
     }
 }

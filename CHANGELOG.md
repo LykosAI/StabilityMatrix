@@ -45,6 +45,113 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### Pioneers
 - A big shoutout to our outstanding Pioneer-tier Patrons, **tankfox**, **Mr. Unknown**, **Szir777**, and **NowFallenAngel**! We deeply appreciate your ongoing support and dedication!
 
+## v2.14.0-pre.1
+### Changed
+- Improved window state handling
+### Fixed
+- Fixed RTX 5000-series GPU detection in certain cases
+- Fixed Image Viewer animation loader keeping file handles open, which resolves 2 different issues (OSes are fun):
+  - (macOS) Fixed `FileNotFoundException` crash when navigating to Inference tab after deleting a Webp animation file previously opened in the Image Viewer Dialog.
+  - (Windows) Fixed Webp animation files unable to be deleted without closing the app first.
+- Fixed Image Viewer `FileNotFoundException` on fetching image size, if navigating to a deleted image file.
+- (macOS) Fixed Webp / Gif animations RGB colors flipped.
+- Fixed some cases of missing custom nodes in SwarmUI
+- Fixed window disappearing on macOS when the saved window size is very small
+
+## v2.14.0-dev.3
+### Added
+- Added Wan 2.1 Text to Video and Text to Image project types for Inference
+- Added Wan 2.1 files to the HuggingFace model browser
+- Added new package - [Stable Diffusion WebUI AMDGPU Forge](https://github.com/lshqqytiger/stable-diffusion-webui-amdgpu-forge)
+- Added support for RTX 5000-series GPUs in ComfyUI, Forge, and reForge
+- Added "Rebuild .NET Project" command to SwarmUI installs - available via the 3-dots menu -> Package Commands -> Rebuild .NET Project
+- Added new autocomplete tag source to Inference - [Danbooru/e621 merged tags](https://civitai.com/models/950325?modelVersionId=1419692)
+### Changed
+- Upgraded ComfyUI CUDA torch to 12.6
+- Upgraded Lykos account connection to use OAuth 2.0 device flow
+- (Internal) Updated Avalonia to 11.2.5
+### Fixed
+- Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
+- Fixed ROCm torch indexes for ComfyUI & Forge
+- Fixed model browser sometimes downloading to `ModelsLora` or `ModelsStableDiffusion` folders instead of the correct folder
+- Fixed incorrect Unet folder path for ComfyUI users on Linux/macOS
+- Fixed [#1157](https://github.com/LykosAI/StabilityMatrix/issues/1157) - crash when broken symlinks exist in model directories
+- Fixed [#1154](https://github.com/LykosAI/StabilityMatrix/issues/1154) - increased width for package name on the package cards
+- Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI
+- Fixed SwarmUI showing Python options in the 3-dots menu
+- Fixed SD.Next install failures in certain cases when using Zluda
+### Supporters
+#### Visionaries
+- Many thanks to our amazing Visionary-tier Patreon supporters, **Waterclouds**, **TheTekknician**, and **Corey T**! Your unwavering support is very much appreciated!
+
+## v2.14.0-dev.2
+### Added
+- Added Align Your Steps scheduler to Inference
+- Added wildcards to Inference prompts, e.g. `{blue|green|red}` will randomly select one of the colors
+- Added Safetensor Metadata viewer to the Checkpoint Manager context menu - thanks to @genteure!
+### Changed
+- Updated the Civitai Model Browser base model selector to match the new Checkpoint Manager filter UI 
+- FaceDetailers in Inference will now inherit the primary sampler/scheduler/etc. by default. You can still manually set these by enabling the options via the ⚙️ button on the FaceDetailer card
+- Slightly rearranged the FaceDetailer card layout due to the above change
+- "Remove symbolic links on shutdown" option now also removes links from Output Sharing
+- Inference "Extra Networks" selector now filters extra networks based on the selected base model
+- Updated Japanese, Brazilian Portuguese, Chinese, and Russian translations
+### Fixed
+- Fixed crash when dragging & dropping images in Inference (hopefully)
+- Fixed HiresFix Inference addon not inheriting sampler/scheduler properly
+- Fixed some plus (+) buttons getting cut off in the Inference UI
+- Fixed CFG Rescale addon interfering with refiner model in Inference
+- Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
+- Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
+- Fixed issue when parsing index URLs in Python Dependencies Override menu
+- Fixed ComfyUI-Zluda not respecting pip user overrides
+- Fixed issue with Checkpoint Manager not displaying any models
+- (dev.2 re-release) Fixed autocomplete not showing in certain cases when using wildcards
+- (dev.2 re-release) Fixed package restart button not working 
+- (dev.2 re-release) Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
+### Supporters
+#### Visionaries
+- A huge thank you to our incredible Visionary-tier Patreon supporters, **Waterclouds**, **TheTekknician**, and our newest Visionary, **Corey**! Your generous support is greatly appreciated!
+
+## v2.14.0-dev.1
+### Added
+- Added Rescale CFG addon to Inference
+- Added Swap Dimensions button between the width/height input in Inference
+- Added Ctrl+Tab/Ctrl+Shift+Tab shortcuts for navigating between Inference tabs
+- Added OpenModelDB tab to the Model Browser
+### Changed
+- Improved the quality of Inference inpainting by upgrading the workflow behind the scenes. The workflow remains the same for you — just better results!
+- Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout
+- "Clear All" button will now remain at the top of the Downloads list regardless of scroll position - thanks to @Genteure!
+- Improved image metadata parsing - thanks to @Genteure!
+### Fixed
+- Fixed Inference image selector card buttons taking up the whole height of the card
+- Fixed Inference mask editor failing to paint to the right-most edge on large images
+- Fixed Inference mask editor not showing the entire image in certain circumstances
+- Fixed an issue where certain sampler/scheduler combos would not get saved in image metadata - thanks to @yansigit!
+- Fixed [#1078](https://github.com/LykosAI/StabilityMatrix/issues/1078) - "Call from invalid thread" error after one-click install finishes
+- Fixed [#1080](https://github.com/LykosAI/StabilityMatrix/issues/1080) - Some models not displayed in Checkpoint Manager
+### Supporters
+#### Visionaries
+- Many thanks to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your support helps us continue to improve Stability Matrix!
+
+## v2.13.4
+### Changed
+- Upgraded ComfyUI CUDA torch to 12.6
+### Fixed
+- Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
+- Fixed ROCm torch indexes for ComfyUI & Forge
+- Fixed model browser sometimes downloading to `ModelsLora` or `ModelsStableDiffusion` folders instead of the correct folder
+
+## v2.13.3
+### Changed
+- "Remove symbolic links on shutdown" option now also removes links from Output Sharing
+### Fixed
+- Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
+- Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
+- Fixed issue when parsing index URLs in Python Dependencies Override menu
+- Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
+
 ## v2.13.2
 ### Changed
 - Removed SimpleSDXL due to security concerns - thanks to @iwr-redmond for the detailed report. For more information please visit https://github.com/LykosAI/StabilityMatrix/security/advisories.

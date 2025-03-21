@@ -215,6 +215,7 @@ public partial class PaintCanvasViewModel(ILogger<PaintCanvasViewModel> logger) 
                 }
                 else
                 {
+                    // If we need to resize:
                     var currentInfo = layer.Surface.Canvas.DeviceClipBounds;
                     if (currentInfo.Width != CanvasSize.Width || currentInfo.Height != CanvasSize.Height)
                     {

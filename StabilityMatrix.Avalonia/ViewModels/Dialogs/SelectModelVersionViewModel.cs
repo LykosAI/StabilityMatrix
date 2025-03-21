@@ -373,6 +373,11 @@ public partial class SelectModelVersionViewModel(
             return rootModelsDirectory.JoinDir(SharedFolderType.Unet.GetStringValue());
         }
 
+        if (modelType is CivitModelType.Checkpoint && baseModelType == "Wan Video")
+        {
+            return rootModelsDirectory.JoinDir(SharedFolderType.Unet.GetStringValue());
+        }
+
         return rootModelsDirectory.JoinDir(modelType.ConvertTo<SharedFolderType>().GetStringValue());
     }
 }

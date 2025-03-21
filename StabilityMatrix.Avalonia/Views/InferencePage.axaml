@@ -2,30 +2,32 @@
     x:Class="StabilityMatrix.Avalonia.Views.InferencePage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fluentIcons="using:FluentIcons.Avalonia.Fluent"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:inference="clr-namespace:StabilityMatrix.Core.Models.Inference;assembly=StabilityMatrix.Core"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
     xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
-    xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
-    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
-    xmlns:inference="clr-namespace:StabilityMatrix.Core.Models.Inference;assembly=StabilityMatrix.Core"
     d:DataContext="{x:Static mocks:DesignData.InferenceViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="1000"
     x:DataType="vm:InferenceViewModel"
     mc:Ignorable="d">
-    
+
     <controls:UserControlBase.KeyBindings>
-        <KeyBinding Gesture="Ctrl+O" Command="{Binding MenuOpenProjectCommand}"/>
-        <KeyBinding Gesture="Ctrl+S" Command="{Binding MenuSaveCommand}"/>
-        <KeyBinding Gesture="Ctrl+Shift+S" Command="{Binding MenuSaveAsCommand}"/>
+        <KeyBinding Command="{Binding MenuOpenProjectCommand}" Gesture="Ctrl+O" />
+        <KeyBinding Command="{Binding MenuSaveCommand}" Gesture="Ctrl+S" />
+        <KeyBinding Command="{Binding MenuSaveAsCommand}" Gesture="Ctrl+Shift+S" />
+        <KeyBinding Command="{Binding GoForwardTabWithLoopingCommand}" Gesture="Ctrl+Tab" />
+        <KeyBinding Command="{Binding GoBackwardsTabWithLoopingCommand}" Gesture="Ctrl+Shift+Tab" />
     </controls:UserControlBase.KeyBindings>
 
     <controls:UserControlBase.Resources>
@@ -44,15 +46,15 @@
             <ui:CommandBarFlyout.SecondaryCommands>
                 <ui:CommandBarButton
                     Click="AddTabMenu_OnClick"
-                    Tag="{x:Static inference:InferenceProjectType.TextToImage}"
                     IconSource="FullScreenMaximize"
                     Label="Text to Image"
+                    Tag="{x:Static inference:InferenceProjectType.TextToImage}"
                     ToolTip.Tip="Text to Image" />
                 <ui:CommandBarButton
                     Click="AddTabMenu_OnClick"
-                    Tag="{x:Static inference:InferenceProjectType.ImageToImage}"
                     IconSource="ImageCopy"
                     Label="Image to Image"
+                    Tag="{x:Static inference:InferenceProjectType.ImageToImage}"
                     ToolTip.Tip="Image to Image" />
                 <ui:CommandBarButton
                     IconSource="ImageEdit"
@@ -62,23 +64,35 @@
                     ToolTip.Tip="Not yet implemented, coming soon!" />
                 <ui:CommandBarButton
                     Click="AddTabMenu_OnClick"
-                    Tag="{x:Static inference:InferenceProjectType.Upscale}"
                     Label="Upscale"
+                    Tag="{x:Static inference:InferenceProjectType.Upscale}"
                     ToolTip.Tip="Upscale">
                     <ui:CommandBarButton.IconSource>
-                        <fluentIcons:SymbolIconSource
-                            FontSize="10"
-                            Symbol="ResizeImage"/>
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="ResizeImage" />
+                    </ui:CommandBarButton.IconSource>
+                </ui:CommandBarButton>
+                <ui:CommandBarButton
+                    Click="AddTabMenu_WanTextToVideo_OnClick"
+                    Label="Wan Text to Video"
+                    ToolTip.Tip="Wan Text to Video">
+                    <ui:CommandBarButton.IconSource>
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="Video" />
+                    </ui:CommandBarButton.IconSource>
+                </ui:CommandBarButton>
+                <ui:CommandBarButton
+                    Click="AddTabMenu_WanImgToVideo_OnClick"
+                    Label="Wan Image to Video"
+                    ToolTip.Tip="Wan Image to Video">
+                    <ui:CommandBarButton.IconSource>
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="VideoAdd" />
                     </ui:CommandBarButton.IconSource>
                 </ui:CommandBarButton>
                 <ui:CommandBarButton
                     Click="AddTabMenu_ImgToVideo_OnClick"
-                    Label="Image to Video"
-                    ToolTip.Tip="Image to Video">
+                    Label="SVD Image to Video"
+                    ToolTip.Tip="SVD Image to Video">
                     <ui:CommandBarButton.IconSource>
-                        <fluentIcons:SymbolIconSource
-                            FontSize="10"
-                            Symbol="Video"/>
+                        <fluentIcons:SymbolIconSource FontSize="10" Symbol="VideoRecording" />
                     </ui:CommandBarButton.IconSource>
                 </ui:CommandBarButton>
             </ui:CommandBarFlyout.SecondaryCommands>
@@ -114,9 +128,9 @@
                     Spacing="2">
 
                     <!--  Connecting Progress  -->
-                    <controls:ProgressRing 
+                    <controls:ProgressRing
                         Margin="0,0,4,0"
-                        BorderThickness="4" 
+                        BorderThickness="4"
                         IsIndeterminate="True">
                         <controls:ProgressRing.IsVisible>
                             <MultiBinding Converter="{x:Static BoolConverters.Or}">
@@ -216,40 +230,40 @@
                             <ui:FAMenuFlyout Placement="BottomEdgeAlignedRight">
                                 <ui:MenuFlyoutItem
                                     Command="{Binding MenuOpenProjectCommand}"
-                                    InputGesture="Ctrl+O"
                                     IconSource="OpenFolder"
+                                    InputGesture="Ctrl+O"
                                     Text="{x:Static lang:Resources.Action_OpenProjectEllipsis}" />
                                 <ui:MenuFlyoutSeparator />
                                 <ui:MenuFlyoutItem
                                     Command="{Binding MenuSaveCommand}"
-                                    InputGesture="Ctrl+S"
                                     IconSource="Save"
+                                    InputGesture="Ctrl+S"
                                     Text="{x:Static lang:Resources.Action_Save}" />
                                 <ui:MenuFlyoutItem
                                     Command="{Binding MenuSaveAsCommand}"
                                     InputGesture="Ctrl+Shift+S"
                                     Text="{x:Static lang:Resources.Action_SaveAsEllipsis}" />
-                                
+
                                 <ui:MenuFlyoutSeparator />
-                                
+
                                 <ui:MenuFlyoutItem
                                     Command="{Binding SelectedTab.RestoreDefaultViewStateCommand, FallbackValue={x:Null}}"
                                     IconSource="CalendarReply"
                                     Text="{x:Static lang:Resources.Action_RestoreDefaultLayout}" />
-                                
-                                <!-- Debug mode menus -->
+
+                                <!--  Debug mode menus  -->
                                 <ui:MenuFlyoutSeparator IsVisible="{Binding SharedState.IsDebugMode}" />
-                                
+
                                 <ui:MenuFlyoutItem
-                                    IsVisible="{Binding SharedState.IsDebugMode}"
                                     Command="{Binding SelectedTab.DebugSaveViewStateCommand, FallbackValue={x:Null}}"
-                                    Text="Show Dock State" />
-                                
-                                <ui:MenuFlyoutItem
                                     IsVisible="{Binding SharedState.IsDebugMode}"
+                                    Text="Show Dock State" />
+
+                                <ui:MenuFlyoutItem
                                     Command="{Binding SelectedTab.DebugLoadViewStateCommand, FallbackValue={x:Null}}"
+                                    IsVisible="{Binding SharedState.IsDebugMode}"
                                     Text="Load Dock State" />
-                                
+
                             </ui:FAMenuFlyout>
                         </Button.Flyout>
                     </Button>

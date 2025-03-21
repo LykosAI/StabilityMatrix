@@ -44,6 +44,11 @@ public interface IModelIndexService
     Task<IEnumerable<LocalModelFile>> FindByHashAsync(string hashBlake3);
 
     /// <summary>
+    /// Find all models with the specified Sha256 hash
+    /// </summary>
+    Task<IEnumerable<LocalModelFile>> FindBySha256Async(string hashSha256);
+
+    /// <summary>
     /// Remove a model from the index.
     /// </summary>
     Task<bool> RemoveModelAsync(LocalModelFile model);

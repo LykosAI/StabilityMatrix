@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace StabilityMatrix.Avalonia.Controls;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-public class Paginator : TemplatedControl
+public class Paginator : TemplatedControlBase
 {
     private bool isFirstTemplateApplied;
     private ICommand? firstPageCommandBinding;
@@ -15,8 +15,10 @@ public class Paginator : TemplatedControl
     private ICommand? nextPageCommandBinding;
     private ICommand? lastPageCommandBinding;
 
-    public static readonly StyledProperty<int> CurrentPageNumberProperty =
-        AvaloniaProperty.Register<Paginator, int>("CurrentPageNumber", 1);
+    public static readonly StyledProperty<int> CurrentPageNumberProperty = AvaloniaProperty.Register<
+        Paginator,
+        int
+    >("CurrentPageNumber", 1);
 
     public int CurrentPageNumber
     {
@@ -24,10 +26,10 @@ public class Paginator : TemplatedControl
         set => SetValue(CurrentPageNumberProperty, value);
     }
 
-    public static readonly StyledProperty<int> TotalPagesProperty = AvaloniaProperty.Register<
-        Paginator,
-        int
-    >("TotalPages", 1);
+    public static readonly StyledProperty<int> TotalPagesProperty = AvaloniaProperty.Register<Paginator, int>(
+        "TotalPages",
+        1
+    );
 
     public int TotalPages
     {
@@ -35,8 +37,10 @@ public class Paginator : TemplatedControl
         set => SetValue(TotalPagesProperty, value);
     }
 
-    public static readonly StyledProperty<ICommand?> FirstPageCommandProperty =
-        AvaloniaProperty.Register<Paginator, ICommand?>("FirstPageCommand");
+    public static readonly StyledProperty<ICommand?> FirstPageCommandProperty = AvaloniaProperty.Register<
+        Paginator,
+        ICommand?
+    >("FirstPageCommand");
 
     public ICommand? FirstPageCommand
     {
@@ -44,8 +48,10 @@ public class Paginator : TemplatedControl
         set => SetValue(FirstPageCommandProperty, value);
     }
 
-    public static readonly StyledProperty<ICommand?> PreviousPageCommandProperty =
-        AvaloniaProperty.Register<Paginator, ICommand?>("PreviousPageCommand");
+    public static readonly StyledProperty<ICommand?> PreviousPageCommandProperty = AvaloniaProperty.Register<
+        Paginator,
+        ICommand?
+    >("PreviousPageCommand");
 
     public ICommand? PreviousPageCommand
     {
@@ -53,8 +59,10 @@ public class Paginator : TemplatedControl
         set => SetValue(PreviousPageCommandProperty, value);
     }
 
-    public static readonly StyledProperty<ICommand?> NextPageCommandProperty =
-        AvaloniaProperty.Register<Paginator, ICommand?>("NextPageCommand");
+    public static readonly StyledProperty<ICommand?> NextPageCommandProperty = AvaloniaProperty.Register<
+        Paginator,
+        ICommand?
+    >("NextPageCommand");
 
     public ICommand? NextPageCommand
     {
@@ -62,8 +70,10 @@ public class Paginator : TemplatedControl
         set => SetValue(NextPageCommandProperty, value);
     }
 
-    public static readonly StyledProperty<ICommand?> LastPageCommandProperty =
-        AvaloniaProperty.Register<Paginator, ICommand?>("LastPageCommand");
+    public static readonly StyledProperty<ICommand?> LastPageCommandProperty = AvaloniaProperty.Register<
+        Paginator,
+        ICommand?
+    >("LastPageCommand");
 
     public ICommand? LastPageCommand
     {

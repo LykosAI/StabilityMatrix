@@ -32,13 +32,14 @@ public partial class CheckpointBrowserViewModel : PageViewModelBase
     /// <inheritdoc/>
     public CheckpointBrowserViewModel(
         CivitAiBrowserViewModel civitAiBrowserViewModel,
-        HuggingFacePageViewModel huggingFaceViewModel
+        HuggingFacePageViewModel huggingFaceViewModel,
+        OpenModelDbBrowserViewModel openModelDbBrowserViewModel
     )
     {
         Pages = new List<TabItem>(
-            new List<TabViewModelBase>([civitAiBrowserViewModel, huggingFaceViewModel]).Select(
-                vm => new TabItem { Header = vm.Header, Content = vm }
-            )
+            new List<TabViewModelBase>(
+                [civitAiBrowserViewModel, huggingFaceViewModel, openModelDbBrowserViewModel]
+            ).Select(vm => new TabItem { Header = vm.Header, Content = vm })
         );
         SelectedPage = Pages.FirstOrDefault();
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;

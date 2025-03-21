@@ -17,6 +17,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Apizr" />
+      <PackageReference Include="Apizr.Extensions.Microsoft.Caching" />
+      <PackageReference Include="Apizr.Extensions.Microsoft.DependencyInjection" />
+      <PackageReference Include="Apizr.Integrations.Fusillade" />
       <PackageReference Include="AsyncAwaitBestPractices" />
       <PackageReference Include="AutoCtor" />
       <PackageReference Include="Blake3" />

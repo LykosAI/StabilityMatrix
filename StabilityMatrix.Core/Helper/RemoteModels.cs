@@ -296,7 +296,7 @@ public static class RemoteModels
 
     private static IEnumerable<RemoteResource> ClipModels =>
         [
-            new RemoteResource
+            new()
             {
                 Url = new Uri(
                     "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors"
@@ -307,7 +307,7 @@ public static class RemoteModels
                 LicenseType = "MIT",
                 ContextType = SharedFolderType.CLIP,
             },
-            new RemoteResource
+            new()
             {
                 Url = new Uri(
                     "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors"
@@ -318,7 +318,7 @@ public static class RemoteModels
                 LicenseType = "Apache 2.0",
                 ContextType = SharedFolderType.CLIP,
             },
-            new RemoteResource
+            new()
             {
                 Url = new Uri(
                     "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors"
@@ -328,9 +328,49 @@ public static class RemoteModels
                 Author = "Google",
                 LicenseType = "Apache 2.0",
                 ContextType = SharedFolderType.CLIP,
+            },
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged"),
+                HashSha256 = "c3355d30191f1f066b26d93fba017ae9809dce6c627dda5f6a66eaa651204f68",
+                Author = "Google",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.CLIP,
+            },
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp16.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged"),
+                HashSha256 = "7b8850f1961e1cf8a77cca4c964a358d303f490833c6c087d0cff4b2f99db2af",
+                Author = "Google",
+                LicenseType = "Apache 2.0",
+                ContextType = SharedFolderType.CLIP,
             }
         ];
 
     public static IEnumerable<HybridModelFile> ClipModelFiles =>
         ClipModels.Select(HybridModelFile.FromDownloadable);
+
+    private static IEnumerable<RemoteResource> ClipVisionModels =>
+        [
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/clip_vision/clip_vision_h.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged"),
+                HashSha256 = "64a7ef761bfccbadbaa3da77366aac4185a6c58fa5de5f589b42a65bcc21f161",
+                Author = "OpenAI",
+                LicenseType = "MIT",
+                ContextType = SharedFolderType.InvokeClipVision,
+            }
+        ];
+
+    public static IEnumerable<HybridModelFile> ClipVisionModelFiles =>
+        ClipVisionModels.Select(HybridModelFile.FromDownloadable);
 }

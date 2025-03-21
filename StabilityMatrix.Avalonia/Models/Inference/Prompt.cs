@@ -4,7 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
@@ -23,6 +25,8 @@ public record Prompt
 
     public required ITokenizeLineResult TokenizeResult { get; init; }
 
+    public required ITokenizerProvider Tokenizer { get; init; }
+
     [MemberNotNullWhen(true, nameof(ExtraNetworks), nameof(ProcessedText))]
     public bool IsProcessed { get; private set; }
 
@@ -38,12 +42,12 @@ public record Prompt
     public string? ProcessedText { get; private set; }
 
     [MemberNotNull(nameof(ExtraNetworks), nameof(ProcessedText))]
-    public void Process()
+    public void Process(bool processWildcards = true)
     {
         if (IsProcessed)
             return;
 
-        var (promptExtraNetworks, processedText) = GetExtraNetworks();
+        var (promptExtraNetworks, processedText) = GetExtraNetworks(processWildcards: processWildcards);
         ExtraNetworks = promptExtraNetworks;
         ProcessedText = processedText;
     }
@@ -54,7 +58,7 @@ public record Prompt
     /// <exception cref="PromptValidationError">Thrown if a filename does not exist</exception>
     public void ValidateExtraNetworks(IModelIndexService indexService)
     {
-        GetExtraNetworks(indexService);
+        GetExtraNetworks(indexService, false);
     }
 
     /// <summary>
@@ -98,7 +102,8 @@ public record Prompt
     }
 
     private (List<PromptExtraNetwork> promptExtraNetworks, string processedText) GetExtraNetworks(
-        IModelIndexService? indexService = null
+        IModelIndexService? indexService = null,
+        bool processWildcards = true
     )
     {
         // Parse tokens "meta.structure.network.prompt"
@@ -109,9 +114,10 @@ public record Prompt
         // ">": "punctuation.definition.network.end.prompt"
         using var tokens = TokenizeResult.Tokens.Cast<IToken>().GetEnumerator();
 
-        // Store non-network tokens
+        // Maintain both token and text stacks for validation
         var outputTokens = new Stack<IToken>();
         var outputText = new Stack<string>();
+        var wildcardStack = new Stack<StringBuilder>();
 
         // Store extra networks
         var promptExtraNetworks = new List<PromptExtraNetwork>();
@@ -134,6 +140,67 @@ public record Prompt
             // Comments - ignore
             if (currentToken.Scopes.Any(s => s.Contains("comment.line")))
             {
+                continue;
+            }
+
+            // Handle wildcard start
+            if (
+                processWildcards
+                && currentToken.Scopes.Contains("punctuation.definition.wildcard.begin.prompt")
+            )
+            {
+                wildcardStack.Push(new StringBuilder());
+                continue;
+            }
+
+            // Handle wildcard end
+            if (
+                processWildcards && currentToken.Scopes.Contains("punctuation.definition.wildcard.end.prompt")
+            )
+            {
+                if (wildcardStack.Count == 0)
+                    continue;
+
+                var wildcardContent = wildcardStack.Pop();
+                var options = wildcardContent
+                    .ToString()
+                    .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(o => o.Trim())
+                    .ToList();
+
+                if (options.Count == 0)
+                {
+                    outputTokens.Push(currentToken);
+                    outputText.Push(string.Empty);
+                    continue;
+                }
+
+                // Process wildcard selection
+                var selectedIndex = RandomNumberGenerator.GetInt32(options.Count);
+                var selectedOption = options[selectedIndex];
+
+                // Process selected option
+                var tempPrompt = FromRawText(selectedOption, Tokenizer);
+                tempPrompt.Process();
+
+                // Collect networks from selected option
+                if (tempPrompt.ExtraNetworks is { Count: > 0 } networks)
+                {
+                    promptExtraNetworks.AddRange(networks);
+                }
+
+                outputTokens.Push(currentToken);
+                outputText.Push(tempPrompt.ProcessedText ?? string.Empty);
+                continue;
+            }
+
+            // Handle wildcard content
+            if (processWildcards && wildcardStack.Count > 0)
+            {
+                var currentWildcard = wildcardStack.Peek();
+                currentWildcard.Append(
+                    RawText[currentToken.StartIndex..GetSafeEndIndex(currentToken.EndIndex)]
+                );
                 continue;
             }
 
@@ -311,32 +378,26 @@ public record Prompt
                 }
             }
 
-            // For embeddings, we add to the prompt, and not to the extra networks list
+            // Modified embedding handling with stack validation
             if (parsedNetworkType is PromptExtraNetworkType.Embedding)
             {
-                // Push to output in Comfy format
-                // <embedding:model> -> embedding:model
-                // <embedding:model:weight> -> (embedding:model:weight)
                 outputTokens.Push(currentToken);
-
                 outputText.Push(
                     weight is null ? $"embedding:{modelName}" : $"(embedding:{modelName}:{weight:F2})"
                 );
             }
-            // Cleanups for separate extra networks
             else
             {
-                // If last entry on stack is a separator, remove it
+                // Original colon cleanup logic
                 if (
-                    outputTokens.TryPeek(out var lastToken2)
-                    && lastToken2.Scopes.Contains("punctuation.separator.variable.prompt")
+                    outputTokens.TryPeek(out var lastToken)
+                    && lastToken.Scopes.Contains("punctuation.separator.variable.prompt")
                 )
                 {
                     outputTokens.Pop();
                     outputText.Pop();
                 }
 
-                // Add to output
                 promptExtraNetworks.Add(
                     new PromptExtraNetwork
                     {
@@ -348,8 +409,8 @@ public record Prompt
             }
         }
 
-        var processedText = string.Join("", outputText.Reverse());
-
+        // Build final text maintaining original order
+        var processedText = string.Concat(outputText.Reverse());
         return (promptExtraNetworks, processedText);
     }
 
@@ -388,6 +449,11 @@ public record Prompt
 
         var result = tokenizer.TokenizeLine(text);
 
-        return new Prompt { RawText = text, TokenizeResult = result };
+        return new Prompt
+        {
+            RawText = text,
+            TokenizeResult = result,
+            Tokenizer = tokenizer
+        };
     }
 }

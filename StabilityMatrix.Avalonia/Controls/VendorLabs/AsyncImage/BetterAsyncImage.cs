@@ -21,7 +21,7 @@ namespace StabilityMatrix.Avalonia.Controls.VendorLabs;
 /// </summary>
 [TemplatePart("PART_Image", typeof(Image))]
 [TemplatePart("PART_PlaceholderImage", typeof(Image))]
-public partial class BetterAsyncImage : TemplatedControl
+public partial class BetterAsyncImage : TemplatedControlBase
 {
     private static NLog.Logger Logger { get; } = NLog.LogManager.GetCurrentClassLogger();
 

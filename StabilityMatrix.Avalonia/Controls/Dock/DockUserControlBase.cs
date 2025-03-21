@@ -24,6 +24,8 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
     private DockControl? baseDock;
     private readonly DockSerializer dockSerializer = new(typeof(AvaloniaList<>));
     private readonly DockState dockState = new();
+    private readonly DockState initialDockState = new();
+    private IDock? initialLayout;
 
     /// <inheritdoc />
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
@@ -37,6 +39,8 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
         if (baseDock.Layout is { } layout)
         {
             dockState.Save(layout);
+            initialDockState.Save(layout);
+            initialLayout = layout;
             // Dispatcher.UIThread.Post(() => dockState.Save(layout), DispatcherPriority.Background);
         }
     }
@@ -107,15 +111,16 @@ public abstract class DockUserControlBase : DropTargetUserControlBase
         if (dockSerializer.Deserialize<IDock?>(data) is { } layout)
         {
             baseDock.Layout = layout;
+            dockState.Restore(baseDock.Layout);
         }
     }
 
     private void RestoreDockLayout()
     {
-        // TODO: idk this doesn't work
-        if (baseDock?.Layout != null)
+        if (baseDock != null && initialLayout != null)
         {
-            dockState.Restore(baseDock.Layout);
+            baseDock.Layout = initialLayout;
+            initialDockState.Restore(baseDock.Layout);
         }
     }
 

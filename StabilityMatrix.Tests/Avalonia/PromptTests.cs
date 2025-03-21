@@ -27,9 +27,7 @@ public class PromptTests
         var registry = new Registry(new RegistryOptions(ThemeName.DarkPlus));
         var grammar = registry.LoadGrammarFromStream(promptSyntaxFile);
 
-        tokenizerProvider
-            .TokenizeLine(Arg.Any<string>())
-            .Returns(x => grammar.TokenizeLine(x.Arg<string>()));
+        tokenizerProvider.TokenizeLine(Arg.Any<string>()).Returns(x => grammar.TokenizeLine(x.Arg<string>()));
     }
 
     [TestMethod]
@@ -68,7 +66,7 @@ public class PromptTests
         var prompt = Prompt.FromRawText("<lora:my_model:1.5>", tokenizerProvider);
 
         // Cultures like de-DE use commas as decimal separators, check that we can parse those too
-        ExecuteWithCulture(prompt.Process, CultureInfo.GetCultureInfo("de-DE"));
+        ExecuteWithCulture(() => prompt.Process(), CultureInfo.GetCultureInfo("de-DE"));
 
         // Output should have no loras
         Assert.AreEqual("", prompt.ProcessedText);

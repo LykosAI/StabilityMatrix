@@ -469,7 +469,7 @@
                                         Command="{Binding CopyModelUrlCommand}"
                                         IconSource="Clipboard"
                                         IsVisible="{Binding CheckpointFile.HasConnectedModel}"
-                                        Text="Copy Link to Clipboard" />
+                                        Text="{x:Static lang:Resources.Label_CopyLinkToClipboard}" />
                                     <ui:MenuFlyoutItem
                                         Command="{Binding FindConnectedMetadataCommand}"
                                         CommandParameter="{StaticResource False}"

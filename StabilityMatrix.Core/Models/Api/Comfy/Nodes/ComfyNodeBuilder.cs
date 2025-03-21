@@ -136,6 +136,14 @@ public class ComfyNodeBuilder
         public required int Width { get; init; }
     }
 
+    public record EmptyHunyuanLatentVideo : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required int Width { get; init; }
+        public required int Height { get; init; }
+        public required int Length { get; init; }
+        public required int BatchSize { get; init; }
+    }
+
     public record CLIPSetLastLayer : ComfyTypedNodeBase<ClipNodeConnection>
     {
         public required ClipNodeConnection Clip { get; init; }
@@ -417,6 +425,18 @@ public class ComfyNodeBuilder
         // no type, always sd3 I guess?
     }
 
+    public record CLIPVisionLoader : ComfyTypedNodeBase<ClipVisionNodeConnection>
+    {
+        public required string ClipName { get; init; }
+    }
+
+    public record CLIPVisionEncode : ComfyTypedNodeBase<ClipVisionOutputNodeConnection>
+    {
+        public required ClipVisionNodeConnection ClipVision { get; init; }
+        public required ImageNodeConnection Image { get; init; }
+        public required string Crop { get; set; }
+    }
+
     public record FluxGuidance : ComfyTypedNodeBase<ConditioningNodeConnection>
     {
         public required ConditioningNodeConnection Conditioning { get; init; }
@@ -479,6 +499,67 @@ public class ComfyNodeBuilder
         /// </summary>
         public required string Sampling { get; set; }
         public required bool Zsnr { get; init; }
+    }
+
+    public record ModelSamplingSD3 : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        [Range(0, 100)]
+        public required double Shift { get; init; }
+    }
+
+    public record RescaleCFG : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required double Multiplier { get; init; }
+    }
+
+    public record SetLatentNoiseMask : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required LatentNodeConnection Samples { get; init; }
+        public required ImageMaskConnection Mask { get; init; }
+    }
+
+    public record AlignYourStepsScheduler : ComfyTypedNodeBase<SigmasNodeConnection>
+    {
+        /// <summary>
+        /// options: SD1, SDXL, SVD
+        /// </summary>
+        public required string ModelType { get; init; }
+
+        [Range(1, 10000)]
+        public required int Steps { get; init; }
+
+        [Range(0.0d, 1.0d)]
+        public required double Denoise { get; init; }
+    }
+
+    public record CFGGuider : ComfyTypedNodeBase<GuiderNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; set; }
+        public required ConditioningNodeConnection Positive { get; set; }
+        public required ConditioningNodeConnection Negative { get; set; }
+
+        [Range(0.0d, 100.0d)]
+        public required double Cfg { get; set; }
+    }
+
+    /// <summary>
+    /// outputs: positive, negative, latent
+    /// </summary>
+    public record WanImageToVideo
+        : ComfyTypedNodeBase<ConditioningNodeConnection, ConditioningNodeConnection, LatentNodeConnection>
+    {
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+        public required ClipVisionOutputNodeConnection ClipVisionOutput { get; init; }
+        public required ImageNodeConnection StartImage { get; init; }
+        public required int Width { get; init; }
+        public required int Height { get; init; }
+        public required int Length { get; init; }
+        public required int BatchSize { get; init; }
     }
 
     [TypedNodeOptions(
@@ -1147,6 +1228,9 @@ public class ComfyNodeBuilder
 
         public int BatchSize { get; set; } = 1;
         public int? BatchIndex { get; set; }
+        public int? PrimarySteps { get; set; }
+        public double? PrimaryCfg { get; set; }
+        public string? PrimaryModelType { get; set; }
 
         public OneOf<string, StringNodeConnection> PositivePrompt { get; set; }
         public OneOf<string, StringNodeConnection> NegativePrompt { get; set; }

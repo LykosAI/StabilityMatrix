@@ -23,7 +23,7 @@ using StabilityMatrix.Avalonia.ViewModels.Controls;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-public class PaintCanvas : TemplatedControl
+public class PaintCanvas : TemplatedControlBase
 {
     private ConcurrentDictionary<long, PenPath> TemporaryPaths => ViewModel!.TemporaryPaths;
 

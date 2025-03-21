@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Linq;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Injectio.Attributes;
@@ -39,6 +34,9 @@ public partial class ModelCardViewModel(
 
     [ObservableProperty]
     private bool isRefinerSelectionEnabled;
+
+    [ObservableProperty]
+    private bool showRefinerOption = true;
 
     [ObservableProperty]
     private HybridModelFile? selectedRefiner = HybridModelFile.None;
@@ -105,6 +103,23 @@ public partial class ModelCardViewModel(
     public bool IsStandaloneModelLoader => SelectedModelLoader is ModelLoader.Unet or ModelLoader.Gguf;
     public bool ShowPrecisionSelection => SelectedModelLoader is ModelLoader.Unet;
     public bool IsSd3Clip => SelectedClipType == "sd3";
+
+    protected override void OnInitialLoaded()
+    {
+        base.OnInitialLoaded();
+        ExtraNetworksStackCardViewModel.CardAdded += ExtraNetworksStackCardViewModelOnCardAdded;
+    }
+
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+        ExtraNetworksStackCardViewModel.CardAdded -= ExtraNetworksStackCardViewModelOnCardAdded;
+    }
+
+    private void ExtraNetworksStackCardViewModelOnCardAdded(object? sender, LoadableViewModelBase e)
+    {
+        OnSelectedModelChanged(SelectedModel);
+    }
 
     [RelayCommand]
     private static async Task OnConfigClickAsync()
@@ -233,6 +248,7 @@ public partial class ModelCardViewModel(
                 SelectedClipType = SelectedClipType,
                 IsClipModelSelectionEnabled = IsClipModelSelectionEnabled,
                 ModelLoader = SelectedModelLoader,
+                ShowRefinerOption = ShowRefinerOption,
                 ExtraNetworks = ExtraNetworksStackCardViewModel.SaveStateToJsonObject()
             }
         );
@@ -284,6 +300,7 @@ public partial class ModelCardViewModel(
 
         IsVaeSelectionEnabled = model.IsVaeSelectionEnabled;
         IsRefinerSelectionEnabled = model.IsRefinerSelectionEnabled;
+        ShowRefinerOption = model.ShowRefinerOption;
         IsClipSkipEnabled = model.IsClipSkipEnabled;
         IsExtraNetworksEnabled = model.IsExtraNetworksEnabled;
         IsModelLoaderSelectionEnabled = model.IsModelLoaderSelectionEnabled;
@@ -362,6 +379,23 @@ public partial class ModelCardViewModel(
 
             if (!IsClipModelSelectionEnabled)
                 IsClipModelSelectionEnabled = true;
+        }
+    }
+
+    partial void OnSelectedModelChanged(HybridModelFile? value)
+    {
+        if (!IsExtraNetworksEnabled)
+            return;
+
+        foreach (var card in ExtraNetworksStackCardViewModel.Cards)
+        {
+            if (card is not LoraModule loraModule)
+                continue;
+
+            if (loraModule.GetCard<ExtraNetworkCardViewModel>() is not { } cardViewModel)
+                continue;
+
+            cardViewModel.SelectedBaseModel = value;
         }
     }
 
@@ -559,6 +593,7 @@ public partial class ModelCardViewModel(
         public bool IsExtraNetworksEnabled { get; init; }
         public bool IsModelLoaderSelectionEnabled { get; init; }
         public bool IsClipModelSelectionEnabled { get; init; }
+        public bool ShowRefinerOption { get; init; }
 
         public JsonObject? ExtraNetworks { get; init; }
     }

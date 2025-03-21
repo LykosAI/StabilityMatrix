@@ -141,6 +141,11 @@ internal static class Assets
             {
                 Url = new Uri("https://cdn.lykos.ai/tags/e621.csv"),
                 HashSha256 = "ef7ea148ad865ad936d0c1ee57f0f83de723b43056c70b07fd67dbdbb89cae35"
+            },
+            new RemoteResource
+            {
+                Url = new Uri("https://cdn.lykos.ai/tags/danbooru_e621_merged.csv"),
+                HashSha256 = "ac405ebce8b0caae363a7ef91f89beb4b8f60a7e218deb5078833686da6d497d"
             }
         };
 

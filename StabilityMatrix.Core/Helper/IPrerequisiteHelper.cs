@@ -12,6 +12,7 @@ public interface IPrerequisiteHelper
     string GitBinPath { get; }
 
     bool IsPythonInstalled { get; }
+    bool IsVcBuildToolsInstalled { get; }
 
     Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null);
     Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null);

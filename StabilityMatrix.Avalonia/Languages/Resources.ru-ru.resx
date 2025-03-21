@@ -133,7 +133,7 @@
     <value>Язык</value>
   </data>
   <data name="Text_RelaunchRequiredToApplyLanguage" xml:space="preserve">
-    <value>Чтобы применить новый язык требуется перезапуск</value>
+    <value>Для применения нового языка, требуется перезапуск</value>
   </data>
   <data name="Action_Relaunch" xml:space="preserve">
     <value>Перезапустить</value>
@@ -175,7 +175,7 @@
     <value>Ослабление акцента</value>
   </data>
   <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
-    <value>Вложения / Текстовая инверсия</value>
+    <value>Embeddings / Textual Inversion</value>
   </data>
   <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
     <value>Сети (Lora / LyCORIS)</value>
@@ -184,7 +184,7 @@
     <value>Комментарии</value>
   </data>
   <data name="Label_ShowPixelGridAtHighZoomLevels" xml:space="preserve">
-    <value>Показывать пискельную сетку при максимальном масштабе</value>
+    <value>Отображать пиксельную сетку при больших уровнях масштабирования</value>
   </data>
   <data name="Label_Steps" xml:space="preserve">
     <value>Шаги</value>
@@ -196,7 +196,7 @@
     <value>Шаги корректора</value>
   </data>
   <data name="Label_CFGScale" xml:space="preserve">
-    <value>Внимание к запросу</value>
+    <value>Соответствие промпту</value>
   </data>
   <data name="Label_DenoisingStrength" xml:space="preserve">
     <value>Сила шумоподавления</value>
@@ -520,8 +520,7 @@
     <value>Добро пожаловать в Stability Matrix!</value>
   </data>
   <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
-    <value>Выберите желаемый интерфейс и нажмите &quot;Установить&quot; чтобы начать работу</value>
-    <comment>Fuzzy</comment>
+    <value>Выберите предпочитаемый интерфейс, чтобы начать</value>
   </data>
   <data name="Label_Installing" xml:space="preserve">
     <value>Установка</value>
@@ -563,7 +562,7 @@
     <value>Добавить пакет</value>
   </data>
   <data name="TeachingTip_AddPackageToGetStarted" xml:space="preserve">
-    <value>Добавьте пакет чтобы начать!</value>
+    <value>Добавьте пакет, чтобы начать!</value>
   </data>
   <data name="Label_EnvVarsTable_Name" xml:space="preserve">
     <value>Переменная</value>
@@ -908,7 +907,7 @@
     <value>Пропуск CLIP</value>
   </data>
   <data name="Label_ImageToVideo" xml:space="preserve">
-    <value>Картинка в Видео</value>
+    <value>Изображение в видео</value>
   </data>
   <data name="Label_Fps" xml:space="preserve">
     <value>Кадров в Секунду</value>
@@ -923,8 +922,7 @@
     <value>Кадры</value>
   </data>
   <data name="Label_MotionBucketId" xml:space="preserve">
-    <value>Motion Bucket ID</value>
-    <comment>Fuzzy</comment>
+    <value>Интенсивность движения (Motion Bucket ID)</value>
   </data>
   <data name="Label_AugmentationLevel" xml:space="preserve">
     <value>Уровень аугментации</value>
@@ -957,7 +955,7 @@
     <value>Здесь можно проверить прогресс установки и скачивания пакетов и моделей.</value>
   </data>
   <data name="Label_RecommendedModels" xml:space="preserve">
-    <value>Рекомендуемые Модели</value>
+    <value>Рекомендуемые модели</value>
   </data>
   <data name="Label_RecommendedModelsSubText" xml:space="preserve">
     <value>Пока ваш пакет устонавливается, вот несколько рекомендуемых моделей для того чтобы помочь вам начать.</value>
@@ -972,7 +970,7 @@
     <value>Требуется ComfyUI</value>
   </data>
   <data name="Label_ComfyRequiredDetail" xml:space="preserve">
-    <value>Требуется ComfyUI, чтобы установить этот пакет. Хотите ли вы установить его сейчас?</value>
+    <value>Для установки этого пакета требуется ComfyUI. Установить?</value>
   </data>
   <data name="Error_PleaseSelectDownloadLocation" xml:space="preserve">
     <value>Пожалуйста выберите место скачивания.</value>
@@ -1056,7 +1054,7 @@
     <value>Stability Matrix уже запущен</value>
   </data>
   <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
-    <value>{0} удалено успешно</value>
+    <value>{0} успешно удалён</value>
   </data>
   <data name="Label_WorkflowDeleted" xml:space="preserve">
     <value>Рабочий процесс удалён</value>
@@ -1131,7 +1129,7 @@
     <value>Копировать как растровое изображение</value>
   </data>
   <data name="Label_DisableUpdateCheck" xml:space="preserve">
-    <value>Отключите Проверку Обновлений</value>
+    <value>Отключить проверку обновлений</value>
   </data>
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>ПОЖАЛУЙСТА ИЗВЛЕКИТЕ ПРИЛОЖЕНИЕ ИЗ АРХИВА ПЕРЕЗ ЗАПУСКОМ STABILITY MATRIX</value>
@@ -1185,7 +1183,7 @@
     <value>Сид</value>
   </data>
   <data name="Label_NegativePrompt" xml:space="preserve">
-    <value>Анти-Запрос</value>
+    <value>Негативный промпт</value>
   </data>
   <data name="Label_NewFolder" xml:space="preserve">
     <value>Новая Папка</value>
@@ -1211,6 +1209,15 @@
   </data>
   <data name="Label_DependencySpecifiers" xml:space="preserve">
     <value>Спецификаторы зависимостей</value>
+  </data>
+  <data name="AnalyticsExample_InstallData" xml:space="preserve">
+    <value>{
+  &quot;packageName&quot;: &quot;stable-diffusion-webui&quot;,
+  &quot;packageVersion&quot;: &quot;v1.10.0&quot;,
+  &quot;isSuccess&quot;: true,
+  &quot;type&quot;: &quot;install&quot;,
+  &quot;timestamp&quot;: &quot;2024-09-04T02:14:04.1967404+00:00&quot;
+}</value>
   </data>
   <data name="Label_Analytics" xml:space="preserve">
     <value>Аналитика</value>

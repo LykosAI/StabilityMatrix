@@ -7,7 +7,7 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
-        <Version>2.13.0-dev.999</Version>
+        <Version>2.14.0-dev.999</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -132,6 +132,7 @@
         <PackageReference Include="Polly.Extensions.Http" />
         <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" />
         <PackageReference Include="RockLib.Reflection.Optimized" />
+        <PackageReference Include="Semi.Avalonia"/>
         <PackageReference Include="Sentry" />
         <PackageReference Include="Sentry.NLog" />
         <PackageReference Include="SpacedGrid-Avalonia" />
@@ -248,6 +249,10 @@
       </Compile>
       <Compile Update="Views\PackageManager\MainPackageManagerView.axaml.cs">
         <DependentUpon>MainPackageManagerView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+      <Compile Update="Views\Inference\InferenceWanTextToVideoView.axaml.cs">
+        <DependentUpon>InferenceWanTextToVideoView.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
     </ItemGroup>

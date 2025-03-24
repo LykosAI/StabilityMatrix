@@ -154,12 +154,6 @@ public record LocalModelFile
     [MemberNotNullWhen(true, nameof(ConnectedModelInfo))]
     public bool HasCivitMetadata => HasConnectedModel && ConnectedModelInfo.ModelId != null;
 
-    [BsonIgnore]
-    public SafetensorMetadata? SafetensorMetadata { get; set; }
-
-    [BsonIgnore]
-    public bool SafetensorMetadataParsed { get; set; }
-
     public string GetFullPath(string rootModelDirectory)
     {
         return Path.Combine(rootModelDirectory, RelativePath);

@@ -771,7 +771,9 @@ public class ComfyUI(
         {
             InstalledPackage = installedPackage,
             WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
-            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables
+            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
+            IsBlackwellGpu =
+                SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu()
         };
 
         var runner = new PackageModificationRunner

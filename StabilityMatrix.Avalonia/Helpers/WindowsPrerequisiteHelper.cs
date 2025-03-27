@@ -553,7 +553,7 @@ public class WindowsPrerequisiteHelper(
 
         var process = ProcessRunner.StartAnsiProcess(
             VcBuildToolsDownloadPath,
-            "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended",
+            "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools;includeRecommended;includeOptional",
             outputDataReceived: output =>
                 progress?.Report(
                     new ProgressReport(

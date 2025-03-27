@@ -3,6 +3,7 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
@@ -17,6 +18,7 @@ public class InstallSageAttentionStep(
 
     public required InstalledPackage InstalledPackage { get; init; }
     public required DirectoryPath WorkingDirectory { get; init; }
+    public required bool IsBlackwellGpu { get; init; }
     public IReadOnlyDictionary<string, string>? EnvironmentVariables { get; init; }
 
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
@@ -88,9 +90,14 @@ public class InstallSageAttentionStep(
 
         progress?.Report(new ProgressReport(-1f, message: "Installing Triton", isIndeterminate: true));
 
-        await venvRunner
-            .PipInstall("triton-windows", progress.AsProcessOutputHandler())
-            .ConfigureAwait(false);
+        var pipArgs = new PipInstallArgs();
+        if (IsBlackwellGpu)
+        {
+            pipArgs = pipArgs.AddArg("--pre");
+        }
+        pipArgs = pipArgs.AddArg("triton-windows");
+
+        await venvRunner.PipInstall(pipArgs, progress.AsProcessOutputHandler()).ConfigureAwait(false);
 
         venvRunner.UpdateEnvironmentVariables(env => env.SetItem("SETUPTOOLS_USE_DISTUTILS", "setuptools"));
 

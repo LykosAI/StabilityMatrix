@@ -361,6 +361,7 @@ public partial class CheckpointsPageViewModel(
                             x
                         )
                 )
+                .DisposeMany()
                 .SortAndBind(Models, comparerObservable)
                 .WhenPropertyChanged(p => p.IsSelected)
                 .Throttle(TimeSpan.FromMilliseconds(50))
@@ -882,11 +883,16 @@ public partial class CheckpointsPageViewModel(
             .FirstOrDefault(x => x.Path == destinationFolder.FullPath);
     }
 
-    public async Task MoveBetweenFolders(List<CheckpointFileViewModel>? sourceFiles, DirectoryPath destinationFolder)
+    public async Task MoveBetweenFolders(
+        List<CheckpointFileViewModel>? sourceFiles,
+        DirectoryPath destinationFolder
+    )
     {
         if (sourceFiles != null && sourceFiles.Count() > 0)
         {
-            var sourceDirectory = Path.GetDirectoryName(sourceFiles[0].CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
+            var sourceDirectory = Path.GetDirectoryName(
+                sourceFiles[0].CheckpointFile.GetFullPath(settingsManager.ModelsDirectory)
+            );
             foreach (CheckpointFileViewModel sourceFile in sourceFiles)
             {
                 if (
@@ -904,13 +910,27 @@ public partial class CheckpointsPageViewModel(
 
                 try
                 {
-                    var sourcePath = new FilePath(sourceFile.CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
+                    var sourcePath = new FilePath(
+                        sourceFile.CheckpointFile.GetFullPath(settingsManager.ModelsDirectory)
+                    );
                     var fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourcePath);
-                    var sourceCmInfoPath = Path.Combine(sourcePath.Directory!, $"{fileNameWithoutExt}.cm-info.json");
-                    var sourcePreviewPath = Path.Combine(sourcePath.Directory!, $"{fileNameWithoutExt}.preview.jpeg");
+                    var sourceCmInfoPath = Path.Combine(
+                        sourcePath.Directory!,
+                        $"{fileNameWithoutExt}.cm-info.json"
+                    );
+                    var sourcePreviewPath = Path.Combine(
+                        sourcePath.Directory!,
+                        $"{fileNameWithoutExt}.preview.jpeg"
+                    );
                     var destinationFilePath = Path.Combine(destinationFolder, sourcePath.Name);
-                    var destinationCmInfoPath = Path.Combine(destinationFolder, $"{fileNameWithoutExt}.cm-info.json");
-                    var destinationPreviewPath = Path.Combine(destinationFolder, $"{fileNameWithoutExt}.preview.jpeg");
+                    var destinationCmInfoPath = Path.Combine(
+                        destinationFolder,
+                        $"{fileNameWithoutExt}.cm-info.json"
+                    );
+                    var destinationPreviewPath = Path.Combine(
+                        destinationFolder,
+                        $"{fileNameWithoutExt}.preview.jpeg"
+                    );
 
                     // Move files
                     if (File.Exists(sourcePath))

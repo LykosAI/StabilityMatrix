@@ -4,7 +4,26 @@ All notable changes to Stability Matrix will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
-  
+
+## v2.14.0-pre.1
+### Added
+- Added new Package Command (in the 3-dots menu) for installing Triton & SageAttention in ComfyUI 
+### Changed
+- Improved window state handling
+- Improved Checkpoint Manager memory usage (thanks to @FireGeek for the profiling assistance!)
+- (Internal) Upgraded FluentAvalonia to 2.3.0 
+### Fixed
+- Fixed RTX 5000-series GPU detection in certain cases
+- Fixed Image Viewer animation loader keeping file handles open, which resolves 2 different issues (OSes are fun):
+  - (macOS) Fixed `FileNotFoundException` crash when navigating to Inference tab after deleting a Webp animation file previously opened in the Image Viewer Dialog.
+  - (Windows) Fixed Webp animation files unable to be deleted without closing the app first.
+- Fixed Image Viewer `FileNotFoundException` on fetching image size, if navigating to a deleted image file.
+- (macOS) Fixed Webp / Gif animations RGB colors flipped.
+- Fixed some cases of missing custom nodes in SwarmUI
+- Fixed window disappearing on macOS when the saved window size is very small
+- Fixed large white boxes appearing when tooltips are visible on macOS/Linux (thanks to @genteure for the fix!)
+- Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI (for real this time)
+
 ## v2.13.4
 ### Added
 - Added support for RTX 5000-series GPUs in ComfyUI, Forge, and reForge
@@ -44,19 +63,6 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - A heartfelt thank you to our incredible Visionary-tier Patrons, **Waterclouds**, **TheTekknician**, and **Corey**! Your unwavering support means the world to us!
 #### Pioneers
 - A big shoutout to our outstanding Pioneer-tier Patrons, **tankfox**, **Mr. Unknown**, **Szir777**, and **NowFallenAngel**! We deeply appreciate your ongoing support and dedication!
-
-## v2.14.0-pre.1
-### Changed
-- Improved window state handling
-### Fixed
-- Fixed RTX 5000-series GPU detection in certain cases
-- Fixed Image Viewer animation loader keeping file handles open, which resolves 2 different issues (OSes are fun):
-  - (macOS) Fixed `FileNotFoundException` crash when navigating to Inference tab after deleting a Webp animation file previously opened in the Image Viewer Dialog.
-  - (Windows) Fixed Webp animation files unable to be deleted without closing the app first.
-- Fixed Image Viewer `FileNotFoundException` on fetching image size, if navigating to a deleted image file.
-- (macOS) Fixed Webp / Gif animations RGB colors flipped.
-- Fixed some cases of missing custom nodes in SwarmUI
-- Fixed window disappearing on macOS when the saved window size is very small
 
 ## v2.14.0-dev.3
 ### Added

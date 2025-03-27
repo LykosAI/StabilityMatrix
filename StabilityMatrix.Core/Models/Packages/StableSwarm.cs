@@ -274,15 +274,29 @@ public class StableSwarm(
 
                 ProcessArgs args = ["--", comfyVenvPath, "main.py", comfyArgs];
 
+                // Create a wrapper batch file that runs zluda.exe
+                var wrapperScriptPath = Path.Combine(installLocation, "Data", "zluda_wrapper.bat");
+                var scriptContent = $"""
+                                     @echo off
+                                     "{zludaPath}" {args}
+                                     """;
+
+                // Ensure the Data directory exists
+                Directory.CreateDirectory(Path.Combine(installLocation, "Data"));
+
+                // Write the batch file
+                await File.WriteAllTextAsync(wrapperScriptPath, scriptContent, cancellationToken)
+                    .ConfigureAwait(false);
+
                 dataSection.Set(
                     "settings",
                     new ComfyUiSelfStartSettings
                     {
-                        StartScript = zludaPath,
+                        StartScript = wrapperScriptPath,
                         DisableInternalArgs = false,
                         AutoUpdate = false,
                         UpdateManagedNodes = "true",
-                        ExtraArgs = args
+                        ExtraArgs = string.Empty // Arguments are already in the batch file
                     }.Save(true)
                 );
             }

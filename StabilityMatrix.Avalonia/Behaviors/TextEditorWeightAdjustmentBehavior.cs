@@ -142,6 +142,13 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
             // Find *all* nodes that contains the selection/caret range
             var selectedNodes = ast.RootNode.Content.Where(node => node.Span.Contains(tokenSegment)).ToList();
 
+            // If empty use intersection instead
+            if (selectedNodes.Count == 0)
+            {
+                selectedNodes = ast.RootNode.Content.Where(node => node.Span.IntersectsWith(tokenSegment))
+                    .ToList();
+            }
+
             Logger.Trace("Selected nodes: {Nodes}", selectedNodes);
 
             // Trim any leading or trailing separator nodes

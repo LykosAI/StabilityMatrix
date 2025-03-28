@@ -139,8 +139,17 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
             var astBuilder = new PromptSyntaxBuilder(tokenizeResult, text);
             var ast = astBuilder.BuildAST();
 
-            // Find *all* nodes that intersect the selection/caret range
-            var selectedNodes = ast.RootNode.Content.Where(node => node.Span.IntersectsWith(tokenSegment))
+            // Find *all* nodes that contains the selection/caret range
+            var selectedNodes = ast.RootNode.Content.Where(node => node.Span.Contains(tokenSegment)).ToList();
+
+            Logger.Trace("Selected nodes: {Nodes}", selectedNodes);
+
+            // Trim any leading or trailing separator nodes
+            selectedNodes = selectedNodes
+                .SkipWhile(node => node is SeperatorNode)
+                .Reverse()
+                .SkipWhile(node => node is SeperatorNode)
+                .Reverse()
                 .ToList();
 
             // Find smallest containing nodes
@@ -154,9 +163,13 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
                 })
                 .ToList();
 
+            Logger.Trace("Smallest nodes: {Nodes}", smallestNodes);
+
             // Go up and find the first parenthesized node, if any
             // (Considering only the first and last of the smallest nodes)
             var parenthesisTargets = smallestNodes.Take(1).Concat(smallestNodes.TakeLast(1)).ToList();
+
+            Logger.Trace("Parenthesis targets: {Nodes}", parenthesisTargets);
 
             var parenthesizedNode = parenthesisTargets
                 .SelectMany(x => x.AncestorsAndSelf())
@@ -336,14 +349,13 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
 
         // Check if the token is a separator, if so check the next token instead
         if (
-            currentToken
-                ?.Scopes
-                .Any(s => s.Contains("meta.structure.array") && s.Contains("punctuation.separator.variable"))
-            == true
+            currentToken?.Scopes is { } scopes
+            && scopes.Contains("meta.structure.array.prompt")
+            && scopes.Contains("punctuation.separator.variable.prompt")
         )
         {
-            // Check if we have a next token
-            var nextToken = result.Tokens.ElementAtOrDefault(currentTokenIndex + 1);
+            // Check if we have a prev token
+            var nextToken = result.Tokens.ElementAtOrDefault(currentTokenIndex - 1);
             if (nextToken is not null)
             {
                 // Use the next token instead
@@ -353,7 +365,7 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
 
         // Still not found or not "text" token (meta.embedded).
         if (
-            currentToken is null
+            currentToken?.Scopes is null
             || !(
                 currentToken.Scopes.Contains("meta.embedded")
                 || currentToken.Scopes.Contains("meta.structure.array.prompt")

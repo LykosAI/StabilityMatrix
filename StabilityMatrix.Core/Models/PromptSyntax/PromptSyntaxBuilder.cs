@@ -137,8 +137,8 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
 
         // Check if it's a separator
         if (
-            token.Scopes.Contains("meta.structure.array")
-            && token.Scopes.Contains("punctuation.separator.variable")
+            token.Scopes.Contains("meta.structure.array.prompt")
+            && token.Scopes.Contains("punctuation.separator.variable.prompt")
         )
         {
             return new SeperatorNode { Span = new TextSpan(token.StartIndex, token.Length), Text = text };

@@ -36,6 +36,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
 
     private readonly INotificationService notificationService;
     private readonly IModelIndexService modelIndexService;
+    private readonly TabContext tabContext;
 
     [JsonIgnore]
     public StackCardViewModel StackCardViewModel { get; }
@@ -64,12 +65,14 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         ISettingsManager settingsManager,
         ServiceManager<ViewModelBase> vmFactory,
         IModelIndexService modelIndexService,
-        RunningPackageService runningPackageService
+        RunningPackageService runningPackageService,
+        TabContext tabContext
     )
         : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
     {
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;
+        this.tabContext = tabContext;
 
         // Get sub view models from service manager
 
@@ -77,6 +80,8 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         SeedCardViewModel.GenerateNewSeed();
 
         ModelCardViewModel = vmFactory.Get<ModelCardViewModel>();
+
+        // When the model changes in the ModelCardViewModel, we'll have access to it in the TabContext
 
         SamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>(samplerCard =>
         {

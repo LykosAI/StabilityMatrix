@@ -36,6 +36,7 @@ public partial class PromptCardViewModel
 {
     private readonly IModelIndexService modelIndexService;
     private readonly ISettingsManager settingsManager;
+    private readonly TabContext tabContext;
 
     /// <summary>
     /// Cache of prompt text to tokenized Prompt
@@ -67,14 +68,19 @@ public partial class PromptCardViewModel
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
         ServiceManager<ViewModelBase> vmFactory,
-        SharedState sharedState
+        SharedState sharedState,
+        TabContext tabContext
     )
     {
         this.modelIndexService = modelIndexService;
         this.settingsManager = settingsManager;
+        this.tabContext = tabContext;
         CompletionProvider = completionProvider;
         TokenizerProvider = tokenizerProvider;
         SharedState = sharedState;
+
+        // Subscribe to tab context state changes
+        tabContext.StateChanged += OnTabContextStateChanged;
 
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(vm =>
         {
@@ -90,6 +96,23 @@ public partial class PromptCardViewModel
                 true
             )
         );
+    }
+
+    private void OnTabContextStateChanged(object? sender, TabContext.TabStateChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TabContext.SelectedModel))
+        {
+            // Handle selected model change
+            // Could use this to update prompt suggestions based on the model
+        }
+    }
+
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+
+        // Unsubscribe from events when view model is unloaded
+        tabContext.StateChanged -= OnTabContextStateChanged;
     }
 
     partial void OnIsHelpButtonTeachingTipOpenChanging(bool oldValue, bool newValue)
@@ -283,8 +306,8 @@ public partial class PromptCardViewModel
                   ```
                   
                   ## {{Resources.Label_Comments}}
-                  Inline comments can be marked by a hashtag ‘#’. 
-                  All text after a ‘#’ on a line will be disregarded during generation.
+                  Inline comments can be marked by a hashtag ' # '. 
+                  All text after a ' # ' on a line will be disregarded during generation.
                   ```prompt
                   # comments
                   a red cat # also comments
@@ -297,7 +320,7 @@ public partial class PromptCardViewModel
                   {red|green|blue} cat
                   ```
                   In this example, a color will be randomly chosen at the start of each generation. 
-                  The final output could be “red cat”, “green cat”, or “blue cat”.
+                  The final output could be "red cat", "green cat", or "blue cat".
                   
                   You can also use networks and embeddings in wildcards. For example:
                   ```prompt

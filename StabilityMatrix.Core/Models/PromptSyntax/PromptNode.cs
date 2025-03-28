@@ -144,9 +144,14 @@ public abstract class PromptNode
         return bestMatch;
     }
 
+    public override string ToString()
+    {
+        return $"{GetType().Name} {Span}";
+    }
+
     private string GetDebuggerDisplay()
     {
-        return GetType().Name + ToString();
+        return ToString();
     }
 }
 

@@ -134,6 +134,16 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
     {
         var token = ConsumeToken(); // Consume the text token.
         var text = GetTextSubstring(token);
+
+        // Check if it's a separator
+        if (
+            token.Scopes.Contains("meta.structure.array")
+            && token.Scopes.Contains("punctuation.separator.variable")
+        )
+        {
+            return new SeperatorNode { Span = new TextSpan(token.StartIndex, token.Length), Text = text };
+        }
+
         return new TextNode { Span = new TextSpan(token.StartIndex, token.Length), Text = text };
     }
 

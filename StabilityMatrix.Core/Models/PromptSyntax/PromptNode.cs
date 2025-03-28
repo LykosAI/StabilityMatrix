@@ -179,6 +179,8 @@ public class TextNode : PromptNode
     public required string Text { get; set; }
 }
 
+public class SeperatorNode : TextNode;
+
 public class NumberNode : LiteralNode<decimal>;
 
 public class ParenthesizedNode : PromptNode, IHasChildren

@@ -305,9 +305,11 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
         var result = TokenizerProvider!.TokenizeLine(lineText);
 
         IToken? currentToken = null;
+        var currentTokenIndex = -1;
         // Get the token the caret is after
-        foreach (var token in result.Tokens)
+        for (var i = 0; i < result.Tokens.Length; i++)
         {
+            var token = result.Tokens[i];
             // If we see a line comment token anywhere, return null
             var isComment = token.Scopes.Any(s => s.Contains("comment.line"));
             if (isComment)
@@ -316,10 +318,36 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
             }
 
             // Find match
-            if (caretAbsoluteOffset >= token.StartIndex && caretAbsoluteOffset <= token.EndIndex)
+            if (caretAbsoluteOffset >= token.StartIndex && caretAbsoluteOffset < token.EndIndex)
             {
                 currentToken = token;
+                currentTokenIndex = i;
                 break;
+            }
+
+            // If last token, also allow just start match
+            if (i == result.Tokens.Length - 1 && caretAbsoluteOffset >= token.StartIndex)
+            {
+                currentToken = token;
+                currentTokenIndex = i;
+                break;
+            }
+        }
+
+        // Check if the token is a separator, if so check the next token instead
+        if (
+            currentToken
+                ?.Scopes
+                .Any(s => s.Contains("meta.structure.array") && s.Contains("punctuation.separator.variable"))
+            == true
+        )
+        {
+            // Check if we have a next token
+            var nextToken = result.Tokens.ElementAtOrDefault(currentTokenIndex + 1);
+            if (nextToken is not null)
+            {
+                // Use the next token instead
+                currentToken = nextToken;
             }
         }
 

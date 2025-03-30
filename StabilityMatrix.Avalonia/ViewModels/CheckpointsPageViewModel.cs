@@ -492,7 +492,7 @@ public partial class CheckpointsPageViewModel(
         if (Design.IsDesignMode)
             return;
 
-        await ShowMigrationNoticeIfNecessaryAsync();
+        await ShowFolderMapTipIfNecessaryAsync();
     }
 
     public void ClearSearchQuery()
@@ -1257,19 +1257,15 @@ public partial class CheckpointsPageViewModel(
         return !HideEmptyRootCategories || category is { Count: > 0 };
     }
 
-    private async Task ShowMigrationNoticeIfNecessaryAsync()
+    private async Task ShowFolderMapTipIfNecessaryAsync()
     {
-        if (settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.SharedFolderMigrationTip))
+        if (settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.FolderMapTip))
             return;
-
-        var migrationNotice = DialogHelper.CreateMarkdownDialog(MarkdownSnippets.SharedFolderMigration);
-        migrationNotice.CloseButtonText = Resources.Action_OK;
-        await migrationNotice.ShowAsync();
 
         var folderReference = DialogHelper.CreateMarkdownDialog(MarkdownSnippets.SMFolderMap);
         folderReference.CloseButtonText = Resources.Action_OK;
         await folderReference.ShowAsync();
 
-        settingsManager.Transaction(s => s.SeenTeachingTips.Add(TeachingTip.SharedFolderMigrationTip));
+        settingsManager.Transaction(s => s.SeenTeachingTips.Add(TeachingTip.FolderMapTip));
     }
 }

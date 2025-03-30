@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed window disappearing on macOS when the saved window size is very small
 - Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI (for real this time)
 - Fixed missing base model options in the Metadata Editor
+- Fixed large white boxes appearing when tooltips are visible on macOS/Linux
 
 ## v2.13.4
 ### Added

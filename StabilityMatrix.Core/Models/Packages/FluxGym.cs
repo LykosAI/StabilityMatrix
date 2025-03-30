@@ -51,12 +51,12 @@ public class FluxGym(
             [
                 new SharedFolderLayoutRule
                 {
-                    SourceTypes = [SharedFolderType.CLIP],
+                    SourceTypes = [SharedFolderType.TextEncoders],
                     TargetRelativePaths = ["models/clip"]
                 },
                 new SharedFolderLayoutRule
                 {
-                    SourceTypes = [SharedFolderType.Unet],
+                    SourceTypes = [SharedFolderType.DiffusionModels],
                     TargetRelativePaths = ["models/unet"]
                 },
                 new SharedFolderLayoutRule

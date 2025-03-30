@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added new Package Command (in the 3-dots menu) for installing Triton & SageAttention in ComfyUI 
 ### Changed
+- Changed the names of some of the shared model folders to better reflect their contents
 - Improved window state handling
 - Improved Checkpoint Manager memory usage (thanks to @FireGeek for the profiling assistance!)
 - (Internal) Upgraded FluentAvalonia to 2.3.0 
@@ -21,8 +22,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - (macOS) Fixed Webp / Gif animations RGB colors flipped.
 - Fixed some cases of missing custom nodes in SwarmUI
 - Fixed window disappearing on macOS when the saved window size is very small
-- Fixed large white boxes appearing when tooltips are visible on macOS/Linux (thanks to @genteure for the fix!)
 - Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI (for real this time)
+- Fixed missing base model options in the Metadata Editor
 
 ## v2.13.4
 ### Added

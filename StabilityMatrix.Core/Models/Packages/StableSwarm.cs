@@ -124,9 +124,9 @@ public class StableSwarm(
             [SharedFolderType.StableDiffusion] = ["Models/Stable-Diffusion"],
             [SharedFolderType.Lora] = ["Models/Lora"],
             [SharedFolderType.VAE] = ["Models/VAE"],
-            [SharedFolderType.TextualInversion] = ["Models/Embeddings"],
+            [SharedFolderType.Embeddings] = ["Models/Embeddings"],
             [SharedFolderType.ControlNet] = ["Models/controlnet"],
-            [SharedFolderType.InvokeClipVision] = ["Models/clip_vision"]
+            [SharedFolderType.ClipVision] = ["Models/clip_vision"]
         };
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = [OutputFolderName] };
@@ -230,7 +230,7 @@ public class StableSwarm(
                     ),
                     SDEmbeddingFolder = Path.Combine(
                         settingsManager.ModelsDirectory,
-                        SharedFolderType.TextualInversion.ToString()
+                        SharedFolderType.Embeddings.ToString()
                     ),
                     SDControlNetsFolder = Path.Combine(
                         settingsManager.ModelsDirectory,
@@ -238,7 +238,7 @@ public class StableSwarm(
                     ),
                     SDClipVisionFolder = Path.Combine(
                         settingsManager.ModelsDirectory,
-                        SharedFolderType.InvokeClipVision.ToString()
+                        SharedFolderType.ClipVision.ToString()
                     )
                 };
             }
@@ -503,7 +503,7 @@ public class StableSwarm(
             );
             paths.Set(
                 "SDEmbeddingFolder",
-                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.TextualInversion.ToString())
+                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.Embeddings.ToString())
             );
             paths.Set(
                 "SDControlNetsFolder",
@@ -511,7 +511,7 @@ public class StableSwarm(
             );
             paths.Set(
                 "SDClipVisionFolder",
-                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.InvokeClipVision.ToString())
+                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.ClipVision.ToString())
             );
             section.Set("Paths", paths);
             section.SaveToFile(settingsPath);
@@ -529,7 +529,7 @@ public class StableSwarm(
             SDVAEFolder = Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.VAE.ToString()),
             SDEmbeddingFolder = Path.Combine(
                 settingsManager.ModelsDirectory,
-                SharedFolderType.TextualInversion.ToString()
+                SharedFolderType.Embeddings.ToString()
             ),
             SDControlNetsFolder = Path.Combine(
                 settingsManager.ModelsDirectory,
@@ -537,7 +537,7 @@ public class StableSwarm(
             ),
             SDClipVisionFolder = Path.Combine(
                 settingsManager.ModelsDirectory,
-                SharedFolderType.InvokeClipVision.ToString()
+                SharedFolderType.ClipVision.ToString()
             )
         };
 

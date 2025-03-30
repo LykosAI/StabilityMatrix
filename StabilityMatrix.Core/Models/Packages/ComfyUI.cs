@@ -53,9 +53,9 @@ public class ComfyUI(
             [SharedFolderType.StableDiffusion] = ["models/checkpoints"],
             [SharedFolderType.Diffusers] = ["models/diffusers"],
             [SharedFolderType.Lora] = ["models/loras"],
-            [SharedFolderType.CLIP] = ["models/clip"],
-            [SharedFolderType.InvokeClipVision] = ["models/clip_vision"],
-            [SharedFolderType.TextualInversion] = ["models/embeddings"],
+            [SharedFolderType.TextEncoders] = ["models/clip"],
+            [SharedFolderType.ClipVision] = ["models/clip_vision"],
+            [SharedFolderType.Embeddings] = ["models/embeddings"],
             [SharedFolderType.VAE] = ["models/vae"],
             [SharedFolderType.ApproxVAE] = ["models/vae_approx"],
             [SharedFolderType.ControlNet] = ["models/controlnet/ControlNet"],
@@ -63,13 +63,13 @@ public class ComfyUI(
             [SharedFolderType.ESRGAN] = ["models/upscale_models"],
             [SharedFolderType.Hypernetwork] = ["models/hypernetworks"],
             [SharedFolderType.IpAdapter] = ["models/ipadapter/base"],
-            [SharedFolderType.InvokeIpAdapters15] = ["models/ipadapter/sd15"],
-            [SharedFolderType.InvokeIpAdaptersXl] = ["models/ipadapter/sdxl"],
+            [SharedFolderType.IpAdapters15] = ["models/ipadapter/sd15"],
+            [SharedFolderType.IpAdaptersXl] = ["models/ipadapter/sdxl"],
             [SharedFolderType.T2IAdapter] = ["models/controlnet/T2IAdapter"],
             [SharedFolderType.PromptExpansion] = ["models/prompt_expansion"],
             [SharedFolderType.Ultralytics] = ["models/ultralytics"],
             [SharedFolderType.Sams] = ["models/sams"],
-            [SharedFolderType.Unet] = ["models/diffusion_models"]
+            [SharedFolderType.DiffusionModels] = ["models/diffusion_models"]
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>

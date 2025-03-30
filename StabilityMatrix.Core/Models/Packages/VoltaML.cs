@@ -40,7 +40,7 @@ public class VoltaML(
         {
             [SharedFolderType.StableDiffusion] = new[] { "data/models" },
             [SharedFolderType.Lora] = new[] { "data/lora" },
-            [SharedFolderType.TextualInversion] = new[] { "data/textual-inversion" },
+            [SharedFolderType.Embeddings] = new[] { "data/textual-inversion" },
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>

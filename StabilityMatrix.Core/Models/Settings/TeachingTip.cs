@@ -16,6 +16,7 @@ public record TeachingTip(string Value) : StringValue(Value)
     public static TeachingTip WebUiButtonMovedTip => new("WebUiButtonMovedTip");
     public static TeachingTip InferencePromptHelpButtonTip => new("InferencePromptHelpButtonTip");
     public static TeachingTip LykosAccountMigrateTip => new("LykosAccountMigrateTip");
+    public static TeachingTip SharedFolderMigrationTip => new("SharedFolderMigrationTip");
 
     /// <inheritdoc />
     public override string ToString()

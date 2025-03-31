@@ -1134,7 +1134,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         vm.VersionName = "1.0.0";
         vm.TrainedWords = "word1, word2, word3";
         vm.ModelType = CivitModelType.Checkpoint;
-        vm.BaseModelType = CivitBaseModelType.Pony;
+        vm.BaseModelType = "Pony";
 
         var dialog = vm.GetDialog();
         dialog.MinDialogHeight = 800;

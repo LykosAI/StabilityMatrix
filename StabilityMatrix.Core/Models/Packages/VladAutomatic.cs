@@ -60,7 +60,7 @@ public class VladAutomatic(
             [SharedFolderType.StableDiffusion] = new[] { "models/Stable-diffusion" },
             [SharedFolderType.Diffusers] = new[] { "models/Diffusers" },
             [SharedFolderType.VAE] = new[] { "models/VAE" },
-            [SharedFolderType.TextualInversion] = new[] { "models/embeddings" },
+            [SharedFolderType.Embeddings] = new[] { "models/embeddings" },
             [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
             [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
             [SharedFolderType.GFPGAN] = new[] { "models/GFPGAN" },
@@ -70,7 +70,7 @@ public class VladAutomatic(
             [SharedFolderType.ScuNET] = new[] { "models/ScuNET" },
             [SharedFolderType.SwinIR] = new[] { "models/SwinIR" },
             [SharedFolderType.LDSR] = new[] { "models/LDSR" },
-            [SharedFolderType.CLIP] = new[] { "models/CLIP" },
+            [SharedFolderType.TextEncoders] = new[] { "models/CLIP" },
             [SharedFolderType.Lora] = new[] { "models/Lora" },
             [SharedFolderType.LyCORIS] = new[] { "models/LyCORIS" },
             [SharedFolderType.ControlNet] = new[] { "models/ControlNet" }

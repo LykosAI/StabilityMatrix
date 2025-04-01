@@ -71,9 +71,17 @@ public static class SharedFoldersConfigHelper
                 stream,
                 layout,
                 rule =>
-                    rule.SourceTypes.Select(type => type.GetStringValue()) // Get the enum string value (e.g., "StableDiffusion")
+                {
+                    // Handle Root, just use models directory (e.g., Swarm)
+                    if (rule.IsRoot)
+                    {
+                        return [sharedModelsDirectory];
+                    }
+
+                    return rule.SourceTypes.Select(type => type.GetStringValue()) // Get the enum string value (e.g., "StableDiffusion")
                         .Where(folderName => !string.IsNullOrEmpty(folderName)) // Filter out potentially empty mappings
-                        .Select(folderName => Path.Combine(sharedModelsDirectory, folderName)), // Combine with base models dir
+                        .Select(folderName => Path.Combine(sharedModelsDirectory, folderName)); // Combine with base models dir
+                },
                 options,
                 cancellationToken
             )

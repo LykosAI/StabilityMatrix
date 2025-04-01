@@ -142,6 +142,29 @@ public partial class PackageInstallDetailViewModel(
             return;
         }
 
+        if (SelectedPackage.InstallRequiresAdmin)
+        {
+            var reason = $"""
+                          # **{SelectedPackage.DisplayName}** may require administrator privileges during the installation. If necessary, you will be prompted to allow the installer to run with elevated privileges.
+                          
+                          ## The reason for this requirement is:
+                          {SelectedPackage.AdminRequiredReason}
+                          
+                          ## Would you like to proceed?
+                          """;
+            var dialog = DialogHelper.CreateMarkdownDialog(reason, string.Empty);
+            dialog.PrimaryButtonText = Resources.Action_Yes;
+            dialog.CloseButtonText = Resources.Action_Cancel;
+            dialog.IsPrimaryButtonEnabled = true;
+            dialog.DefaultButton = ContentDialogButton.Primary;
+
+            var result = await dialog.ShowAsync();
+            if (result != ContentDialogResult.Primary)
+            {
+                return;
+            }
+        }
+
         if (SelectedPackage is StableSwarm)
         {
             var comfy = settingsManager.Settings.InstalledPackages.FirstOrDefault(

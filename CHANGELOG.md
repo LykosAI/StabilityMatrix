@@ -17,7 +17,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Changed the names of some of the shared model folders to better reflect their contents
 - Improved window state handling
 - Improved Checkpoint Manager memory usage (thanks to @FireGeek for the profiling assistance!)
-- (Internal) Upgraded FluentAvalonia to 2.3.0 
+- Upgraded HIP SDK installs to 6.2.4 for ComfyUI-Zluda and AMDGPU-Forge
+- (Internal) Upgraded FluentAvalonia to 2.3.0
 ### Fixed
 - Fixed RTX 5000-series GPU detection in certain cases
 - Fixed Image Viewer animation loader keeping file handles open, which resolves 2 different issues (OSes are fun):
@@ -30,6 +31,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI (for real this time)
 - Fixed missing base model options in the Metadata Editor
 - Fixed large white boxes appearing when tooltips are visible on macOS/Linux
+### Supporters
+#### Visionaries
+- A special shout-out to our fantastic Visionary-tier Patreon supporters: Waterclouds, Corey T, and our newest Visionary, bluepopsicle! Your continued generosity powers the future of Stability Matrix—thank you so much!
 
 ## v2.13.4
 ### Added

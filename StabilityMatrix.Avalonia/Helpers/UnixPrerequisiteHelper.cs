@@ -60,6 +60,7 @@ public class UnixPrerequisiteHelper(
     private bool? isGitInstalled;
 
     public bool IsVcBuildToolsInstalled => false;
+    public bool IsHipSdkInstalled => false;
 
     private async Task<bool> CheckIsGitInstalled()
     {

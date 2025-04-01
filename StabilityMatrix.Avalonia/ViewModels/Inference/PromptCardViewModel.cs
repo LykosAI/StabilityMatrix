@@ -254,6 +254,8 @@ public partial class PromptCardViewModel
     {
         var md = $$"""
                   ## {{Resources.Label_Emphasis}}
+                  You can also use (`Ctrl+Up`/`Ctrl+Down`) in the editor to adjust the 
+                  weight emphasis of the token under the caret or the currently selected text.
                   ```prompt
                   (keyword)
                   (keyword:1.0)

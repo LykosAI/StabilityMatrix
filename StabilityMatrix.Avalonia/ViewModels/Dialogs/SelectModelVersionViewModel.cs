@@ -333,7 +333,7 @@ public partial class SelectModelVersionViewModel(
             }
         }
 
-        if (downloadDirectory.ToString().EndsWith("Unet"))
+        if (downloadDirectory.ToString().EndsWith(SharedFolderType.DiffusionModels.GetStringValue()))
         {
             // also add StableDiffusion in case we have an AIO version
             var stableDiffusionDirectory = rootModelsDirectory.JoinDir(

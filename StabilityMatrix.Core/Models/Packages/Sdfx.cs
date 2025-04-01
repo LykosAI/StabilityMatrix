@@ -216,32 +216,48 @@ public class Sdfx(
 
             var models = config.GetOrAddNonNullJsonObject(["paths", "models"]);
 
-            models["checkpoints"] = new JsonArray(Path.Combine(modelsDir, "StableDiffusion"));
-            models["vae"] = new JsonArray(Path.Combine(modelsDir, "VAE"));
+            models["checkpoints"] = new JsonArray(
+                Path.Combine(modelsDir, SharedFolderType.StableDiffusion.GetStringValue())
+            );
+            models["vae"] = new JsonArray(Path.Combine(modelsDir, SharedFolderType.VAE.GetStringValue()));
             models["loras"] = new JsonArray(
-                Path.Combine(modelsDir, "Lora"),
-                Path.Combine(modelsDir, "LyCORIS")
+                Path.Combine(modelsDir, SharedFolderType.Lora.GetStringValue()),
+                Path.Combine(modelsDir, SharedFolderType.LyCORIS.GetStringValue())
             );
             models["upscale_models"] = new JsonArray(
-                Path.Combine(modelsDir, "ESRGAN"),
-                Path.Combine(modelsDir, "RealESRGAN"),
-                Path.Combine(modelsDir, "SwinIR")
+                Path.Combine(modelsDir, SharedFolderType.ESRGAN.GetStringValue()),
+                Path.Combine(modelsDir, SharedFolderType.RealESRGAN.GetStringValue()),
+                Path.Combine(modelsDir, SharedFolderType.SwinIR.GetStringValue())
             );
-            models["embeddings"] = new JsonArray(Path.Combine(modelsDir, "TextualInversion"));
-            models["hypernetworks"] = new JsonArray(Path.Combine(modelsDir, "Hypernetwork"));
+            models["embeddings"] = new JsonArray(
+                Path.Combine(modelsDir, SharedFolderType.Embeddings.GetStringValue())
+            );
+            models["hypernetworks"] = new JsonArray(
+                Path.Combine(modelsDir, SharedFolderType.Hypernetwork.GetStringValue())
+            );
             models["controlnet"] = new JsonArray(
-                Path.Combine(modelsDir, "ControlNet"),
-                Path.Combine(modelsDir, "T2IAdapter")
+                Path.Combine(modelsDir, SharedFolderType.ControlNet.GetStringValue()),
+                Path.Combine(modelsDir, SharedFolderType.T2IAdapter.GetStringValue())
             );
-            models["clip"] = new JsonArray(Path.Combine(modelsDir, "CLIP"));
-            models["clip_vision"] = new JsonArray(Path.Combine(modelsDir, "InvokeClipVision"));
-            models["diffusers"] = new JsonArray(Path.Combine(modelsDir, "Diffusers"));
-            models["gligen"] = new JsonArray(Path.Combine(modelsDir, "GLIGEN"));
-            models["vae_approx"] = new JsonArray(Path.Combine(modelsDir, "ApproxVAE"));
+            models["clip"] = new JsonArray(
+                Path.Combine(modelsDir, SharedFolderType.TextEncoders.GetStringValue())
+            );
+            models["clip_vision"] = new JsonArray(
+                Path.Combine(modelsDir, SharedFolderType.ClipVision.GetStringValue())
+            );
+            models["diffusers"] = new JsonArray(
+                Path.Combine(modelsDir, SharedFolderType.Diffusers.GetStringValue())
+            );
+            models["gligen"] = new JsonArray(
+                Path.Combine(modelsDir, SharedFolderType.GLIGEN.GetStringValue())
+            );
+            models["vae_approx"] = new JsonArray(
+                Path.Combine(modelsDir, SharedFolderType.ApproxVAE.GetStringValue())
+            );
             models["ipadapter"] = new JsonArray(
-                Path.Combine(modelsDir, "IpAdapter"),
-                Path.Combine(modelsDir, "InvokeIpAdapters15"),
-                Path.Combine(modelsDir, "InvokeIpAdaptersXl")
+                Path.Combine(modelsDir, SharedFolderType.IpAdapter.GetStringValue()),
+                Path.Combine(modelsDir, SharedFolderType.IpAdapters15.GetStringValue()),
+                Path.Combine(modelsDir, SharedFolderType.IpAdaptersXl.GetStringValue())
             );
 
             await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);

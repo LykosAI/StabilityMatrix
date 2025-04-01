@@ -408,38 +408,77 @@ public class ComfyUI(
             if (stabilityMatrixNode.Value is not YamlMappingNode nodeValue)
                 return;
 
-            nodeValue.Children["checkpoints"] = Path.Combine(modelsDir, "StableDiffusion");
-            nodeValue.Children["vae"] = Path.Combine(modelsDir, "VAE");
+            nodeValue.Children["checkpoints"] = Path.Combine(
+                modelsDir,
+                SharedFolderType.StableDiffusion.GetStringValue()
+            );
+            nodeValue.Children["vae"] = Path.Combine(modelsDir, SharedFolderType.VAE.GetStringValue());
             nodeValue.Children["loras"] =
-                $"{Path.Combine(modelsDir, "Lora")}\n" + $"{Path.Combine(modelsDir, "LyCORIS")}";
+                $"{Path.Combine(modelsDir, SharedFolderType.Lora.GetStringValue())}\n"
+                + $"{Path.Combine(modelsDir, SharedFolderType.LyCORIS.GetStringValue())}";
             nodeValue.Children["upscale_models"] =
-                $"{Path.Combine(modelsDir, "ESRGAN")}\n"
-                + $"{Path.Combine(modelsDir, "RealESRGAN")}\n"
-                + $"{Path.Combine(modelsDir, "SwinIR")}";
-            nodeValue.Children["embeddings"] = Path.Combine(modelsDir, "TextualInversion");
-            nodeValue.Children["hypernetworks"] = Path.Combine(modelsDir, "Hypernetwork");
+                $"{Path.Combine(modelsDir, SharedFolderType.ESRGAN.GetStringValue())}\n"
+                + $"{Path.Combine(modelsDir, SharedFolderType.RealESRGAN.GetStringValue())}\n"
+                + $"{Path.Combine(modelsDir, SharedFolderType.SwinIR.GetStringValue())}";
+            nodeValue.Children["embeddings"] = Path.Combine(
+                modelsDir,
+                SharedFolderType.Embeddings.GetStringValue()
+            );
+            nodeValue.Children["hypernetworks"] = Path.Combine(
+                modelsDir,
+                SharedFolderType.Hypernetwork.GetStringValue()
+            );
             nodeValue.Children["controlnet"] = string.Join(
                 '\n',
-                Path.Combine(modelsDir, "ControlNet"),
-                Path.Combine(modelsDir, "T2IAdapter")
+                Path.Combine(modelsDir, SharedFolderType.ControlNet.GetStringValue()),
+                Path.Combine(modelsDir, SharedFolderType.T2IAdapter.GetStringValue())
             );
-            nodeValue.Children["clip"] = Path.Combine(modelsDir, "CLIP");
-            nodeValue.Children["clip_vision"] = Path.Combine(modelsDir, "InvokeClipVision");
-            nodeValue.Children["diffusers"] = Path.Combine(modelsDir, "Diffusers");
-            nodeValue.Children["gligen"] = Path.Combine(modelsDir, "GLIGEN");
-            nodeValue.Children["vae_approx"] = Path.Combine(modelsDir, "ApproxVAE");
+            nodeValue.Children["clip"] = Path.Combine(
+                modelsDir,
+                SharedFolderType.TextEncoders.GetStringValue()
+            );
+            nodeValue.Children["clip_vision"] = Path.Combine(
+                modelsDir,
+                SharedFolderType.ClipVision.GetStringValue()
+            );
+            nodeValue.Children["diffusers"] = Path.Combine(
+                modelsDir,
+                SharedFolderType.Diffusers.GetStringValue()
+            );
+            nodeValue.Children["gligen"] = Path.Combine(modelsDir, SharedFolderType.GLIGEN.GetStringValue());
+            nodeValue.Children["vae_approx"] = Path.Combine(
+                modelsDir,
+                SharedFolderType.ApproxVAE.GetStringValue()
+            );
             nodeValue.Children["ipadapter"] = string.Join(
                 '\n',
-                Path.Combine(modelsDir, "IpAdapter"),
-                Path.Combine(modelsDir, "InvokeIpAdapters15"),
-                Path.Combine(modelsDir, "InvokeIpAdaptersXl")
+                Path.Combine(modelsDir, SharedFolderType.IpAdapter.GetStringValue()),
+                Path.Combine(modelsDir, SharedFolderType.IpAdapters15.GetStringValue()),
+                Path.Combine(modelsDir, SharedFolderType.IpAdaptersXl.GetStringValue())
             );
-            nodeValue.Children["prompt_expansion"] = Path.Combine(modelsDir, "PromptExpansion");
-            nodeValue.Children["ultralytics"] = Path.Combine(modelsDir, "Ultralytics");
-            nodeValue.Children["ultralytics_bbox"] = Path.Combine(modelsDir, "Ultralytics", "bbox");
-            nodeValue.Children["ultralytics_segm"] = Path.Combine(modelsDir, "Ultralytics", "segm");
-            nodeValue.Children["sams"] = Path.Combine(modelsDir, "Sams");
-            nodeValue.Children["diffusion_models"] = Path.Combine(modelsDir, "Unet");
+            nodeValue.Children["prompt_expansion"] = Path.Combine(
+                modelsDir,
+                SharedFolderType.PromptExpansion.GetStringValue()
+            );
+            nodeValue.Children["ultralytics"] = Path.Combine(
+                modelsDir,
+                SharedFolderType.Ultralytics.GetStringValue()
+            );
+            nodeValue.Children["ultralytics_bbox"] = Path.Combine(
+                modelsDir,
+                SharedFolderType.Ultralytics.GetStringValue(),
+                "bbox"
+            );
+            nodeValue.Children["ultralytics_segm"] = Path.Combine(
+                modelsDir,
+                SharedFolderType.Ultralytics.GetStringValue(),
+                "segm"
+            );
+            nodeValue.Children["sams"] = Path.Combine(modelsDir, SharedFolderType.Sams.GetStringValue());
+            nodeValue.Children["diffusion_models"] = Path.Combine(
+                modelsDir,
+                SharedFolderType.DiffusionModels.GetStringValue()
+            );
         }
         else
         {
@@ -447,43 +486,64 @@ public class ComfyUI(
                 new YamlScalarNode("stability_matrix"),
                 new YamlMappingNode
                 {
-                    { "checkpoints", Path.Combine(modelsDir, "StableDiffusion") },
-                    { "vae", Path.Combine(modelsDir, "VAE") },
-                    { "loras", $"{Path.Combine(modelsDir, "Lora")}\n{Path.Combine(modelsDir, "LyCORIS")}" },
+                    {
+                        "checkpoints",
+                        Path.Combine(modelsDir, SharedFolderType.StableDiffusion.GetStringValue())
+                    },
+                    { "vae", Path.Combine(modelsDir, SharedFolderType.VAE.GetStringValue()) },
+                    {
+                        "loras",
+                        $"{Path.Combine(modelsDir, SharedFolderType.Lora.GetStringValue())}\n{Path.Combine(modelsDir, SharedFolderType.LyCORIS.GetStringValue())}"
+                    },
                     {
                         "upscale_models",
-                        $"{Path.Combine(modelsDir, "ESRGAN")}\n{Path.Combine(modelsDir, "RealESRGAN")}\n{Path.Combine(modelsDir, "SwinIR")}"
+                        $"{Path.Combine(modelsDir, SharedFolderType.ESRGAN.GetStringValue())}\n{Path.Combine(modelsDir, SharedFolderType.RealESRGAN.GetStringValue())}\n{Path.Combine(modelsDir, SharedFolderType.SwinIR.GetStringValue())}"
                     },
-                    { "embeddings", Path.Combine(modelsDir, "TextualInversion") },
-                    { "hypernetworks", Path.Combine(modelsDir, "Hypernetwork") },
+                    { "embeddings", Path.Combine(modelsDir, SharedFolderType.Embeddings.GetStringValue()) },
+                    {
+                        "hypernetworks",
+                        Path.Combine(modelsDir, SharedFolderType.Hypernetwork.GetStringValue())
+                    },
                     {
                         "controlnet",
                         string.Join(
                             '\n',
-                            Path.Combine(modelsDir, "ControlNet"),
-                            Path.Combine(modelsDir, "T2IAdapter")
+                            Path.Combine(modelsDir, SharedFolderType.ControlNet.GetStringValue()),
+                            Path.Combine(modelsDir, SharedFolderType.T2IAdapter.GetStringValue())
                         )
                     },
-                    { "clip", Path.Combine(modelsDir, "CLIP") },
-                    { "clip_vision", Path.Combine(modelsDir, "InvokeClipVision") },
-                    { "diffusers", Path.Combine(modelsDir, "Diffusers") },
-                    { "gligen", Path.Combine(modelsDir, "GLIGEN") },
-                    { "vae_approx", Path.Combine(modelsDir, "ApproxVAE") },
+                    { "clip", Path.Combine(modelsDir, SharedFolderType.TextEncoders.GetStringValue()) },
+                    { "clip_vision", Path.Combine(modelsDir, SharedFolderType.ClipVision.GetStringValue()) },
+                    { "diffusers", Path.Combine(modelsDir, SharedFolderType.Diffusers.GetStringValue()) },
+                    { "gligen", Path.Combine(modelsDir, SharedFolderType.GLIGEN.GetStringValue()) },
+                    { "vae_approx", Path.Combine(modelsDir, SharedFolderType.ApproxVAE.GetStringValue()) },
                     {
                         "ipadapter",
                         string.Join(
                             '\n',
-                            Path.Combine(modelsDir, "IpAdapter"),
-                            Path.Combine(modelsDir, "InvokeIpAdapters15"),
-                            Path.Combine(modelsDir, "InvokeIpAdaptersXl")
+                            Path.Combine(modelsDir, SharedFolderType.IpAdapter.GetStringValue()),
+                            Path.Combine(modelsDir, SharedFolderType.IpAdapters15.GetStringValue()),
+                            Path.Combine(modelsDir, SharedFolderType.IpAdaptersXl.GetStringValue())
                         )
                     },
-                    { "prompt_expansion", Path.Combine(modelsDir, "PromptExpansion") },
-                    { "ultralytics", Path.Combine(modelsDir, "Ultralytics") },
-                    { "ultralytics_bbox", Path.Combine(modelsDir, "Ultralytics", "bbox") },
-                    { "ultralytics_segm", Path.Combine(modelsDir, "Ultralytics", "segm") },
-                    { "sams", Path.Combine(modelsDir, "Sams") },
-                    { "diffusion_models", Path.Combine(modelsDir, "Unet") }
+                    {
+                        "prompt_expansion",
+                        Path.Combine(modelsDir, SharedFolderType.PromptExpansion.GetStringValue())
+                    },
+                    { "ultralytics", Path.Combine(modelsDir, SharedFolderType.Ultralytics.GetStringValue()) },
+                    {
+                        "ultralytics_bbox",
+                        Path.Combine(modelsDir, SharedFolderType.Ultralytics.GetStringValue(), "bbox")
+                    },
+                    {
+                        "ultralytics_segm",
+                        Path.Combine(modelsDir, SharedFolderType.Ultralytics.GetStringValue(), "segm")
+                    },
+                    { "sams", Path.Combine(modelsDir, SharedFolderType.Sams.GetStringValue()) },
+                    {
+                        "diffusion_models",
+                        Path.Combine(modelsDir, SharedFolderType.DiffusionModels.GetStringValue())
+                    }
                 }
             );
         }

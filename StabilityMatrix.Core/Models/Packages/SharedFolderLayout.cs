@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using StabilityMatrix.Core.Models.Packages.Config;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -8,6 +9,10 @@ public record SharedFolderLayout
     /// Optional config file path, relative from package installation directory
     /// </summary>
     public string? RelativeConfigPath { get; set; }
+
+    public ConfigFileType? ConfigFileType { get; set; }
+
+    public ConfigSharingOptions ConfigSharingOptions { get; set; } = ConfigSharingOptions.Default;
 
     public IImmutableList<SharedFolderLayoutRule> Rules { get; set; } = [];
 

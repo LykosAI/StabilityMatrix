@@ -8,17 +8,22 @@ public readonly record struct SharedFolderLayoutRule
 
     public string[] ConfigDocumentPaths { get; init; }
 
+    public bool IsRoot { get; init; }
+
     public SharedFolderLayoutRule()
     {
         SourceTypes = [];
         TargetRelativePaths = [];
         ConfigDocumentPaths = [];
+        IsRoot = false;
     }
 
     public SharedFolderLayoutRule(SharedFolderType[] types, string[] targets)
     {
         SourceTypes = types;
         TargetRelativePaths = targets;
+        ConfigDocumentPaths = [];
+        IsRoot = false;
     }
 
     public SharedFolderLayoutRule(SharedFolderType[] types, string[] targets, string[] configs)
@@ -26,6 +31,7 @@ public readonly record struct SharedFolderLayoutRule
         SourceTypes = types;
         TargetRelativePaths = targets;
         ConfigDocumentPaths = configs;
+        IsRoot = false;
     }
 
     public SharedFolderLayoutRule Union(SharedFolderLayoutRule other)
@@ -34,7 +40,8 @@ public readonly record struct SharedFolderLayoutRule
         {
             SourceTypes = SourceTypes.Union(other.SourceTypes).ToArray(),
             TargetRelativePaths = TargetRelativePaths.Union(other.TargetRelativePaths).ToArray(),
-            ConfigDocumentPaths = ConfigDocumentPaths.Union(other.ConfigDocumentPaths).ToArray()
+            ConfigDocumentPaths = ConfigDocumentPaths.Union(other.ConfigDocumentPaths).ToArray(),
+            IsRoot = IsRoot || other.IsRoot
         };
     }
 }

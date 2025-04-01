@@ -67,6 +67,7 @@
       <PackageReference Include="Sentry.NLog" />
       <PackageReference Include="SharpCompress" />
       <PackageReference Include="SkiaSharp" />
+      <PackageReference Include="TextMateSharp.Grammars" />
       <PackageReference Include="Websocket.Client" />
       <PackageReference Include="YamlDotNet" />
       <PackageReference Include="Yoh.Text.Json.NamingPolicies" />

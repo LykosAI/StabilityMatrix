@@ -21,6 +21,7 @@ using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.PromptSyntax;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
@@ -253,6 +254,8 @@ public partial class PromptCardViewModel
     {
         var md = $$"""
                   ## {{Resources.Label_Emphasis}}
+                  You can also use (`Ctrl+Up`/`Ctrl+Down`) in the editor to adjust the 
+                  weight emphasis of the token under the caret or the currently selected text.
                   ```prompt
                   (keyword)
                   (keyword:1.0)
@@ -330,6 +333,25 @@ public partial class PromptCardViewModel
         var tokens = prompt.TokenizeResult.Tokens;
 
         var builder = new StringBuilder();
+
+        try
+        {
+            var astBuilder = new PromptSyntaxBuilder(prompt.TokenizeResult, prompt.RawText);
+            var ast = astBuilder.BuildAST();
+            builder.AppendLine("## AST:");
+            builder.AppendLine("```csharp");
+            builder.AppendLine(ast.ToDebugString());
+            builder.AppendLine("```");
+        }
+        catch (PromptError e)
+        {
+            builder.AppendLine($"## AST (Error)");
+            builder.AppendLine($"({e.GetType().Name} - {e.Message})");
+            builder.AppendLine("```csharp");
+            builder.AppendLine(e.StackTrace);
+            builder.AppendLine("```");
+            throw;
+        }
 
         builder.AppendLine($"## Tokens ({tokens.Length}):");
         builder.AppendLine("```csharp");

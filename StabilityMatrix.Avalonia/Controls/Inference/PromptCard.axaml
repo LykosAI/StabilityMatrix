@@ -6,10 +6,10 @@
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
     xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
-    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
-    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
     x:DataType="vmInference:PromptCardViewModel">
     <Design.PreviewWith>
         <Grid Width="460" Height="600">
@@ -21,9 +21,11 @@
         <!--  Set Defaults  -->
         <Setter Property="Template">
             <ControlTemplate>
-                <controls:Card Padding="12" HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
-                               VerticalAlignment="{TemplateBinding VerticalAlignment}"
-                               VerticalContentAlignment="Stretch">
+                <controls:Card
+                    Padding="12"
+                    HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                    VerticalAlignment="{TemplateBinding VerticalAlignment}"
+                    VerticalContentAlignment="Stretch">
                     <controls:Card.Styles>
                         <Style Selector="avaloniaEdit|TextEditor">
                             <Setter Property="Margin" Value="0,8,0,8" />
@@ -37,8 +39,7 @@
                         </Style>
                     </controls:Card.Styles>
 
-                    <Grid RowDefinitions="*,16,*,16,Auto"
-                          Name="PART_RootGrid">
+                    <Grid Name="PART_RootGrid" RowDefinitions="*,16,*,16,Auto">
                         <!--  Prompt  -->
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,*">
                             <StackPanel
@@ -71,27 +72,27 @@
                                         icons:Attached.Icon="fa-solid fa-question"
                                         Classes="transparent-full"
                                         Command="{Binding ShowHelpDialogCommand}" />
-                                    
-                                    <ui:TeachingTip 
-                                        Target="{Binding #PART_HelpButton}"
+
+                                    <ui:TeachingTip
                                         Title="{x:Static lang:Resources.TeachingTip_InferencePromptHelpButton}"
-                                        IsOpen="{Binding IsHelpButtonTeachingTipOpen, Mode=TwoWay}"/>
+                                        IsOpen="{Binding IsHelpButtonTeachingTipOpen, Mode=TwoWay}"
+                                        Target="{Binding #PART_HelpButton}" />
                                 </Panel>
-                                
+
                                 <Button
                                     Padding="8,4"
                                     Command="{Binding DebugShowTokensCommand}"
                                     Content="Show Tokens"
                                     IsVisible="{Binding SharedState.IsDebugMode}" />
-                                
+
                             </StackPanel>
 
                             <Border
                                 Grid.Row="1"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
-                                Classes="theme-dark"
                                 VerticalAlignment="Stretch"
+                                Classes="theme-dark"
                                 CornerRadius="4">
 
                                 <avaloniaEdit:TextEditor
@@ -104,6 +105,7 @@
                                             CompletionProvider="{Binding CompletionProvider}"
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
                                             TokenizerProvider="{Binding TokenizerProvider}" />
+                                        <behaviors:TextEditorWeightAdjustmentBehavior TokenizerProvider="{Binding TokenizerProvider}" />
                                         <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
@@ -120,8 +122,10 @@
                             Opacity="0.3" />
 
                         <!--  Negative Prompt  -->
-                        <Grid Grid.Row="2" RowDefinitions="Auto,*"
-                              IsVisible="{Binding IsNegativePromptEnabled, FallbackValue=True, TargetNullValue=True}">
+                        <Grid
+                            Grid.Row="2"
+                            IsVisible="{Binding IsNegativePromptEnabled, FallbackValue=True, TargetNullValue=True}"
+                            RowDefinitions="Auto,*">
                             <StackPanel Margin="4,0,4,8" Orientation="Horizontal">
                                 <TextBlock FontSize="14" Text="Negative Prompt" />
                                 <icons:Icon
@@ -132,8 +136,8 @@
 
                             <Border
                                 Grid.Row="1"
-                                Classes="theme-dark"
                                 VerticalAlignment="Stretch"
+                                Classes="theme-dark"
                                 CornerRadius="4">
 
                                 <avaloniaEdit:TextEditor
@@ -146,6 +150,7 @@
                                             CompletionProvider="{Binding CompletionProvider}"
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
                                             TokenizerProvider="{Binding TokenizerProvider}" />
+                                        <behaviors:TextEditorWeightAdjustmentBehavior TokenizerProvider="{Binding TokenizerProvider}" />
                                         <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
@@ -153,7 +158,7 @@
 
                             </Border>
                         </Grid>
-                        
+
                         <GridSplitter
                             Grid.Row="3"
                             MaxWidth="45"
@@ -161,14 +166,12 @@
                             BorderThickness="1"
                             CornerRadius="4"
                             Opacity="0.3" />
-                        
+
                         <controls:StackEditableCard
+                            Grid.Row="4"
                             Margin="2,0,0,0"
-                            DataContext="{Binding ModulesCardViewModel}"
-                            Grid.Row="4">
-                            
-                        </controls:StackEditableCard>
-                        
+                            DataContext="{Binding ModulesCardViewModel}" />
+
                         <!--  Styles and Prompt Expansions  -->
                         <!--<Grid Grid.Row="4" RowDefinitions="Auto,*">
                             <StackPanel Margin="4,0,4,8" Orientation="Horizontal">

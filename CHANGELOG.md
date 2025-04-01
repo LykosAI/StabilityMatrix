@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.14.0-pre.1
 ### Added
-- Added new Package Command (in the 3-dots menu) for installing Triton & SageAttention in ComfyUI 
+- Added new Package Command (in the 3-dots menu) for installing Triton & SageAttention in ComfyUI
+- Added Abstract Syntax Tree (AST) parsing for Inference prompts. This provides a more robust internal understanding of prompt structure, paving the way for future enhancements.
+- Added hotkey (`Ctrl+Up`/`Ctrl+Down`) in Inference prompt editors to adjust the weight emphasis of the token under the caret or the currently selected text.
+  - This automatically wraps the token/selection in parentheses `()` if it's not already weighted.
+  - It modifies existing weights within parentheses or adds weights if none exist (e.g. `(word:1.1)`).
+  - Handles selection spanning multiple tokens intelligently.
 ### Changed
 - Changed the names of some of the shared model folders to better reflect their contents
 - Improved window state handling

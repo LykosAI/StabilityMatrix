@@ -173,7 +173,7 @@ public class Fooocus(
                 },
                 new SharedFolderLayoutRule
                 {
-                    SourceTypes = [SharedFolderType.CLIP],
+                    SourceTypes = [SharedFolderType.TextEncoders],
                     TargetRelativePaths = ["models/clip"]
                 },
                 new SharedFolderLayoutRule
@@ -193,7 +193,7 @@ public class Fooocus(
                 },
                 new SharedFolderLayoutRule
                 {
-                    SourceTypes = [SharedFolderType.TextualInversion],
+                    SourceTypes = [SharedFolderType.Embeddings],
                     TargetRelativePaths = ["models/embeddings"],
                     ConfigDocumentPaths = ["path_embeddings"]
                 },
@@ -217,7 +217,7 @@ public class Fooocus(
                 },
                 new SharedFolderLayoutRule
                 {
-                    SourceTypes = [SharedFolderType.InvokeClipVision],
+                    SourceTypes = [SharedFolderType.ClipVision],
                     TargetRelativePaths = ["models/clip_vision"],
                     ConfigDocumentPaths = ["path_clip_vision"]
                 },

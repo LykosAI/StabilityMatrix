@@ -46,9 +46,9 @@ public class Sdfx(
             [SharedFolderType.StableDiffusion] = new[] { "data/models/checkpoints" },
             [SharedFolderType.Diffusers] = new[] { "data/models/diffusers" },
             [SharedFolderType.Lora] = new[] { "data/models/loras" },
-            [SharedFolderType.CLIP] = new[] { "data/models/clip" },
-            [SharedFolderType.InvokeClipVision] = new[] { "data/models/clip_vision" },
-            [SharedFolderType.TextualInversion] = new[] { "data/models/embeddings" },
+            [SharedFolderType.TextEncoders] = new[] { "data/models/clip" },
+            [SharedFolderType.ClipVision] = new[] { "data/models/clip_vision" },
+            [SharedFolderType.Embeddings] = new[] { "data/models/embeddings" },
             [SharedFolderType.VAE] = new[] { "data/models/vae" },
             [SharedFolderType.ApproxVAE] = new[] { "data/models/vae_approx" },
             [SharedFolderType.ControlNet] = new[] { "data/models/controlnet/ControlNet" },
@@ -56,8 +56,8 @@ public class Sdfx(
             [SharedFolderType.ESRGAN] = new[] { "data/models/upscale_models" },
             [SharedFolderType.Hypernetwork] = new[] { "data/models/hypernetworks" },
             [SharedFolderType.IpAdapter] = new[] { "data/models/ipadapter/base" },
-            [SharedFolderType.InvokeIpAdapters15] = new[] { "data/models/ipadapter/sd15" },
-            [SharedFolderType.InvokeIpAdaptersXl] = new[] { "data/models/ipadapter/sdxl" },
+            [SharedFolderType.IpAdapters15] = new[] { "data/models/ipadapter/sd15" },
+            [SharedFolderType.IpAdaptersXl] = new[] { "data/models/ipadapter/sdxl" },
             [SharedFolderType.T2IAdapter] = new[] { "data/models/controlnet/T2IAdapter" },
             [SharedFolderType.PromptExpansion] = new[] { "data/models/prompt_expansion" }
         };

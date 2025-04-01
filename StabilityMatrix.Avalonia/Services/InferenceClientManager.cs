@@ -587,12 +587,16 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         downloadableSamModelsSource.EditDiff(downloadableSamModels, HybridModelFile.Comparer);
 
         unetModelsSource.EditDiff(
-            modelIndexService.FindByModelType(SharedFolderType.Unet).Select(HybridModelFile.FromLocal),
+            modelIndexService
+                .FindByModelType(SharedFolderType.DiffusionModels)
+                .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
         clipModelsSource.EditDiff(
-            modelIndexService.FindByModelType(SharedFolderType.CLIP).Select(HybridModelFile.FromLocal),
+            modelIndexService
+                .FindByModelType(SharedFolderType.TextEncoders)
+                .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
@@ -602,9 +606,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         downloadableClipModelsSource.EditDiff(downloadableClipModels, HybridModelFile.Comparer);
 
         clipVisionModelsSource.EditDiff(
-            modelIndexService
-                .FindByModelType(SharedFolderType.InvokeClipVision)
-                .Select(HybridModelFile.FromLocal),
+            modelIndexService.FindByModelType(SharedFolderType.ClipVision).Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 

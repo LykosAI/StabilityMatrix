@@ -145,7 +145,7 @@ public partial class PackageInstallDetailViewModel(
         if (SelectedPackage is StableSwarm)
         {
             var comfy = settingsManager.Settings.InstalledPackages.FirstOrDefault(
-                x => x.PackageName == nameof(ComfyUI)
+                x => x.PackageName is nameof(ComfyUI) or "ComfyUI-Zluda"
             );
 
             if (comfy == null)

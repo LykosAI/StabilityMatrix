@@ -305,7 +305,7 @@ public static class RemoteModels
                 HashSha256 = "660c6f5b1abae9dc498ac2d21e1347d2abdb0cf6c0c0c8576cd796491d9a6cdd",
                 Author = "OpenAI",
                 LicenseType = "MIT",
-                ContextType = SharedFolderType.CLIP,
+                ContextType = SharedFolderType.TextEncoders,
             },
             new()
             {
@@ -316,7 +316,7 @@ public static class RemoteModels
                 HashSha256 = "6e480b09fae049a72d2a8c5fbccb8d3e92febeb233bbe9dfe7256958a9167635",
                 Author = "Google",
                 LicenseType = "Apache 2.0",
-                ContextType = SharedFolderType.CLIP,
+                ContextType = SharedFolderType.TextEncoders,
             },
             new()
             {
@@ -327,7 +327,7 @@ public static class RemoteModels
                 HashSha256 = "7d330da4816157540d6bb7838bf63a0f02f573fc48ca4d8de34bb0cbfd514f09",
                 Author = "Google",
                 LicenseType = "Apache 2.0",
-                ContextType = SharedFolderType.CLIP,
+                ContextType = SharedFolderType.TextEncoders,
             },
             new()
             {
@@ -338,7 +338,7 @@ public static class RemoteModels
                 HashSha256 = "c3355d30191f1f066b26d93fba017ae9809dce6c627dda5f6a66eaa651204f68",
                 Author = "Google",
                 LicenseType = "Apache 2.0",
-                ContextType = SharedFolderType.CLIP,
+                ContextType = SharedFolderType.TextEncoders,
             },
             new()
             {
@@ -349,7 +349,7 @@ public static class RemoteModels
                 HashSha256 = "7b8850f1961e1cf8a77cca4c964a358d303f490833c6c087d0cff4b2f99db2af",
                 Author = "Google",
                 LicenseType = "Apache 2.0",
-                ContextType = SharedFolderType.CLIP,
+                ContextType = SharedFolderType.TextEncoders,
             }
         ];
 
@@ -367,7 +367,7 @@ public static class RemoteModels
                 HashSha256 = "64a7ef761bfccbadbaa3da77366aac4185a6c58fa5de5f589b42a65bcc21f161",
                 Author = "OpenAI",
                 LicenseType = "MIT",
-                ContextType = SharedFolderType.InvokeClipVision,
+                ContextType = SharedFolderType.ClipVision,
             }
         ];
 

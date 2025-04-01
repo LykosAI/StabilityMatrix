@@ -16,7 +16,7 @@ public class SharedFoldersTests
         {
             [SharedFolderType.StableDiffusion] = "models/Stable-diffusion",
             [SharedFolderType.ESRGAN] = "models/ESRGAN",
-            [SharedFolderType.TextualInversion] = "embeddings",
+            [SharedFolderType.Embeddings] = "embeddings",
         };
 
     [TestInitialize]
@@ -41,7 +41,7 @@ public class SharedFoldersTests
         {
             [SharedFolderType.StableDiffusion] = new[] { "models/Stable-diffusion" },
             [SharedFolderType.ESRGAN] = new[] { "models/ESRGAN" },
-            [SharedFolderType.TextualInversion] = new[] { "embeddings" },
+            [SharedFolderType.Embeddings] = new[] { "embeddings" },
         };
         SharedFolders
             .UpdateLinksForPackage(definitions, TempModelsFolder, TempPackageFolder)
@@ -60,10 +60,7 @@ public class SharedFoldersTests
             var packagePath = Path.Combine(TempPackageFolder, relativePath);
             var modelFolder = Path.Combine(TempModelsFolder, folderType.GetStringValue());
             // Should exist and be a junction
-            Assert.IsTrue(
-                Directory.Exists(packagePath),
-                $"Package folder {packagePath} does not exist."
-            );
+            Assert.IsTrue(Directory.Exists(packagePath), $"Package folder {packagePath} does not exist.");
             var info = new DirectoryInfo(packagePath);
             Assert.IsTrue(
                 info.Attributes.HasFlag(FileAttributes.ReparsePoint),
@@ -108,10 +105,7 @@ public class SharedFoldersTests
 
         // Now delete the junction
         Directory.Delete(packagePath, false);
-        Assert.IsFalse(
-            Directory.Exists(packagePath),
-            $"Package folder {packagePath} should not exist."
-        );
+        Assert.IsFalse(Directory.Exists(packagePath), $"Package folder {packagePath} should not exist.");
 
         // The file should still exist in the model folder
         Assert.IsTrue(

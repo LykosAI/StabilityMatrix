@@ -92,6 +92,7 @@ public class WindowsPrerequisiteHelper(
 
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
+    public bool IsVcBuildToolsInstalled => Directory.Exists(VcBuildToolsExistsPath);
 
     public async Task RunGit(
         ProcessArgs args,
@@ -552,7 +553,7 @@ public class WindowsPrerequisiteHelper(
 
         var process = ProcessRunner.StartAnsiProcess(
             VcBuildToolsDownloadPath,
-            "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended",
+            "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools;includeRecommended;includeOptional",
             outputDataReceived: output =>
                 progress?.Report(
                     new ProgressReport(

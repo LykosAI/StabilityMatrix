@@ -184,6 +184,15 @@ public static class Program
 
         var app = AppBuilder.Configure<App>().UsePlatformDetect().WithInterFont().LogToTrace();
 
+        if (Compat.IsLinux)
+        {
+            app = app.With(new X11PlatformOptions { OverlayPopups = true });
+        }
+        else if (Compat.IsMacOS)
+        {
+            app = app.With(new AvaloniaNativePlatformOptions { OverlayPopups = true });
+        }
+
         if (Args.UseOpenGlRendering)
         {
             app = app.With(

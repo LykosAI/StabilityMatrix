@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Extensions;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.Views.Dialogs;
@@ -21,9 +22,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [View(typeof(ModelMetadataEditorDialog))]
 [ManagedService]
 [RegisterTransient<ModelMetadataEditorDialogViewModel>]
-public partial class ModelMetadataEditorDialogViewModel(ISettingsManager settingsManager)
-    : ContentDialogViewModelBase,
-        IDropTarget
+public partial class ModelMetadataEditorDialogViewModel(
+    ISettingsManager settingsManager,
+    ICivitBaseModelTypeService baseModelTypeService
+) : ContentDialogViewModelBase, IDropTarget
 {
     [ObservableProperty]
     private List<CheckpointFileViewModel> checkpointFiles = [];
@@ -47,7 +49,10 @@ public partial class ModelMetadataEditorDialogViewModel(ISettingsManager setting
     private string versionName = string.Empty;
 
     [ObservableProperty]
-    private CivitBaseModelType baseModelType = CivitBaseModelType.Other;
+    private string baseModelType = "Other";
+
+    [ObservableProperty]
+    private List<string> baseModelTypes = [];
 
     [ObservableProperty]
     private string trainedWords = string.Empty;
@@ -76,8 +81,9 @@ public partial class ModelMetadataEditorDialogViewModel(ISettingsManager setting
         ThumbnailFilePath = sourceFile.FullPath;
     }
 
-    partial void OnCheckpointFilesChanged(List<CheckpointFileViewModel> value)
+    public override async Task OnLoadedAsync()
     {
+        BaseModelTypes = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
         if (IsEditingMultipleCheckpoints)
             return;
 
@@ -89,22 +95,12 @@ public partial class ModelMetadataEditorDialogViewModel(ISettingsManager setting
         {
             ModelName = firstCheckpoint.CheckpointFile.DisplayModelName;
             ThumbnailFilePath = GetImagePath(firstCheckpoint.CheckpointFile);
-            BaseModelType = CivitBaseModelType.Other;
+            BaseModelType = "Other";
             ModelType = CivitModelType.Other;
             return;
         }
 
-        if (
-            EnumExtensions.TryParseEnumStringValue(
-                firstCheckpoint.CheckpointFile.ConnectedModelInfo.BaseModel,
-                CivitBaseModelType.Other,
-                out var baseModel
-            )
-        )
-        {
-            BaseModelType = baseModel;
-        }
-
+        BaseModelType = firstCheckpoint.CheckpointFile.ConnectedModelInfo.BaseModel ?? "Other";
         ModelName = firstCheckpoint.CheckpointFile.ConnectedModelInfo.ModelName;
         ModelDescription = firstCheckpoint.CheckpointFile.ConnectedModelInfo.ModelDescription;
         IsNsfw = firstCheckpoint.CheckpointFile.ConnectedModelInfo.Nsfw;

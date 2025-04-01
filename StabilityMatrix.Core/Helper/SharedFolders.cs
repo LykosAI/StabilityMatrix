@@ -1,5 +1,6 @@
 ﻿using Injectio.Attributes;
 using NLog;
+using OneOf.Types;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
@@ -17,6 +18,18 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
         IAsyncDisposable
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    // mapping is old:new
+    private static readonly Dictionary<string, string> LegacySharedFolderMapping =
+        new()
+        {
+            { "CLIP", "TextEncoders" },
+            { "Unet", "DiffusionModels" },
+            { "InvokeClipVision", "ClipVision" },
+            { "InvokeIpAdapters15", "IpAdapters15" },
+            { "InvokeIpAdaptersXl", "IpAdaptersXl" },
+            { "TextualInversion", "Embeddings" }
+        };
 
     public bool IsDisposed { get; private set; }
 
@@ -236,6 +249,38 @@ public class SharedFolders(ISettingsManager settingsManager, IPackageFactory pac
                 bboxDir.Create();
                 segmDir.Create();
             }
+        }
+
+        MigrateOldSharedFolderPaths(rootModelsDir);
+    }
+
+    private static void MigrateOldSharedFolderPaths(DirectoryPath rootModelsDir)
+    {
+        foreach (var (legacyFolderName, newFolderName) in LegacySharedFolderMapping)
+        {
+            var fullPath = rootModelsDir.JoinDir(legacyFolderName);
+            if (!fullPath.Exists)
+                continue;
+
+            foreach (var file in fullPath.EnumerateFiles(searchOption: SearchOption.AllDirectories))
+            {
+                var relativePath = file.RelativeTo(fullPath);
+                var newPath = rootModelsDir.JoinFile(newFolderName, relativePath);
+                newPath.Directory?.Create();
+                file.MoveTo(newPath);
+            }
+        }
+
+        // delete the old directories *only if they're empty*
+        foreach (
+            var fullPath in from legacyFolderName in LegacySharedFolderMapping.Keys
+            select rootModelsDir.JoinDir(legacyFolderName) into fullPath
+            where fullPath.Exists
+            where !fullPath.EnumerateFiles(searchOption: SearchOption.AllDirectories).Any()
+            select fullPath
+        )
+        {
+            fullPath.Delete(true);
         }
     }
 

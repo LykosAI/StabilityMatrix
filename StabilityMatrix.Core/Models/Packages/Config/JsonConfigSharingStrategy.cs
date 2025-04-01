@@ -9,6 +9,7 @@ public class JsonConfigSharingStrategy : IConfigSharingStrategy
         Stream configStream,
         SharedFolderLayout layout,
         Func<SharedFolderLayoutRule, IEnumerable<string>> pathsSelector,
+        IEnumerable<string> clearPaths,
         ConfigSharingOptions options,
         CancellationToken cancellationToken = default
     )
@@ -48,7 +49,7 @@ public class JsonConfigSharingStrategy : IConfigSharingStrategy
             }
         }
 
-        UpdateJsonConfig(layout, jsonNode, pathsSelector, options);
+        UpdateJsonConfig(layout, jsonNode, pathsSelector, clearPaths, options);
 
         // Reset stream to original position (or beginning if new/failed) before writing
         configStream.Seek(initialPosition, SeekOrigin.Begin);
@@ -65,6 +66,7 @@ public class JsonConfigSharingStrategy : IConfigSharingStrategy
         SharedFolderLayout layout,
         JsonObject rootNode, // Changed parameter name for clarity
         Func<SharedFolderLayoutRule, IEnumerable<string>> pathsSelector,
+        IEnumerable<string> clearPaths,
         ConfigSharingOptions options
     )
     {

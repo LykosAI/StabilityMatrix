@@ -15,4 +15,7 @@ public record ConfigSharingOptions
 
     // For YAML/FDS: Key under which to store SM paths (e.g., "stability_matrix")
     public string? RootKey { get; set; }
+
+    // Do we want to clear the root key / set to relative paths when clearing?
+    public ConfigDefaultType ConfigDefaultType { get; set; } = ConfigDefaultType.TargetRelativePaths;
 }

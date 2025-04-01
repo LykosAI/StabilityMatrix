@@ -8,6 +8,7 @@ public class FdsConfigSharingStrategy : IConfigSharingStrategy
         Stream configStream,
         SharedFolderLayout layout,
         Func<SharedFolderLayoutRule, IEnumerable<string>> pathsSelector,
+        IEnumerable<string> clearPaths,
         ConfigSharingOptions options,
         CancellationToken cancellationToken = default
     )
@@ -22,7 +23,7 @@ public class FdsConfigSharingStrategy : IConfigSharingStrategy
             {
                 // FDSUtility reads from the current position
                 using var reader = new StreamReader(configStream, leaveOpen: true);
-                var fdsContent = await reader.ReadToEndAsync().ConfigureAwait(false);
+                var fdsContent = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
                 rootSection = new FDSSection(fdsContent);
             }
             catch (Exception ex) // FDSUtility might throw various exceptions on parse errors
@@ -39,7 +40,7 @@ public class FdsConfigSharingStrategy : IConfigSharingStrategy
             rootSection = new FDSSection();
         }
 
-        UpdateFdsConfig(layout, rootSection, pathsSelector, options);
+        UpdateFdsConfig(layout, rootSection, pathsSelector, clearPaths, options);
 
         // Reset stream to original position before writing
         configStream.Seek(initialPosition, SeekOrigin.Begin);
@@ -52,7 +53,7 @@ public class FdsConfigSharingStrategy : IConfigSharingStrategy
             await writer
                 .WriteAsync(rootSection.SaveToString().AsMemory(), cancellationToken)
                 .ConfigureAwait(false);
-            await writer.FlushAsync().ConfigureAwait(false); // Ensure content is written
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(false); // Ensure content is written
         }
         await configStream.FlushAsync(cancellationToken).ConfigureAwait(false); // Flush the underlying stream
     }
@@ -61,6 +62,7 @@ public class FdsConfigSharingStrategy : IConfigSharingStrategy
         SharedFolderLayout layout,
         FDSSection rootSection,
         Func<SharedFolderLayoutRule, IEnumerable<string>> pathsSelector,
+        IEnumerable<string> clearPaths,
         ConfigSharingOptions options
     )
     {

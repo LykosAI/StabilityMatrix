@@ -1,8 +1,10 @@
 ﻿using System.Collections.Immutable;
+using System.ComponentModel;
 using StabilityMatrix.Core.Models.Packages.Config;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
+[Localizable(false)]
 public record SharedFolderLayout
 {
     /// <summary>

@@ -11,12 +11,13 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
         Stream configStream,
         SharedFolderLayout layout,
         Func<SharedFolderLayoutRule, IEnumerable<string>> pathsSelector,
+        IEnumerable<string> clearPaths,
         ConfigSharingOptions options,
         CancellationToken cancellationToken = default
     )
     {
         YamlMappingNode rootNode;
-        YamlStream yamlStream = new();
+        YamlStream yamlStream = [];
         var initialPosition = configStream.Position;
         var isEmpty = configStream.Length - initialPosition == 0;
 
@@ -39,7 +40,7 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
                     System.Diagnostics.Debug.WriteLine(
                         $"YAML config exists but is not a mapping node. Treating as new."
                     );
-                    rootNode = new YamlMappingNode();
+                    rootNode = [];
                     yamlStream = new YamlStream(new YamlDocument(rootNode)); // Reset stream content
                     isEmpty = true;
                 }
@@ -50,7 +51,7 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
                 System.Diagnostics.Debug.WriteLine(
                     $"Error deserializing YAML config: {ex.Message}. Treating as new."
                 );
-                rootNode = new YamlMappingNode();
+                rootNode = [];
                 yamlStream = new YamlStream(new YamlDocument(rootNode)); // Reset stream content
                 isEmpty = true;
             }
@@ -58,11 +59,11 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
         else
         {
             // Stream is empty, create new structure
-            rootNode = new YamlMappingNode();
+            rootNode = [];
             yamlStream.Add(new YamlDocument(rootNode));
         }
 
-        UpdateYamlConfig(layout, rootNode, pathsSelector, options);
+        UpdateYamlConfig(layout, rootNode, pathsSelector, clearPaths, options);
 
         // Reset stream to original position (or beginning if new/failed) before writing
         configStream.Seek(initialPosition, SeekOrigin.Begin);
@@ -80,7 +81,7 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
                 .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults) // Optional: omit nulls/defaults
                 .Build();
             serializer.Serialize(writer, yamlStream.Documents[0].RootNode); // Serialize the modified root node
-            await writer.FlushAsync().ConfigureAwait(false); // Ensure content is written to stream
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(false); // Ensure content is written to stream
         }
         await configStream.FlushAsync(cancellationToken).ConfigureAwait(false); // Flush the underlying stream
     }
@@ -89,6 +90,7 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
         SharedFolderLayout layout,
         YamlMappingNode rootNode,
         Func<SharedFolderLayoutRule, IEnumerable<string>> pathsSelector,
+        IEnumerable<string> clearPaths,
         ConfigSharingOptions options
     )
     {
@@ -106,7 +108,7 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
             {
                 if (subNode != null)
                     rootNode.Children.Remove(rootKeyNode); // Remove if exists but wrong type
-                subMapping = new YamlMappingNode();
+                subMapping = [];
                 rootNode.Add(rootKeyNode, subMapping);
             }
             currentNode = subMapping; // Operate within the specified RootKey node
@@ -131,12 +133,18 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
                 /*valueNode = new YamlSequenceNode(
                     normalizedPaths.Select(p => new YamlScalarNode(p)).Cast<YamlNode>()
                 );*/
-                // --- OR Use Literal Scalar ---
+                // --- Multi-line literal scalar (ComfyUI default) ---
                 var multiLinePath = string.Join("\n", normalizedPaths);
                 valueNode = new YamlScalarNode(multiLinePath) { Style = ScalarStyle.Literal };
             }
 
             SetYamlValue(writableNode, configPath, valueNode); // Use helper
+        }
+
+        // Clear specified paths
+        foreach (var clearPath in clearPaths)
+        {
+            SetYamlValue(rootNode, clearPath, null); // Note we use root node here instead
         }
 
         // Optional: Cleanup empty nodes after setting values (could be complex)
@@ -218,10 +226,10 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
     private static void SetYamlValue(YamlMappingNode rootMapping, string dottedPath, YamlNode? value)
     {
         var segments = dottedPath.Split('.');
-        YamlMappingNode currentMapping = rootMapping;
+        var currentMapping = rootMapping;
 
         // Traverse or create nodes up to the parent of the target
-        for (int i = 0; i < segments.Length - 1; i++)
+        for (var i = 0; i < segments.Length - 1; i++)
         {
             var segmentNode = new YamlScalarNode(segments[i]);
             if (
@@ -232,7 +240,7 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
                 // If node doesn't exist or isn't a mapping, create it
                 if (nextNode != null)
                     currentMapping.Children.Remove(segmentNode); // Remove if wrong type
-                nextMapping = new YamlMappingNode();
+                nextMapping = [];
                 currentMapping.Add(segmentNode, nextMapping);
             }
             currentMapping = nextMapping;

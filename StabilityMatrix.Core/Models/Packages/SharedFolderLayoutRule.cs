@@ -8,7 +8,15 @@ public readonly record struct SharedFolderLayoutRule
 
     public string[] ConfigDocumentPaths { get; init; }
 
+    /// <summary>
+    /// For rules that use the root models folder instead of a specific SharedFolderType
+    /// </summary>
     public bool IsRoot { get; init; }
+
+    /// <summary>
+    /// Optional sub-path from all source types to the target path.
+    /// </summary>
+    public string? SourceSubPath { get; init; }
 
     public SharedFolderLayoutRule()
     {

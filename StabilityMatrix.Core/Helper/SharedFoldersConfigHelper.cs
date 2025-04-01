@@ -78,10 +78,19 @@ public static class SharedFoldersConfigHelper
                         return [sharedModelsDirectory];
                     }
 
-                    return rule.SourceTypes.Select(type => type.GetStringValue()) // Get the enum string value (e.g., "StableDiffusion")
+                    var paths = rule.SourceTypes.Select(type => type.GetStringValue()) // Get the enum string value (e.g., "StableDiffusion")
                         .Where(folderName => !string.IsNullOrEmpty(folderName)) // Filter out potentially empty mappings
                         .Select(folderName => Path.Combine(sharedModelsDirectory, folderName)); // Combine with base models dir
+
+                    // If sub-path provided, add to all paths
+                    if (!string.IsNullOrEmpty(rule.SourceSubPath))
+                    {
+                        paths = paths.Select(path => Path.Combine(path, rule.SourceSubPath));
+                    }
+
+                    return paths;
                 },
+                [],
                 options,
                 cancellationToken
             )
@@ -135,6 +144,14 @@ public static class SharedFoldersConfigHelper
             throw new NotSupportedException($"Configuration file type '{fileType}' is not supported.");
         }
 
+        var clearPaths = new List<string>();
+
+        // If using clear root option, add the root key
+        if (options.ConfigDefaultType is ConfigDefaultType.ClearRoot)
+        {
+            clearPaths.Add(options.RootKey ?? "");
+        }
+
         await strategy
             .UpdateAndWriteAsync(
                 stream,
@@ -143,6 +160,7 @@ public static class SharedFoldersConfigHelper
                     rule.TargetRelativePaths.Select(
                         path => Path.Combine(packageRootDirectory, NormalizePathSlashes(path))
                     ), // Combine relative with package root
+                clearPaths,
                 options,
                 cancellationToken
             )

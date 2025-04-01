@@ -9,6 +9,7 @@ public interface IConfigSharingStrategy
         Stream configStream,
         SharedFolderLayout layout,
         Func<SharedFolderLayoutRule, IEnumerable<string>> pathsSelector,
+        IEnumerable<string> clearPaths,
         ConfigSharingOptions options,
         CancellationToken cancellationToken = default
     );

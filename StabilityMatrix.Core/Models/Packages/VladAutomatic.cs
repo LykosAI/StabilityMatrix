@@ -422,23 +422,74 @@ public class VladAutomatic(
             configRoot = new JsonObject();
         }
 
-        configRoot["ckpt_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "StableDiffusion");
-        configRoot["diffusers_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Diffusers");
-        configRoot["vae_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "VAE");
-        configRoot["lora_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Lora");
-        configRoot["lyco_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "LyCORIS");
-        configRoot["embeddings_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "TextualInversion");
-        configRoot["hypernetwork_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Hypernetwork");
-        configRoot["codeformer_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "Codeformer");
-        configRoot["gfpgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "GFPGAN");
-        configRoot["bsrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "BSRGAN");
-        configRoot["esrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ESRGAN");
-        configRoot["realesrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "RealESRGAN");
-        configRoot["scunet_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ScuNET");
-        configRoot["swinir_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "SwinIR");
-        configRoot["ldsr_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "LDSR");
-        configRoot["clip_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "CLIP");
-        configRoot["control_net_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ControlNet");
+        configRoot["ckpt_dir"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.StableDiffusion.GetStringValue()
+        );
+        configRoot["diffusers_dir"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.Diffusers.GetStringValue()
+        );
+        configRoot["vae_dir"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.VAE.GetStringValue()
+        );
+        configRoot["lora_dir"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.Lora.GetStringValue()
+        );
+        configRoot["lyco_dir"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.LyCORIS.GetStringValue()
+        );
+        configRoot["embeddings_dir"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.Embeddings.GetStringValue()
+        );
+        configRoot["hypernetwork_dir"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.Hypernetwork.GetStringValue()
+        );
+        configRoot["codeformer_models_path"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.Codeformer.GetStringValue()
+        );
+        configRoot["gfpgan_models_path"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.GFPGAN.GetStringValue()
+        );
+        configRoot["bsrgan_models_path"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.BSRGAN.GetStringValue()
+        );
+        configRoot["esrgan_models_path"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.ESRGAN.GetStringValue()
+        );
+        configRoot["realesrgan_models_path"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.RealESRGAN.GetStringValue()
+        );
+        configRoot["scunet_models_path"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.ScuNET.GetStringValue()
+        );
+        configRoot["swinir_models_path"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.SwinIR.GetStringValue()
+        );
+        configRoot["ldsr_models_path"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.LDSR.GetStringValue()
+        );
+        configRoot["clip_models_path"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.TextEncoders.GetStringValue()
+        );
+        configRoot["control_net_models_path"] = Path.Combine(
+            SettingsManager.ModelsDirectory,
+            SharedFolderType.ControlNet.GetStringValue()
+        );
 
         var configJsonStr = JsonSerializer.Serialize(
             configRoot,

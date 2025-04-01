@@ -617,6 +617,22 @@ public abstract class BaseGitPackage : BasePackage
         SharedFolderMethod sharedFolderMethod
     )
     {
+        // Auto handling for ISharedFolderLayoutPackage
+        if (
+            sharedFolderMethod is SharedFolderMethod.Configuration
+            && this is ISharedFolderLayoutPackage layoutPackage
+        )
+        {
+            await SharedFoldersConfigHelper
+                .UpdateConfigFileForSharedAsync(
+                    layoutPackage.SharedFolderLayout,
+                    installDirectory.FullPath,
+                    SettingsManager.ModelsDirectory
+                )
+                .ConfigureAwait(false);
+            return;
+        }
+
         if (sharedFolderMethod != SharedFolderMethod.Symlink || SharedFolders is not { } sharedFolders)
         {
             return;
@@ -667,7 +683,19 @@ public abstract class BaseGitPackage : BasePackage
         SharedFolderMethod sharedFolderMethod
     )
     {
-        if (SharedFolders is not null && sharedFolderMethod == SharedFolderMethod.Symlink)
+        // Auto handling for ISharedFolderLayoutPackage
+        if (
+            sharedFolderMethod is SharedFolderMethod.Configuration
+            && this is ISharedFolderLayoutPackage layoutPackage
+        )
+        {
+            return SharedFoldersConfigHelper.UpdateConfigFileForDefaultAsync(
+                layoutPackage.SharedFolderLayout,
+                installDirectory.FullPath
+            );
+        }
+
+        if (SharedFolders is not null && sharedFolderMethod is SharedFolderMethod.Symlink)
         {
             Helper.SharedFolders.RemoveLinksForPackage(SharedFolders, installDirectory);
         }

@@ -13,6 +13,7 @@ public interface IPrerequisiteHelper
 
     bool IsPythonInstalled { get; }
     bool IsVcBuildToolsInstalled { get; }
+    bool IsHipSdkInstalled { get; }
 
     Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null);
     Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null);

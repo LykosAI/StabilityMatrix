@@ -54,6 +54,8 @@ public abstract class BasePackage(ISettingsManager settingsManager)
 
     public virtual PackageType PackageType => PackageType.SdInference;
     public virtual bool UsesVenv => true;
+    public virtual bool InstallRequiresAdmin => false;
+    public virtual string? AdminRequiredReason => null;
 
     /// <summary>
     /// Returns a list of extra commands that can be executed for this package.

@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Changed the names of some of the shared model folders to better reflect their contents
 - Improved window state handling
 - Improved Checkpoint Manager memory usage (thanks to @FireGeek for the profiling assistance!)
-- (Internal) Upgraded FluentAvalonia to 2.3.0 
+- Upgraded HIP SDK installs to 6.2.4 for ComfyUI-Zluda and AMDGPU-Forge
+- (Internal) Upgraded FluentAvalonia to 2.3.0
 ### Fixed
 - Fixed RTX 5000-series GPU detection in certain cases
 - Fixed Image Viewer animation loader keeping file handles open, which resolves 2 different issues (OSes are fun):

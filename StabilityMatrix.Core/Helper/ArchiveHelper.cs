@@ -113,7 +113,7 @@ public static partial class ArchiveHelper
     public static async Task<ArchiveInfo> Extract7Z(
         string archivePath,
         string extractDirectory,
-        IProgress<ProgressReport> progress
+        IProgress<ProgressReport>? progress
     )
     {
         var outputStore = new StringBuilder();
@@ -130,7 +130,7 @@ public static partial class ArchiveHelper
             {
                 var percent = int.Parse(match.Groups[1].Value);
                 var currentFile = match.Groups[2].Value;
-                progress.Report(
+                progress?.Report(
                     new ProgressReport(
                         percent / (float)100,
                         "Extracting",
@@ -140,7 +140,7 @@ public static partial class ArchiveHelper
                 );
             }
         });
-        progress.Report(new ProgressReport(-1, isIndeterminate: true, type: ProgressType.Extract));
+        progress?.Report(new ProgressReport(-1, isIndeterminate: true, type: ProgressType.Extract));
 
         // Need -bsp1 for progress reports
         var args = $"x {ProcessRunner.Quote(archivePath)} -o{ProcessRunner.Quote(extractDirectory)} -y -bsp1";
@@ -152,7 +152,7 @@ public static partial class ArchiveHelper
 
         ProcessException.ThrowIfNonZeroExitCode(process, outputStore);
 
-        progress.Report(new ProgressReport(1f, "Finished extracting", type: ProgressType.Extract));
+        progress?.Report(new ProgressReport(1f, "Finished extracting", type: ProgressType.Extract));
 
         var output = outputStore.ToString();
 

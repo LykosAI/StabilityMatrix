@@ -20,7 +20,7 @@ public static class WindowsElevated
         process.StartInfo.FileName = "cmd.exe";
         process.StartInfo.Arguments = $"/c {args}";
         process.StartInfo.UseShellExecute = true;
-        process.StartInfo.CreateNoWindow = true;
+        process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
         process.StartInfo.Verb = "runas";
 
         process.Start();

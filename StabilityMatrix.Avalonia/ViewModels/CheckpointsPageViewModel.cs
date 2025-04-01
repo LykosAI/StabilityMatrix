@@ -213,6 +213,15 @@ public partial class CheckpointsPageViewModel(
                     (Func<LocalModelFile, bool>)(
                         file =>
                             string.IsNullOrWhiteSpace(SearchQuery)
+                            || (
+                                SearchQuery.StartsWith("#")
+                                && (
+                                    file.ConnectedModelInfo?.Tags.Contains(
+                                        SearchQuery.Substring(1),
+                                        StringComparer.OrdinalIgnoreCase
+                                    ) ?? false
+                                )
+                            )
                             || file.DisplayModelFileName.Contains(
                                 SearchQuery,
                                 StringComparison.OrdinalIgnoreCase
@@ -830,6 +839,70 @@ public partial class CheckpointsPageViewModel(
         SelectedCategory = Categories
             .SelectMany(c => c.Flatten())
             .FirstOrDefault(x => x.Path == destinationFolder.FullPath);
+    }
+
+    public async Task MoveBetweenFolders(List<CheckpointFileViewModel>? sourceFiles, DirectoryPath destinationFolder)
+    {
+        if (sourceFiles != null && sourceFiles.Count() > 0)
+        {
+            var sourceDirectory = Path.GetDirectoryName(sourceFiles[0].CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
+            foreach (CheckpointFileViewModel sourceFile in sourceFiles)
+            {
+                if (
+                    destinationFolder.FullPath == settingsManager.ModelsDirectory
+                    || (sourceDirectory != null && sourceDirectory == destinationFolder.FullPath)
+                )
+                {
+                    notificationService.Show(
+                        "Invalid Folder",
+                        "Please select a different folder to import the files into.",
+                        NotificationType.Error
+                    );
+                    return;
+                }
+
+                try
+                {
+                    var sourcePath = new FilePath(sourceFile.CheckpointFile.GetFullPath(settingsManager.ModelsDirectory));
+                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourcePath);
+                    var sourceCmInfoPath = Path.Combine(sourcePath.Directory!, $"{fileNameWithoutExt}.cm-info.json");
+                    var sourcePreviewPath = Path.Combine(sourcePath.Directory!, $"{fileNameWithoutExt}.preview.jpeg");
+                    var destinationFilePath = Path.Combine(destinationFolder, sourcePath.Name);
+                    var destinationCmInfoPath = Path.Combine(destinationFolder, $"{fileNameWithoutExt}.cm-info.json");
+                    var destinationPreviewPath = Path.Combine(destinationFolder, $"{fileNameWithoutExt}.preview.jpeg");
+
+                    // Move files
+                    if (File.Exists(sourcePath))
+                        await FileTransfers.MoveFileAsync(sourcePath, destinationFilePath);
+
+                    if (File.Exists(sourceCmInfoPath))
+                        await FileTransfers.MoveFileAsync(sourceCmInfoPath, destinationCmInfoPath);
+
+                    if (File.Exists(sourcePreviewPath))
+                        await FileTransfers.MoveFileAsync(sourcePreviewPath, destinationPreviewPath);
+
+                    notificationService.Show(
+                        "Model moved successfully",
+                        $"Moved '{sourcePath.Name}' to '{Path.GetFileName(destinationFolder)}'"
+                    );
+                }
+                catch (FileTransferExistsException)
+                {
+                    notificationService.Show(
+                        "Failed to move file",
+                        "Destination file exists",
+                        NotificationType.Error
+                    );
+                }
+            }
+
+            SelectedCategory = Categories
+                .SelectMany(c => c.Flatten())
+                .FirstOrDefault(x => x.Path == sourceDirectory);
+
+            await modelIndexService.RefreshIndex();
+            DelayedClearProgress(TimeSpan.FromSeconds(1.5));
+        }
     }
 
     public async Task MoveBetweenFolders(LocalModelFile sourceFile, DirectoryPath destinationFolder)

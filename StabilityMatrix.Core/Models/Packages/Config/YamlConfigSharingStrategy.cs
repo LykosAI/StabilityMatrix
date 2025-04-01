@@ -76,6 +76,7 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
             // Configure serializer for better readability if desired
             var serializer = new SerializerBuilder()
                 .WithNamingConvention(UnderscoredNamingConvention.Instance) // Common for ComfyUI paths
+                .WithDefaultScalarStyle(ScalarStyle.Literal)
                 .ConfigureDefaultValuesHandling(DefaultValuesHandling.OmitDefaults) // Optional: omit nulls/defaults
                 .Build();
             serializer.Serialize(writer, yamlStream.Documents[0].RootNode); // Serialize the modified root node
@@ -127,12 +128,12 @@ public class YamlConfigSharingStrategy : IConfigSharingStrategy
             if (normalizedPaths.Length > 0)
             {
                 // Use Sequence for multiple paths
-                valueNode = new YamlSequenceNode(
+                /*valueNode = new YamlSequenceNode(
                     normalizedPaths.Select(p => new YamlScalarNode(p)).Cast<YamlNode>()
-                );
+                );*/
                 // --- OR Use Literal Scalar ---
-                // var multiLinePath = string.Join("\n", normalizedPaths);
-                // valueNode = new YamlScalarNode(multiLinePath) { Style = ScalarStyle.Literal };
+                var multiLinePath = string.Join("\n", normalizedPaths);
+                valueNode = new YamlScalarNode(multiLinePath) { Style = ScalarStyle.Literal };
             }
 
             SetYamlValue(writableNode, configPath, valueNode); // Use helper

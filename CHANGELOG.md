@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - This automatically wraps the token/selection in parentheses `()` if it's not already weighted.
   - It modifies existing weights within parentheses or adds weights if none exist (e.g. `(word:1.1)`).
   - Handles selection spanning multiple tokens intelligently.
+- Added Plasma Noise addon to Inference for text to image workflows
 ### Changed
 - Changed the names of some of the shared model folders to better reflect their contents
 - Improved window state handling
@@ -33,7 +34,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed large white boxes appearing when tooltips are visible on macOS/Linux
 ### Supporters
 #### Visionaries
-- A special shout-out to our fantastic Visionary-tier Patreon supporters: Waterclouds, Corey T, and our newest Visionary, bluepopsicle! Your continued generosity powers the future of Stability Matrix—thank you so much!
+- A special shout-out to our fantastic Visionary-tier Patreon supporters: Waterclouds, Corey T, and our newest Visionaries, bluepopsicle and Bob S! Your continued generosity powers the future of Stability Matrix—thank you so much!
 
 ## v2.13.4
 ### Added

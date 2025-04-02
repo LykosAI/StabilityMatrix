@@ -268,4 +268,135 @@ public static class ComfyNodeBuilderExtensions
 
         return previewImage.Name;
     }
+
+    public static void SetupPlasmaLatentSource(
+        this ComfyNodeBuilder builder,
+        int width,
+        int height,
+        ulong seed,
+        NoiseType noiseType,
+        int valueMin = -1,
+        int valueMax = -1,
+        int redMin = -1,
+        int redMax = -1,
+        int greenMin = -1,
+        int greenMax = -1,
+        int blueMin = -1,
+        int blueMax = -1,
+        double turbulence = 2.75d
+    )
+    {
+        var primaryNodeConnection = noiseType switch
+        {
+            NoiseType.Plasma
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.PlasmaNoise
+                        {
+                            Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.PlasmaNoise)),
+                            Height = height,
+                            Width = width,
+                            Seed = seed,
+                            ValueMin = valueMin,
+                            ValueMax = valueMax,
+                            RedMin = redMin,
+                            RedMax = redMax,
+                            GreenMin = greenMin,
+                            GreenMax = greenMax,
+                            BlueMin = blueMin,
+                            BlueMax = blueMax,
+                            Turbulence = turbulence,
+                        }
+                    )
+                    .Output,
+
+            NoiseType.Random
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.RandNoise
+                        {
+                            Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.RandNoise)),
+                            Height = height,
+                            Width = width,
+                            Seed = seed,
+                            ValueMin = valueMin,
+                            ValueMax = valueMax,
+                            RedMin = redMin,
+                            RedMax = redMax,
+                            GreenMin = greenMin,
+                            GreenMax = greenMax,
+                            BlueMin = blueMin,
+                            BlueMax = blueMax
+                        }
+                    )
+                    .Output,
+
+            NoiseType.Greyscale
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.GreyNoise
+                        {
+                            Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.GreyNoise)),
+                            Height = height,
+                            Width = width,
+                            Seed = seed,
+                            ValueMin = valueMin,
+                            ValueMax = valueMax,
+                            RedMin = redMin,
+                            RedMax = redMax,
+                            GreenMin = greenMin,
+                            GreenMax = greenMax,
+                            BlueMin = blueMin,
+                            BlueMax = blueMax
+                        }
+                    )
+                    .Output,
+
+            NoiseType.Brown
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.BrownNoise
+                        {
+                            Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.BrownNoise)),
+                            Height = height,
+                            Width = width,
+                            Seed = seed,
+                            ValueMin = valueMin,
+                            ValueMax = valueMax,
+                            RedMin = redMin,
+                            RedMax = redMax,
+                            GreenMin = greenMin,
+                            GreenMax = greenMax,
+                            BlueMin = blueMin,
+                            BlueMax = blueMax
+                        }
+                    )
+                    .Output,
+
+            NoiseType.Pink
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.PinkNoise
+                        {
+                            Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.PinkNoise)),
+                            Height = height,
+                            Width = width,
+                            Seed = seed,
+                            ValueMin = valueMin,
+                            ValueMax = valueMax,
+                            RedMin = redMin,
+                            RedMax = redMax,
+                            GreenMin = greenMin,
+                            GreenMax = greenMax,
+                            BlueMin = blueMin,
+                            BlueMax = blueMax
+                        }
+                    )
+                    .Output,
+            _ => throw new ArgumentOutOfRangeException(nameof(noiseType), noiseType, null)
+        };
+
+        builder.Connections.Primary = primaryNodeConnection;
+        builder.Connections.PrimarySize = new Size(width, height);
+    }
 }

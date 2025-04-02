@@ -97,6 +97,7 @@
         <StyleInclude Source="Controls/Painting/PaintCanvas.axaml" />
         <StyleInclude Source="Controls/MarkdownViewer.axaml" />
         <StyleInclude Source="Controls/Inference/WanModelCard.axaml" />
+        <StyleInclude Source="Controls/Inference/PlasmaNoiseCard.axaml" />
         <labs:ControlThemes />
 
         <Style Selector="DockControl">

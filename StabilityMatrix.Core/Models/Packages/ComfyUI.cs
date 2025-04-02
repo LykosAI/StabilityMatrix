@@ -9,6 +9,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Models.Packages.Config;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -47,29 +48,144 @@ public class ComfyUI(
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
 
     // https://github.com/comfyanonymous/ComfyUI/blob/master/folder_paths.py#L11
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
+    public override SharedFolderLayout SharedFolderLayout =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = ["models/checkpoints"],
-            [SharedFolderType.Diffusers] = ["models/diffusers"],
-            [SharedFolderType.Lora] = ["models/loras"],
-            [SharedFolderType.TextEncoders] = ["models/clip"],
-            [SharedFolderType.ClipVision] = ["models/clip_vision"],
-            [SharedFolderType.Embeddings] = ["models/embeddings"],
-            [SharedFolderType.VAE] = ["models/vae"],
-            [SharedFolderType.ApproxVAE] = ["models/vae_approx"],
-            [SharedFolderType.ControlNet] = ["models/controlnet/ControlNet"],
-            [SharedFolderType.GLIGEN] = ["models/gligen"],
-            [SharedFolderType.ESRGAN] = ["models/upscale_models"],
-            [SharedFolderType.Hypernetwork] = ["models/hypernetworks"],
-            [SharedFolderType.IpAdapter] = ["models/ipadapter/base"],
-            [SharedFolderType.IpAdapters15] = ["models/ipadapter/sd15"],
-            [SharedFolderType.IpAdaptersXl] = ["models/ipadapter/sdxl"],
-            [SharedFolderType.T2IAdapter] = ["models/controlnet/T2IAdapter"],
-            [SharedFolderType.PromptExpansion] = ["models/prompt_expansion"],
-            [SharedFolderType.Ultralytics] = ["models/ultralytics"],
-            [SharedFolderType.Sams] = ["models/sams"],
-            [SharedFolderType.DiffusionModels] = ["models/diffusion_models"]
+            RelativeConfigPath = "extra_model_paths.yaml",
+            ConfigFileType = ConfigFileType.Yaml,
+            ConfigSharingOptions =
+            {
+                RootKey = "stability_matrix",
+                ConfigDefaultType = ConfigDefaultType.ClearRoot
+            },
+            Rules =
+            [
+                new SharedFolderLayoutRule // Checkpoints
+                {
+                    SourceTypes = [SharedFolderType.StableDiffusion],
+                    TargetRelativePaths = ["models/checkpoints"],
+                    ConfigDocumentPaths = ["checkpoints"]
+                },
+                new SharedFolderLayoutRule // Diffusers
+                {
+                    SourceTypes = [SharedFolderType.Diffusers],
+                    TargetRelativePaths = ["models/diffusers"],
+                    ConfigDocumentPaths = ["diffusers"]
+                },
+                new SharedFolderLayoutRule // Loras
+                {
+                    SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
+                    TargetRelativePaths = ["models/loras"],
+                    ConfigDocumentPaths = ["loras"]
+                },
+                new SharedFolderLayoutRule // CLIP (Text Encoders)
+                {
+                    SourceTypes = [SharedFolderType.TextEncoders],
+                    TargetRelativePaths = ["models/clip"],
+                    ConfigDocumentPaths = ["clip"]
+                },
+                new SharedFolderLayoutRule // CLIP Vision
+                {
+                    SourceTypes = [SharedFolderType.ClipVision],
+                    TargetRelativePaths = ["models/clip_vision"],
+                    ConfigDocumentPaths = ["clip_vision"]
+                },
+                new SharedFolderLayoutRule // Embeddings / Textual Inversion
+                {
+                    SourceTypes = [SharedFolderType.Embeddings],
+                    TargetRelativePaths = ["models/embeddings"],
+                    ConfigDocumentPaths = ["embeddings"]
+                },
+                new SharedFolderLayoutRule // VAE
+                {
+                    SourceTypes = [SharedFolderType.VAE],
+                    TargetRelativePaths = ["models/vae"],
+                    ConfigDocumentPaths = ["vae"]
+                },
+                new SharedFolderLayoutRule // VAE Approx
+                {
+                    SourceTypes = [SharedFolderType.ApproxVAE],
+                    TargetRelativePaths = ["models/vae_approx"],
+                    ConfigDocumentPaths = ["vae_approx"]
+                },
+                new SharedFolderLayoutRule // ControlNet / T2IAdapter
+                {
+                    SourceTypes = [SharedFolderType.ControlNet, SharedFolderType.T2IAdapter],
+                    TargetRelativePaths = ["models/controlnet"],
+                    ConfigDocumentPaths = ["controlnet"]
+                },
+                new SharedFolderLayoutRule // GLIGEN
+                {
+                    SourceTypes = [SharedFolderType.GLIGEN],
+                    TargetRelativePaths = ["models/gligen"],
+                    ConfigDocumentPaths = ["gligen"]
+                },
+                new SharedFolderLayoutRule // Upscalers
+                {
+                    SourceTypes =
+                    [
+                        SharedFolderType.ESRGAN,
+                        SharedFolderType.RealESRGAN,
+                        SharedFolderType.SwinIR
+                    ],
+                    TargetRelativePaths = ["models/upscale_models"],
+                    ConfigDocumentPaths = ["upscale_models"]
+                },
+                new SharedFolderLayoutRule // Hypernetworks
+                {
+                    SourceTypes = [SharedFolderType.Hypernetwork],
+                    TargetRelativePaths = ["models/hypernetworks"],
+                    ConfigDocumentPaths = ["hypernetworks"]
+                },
+                new SharedFolderLayoutRule // IP-Adapter Base, SD1.5, SDXL
+                {
+                    SourceTypes =
+                    [
+                        SharedFolderType.IpAdapter,
+                        SharedFolderType.IpAdapters15,
+                        SharedFolderType.IpAdaptersXl
+                    ],
+                    TargetRelativePaths = ["models/ipadapter"], // Single target path
+                    ConfigDocumentPaths = ["ipadapter"]
+                },
+                new SharedFolderLayoutRule // Prompt Expansion
+                {
+                    SourceTypes = [SharedFolderType.PromptExpansion],
+                    TargetRelativePaths = ["models/prompt_expansion"],
+                    ConfigDocumentPaths = ["prompt_expansion"]
+                },
+                new SharedFolderLayoutRule // Ultralytics
+                {
+                    SourceTypes = [SharedFolderType.Ultralytics], // Might need specific UltralyticsBbox/Segm if symlinks differ
+                    TargetRelativePaths = ["models/ultralytics"],
+                    ConfigDocumentPaths = ["ultralytics"]
+                },
+                // Config only rules for Ultralytics bbox/segm
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Ultralytics],
+                    SourceSubPath = "bbox",
+                    ConfigDocumentPaths = ["ultralytics_bbox"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Ultralytics],
+                    SourceSubPath = "segm",
+                    ConfigDocumentPaths = ["ultralytics_segm"]
+                },
+                new SharedFolderLayoutRule // SAMs
+                {
+                    SourceTypes = [SharedFolderType.Sams],
+                    TargetRelativePaths = ["models/sams"],
+                    ConfigDocumentPaths = ["sams"]
+                },
+                new SharedFolderLayoutRule // Diffusion Models / Unet
+                {
+                    SourceTypes = [SharedFolderType.DiffusionModels],
+                    TargetRelativePaths = ["models/diffusion_models"],
+                    ConfigDocumentPaths = ["diffusion_models"]
+                },
+            ]
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -343,261 +459,6 @@ public class ComfyUI(
             }
             OnStartupComplete(WebUrl);
         }
-    }
-
-    public override Task SetupModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    ) =>
-        sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink
-                => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
-            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
-            SharedFolderMethod.None => Task.CompletedTask,
-            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
-        };
-
-    public override Task RemoveModelFolderLinks(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
-    {
-        return sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
-            SharedFolderMethod.Configuration => RemoveConfigSection(installDirectory),
-            SharedFolderMethod.None => Task.CompletedTask,
-            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
-        };
-    }
-
-    private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)
-    {
-        var extraPathsYamlPath = installDirectory.JoinFile("extra_model_paths.yaml");
-        var modelsDir = SettingsManager.ModelsDirectory;
-
-        if (!extraPathsYamlPath.Exists)
-        {
-            Logger.Info("Creating extra_model_paths.yaml");
-            extraPathsYamlPath.Create();
-        }
-
-        var yaml = await extraPathsYamlPath.ReadAllTextAsync().ConfigureAwait(false);
-        using var sr = new StringReader(yaml);
-        var yamlStream = new YamlStream();
-        yamlStream.Load(sr);
-
-        if (!yamlStream.Documents.Any())
-        {
-            yamlStream.Documents.Add(new YamlDocument(new YamlMappingNode()));
-        }
-
-        var root = yamlStream.Documents[0].RootNode;
-        if (root is not YamlMappingNode mappingNode)
-        {
-            throw new Exception("Invalid extra_model_paths.yaml");
-        }
-        // check if we have a child called "stability_matrix"
-        var stabilityMatrixNode = mappingNode.Children.FirstOrDefault(
-            c => c.Key.ToString() == "stability_matrix"
-        );
-
-        if (stabilityMatrixNode.Key != null)
-        {
-            if (stabilityMatrixNode.Value is not YamlMappingNode nodeValue)
-                return;
-
-            nodeValue.Children["checkpoints"] = Path.Combine(
-                modelsDir,
-                SharedFolderType.StableDiffusion.GetStringValue()
-            );
-            nodeValue.Children["vae"] = Path.Combine(modelsDir, SharedFolderType.VAE.GetStringValue());
-            nodeValue.Children["loras"] =
-                $"{Path.Combine(modelsDir, SharedFolderType.Lora.GetStringValue())}\n"
-                + $"{Path.Combine(modelsDir, SharedFolderType.LyCORIS.GetStringValue())}";
-            nodeValue.Children["upscale_models"] =
-                $"{Path.Combine(modelsDir, SharedFolderType.ESRGAN.GetStringValue())}\n"
-                + $"{Path.Combine(modelsDir, SharedFolderType.RealESRGAN.GetStringValue())}\n"
-                + $"{Path.Combine(modelsDir, SharedFolderType.SwinIR.GetStringValue())}";
-            nodeValue.Children["embeddings"] = Path.Combine(
-                modelsDir,
-                SharedFolderType.Embeddings.GetStringValue()
-            );
-            nodeValue.Children["hypernetworks"] = Path.Combine(
-                modelsDir,
-                SharedFolderType.Hypernetwork.GetStringValue()
-            );
-            nodeValue.Children["controlnet"] = string.Join(
-                '\n',
-                Path.Combine(modelsDir, SharedFolderType.ControlNet.GetStringValue()),
-                Path.Combine(modelsDir, SharedFolderType.T2IAdapter.GetStringValue())
-            );
-            nodeValue.Children["clip"] = Path.Combine(
-                modelsDir,
-                SharedFolderType.TextEncoders.GetStringValue()
-            );
-            nodeValue.Children["clip_vision"] = Path.Combine(
-                modelsDir,
-                SharedFolderType.ClipVision.GetStringValue()
-            );
-            nodeValue.Children["diffusers"] = Path.Combine(
-                modelsDir,
-                SharedFolderType.Diffusers.GetStringValue()
-            );
-            nodeValue.Children["gligen"] = Path.Combine(modelsDir, SharedFolderType.GLIGEN.GetStringValue());
-            nodeValue.Children["vae_approx"] = Path.Combine(
-                modelsDir,
-                SharedFolderType.ApproxVAE.GetStringValue()
-            );
-            nodeValue.Children["ipadapter"] = string.Join(
-                '\n',
-                Path.Combine(modelsDir, SharedFolderType.IpAdapter.GetStringValue()),
-                Path.Combine(modelsDir, SharedFolderType.IpAdapters15.GetStringValue()),
-                Path.Combine(modelsDir, SharedFolderType.IpAdaptersXl.GetStringValue())
-            );
-            nodeValue.Children["prompt_expansion"] = Path.Combine(
-                modelsDir,
-                SharedFolderType.PromptExpansion.GetStringValue()
-            );
-            nodeValue.Children["ultralytics"] = Path.Combine(
-                modelsDir,
-                SharedFolderType.Ultralytics.GetStringValue()
-            );
-            nodeValue.Children["ultralytics_bbox"] = Path.Combine(
-                modelsDir,
-                SharedFolderType.Ultralytics.GetStringValue(),
-                "bbox"
-            );
-            nodeValue.Children["ultralytics_segm"] = Path.Combine(
-                modelsDir,
-                SharedFolderType.Ultralytics.GetStringValue(),
-                "segm"
-            );
-            nodeValue.Children["sams"] = Path.Combine(modelsDir, SharedFolderType.Sams.GetStringValue());
-            nodeValue.Children["diffusion_models"] = Path.Combine(
-                modelsDir,
-                SharedFolderType.DiffusionModels.GetStringValue()
-            );
-        }
-        else
-        {
-            stabilityMatrixNode = new KeyValuePair<YamlNode, YamlNode>(
-                new YamlScalarNode("stability_matrix"),
-                new YamlMappingNode
-                {
-                    {
-                        "checkpoints",
-                        Path.Combine(modelsDir, SharedFolderType.StableDiffusion.GetStringValue())
-                    },
-                    { "vae", Path.Combine(modelsDir, SharedFolderType.VAE.GetStringValue()) },
-                    {
-                        "loras",
-                        $"{Path.Combine(modelsDir, SharedFolderType.Lora.GetStringValue())}\n{Path.Combine(modelsDir, SharedFolderType.LyCORIS.GetStringValue())}"
-                    },
-                    {
-                        "upscale_models",
-                        $"{Path.Combine(modelsDir, SharedFolderType.ESRGAN.GetStringValue())}\n{Path.Combine(modelsDir, SharedFolderType.RealESRGAN.GetStringValue())}\n{Path.Combine(modelsDir, SharedFolderType.SwinIR.GetStringValue())}"
-                    },
-                    { "embeddings", Path.Combine(modelsDir, SharedFolderType.Embeddings.GetStringValue()) },
-                    {
-                        "hypernetworks",
-                        Path.Combine(modelsDir, SharedFolderType.Hypernetwork.GetStringValue())
-                    },
-                    {
-                        "controlnet",
-                        string.Join(
-                            '\n',
-                            Path.Combine(modelsDir, SharedFolderType.ControlNet.GetStringValue()),
-                            Path.Combine(modelsDir, SharedFolderType.T2IAdapter.GetStringValue())
-                        )
-                    },
-                    { "clip", Path.Combine(modelsDir, SharedFolderType.TextEncoders.GetStringValue()) },
-                    { "clip_vision", Path.Combine(modelsDir, SharedFolderType.ClipVision.GetStringValue()) },
-                    { "diffusers", Path.Combine(modelsDir, SharedFolderType.Diffusers.GetStringValue()) },
-                    { "gligen", Path.Combine(modelsDir, SharedFolderType.GLIGEN.GetStringValue()) },
-                    { "vae_approx", Path.Combine(modelsDir, SharedFolderType.ApproxVAE.GetStringValue()) },
-                    {
-                        "ipadapter",
-                        string.Join(
-                            '\n',
-                            Path.Combine(modelsDir, SharedFolderType.IpAdapter.GetStringValue()),
-                            Path.Combine(modelsDir, SharedFolderType.IpAdapters15.GetStringValue()),
-                            Path.Combine(modelsDir, SharedFolderType.IpAdaptersXl.GetStringValue())
-                        )
-                    },
-                    {
-                        "prompt_expansion",
-                        Path.Combine(modelsDir, SharedFolderType.PromptExpansion.GetStringValue())
-                    },
-                    { "ultralytics", Path.Combine(modelsDir, SharedFolderType.Ultralytics.GetStringValue()) },
-                    {
-                        "ultralytics_bbox",
-                        Path.Combine(modelsDir, SharedFolderType.Ultralytics.GetStringValue(), "bbox")
-                    },
-                    {
-                        "ultralytics_segm",
-                        Path.Combine(modelsDir, SharedFolderType.Ultralytics.GetStringValue(), "segm")
-                    },
-                    { "sams", Path.Combine(modelsDir, SharedFolderType.Sams.GetStringValue()) },
-                    {
-                        "diffusion_models",
-                        Path.Combine(modelsDir, SharedFolderType.DiffusionModels.GetStringValue())
-                    }
-                }
-            );
-        }
-
-        var newRootNode = new YamlMappingNode();
-        foreach (var child in mappingNode.Children.Where(c => c.Key.ToString() != "stability_matrix"))
-        {
-            newRootNode.Children.Add(child);
-        }
-
-        newRootNode.Children.Add(stabilityMatrixNode);
-
-        var serializer = new SerializerBuilder()
-            .WithNamingConvention(UnderscoredNamingConvention.Instance)
-            .WithDefaultScalarStyle(ScalarStyle.Literal)
-            .Build();
-
-        var yamlData = serializer.Serialize(newRootNode);
-        await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);
-    }
-
-    private static async Task RemoveConfigSection(DirectoryPath installDirectory)
-    {
-        var extraPathsYamlPath = installDirectory.JoinFile("extra_model_paths.yaml");
-
-        if (!extraPathsYamlPath.Exists)
-        {
-            return;
-        }
-
-        var yaml = await extraPathsYamlPath.ReadAllTextAsync().ConfigureAwait(false);
-        using var sr = new StringReader(yaml);
-        var yamlStream = new YamlStream();
-        yamlStream.Load(sr);
-
-        if (!yamlStream.Documents.Any())
-        {
-            return;
-        }
-
-        var root = yamlStream.Documents[0].RootNode;
-        if (root is not YamlMappingNode mappingNode)
-        {
-            return;
-        }
-
-        mappingNode.Children.Remove("stability_matrix");
-
-        var serializer = new SerializerBuilder()
-            .WithNamingConvention(UnderscoredNamingConvention.Instance)
-            .Build();
-        var yamlData = serializer.Serialize(mappingNode);
-
-        await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);
     }
 
     public override IPackageExtensionManager ExtensionManager =>

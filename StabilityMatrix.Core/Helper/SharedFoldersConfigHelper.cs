@@ -16,23 +16,6 @@ public static class SharedFoldersConfigHelper
             // Add more strategies here as needed
         };
 
-    public static Task UpdateConfigFileForSharedAsync(
-        SharedFolderLayout layout,
-        string packageRootDirectory,
-        string sharedModelsDirectory,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return UpdateConfigFileForSharedAsync(
-            layout,
-            packageRootDirectory,
-            sharedModelsDirectory,
-            layout.ConfigFileType ?? throw new InvalidOperationException("ConfigFileType is null"),
-            layout.ConfigSharingOptions,
-            cancellationToken
-        );
-    }
-
     /// <summary>
     /// Updates a config file with shared folder layout rules, using the SourceTypes,
     /// converted to absolute paths using the sharedModelsDirectory.
@@ -41,12 +24,9 @@ public static class SharedFoldersConfigHelper
         SharedFolderLayout layout,
         string packageRootDirectory,
         string sharedModelsDirectory,
-        ConfigFileType fileType, // Specify the file type
-        ConfigSharingOptions? options = null,
         CancellationToken cancellationToken = default
     )
     {
-        options ??= ConfigSharingOptions.Default;
         var configPath = Path.Combine(
             packageRootDirectory,
             layout.RelativeConfigPath ?? throw new InvalidOperationException("RelativeConfigPath is null")
@@ -60,6 +40,31 @@ public static class SharedFoldersConfigHelper
             FileAccess.ReadWrite,
             FileShare.None
         );
+
+        await UpdateConfigFileForSharedAsync(
+                layout,
+                packageRootDirectory,
+                sharedModelsDirectory,
+                stream,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Updates a config file with shared folder layout rules, using the SourceTypes,
+    /// converted to absolute paths using the sharedModelsDirectory.
+    /// </summary>
+    public static async Task UpdateConfigFileForSharedAsync(
+        SharedFolderLayout layout,
+        string packageRootDirectory,
+        string sharedModelsDirectory,
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var fileType = layout.ConfigFileType ?? throw new InvalidOperationException("ConfigFileType is null");
+        var options = layout.ConfigSharingOptions;
 
         if (!Strategies.TryGetValue(fileType, out var strategy))
         {
@@ -97,21 +102,6 @@ public static class SharedFoldersConfigHelper
             .ConfigureAwait(false);
     }
 
-    public static Task UpdateConfigFileForDefaultAsync(
-        SharedFolderLayout layout,
-        string packageRootDirectory,
-        CancellationToken cancellationToken = default
-    )
-    {
-        return UpdateConfigFileForDefaultAsync(
-            layout,
-            packageRootDirectory,
-            layout.ConfigFileType ?? throw new InvalidOperationException("ConfigFileType is null"),
-            layout.ConfigSharingOptions,
-            cancellationToken
-        );
-    }
-
     /// <summary>
     /// Updates a config file with shared folder layout rules, using the TargetRelativePaths,
     /// converted to absolute paths using the packageRootDirectory (restores default paths).
@@ -119,12 +109,9 @@ public static class SharedFoldersConfigHelper
     public static async Task UpdateConfigFileForDefaultAsync(
         SharedFolderLayout layout,
         string packageRootDirectory,
-        ConfigFileType fileType, // Specify the file type
-        ConfigSharingOptions? options = null,
         CancellationToken cancellationToken = default
     )
     {
-        options ??= ConfigSharingOptions.Default;
         var configPath = Path.Combine(
             packageRootDirectory,
             layout.RelativeConfigPath ?? throw new InvalidOperationException("RelativeConfigPath is null")
@@ -138,6 +125,24 @@ public static class SharedFoldersConfigHelper
             FileAccess.ReadWrite,
             FileShare.None
         );
+
+        await UpdateConfigFileForDefaultAsync(layout, packageRootDirectory, stream, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Updates a config file with shared folder layout rules, using the TargetRelativePaths,
+    /// converted to absolute paths using the packageRootDirectory (restores default paths).
+    /// </summary>
+    public static async Task UpdateConfigFileForDefaultAsync(
+        SharedFolderLayout layout,
+        string packageRootDirectory,
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var fileType = layout.ConfigFileType ?? throw new InvalidOperationException("ConfigFileType is null");
+        var options = layout.ConfigSharingOptions;
 
         if (!Strategies.TryGetValue(fileType, out var strategy))
         {

@@ -715,28 +715,43 @@ public class WindowsPrerequisiteHelper(
         await ArchiveHelper.Extract7Z(rocmLibsDownloadPath, rocmLibsExtractPath, progress);
 
         var hipInstalledPath = new DirectoryPath(HipInstalledPath);
-        var librarySourceDir = rocmLibsExtractPath.JoinDir("library");
+
+        var zipFolderName = downloadUrl switch
+        {
+            _ when downloadUrl.Contains("gfx1201") => null,
+            _ when downloadUrl.Contains("gfx1150") => "rocm gfx1150 for hip skd 6.2.4",
+            _ when downloadUrl.Contains("gfx1103.AMD")
+                => "rocm gfx1103 AMD 780M phoenix V5.0 for hip skd 6.2.4",
+            _ when downloadUrl.Contains("gfx1034") => "rocm gfx1034-gfx1035-gfx1036 for hip sdk 6.2.4",
+            _ when downloadUrl.Contains("gfx1032") => "rocm gfx1032 for hip skd 6.2.4(navi21 logic)",
+            _ when downloadUrl.Contains("gfx1031") => "rocm gfx1031 for hip skd 6.2.4 (littlewu's logic)",
+            _ when downloadUrl.Contains("gfx1010")
+                => "rocm gfx1010-xnack-gfx1011-xnack-gfx1012-xnack- for hip sdk 6.2.4",
+            _ => null
+        };
+
+        var librarySourceDir = rocmLibsExtractPath;
+        if (!string.IsNullOrWhiteSpace(zipFolderName))
+        {
+            librarySourceDir = librarySourceDir.JoinDir(zipFolderName);
+        }
+
+        librarySourceDir = librarySourceDir.JoinDir("library");
         var libraryDestDir = hipInstalledPath.JoinDir("bin", "rocblas", "library");
+        await WindowsElevated.Robocopy(librarySourceDir, libraryDestDir);
 
-        List<(string sourcePath, string destPath)> listOfMoves = [];
-        foreach (var file in librarySourceDir.EnumerateFiles(searchOption: SearchOption.AllDirectories))
+        var rocblasSource = rocmLibsExtractPath;
+        if (!string.IsNullOrWhiteSpace(zipFolderName))
         {
-            var relativePath = file.RelativeTo(librarySourceDir);
-            var newPath = libraryDestDir.JoinFile(relativePath);
-            newPath.Directory?.Create();
-            listOfMoves.Add((file.FullPath, newPath.FullPath));
+            rocblasSource = rocblasSource.JoinDir(zipFolderName);
         }
 
-        var rocblasSource = rocmLibsExtractPath.JoinFile("rocblas.dll");
+        var rocblasSourceFile = rocblasSource.JoinFile("rocblas.dll");
         var rocblasDest = hipInstalledPath.JoinDir("bin").JoinFile("rocblas.dll");
-        if (rocblasSource.Exists)
+        if (rocblasSourceFile.Exists)
         {
-            listOfMoves.Add((rocblasSource.FullPath, rocblasDest.FullPath));
+            await WindowsElevated.MoveFiles((rocblasSourceFile.FullPath, rocblasDest.FullPath));
         }
-
-        progress?.Report(new ProgressReport(-1, "Patching ROCm for your GPU", isIndeterminate: true));
-
-        await WindowsElevated.MoveFiles(listOfMoves.ToArray());
     }
 
     private string? GetDownloadUrlFromGpuName(string name)

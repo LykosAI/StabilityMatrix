@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Text;
+using System.Text.Json.Nodes;
 using FreneticUtilities.FreneticDataSyntax;
 
 namespace StabilityMatrix.Core.Models.Packages.Config;
@@ -77,7 +78,13 @@ public class FdsConfigSharingStrategy : IConfigSharingStrategy
         var rulesByConfigPath = layout.GetRulesByConfigPath();
 
         // SwarmUI typically stores paths under a "Paths" section
-        var pathsSection = rootSection.GetSection("Paths") ?? new FDSSection(); // Get or create "Paths" section
+        // Get or create the Paths section
+        var pathsSection = rootSection.GetSection("Paths");
+        if (pathsSection is null)
+        {
+            pathsSection = new FDSSection();
+            rootSection.Set("Paths", pathsSection); // Add Paths section to the root
+        }
 
         // Keep track of keys managed by the layout to remove old ones
         var allRuleKeys = rulesByConfigPath.Keys.ToHashSet();

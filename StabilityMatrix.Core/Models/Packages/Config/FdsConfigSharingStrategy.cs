@@ -1,4 +1,6 @@
-﻿using FreneticUtilities.FreneticDataSyntax;
+﻿using System.Diagnostics;
+using System.Text;
+using FreneticUtilities.FreneticDataSyntax;
 
 namespace StabilityMatrix.Core.Models.Packages.Config;
 
@@ -40,6 +42,8 @@ public class FdsConfigSharingStrategy : IConfigSharingStrategy
             rootSection = new FDSSection();
         }
 
+        // Debug.WriteLine($"-- Current Fds --\n\n{rootSection.SaveToString()}");
+
         UpdateFdsConfig(layout, rootSection, pathsSelector, clearPaths, options);
 
         // Reset stream to original position before writing
@@ -48,8 +52,12 @@ public class FdsConfigSharingStrategy : IConfigSharingStrategy
         configStream.SetLength(initialPosition + 0);
 
         // Save using a StreamWriter to control encoding and leave stream open
-        await using (var writer = new StreamWriter(configStream, System.Text.Encoding.UTF8, leaveOpen: true))
+        // Use BOM-less UTF-8 encoding !! (FSD not UTF-8 BOM compatible)
+        var encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+        await using (var writer = new StreamWriter(configStream, encoding, leaveOpen: true))
         {
+            // Debug.WriteLine($"-- Saved Fds: --\n\n{rootSection.SaveToString()}");
+
             await writer
                 .WriteAsync(rootSection.SaveToString().AsMemory(), cancellationToken)
                 .ConfigureAwait(false);
@@ -97,20 +105,20 @@ public class FdsConfigSharingStrategy : IConfigSharingStrategy
             else
             {
                 // No paths for this rule, remove the key
-                pathsSection.Remove(configPath); // Assuming Remove method exists
+                // pathsSection.Remove(configPath); // Assuming Remove method exists
             }
         }
 
         // Remove any keys in the Paths section that are no longer defined by any rule
-        foreach (var existingKey in currentKeysInPathsSection)
+        /*foreach (var existingKey in currentKeysInPathsSection)
         {
             if (!allRuleKeys.Contains(existingKey))
             {
                 pathsSection.Remove(existingKey);
             }
-        }
+        }*/
 
-        // If the Paths section is not empty, add/update it in the root
+        /*// If the Paths section is not empty, add/update it in the root
         if (pathsSection.GetRootKeys().Any()) // Check if the section has content
         {
             rootSection.Set("Paths", pathsSection);
@@ -119,6 +127,6 @@ public class FdsConfigSharingStrategy : IConfigSharingStrategy
         else // Otherwise, remove the empty Paths section from the root
         {
             rootSection.Remove("Paths"); // Assuming Remove method exists for sections too
-        }
+        }*/
     }
 }

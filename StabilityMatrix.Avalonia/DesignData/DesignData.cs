@@ -881,6 +881,9 @@ The gallery images are often inpainted, but you will get something very similar 
     public static ImgToVidModelCardViewModel ImgToVidModelCardViewModel =>
         DialogFactory.Get<ImgToVidModelCardViewModel>();
 
+    public static PlasmaNoiseCardViewModel PlasmaNoiseCardViewModel =>
+        DialogFactory.Get<PlasmaNoiseCardViewModel>();
+
     public static ImageGalleryCardViewModel ImageGalleryCardViewModel =>
         DialogFactory.Get<ImageGalleryCardViewModel>(vm =>
         {

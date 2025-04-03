@@ -4,6 +4,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Config;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -17,9 +18,7 @@ public class Fooocus(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper
-)
-    : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper),
-        ISharedFolderLayoutPackage
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
 {
     public override string Name => "Fooocus";
     public override string DisplayName { get; set; } = "Fooocus";
@@ -151,13 +150,11 @@ public class Fooocus(
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.Configuration, SharedFolderMethod.None };
 
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
-        ((ISharedFolderLayoutPackage)this).LegacySharedFolders;
-
-    public virtual SharedFolderLayout SharedFolderLayout =>
+    public override SharedFolderLayout SharedFolderLayout =>
         new()
         {
             RelativeConfigPath = "config.txt",
+            ConfigFileType = ConfigFileType.Json,
             Rules =
             [
                 new SharedFolderLayoutRule
@@ -345,60 +342,6 @@ public class Fooocus(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
             HandleConsoleOutput,
             OnExit
-        );
-    }
-
-    public override Task SetupModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
-    {
-        return sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink
-                => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
-            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
-            SharedFolderMethod.None => Task.CompletedTask,
-            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
-        };
-    }
-
-    public override Task RemoveModelFolderLinks(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
-    {
-        return sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
-            SharedFolderMethod.Configuration => WriteDefaultConfig(installDirectory),
-            SharedFolderMethod.None => Task.CompletedTask,
-            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
-        };
-    }
-
-    private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)
-    {
-        // doesn't always exist on first install
-        installDirectory.JoinDir(OutputFolderName).Create();
-
-        await SharedFoldersConfigHelper
-            .UpdateJsonConfigFileForSharedAsync(
-                SharedFolderLayout,
-                installDirectory,
-                SettingsManager.ModelsDirectory
-            )
-            .ConfigureAwait(false);
-    }
-
-    private Task WriteDefaultConfig(DirectoryPath installDirectory)
-    {
-        // doesn't always exist on first install
-        installDirectory.JoinDir(OutputFolderName).Create();
-
-        return SharedFoldersConfigHelper.UpdateJsonConfigFileForDefaultAsync(
-            SharedFolderLayout,
-            installDirectory
         );
     }
 }

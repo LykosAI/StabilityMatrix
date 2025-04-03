@@ -8,6 +8,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FDS;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Config;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -118,16 +119,53 @@ public class StableSwarm(
             LaunchOptionDefinition.Extras
         ];
 
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
+    public override SharedFolderLayout SharedFolderLayout =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = ["Models/Stable-Diffusion"],
-            [SharedFolderType.Lora] = ["Models/Lora"],
-            [SharedFolderType.VAE] = ["Models/VAE"],
-            [SharedFolderType.Embeddings] = ["Models/Embeddings"],
-            [SharedFolderType.ControlNet] = ["Models/controlnet"],
-            [SharedFolderType.ClipVision] = ["Models/clip_vision"]
+            RelativeConfigPath = Path.Combine("Data/Settings.fds"),
+            ConfigFileType = ConfigFileType.Fds,
+            Rules =
+            [
+                new SharedFolderLayoutRule { IsRoot = true, ConfigDocumentPaths = ["ModelRoot"], },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.StableDiffusion],
+                    TargetRelativePaths = ["Models/Stable-Diffusion"],
+                    ConfigDocumentPaths = ["SDModelFolder"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
+                    TargetRelativePaths = ["Models/Lora"],
+                    ConfigDocumentPaths = ["SDLoraFolder"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.VAE],
+                    TargetRelativePaths = ["Models/VAE"],
+                    ConfigDocumentPaths = ["SDVAEFolder"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Embeddings],
+                    TargetRelativePaths = ["Models/Embeddings"],
+                    ConfigDocumentPaths = ["SDEmbeddingFolder"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ControlNet, SharedFolderType.T2IAdapter],
+                    TargetRelativePaths = ["Models/controlnet"],
+                    ConfigDocumentPaths = ["SDControlNetsFolder"]
+                }, // Assuming Swarm maps T2I to ControlNet folder
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ClipVision],
+                    TargetRelativePaths = ["Models/clip_vision"],
+                    ConfigDocumentPaths = ["SDClipVisionFolder"]
+                },
+            ]
         };
+
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = [OutputFolderName] };
     public override string MainBranch => "master";
@@ -412,7 +450,7 @@ public class StableSwarm(
         return await base.CheckForUpdates(package).ConfigureAwait(false);
     }
 
-    public override Task SetupModelFolders(
+    /*public override Task SetupModelFolders(
         DirectoryPath installDirectory,
         SharedFolderMethod sharedFolderMethod
     ) =>
@@ -420,7 +458,7 @@ public class StableSwarm(
         {
             SharedFolderMethod.Symlink
                 => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
-            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory), // TODO
+            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
             _ => Task.CompletedTask
         };
 
@@ -433,7 +471,7 @@ public class StableSwarm(
             SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
             SharedFolderMethod.Configuration => RemoveModelFoldersConfig(installDirectory),
             _ => Task.CompletedTask
-        };
+        };*/
 
     public override async Task WaitForShutdown()
     {

@@ -13,12 +13,17 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - This automatically wraps the token/selection in parentheses `()` if it's not already weighted.
   - It modifies existing weights within parentheses or adds weights if none exist (e.g. `(word:1.1)`).
   - Handles selection spanning multiple tokens intelligently.
+- (Internal) Introduced unified strategy pattern (`IConfigSharingStrategy`) to for handling different config file formats (JSON, YAML, FDS).
+  - Added support for configuring nested paths in JSON and YAML files (e.g. `paths.models.vae`) via dot-notation in `SharedFolderLayoutRule.ConfigDocumentPaths`.
+  - Packages can now use the `SharedFolderLayout` property to define a `ConfigFileType` and `ConfigSharingOptions` (like `RootKey`), without needing to implement custom configuration logic.
 ### Changed
 - Changed the names of some of the shared model folders to better reflect their contents
 - Improved window state handling
 - Improved Checkpoint Manager memory usage (thanks to @FireGeek for the profiling assistance!)
 - Upgraded HIP SDK installs to 6.2.4 for ComfyUI-Zluda and AMDGPU-Forge
 - (Internal) Upgraded FluentAvalonia to 2.3.0
+- (Internal) Refactored configuration-based shared folder logic: Centralized handling into `SharedFoldersConfigHelper` and format-specific strategies, removing custom file I/O logic from individual package classes for improved consistency and maintainability.
+  - Migrated packages ComfyUI (incl. Zluda), VladAutomatic (SD.Next), Sdfx, and StableSwarm to use the unified system for configuration and symlink based sharing.
 ### Fixed
 - Fixed RTX 5000-series GPU detection in certain cases
 - Fixed Image Viewer animation loader keeping file handles open, which resolves 2 different issues (OSes are fun):

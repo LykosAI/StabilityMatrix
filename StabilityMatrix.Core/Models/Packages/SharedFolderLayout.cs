@@ -1,13 +1,20 @@
 ﻿using System.Collections.Immutable;
+using System.ComponentModel;
+using StabilityMatrix.Core.Models.Packages.Config;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
+[Localizable(false)]
 public record SharedFolderLayout
 {
     /// <summary>
     /// Optional config file path, relative from package installation directory
     /// </summary>
     public string? RelativeConfigPath { get; set; }
+
+    public ConfigFileType? ConfigFileType { get; set; }
+
+    public ConfigSharingOptions ConfigSharingOptions { get; set; } = ConfigSharingOptions.Default;
 
     public IImmutableList<SharedFolderLayoutRule> Rules { get; set; } = [];
 

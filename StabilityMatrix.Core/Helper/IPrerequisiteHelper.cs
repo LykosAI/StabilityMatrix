@@ -12,6 +12,8 @@ public interface IPrerequisiteHelper
     string GitBinPath { get; }
 
     bool IsPythonInstalled { get; }
+    bool IsVcBuildToolsInstalled { get; }
+    bool IsHipSdkInstalled { get; }
 
     Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null);
     Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null);

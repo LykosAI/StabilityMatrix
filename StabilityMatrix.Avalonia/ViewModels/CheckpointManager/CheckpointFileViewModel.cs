@@ -407,7 +407,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             cmInfo.ModelDescription = vm.ModelDescription;
             cmInfo.Nsfw = vm.IsNsfw;
             cmInfo.Tags = vm.Tags.Split(',').Select(x => x.Trim()).ToArray();
-            cmInfo.BaseModel = vm.BaseModelType.GetStringValue();
+            cmInfo.BaseModel = vm.BaseModelType;
             cmInfo.TrainedWords = string.IsNullOrWhiteSpace(vm.TrainedWords)
                 ? null
                 : vm.TrainedWords.Split(',').Select(x => x.Trim()).ToArray();

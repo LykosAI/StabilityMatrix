@@ -333,7 +333,7 @@ public partial class SelectModelVersionViewModel(
             }
         }
 
-        if (downloadDirectory.ToString().EndsWith("Unet"))
+        if (downloadDirectory.ToString().EndsWith(SharedFolderType.DiffusionModels.GetStringValue()))
         {
             // also add StableDiffusion in case we have an AIO version
             var stableDiffusionDirectory = rootModelsDirectory.JoinDir(
@@ -370,12 +370,12 @@ public partial class SelectModelVersionViewModel(
             )
         )
         {
-            return rootModelsDirectory.JoinDir(SharedFolderType.Unet.GetStringValue());
+            return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
         }
 
         if (modelType is CivitModelType.Checkpoint && baseModelType == "Wan Video")
         {
-            return rootModelsDirectory.JoinDir(SharedFolderType.Unet.GetStringValue());
+            return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
         }
 
         return rootModelsDirectory.JoinDir(modelType.ConvertTo<SharedFolderType>().GetStringValue());

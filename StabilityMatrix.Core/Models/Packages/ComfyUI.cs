@@ -8,6 +8,8 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
+using StabilityMatrix.Core.Models.Packages.Config;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -46,29 +48,144 @@ public class ComfyUI(
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
 
     // https://github.com/comfyanonymous/ComfyUI/blob/master/folder_paths.py#L11
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
+    public override SharedFolderLayout SharedFolderLayout =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = ["models/checkpoints"],
-            [SharedFolderType.Diffusers] = ["models/diffusers"],
-            [SharedFolderType.Lora] = ["models/loras"],
-            [SharedFolderType.CLIP] = ["models/clip"],
-            [SharedFolderType.InvokeClipVision] = ["models/clip_vision"],
-            [SharedFolderType.TextualInversion] = ["models/embeddings"],
-            [SharedFolderType.VAE] = ["models/vae"],
-            [SharedFolderType.ApproxVAE] = ["models/vae_approx"],
-            [SharedFolderType.ControlNet] = ["models/controlnet/ControlNet"],
-            [SharedFolderType.GLIGEN] = ["models/gligen"],
-            [SharedFolderType.ESRGAN] = ["models/upscale_models"],
-            [SharedFolderType.Hypernetwork] = ["models/hypernetworks"],
-            [SharedFolderType.IpAdapter] = ["models/ipadapter/base"],
-            [SharedFolderType.InvokeIpAdapters15] = ["models/ipadapter/sd15"],
-            [SharedFolderType.InvokeIpAdaptersXl] = ["models/ipadapter/sdxl"],
-            [SharedFolderType.T2IAdapter] = ["models/controlnet/T2IAdapter"],
-            [SharedFolderType.PromptExpansion] = ["models/prompt_expansion"],
-            [SharedFolderType.Ultralytics] = ["models/ultralytics"],
-            [SharedFolderType.Sams] = ["models/sams"],
-            [SharedFolderType.Unet] = ["models/diffusion_models"]
+            RelativeConfigPath = "extra_model_paths.yaml",
+            ConfigFileType = ConfigFileType.Yaml,
+            ConfigSharingOptions =
+            {
+                RootKey = "stability_matrix",
+                ConfigDefaultType = ConfigDefaultType.ClearRoot
+            },
+            Rules =
+            [
+                new SharedFolderLayoutRule // Checkpoints
+                {
+                    SourceTypes = [SharedFolderType.StableDiffusion],
+                    TargetRelativePaths = ["models/checkpoints"],
+                    ConfigDocumentPaths = ["checkpoints"]
+                },
+                new SharedFolderLayoutRule // Diffusers
+                {
+                    SourceTypes = [SharedFolderType.Diffusers],
+                    TargetRelativePaths = ["models/diffusers"],
+                    ConfigDocumentPaths = ["diffusers"]
+                },
+                new SharedFolderLayoutRule // Loras
+                {
+                    SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
+                    TargetRelativePaths = ["models/loras"],
+                    ConfigDocumentPaths = ["loras"]
+                },
+                new SharedFolderLayoutRule // CLIP (Text Encoders)
+                {
+                    SourceTypes = [SharedFolderType.TextEncoders],
+                    TargetRelativePaths = ["models/clip"],
+                    ConfigDocumentPaths = ["clip"]
+                },
+                new SharedFolderLayoutRule // CLIP Vision
+                {
+                    SourceTypes = [SharedFolderType.ClipVision],
+                    TargetRelativePaths = ["models/clip_vision"],
+                    ConfigDocumentPaths = ["clip_vision"]
+                },
+                new SharedFolderLayoutRule // Embeddings / Textual Inversion
+                {
+                    SourceTypes = [SharedFolderType.Embeddings],
+                    TargetRelativePaths = ["models/embeddings"],
+                    ConfigDocumentPaths = ["embeddings"]
+                },
+                new SharedFolderLayoutRule // VAE
+                {
+                    SourceTypes = [SharedFolderType.VAE],
+                    TargetRelativePaths = ["models/vae"],
+                    ConfigDocumentPaths = ["vae"]
+                },
+                new SharedFolderLayoutRule // VAE Approx
+                {
+                    SourceTypes = [SharedFolderType.ApproxVAE],
+                    TargetRelativePaths = ["models/vae_approx"],
+                    ConfigDocumentPaths = ["vae_approx"]
+                },
+                new SharedFolderLayoutRule // ControlNet / T2IAdapter
+                {
+                    SourceTypes = [SharedFolderType.ControlNet, SharedFolderType.T2IAdapter],
+                    TargetRelativePaths = ["models/controlnet"],
+                    ConfigDocumentPaths = ["controlnet"]
+                },
+                new SharedFolderLayoutRule // GLIGEN
+                {
+                    SourceTypes = [SharedFolderType.GLIGEN],
+                    TargetRelativePaths = ["models/gligen"],
+                    ConfigDocumentPaths = ["gligen"]
+                },
+                new SharedFolderLayoutRule // Upscalers
+                {
+                    SourceTypes =
+                    [
+                        SharedFolderType.ESRGAN,
+                        SharedFolderType.RealESRGAN,
+                        SharedFolderType.SwinIR
+                    ],
+                    TargetRelativePaths = ["models/upscale_models"],
+                    ConfigDocumentPaths = ["upscale_models"]
+                },
+                new SharedFolderLayoutRule // Hypernetworks
+                {
+                    SourceTypes = [SharedFolderType.Hypernetwork],
+                    TargetRelativePaths = ["models/hypernetworks"],
+                    ConfigDocumentPaths = ["hypernetworks"]
+                },
+                new SharedFolderLayoutRule // IP-Adapter Base, SD1.5, SDXL
+                {
+                    SourceTypes =
+                    [
+                        SharedFolderType.IpAdapter,
+                        SharedFolderType.IpAdapters15,
+                        SharedFolderType.IpAdaptersXl
+                    ],
+                    TargetRelativePaths = ["models/ipadapter"], // Single target path
+                    ConfigDocumentPaths = ["ipadapter"]
+                },
+                new SharedFolderLayoutRule // Prompt Expansion
+                {
+                    SourceTypes = [SharedFolderType.PromptExpansion],
+                    TargetRelativePaths = ["models/prompt_expansion"],
+                    ConfigDocumentPaths = ["prompt_expansion"]
+                },
+                new SharedFolderLayoutRule // Ultralytics
+                {
+                    SourceTypes = [SharedFolderType.Ultralytics], // Might need specific UltralyticsBbox/Segm if symlinks differ
+                    TargetRelativePaths = ["models/ultralytics"],
+                    ConfigDocumentPaths = ["ultralytics"]
+                },
+                // Config only rules for Ultralytics bbox/segm
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Ultralytics],
+                    SourceSubPath = "bbox",
+                    ConfigDocumentPaths = ["ultralytics_bbox"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Ultralytics],
+                    SourceSubPath = "segm",
+                    ConfigDocumentPaths = ["ultralytics_segm"]
+                },
+                new SharedFolderLayoutRule // SAMs
+                {
+                    SourceTypes = [SharedFolderType.Sams],
+                    TargetRelativePaths = ["models/sams"],
+                    ConfigDocumentPaths = ["sams"]
+                },
+                new SharedFolderLayoutRule // Diffusion Models / Unet
+                {
+                    SourceTypes = [SharedFolderType.DiffusionModels],
+                    TargetRelativePaths = ["models/diffusion_models"],
+                    ConfigDocumentPaths = ["diffusion_models"]
+                },
+            ]
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -76,21 +193,21 @@ public class ComfyUI(
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "127.0.0.1",
                 Options = ["--listen"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "8188",
                 Options = ["--port"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "VRAM",
                 Type = LaunchOptionType.Bool,
@@ -102,7 +219,7 @@ public class ComfyUI(
                 },
                 Options = ["--highvram", "--normalvram", "--lowvram", "--novram"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Reserve VRAM",
                 Type = LaunchOptionType.String,
@@ -111,21 +228,21 @@ public class ComfyUI(
                     "Sets the amount of VRAM (in GB) you want to reserve for use by your OS/other software",
                 Options = ["--reserve-vram"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Preview Method",
                 Type = LaunchOptionType.Bool,
                 InitialValue = "--preview-method auto",
                 Options = ["--preview-method auto", "--preview-method latent2rgb", "--preview-method taesd"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.PreferDirectMLOrZluda() && this is not ComfyZluda,
                 Options = ["--directml"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Use CPU only",
                 Type = LaunchOptionType.Bool,
@@ -133,7 +250,7 @@ public class ComfyUI(
                     !Compat.IsMacOS && !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
                 Options = ["--cpu"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Cross Attention Method",
                 Type = LaunchOptionType.Bool,
@@ -146,36 +263,37 @@ public class ComfyUI(
                 [
                     "--use-split-cross-attention",
                     "--use-quad-cross-attention",
-                    "--use-pytorch-cross-attention"
+                    "--use-pytorch-cross-attention",
+                    "--use-sage-attention"
                 ]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Force Floating Point Precision",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS ? "--force-fp16" : null,
                 Options = ["--force-fp32", "--force-fp16"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "VAE Precision",
                 Type = LaunchOptionType.Bool,
                 Options = ["--fp16-vae", "--fp32-vae", "--bf16-vae"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Disable Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
                 Options = ["--disable-xformers"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Disable upcasting of attention",
                 Type = LaunchOptionType.Bool,
                 Options = ["--dont-upcast-attention"]
             },
-            new LaunchOptionDefinition
+            new()
             {
                 Name = "Auto-Launch",
                 Type = LaunchOptionType.Bool,
@@ -188,6 +306,28 @@ public class ComfyUI(
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
+
+    public override List<ExtraPackageCommand> GetExtraCommands() =>
+        Compat.IsWindows
+            ?
+            [
+                new ExtraPackageCommand
+                {
+                    CommandName = "Install Triton and SageAttention",
+                    Command = async installedPackage =>
+                    {
+                        if (installedPackage == null || string.IsNullOrEmpty(installedPackage.FullPath))
+                        {
+                            throw new InvalidOperationException(
+                                "Package not found or not installed correctly"
+                            );
+                        }
+
+                        await InstallTritonAndSageAttention(installedPackage).ConfigureAwait(false);
+                    }
+                }
+            ]
+            : [];
 
     public override async Task InstallPackage(
         string installLocation,
@@ -213,11 +353,12 @@ public class ComfyUI(
         if (isBlackwell && torchVersion is TorchIndex.Cuda)
         {
             pipArgs = pipArgs
-                .AddArg("--upgrade")
                 .AddArg("--pre")
                 .WithTorch()
                 .WithTorchVision()
-                .WithTorchExtraIndex("nightly/cu128");
+                .WithTorchAudio()
+                .WithTorchExtraIndex("nightly/cu128")
+                .AddArg("--upgrade");
 
             if (installedPackage.PipOverrides != null)
             {
@@ -265,7 +406,7 @@ public class ComfyUI(
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(
             await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-            excludePattern: isBlackwell ? "torch$|torchvision$|numpy" : "torch$|numpy"
+            excludePattern: isBlackwell ? "torch$|torchvision$|torchaudio$|numpy" : "torch$|numpy"
         );
 
         // https://github.com/comfyanonymous/ComfyUI/pull/4121
@@ -318,201 +459,6 @@ public class ComfyUI(
             }
             OnStartupComplete(WebUrl);
         }
-    }
-
-    public override Task SetupModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    ) =>
-        sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink
-                => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
-            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
-            SharedFolderMethod.None => Task.CompletedTask,
-            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
-        };
-
-    public override Task RemoveModelFolderLinks(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
-    {
-        return sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
-            SharedFolderMethod.Configuration => RemoveConfigSection(installDirectory),
-            SharedFolderMethod.None => Task.CompletedTask,
-            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
-        };
-    }
-
-    private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)
-    {
-        var extraPathsYamlPath = installDirectory.JoinFile("extra_model_paths.yaml");
-        var modelsDir = SettingsManager.ModelsDirectory;
-
-        if (!extraPathsYamlPath.Exists)
-        {
-            Logger.Info("Creating extra_model_paths.yaml");
-            extraPathsYamlPath.Create();
-        }
-
-        var yaml = await extraPathsYamlPath.ReadAllTextAsync().ConfigureAwait(false);
-        using var sr = new StringReader(yaml);
-        var yamlStream = new YamlStream();
-        yamlStream.Load(sr);
-
-        if (!yamlStream.Documents.Any())
-        {
-            yamlStream.Documents.Add(new YamlDocument(new YamlMappingNode()));
-        }
-
-        var root = yamlStream.Documents[0].RootNode;
-        if (root is not YamlMappingNode mappingNode)
-        {
-            throw new Exception("Invalid extra_model_paths.yaml");
-        }
-        // check if we have a child called "stability_matrix"
-        var stabilityMatrixNode = mappingNode.Children.FirstOrDefault(
-            c => c.Key.ToString() == "stability_matrix"
-        );
-
-        if (stabilityMatrixNode.Key != null)
-        {
-            if (stabilityMatrixNode.Value is not YamlMappingNode nodeValue)
-                return;
-
-            nodeValue.Children["checkpoints"] = Path.Combine(modelsDir, "StableDiffusion");
-            nodeValue.Children["vae"] = Path.Combine(modelsDir, "VAE");
-            nodeValue.Children["loras"] =
-                $"{Path.Combine(modelsDir, "Lora")}\n" + $"{Path.Combine(modelsDir, "LyCORIS")}";
-            nodeValue.Children["upscale_models"] =
-                $"{Path.Combine(modelsDir, "ESRGAN")}\n"
-                + $"{Path.Combine(modelsDir, "RealESRGAN")}\n"
-                + $"{Path.Combine(modelsDir, "SwinIR")}";
-            nodeValue.Children["embeddings"] = Path.Combine(modelsDir, "TextualInversion");
-            nodeValue.Children["hypernetworks"] = Path.Combine(modelsDir, "Hypernetwork");
-            nodeValue.Children["controlnet"] = string.Join(
-                '\n',
-                Path.Combine(modelsDir, "ControlNet"),
-                Path.Combine(modelsDir, "T2IAdapter")
-            );
-            nodeValue.Children["clip"] = Path.Combine(modelsDir, "CLIP");
-            nodeValue.Children["clip_vision"] = Path.Combine(modelsDir, "InvokeClipVision");
-            nodeValue.Children["diffusers"] = Path.Combine(modelsDir, "Diffusers");
-            nodeValue.Children["gligen"] = Path.Combine(modelsDir, "GLIGEN");
-            nodeValue.Children["vae_approx"] = Path.Combine(modelsDir, "ApproxVAE");
-            nodeValue.Children["ipadapter"] = string.Join(
-                '\n',
-                Path.Combine(modelsDir, "IpAdapter"),
-                Path.Combine(modelsDir, "InvokeIpAdapters15"),
-                Path.Combine(modelsDir, "InvokeIpAdaptersXl")
-            );
-            nodeValue.Children["prompt_expansion"] = Path.Combine(modelsDir, "PromptExpansion");
-            nodeValue.Children["ultralytics"] = Path.Combine(modelsDir, "Ultralytics");
-            nodeValue.Children["ultralytics_bbox"] = Path.Combine(modelsDir, "Ultralytics", "bbox");
-            nodeValue.Children["ultralytics_segm"] = Path.Combine(modelsDir, "Ultralytics", "segm");
-            nodeValue.Children["sams"] = Path.Combine(modelsDir, "Sams");
-            nodeValue.Children["diffusion_models"] = Path.Combine(modelsDir, "Unet");
-        }
-        else
-        {
-            stabilityMatrixNode = new KeyValuePair<YamlNode, YamlNode>(
-                new YamlScalarNode("stability_matrix"),
-                new YamlMappingNode
-                {
-                    { "checkpoints", Path.Combine(modelsDir, "StableDiffusion") },
-                    { "vae", Path.Combine(modelsDir, "VAE") },
-                    { "loras", $"{Path.Combine(modelsDir, "Lora")}\n{Path.Combine(modelsDir, "LyCORIS")}" },
-                    {
-                        "upscale_models",
-                        $"{Path.Combine(modelsDir, "ESRGAN")}\n{Path.Combine(modelsDir, "RealESRGAN")}\n{Path.Combine(modelsDir, "SwinIR")}"
-                    },
-                    { "embeddings", Path.Combine(modelsDir, "TextualInversion") },
-                    { "hypernetworks", Path.Combine(modelsDir, "Hypernetwork") },
-                    {
-                        "controlnet",
-                        string.Join(
-                            '\n',
-                            Path.Combine(modelsDir, "ControlNet"),
-                            Path.Combine(modelsDir, "T2IAdapter")
-                        )
-                    },
-                    { "clip", Path.Combine(modelsDir, "CLIP") },
-                    { "clip_vision", Path.Combine(modelsDir, "InvokeClipVision") },
-                    { "diffusers", Path.Combine(modelsDir, "Diffusers") },
-                    { "gligen", Path.Combine(modelsDir, "GLIGEN") },
-                    { "vae_approx", Path.Combine(modelsDir, "ApproxVAE") },
-                    {
-                        "ipadapter",
-                        string.Join(
-                            '\n',
-                            Path.Combine(modelsDir, "IpAdapter"),
-                            Path.Combine(modelsDir, "InvokeIpAdapters15"),
-                            Path.Combine(modelsDir, "InvokeIpAdaptersXl")
-                        )
-                    },
-                    { "prompt_expansion", Path.Combine(modelsDir, "PromptExpansion") },
-                    { "ultralytics", Path.Combine(modelsDir, "Ultralytics") },
-                    { "ultralytics_bbox", Path.Combine(modelsDir, "Ultralytics", "bbox") },
-                    { "ultralytics_segm", Path.Combine(modelsDir, "Ultralytics", "segm") },
-                    { "sams", Path.Combine(modelsDir, "Sams") },
-                    { "diffusion_models", Path.Combine(modelsDir, "Unet") }
-                }
-            );
-        }
-
-        var newRootNode = new YamlMappingNode();
-        foreach (var child in mappingNode.Children.Where(c => c.Key.ToString() != "stability_matrix"))
-        {
-            newRootNode.Children.Add(child);
-        }
-
-        newRootNode.Children.Add(stabilityMatrixNode);
-
-        var serializer = new SerializerBuilder()
-            .WithNamingConvention(UnderscoredNamingConvention.Instance)
-            .WithDefaultScalarStyle(ScalarStyle.Literal)
-            .Build();
-
-        var yamlData = serializer.Serialize(newRootNode);
-        await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);
-    }
-
-    private static async Task RemoveConfigSection(DirectoryPath installDirectory)
-    {
-        var extraPathsYamlPath = installDirectory.JoinFile("extra_model_paths.yaml");
-
-        if (!extraPathsYamlPath.Exists)
-        {
-            return;
-        }
-
-        var yaml = await extraPathsYamlPath.ReadAllTextAsync().ConfigureAwait(false);
-        using var sr = new StringReader(yaml);
-        var yamlStream = new YamlStream();
-        yamlStream.Load(sr);
-
-        if (!yamlStream.Documents.Any())
-        {
-            return;
-        }
-
-        var root = yamlStream.Documents[0].RootNode;
-        if (root is not YamlMappingNode mappingNode)
-        {
-            return;
-        }
-
-        mappingNode.Children.Remove("stability_matrix");
-
-        var serializer = new SerializerBuilder()
-            .WithNamingConvention(UnderscoredNamingConvention.Instance)
-            .Build();
-        var yamlData = serializer.Serialize(mappingNode);
-
-        await extraPathsYamlPath.WriteAllTextAsync(yamlData).ConfigureAwait(false);
     }
 
     public override IPackageExtensionManager ExtensionManager =>
@@ -734,6 +680,67 @@ public class ComfyUI(
                     progress?.Report(new ProgressReport(1f, $"Ran launch.py for {installedDir.Name}"));
                 }
             }
+        }
+    }
+
+    private async Task InstallTritonAndSageAttention(InstalledPackage installedPackage)
+    {
+        if (installedPackage?.FullPath is null)
+            return;
+
+        var installSageStep = new InstallSageAttentionStep(DownloadService, PrerequisiteHelper)
+        {
+            InstalledPackage = installedPackage,
+            WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
+            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
+            IsBlackwellGpu =
+                SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu()
+        };
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteMessage = "Triton and SageAttention installed successfully",
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps([installSageStep]).ConfigureAwait(false);
+
+        if (runner.Failed)
+            return;
+
+        await using var transaction = settingsManager.BeginTransaction();
+        var attentionOptions = transaction
+            .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
+            .LaunchArgs?.Where(opt => opt.Name.Contains("attention"));
+
+        if (attentionOptions is not null)
+        {
+            foreach (var option in attentionOptions)
+            {
+                option.OptionValue = false;
+            }
+        }
+
+        var sageAttention = transaction
+            .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
+            .LaunchArgs?.FirstOrDefault(opt => opt.Name.Contains("sage-attention"));
+
+        if (sageAttention is not null)
+        {
+            sageAttention.OptionValue = true;
+        }
+        else
+        {
+            transaction
+                .Settings.InstalledPackages.First(x => x.Id == installedPackage.Id)
+                .LaunchArgs?.Add(
+                    new LaunchOption
+                    {
+                        Name = "--use-sage-attention",
+                        Type = LaunchOptionType.Bool,
+                        OptionValue = true
+                    }
+                );
         }
     }
 }

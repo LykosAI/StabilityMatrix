@@ -8,17 +8,30 @@ public readonly record struct SharedFolderLayoutRule
 
     public string[] ConfigDocumentPaths { get; init; }
 
+    /// <summary>
+    /// For rules that use the root models folder instead of a specific SharedFolderType
+    /// </summary>
+    public bool IsRoot { get; init; }
+
+    /// <summary>
+    /// Optional sub-path from all source types to the target path.
+    /// </summary>
+    public string? SourceSubPath { get; init; }
+
     public SharedFolderLayoutRule()
     {
         SourceTypes = [];
         TargetRelativePaths = [];
         ConfigDocumentPaths = [];
+        IsRoot = false;
     }
 
     public SharedFolderLayoutRule(SharedFolderType[] types, string[] targets)
     {
         SourceTypes = types;
         TargetRelativePaths = targets;
+        ConfigDocumentPaths = [];
+        IsRoot = false;
     }
 
     public SharedFolderLayoutRule(SharedFolderType[] types, string[] targets, string[] configs)
@@ -26,6 +39,7 @@ public readonly record struct SharedFolderLayoutRule
         SourceTypes = types;
         TargetRelativePaths = targets;
         ConfigDocumentPaths = configs;
+        IsRoot = false;
     }
 
     public SharedFolderLayoutRule Union(SharedFolderLayoutRule other)
@@ -34,7 +48,8 @@ public readonly record struct SharedFolderLayoutRule
         {
             SourceTypes = SourceTypes.Union(other.SourceTypes).ToArray(),
             TargetRelativePaths = TargetRelativePaths.Union(other.TargetRelativePaths).ToArray(),
-            ConfigDocumentPaths = ConfigDocumentPaths.Union(other.ConfigDocumentPaths).ToArray()
+            ConfigDocumentPaths = ConfigDocumentPaths.Union(other.ConfigDocumentPaths).ToArray(),
+            IsRoot = IsRoot || other.IsRoot
         };
     }
 }

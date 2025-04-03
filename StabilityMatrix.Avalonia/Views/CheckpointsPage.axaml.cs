@@ -204,11 +204,7 @@ public partial class CheckpointsPage : UserControlBase
                         {
                             allSelectedCheckpoints.Add(vm);
                         }
-
-                        foreach (var checkpoint in allSelectedCheckpoints)
-                        {
-                            await checkpointsVm.MoveBetweenFolders(checkpoint.CheckpointFile, category.Path);
-                        }
+                        await checkpointsVm.MoveBetweenFolders(allSelectedCheckpoints, category.Path);
                     }
                     else
                     {

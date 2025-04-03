@@ -341,7 +341,7 @@ public partial class ModelCardViewModel(
         if (model is null)
             return;
 
-        if (model.Local?.SharedFolderType is SharedFolderType.Unet)
+        if (model.Local?.SharedFolderType is SharedFolderType.DiffusionModels)
         {
             SelectedUnetModel = model;
         }

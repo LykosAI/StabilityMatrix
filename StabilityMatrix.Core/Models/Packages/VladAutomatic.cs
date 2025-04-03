@@ -10,6 +10,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Config;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -54,26 +55,116 @@ public class VladAutomatic(
         };
 
     // https://github.com/vladmandic/automatic/blob/master/modules/shared.py#L324
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
+    public virtual SharedFolderLayout SharedFolderLayout =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = new[] { "models/Stable-diffusion" },
-            [SharedFolderType.Diffusers] = new[] { "models/Diffusers" },
-            [SharedFolderType.VAE] = new[] { "models/VAE" },
-            [SharedFolderType.TextualInversion] = new[] { "models/embeddings" },
-            [SharedFolderType.Hypernetwork] = new[] { "models/hypernetworks" },
-            [SharedFolderType.Codeformer] = new[] { "models/Codeformer" },
-            [SharedFolderType.GFPGAN] = new[] { "models/GFPGAN" },
-            [SharedFolderType.BSRGAN] = new[] { "models/BSRGAN" },
-            [SharedFolderType.ESRGAN] = new[] { "models/ESRGAN" },
-            [SharedFolderType.RealESRGAN] = new[] { "models/RealESRGAN" },
-            [SharedFolderType.ScuNET] = new[] { "models/ScuNET" },
-            [SharedFolderType.SwinIR] = new[] { "models/SwinIR" },
-            [SharedFolderType.LDSR] = new[] { "models/LDSR" },
-            [SharedFolderType.CLIP] = new[] { "models/CLIP" },
-            [SharedFolderType.Lora] = new[] { "models/Lora" },
-            [SharedFolderType.LyCORIS] = new[] { "models/LyCORIS" },
-            [SharedFolderType.ControlNet] = new[] { "models/ControlNet" }
+            RelativeConfigPath = "config.json",
+            ConfigFileType = ConfigFileType.Json,
+            Rules =
+            [
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.StableDiffusion],
+                    TargetRelativePaths = ["models/Stable-diffusion"],
+                    ConfigDocumentPaths = ["ckpt_dir"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Diffusers],
+                    TargetRelativePaths = ["models/Diffusers"],
+                    ConfigDocumentPaths = ["diffusers_dir"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.VAE],
+                    TargetRelativePaths = ["models/VAE"],
+                    ConfigDocumentPaths = ["vae_dir"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Embeddings],
+                    TargetRelativePaths = ["models/embeddings"],
+                    ConfigDocumentPaths = ["embeddings_dir"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Hypernetwork],
+                    TargetRelativePaths = ["models/hypernetworks"],
+                    ConfigDocumentPaths = ["hypernetwork_dir"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Codeformer],
+                    TargetRelativePaths = ["models/Codeformer"],
+                    ConfigDocumentPaths = ["codeformer_models_path"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.GFPGAN],
+                    TargetRelativePaths = ["models/GFPGAN"],
+                    ConfigDocumentPaths = ["gfpgan_models_path"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.BSRGAN],
+                    TargetRelativePaths = ["models/BSRGAN"],
+                    ConfigDocumentPaths = ["bsrgan_models_path"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ESRGAN],
+                    TargetRelativePaths = ["models/ESRGAN"],
+                    ConfigDocumentPaths = ["esrgan_models_path"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.RealESRGAN],
+                    TargetRelativePaths = ["models/RealESRGAN"],
+                    ConfigDocumentPaths = ["realesrgan_models_path"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ScuNET],
+                    TargetRelativePaths = ["models/ScuNET"],
+                    ConfigDocumentPaths = ["scunet_models_path"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.SwinIR],
+                    TargetRelativePaths = ["models/SwinIR"],
+                    ConfigDocumentPaths = ["swinir_models_path"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.LDSR],
+                    TargetRelativePaths = ["models/LDSR"],
+                    ConfigDocumentPaths = ["ldsr_models_path"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.TextEncoders],
+                    TargetRelativePaths = ["models/CLIP"],
+                    ConfigDocumentPaths = ["clip_models_path"]
+                }, // CLIP
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Lora],
+                    TargetRelativePaths = ["models/Lora"],
+                    ConfigDocumentPaths = ["lora_dir"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.LyCORIS],
+                    TargetRelativePaths = ["models/LyCORIS"],
+                    ConfigDocumentPaths = ["lyco_dir"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ControlNet, SharedFolderType.T2IAdapter],
+                    TargetRelativePaths = ["models/ControlNet"],
+                    ConfigDocumentPaths = ["control_net_models_path"]
+                }, // Combined ControlNet/T2I
+            ]
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -385,146 +476,6 @@ public class VladAutomatic(
         }
 
         return baseUpdateResult;
-    }
-
-    public override Task SetupModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
-    {
-        switch (sharedFolderMethod)
-        {
-            case SharedFolderMethod.Symlink:
-                return base.SetupModelFolders(installDirectory, sharedFolderMethod);
-            case SharedFolderMethod.None:
-                return Task.CompletedTask;
-        }
-
-        // Config option
-        var configJsonPath = installDirectory + "config.json";
-        var exists = File.Exists(configJsonPath);
-        JsonObject? configRoot;
-        if (exists)
-        {
-            var configJson = File.ReadAllText(configJsonPath);
-            try
-            {
-                configRoot = JsonSerializer.Deserialize<JsonObject>(configJson) ?? new JsonObject();
-            }
-            catch (JsonException e)
-            {
-                Logger.Error(e, "Error setting up Vlad shared model config");
-                return Task.CompletedTask;
-            }
-        }
-        else
-        {
-            configRoot = new JsonObject();
-        }
-
-        configRoot["ckpt_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "StableDiffusion");
-        configRoot["diffusers_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Diffusers");
-        configRoot["vae_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "VAE");
-        configRoot["lora_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Lora");
-        configRoot["lyco_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "LyCORIS");
-        configRoot["embeddings_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "TextualInversion");
-        configRoot["hypernetwork_dir"] = Path.Combine(SettingsManager.ModelsDirectory, "Hypernetwork");
-        configRoot["codeformer_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "Codeformer");
-        configRoot["gfpgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "GFPGAN");
-        configRoot["bsrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "BSRGAN");
-        configRoot["esrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ESRGAN");
-        configRoot["realesrgan_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "RealESRGAN");
-        configRoot["scunet_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ScuNET");
-        configRoot["swinir_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "SwinIR");
-        configRoot["ldsr_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "LDSR");
-        configRoot["clip_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "CLIP");
-        configRoot["control_net_models_path"] = Path.Combine(SettingsManager.ModelsDirectory, "ControlNet");
-
-        var configJsonStr = JsonSerializer.Serialize(
-            configRoot,
-            new JsonSerializerOptions { WriteIndented = true }
-        );
-        File.WriteAllText(configJsonPath, configJsonStr);
-
-        return Task.CompletedTask;
-    }
-
-    public override Task UpdateModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    ) =>
-        sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink => base.UpdateModelFolders(installDirectory, sharedFolderMethod),
-            SharedFolderMethod.None => Task.CompletedTask,
-            SharedFolderMethod.Configuration => SetupModelFolders(installDirectory, sharedFolderMethod),
-            _ => Task.CompletedTask
-        };
-
-    public override Task RemoveModelFolderLinks(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    ) =>
-        sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
-            SharedFolderMethod.None => Task.CompletedTask,
-            SharedFolderMethod.Configuration => RemoveConfigSettings(installDirectory),
-            _ => Task.CompletedTask
-        };
-
-    private Task RemoveConfigSettings(string installDirectory)
-    {
-        var configJsonPath = Path.Combine(installDirectory, "config.json");
-        var exists = File.Exists(configJsonPath);
-        JsonObject? configRoot;
-        if (exists)
-        {
-            var configJson = File.ReadAllText(configJsonPath);
-            try
-            {
-                configRoot = JsonSerializer.Deserialize<JsonObject>(configJson);
-                if (configRoot == null)
-                {
-                    return Task.CompletedTask;
-                }
-            }
-            catch (JsonException e)
-            {
-                Logger.Error(e, "Error removing Vlad shared model config");
-                return Task.CompletedTask;
-            }
-        }
-        else
-        {
-            return Task.CompletedTask;
-        }
-
-        configRoot.Remove("ckpt_dir");
-        configRoot.Remove("diffusers_dir");
-        configRoot.Remove("vae_dir");
-        configRoot.Remove("lora_dir");
-        configRoot.Remove("lyco_dir");
-        configRoot.Remove("embeddings_dir");
-        configRoot.Remove("hypernetwork_dir");
-        configRoot.Remove("codeformer_models_path");
-        configRoot.Remove("gfpgan_models_path");
-        configRoot.Remove("bsrgan_models_path");
-        configRoot.Remove("esrgan_models_path");
-        configRoot.Remove("realesrgan_models_path");
-        configRoot.Remove("scunet_models_path");
-        configRoot.Remove("swinir_models_path");
-        configRoot.Remove("ldsr_models_path");
-        configRoot.Remove("clip_models_path");
-        configRoot.Remove("control_net_models_path");
-
-        var configJsonStr = JsonSerializer.Serialize(
-            configRoot,
-            new JsonSerializerOptions { WriteIndented = true }
-        );
-        File.WriteAllText(configJsonPath, configJsonStr);
-
-        return Task.CompletedTask;
     }
 
     private class VladExtensionManager(VladAutomatic package)

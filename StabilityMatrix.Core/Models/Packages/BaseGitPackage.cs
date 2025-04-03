@@ -617,44 +617,52 @@ public abstract class BaseGitPackage : BasePackage
         SharedFolderMethod sharedFolderMethod
     )
     {
-        if (sharedFolderMethod != SharedFolderMethod.Symlink || SharedFolders is not { } sharedFolders)
+        if (sharedFolderMethod is SharedFolderMethod.Configuration && SharedFolderLayout is not null)
         {
-            return;
+            await SharedFoldersConfigHelper
+                .UpdateConfigFileForSharedAsync(
+                    SharedFolderLayout,
+                    installDirectory.FullPath,
+                    SettingsManager.ModelsDirectory
+                )
+                .ConfigureAwait(false);
         }
-
-        var modelsDir = new DirectoryPath(SettingsManager.ModelsDirectory);
-
-        // fix infinity controlnet folders
-        await FixInfinityFolders(modelsDir.JoinDir("ControlNet"), "ControlNet").ConfigureAwait(false);
-        await FixForgeInfinity().ConfigureAwait(false);
-
-        // fix duplicate links in models dir
-        // see https://github.com/LykosAI/StabilityMatrix/issues/338
-        string[] duplicatePaths =
-        [
-            Path.Combine("ControlNet", "ControlNet"),
-            Path.Combine("IPAdapter", "base"),
-            Path.Combine("IPAdapter", "sd15"),
-            Path.Combine("IPAdapter", "sdxl")
-        ];
-
-        foreach (var duplicatePath in duplicatePaths)
+        else if (sharedFolderMethod is SharedFolderMethod.Symlink && SharedFolders is { } sharedFolders)
         {
-            var linkDir = modelsDir.JoinDir(duplicatePath);
-            if (!linkDir.IsSymbolicLink)
-                continue;
+            var modelsDir = new DirectoryPath(SettingsManager.ModelsDirectory);
 
-            Logger.Info("Removing duplicate junction at {Path}", linkDir.ToString());
-            await linkDir.DeleteAsync(false).ConfigureAwait(false);
+            // fix infinity controlnet folders
+            await FixInfinityFolders(modelsDir.JoinDir("ControlNet"), "ControlNet").ConfigureAwait(false);
+            await FixForgeInfinity().ConfigureAwait(false);
+
+            // fix duplicate links in models dir
+            // see https://github.com/LykosAI/StabilityMatrix/issues/338
+            string[] duplicatePaths =
+            [
+                Path.Combine("ControlNet", "ControlNet"),
+                Path.Combine("IPAdapter", "base"),
+                Path.Combine("IPAdapter", "sd15"),
+                Path.Combine("IPAdapter", "sdxl")
+            ];
+
+            foreach (var duplicatePath in duplicatePaths)
+            {
+                var linkDir = modelsDir.JoinDir(duplicatePath);
+                if (!linkDir.IsSymbolicLink)
+                    continue;
+
+                Logger.Info("Removing duplicate junction at {Path}", linkDir.ToString());
+                await linkDir.DeleteAsync(false).ConfigureAwait(false);
+            }
+
+            await Helper
+                .SharedFolders.UpdateLinksForPackage(
+                    sharedFolders,
+                    SettingsManager.ModelsDirectory,
+                    installDirectory
+                )
+                .ConfigureAwait(false);
         }
-
-        await Helper
-            .SharedFolders.UpdateLinksForPackage(
-                sharedFolders,
-                SettingsManager.ModelsDirectory,
-                installDirectory
-            )
-            .ConfigureAwait(false);
     }
 
     public override Task UpdateModelFolders(
@@ -667,7 +675,16 @@ public abstract class BaseGitPackage : BasePackage
         SharedFolderMethod sharedFolderMethod
     )
     {
-        if (SharedFolders is not null && sharedFolderMethod == SharedFolderMethod.Symlink)
+        // Auto handling for SharedFolderLayout
+        if (sharedFolderMethod is SharedFolderMethod.Configuration && SharedFolderLayout is not null)
+        {
+            return SharedFoldersConfigHelper.UpdateConfigFileForDefaultAsync(
+                SharedFolderLayout,
+                installDirectory.FullPath
+            );
+        }
+
+        if (SharedFolders is not null && sharedFolderMethod is SharedFolderMethod.Symlink)
         {
             Helper.SharedFolders.RemoveLinksForPackage(SharedFolders, installDirectory);
         }

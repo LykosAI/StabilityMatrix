@@ -108,8 +108,8 @@ public partial class MainWindow : AppWindowBase
         )
         {
             Position = new PixelPoint(windowSettings.X, windowSettings.Y);
-            Width = windowSettings.Width;
-            Height = windowSettings.Height;
+            Width = Math.Max(300, windowSettings.Width);
+            Height = Math.Max(300, windowSettings.Height);
             WindowState = windowSettings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
         }
         else
@@ -178,13 +178,21 @@ public partial class MainWindow : AppWindowBase
                 settingsManager.Transaction(
                     s =>
                     {
-                        s.WindowSettings = new WindowSettings(
-                            newSize.Width,
-                            newSize.Height,
-                            validWindowPosition ? Position.X : 0,
-                            validWindowPosition ? Position.Y : 0,
-                            WindowState == WindowState.Maximized
-                        );
+                        var isMaximized = WindowState == WindowState.Maximized;
+                        if (isMaximized && s.WindowSettings != null)
+                        {
+                            s.WindowSettings = s.WindowSettings with { IsMaximized = true };
+                        }
+                        else
+                        {
+                            s.WindowSettings = new WindowSettings(
+                                newSize.Width,
+                                newSize.Height,
+                                validWindowPosition ? Position.X : 0,
+                                validWindowPosition ? Position.Y : 0,
+                                WindowState == WindowState.Maximized
+                            );
+                        }
                     },
                     ignoreMissingLibraryDir: true
                 );
@@ -201,13 +209,23 @@ public partial class MainWindow : AppWindowBase
                 settingsManager.Transaction(
                     s =>
                     {
-                        s.WindowSettings = new WindowSettings(
-                            Width,
-                            Height,
-                            position.X,
-                            position.Y,
-                            WindowState == WindowState.Maximized
-                        );
+                        var isMaximized = WindowState == WindowState.Maximized;
+                        var validWindowPosition = Screens.All.Any(screen => screen.Bounds.Contains(position));
+
+                        if (isMaximized && s.WindowSettings != null)
+                        {
+                            s.WindowSettings = s.WindowSettings with { IsMaximized = true };
+                        }
+                        else
+                        {
+                            s.WindowSettings = new WindowSettings(
+                                Width,
+                                Height,
+                                validWindowPosition ? position.X : 0,
+                                validWindowPosition ? position.Y : 0,
+                                WindowState == WindowState.Maximized
+                            );
+                        }
                     },
                     ignoreMissingLibraryDir: true
                 );

@@ -1,5 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using Octokit;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Database;
@@ -54,6 +56,8 @@ public abstract class BasePackage(ISettingsManager settingsManager)
 
     public virtual PackageType PackageType => PackageType.SdInference;
     public virtual bool UsesVenv => true;
+    public virtual bool InstallRequiresAdmin => false;
+    public virtual string? AdminRequiredReason => null;
 
     /// <summary>
     /// Returns a list of extra commands that can be executed for this package.
@@ -183,10 +187,80 @@ public abstract class BasePackage(ISettingsManager settingsManager)
     public virtual IReadOnlyList<string> ExtraLaunchArguments { get; } = Array.Empty<string>();
 
     /// <summary>
+    /// Layout of the shared folders. For both Symlink and Config.
+    /// </summary>
+    public virtual SharedFolderLayout? SharedFolderLayout { get; } = new();
+
+    /// <summary>
     /// The shared folders that this package supports.
     /// Mapping of <see cref="SharedFolderType"/> to the relative paths from the package root.
+    /// (Legacy format for Symlink only, computed from SharedFolderLayout.)
     /// </summary>
-    public abstract Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders { get; }
+    public virtual Dictionary<SharedFolderType, IReadOnlyList<string>>? SharedFolders =>
+        GetLegacySharedFolders();
+
+    private Dictionary<SharedFolderType, IReadOnlyList<string>>? GetLegacySharedFolders()
+    {
+        if (SharedFolderLayout is null)
+            return null;
+
+        // Keep track of unique paths since symbolic links can't do multiple targets
+        // So we'll ignore duplicates once they appear here
+        var addedPaths = new HashSet<string>();
+        var result = new Dictionary<SharedFolderType, IReadOnlyList<string>>();
+
+        foreach (var rule in SharedFolderLayout.Rules)
+        {
+            // Ignore empty
+            if (rule.TargetRelativePaths is not { Length: > 0 })
+            {
+                continue;
+            }
+
+            // If there are multi SourceTypes <-> TargetRelativePaths:
+            // We'll add a sub-path later
+            var isMultiSource = rule.SourceTypes.Length > 1;
+
+            foreach (var folderTypeKey in rule.SourceTypes)
+            {
+                var existingList =
+                    (ImmutableList<string>)
+                        result.GetValueOrDefault(folderTypeKey, ImmutableList<string>.Empty);
+
+                var folderName = folderTypeKey.GetStringValue();
+
+                foreach (var path in rule.TargetRelativePaths)
+                {
+                    var currentPath = path;
+
+                    if (isMultiSource)
+                    {
+                        // Add a sub-path for each source type
+                        currentPath = $"{path}/{folderName}";
+                    }
+
+                    // Skip if the path is already in the list
+                    if (existingList.Contains(currentPath))
+                        continue;
+
+                    // Skip if the path is already added globally
+                    if (!addedPaths.Add(currentPath))
+                        continue;
+
+                    result[folderTypeKey] = existingList.Add(currentPath);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Represents a mapping of shared output types to their corresponding folder paths.
+    /// This property defines where various output files, such as images or grids,
+    /// are stored for the package. The dictionary keys represent specific
+    /// output types, and the values are lists of associated folder paths.
+    /// </summary>
     public abstract Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
 
     /// <summary>

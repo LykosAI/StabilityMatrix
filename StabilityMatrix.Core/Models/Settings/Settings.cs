@@ -83,11 +83,6 @@ public class Settings
     public bool IsNavExpanded { get; set; }
     public bool IsImportAsConnected { get; set; }
     public bool ShowConnectedModelImages { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter<SharedFolderType>))]
-    public SharedFolderType SharedFolderVisibleCategories { get; set; } =
-        SharedFolderType.StableDiffusion | SharedFolderType.Lora | SharedFolderType.LyCORIS;
-
     public WindowSettings? WindowSettings { get; set; }
 
     public ModelSearchOptions? ModelSearchOptions { get; set; }

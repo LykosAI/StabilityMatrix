@@ -55,7 +55,7 @@ public class VladAutomatic(
         };
 
     // https://github.com/vladmandic/automatic/blob/master/modules/shared.py#L324
-    public virtual SharedFolderLayout SharedFolderLayout =>
+    public override SharedFolderLayout SharedFolderLayout =>
         new()
         {
             RelativeConfigPath = "config.json",

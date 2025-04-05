@@ -771,9 +771,12 @@ public class ComfyNodeBuilder
     }
 
     /// <summary>
-    /// Plasma Noise generation node (JDC_Plasma)
+    /// Plasma Noise generation node (Lykos_JDC_Plasma)
     /// </summary>
-    [TypedNodeOptions(Name = "JDC_Plasma", RequiredExtensions = ["https://github.com/Jordach/comfy-plasma"])] // Name corrected, Extensions added
+    [TypedNodeOptions(
+        Name = "Lykos_JDC_Plasma",
+        RequiredExtensions = ["https://github.com/LykosAI/inference-comfy-plasma"]
+    )] // Name corrected, Extensions added
     public record PlasmaNoise : ComfyTypedNodeBase<ImageNodeConnection>
     {
         [Range(128, 8192)]
@@ -814,11 +817,11 @@ public class ComfyNodeBuilder
     }
 
     /// <summary>
-    /// Random Noise generation node (JDC_RandNoise)
+    /// Random Noise generation node (Lykos_JDC_RandNoise)
     /// </summary>
     [TypedNodeOptions(
-        Name = "JDC_RandNoise",
-        RequiredExtensions = ["https://github.com/Jordach/comfy-plasma"]
+        Name = "Lykos_JDC_RandNoise",
+        RequiredExtensions = ["https://github.com/LykosAI/inference-comfy-plasma"]
     )] // Name corrected, Extensions added
     public record RandNoise : ComfyTypedNodeBase<ImageNodeConnection>
     {
@@ -857,11 +860,11 @@ public class ComfyNodeBuilder
     }
 
     /// <summary>
-    /// Greyscale Noise generation node (JDC_GreyNoise)
+    /// Greyscale Noise generation node (Lykos_JDC_GreyNoise)
     /// </summary>
     [TypedNodeOptions(
-        Name = "JDC_GreyNoise",
-        RequiredExtensions = ["https://github.com/Jordach/comfy-plasma"]
+        Name = "Lykos_JDC_GreyNoise",
+        RequiredExtensions = ["https://github.com/LykosAI/inference-comfy-plasma"]
     )] // Name corrected, Extensions added
     public record GreyNoise : ComfyTypedNodeBase<ImageNodeConnection>
     {
@@ -900,11 +903,11 @@ public class ComfyNodeBuilder
     }
 
     /// <summary>
-    /// Pink Noise generation node (JDC_PinkNoise)
+    /// Pink Noise generation node (Lykos_JDC_PinkNoise)
     /// </summary>
     [TypedNodeOptions(
-        Name = "JDC_PinkNoise",
-        RequiredExtensions = ["https://github.com/Jordach/comfy-plasma"]
+        Name = "Lykos_JDC_PinkNoise",
+        RequiredExtensions = ["https://github.com/LykosAI/inference-comfy-plasma"]
     )] // Name corrected, Extensions added
     public record PinkNoise : ComfyTypedNodeBase<ImageNodeConnection>
     {
@@ -943,11 +946,11 @@ public class ComfyNodeBuilder
     }
 
     /// <summary>
-    /// Brown Noise generation node (JDC_BrownNoise)
+    /// Brown Noise generation node (Lykos_JDC_BrownNoise)
     /// </summary>
     [TypedNodeOptions(
-        Name = "JDC_BrownNoise",
-        RequiredExtensions = new[] { "https://github.com/Jordach/comfy-plasma" }
+        Name = "Lykos_JDC_BrownNoise",
+        RequiredExtensions = new[] { "https://github.com/LykosAI/inference-comfy-plasma" }
     )] // Name corrected, Extensions added
     public record BrownNoise : ComfyTypedNodeBase<ImageNodeConnection>
     {
@@ -986,11 +989,11 @@ public class ComfyNodeBuilder
     }
 
     /// <summary>
-    /// Custom KSampler node using alternative noise distribution (JDC_PlasmaSampler)
+    /// Custom KSampler node using alternative noise distribution (Lykos_JDC_PlasmaSampler)
     /// </summary>
     [TypedNodeOptions(
-        Name = "JDC_PlasmaSampler",
-        RequiredExtensions = ["https://github.com/Jordach/comfy-plasma"]
+        Name = "Lykos_JDC_PlasmaSampler",
+        RequiredExtensions = ["https://github.com/LykosAI/inference-comfy-plasma"]
     )] // Name corrected, Extensions added
     public record PlasmaSampler : ComfyTypedNodeBase<LatentNodeConnection>
     {

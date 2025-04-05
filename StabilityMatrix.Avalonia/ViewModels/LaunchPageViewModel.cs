@@ -591,14 +591,17 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         return dialog;
     }
 
-    public void Dispose()
+    protected override void Dispose(bool disposing)
     {
-        RunningPackage?.BasePackage.Shutdown();
-        RunningPackage = null;
+        if (disposing)
+        {
+            RunningPackage?.BasePackage.Shutdown();
+            RunningPackage = null;
 
-        Console.Dispose();
+            Console.Dispose();
+        }
 
-        GC.SuppressFinalize(this);
+        base.Dispose(disposing);
     }
 
     public async ValueTask DisposeAsync()

@@ -10,7 +10,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
-public abstract class StackViewModelBase : LoadableViewModelBase
+public abstract class StackViewModelBase : DisposableLoadableViewModelBase
 {
     private readonly ServiceManager<ViewModelBase> vmFactory;
 

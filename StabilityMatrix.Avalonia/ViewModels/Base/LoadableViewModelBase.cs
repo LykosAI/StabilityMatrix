@@ -39,7 +39,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Base;
 [JsonDerivedType(typeof(DiscreteModelSamplingModule))]
 [JsonDerivedType(typeof(RescaleCfgModule))]
 [JsonDerivedType(typeof(PlasmaNoiseModule))]
-public abstract class LoadableViewModelBase : DisposableViewModelBase, IJsonLoadableState
+public abstract class LoadableViewModelBase : ViewModelBase, IJsonLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 

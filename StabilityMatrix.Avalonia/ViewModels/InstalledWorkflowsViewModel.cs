@@ -1,23 +1,14 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Reactive.Linq;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Reactive.Linq;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
-using DynamicData.Alias;
 using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
-using KGySoft.CoreLibraries;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -37,7 +28,7 @@ namespace StabilityMatrix.Avalonia.ViewModels;
 public partial class InstalledWorkflowsViewModel(
     ISettingsManager settingsManager,
     INotificationService notificationService
-) : TabViewModelBase, IDisposable
+) : TabViewModelBase
 {
     public override string Header => Resources.TabLabel_InstalledWorkflows;
 
@@ -60,14 +51,16 @@ public partial class InstalledWorkflowsViewModel(
             .DistinctUntilChanged()
             .Select(_ => (Func<OpenArtMetadata, bool>)FilterWorkflows);
 
-        workflowsCache
-            .Connect()
-            .DeferUntilLoaded()
-            .Filter(searchPredicate)
-            .SortBy(x => x.Index)
-            .Bind(DisplayedWorkflows)
-            .ObserveOn(SynchronizationContext.Current)
-            .Subscribe();
+        AddDisposable(
+            workflowsCache
+                .Connect()
+                .DeferUntilLoaded()
+                .Filter(searchPredicate)
+                .SortBy(x => x.Index)
+                .Bind(DisplayedWorkflows)
+                .ObserveOn(SynchronizationContext.Current!)
+                .Subscribe()
+        );
 
         if (Design.IsDesignMode)
             return;
@@ -204,9 +197,13 @@ public partial class InstalledWorkflowsViewModel(
         LoadInstalledWorkflowsAsync().SafeFireAndForget();
     }
 
-    public void Dispose()
+    protected override void Dispose(bool disposing)
     {
-        workflowsCache.Dispose();
-        EventManager.Instance.WorkflowInstalled -= OnWorkflowInstalled;
+        if (disposing)
+        {
+            EventManager.Instance.WorkflowInstalled -= OnWorkflowInstalled;
+        }
+
+        base.Dispose(disposing);
     }
 }

@@ -362,12 +362,18 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         var refinerConditioning = e.Temp.Refiner.Conditioning;
 
         var useFluxGuidance = ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>();
-        var plasmaViewModel = ModulesCardViewModel
-            .GetCard<PlasmaNoiseModule>()
-            .GetCard<PlasmaNoiseCardViewModel>();
-        var usePlasmaSampler =
-            ModulesCardViewModel.IsModuleEnabled<PlasmaNoiseModule>()
-            && plasmaViewModel.IsPlasmaSamplerEnabled;
+
+        var isPlasmaEnabled = ModulesCardViewModel.IsModuleEnabled<PlasmaNoiseModule>();
+        var usePlasmaSampler = false;
+
+        if (isPlasmaEnabled)
+        {
+            var plasmaViewModel = ModulesCardViewModel
+                .GetCard<PlasmaNoiseModule>()
+                .GetCard<PlasmaNoiseCardViewModel>();
+
+            usePlasmaSampler = plasmaViewModel.IsPlasmaSamplerEnabled;
+        }
 
         if (useFluxGuidance)
         {
@@ -431,6 +437,10 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         }
         else if (usePlasmaSampler)
         {
+            var plasmaViewModel = ModulesCardViewModel
+                .GetCard<PlasmaNoiseModule>()
+                .GetCard<PlasmaNoiseCardViewModel>();
+
             var sampler = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.PlasmaSampler
                 {

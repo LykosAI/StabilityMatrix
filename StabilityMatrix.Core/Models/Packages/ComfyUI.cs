@@ -308,7 +308,7 @@ public class ComfyUI(
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
 
     public override List<ExtraPackageCommand> GetExtraCommands() =>
-        Compat.IsWindows
+        Compat.IsWindows && SettingsManager.Settings.PreferredGpu?.IsTritonCompatibleGpu() is true
             ?
             [
                 new ExtraPackageCommand

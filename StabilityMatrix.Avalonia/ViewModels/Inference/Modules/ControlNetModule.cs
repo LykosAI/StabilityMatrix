@@ -61,8 +61,8 @@ public class ControlNetModule : ModuleBase
                     Name = e.Nodes.GetUniqueName("ControlNet_Preprocessor"),
                     Image = image,
                     Preprocessor = preprocessor.ToString(),
-                    // Use width if valid, else default of 512
-                    Resolution = card.Width is <= 2048 and > 0 ? card.Width : 512
+                    // Use lower of width and height for resolution
+                    Resolution = Math.Min(card.Width, card.Height)
                 }
             );
 

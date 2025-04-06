@@ -121,7 +121,7 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
                 Name = args.Nodes.GetUniqueName("Preprocessor"),
                 Image = image,
                 Preprocessor = preprocessor.ToString(),
-                Resolution = Width is <= 2048 and > 0 ? Width : 512
+                Resolution = Math.Min(Width, Height)
             }
         );
 

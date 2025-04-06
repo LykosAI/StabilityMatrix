@@ -121,7 +121,9 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
                 Name = args.Nodes.GetUniqueName("Preprocessor"),
                 Image = image,
                 Preprocessor = preprocessor.ToString(),
-                // Comment explaining why we use the lower of width and height
+                // AIO wants the lower of the two resolutions. who knows why.
+                // also why can't we put in the low/high thresholds?
+                // Or any of the other parameters for the other preprocessors?
                 Resolution = Math.Min(Width, Height)
             }
         );

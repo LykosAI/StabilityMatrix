@@ -121,6 +121,7 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
                 Name = args.Nodes.GetUniqueName("Preprocessor"),
                 Image = image,
                 Preprocessor = preprocessor.ToString(),
+                // Comment explaining why we use the lower of width and height
                 Resolution = Math.Min(Width, Height)
             }
         );

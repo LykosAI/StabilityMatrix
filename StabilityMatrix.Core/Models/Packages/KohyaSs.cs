@@ -190,7 +190,7 @@ public class KohyaSs(
                 pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
             }
 
-            await venvRunner.PipInstall(pipArgs).ConfigureAwait(false);
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
             pipArgs = new PipInstallArgs()
                 .AddArg("--pre")
@@ -203,7 +203,7 @@ public class KohyaSs(
                 pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
             }
 
-            await venvRunner.PipInstall(pipArgs).ConfigureAwait(false);
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
             pipArgs = new PipInstallArgs().AddArg("-U").AddArg("bitsandbytes");
 
@@ -212,7 +212,8 @@ public class KohyaSs(
                 pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
             }
 
-            await venvRunner.PipInstall(pipArgs).ConfigureAwait(false);
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+            await venvRunner.PipInstall("numpy==1.26.4", onConsoleOutput).ConfigureAwait(false);
         }
     }
 

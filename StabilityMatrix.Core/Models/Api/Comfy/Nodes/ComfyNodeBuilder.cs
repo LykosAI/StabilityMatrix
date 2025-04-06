@@ -603,7 +603,7 @@ public class ComfyNodeBuilder
 
         public required string Preprocessor { get; init; }
 
-        [Range(64, 2048)]
+        [Range(64, 16384)]
         public int Resolution { get; init; } = 512;
     }
 

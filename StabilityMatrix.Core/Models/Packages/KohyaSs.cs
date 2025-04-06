@@ -141,9 +141,21 @@ public class KohyaSs(
 
         if (Compat.IsWindows)
         {
-            // Install
             await venvRunner
                 .CustomInstall(["setup/setup_windows.py", "--headless"], onConsoleOutput)
+                .ConfigureAwait(false);
+        }
+        else if (Compat.IsMacOS)
+        {
+            await venvRunner
+                .CustomInstall(
+                    [
+                        "setup/setup_linux.py",
+                        "--platform-requirements-file=requirements_macos_arm64.txt",
+                        "--no_run_accelerate"
+                    ],
+                    onConsoleOutput
+                )
                 .ConfigureAwait(false);
         }
         else if (Compat.IsLinux)
@@ -158,6 +170,50 @@ public class KohyaSs(
                     onConsoleOutput
                 )
                 .ConfigureAwait(false);
+        }
+
+        var isBlackwell =
+            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
+
+        if (isBlackwell)
+        {
+            pipArgs = new PipInstallArgs()
+                .AddArg("--pre")
+                .WithTorch()
+                .WithTorchVision()
+                .WithTorchAudio()
+                .WithTorchExtraIndex("nightly/cu128")
+                .AddArg("--force-reinstall");
+
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+            pipArgs = new PipInstallArgs()
+                .AddArg("--pre")
+                .AddArg("-U")
+                .AddArg("--no-deps")
+                .AddArg("xformers");
+
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+            pipArgs = new PipInstallArgs().AddArg("-U").AddArg("bitsandbytes");
+
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+            await venvRunner.PipInstall("numpy==1.26.4", onConsoleOutput).ConfigureAwait(false);
         }
     }
 

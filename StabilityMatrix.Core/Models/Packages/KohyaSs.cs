@@ -29,21 +29,17 @@ public class KohyaSs(
 
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/kohyass/preview.webp");
     public override string OutputFolderName => string.Empty;
+    public override bool IsCompatible => HardwareHelper.HasNvidiaGpu() || Compat.IsMacOS;
 
-    public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
-
-    public override TorchIndex GetRecommendedTorchVersion() => TorchIndex.Cuda;
-
-    public override string Disclaimer =>
-        "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
+    public override TorchIndex GetRecommendedTorchVersion() =>
+        Compat.IsMacOS ? TorchIndex.Mps : TorchIndex.Cuda;
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.UltraNightmare;
     public override PackageType PackageType => PackageType.SdTraining;
     public override bool OfferInOneClickInstaller => false;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
-    public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda];
-    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        new[] { SharedFolderMethod.None };
+    public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda, TorchIndex.Mps];
+    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => [SharedFolderMethod.None];
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         base.Prerequisites.Concat([PackagePrerequisite.Tkinter]);
 

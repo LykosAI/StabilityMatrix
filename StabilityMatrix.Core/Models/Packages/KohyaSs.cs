@@ -26,19 +26,17 @@ public class KohyaSs(
     public override string LicenseType => "Apache-2.0";
     public override string LicenseUrl => "https://github.com/bmaltais/kohya_ss/blob/master/LICENSE.md";
     public override string LaunchCommand => "kohya_gui.py";
-
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/kohyass/preview.webp");
     public override string OutputFolderName => string.Empty;
-    public override bool IsCompatible => HardwareHelper.HasNvidiaGpu() || Compat.IsMacOS;
+    public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
 
-    public override TorchIndex GetRecommendedTorchVersion() =>
-        Compat.IsMacOS ? TorchIndex.Mps : TorchIndex.Cuda;
+    public override TorchIndex GetRecommendedTorchVersion() => TorchIndex.Cuda;
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.UltraNightmare;
     public override PackageType PackageType => PackageType.SdTraining;
     public override bool OfferInOneClickInstaller => false;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
-    public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda, TorchIndex.Mps];
+    public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda];
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => [SharedFolderMethod.None];
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         base.Prerequisites.Concat([PackagePrerequisite.Tkinter]);
@@ -139,19 +137,6 @@ public class KohyaSs(
         {
             await venvRunner
                 .CustomInstall(["setup/setup_windows.py", "--headless"], onConsoleOutput)
-                .ConfigureAwait(false);
-        }
-        else if (Compat.IsMacOS)
-        {
-            await venvRunner
-                .CustomInstall(
-                    [
-                        "setup/setup_linux.py",
-                        "--platform-requirements-file=requirements_macos_arm64.txt",
-                        "--no_run_accelerate"
-                    ],
-                    onConsoleOutput
-                )
                 .ConfigureAwait(false);
         }
         else if (Compat.IsLinux)

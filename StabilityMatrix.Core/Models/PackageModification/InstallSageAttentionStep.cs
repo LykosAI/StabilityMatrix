@@ -88,7 +88,28 @@ public class InstallSageAttentionStep(
             return env;
         });
 
-        progress?.Report(new ProgressReport(-1f, message: "Installing Triton", isIndeterminate: true));
+        var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
+        var sageWheelUrl = string.Empty;
+
+        if (torchInfo == null)
+        {
+            sageWheelUrl = string.Empty;
+        }
+        else if (torchInfo.Version.Contains("2.5.1") && torchInfo.Version.Contains("cu124"))
+        {
+            sageWheelUrl =
+                "https://github.com/woct0rdho/SageAttention/releases/download/v2.1.1-windows/sageattention-2.1.1+cu124torch2.5.1-cp310-cp310-win_amd64.whl";
+        }
+        else if (torchInfo.Version.Contains("2.6.0") && torchInfo.Version.Contains("cu126"))
+        {
+            sageWheelUrl =
+                "https://github.com/woct0rdho/SageAttention/releases/download/v2.1.1-windows/sageattention-2.1.1+cu126torch2.6.0-cp310-cp310-win_amd64.whl";
+        }
+        else if (torchInfo.Version.Contains("2.7.0") && torchInfo.Version.Contains("cu128"))
+        {
+            sageWheelUrl =
+                "https://github.com/woct0rdho/SageAttention/releases/download/v2.1.1-windows/sageattention-2.1.1+cu128torch2.7.0-cp310-cp310-win_amd64.whl";
+        }
 
         var pipArgs = new PipInstallArgs();
         if (IsBlackwellGpu)
@@ -96,6 +117,19 @@ public class InstallSageAttentionStep(
             pipArgs = pipArgs.AddArg("--pre");
         }
         pipArgs = pipArgs.AddArg("triton-windows");
+
+        if (!string.IsNullOrWhiteSpace(sageWheelUrl))
+        {
+            pipArgs = pipArgs.AddArg(sageWheelUrl);
+
+            progress?.Report(
+                new ProgressReport(-1f, message: "Installing Triton & SageAttention", isIndeterminate: true)
+            );
+            await venvRunner.PipInstall(pipArgs, progress.AsProcessOutputHandler()).ConfigureAwait(false);
+            return;
+        }
+
+        progress?.Report(new ProgressReport(-1f, message: "Installing Triton", isIndeterminate: true));
 
         await venvRunner.PipInstall(pipArgs, progress.AsProcessOutputHandler()).ConfigureAwait(false);
 
@@ -126,7 +160,10 @@ public class InstallSageAttentionStep(
                 new ProgressReport(-1f, message: "Downloading SageAttention", isIndeterminate: true)
             );
             await prerequisiteHelper
-                .RunGit(["clone", "https://github.com/thu-ml/SageAttention.git", sageDir.ToString()])
+                .RunGit(
+                    ["clone", "https://github.com/thu-ml/SageAttention.git", sageDir.ToString()],
+                    progress.AsProcessOutputHandler()
+                )
                 .ConfigureAwait(false);
         }
 

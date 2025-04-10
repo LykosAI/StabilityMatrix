@@ -95,7 +95,7 @@ public class WindowsPrerequisiteHelper(
 
     public async Task RunGit(
         ProcessArgs args,
-        Action<ProcessOutput>? onProcessOutput,
+        Action<ProcessOutput>? onProcessOutput = null,
         string? workingDirectory = null
     )
     {
@@ -114,15 +114,6 @@ public class WindowsPrerequisiteHelper(
         {
             throw new ProcessException($"Git exited with code {process.ExitCode}");
         }
-    }
-
-    public async Task RunGit(ProcessArgs args, string? workingDirectory = null)
-    {
-        var result = await ProcessRunner
-            .GetProcessResultAsync(GitExePath, args, workingDirectory)
-            .ConfigureAwait(false);
-
-        result.EnsureSuccessExitCode();
     }
 
     public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
@@ -428,7 +419,7 @@ public class WindowsPrerequisiteHelper(
 
         try
         {
-            await RunGit(["config", "--system", "core.longpaths", "true"]);
+            await RunGit(["config", "--system", "core.longpaths", "true"], null);
             return true;
         }
         catch (Exception e)

@@ -376,13 +376,18 @@ public class VladAutomatic(
                     "https://github.com/vladmandic/automatic",
                     installDir.Name
                 },
+                progress?.AsProcessOutputHandler(),
                 installDir.Parent?.FullPath ?? ""
             )
             .ConfigureAwait(false);
         if (!string.IsNullOrWhiteSpace(versionOptions.CommitHash) && !versionOptions.IsLatest)
         {
             await PrerequisiteHelper
-                .RunGit(new[] { "checkout", versionOptions.CommitHash }, installLocation)
+                .RunGit(
+                    new[] { "checkout", versionOptions.CommitHash },
+                    progress?.AsProcessOutputHandler(),
+                    installLocation
+                )
                 .ConfigureAwait(false);
         }
     }

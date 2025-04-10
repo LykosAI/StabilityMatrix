@@ -419,7 +419,7 @@ public class WindowsPrerequisiteHelper(
 
         try
         {
-            await RunGit(["config", "--system", "core.longpaths", "true"], null);
+            await RunGit(["config", "--system", "core.longpaths", "true"]);
             return true;
         }
         catch (Exception e)

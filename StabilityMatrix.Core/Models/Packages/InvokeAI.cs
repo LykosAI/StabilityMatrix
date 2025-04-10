@@ -382,6 +382,11 @@ public class InvokeAI : BaseGitPackage
         }
     }
 
+    // Invoke doing shared folders on startup instead
+    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) => Task.CompletedTask;
+
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) => Task.CompletedTask;
+
     private async Task<bool> SetupInvokeModelSharingConfig(
         Action<ProcessOutput>? onConsoleOutput,
         Match match,

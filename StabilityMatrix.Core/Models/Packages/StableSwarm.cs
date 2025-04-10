@@ -443,7 +443,7 @@ public class StableSwarm(
         if (needsMigrate)
         {
             await prerequisiteHelper
-                .RunGit(["remote", "set-url", "origin", GithubUrl], package.FullPath)
+                .RunGit(["remote", "set-url", "origin", GithubUrl], workingDirectory: package.FullPath)
                 .ConfigureAwait(false);
         }
 

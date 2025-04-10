@@ -5,6 +5,13 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.14.0-pre.2
+### Changed
+- Updated install for kohya_ss to support RTX 5000-series GPUs
+### Fixed
+- Fixed Inference ControlNet Preprocessors using incorrect resolution and increased maximum of smallest dimension to 16384
+- Fixed Triton/Sage install option showing for incompatible GPUs
+
 ## v2.14.0-pre.1
 ### Added
 - Added new Package Command (in the 3-dots menu) for installing Triton & SageAttention in ComfyUI

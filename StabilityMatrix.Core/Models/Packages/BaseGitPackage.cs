@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Compression;
-using System.Text.RegularExpressions;
 using NLog;
 using Octokit;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Database;
@@ -210,6 +210,18 @@ public abstract class BaseGitPackage : BasePackage
             await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         }
 
+        if (!Compat.IsWindows)
+            return venvRunner;
+
+        try
+        {
+            await PrerequisiteHelper.AddMissingLibsToVenv(installedPackagePath).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to add missing libs to venv");
+        }
+
         return venvRunner;
     }
 
@@ -250,14 +262,19 @@ public abstract class BaseGitPackage : BasePackage
                         : versionOptions.BranchName ?? MainBranch,
                     GithubUrl,
                     installLocation
-                }
+                },
+                progress?.AsProcessOutputHandler()
             )
             .ConfigureAwait(false);
 
         if (!versionOptions.IsLatest && !string.IsNullOrWhiteSpace(versionOptions.CommitHash))
         {
             await PrerequisiteHelper
-                .RunGit(new[] { "checkout", versionOptions.CommitHash }, installLocation)
+                .RunGit(
+                    new[] { "checkout", versionOptions.CommitHash },
+                    progress?.AsProcessOutputHandler(),
+                    installLocation
+                )
                 .ConfigureAwait(false);
         }
 

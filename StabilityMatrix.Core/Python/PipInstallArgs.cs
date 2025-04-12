@@ -8,7 +8,7 @@ using StabilityMatrix.Core.Processes;
 namespace StabilityMatrix.Core.Python;
 
 [SuppressMessage("ReSharper", "StringLiteralTypo")]
-public record PipInstallArgs : ProcessArgsBuilder
+public partial record PipInstallArgs : ProcessArgsBuilder
 {
     public PipInstallArgs(params Argument[] arguments)
         : base(arguments) { }
@@ -70,7 +70,7 @@ public record PipInstallArgs : ProcessArgsBuilder
 
         // Regex to match common version constraint patterns with spaces
         // Matches: package >= 1.0.0, package <= 1.0.0, package == 1.0.0, etc.
-        var versionConstraintPattern = new Regex(@"^([a-zA-Z0-9\-_.]+)\s*(>=|<=|==|>|<|!=|~=)\s*(.+)$");
+        var versionConstraintPattern = PackageSpecifierRegex();
 
         var match = versionConstraintPattern.Match(specifier);
         if (match.Success)
@@ -136,4 +136,7 @@ public record PipInstallArgs : ProcessArgsBuilder
     {
         return base.ToString();
     }
+
+    [GeneratedRegex(@"^([a-zA-Z0-9\-_.]+)\s*(>=|<=|==|>|<|!=|~=)\s*(.+)$")]
+    private static partial Regex PackageSpecifierRegex();
 }

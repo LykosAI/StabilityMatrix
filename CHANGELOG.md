@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed Inference ControlNet Preprocessors using incorrect resolution and increased maximum of smallest dimension to 16384
 - Fixed Triton/Sage install option showing for incompatible GPUs
+- Fixed errors from invalid pip specifiers in requirements files
 
 ## v2.14.0-pre.1
 ### Added

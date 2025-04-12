@@ -8,7 +8,7 @@ using StabilityMatrix.Core.Processes;
 namespace StabilityMatrix.Core.Python;
 
 [SuppressMessage("ReSharper", "StringLiteralTypo")]
-public record PipInstallArgs : ProcessArgsBuilder
+public partial record PipInstallArgs : ProcessArgsBuilder
 {
     public PipInstallArgs(params Argument[] arguments)
         : base(arguments) { }
@@ -44,7 +44,8 @@ public record PipInstallArgs : ProcessArgsBuilder
             .Where(s => !s.StartsWith('#'))
             .Select(s => s.Contains('#') ? s.Substring(0, s.IndexOf('#')) : s)
             .Select(s => s.Trim())
-            .Where(s => !string.IsNullOrWhiteSpace(s));
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(NormalizePackageSpecifier);
 
         if (excludePattern is not null)
         {
@@ -54,6 +55,34 @@ public record PipInstallArgs : ProcessArgsBuilder
         }
 
         return this.AddArgs(requirementsEntries.Select(Argument.Quoted).ToArray());
+    }
+
+    /// <summary>
+    /// Normalizes a package specifier by removing spaces around version constraint operators.
+    /// </summary>
+    /// <param name="specifier">The package specifier to normalize.</param>
+    /// <returns>The normalized package specifier.</returns>
+    private static string NormalizePackageSpecifier(string specifier)
+    {
+        // Skip normalization for special pip commands that start with a hyphen
+        if (specifier.StartsWith('-'))
+            return specifier;
+
+        // Regex to match common version constraint patterns with spaces
+        // Matches: package >= 1.0.0, package <= 1.0.0, package == 1.0.0, etc.
+        var versionConstraintPattern = PackageSpecifierRegex();
+
+        var match = versionConstraintPattern.Match(specifier);
+        if (match.Success)
+        {
+            var packageName = match.Groups[1].Value;
+            var versionOperator = match.Groups[2].Value;
+            var version = match.Groups[3].Value;
+
+            return $"{packageName}{versionOperator}{version}";
+        }
+
+        return specifier;
     }
 
     public PipInstallArgs WithUserOverrides(List<PipPackageSpecifierOverride> overrides)
@@ -107,4 +136,7 @@ public record PipInstallArgs : ProcessArgsBuilder
     {
         return base.ToString();
     }
+
+    [GeneratedRegex(@"^([a-zA-Z0-9\-_.]+)\s*(>=|<=|==|>|<|!=|~=)\s*(.+)$")]
+    private static partial Regex PackageSpecifierRegex();
 }

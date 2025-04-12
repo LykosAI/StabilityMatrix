@@ -491,4 +491,14 @@ public class UnixPrerequisiteHelper(
     {
         throw new PlatformNotSupportedException();
     }
+
+    [UnsupportedOSPlatform("Linux")]
+    [UnsupportedOSPlatform("macOS")]
+    public Task AddMissingLibsToVenv(
+        DirectoryPath installedPackagePath,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        throw new PlatformNotSupportedException();
+    }
 }

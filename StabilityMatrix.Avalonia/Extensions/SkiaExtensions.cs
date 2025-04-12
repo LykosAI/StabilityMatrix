@@ -172,4 +172,15 @@ public static class SkiaExtensions
             pixmap.RowBytes
         );
     }
+
+    public static PixelFormat ToAvaloniaPixelFormat(this SKColorType colorType)
+    {
+        // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+        return colorType switch
+        {
+            SKColorType.Rgba8888 => PixelFormat.Rgba8888,
+            SKColorType.Bgra8888 => PixelFormat.Bgra8888,
+            _ => throw new NotSupportedException($"Unsupported SKColorType: {colorType}")
+        };
+    }
 }

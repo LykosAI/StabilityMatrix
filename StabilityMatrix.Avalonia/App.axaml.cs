@@ -426,6 +426,9 @@ public sealed class App : Application
             s => s.ServiceType.GetCustomAttributes<ManagedServiceAttribute>().Any()
         );
 
+        // Scope context for individual tabs
+        services.AddScoped<TabContext>();
+
         // Other services
         services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
         services.AddSingleton<IDisposable>(

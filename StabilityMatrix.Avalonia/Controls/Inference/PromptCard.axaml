@@ -87,6 +87,7 @@
                                     VerticalContentAlignment="Top"
                                     icons:Attached.Icon="fa-solid fa-wand-magic-sparkles"
                                     Classes="transparent-full"
+                                    Command="{Binding AmplifyPromptCommand}"
                                     ToolTip.Tip="Amplify Prompt" />
 
                                 <Button

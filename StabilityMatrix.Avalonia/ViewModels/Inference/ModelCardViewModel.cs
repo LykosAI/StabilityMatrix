@@ -387,7 +387,6 @@ public partial class ModelCardViewModel(
     {
         // Update TabContext with the selected model
         tabContext.SelectedModel = value;
-        tabContext.NotifyStateChanged(nameof(TabContext.SelectedModel), value);
 
         if (!IsExtraNetworksEnabled)
             return;

@@ -410,6 +410,13 @@ public partial class PromptCardViewModel
         textEditor?.Cut();
     }
 
+    [RelayCommand]
+    private async Task AmplifyPrompt()
+    {
+        var dialog = DialogHelper.CreateMarkdownDialog(tabContext.SelectedModel?.RelativePath ?? "nothin");
+        await dialog.ShowAsync();
+    }
+
     /// <inheritdoc />
     public override JsonObject SaveStateToJsonObject()
     {

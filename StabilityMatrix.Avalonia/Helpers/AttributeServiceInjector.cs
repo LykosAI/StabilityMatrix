@@ -50,9 +50,9 @@ internal static partial class AttributeServiceInjector
     }
 
     /// <summary>
-    /// Adds a <see cref="ServiceManager{T}"/> to the <see cref="IServiceCollection"/>.
+    /// Adds a <see cref="IServiceManager{T}"/> to the <see cref="IServiceCollection"/>.
     /// </summary>
-    /// <param name="services">The <see cref="IServiceCollection"/> to which the <see cref="ServiceManager{T}"/> will be added.</param>
+    /// <param name="services">The <see cref="IServiceCollection"/> to which the <see cref="IServiceManager{T}"/> will be added.</param>
     /// <param name="serviceFilter">An optional filter for the services.</param>
     /// <typeparam name="TService">The base type of the services.</typeparam>
     /// <exception cref="InvalidOperationException"></exception>
@@ -61,7 +61,7 @@ internal static partial class AttributeServiceInjector
         Func<ServiceDescriptor, bool>? serviceFilter = null
     )
     {
-        return services.AddSingleton<ServiceManager<TService>>(provider =>
+        return services.AddSingleton<IServiceManager<TService>>(provider =>
         {
             using var _ = CodeTimer.StartDebug(
                 callerName: $"{nameof(AddServiceManagerWithCurrentCollectionServices)}<{typeof(TService)}>"

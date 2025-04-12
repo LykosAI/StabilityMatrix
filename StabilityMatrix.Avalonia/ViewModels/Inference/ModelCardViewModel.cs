@@ -23,7 +23,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterTransient<ModelCardViewModel>]
 public partial class ModelCardViewModel(
     IInferenceClientManager clientManager,
-    ServiceManager<ViewModelBase> vmFactory,
+    IServiceManager<ViewModelBase> vmFactory,
     TabContext tabContext
 ) : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {

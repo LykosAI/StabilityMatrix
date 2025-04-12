@@ -60,7 +60,7 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         RunningPackageService runningPackageService
     )
         : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)

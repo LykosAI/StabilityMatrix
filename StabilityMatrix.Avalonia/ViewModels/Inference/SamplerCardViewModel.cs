@@ -123,7 +123,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     public SamplerCardViewModel(
         IInferenceClientManager clientManager,
-        ServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory
     )
     {
         ClientManager = clientManager;

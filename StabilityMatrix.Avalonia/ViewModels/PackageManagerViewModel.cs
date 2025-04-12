@@ -32,7 +32,7 @@ public partial class PackageManagerViewModel : PageViewModelBase
     [ObservableProperty]
     private PageViewModelBase? currentPage;
 
-    public PackageManagerViewModel(ServiceManager<ViewModelBase> vmFactory)
+    public PackageManagerViewModel(IServiceManager<ViewModelBase> vmFactory)
     {
         SubPages = new PageViewModelBase[]
         {

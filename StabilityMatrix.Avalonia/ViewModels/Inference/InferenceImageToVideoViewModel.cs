@@ -62,7 +62,7 @@ public partial class InferenceImageToVideoViewModel
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IModelIndexService modelIndexService,
         RunningPackageService runningPackageService
     )

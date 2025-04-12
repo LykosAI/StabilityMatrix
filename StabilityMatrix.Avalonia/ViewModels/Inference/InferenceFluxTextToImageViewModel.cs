@@ -51,7 +51,7 @@ public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBas
     public SeedCardViewModel SeedCardViewModel { get; }
 
     public InferenceFluxTextToImageViewModel(
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,

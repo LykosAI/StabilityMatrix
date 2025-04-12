@@ -128,7 +128,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     public CivitAiBrowserViewModel(
         ICivitApi civitApi,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> dialogFactory,
+        IServiceManager<ViewModelBase> dialogFactory,
         ILiteDbContext liteDbContext,
         INotificationService notificationService,
         ICivitBaseModelTypeService baseModelTypeService

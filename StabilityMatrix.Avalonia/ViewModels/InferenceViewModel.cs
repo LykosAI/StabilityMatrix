@@ -55,7 +55,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private readonly INotificationService notificationService;
 
     private readonly ISettingsManager settingsManager;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly IModelIndexService modelIndexService;
     private readonly ILiteDbContext liteDbContext;
     private readonly IServiceScopeFactory scopeFactory;
@@ -100,7 +100,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private IDisposable? onStartupComplete;
 
     public InferenceViewModel(
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,

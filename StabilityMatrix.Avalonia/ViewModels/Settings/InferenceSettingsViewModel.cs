@@ -83,7 +83,7 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
         INotificationService notificationService,
         IPrerequisiteHelper prerequisiteHelper,
         IPyRunner pyRunner,
-        ServiceManager<ViewModelBase> dialogFactory,
+        IServiceManager<ViewModelBase> dialogFactory,
         ICompletionProvider completionProvider,
         ITrackedDownloadService trackedDownloadService,
         IModelIndexService modelIndexService,

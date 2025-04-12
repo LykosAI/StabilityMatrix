@@ -39,7 +39,7 @@ public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase
     public VideoOutputSettingsCardViewModel VideoOutputSettingsCardViewModel { get; }
 
     public InferenceWanTextToVideoViewModel(
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,

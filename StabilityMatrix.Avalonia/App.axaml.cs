@@ -374,7 +374,7 @@ public sealed class App : Application
                 new MainWindowViewModel(
                     provider.GetRequiredService<ISettingsManager>(),
                     provider.GetRequiredService<IDiscordRichPresenceService>(),
-                    provider.GetRequiredService<ServiceManager<ViewModelBase>>(),
+                    provider.GetRequiredService<IServiceManager<ViewModelBase>>(),
                     provider.GetRequiredService<ITrackedDownloadService>(),
                     provider.GetRequiredService<IModelIndexService>(),
                     provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),

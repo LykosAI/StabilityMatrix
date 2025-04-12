@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using Avalonia.Controls;
 using Microsoft.Extensions.DependencyInjection;
-using StabilityMatrix.Avalonia.Controls;
-using StabilityMatrix.Core.Attributes;
 
 namespace StabilityMatrix.Avalonia.Services;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-public class ServiceManager<T>
+[Localizable(false)]
+public class ServiceManager<T> : IServiceManager<T>
 {
     // Holds providers
     private readonly Dictionary<Type, Func<T>> providers = new();
@@ -20,7 +17,7 @@ public class ServiceManager<T>
     /// <summary>
     /// Register a new dialog view model (singleton instance)
     /// </summary>
-    public ServiceManager<T> Register<TService>(TService instance)
+    public IServiceManager<T> Register<TService>(TService instance)
         where TService : T
     {
         if (instance is null)
@@ -44,7 +41,7 @@ public class ServiceManager<T>
     /// <summary>
     /// Register a new dialog view model provider action (called on each dialog creation)
     /// </summary>
-    public ServiceManager<T> Register<TService>(Func<TService> provider)
+    public IServiceManager<T> Register<TService>(Func<TService> provider)
         where TService : T
     {
         lock (providers)
@@ -68,7 +65,7 @@ public class ServiceManager<T>
     /// Register a new dialog view model instance using a service provider
     /// Equal to Register[TService](serviceProvider.GetRequiredService[TService])
     /// </summary>
-    public ServiceManager<T> RegisterProvider<TService>(IServiceProvider provider)
+    public IServiceManager<T> RegisterProvider<TService>(IServiceProvider provider)
         where TService : notnull, T
     {
         lock (providers)
@@ -96,18 +93,14 @@ public class ServiceManager<T>
     {
         if (!serviceType.IsAssignableTo(typeof(T)))
         {
-            throw new ArgumentException(
-                $"Service type {serviceType} is not assignable to {typeof(T)}"
-            );
+            throw new ArgumentException($"Service type {serviceType} is not assignable to {typeof(T)}");
         }
 
         if (instances.TryGetValue(serviceType, out var instance))
         {
             if (instance is null)
             {
-                throw new ArgumentException(
-                    $"Service of type {serviceType} was registered as null"
-                );
+                throw new ArgumentException($"Service of type {serviceType} was registered as null");
             }
             return (T)instance;
         }
@@ -116,23 +109,17 @@ public class ServiceManager<T>
         {
             if (provider is null)
             {
-                throw new ArgumentException(
-                    $"Service of type {serviceType} was registered as null"
-                );
+                throw new ArgumentException($"Service of type {serviceType} was registered as null");
             }
             var result = provider();
             if (result is null)
             {
-                throw new ArgumentException(
-                    $"Service provider for type {serviceType} returned null"
-                );
+                throw new ArgumentException($"Service provider for type {serviceType} returned null");
             }
             return (T)result;
         }
 
-        throw new ArgumentException(
-            $"Service of type {serviceType} is not registered for {typeof(T)}"
-        );
+        throw new ArgumentException($"Service of type {serviceType} is not registered for {typeof(T)}");
     }
 
     /// <summary>
@@ -146,9 +133,7 @@ public class ServiceManager<T>
         {
             if (instance is null)
             {
-                throw new ArgumentException(
-                    $"Service of type {typeof(TService)} was registered as null"
-                );
+                throw new ArgumentException($"Service of type {typeof(TService)} was registered as null");
             }
             return (TService)instance;
         }
@@ -157,23 +142,17 @@ public class ServiceManager<T>
         {
             if (provider is null)
             {
-                throw new ArgumentException(
-                    $"Service of type {typeof(TService)} was registered as null"
-                );
+                throw new ArgumentException($"Service of type {typeof(TService)} was registered as null");
             }
             var result = provider();
             if (result is null)
             {
-                throw new ArgumentException(
-                    $"Service provider for type {typeof(TService)} returned null"
-                );
+                throw new ArgumentException($"Service provider for type {typeof(TService)} returned null");
             }
             return (TService)result;
         }
 
-        throw new ArgumentException(
-            $"Service of type {typeof(TService)} is not registered for {typeof(T)}"
-        );
+        throw new ArgumentException($"Service of type {typeof(TService)} is not registered for {typeof(T)}");
     }
 
     /// <summary>
@@ -197,75 +176,13 @@ public class ServiceManager<T>
         return instance;
     }
 
-    /// <summary>
-    /// Get a view model instance, set as DataContext of its View, and return
-    /// a BetterContentDialog with that View as its Content
-    /// </summary>
-    public BetterContentDialog GetDialog<TService>()
-        where TService : T
-    {
-        var instance = Get<TService>()!;
-
-        if (
-            Attribute.GetCustomAttribute(instance.GetType(), typeof(ViewAttribute))
-            is not ViewAttribute viewAttr
-        )
-        {
-            throw new InvalidOperationException(
-                $"View not found for {instance.GetType().FullName}"
-            );
-        }
-
-        if (Activator.CreateInstance(viewAttr.ViewType) is not Control view)
-        {
-            throw new NullReferenceException(
-                $"Unable to create instance for {instance.GetType().FullName}"
-            );
-        }
-
-        return new BetterContentDialog { Content = view };
-    }
-
-    /// <summary>
-    /// Get a view model instance with initializer, set as DataContext of its View, and return
-    /// a BetterContentDialog with that View as its Content
-    /// </summary>
-    public BetterContentDialog GetDialog<TService>(Action<TService> initializer)
-        where TService : T
-    {
-        var instance = Get(initializer)!;
-
-        if (
-            Attribute.GetCustomAttribute(instance.GetType(), typeof(ViewAttribute))
-            is not ViewAttribute viewAttr
-        )
-        {
-            throw new InvalidOperationException(
-                $"View not found for {instance.GetType().FullName}"
-            );
-        }
-
-        if (Activator.CreateInstance(viewAttr.ViewType) is not Control view)
-        {
-            throw new NullReferenceException(
-                $"Unable to create instance for {instance.GetType().FullName}"
-            );
-        }
-
-        view.DataContext = instance;
-
-        return new BetterContentDialog { Content = view };
-    }
-
     public void Register(Type type, Func<T> providerFunc)
     {
         lock (providers)
         {
             if (instances.ContainsKey(type) || providers.ContainsKey(type))
             {
-                throw new ArgumentException(
-                    $"Service of type {type} is already registered for {typeof(T)}"
-                );
+                throw new ArgumentException($"Service of type {type} is already registered for {typeof(T)}");
             }
 
             providers[type] = providerFunc;

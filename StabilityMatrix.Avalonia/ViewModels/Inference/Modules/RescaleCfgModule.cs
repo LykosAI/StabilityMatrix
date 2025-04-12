@@ -11,7 +11,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 [RegisterTransient<RescaleCfgModule>]
 public class RescaleCfgModule : ModuleBase
 {
-    public RescaleCfgModule(ServiceManager<ViewModelBase> vmFactory)
+    public RescaleCfgModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "CFG Rescale";

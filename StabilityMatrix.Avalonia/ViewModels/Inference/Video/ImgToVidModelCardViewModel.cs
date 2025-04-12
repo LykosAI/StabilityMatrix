@@ -16,7 +16,7 @@ public class ImgToVidModelCardViewModel : ModelCardViewModel
 {
     public ImgToVidModelCardViewModel(
         IInferenceClientManager clientManager,
-        ServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory
     )
         : base(clientManager, vmFactory)
     {

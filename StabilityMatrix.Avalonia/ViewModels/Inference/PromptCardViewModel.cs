@@ -67,7 +67,7 @@ public partial class PromptCardViewModel
         ITokenizerProvider tokenizerProvider,
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         SharedState sharedState,
         TabContext tabContext
     )

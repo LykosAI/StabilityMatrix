@@ -12,11 +12,11 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 public abstract class StackViewModelBase : LoadableViewModelBase
 {
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
 
     public AdvancedObservableList<LoadableViewModelBase> Cards { get; } = new();
 
-    protected StackViewModelBase(ServiceManager<ViewModelBase> vmFactory)
+    protected StackViewModelBase(IServiceManager<ViewModelBase> vmFactory)
     {
         this.vmFactory = vmFactory;
 

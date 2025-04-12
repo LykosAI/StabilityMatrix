@@ -19,7 +19,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 public class ControlNetModule : ModuleBase
 {
     /// <inheritdoc />
-    public ControlNetModule(ServiceManager<ViewModelBase> vmFactory)
+    public ControlNetModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "ControlNet";

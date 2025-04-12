@@ -16,7 +16,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public class InferenceWanImageToVideoViewModel : InferenceWanTextToVideoViewModel
 {
     public InferenceWanImageToVideoViewModel(
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,

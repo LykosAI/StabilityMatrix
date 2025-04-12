@@ -25,7 +25,7 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
 
     /// <inheritdoc />
     public InferenceImageToImageViewModel(
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,

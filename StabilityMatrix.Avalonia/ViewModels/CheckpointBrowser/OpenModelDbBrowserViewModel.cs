@@ -28,7 +28,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 [RegisterSingleton<OpenModelDbBrowserViewModel>]
 public sealed partial class OpenModelDbBrowserViewModel(
     ILogger<OpenModelDbBrowserViewModel> logger,
-    ServiceManager<ViewModelBase> vmManager,
+    IServiceManager<ViewModelBase> vmManager,
     OpenModelDbManager openModelDbManager,
     INotificationService notificationService
 ) : TabViewModelBase

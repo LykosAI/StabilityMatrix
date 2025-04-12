@@ -32,7 +32,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterTransient<SelectImageCardViewModel>]
 public partial class SelectImageCardViewModel(
     INotificationService notificationService,
-    ServiceManager<ViewModelBase> vmFactory
+    IServiceManager<ViewModelBase> vmFactory
 ) : LoadableViewModelBase, IDropTarget, IComfyStep, IInputImageProvider
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

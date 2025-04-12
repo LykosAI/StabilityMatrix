@@ -63,7 +63,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IModelIndexService modelIndexService,
         RunningPackageService runningPackageService,
         TabContext tabContext

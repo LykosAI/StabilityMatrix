@@ -13,7 +13,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 public class FreeUModule : ModuleBase
 {
     /// <inheritdoc />
-    public FreeUModule(ServiceManager<ViewModelBase> vmFactory)
+    public FreeUModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "FreeU";

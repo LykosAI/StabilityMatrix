@@ -26,7 +26,7 @@ public partial class HiresFixModule : ModuleBase
     public override IRelayCommand SettingsCommand => OpenSettingsDialogCommand;
 
     /// <inheritdoc />
-    public HiresFixModule(ServiceManager<ViewModelBase> vmFactory)
+    public HiresFixModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "HiresFix";

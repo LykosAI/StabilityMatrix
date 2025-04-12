@@ -16,9 +16,10 @@ public class ImgToVidModelCardViewModel : ModelCardViewModel
 {
     public ImgToVidModelCardViewModel(
         IInferenceClientManager clientManager,
-        IServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory,
+        TabContext tabContext
     )
-        : base(clientManager, vmFactory)
+        : base(clientManager, vmFactory, tabContext)
     {
         DisableSettings = true;
     }

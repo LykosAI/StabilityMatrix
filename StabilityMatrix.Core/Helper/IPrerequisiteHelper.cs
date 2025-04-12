@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.Versioning;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -203,4 +204,5 @@ public interface IPrerequisiteHelper
     );
 
     Task<bool> FixGitLongPaths();
+    Task AddMissingLibsToVenv(DirectoryPath installedPackagePath, IProgress<ProgressReport>? progress = null);
 }

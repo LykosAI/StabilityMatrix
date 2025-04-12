@@ -44,6 +44,7 @@ public class WindowsPrerequisiteHelper(
 
     private const string HipSdkDownloadUrl =
         "https://download.amd.com/developer/eula/rocm-hub/AMD-Software-PRO-Edition-24.Q4-Win10-Win11-For-HIP.exe";
+    private const string PythonLibsDownloadUrl = "https://cdn.lykos.ai/python_libs_for_sage.zip";
 
     private string HomeDir => settingsManager.LibraryDir;
 
@@ -631,6 +632,43 @@ public class WindowsPrerequisiteHelper(
             $"dotnet8 with args [{args}] failed with exit code"
                 + $" {process.ExitCode}:\n{process.StandardOutput}\n{process.StandardError}"
         );
+    }
+
+    [SupportedOSPlatform("Windows")]
+    public async Task AddMissingLibsToVenv(
+        DirectoryPath installedPackagePath,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        var venvLibsDir = installedPackagePath.JoinDir("venv", "libs");
+        var venvIncludeDir = installedPackagePath.JoinDir("venv", "include");
+        if (
+            venvLibsDir.Exists
+            && venvIncludeDir.Exists
+            && venvLibsDir.JoinFile("python3.lib").Exists
+            && venvLibsDir.JoinFile("python310.lib").Exists
+        )
+        {
+            Logger.Debug("Python libs already installed at {VenvLibsDir}", venvLibsDir);
+            return;
+        }
+
+        var downloadPath = installedPackagePath.JoinFile("python_libs_for_sage.zip");
+        var venvDir = installedPackagePath.JoinDir("venv");
+        await downloadService
+            .DownloadToFileAsync(PythonLibsDownloadUrl, downloadPath, progress)
+            .ConfigureAwait(false);
+
+        progress?.Report(
+            new ProgressReport(-1f, message: "Extracting Python libraries", isIndeterminate: true)
+        );
+        await ArchiveHelper.Extract7Z(downloadPath, venvDir, progress);
+
+        var includeFolder = venvDir.JoinDir("include");
+        var scriptsIncludeFolder = venvDir.JoinDir("Scripts").JoinDir("include");
+        await includeFolder.CopyToAsync(scriptsIncludeFolder);
+
+        await downloadPath.DeleteAsync();
     }
 
     private async Task DownloadAndExtractPrerequisite(

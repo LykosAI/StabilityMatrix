@@ -210,6 +210,18 @@ public abstract class BaseGitPackage : BasePackage
             await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         }
 
+        if (!Compat.IsWindows)
+            return venvRunner;
+
+        try
+        {
+            await PrerequisiteHelper.AddMissingLibsToVenv(installedPackagePath).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to add missing libs to venv");
+        }
+
         return venvRunner;
     }
 

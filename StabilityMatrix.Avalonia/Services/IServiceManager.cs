@@ -51,6 +51,27 @@ public interface IServiceManager<T>
         where TService : T;
 
     /// <summary>
+    /// Get a view model instance with an initializer parameter
+    /// </summary>
+    public TService Get<TService>(Func<TService, TService> initializer)
+        where TService : T
+    {
+        var instance = Get<TService>();
+        return initializer(instance);
+    }
+
+    /// <summary>
+    /// Get a view model instance with an initializer for a mutable instance
+    /// </summary>
+    public TService Get<TService>(Action<TService> initializer)
+        where TService : T
+    {
+        var instance = Get<TService>();
+        initializer(instance);
+        return instance;
+    }
+
+    /// <summary>
     /// Register a new service provider action with Scoped lifetime.
     /// The factory is called once per scope.
     /// </summary>

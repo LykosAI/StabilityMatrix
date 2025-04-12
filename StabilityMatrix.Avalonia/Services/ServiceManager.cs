@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -6,13 +7,16 @@ namespace StabilityMatrix.Avalonia.Services;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 [Localizable(false)]
-public class ServiceManager<T> : IServiceManager<T>
+public class ServiceManager<T>(IServiceProvider scopedServiceProvider) : IServiceManager<T>
 {
     // Holds providers
     private readonly Dictionary<Type, Func<T>> providers = new();
 
     // Holds singleton instances
     private readonly Dictionary<Type, T> instances = new();
+
+    // Holds scoped providers (factories)
+    private readonly ConcurrentDictionary<Type, Func<IServiceProvider, T>> scopedProviders = new();
 
     /// <summary>
     /// Register a new dialog view model (singleton instance)
@@ -61,6 +65,62 @@ public class ServiceManager<T> : IServiceManager<T>
         return this;
     }
 
+    public void Register(Type type, Func<T> providerFunc)
+    {
+        lock (providers)
+        {
+            if (instances.ContainsKey(type) || providers.ContainsKey(type))
+            {
+                throw new ArgumentException($"Service of type {type} is already registered for {typeof(T)}");
+            }
+
+            providers[type] = providerFunc;
+        }
+    }
+
+    /// <summary>
+    /// Register a new service provider action with Scoped lifetime.
+    /// The factory is called once per scope.
+    /// </summary>
+    public IServiceManager<T> RegisterScoped<TService>(Func<IServiceProvider, TService> provider)
+        where TService : T
+    {
+        var type = typeof(TService);
+
+        lock (providers)
+        {
+            if (instances.ContainsKey(type) || providers.ContainsKey(type))
+                throw new ArgumentException(
+                    $"Service of type {type} is already registered with a different lifetime."
+                );
+
+            if (!scopedProviders.TryAdd(type, sp => provider(sp))) // Store as base type T
+                throw new ArgumentException($"Service of type {type} is already registered as Scoped.");
+        }
+
+        return this;
+    }
+
+    /// <summary>
+    /// Register a new service provider action with Scoped lifetime.
+    /// The factory is called once per scope.
+    /// </summary>
+    public IServiceManager<T> RegisterScoped(Type type, Func<IServiceProvider, T> provider)
+    {
+        lock (providers)
+        {
+            if (instances.ContainsKey(type) || providers.ContainsKey(type))
+                throw new ArgumentException(
+                    $"Service of type {type} is already registered with a different lifetime."
+                );
+
+            if (!scopedProviders.TryAdd(type, provider)) // Store as base type T
+                throw new ArgumentException($"Service of type {type} is already registered as Scoped.");
+        }
+
+        return this;
+    }
+
     /// <summary>
     /// Register a new dialog view model instance using a service provider
     /// Equal to Register[TService](serviceProvider.GetRequiredService[TService])
@@ -83,6 +143,25 @@ public class ServiceManager<T> : IServiceManager<T>
         }
 
         return this;
+    }
+
+    /// <summary>
+    /// Creates a new service scope.
+    /// </summary>
+    /// <returns>An IServiceManagerScope representing the created scope.</returns>
+    public IServiceManagerScope<T> CreateScope()
+    {
+        var scope = scopedServiceProvider.CreateScope();
+        return new ServiceManagerScope<T>(scope, new ScopedServiceManager<T>(this, scope.ServiceProvider));
+    }
+
+    // Internal method for ScopedServiceManager to access providers
+    internal bool TryGetScopedProvider(
+        Type serviceType,
+        [MaybeNullWhen(false)] out Func<IServiceProvider, T> provider
+    )
+    {
+        return scopedProviders.TryGetValue(serviceType, out provider);
     }
 
     /// <summary>
@@ -153,39 +232,5 @@ public class ServiceManager<T> : IServiceManager<T>
         }
 
         throw new ArgumentException($"Service of type {typeof(TService)} is not registered for {typeof(T)}");
-    }
-
-    /// <summary>
-    /// Get a view model instance with an initializer parameter
-    /// </summary>
-    public TService Get<TService>(Func<TService, TService> initializer)
-        where TService : T
-    {
-        var instance = Get<TService>();
-        return initializer(instance);
-    }
-
-    /// <summary>
-    /// Get a view model instance with an initializer for a mutable instance
-    /// </summary>
-    public TService Get<TService>(Action<TService> initializer)
-        where TService : T
-    {
-        var instance = Get<TService>();
-        initializer(instance);
-        return instance;
-    }
-
-    public void Register(Type type, Func<T> providerFunc)
-    {
-        lock (providers)
-        {
-            if (instances.ContainsKey(type) || providers.ContainsKey(type))
-            {
-                throw new ArgumentException($"Service of type {type} is already registered for {typeof(T)}");
-            }
-
-            providers[type] = providerFunc;
-        }
     }
 }

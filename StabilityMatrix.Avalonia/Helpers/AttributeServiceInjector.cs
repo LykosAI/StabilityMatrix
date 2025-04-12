@@ -61,13 +61,13 @@ internal static partial class AttributeServiceInjector
         Func<ServiceDescriptor, bool>? serviceFilter = null
     )
     {
-        return services.AddSingleton<IServiceManager<TService>>(provider =>
+        return services.AddScoped<IServiceManager<TService>>(provider =>
         {
             using var _ = CodeTimer.StartDebug(
                 callerName: $"{nameof(AddServiceManagerWithCurrentCollectionServices)}<{typeof(TService)}>"
             );
 
-            var serviceManager = new ServiceManager<TService>();
+            var serviceManager = new ServiceManager<TService>(provider);
 
             // Get registered services that are assignable to TService
             var serviceDescriptors = services.Where(s => s.ServiceType.IsAssignableTo(typeof(TService)));
@@ -84,7 +84,14 @@ internal static partial class AttributeServiceInjector
                 Debug.Assert(type is not null, "type is not null");
                 Debug.Assert(type.IsAssignableTo(typeof(TService)), "type is assignable to TService");
 
-                serviceManager.Register(type, () => (TService)provider.GetRequiredService(type));
+                if (service.Lifetime == ServiceLifetime.Scoped)
+                {
+                    serviceManager.RegisterScoped(type, sp => (TService)sp.GetRequiredService(type));
+                }
+                else
+                {
+                    serviceManager.Register(type, () => (TService)provider.GetRequiredService(type));
+                }
             }
 
             return serviceManager;

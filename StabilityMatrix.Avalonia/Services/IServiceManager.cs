@@ -1,5 +1,8 @@
-﻿namespace StabilityMatrix.Avalonia.Services;
+﻿using System.ComponentModel;
 
+namespace StabilityMatrix.Avalonia.Services;
+
+[Localizable(false)]
 public interface IServiceManager<T>
 {
     /// <summary>
@@ -24,6 +27,19 @@ public interface IServiceManager<T>
         where TService : notnull, T;
 
     /// <summary>
+    /// Register a new service provider action with Scoped lifetime.
+    /// The factory is called once per scope.
+    /// </summary>
+    IServiceManager<T> RegisterScoped<TService>(Func<IServiceProvider, TService> provider)
+        where TService : T;
+
+    /// <summary>
+    /// Creates a new service scope.
+    /// </summary>
+    /// <returns>An IServiceManagerScope representing the created scope.</returns>
+    IServiceManagerScope<T> CreateScope();
+
+    /// <summary>
     /// Get a view model instance from runtime type
     /// </summary>
     T Get(Type serviceType);
@@ -35,14 +51,8 @@ public interface IServiceManager<T>
         where TService : T;
 
     /// <summary>
-    /// Get a view model instance with an initializer parameter
+    /// Register a new service provider action with Scoped lifetime.
+    /// The factory is called once per scope.
     /// </summary>
-    TService Get<TService>(Func<TService, TService> initializer)
-        where TService : T;
-
-    /// <summary>
-    /// Get a view model instance with an initializer for a mutable instance
-    /// </summary>
-    TService Get<TService>(Action<TService> initializer)
-        where TService : T;
+    IServiceManager<T> RegisterScoped(Type type, Func<IServiceProvider, T> provider);
 }

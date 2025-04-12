@@ -10,6 +10,31 @@ namespace StabilityMatrix.Avalonia.Extensions;
 public static class ServiceManagerExtensions
 {
     /// <summary>
+    /// Get a view model instance with an initializer parameter
+    /// </summary>
+    public static TService Get<TService>(
+        this IServiceManager<TService> serviceManager,
+        Func<TService, TService> initializer
+    )
+    {
+        var instance = serviceManager.Get<TService>();
+        return initializer(instance);
+    }
+
+    /// <summary>
+    /// Get a view model instance with an initializer for a mutable instance
+    /// </summary>
+    public static TService Get<TService>(
+        this IServiceManager<TService> serviceManager,
+        Action<TService> initializer
+    )
+    {
+        var instance = serviceManager.Get<TService>();
+        initializer(instance);
+        return instance;
+    }
+
+    /// <summary>
     /// Get a view model instance, set as DataContext of its View, and return
     /// a BetterContentDialog with that View as its Content
     /// </summary>

@@ -22,6 +22,9 @@ public class Reforge(
     public override string LicenseUrl =>
         "https://github.com/Panchovix/stable-diffusion-webui-reForge/blob/main/LICENSE.txt";
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/reforge/preview.webp");
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Impossible;
+    public override bool OfferInOneClickInstaller => false;
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.ReallyRecommended;
+    public override string Disclaimer =>
+        "Development of this package has stopped. It may be removed from Stability Matrix in the future.";
 }

@@ -98,6 +98,8 @@ public class PackageFactory : IPackageFactory
                 => new ComfyZluda(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             "stable-diffusion-webui-amdgpu-forge"
                 => new ForgeAmdGpu(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "forge-classic"
+                => new ForgeClassic(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage))
         };
     }

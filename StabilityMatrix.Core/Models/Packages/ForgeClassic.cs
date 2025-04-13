@@ -109,6 +109,28 @@ public class ForgeClassic(
             LaunchOptionDefinition.Extras,
         ];
 
+    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
+        new()
+        {
+            [SharedFolderType.StableDiffusion] = ["models/Stable-diffusion/sd"],
+            [SharedFolderType.ESRGAN] = ["models/ESRGAN"],
+            [SharedFolderType.Lora] = ["models/Lora"],
+            [SharedFolderType.LyCORIS] = ["models/LyCORIS"],
+            [SharedFolderType.ApproxVAE] = ["models/VAE-approx"],
+            [SharedFolderType.VAE] = ["models/VAE"],
+            [SharedFolderType.DeepDanbooru] = ["models/deepbooru"],
+            [SharedFolderType.Embeddings] = ["models/embeddings"],
+            [SharedFolderType.Hypernetwork] = ["models/hypernetworks"],
+            [SharedFolderType.ControlNet] = ["models/controlnet/ControlNet"],
+            [SharedFolderType.AfterDetailer] = ["models/adetailer"],
+            [SharedFolderType.T2IAdapter] = ["models/controlnet/T2IAdapter"],
+            [SharedFolderType.IpAdapter] = ["models/controlnet/IpAdapter"],
+            [SharedFolderType.IpAdapters15] = ["models/controlnet/DiffusersIpAdapters"],
+            [SharedFolderType.IpAdaptersXl] = ["models/controlnet/DiffusersIpAdaptersXL"],
+            [SharedFolderType.TextEncoders] = ["models/text_encoder"],
+            [SharedFolderType.DiffusionModels] = ["models/Stable-diffusion/unet"],
+        };
+
     public override async Task InstallPackage(
         string installLocation,
         InstalledPackage installedPackage,

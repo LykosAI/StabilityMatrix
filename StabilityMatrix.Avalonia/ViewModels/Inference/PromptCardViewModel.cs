@@ -28,7 +28,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(PromptCard))]
 [ManagedService]
-[RegisterTransient<PromptCardViewModel>]
+[RegisterScoped<PromptCardViewModel>]
 public partial class PromptCardViewModel
     : DisposableLoadableViewModelBase,
         IParametersLoadableState,

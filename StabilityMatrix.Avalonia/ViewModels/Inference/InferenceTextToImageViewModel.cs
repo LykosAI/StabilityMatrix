@@ -29,7 +29,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), IsPersistent = true)]
 [ManagedService]
-[RegisterTransient<InferenceTextToImageViewModel>]
+[RegisterScoped<InferenceTextToImageViewModel>]
 public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

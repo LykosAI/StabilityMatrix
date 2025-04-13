@@ -1,25 +1,14 @@
-﻿using System.Collections.Concurrent;
+﻿namespace StabilityMatrix.Avalonia.Services;
 
-namespace StabilityMatrix.Avalonia.Services;
-
-internal class ScopedServiceManager<T> : IServiceManager<T>, IDisposable
+internal class ScopedServiceManager<T> : IServiceManager<T>
 {
     private readonly ServiceManager<T> parentManager;
     private readonly IServiceProvider scopedServiceProvider;
-    private readonly ConcurrentDictionary<Type, T> _scopedInstances = new();
-    private readonly List<IDisposable> _disposables = new();
-    private readonly List<IAsyncDisposable> _asyncDisposables = new();
-    private readonly Lock _lock = new(); // For creating scoped instances safely
-
-    private bool _disposed;
 
     internal ScopedServiceManager(ServiceManager<T> parentManager, IServiceProvider scopedServiceProvider)
     {
         this.parentManager = parentManager;
         this.scopedServiceProvider = scopedServiceProvider;
-
-        // Add ourselves as the materialized IServiceManager<T> for this scope
-        // _scopedInstances[typeof(IServiceManager<T>)] = this;
     }
 
     // Delegate Register methods to the parent manager
@@ -76,93 +65,19 @@ internal class ScopedServiceManager<T> : IServiceManager<T>, IDisposable
             throw new ArgumentException($"Service type {serviceType} is not assignable to {typeof(T)}");
         }
 
-        // 1. Check if instance already exists *in this scope*
-        if (_scopedInstances.TryGetValue(serviceType, out var scopedInstance))
-        {
-            return scopedInstance;
-        }
-
-        // 2. Check if it's a known *scoped* service type from the parent
+        // Check if it's a known *scoped* service type from the parent
         if (parentManager.TryGetScopedProvider(serviceType, out var scopedProvider))
         {
-            // Lock to prevent multiple creations of the same scoped service concurrently within this scope
-            lock (_lock)
-            {
-                // Double-check if another thread created it while waiting for the lock
-                if (_scopedInstances.TryGetValue(serviceType, out scopedInstance))
-                {
-                    return scopedInstance;
-                }
+            // Create the scoped instance using the factory from the parent
+            var newScopedInstance = scopedProvider(scopedServiceProvider);
+            if (newScopedInstance == null)
+                throw new InvalidOperationException($"Scoped provider for {serviceType} returned null.");
 
-                // Create the scoped instance using the factory from the parent
-                var newScopedInstance = scopedProvider(scopedServiceProvider);
-                if (newScopedInstance == null)
-                    throw new InvalidOperationException($"Scoped provider for {serviceType} returned null.");
-
-                if (!_scopedInstances.TryAdd(serviceType, newScopedInstance))
-                {
-                    // Should not happen due to outer check + lock, but defensive check
-                    throw new InvalidOperationException(
-                        $"Failed to add scoped instance for {serviceType}. Concurrency issue?"
-                    );
-                }
-
-                // Track disposables created within this scope
-                if (newScopedInstance is IDisposable disposable)
-                    _disposables.Add(disposable);
-                if (newScopedInstance is IAsyncDisposable asyncDisposable)
-                    _asyncDisposables.Add(asyncDisposable);
-
-                return newScopedInstance;
-            }
+            return newScopedInstance;
         }
 
         // 3. If not scoped, delegate to the parent manager to resolve Singleton or Transient
         //    (Parent's Get will throw if the type isn't registered there either)
         return parentManager.Get(serviceType);
-    }
-
-    public void Dispose()
-    {
-        // Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (_disposed)
-            return;
-
-        if (disposing)
-        {
-            // Dispose synchronous disposables created *within this scope*
-            foreach (var disposable in _disposables)
-            {
-                try
-                {
-                    disposable.Dispose();
-                }
-                catch (Exception ex)
-                { /* Log error */
-                }
-            }
-            _disposables.Clear();
-
-            // Handle async disposables created *within this scope*
-            foreach (var asyncDisposable in _asyncDisposables)
-            {
-                try
-                {
-                    asyncDisposable.DisposeAsync().AsTask().Wait();
-                }
-                catch (Exception ex)
-                { /* Log error */
-                }
-            }
-            _asyncDisposables.Clear();
-
-            _scopedInstances.Clear(); // Clear instances held by this scope
-        }
-        _disposed = true;
     }
 }

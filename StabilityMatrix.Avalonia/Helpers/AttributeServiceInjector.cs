@@ -49,6 +49,17 @@ internal static partial class AttributeServiceInjector
         services.AddStabilityMatrixAvalonia();
     }
 
+    private static bool IsScoped(IServiceProvider serviceProvider)
+    {
+        // Hacky check for if service provider is scoped
+        var typeName = serviceProvider.GetType().Name;
+        if (typeName == "ServiceProviderEngineScope" || typeName.Contains("Scope"))
+        {
+            return true;
+        }
+        return false;
+    }
+
     /// <summary>
     /// Adds a <see cref="IServiceManager{T}"/> to the <see cref="IServiceCollection"/>.
     /// </summary>
@@ -61,7 +72,8 @@ internal static partial class AttributeServiceInjector
         Func<ServiceDescriptor, bool>? serviceFilter = null
     )
     {
-        return services.AddScoped<IServiceManager<TService>>(provider =>
+        // Register main service manager as singleton
+        services.AddSingleton<ServiceManager<TService>>(provider =>
         {
             using var _ = CodeTimer.StartDebug(
                 callerName: $"{nameof(AddServiceManagerWithCurrentCollectionServices)}<{typeof(TService)}>"
@@ -96,5 +108,24 @@ internal static partial class AttributeServiceInjector
 
             return serviceManager;
         });
+
+        // Register scoped for interface
+        services.AddScoped<IServiceManager<TService>>(provider =>
+        {
+            var rootServiceManager = provider.GetRequiredService<ServiceManager<TService>>();
+
+            // For non scoped, just return the singleton
+            if (!IsScoped(provider))
+            {
+                return rootServiceManager;
+            }
+
+            // For scoped, create a new instance using root and provider
+            var scopedServiceManager = new ScopedServiceManager<TService>(rootServiceManager, provider);
+
+            return scopedServiceManager;
+        });
+
+        return services;
     }
 }

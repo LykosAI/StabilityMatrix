@@ -1,4 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Injectio.Attributes;
+using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -6,6 +8,8 @@ namespace StabilityMatrix.Avalonia.Services;
 /// <summary>
 /// Holds shared state scoped to a single Inference tab.
 /// </summary>
+[RegisterScoped<TabContext>]
+[ManagedService]
 public partial class TabContext : ObservableObject
 {
     [ObservableProperty]

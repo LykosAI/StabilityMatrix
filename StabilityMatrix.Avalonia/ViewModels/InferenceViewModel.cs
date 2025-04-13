@@ -58,10 +58,9 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly IModelIndexService modelIndexService;
     private readonly ILiteDbContext liteDbContext;
-    private readonly IServiceScopeFactory scopeFactory;
     private readonly RunningPackageService runningPackageService;
     private Guid? selectedPackageId;
-    private List<IServiceScope> scopes = [];
+    private List<IDisposable> scopes = [];
 
     public override string Title => Resources.Label_Inference;
     public override IconSource IconSource =>
@@ -106,7 +105,6 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
         ILiteDbContext liteDbContext,
-        IServiceScopeFactory scopeFactory,
         RunningPackageService runningPackageService,
         SharedState sharedState
     )
@@ -116,7 +114,6 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         this.settingsManager = settingsManager;
         this.modelIndexService = modelIndexService;
         this.liteDbContext = liteDbContext;
-        this.scopeFactory = scopeFactory;
         this.runningPackageService = runningPackageService;
 
         ClientManager = inferenceClientManager;
@@ -394,16 +391,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         }
 
         // Create a new scope for this tab
-        var scope = scopeFactory.CreateScope();
-        scopes.Add(scope);
-
-        // Register a TabContext in this scope
-        var tabContext = new TabContext();
-        scope.ServiceProvider.GetRequiredService<IServiceCollection>().AddScoped(_ => tabContext);
+        var scope = vmFactory.CreateScope();
 
         // Get the view model using the scope's service provider
         var tab =
-            scope.ServiceProvider.GetService(vmType) as InferenceTabViewModelBase
+            scope.ServiceManager.Get(vmType) as InferenceTabViewModelBase
             ?? throw new NullReferenceException($"Could not create view model of type {vmType}");
 
         Tabs.Add(tab);
@@ -697,16 +689,12 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         }
 
         // Create a new scope for this tab
-        var scope = scopeFactory.CreateScope();
+        var scope = vmFactory.CreateScope();
         scopes.Add(scope);
-
-        // Register a TabContext in this scope
-        var tabContext = new TabContext();
-        scope.ServiceProvider.GetRequiredService<IServiceCollection>().AddScoped(_ => tabContext);
 
         // Get the view model using the scope's service provider
         var vm =
-            scope.ServiceProvider.GetService(vmType) as InferenceTabViewModelBase
+            scope.ServiceManager.Get(vmType) as InferenceTabViewModelBase
             ?? throw new NullReferenceException($"Could not create view model of type {vmType}");
 
         vm.LoadStateFromJsonObject(document.State);
@@ -722,26 +710,18 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private async Task AddTabFromFileAsync(LocalImageFile imageFile, InferenceProjectType projectType)
     {
         // Create a new scope for this tab
-        var scope = scopeFactory.CreateScope();
+        var scope = vmFactory.CreateScope();
         scopes.Add(scope);
-
-        // Register a TabContext in this scope
-        var tabContext = new TabContext();
-        scope.ServiceProvider.GetRequiredService<IServiceCollection>().AddScoped(_ => tabContext);
 
         // Get the appropriate view model from the scope
         InferenceTabViewModelBase vm = projectType switch
         {
-            InferenceProjectType.TextToImage
-                => scope.ServiceProvider.GetRequiredService<InferenceTextToImageViewModel>(),
-            InferenceProjectType.ImageToImage
-                => scope.ServiceProvider.GetRequiredService<InferenceImageToImageViewModel>(),
-            InferenceProjectType.ImageToVideo
-                => scope.ServiceProvider.GetRequiredService<InferenceImageToVideoViewModel>(),
-            InferenceProjectType.Upscale
-                => scope.ServiceProvider.GetRequiredService<InferenceImageUpscaleViewModel>(),
+            InferenceProjectType.TextToImage => scope.ServiceManager.Get<InferenceTextToImageViewModel>(),
+            InferenceProjectType.ImageToImage => scope.ServiceManager.Get<InferenceImageToImageViewModel>(),
+            InferenceProjectType.ImageToVideo => scope.ServiceManager.Get<InferenceImageToVideoViewModel>(),
+            InferenceProjectType.Upscale => scope.ServiceManager.Get<InferenceImageUpscaleViewModel>(),
             InferenceProjectType.FluxTextToImage
-                => scope.ServiceProvider.GetRequiredService<InferenceFluxTextToImageViewModel>(),
+                => scope.ServiceManager.Get<InferenceFluxTextToImageViewModel>(),
         };
 
         switch (vm)

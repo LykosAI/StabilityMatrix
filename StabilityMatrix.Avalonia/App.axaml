@@ -30,6 +30,7 @@
                 <ResourceInclude Source="Styles/FAComboBoxStyles.axaml" />
                 <ResourceInclude Source="Controls/Inference/ImageFolderCard.axaml" />
                 <ResourceInclude Source="Controls/VendorLabs/Themes/BetterAsyncImage.axaml" />
+                <ResourceInclude Source="Styles/ControlThemes/ButtonStyles.Accelerator.axaml" />
             </ResourceDictionary.MergedDictionaries>
 
             <ControlRecycling x:Key="ControlRecyclingKey" />

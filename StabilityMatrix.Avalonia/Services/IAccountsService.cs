@@ -36,4 +36,6 @@ public interface IAccountsService
     Task CivitLogoutAsync();
 
     Task RefreshAsync();
+
+    Task RefreshLykosAsync();
 }

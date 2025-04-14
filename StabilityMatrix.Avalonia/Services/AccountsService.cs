@@ -181,6 +181,13 @@ public class AccountsService : IAccountsService
         await RefreshCivitAsync(secrets);
     }
 
+    public async Task RefreshLykosAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+
+        await RefreshLykosAsync(secrets);
+    }
+
     private async Task RefreshLykosAsync(Secrets secrets)
     {
         if (

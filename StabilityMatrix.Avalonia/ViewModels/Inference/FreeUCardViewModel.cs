@@ -9,7 +9,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(FreeUCard))]
 [ManagedService]
-[RegisterTransient<FreeUCardViewModel>]
+[RegisterScoped<FreeUCardViewModel>]
 public partial class FreeUCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "FreeU";

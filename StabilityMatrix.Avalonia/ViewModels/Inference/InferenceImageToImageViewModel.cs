@@ -17,7 +17,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceImageToImageView), IsPersistent = true)]
-[RegisterTransient<InferenceImageToImageViewModel>, ManagedService]
+[RegisterScoped<InferenceImageToImageViewModel>, ManagedService]
 public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
 {
     [JsonPropertyName("SelectImage")]

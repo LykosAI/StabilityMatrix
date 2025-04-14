@@ -37,7 +37,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ImageFolderCard))]
 [ManagedService]
-[RegisterTransient<ImageFolderCardViewModel>]
+[RegisterScoped<ImageFolderCardViewModel>]
 public partial class ImageFolderCardViewModel : DisposableViewModelBase
 {
     private readonly ILogger<ImageFolderCardViewModel> logger;

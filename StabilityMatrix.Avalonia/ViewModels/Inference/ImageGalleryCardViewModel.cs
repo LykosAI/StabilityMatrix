@@ -25,7 +25,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ImageGalleryCard))]
 [ManagedService]
-[RegisterTransient<ImageGalleryCardViewModel>]
+[RegisterScoped<ImageGalleryCardViewModel>]
 public partial class ImageGalleryCardViewModel : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

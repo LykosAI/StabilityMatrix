@@ -8,7 +8,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<DiscreteModelSamplingModule>]
+[RegisterScoped<DiscreteModelSamplingModule>]
 public class DiscreteModelSamplingModule : ModuleBase
 {
     public DiscreteModelSamplingModule(IServiceManager<ViewModelBase> vmFactory)

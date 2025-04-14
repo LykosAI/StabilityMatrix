@@ -16,7 +16,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<LoraModule>]
+[RegisterScoped<LoraModule>]
 public partial class LoraModule : ModuleBase
 {
     /// <inheritdoc />

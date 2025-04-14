@@ -11,7 +11,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 
 [View(typeof(ModelCard))]
 [ManagedService]
-[RegisterTransient<ImgToVidModelCardViewModel>]
+[RegisterScoped<ImgToVidModelCardViewModel>]
 public class ImgToVidModelCardViewModel : ModelCardViewModel
 {
     public ImgToVidModelCardViewModel(

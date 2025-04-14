@@ -15,7 +15,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(FaceDetailerCard))]
 [ManagedService]
-[RegisterTransient<FaceDetailerViewModel>]
+[RegisterScoped<FaceDetailerViewModel>]
 public partial class FaceDetailerViewModel : LoadableViewModelBase
 {
     private readonly IServiceManager<ViewModelBase> vmFactory;

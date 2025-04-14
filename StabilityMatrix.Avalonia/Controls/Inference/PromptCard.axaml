@@ -1,9 +1,11 @@
 ﻿<Styles
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
     xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
@@ -86,9 +88,277 @@
                                     VerticalAlignment="Top"
                                     VerticalContentAlignment="Top"
                                     icons:Attached.Icon="fa-solid fa-wand-magic-sparkles"
-                                    Classes="transparent-full"
-                                    Command="{Binding AmplifyPromptCommand}"
-                                    ToolTip.Tip="Amplify Prompt" />
+                                    Classes="accent"
+                                    ToolTip.Tip="Prompt Amplifier">
+                                    <Button.Flyout>
+                                        <controls:BetterFlyout>
+                                            <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
+
+                                                <TextBlock
+                                                    Grid.Row="0"
+                                                    Grid.Column="0"
+                                                    Grid.ColumnSpan="2"
+                                                    Margin="0,4,0,8"
+                                                    FontSize="24"
+                                                    FontWeight="Light"
+                                                    Text="Prompt Amplifier"
+                                                    TextAlignment="Center" />
+
+                                                <Separator
+                                                    Grid.Row="1"
+                                                    Grid.Column="0"
+                                                    Grid.ColumnSpan="2"
+                                                    Margin="16,0,16,16"
+                                                    Background="#777777" />
+
+                                                <TextBlock
+                                                    Grid.Row="2"
+                                                    Grid.Column="0"
+                                                    Grid.ColumnSpan="2"
+                                                    Margin="4,8,0,4"
+                                                    FontSize="18"
+                                                    FontWeight="Light"
+                                                    Text="Model"
+                                                    TextAlignment="Left" />
+
+                                                <ToggleButton
+                                                    Grid.Row="3"
+                                                    Grid.Column="1"
+                                                    HorizontalAlignment="Center"
+                                                    IsChecked="{Binding IsThinkingEnabled}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <fluent:SymbolIcon Symbol="BrainCircuit" />
+                                                        <TextBlock Text="Think" />
+                                                    </StackPanel>
+                                                </ToggleButton>
+
+                                                <controls:BetterComboBox
+                                                    Grid.Row="3"
+                                                    Grid.Column="0"
+                                                    Height="34"
+                                                    Margin="0,0,8,0"
+                                                    HorizontalAlignment="Stretch"
+                                                    SelectedIndex="0">
+                                                    <controls:BetterComboBox.Items>
+                                                        <ComboBoxItem Content="Spark" />
+                                                    </controls:BetterComboBox.Items>
+                                                </controls:BetterComboBox>
+
+                                                <TextBlock
+                                                    Grid.Row="4"
+                                                    Grid.Column="0"
+                                                    Grid.ColumnSpan="2"
+                                                    Margin="4,16,0,4"
+                                                    FontSize="18"
+                                                    FontWeight="Light"
+                                                    Text="Feel"
+                                                    TextAlignment="Left" />
+
+                                                <StackPanel
+                                                    Grid.Row="5"
+                                                    Grid.Column="0"
+                                                    Grid.ColumnSpan="2"
+                                                    Orientation="Horizontal">
+                                                    <ToggleButton
+                                                        Width="100"
+                                                        Content="Focused"
+                                                        CornerRadius="8,0,0,8"
+                                                        IsChecked="{Binding IsFocused}" />
+                                                    <ToggleButton
+                                                        Width="100"
+                                                        Content="Balanced"
+                                                        CornerRadius="0"
+                                                        IsChecked="{Binding IsBalanced}" />
+                                                    <ToggleButton
+                                                        Width="100"
+                                                        Content="Imaginative"
+                                                        CornerRadius="0,8,8,0"
+                                                        IsChecked="{Binding IsImaginative}" />
+                                                </StackPanel>
+
+                                                <Button
+                                                    Grid.Row="6"
+                                                    Grid.Column="0"
+                                                    Grid.ColumnSpan="2"
+                                                    Margin="0,24,0,12"
+                                                    HorizontalAlignment="Stretch"
+                                                    Classes="accent"
+                                                    Command="{Binding AmplifyPromptCommand}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <Grid
+                                                            Width="24"
+                                                            Height="24"
+                                                            VerticalAlignment="Center">
+                                                            <!--  Main wand icon  -->
+                                                            <icons:Icon
+                                                                x:Name="AmplifyIcon"
+                                                                Classes.running="{Binding AmplifyPromptCommand.IsRunning}"
+                                                                RenderTransformOrigin="50% 50%"
+                                                                Value="fa-solid fa-wand-magic-sparkles">
+                                                                <icons:Icon.RenderTransform>
+                                                                    <TransformGroup>
+                                                                        <RotateTransform Angle="0" />
+                                                                        <ScaleTransform ScaleX="1" ScaleY="1" />
+                                                                    </TransformGroup>
+                                                                </icons:Icon.RenderTransform>
+                                                                <icons:Icon.Styles>
+                                                                    <Style Selector="icons|Icon.running">
+                                                                        <Style.Animations>
+                                                                            <Animation IterationCount="Infinite" Duration="0:0:1.2">
+                                                                                <KeyFrame Cue="0%">
+                                                                                    <Setter Property="RotateTransform.Angle" Value="-15" />
+                                                                                    <Setter Property="ScaleTransform.ScaleX" Value="1" />
+                                                                                    <Setter Property="ScaleTransform.ScaleY" Value="1" />
+                                                                                    <Setter Property="Foreground" Value="#FFFFFFFF" />
+                                                                                </KeyFrame>
+                                                                                <KeyFrame Cue="25%">
+                                                                                    <Setter Property="RotateTransform.Angle" Value="10" />
+                                                                                    <Setter Property="ScaleTransform.ScaleX" Value="1.15" />
+                                                                                    <Setter Property="ScaleTransform.ScaleY" Value="1.15" />
+                                                                                    <Setter Property="Foreground" Value="#FFFFD700" />
+                                                                                </KeyFrame>
+                                                                                <KeyFrame Cue="50%">
+                                                                                    <Setter Property="RotateTransform.Angle" Value="15" />
+                                                                                    <Setter Property="ScaleTransform.ScaleX" Value="1" />
+                                                                                    <Setter Property="ScaleTransform.ScaleY" Value="1" />
+                                                                                    <Setter Property="Foreground" Value="#FFFFFFFF" />
+                                                                                </KeyFrame>
+                                                                                <KeyFrame Cue="75%">
+                                                                                    <Setter Property="RotateTransform.Angle" Value="-5" />
+                                                                                    <Setter Property="ScaleTransform.ScaleX" Value="1.15" />
+                                                                                    <Setter Property="ScaleTransform.ScaleY" Value="1.15" />
+                                                                                    <Setter Property="Foreground" Value="#FF9370DB" />
+                                                                                </KeyFrame>
+                                                                                <KeyFrame Cue="100%">
+                                                                                    <Setter Property="RotateTransform.Angle" Value="-15" />
+                                                                                    <Setter Property="ScaleTransform.ScaleX" Value="1" />
+                                                                                    <Setter Property="ScaleTransform.ScaleY" Value="1" />
+                                                                                    <Setter Property="Foreground" Value="#FFFFFFFF" />
+                                                                                </KeyFrame>
+                                                                            </Animation>
+                                                                        </Style.Animations>
+                                                                    </Style>
+                                                                </icons:Icon.Styles>
+                                                            </icons:Icon>
+
+                                                            <!--  Sparkle 1  -->
+                                                            <icons:Icon
+                                                                HorizontalAlignment="Right"
+                                                                VerticalAlignment="Top"
+                                                                Classes.running="{Binding AmplifyPromptCommand.IsRunning}"
+                                                                FontSize="8"
+                                                                Foreground="#FFFFD700"
+                                                                Opacity="0"
+                                                                Value="fa-solid fa-star">
+                                                                <icons:Icon.Styles>
+                                                                    <Style Selector="icons|Icon.running">
+                                                                        <Style.Animations>
+                                                                            <Animation IterationCount="Infinite" Duration="0:0:1.5">
+                                                                                <KeyFrame Cue="0%">
+                                                                                    <Setter Property="Opacity" Value="0" />
+                                                                                </KeyFrame>
+                                                                                <KeyFrame Cue="20%">
+                                                                                    <Setter Property="Opacity" Value="1" />
+                                                                                </KeyFrame>
+                                                                                <KeyFrame Cue="40%">
+                                                                                    <Setter Property="Opacity" Value="0" />
+                                                                                </KeyFrame>
+                                                                            </Animation>
+                                                                        </Style.Animations>
+                                                                    </Style>
+                                                                </icons:Icon.Styles>
+                                                            </icons:Icon>
+
+                                                            <!--  Sparkle 2  -->
+                                                            <icons:Icon
+                                                                HorizontalAlignment="Left"
+                                                                VerticalAlignment="Bottom"
+                                                                Classes.running="{Binding AmplifyPromptCommand.IsRunning}"
+                                                                FontSize="6"
+                                                                Foreground="#FF9370DB"
+                                                                Opacity="0"
+                                                                Value="fa-solid fa-star">
+                                                                <icons:Icon.Styles>
+                                                                    <Style Selector="icons|Icon.running">
+                                                                        <Style.Animations>
+                                                                            <Animation
+                                                                                Delay="0:0:0.4"
+                                                                                IterationCount="Infinite"
+                                                                                Duration="0:0:1.5">
+                                                                                <KeyFrame Cue="0%">
+                                                                                    <Setter Property="Opacity" Value="0" />
+                                                                                </KeyFrame>
+                                                                                <KeyFrame Cue="20%">
+                                                                                    <Setter Property="Opacity" Value="1" />
+                                                                                </KeyFrame>
+                                                                                <KeyFrame Cue="40%">
+                                                                                    <Setter Property="Opacity" Value="0" />
+                                                                                </KeyFrame>
+                                                                            </Animation>
+                                                                        </Style.Animations>
+                                                                    </Style>
+                                                                </icons:Icon.Styles>
+                                                            </icons:Icon>
+
+                                                            <!--  Sparkle 3  -->
+                                                            <icons:Icon
+                                                                Margin="0,0,2,1"
+                                                                HorizontalAlignment="Right"
+                                                                VerticalAlignment="Bottom"
+                                                                Classes.running="{Binding AmplifyPromptCommand.IsRunning}"
+                                                                FontSize="7"
+                                                                Foreground="#FF00BFFF"
+                                                                Opacity="0"
+                                                                Value="fa-solid fa-star">
+                                                                <icons:Icon.Styles>
+                                                                    <Style Selector="icons|Icon.running">
+                                                                        <Style.Animations>
+                                                                            <Animation
+                                                                                Delay="0:0:0.8"
+                                                                                IterationCount="Infinite"
+                                                                                Duration="0:0:1.5">
+                                                                                <KeyFrame Cue="0%">
+                                                                                    <Setter Property="Opacity" Value="0" />
+                                                                                </KeyFrame>
+                                                                                <KeyFrame Cue="20%">
+                                                                                    <Setter Property="Opacity" Value="1" />
+                                                                                </KeyFrame>
+                                                                                <KeyFrame Cue="40%">
+                                                                                    <Setter Property="Opacity" Value="0" />
+                                                                                </KeyFrame>
+                                                                            </Animation>
+                                                                        </Style.Animations>
+                                                                    </Style>
+                                                                </icons:Icon.Styles>
+                                                            </icons:Icon>
+                                                        </Grid>
+
+                                                        <TextBlock
+                                                            Margin="0,-1,0,0"
+                                                            VerticalAlignment="Center"
+                                                            IsVisible="{Binding !AmplifyPromptCommand.IsRunning}"
+                                                            Text="Amplify" />
+                                                        <TextBlock
+                                                            Margin="0,-1,0,0"
+                                                            VerticalAlignment="Center"
+                                                            IsVisible="{Binding AmplifyPromptCommand.IsRunning}"
+                                                            Text="Amplifying..." />
+                                                    </StackPanel>
+                                                </Button>
+
+                                                <TextBlock
+                                                    Grid.Row="7"
+                                                    Grid.Column="0"
+                                                    Grid.ColumnSpan="2"
+                                                    FontSize="12"
+                                                    Foreground="#999999"
+                                                    IsVisible="{Binding ShowLowTokenWarning}"
+                                                    Text="{Binding LowTokenWarningText}"
+                                                    TextAlignment="Center" />
+                                            </Grid>
+                                        </controls:BetterFlyout>
+                                    </Button.Flyout>
+                                </Button>
 
                                 <Button
                                     Padding="8,4"

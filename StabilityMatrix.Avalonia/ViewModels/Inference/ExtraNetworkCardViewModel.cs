@@ -19,7 +19,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ExtraNetworkCard))]
 [ManagedService]
-[RegisterTransient<ExtraNetworkCardViewModel>]
+[RegisterScoped<ExtraNetworkCardViewModel>]
 public partial class ExtraNetworkCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "ExtraNetwork";

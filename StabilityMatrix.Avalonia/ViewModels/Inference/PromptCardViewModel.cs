@@ -1,13 +1,16 @@
-﻿using System.Linq;
+﻿using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
+using Avalonia.Controls.Notifications;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
+using Microsoft.Extensions.Logging;
+using Refit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
@@ -16,13 +19,17 @@ using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
+using StabilityMatrix.Core.Api.PromptGenApi;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
-using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
+using Prompt = StabilityMatrix.Avalonia.Models.Inference.Prompt;
+using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -37,6 +44,9 @@ public partial class PromptCardViewModel
     private readonly IModelIndexService modelIndexService;
     private readonly ISettingsManager settingsManager;
     private readonly TabContext tabContext;
+    private readonly IPromptGenApi promptGenApi;
+    private readonly INotificationService notificationService;
+    private readonly ILogger<PromptCardViewModel> logger;
 
     /// <summary>
     /// Cache of prompt text to tokenized Prompt
@@ -61,6 +71,27 @@ public partial class PromptCardViewModel
     [ObservableProperty]
     private bool isNegativePromptEnabled = true;
 
+    [ObservableProperty]
+    private bool isThinkingEnabled;
+
+    [ObservableProperty]
+    private bool isFocused;
+
+    [ObservableProperty]
+    private bool isBalanced = true;
+
+    [ObservableProperty]
+    private bool isImaginative;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowLowTokenWarning))]
+    private int tokensRemaining;
+
+    public bool ShowLowTokenWarning => TokensRemaining <= 100;
+
+    public string LowTokenWarningText =>
+        $"{TokensRemaining} amplification{(TokensRemaining == 1 ? "" : "s")} remaining (resets in {Utilities.GetNumDaysTilBeginningOfNextMonth()} days)";
+
     /// <inheritdoc />
     public PromptCardViewModel(
         ICompletionProvider completionProvider,
@@ -68,6 +99,9 @@ public partial class PromptCardViewModel
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
         IServiceManager<ViewModelBase> vmFactory,
+        IPromptGenApi promptGenApi,
+        INotificationService notificationService,
+        ILogger<PromptCardViewModel> logger,
         SharedState sharedState,
         TabContext tabContext
     )
@@ -75,6 +109,9 @@ public partial class PromptCardViewModel
         this.modelIndexService = modelIndexService;
         this.settingsManager = settingsManager;
         this.tabContext = tabContext;
+        this.promptGenApi = promptGenApi;
+        this.notificationService = notificationService;
+        this.logger = logger;
         CompletionProvider = completionProvider;
         TokenizerProvider = tokenizerProvider;
         SharedState = sharedState;
@@ -128,15 +165,22 @@ public partial class PromptCardViewModel
     }
 
     /// <inheritdoc />
-    public override void OnLoaded()
+    public override async Task OnLoadedAsync()
     {
-        base.OnLoaded();
+        await base.OnLoadedAsync();
 
         // Show teaching tip for help button if not seen
         if (!settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.InferencePromptHelpButtonTip))
         {
             IsHelpButtonTeachingTipOpen = true;
         }
+
+        _ = promptGenApi
+            .AccountMeTokens()
+            .ContinueWith(result =>
+            {
+                TokensRemaining = result.Result.Available;
+            });
     }
 
     /// <summary>
@@ -413,21 +457,131 @@ public partial class PromptCardViewModel
     [RelayCommand]
     private async Task AmplifyPrompt()
     {
-        var dialog = DialogHelper.CreateMarkdownDialog(tabContext.SelectedModel?.RelativePath ?? "nothin");
-        await dialog.ShowAsync();
+        var valid = await ValidatePrompts();
+        if (!valid)
+            return;
+
+        var prompt = GetPrompt();
+        if (string.IsNullOrWhiteSpace(prompt.RawText))
+        {
+            notificationService.Show("Prompt Amplifier Error", "Prompt is empty", NotificationType.Error);
+            return;
+        }
+
+        var negativePrompt = GetNegativePrompt();
+        var selectedModel = tabContext.SelectedModel;
+        var modelTags = selectedModel?.Local?.ConnectedModelInfo?.BaseModel?.ToLower() switch
+        {
+            { } baseModel when baseModel.Contains("flux") => new List<ModelTags> { ModelTags.Flux },
+            { } baseModel when baseModel.Contains("sdxl") => [ModelTags.Sdxl],
+            "pony" => [ModelTags.Pony],
+            "noobai" => [ModelTags.Illustrious],
+            "illustrious" => [ModelTags.Illustrious],
+            _ => [],
+        };
+        var mode = IsFocused
+            ? PromptExpansionRequestMode.Focused
+            : IsImaginative
+                ? PromptExpansionRequestMode.Imaginative
+                : PromptExpansionRequestMode.Balanced;
+        try
+        {
+            var expandedPrompt = await promptGenApi.ExpandPrompt(
+                new PromptExpansionRequest
+                {
+                    Prompt = new PromptToEnhance
+                    {
+                        PositivePrompt = prompt.ProcessedText ?? prompt.RawText,
+                        NegativePrompt = negativePrompt.ProcessedText ?? negativePrompt.RawText,
+                        Model = selectedModel?.Local?.DisplayModelName
+                    },
+                    Model = IsThinkingEnabled ? "PromptV1ThinkingDev" : "PromptV1Dev",
+                    Mode = mode,
+                    ModelTags = modelTags
+                }
+            );
+
+            PromptDocument.Text = expandedPrompt.Response.PositivePrompt;
+            NegativePromptDocument.Text = expandedPrompt.Response.NegativePrompt;
+
+            TokensRemaining = expandedPrompt.AvailableTokens;
+        }
+        catch (ApiException e)
+        {
+            logger.LogError(e, "Error amplifying prompt");
+            switch (e.StatusCode)
+            {
+                case HttpStatusCode.PaymentRequired:
+                {
+                    var dialog = DialogHelper.CreateMarkdownDialog(
+                        $"You have no Prompt Amplifier usage left this month. Usage resets on the 1st of each month. ({Utilities.GetNumDaysTilBeginningOfNextMonth()} days left)",
+                        "Rate Limit Reached"
+                    );
+                    dialog.PrimaryButtonText = "Upgrade";
+                    dialog.PrimaryButtonCommand = new RelayCommand(
+                        () => ProcessRunner.OpenUrl("https://patreon.com/join/StabilityMatrix")
+                    );
+                    dialog.IsPrimaryButtonEnabled = true;
+                    dialog.DefaultButton = ContentDialogButton.Primary;
+
+                    await dialog.ShowAsync();
+                    break;
+                }
+                case HttpStatusCode.BadRequest:
+                    notificationService.Show(
+                        "Moderation Error",
+                        "Your prompt was flagged by the moderation system. Please try again with a different prompt.",
+                        NotificationType.Error
+                    );
+                    break;
+                default:
+                    notificationService.Show(
+                        "Prompt Amplifier Error",
+                        "There was an error processing your request.",
+                        NotificationType.Error
+                    );
+                    break;
+            }
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error amplifying prompt");
+            notificationService.Show("Prompt Amplifier Error", e.Message, NotificationType.Error);
+        }
     }
 
-    /// <inheritdoc />
-    public override JsonObject SaveStateToJsonObject()
+    partial void OnIsBalancedChanged(bool value)
     {
-        return SerializeModel(
-            new PromptCardModel
-            {
-                Prompt = PromptDocument.Text,
-                NegativePrompt = NegativePromptDocument.Text,
-                ModulesCardState = ModulesCardViewModel.SaveStateToJsonObject()
-            }
-        );
+        switch (value)
+        {
+            case false when !IsFocused && !IsImaginative:
+                IsBalanced = true;
+                return;
+            case false:
+                return;
+            default:
+                IsFocused = false;
+                IsImaginative = false;
+                break;
+        }
+    }
+
+    partial void OnIsFocusedChanged(bool value)
+    {
+        if (!value)
+            return;
+
+        IsBalanced = false;
+        IsImaginative = false;
+    }
+
+    partial void OnIsImaginativeChanged(bool value)
+    {
+        if (!value)
+            return;
+
+        IsBalanced = false;
+        IsFocused = false;
     }
 
     /// <inheritdoc />

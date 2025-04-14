@@ -21,7 +21,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ControlNetCard))]
 [ManagedService]
-[RegisterTransient<ControlNetCardViewModel>]
+[RegisterScoped<ControlNetCardViewModel>]
 public partial class ControlNetCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "ControlNet";

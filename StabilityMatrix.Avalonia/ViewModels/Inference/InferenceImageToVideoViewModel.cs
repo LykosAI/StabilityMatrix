@@ -24,7 +24,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceImageToVideoView), persistent: true)]
 [ManagedService]
-[RegisterTransient<InferenceImageToVideoViewModel>]
+[RegisterScoped<InferenceImageToVideoViewModel>]
 public partial class InferenceImageToVideoViewModel
     : InferenceGenerationViewModelBase,
         IParametersLoadableState

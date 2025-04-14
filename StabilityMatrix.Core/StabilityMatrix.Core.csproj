@@ -80,4 +80,8 @@
         <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
       </Compile>
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Api\PromptGen\Generated\" />
+    </ItemGroup>
 </Project>

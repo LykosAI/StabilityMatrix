@@ -14,7 +14,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceWanTextToVideoView), IsPersistent = true)]
-[RegisterTransient<InferenceWanTextToVideoViewModel>, ManagedService]
+[RegisterScoped<InferenceWanTextToVideoViewModel>, ManagedService]
 public class InferenceWanTextToVideoViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     [JsonIgnore]

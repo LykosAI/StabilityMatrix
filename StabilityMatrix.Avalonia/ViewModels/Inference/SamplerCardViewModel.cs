@@ -28,7 +28,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SamplerCard))]
 [ManagedService]
-[RegisterTransient<SamplerCardViewModel>]
+[RegisterScoped<SamplerCardViewModel>]
 public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
     public const string ModuleKey = "Sampler";

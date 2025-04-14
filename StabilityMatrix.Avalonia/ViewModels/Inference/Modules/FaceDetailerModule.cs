@@ -17,7 +17,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<FaceDetailerModule>]
+[RegisterScoped<FaceDetailerModule>]
 public partial class FaceDetailerModule : ModuleBase, IValidatableModule
 {
     /// <inheritdoc />

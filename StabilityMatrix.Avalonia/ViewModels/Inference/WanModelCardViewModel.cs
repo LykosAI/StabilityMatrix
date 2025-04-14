@@ -16,7 +16,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(WanModelCard))]
 [ManagedService]
-[RegisterTransient<WanModelCardViewModel>]
+[RegisterScoped<WanModelCardViewModel>]
 public partial class WanModelCardViewModel(
     IInferenceClientManager clientManager,
     IServiceManager<ViewModelBase> vmFactory

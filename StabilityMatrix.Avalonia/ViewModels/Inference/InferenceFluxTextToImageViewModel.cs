@@ -23,7 +23,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), IsPersistent = true)]
 [ManagedService]
-[RegisterTransient<InferenceFluxTextToImageViewModel>]
+[RegisterScoped<InferenceFluxTextToImageViewModel>]
 public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     private readonly INotificationService notificationService;

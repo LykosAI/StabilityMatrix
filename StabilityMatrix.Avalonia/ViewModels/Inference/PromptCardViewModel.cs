@@ -26,9 +26,9 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
-using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Models.PromptSyntax;
 using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Prompt = StabilityMatrix.Avalonia.Models.Inference.Prompt;
 using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
@@ -86,7 +86,7 @@ public partial class PromptCardViewModel
     private bool isImaginative;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowLowTokenWarning))]
+    [NotifyPropertyChangedFor(nameof(ShowLowTokenWarning), nameof(LowTokenWarningText))]
     private int tokensRemaining;
 
     public bool ShowLowTokenWarning => TokensRemaining <= 100;

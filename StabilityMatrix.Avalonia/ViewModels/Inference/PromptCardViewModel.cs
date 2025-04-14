@@ -608,6 +608,19 @@ public partial class PromptCardViewModel
     }
 
     /// <inheritdoc />
+    public override JsonObject SaveStateToJsonObject()
+    {
+        return SerializeModel(
+            new PromptCardModel
+            {
+                Prompt = PromptDocument.Text,
+                NegativePrompt = NegativePromptDocument.Text,
+                ModulesCardState = ModulesCardViewModel.SaveStateToJsonObject()
+            }
+        );
+    }
+
+    /// <inheritdoc />
     public override void LoadStateFromJsonObject(JsonObject state)
     {
         var model = DeserializeModel<PromptCardModel>(state);

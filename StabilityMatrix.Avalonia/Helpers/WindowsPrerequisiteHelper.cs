@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Runtime.Versioning;
-using System.Threading.Tasks;
 using Microsoft.Win32;
 using NLog;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -45,7 +42,9 @@ public class WindowsPrerequisiteHelper(
 
     private const string CppBuildToolsUrl = "https://aka.ms/vs/17/release/vs_BuildTools.exe";
 
-    private const string HipSdkDownloadUrl = "https://cdn.lykos.ai/AMD-HIP-SDK.exe";
+    private const string HipSdkDownloadUrl =
+        "https://download.amd.com/developer/eula/rocm-hub/AMD-Software-PRO-Edition-24.Q4-Win10-Win11-For-HIP.exe";
+    private const string PythonLibsDownloadUrl = "https://cdn.lykos.ai/python_libs_for_sage.zip";
 
     private string HomeDir => settingsManager.LibraryDir;
 
@@ -88,15 +87,16 @@ public class WindowsPrerequisiteHelper(
     private string HipSdkDownloadPath => Path.Combine(AssetsDir, "AMD-HIP-SDK.exe");
 
     private string HipInstalledPath =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "AMD", "ROCm", "5.7");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "AMD", "ROCm", "6.2");
 
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsPythonInstalled => File.Exists(PythonDllPath);
     public bool IsVcBuildToolsInstalled => Directory.Exists(VcBuildToolsExistsPath);
+    public bool IsHipSdkInstalled => Directory.Exists(HipInstalledPath);
 
     public async Task RunGit(
         ProcessArgs args,
-        Action<ProcessOutput>? onProcessOutput,
+        Action<ProcessOutput>? onProcessOutput = null,
         string? workingDirectory = null
     )
     {
@@ -115,15 +115,6 @@ public class WindowsPrerequisiteHelper(
         {
             throw new ProcessException($"Git exited with code {process.ExitCode}");
         }
-    }
-
-    public async Task RunGit(ProcessArgs args, string? workingDirectory = null)
-    {
-        var result = await ProcessRunner
-            .GetProcessResultAsync(GitExePath, args, workingDirectory)
-            .ConfigureAwait(false);
-
-        result.EnsureSuccessExitCode();
     }
 
     public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
@@ -165,6 +156,11 @@ public class WindowsPrerequisiteHelper(
     {
         await UnpackResourcesIfNecessary(progress);
 
+        if (prerequisites.Contains(PackagePrerequisite.HipSdk))
+        {
+            await InstallHipSdkIfNecessary(progress);
+        }
+
         if (prerequisites.Contains(PackagePrerequisite.Python310))
         {
             await InstallPythonIfNecessary(progress);
@@ -199,11 +195,6 @@ public class WindowsPrerequisiteHelper(
         if (prerequisites.Contains(PackagePrerequisite.VcBuildTools))
         {
             await InstallVcBuildToolsIfNecessary(progress);
-        }
-
-        if (prerequisites.Contains(PackagePrerequisite.HipSdk))
-        {
-            await InstallHipSdkIfNecessary(progress);
         }
     }
 
@@ -570,8 +561,11 @@ public class WindowsPrerequisiteHelper(
     [SupportedOSPlatform("windows")]
     public async Task InstallHipSdkIfNecessary(IProgress<ProgressReport>? progress = null)
     {
-        if (Directory.Exists(HipInstalledPath))
+        if (IsHipSdkInstalled)
+        {
+            await PatchHipSdkIfNecessary(progress);
             return;
+        }
 
         await downloadService.DownloadToFileAsync(HipSdkDownloadUrl, HipSdkDownloadPath, progress: progress);
         Logger.Info("Downloaded & installing HIP SDK");
@@ -598,6 +592,8 @@ public class WindowsPrerequisiteHelper(
         {
             await process.WaitForExitAsync();
         }
+
+        await PatchHipSdkIfNecessary(progress);
     }
 
     public async Task<Process> RunDotnet(
@@ -636,6 +632,43 @@ public class WindowsPrerequisiteHelper(
             $"dotnet8 with args [{args}] failed with exit code"
                 + $" {process.ExitCode}:\n{process.StandardOutput}\n{process.StandardError}"
         );
+    }
+
+    [SupportedOSPlatform("Windows")]
+    public async Task AddMissingLibsToVenv(
+        DirectoryPath installedPackagePath,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        var venvLibsDir = installedPackagePath.JoinDir("venv", "libs");
+        var venvIncludeDir = installedPackagePath.JoinDir("venv", "include");
+        if (
+            venvLibsDir.Exists
+            && venvIncludeDir.Exists
+            && venvLibsDir.JoinFile("python3.lib").Exists
+            && venvLibsDir.JoinFile("python310.lib").Exists
+        )
+        {
+            Logger.Debug("Python libs already installed at {VenvLibsDir}", venvLibsDir);
+            return;
+        }
+
+        var downloadPath = installedPackagePath.JoinFile("python_libs_for_sage.zip");
+        var venvDir = installedPackagePath.JoinDir("venv");
+        await downloadService
+            .DownloadToFileAsync(PythonLibsDownloadUrl, downloadPath, progress)
+            .ConfigureAwait(false);
+
+        progress?.Report(
+            new ProgressReport(-1f, message: "Extracting Python libraries", isIndeterminate: true)
+        );
+        await ArchiveHelper.Extract7Z(downloadPath, venvDir, progress);
+
+        var includeFolder = venvDir.JoinDir("include");
+        var scriptsIncludeFolder = venvDir.JoinDir("Scripts").JoinDir("include");
+        await includeFolder.CopyToAsync(scriptsIncludeFolder);
+
+        await downloadPath.DeleteAsync();
     }
 
     private async Task DownloadAndExtractPrerequisite(
@@ -688,5 +721,131 @@ public class WindowsPrerequisiteHelper(
         Logger.Info("Extracted Git");
 
         File.Delete(PortableGitDownloadPath);
+    }
+
+    private async Task PatchHipSdkIfNecessary(IProgress<ProgressReport>? progress)
+    {
+        var theGpu =
+            settingsManager.Settings.PreferredGpu
+            ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.Name != null && x.Name.Contains("AMD"));
+
+        if (theGpu?.Name is null)
+            return;
+        var downloadUrl = GetDownloadUrlFromGpuName(theGpu.Name);
+        if (downloadUrl is null)
+            return;
+
+        progress?.Report(new ProgressReport(-1, "Patching ROCm for your GPU", isIndeterminate: true));
+
+        var rocmLibsDownloadPath = new FilePath(AssetsDir, "rocmLibs.7z");
+        await downloadService.DownloadToFileAsync(downloadUrl, rocmLibsDownloadPath, progress: progress);
+
+        var rocmLibsExtractPath = new DirectoryPath(AssetsDir, "rocmLibs");
+        await ArchiveHelper.Extract7Z(rocmLibsDownloadPath, rocmLibsExtractPath, progress);
+
+        var hipInstalledPath = new DirectoryPath(HipInstalledPath);
+
+        var zipFolderName = downloadUrl switch
+        {
+            _ when downloadUrl.Contains("gfx1201") => null,
+            _ when downloadUrl.Contains("gfx1150") => "rocm gfx1150 for hip skd 6.2.4",
+            _ when downloadUrl.Contains("gfx1103.AMD")
+                => "rocm gfx1103 AMD 780M phoenix V5.0 for hip skd 6.2.4",
+            _ when downloadUrl.Contains("gfx1034") => "rocm gfx1034-gfx1035-gfx1036 for hip sdk 6.2.4",
+            _ when downloadUrl.Contains("gfx1032") => "rocm gfx1032 for hip skd 6.2.4(navi21 logic)",
+            _ when downloadUrl.Contains("gfx1031") => "rocm gfx1031 for hip skd 6.2.4 (littlewu's logic)",
+            _ when downloadUrl.Contains("gfx1010")
+                => "rocm gfx1010-xnack-gfx1011-xnack-gfx1012-xnack- for hip sdk 6.2.4",
+            _ => null
+        };
+
+        var librarySourceDir = rocmLibsExtractPath;
+        if (!string.IsNullOrWhiteSpace(zipFolderName))
+        {
+            librarySourceDir = librarySourceDir.JoinDir(zipFolderName);
+        }
+
+        librarySourceDir = librarySourceDir.JoinDir("library");
+        var libraryDestDir = hipInstalledPath.JoinDir("bin", "rocblas", "library");
+        await WindowsElevated.Robocopy(librarySourceDir, libraryDestDir);
+
+        var rocblasSource = rocmLibsExtractPath;
+        if (!string.IsNullOrWhiteSpace(zipFolderName))
+        {
+            rocblasSource = rocblasSource.JoinDir(zipFolderName);
+        }
+
+        var rocblasSourceFile = rocblasSource.JoinFile("rocblas.dll");
+        var rocblasDest = hipInstalledPath.JoinDir("bin").JoinFile("rocblas.dll");
+        if (rocblasSourceFile.Exists)
+        {
+            await WindowsElevated.MoveFiles((rocblasSourceFile.FullPath, rocblasDest.FullPath));
+        }
+    }
+
+    private string? GetDownloadUrlFromGpuName(string name)
+    {
+        // gfx1201
+        if (name.Contains("9060") || name.Contains("9070"))
+        {
+            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1201.for.hip.skd.6.2.4-no-optimized.7z";
+        }
+
+        // gfx1150
+        if (
+            name.Contains("8050S")
+            || name.Contains("8060S")
+            || name.Contains("880M")
+            || name.Contains("890M")
+        )
+        {
+            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1150.for.hip.skd.6.2.4.7z";
+        }
+
+        // gfx1103
+        if (name.Contains("740M") || name.Contains("760M") || name.Contains("780M") || name.Contains("Z1"))
+        {
+            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1103.AMD.780M.phoenix.V5.0.for.hip.sdk.6.2.4.7z";
+        }
+
+        // gfx1034, gfx1035, gfx1036
+        if (
+            name.Contains("6300")
+            || name.Contains("6400")
+            || name.Contains("6450")
+            || name.Contains("6500")
+            || name.Contains("6550")
+            || name.Contains("660M")
+            || name.Contains("680M")
+            || name.Contains("Graphics 128SP")
+        )
+        {
+            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1034-gfx1035-gfx1036.for.hip.sdk.6.2.4.7z";
+        }
+
+        // gfx1032
+        if (
+            name.Contains("6700S")
+            || name.Contains("6800S")
+            || name.Contains("6600")
+            || name.Contains("6650")
+        )
+        {
+            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1032.for.hip.sdk.6.2.4.navi21.logic.7z";
+        }
+
+        // gfx1031
+        if (name.Contains("6700") || name.Contains("6750") || name.Contains("6800") || name.Contains("6850"))
+        {
+            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1031.for.hip.sdk.6.2.4.littlewu.s.logic.7z";
+        }
+
+        // gfx1010/1012
+        if (name.Contains("5700") || name.Contains("5600") || name.Contains("5300") || name.Contains("5500"))
+        {
+            return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1010-xnack-gfx1011-xnack-gfx1012-xnack-.for.hip.sdk.6.2.4.7z";
+        }
+
+        return null;
     }
 }

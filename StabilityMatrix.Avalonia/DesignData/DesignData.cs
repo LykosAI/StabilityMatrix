@@ -881,6 +881,9 @@ The gallery images are often inpainted, but you will get something very similar 
     public static ImgToVidModelCardViewModel ImgToVidModelCardViewModel =>
         DialogFactory.Get<ImgToVidModelCardViewModel>();
 
+    public static PlasmaNoiseCardViewModel PlasmaNoiseCardViewModel =>
+        DialogFactory.Get<PlasmaNoiseCardViewModel>();
+
     public static ImageGalleryCardViewModel ImageGalleryCardViewModel =>
         DialogFactory.Get<ImageGalleryCardViewModel>(vm =>
         {
@@ -1280,7 +1283,7 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.VersionName = "1.0.0";
             vm.TrainedWords = "word1, word2, word3";
             vm.ModelType = CivitModelType.Checkpoint;
-            vm.BaseModelType = CivitBaseModelType.Pony;
+            vm.BaseModelType = "Pony";
         });
 
     public static MockGitVersionProvider MockGitVersionProvider => new();

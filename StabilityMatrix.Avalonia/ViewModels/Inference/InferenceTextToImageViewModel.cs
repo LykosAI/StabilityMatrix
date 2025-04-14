@@ -171,6 +171,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Gguf or ModelLoader.Unet;
         var useSd3Latent =
             SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>() || isUnetLoader;
+        var usePlasmaNoise = SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<PlasmaNoiseModule>();
 
         if (useSd3Latent)
         {
@@ -180,6 +181,27 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 BatchSizeCardViewModel.BatchSize,
                 BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null,
                 latentType: LatentType.Sd3
+            );
+        }
+        else if (usePlasmaNoise)
+        {
+            var plasmaVm = SamplerCardViewModel
+                .ModulesCardViewModel.GetCard<PlasmaNoiseModule>()
+                .GetCard<PlasmaNoiseCardViewModel>();
+            builder.SetupPlasmaLatentSource(
+                SamplerCardViewModel.Width,
+                SamplerCardViewModel.Height,
+                builder.Connections.Seed,
+                plasmaVm.SelectedNoiseType,
+                plasmaVm.ValueMin,
+                plasmaVm.ValueMax,
+                plasmaVm.RedMin,
+                plasmaVm.RedMax,
+                plasmaVm.GreenMin,
+                plasmaVm.GreenMax,
+                plasmaVm.BlueMin,
+                plasmaVm.BlueMax,
+                plasmaVm.PlasmaTurbulence
             );
         }
         else

@@ -286,7 +286,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 || model.BaseModelType == CivitBaseModelType.Flux1S.GetStringValue()
             )
             {
-                sharedFolder = SharedFolderType.Unet.GetStringValue();
+                sharedFolder = SharedFolderType.DiffusionModels.GetStringValue();
             }
 
             var defaultPath = Path.Combine(@"Models", sharedFolder);

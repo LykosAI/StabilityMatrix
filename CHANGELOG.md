@@ -5,13 +5,34 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.14.0-pre.2
+### Changed
+- Updated install for kohya_ss to support RTX 5000-series GPUs
+### Fixed
+- Fixed Inference ControlNet Preprocessors using incorrect resolution and increased maximum of smallest dimension to 16384
+- Fixed Triton/Sage install option showing for incompatible GPUs
+- Fixed errors from invalid pip specifiers in requirements files
+
 ## v2.14.0-pre.1
 ### Added
-- Added new Package Command (in the 3-dots menu) for installing Triton & SageAttention in ComfyUI 
+- Added new Package Command (in the 3-dots menu) for installing Triton & SageAttention in ComfyUI
+- Added Abstract Syntax Tree (AST) parsing for Inference prompts. This provides a more robust internal understanding of prompt structure, paving the way for future enhancements.
+- Added hotkey (`Ctrl+Up`/`Ctrl+Down`) in Inference prompt editors to adjust the weight emphasis of the token under the caret or the currently selected text.
+  - This automatically wraps the token/selection in parentheses `()` if it's not already weighted.
+  - It modifies existing weights within parentheses or adds weights if none exist (e.g. `(word:1.1)`).
+  - Handles selection spanning multiple tokens intelligently.
+- Added Plasma Noise addon to Inference for text to image workflows
+- (Internal) Introduced unified strategy pattern (`IConfigSharingStrategy`) to for handling different config file formats (JSON, YAML, FDS).
+  - Added support for configuring nested paths in JSON and YAML files (e.g. `paths.models.vae`) via dot-notation in `SharedFolderLayoutRule.ConfigDocumentPaths`.
+  - Packages can now use the `SharedFolderLayout` property to define a `ConfigFileType` and `ConfigSharingOptions` (like `RootKey`), without needing to implement custom configuration logic.
 ### Changed
+- Changed the names of some of the shared model folders to better reflect their contents
 - Improved window state handling
 - Improved Checkpoint Manager memory usage (thanks to @FireGeek for the profiling assistance!)
-- (Internal) Upgraded FluentAvalonia to 2.3.0 
+- Upgraded HIP SDK installs to 6.2.4 for ComfyUI-Zluda and AMDGPU-Forge
+- (Internal) Upgraded FluentAvalonia to 2.3.0
+- (Internal) Refactored configuration-based shared folder logic: Centralized handling into `SharedFoldersConfigHelper` and format-specific strategies, removing custom file I/O logic from individual package classes for improved consistency and maintainability.
+  - Migrated packages ComfyUI (incl. Zluda), VladAutomatic (SD.Next), Sdfx, and StableSwarm to use the unified system for configuration and symlink based sharing.
 ### Fixed
 - Fixed RTX 5000-series GPU detection in certain cases
 - Fixed Image Viewer animation loader keeping file handles open, which resolves 2 different issues (OSes are fun):
@@ -19,50 +40,15 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
   - (Windows) Fixed Webp animation files unable to be deleted without closing the app first.
 - Fixed Image Viewer `FileNotFoundException` on fetching image size, if navigating to a deleted image file.
 - (macOS) Fixed Webp / Gif animations RGB colors flipped.
+- Fixed Package Updates and Change Version not using stored PyTorch index and instead using the default recommended index.
 - Fixed some cases of missing custom nodes in SwarmUI
 - Fixed window disappearing on macOS when the saved window size is very small
-- Fixed large white boxes appearing when tooltips are visible on macOS/Linux (thanks to @genteure for the fix!)
 - Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI (for real this time)
-
-## v2.13.4
-### Added
-- Added support for RTX 5000-series GPUs in ComfyUI, Forge, and reForge
-- Added "Rebuild .NET Project" command to SwarmUI installs - available via the 3-dots menu -> Package Commands -> Rebuild .NET Project
-### Changed
-- Upgraded ComfyUI CUDA torch to 12.6
-- Upgraded Lykos account connection to use OAuth 2.0 device flow
-- (Internal) Updated Avalonia to 11.2.5
-### Fixed
-- Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
-- Fixed ROCm torch indexes for ComfyUI & Forge
-- Fixed model browser sometimes downloading to `ModelsLora` or `ModelsStableDiffusion` folders instead of the correct folder
-- Fixed incorrect Unet folder path for ComfyUI users on Linux/macOS
-- Fixed [#1157](https://github.com/LykosAI/StabilityMatrix/issues/1157) - crash when broken symlinks exist in model directories
-- Fixed [#1154](https://github.com/LykosAI/StabilityMatrix/issues/1154) - increased width for package name on the package cards
-- Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI
-- Fixed SwarmUI showing Python options in the 3-dots menu
-- Fixed SD.Next install failures in certain cases when using Zluda
+- Fixed missing base model options in the Metadata Editor
+- Fixed large white boxes appearing when tooltips are visible on macOS/Linux
 ### Supporters
 #### Visionaries
-- Huge thanks to our amazing Visionary-tier Patrons, **Waterclouds** and **Corey T**! We're truly grateful for your continued generosity and support!
-#### Pioneers
-- Special appreciation to our fantastic Pioneer-tier Patrons: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, **NowFallenAngel**, and our newest addition, **Al Gorithm**! Thank you all for your incredible commitment and ongoing encouragement!
-
-## v2.13.3
-### Changed
-- "Remove symbolic links on shutdown" option now also removes links from Output Sharing
-### Fixed
-- Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
-- Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
-- Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
-- Fixed issue when parsing index URLs in Python Dependencies Override menu
-- Fixed issue where models were filtered incorrectly in the Checkpoint Manager
-- Fixed ComfyUI-Zluda not using the user-defined pip overrides
-### Supporters
-#### Visionaries
-- A heartfelt thank you to our incredible Visionary-tier Patrons, **Waterclouds**, **TheTekknician**, and **Corey**! Your unwavering support means the world to us!
-#### Pioneers
-- A big shoutout to our outstanding Pioneer-tier Patrons, **tankfox**, **Mr. Unknown**, **Szir777**, and **NowFallenAngel**! We deeply appreciate your ongoing support and dedication!
+- A special shout-out to our fantastic Visionary-tier Patreon supporters: Waterclouds, Corey T, and our newest Visionaries, bluepopsicle and Bob S! Your continued generosity powers the future of Stability Matrix—thank you so much!
 
 ## v2.14.0-dev.3
 ### Added
@@ -142,21 +128,44 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Many thanks to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your support helps us continue to improve Stability Matrix!
 
 ## v2.13.4
+### Added
+- Added support for RTX 5000-series GPUs in ComfyUI, Forge, and reForge
+- Added "Rebuild .NET Project" command to SwarmUI installs - available via the 3-dots menu -> Package Commands -> Rebuild .NET Project
 ### Changed
 - Upgraded ComfyUI CUDA torch to 12.6
+- Upgraded Lykos account connection to use OAuth 2.0 device flow
+- (Internal) Updated Avalonia to 11.2.5
 ### Fixed
 - Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
 - Fixed ROCm torch indexes for ComfyUI & Forge
 - Fixed model browser sometimes downloading to `ModelsLora` or `ModelsStableDiffusion` folders instead of the correct folder
+- Fixed incorrect Unet folder path for ComfyUI users on Linux/macOS
+- Fixed [#1157](https://github.com/LykosAI/StabilityMatrix/issues/1157) - crash when broken symlinks exist in model directories
+- Fixed [#1154](https://github.com/LykosAI/StabilityMatrix/issues/1154) - increased width for package name on the package cards
+- Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI
+- Fixed SwarmUI showing Python options in the 3-dots menu
+- Fixed SD.Next install failures in certain cases when using Zluda
+### Supporters
+#### Visionaries
+- Huge thanks to our amazing Visionary-tier Patrons, **Waterclouds** and **Corey T**! We're truly grateful for your continued generosity and support!
+#### Pioneers
+- Special appreciation to our fantastic Pioneer-tier Patrons: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, **NowFallenAngel**, and our newest addition, **Al Gorithm**! Thank you all for your incredible commitment and ongoing encouragement!
 
 ## v2.13.3
 ### Changed
 - "Remove symbolic links on shutdown" option now also removes links from Output Sharing
 ### Fixed
 - Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
+- Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
 - Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
 - Fixed issue when parsing index URLs in Python Dependencies Override menu
-- Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
+- Fixed issue where models were filtered incorrectly in the Checkpoint Manager
+- Fixed ComfyUI-Zluda not using the user-defined pip overrides
+### Supporters
+#### Visionaries
+- A heartfelt thank you to our incredible Visionary-tier Patrons, **Waterclouds**, **TheTekknician**, and **Corey**! Your unwavering support means the world to us!
+#### Pioneers
+- A big shoutout to our outstanding Pioneer-tier Patrons, **tankfox**, **Mr. Unknown**, **Szir777**, and **NowFallenAngel**! We deeply appreciate your ongoing support and dedication!
 
 ## v2.13.2
 ### Changed

@@ -5,6 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
         <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+        <WarningsAsErrors>CS0108</WarningsAsErrors>
     </PropertyGroup>
     
     <PropertyGroup>

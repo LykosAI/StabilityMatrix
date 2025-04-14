@@ -51,6 +51,7 @@ using Sentry;
 using StabilityMatrix.Avalonia.Behaviors;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -1021,7 +1022,8 @@ public sealed class App : Application
             {
                 typeof(ConsoleViewModel),
                 typeof(LoadableViewModelBase),
-                typeof(TextEditorCompletionBehavior)
+                typeof(TextEditorCompletionBehavior),
+                typeof(CompletionProvider)
             };
 
             foreach (var type in typesToDisableTrace)

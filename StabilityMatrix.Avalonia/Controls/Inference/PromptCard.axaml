@@ -359,7 +359,6 @@
                                         </controls:BetterFlyout>
                                     </Button.Flyout>
                                 </Button>
-
                                 <Button
                                     Padding="8,4"
                                     Command="{Binding DebugShowTokensCommand}"
@@ -386,6 +385,7 @@
                                             CompletionProvider="{Binding CompletionProvider}"
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
                                             TokenizerProvider="{Binding TokenizerProvider}" />
+                                        <behaviors:TextEditorWeightAdjustmentBehavior TokenizerProvider="{Binding TokenizerProvider}" />
                                         <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>
@@ -430,6 +430,7 @@
                                             CompletionProvider="{Binding CompletionProvider}"
                                             IsEnabled="{Binding IsAutoCompletionEnabled}"
                                             TokenizerProvider="{Binding TokenizerProvider}" />
+                                        <behaviors:TextEditorWeightAdjustmentBehavior TokenizerProvider="{Binding TokenizerProvider}" />
                                         <behaviors:TextEditorToolTipBehavior IsEnabled="False" TokenizerProvider="{Binding TokenizerProvider}" />
                                     </i:Interaction.Behaviors>
                                 </avaloniaEdit:TextEditor>

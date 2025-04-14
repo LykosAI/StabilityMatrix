@@ -1074,6 +1074,24 @@ public partial class MainSettingsViewModel : PageViewModelBase
         }
     }
 
+    [RelayCommand]
+    private async Task DebugRobocopy()
+    {
+        var textFields = new TextBoxField[]
+        {
+            new() { Label = "Source" },
+            new() { Label = "Destination" }
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("Robocopy", "", textFields);
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var result = await WindowsElevated.Robocopy(textFields[0].Text, textFields[1].Text);
+            await DialogHelper.CreateMarkdownDialog(result.ToString()).ShowAsync();
+        }
+    }
+
     #endregion
 
     #region Debug Commands
@@ -1094,7 +1112,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugNvidiaSmiCommand),
             new CommandItem(DebugShowGitVersionSelectorDialogCommand),
             new CommandItem(DebugShowMockGitVersionSelectorDialogCommand),
-            new CommandItem(DebugWhichCommand)
+            new CommandItem(DebugWhichCommand),
+            new CommandItem(DebugRobocopyCommand)
         ];
 
     [RelayCommand]
@@ -1134,7 +1153,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         vm.VersionName = "1.0.0";
         vm.TrainedWords = "word1, word2, word3";
         vm.ModelType = CivitModelType.Checkpoint;
-        vm.BaseModelType = CivitBaseModelType.Pony;
+        vm.BaseModelType = "Pony";
 
         var dialog = vm.GetDialog();
         dialog.MinDialogHeight = 800;

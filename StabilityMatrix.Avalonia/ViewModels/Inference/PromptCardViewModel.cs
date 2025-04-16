@@ -8,6 +8,7 @@ using AvaloniaEdit.Document;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using FluentAvalonia.UI.Media.Animation;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Refit;
@@ -19,6 +20,7 @@ using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
+using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Api.PromptGenApi;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
@@ -49,6 +51,8 @@ public partial class PromptCardViewModel
     private readonly IPromptGenApi promptGenApi;
     private readonly INotificationService notificationService;
     private readonly ILogger<PromptCardViewModel> logger;
+    private readonly INavigationService<SettingsViewModel> settingsNavService;
+    private readonly INavigationService<MainWindowViewModel> mainNavService;
 
     /// <summary>
     /// Cache of prompt text to tokenized Prompt
@@ -89,7 +93,10 @@ public partial class PromptCardViewModel
     [NotifyPropertyChangedFor(nameof(ShowLowTokenWarning), nameof(LowTokenWarningText))]
     private int tokensRemaining;
 
-    public bool ShowLowTokenWarning => TokensRemaining <= 100;
+    [ObservableProperty]
+    private bool isFlyoutOpen;
+
+    public bool ShowLowTokenWarning => TokensRemaining is <= 100 and >= 0;
 
     public string LowTokenWarningText =>
         $"{TokensRemaining} amplification{(TokensRemaining == 1 ? "" : "s")} remaining (resets in {Utilities.GetNumDaysTilBeginningOfNextMonth()} days)";
@@ -104,6 +111,8 @@ public partial class PromptCardViewModel
         IPromptGenApi promptGenApi,
         INotificationService notificationService,
         ILogger<PromptCardViewModel> logger,
+        INavigationService<SettingsViewModel> settingsNavService,
+        INavigationService<MainWindowViewModel> mainNavService,
         SharedState sharedState,
         TabContext tabContext
     )
@@ -114,6 +123,8 @@ public partial class PromptCardViewModel
         this.promptGenApi = promptGenApi;
         this.notificationService = notificationService;
         this.logger = logger;
+        this.settingsNavService = settingsNavService;
+        this.mainNavService = mainNavService;
         CompletionProvider = completionProvider;
         TokenizerProvider = tokenizerProvider;
         SharedState = sharedState;
@@ -177,12 +188,28 @@ public partial class PromptCardViewModel
             IsHelpButtonTeachingTipOpen = true;
         }
 
-        _ = promptGenApi
-            .AccountMeTokens()
-            .ContinueWith(result =>
+        _ = Task.Run(async () =>
+        {
+            try
             {
-                TokensRemaining = result.Result.Available;
-            });
+                var result = await promptGenApi.AccountMeTokens();
+                TokensRemaining = result.Available;
+            }
+            catch (ApiException e)
+            {
+                if (e.StatusCode != HttpStatusCode.Unauthorized && e.StatusCode != HttpStatusCode.NotFound)
+                {
+                    notificationService.Show(
+                        "Error retrieving prompt amplifier data",
+                        e.Message,
+                        NotificationType.Error
+                    );
+                    return;
+                }
+
+                TokensRemaining = -1;
+            }
+        });
     }
 
     /// <summary>
@@ -557,6 +584,9 @@ public partial class PromptCardViewModel
                         NotificationType.Error
                     );
                     break;
+                case HttpStatusCode.Unauthorized:
+                    await ShowLoginDialog();
+                    break;
                 default:
                     notificationService.Show(
                         "Prompt Amplifier Error",
@@ -649,5 +679,28 @@ public partial class PromptCardViewModel
             PositivePrompt = PromptDocument.Text,
             NegativePrompt = NegativePromptDocument.Text
         };
+    }
+
+    private async Task ShowLoginDialog()
+    {
+        IsFlyoutOpen = false;
+
+        var dialog = DialogHelper.CreateTaskDialog(
+            "Lykos Account Required",
+            "You need to be logged in to use this feature. Please log in to your Lykos account."
+        );
+
+        dialog.Buttons =
+        [
+            new TaskDialogButton(Resources.Label_Accounts, TaskDialogStandardResult.OK),
+            TaskDialogButton.CloseButton
+        ];
+
+        if (await dialog.ShowAsync(true) is TaskDialogStandardResult.OK)
+        {
+            mainNavService.NavigateTo<SettingsViewModel>(new SuppressNavigationTransitionInfo());
+            await Task.Delay(50);
+            settingsNavService.NavigateTo<AccountSettingsViewModel>(new SuppressNavigationTransitionInfo());
+        }
     }
 }

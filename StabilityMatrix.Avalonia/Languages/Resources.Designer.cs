@@ -213,6 +213,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Disable.
+        /// </summary>
+        public static string Action_Disable {
+            get {
+                return ResourceManager.GetString("Action_Disable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Disconnect.
         /// </summary>
         public static string Action_Disconnect {
@@ -245,6 +254,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Action_Edit {
             get {
                 return ResourceManager.GetString("Action_Edit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable.
+        /// </summary>
+        public static string Action_Enable {
+            get {
+                return ResourceManager.GetString("Action_Enable", resourceCulture);
             }
         }
         

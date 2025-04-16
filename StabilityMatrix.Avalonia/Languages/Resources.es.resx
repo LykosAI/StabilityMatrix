@@ -1082,4 +1082,10 @@
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>Ir a la configuración</value>
   </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>Activar</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>Desactivar</value>
+  </data>
 </root>

@@ -668,4 +668,10 @@
 
 不，Stability Matrix 在沒有帳戶的情況下仍然可以正常運作。 但是，您的 Lykos 帳戶可以啟用一些額外的連接功能，例如為我們的 Patreon 支持者自動更新到開發版本（以及更多即將推出的功能）。</value>
   </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>啟用</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>停用</value>
+  </data>
 </root>

@@ -1341,4 +1341,10 @@ Nope! Stability Matrix is still fully functional without one. But, your Lykos ac
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>Go to Settings</value>
   </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>Enable</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>Disable</value>
+  </data>
 </root>

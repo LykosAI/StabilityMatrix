@@ -1240,4 +1240,10 @@
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>設定に移動</value>
   </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>有効</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>無効</value>
+  </data>
 </root>

@@ -338,6 +338,7 @@ internal abstract class CacheBase<T>
         return value;
     }
 
+    [DebuggerDisableUserUnhandledExceptions]
     private async Task<T?> GetItemAsync(
         Uri uri,
         bool throwOnError,

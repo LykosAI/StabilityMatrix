@@ -207,6 +207,8 @@ public class Settings
 
     public bool HideEarlyAccessModels { get; set; }
 
+    public bool CivitUseDiscoveryApi { get; set; }
+
     public string? ModelDirectoryOverride { get; set; } = null;
 
     public GpuInfo? PreferredGpu { get; set; }

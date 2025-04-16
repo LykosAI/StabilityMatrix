@@ -11,6 +11,7 @@ using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
+using OpenIddict.Client;
 using Refit;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -19,8 +20,10 @@ using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
+using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Api.PromptGenApi;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
@@ -28,10 +31,12 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Lykos;
 using StabilityMatrix.Core.Models.PromptSyntax;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
+using YamlDotNet.Core.Tokens;
 using Prompt = StabilityMatrix.Avalonia.Models.Inference.Prompt;
 using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
 
@@ -51,8 +56,8 @@ public partial class PromptCardViewModel
     private readonly IPromptGenApi promptGenApi;
     private readonly INotificationService notificationService;
     private readonly ILogger<PromptCardViewModel> logger;
-    private readonly INavigationService<SettingsViewModel> settingsNavService;
-    private readonly INavigationService<MainWindowViewModel> mainNavService;
+    private readonly IAccountsService accountsService;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
 
     /// <summary>
     /// Cache of prompt text to tokenized Prompt
@@ -96,7 +101,11 @@ public partial class PromptCardViewModel
     [ObservableProperty]
     private bool isFlyoutOpen;
 
-    public bool ShowLowTokenWarning => TokensRemaining is <= 100 and >= 0;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowLowTokenWarning))]
+    private int lowTokenThreshold = 25;
+
+    public bool ShowLowTokenWarning => TokensRemaining <= LowTokenThreshold && TokensRemaining >= 0;
 
     public string LowTokenWarningText =>
         $"{TokensRemaining} amplification{(TokensRemaining == 1 ? "" : "s")} remaining (resets in {Utilities.GetNumDaysTilBeginningOfNextMonth()} days)";
@@ -111,8 +120,7 @@ public partial class PromptCardViewModel
         IPromptGenApi promptGenApi,
         INotificationService notificationService,
         ILogger<PromptCardViewModel> logger,
-        INavigationService<SettingsViewModel> settingsNavService,
-        INavigationService<MainWindowViewModel> mainNavService,
+        IAccountsService accountsService,
         SharedState sharedState,
         TabContext tabContext
     )
@@ -123,8 +131,8 @@ public partial class PromptCardViewModel
         this.promptGenApi = promptGenApi;
         this.notificationService = notificationService;
         this.logger = logger;
-        this.settingsNavService = settingsNavService;
-        this.mainNavService = mainNavService;
+        this.accountsService = accountsService;
+        this.vmFactory = vmFactory;
         CompletionProvider = completionProvider;
         TokenizerProvider = tokenizerProvider;
         SharedState = sharedState;
@@ -192,6 +200,20 @@ public partial class PromptCardViewModel
         {
             try
             {
+                if (accountsService.LykosStatus == null)
+                {
+                    await accountsService.RefreshAsync();
+                }
+
+                SetTokenThreshold();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error refreshing account data");
+            }
+
+            try
+            {
                 var result = await promptGenApi.AccountMeTokens();
                 TokensRemaining = result.Available;
             }
@@ -210,6 +232,17 @@ public partial class PromptCardViewModel
                 TokensRemaining = -1;
             }
         });
+    }
+
+    private void SetTokenThreshold()
+    {
+        if (accountsService.LykosStatus is not { User: not null } status)
+            return;
+
+        if (status.User.Roles.Count is 1 && status.User.Roles.Contains(LykosRole.Basic.ToString()))
+        {
+            LowTokenThreshold = 25;
+        }
     }
 
     /// <summary>
@@ -585,7 +618,18 @@ public partial class PromptCardViewModel
                     );
                     break;
                 case HttpStatusCode.Unauthorized:
-                    await ShowLoginDialog();
+                    if (await ShowLoginDialog())
+                    {
+                        await AmplifyPrompt();
+                    }
+                    else
+                    {
+                        notificationService.Show(
+                            "Prompt Amplifier Error",
+                            "You need to be logged in to use this feature.",
+                            NotificationType.Error
+                        );
+                    }
                     break;
                 default:
                     notificationService.Show(
@@ -681,10 +725,8 @@ public partial class PromptCardViewModel
         };
     }
 
-    private async Task ShowLoginDialog()
+    private async Task<bool> ShowLoginDialog()
     {
-        IsFlyoutOpen = false;
-
         var dialog = DialogHelper.CreateTaskDialog(
             "Lykos Account Required",
             "You need to be logged in to use this feature. Please log in to your Lykos account."
@@ -692,15 +734,31 @@ public partial class PromptCardViewModel
 
         dialog.Buttons =
         [
-            new TaskDialogButton(Resources.Label_Accounts, TaskDialogStandardResult.OK),
+            new TaskDialogButton(Resources.Action_Login, TaskDialogStandardResult.OK),
             TaskDialogButton.CloseButton
         ];
 
-        if (await dialog.ShowAsync(true) is TaskDialogStandardResult.OK)
+        if (await dialog.ShowAsync(true) is not TaskDialogStandardResult.OK)
+            return false;
+
+        var vm = vmFactory.Get<OAuthDeviceAuthViewModel>();
+        vm.ChallengeRequest = new OpenIddictClientModels.DeviceChallengeRequest
         {
-            mainNavService.NavigateTo<SettingsViewModel>(new SuppressNavigationTransitionInfo());
-            await Task.Delay(50);
-            settingsNavService.NavigateTo<AccountSettingsViewModel>(new SuppressNavigationTransitionInfo());
-        }
+            ProviderName = OpenIdClientConstants.LykosAccount.ProviderName
+        };
+        await vm.ShowDialogAsync();
+
+        if (vm.AuthenticationResult is not { } result)
+            return false;
+
+        await accountsService.LykosAccountV2LoginAsync(
+            new LykosAccountV2Tokens(result.AccessToken, result.RefreshToken, result.IdentityToken)
+        );
+
+        var tokens = await promptGenApi.AccountMeTokens();
+        TokensRemaining = tokens.Available;
+        SetTokenThreshold();
+
+        return true;
     }
 }

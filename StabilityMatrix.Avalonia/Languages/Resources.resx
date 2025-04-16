@@ -1341,4 +1341,7 @@ Nope! Stability Matrix is still fully functional without one. But, your Lykos ac
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>Go to Settings</value>
   </data>
+  <data name="TeachingTip_PromptAmplifier" xml:space="preserve">
+    <value>Try out the new Prompt Amplifier! Enhance your prompts for better results!</value>
+  </data>
 </root>

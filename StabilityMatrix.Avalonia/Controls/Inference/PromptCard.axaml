@@ -359,6 +359,10 @@
                                         </controls:BetterFlyout>
                                     </Button.Flyout>
                                 </Button>
+                                <ui:TeachingTip
+                                    Title="{x:Static lang:Resources.TeachingTip_PromptAmplifier}"
+                                    IsOpen="{Binding IsPromptAmplifyTeachingTipOpen, Mode=TwoWay}"
+                                    Target="{Binding #PART_AmplifyButton}" />
                                 <Button
                                     Padding="8,4"
                                     Command="{Binding DebugShowTokensCommand}"

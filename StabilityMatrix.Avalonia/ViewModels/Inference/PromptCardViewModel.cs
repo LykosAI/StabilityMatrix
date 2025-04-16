@@ -80,6 +80,9 @@ public partial class PromptCardViewModel
     private bool isHelpButtonTeachingTipOpen;
 
     [ObservableProperty]
+    private bool isPromptAmplifyTeachingTipOpen;
+
+    [ObservableProperty]
     private bool isNegativePromptEnabled = true;
 
     [ObservableProperty]
@@ -182,6 +185,22 @@ public partial class PromptCardViewModel
             {
                 settings.SeenTeachingTips.Add(TeachingTip.InferencePromptHelpButtonTip);
             });
+
+            if (!settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.InferencePromptAmplifyTip))
+            {
+                IsPromptAmplifyTeachingTipOpen = true;
+            }
+        }
+    }
+
+    partial void OnIsPromptAmplifyTeachingTipOpenChanging(bool oldValue, bool newValue)
+    {
+        if (oldValue && !newValue)
+        {
+            settingsManager.Transaction(settings =>
+            {
+                settings.SeenTeachingTips.Add(TeachingTip.InferencePromptAmplifyTip);
+            });
         }
     }
 
@@ -194,6 +213,14 @@ public partial class PromptCardViewModel
         if (!settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.InferencePromptHelpButtonTip))
         {
             IsHelpButtonTeachingTipOpen = true;
+        }
+
+        if (
+            !IsHelpButtonTeachingTipOpen
+            && !settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.InferencePromptAmplifyTip)
+        )
+        {
+            IsPromptAmplifyTeachingTipOpen = true;
         }
 
         _ = Task.Run(async () =>

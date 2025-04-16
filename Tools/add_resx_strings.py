@@ -62,7 +62,9 @@ def escape_xml_value(value: str) -> str:
 # --- Core Logic ---
 
 def add_strings_to_resx(
-    resx_file_path: Path, strings_to_add: Dict[str, str]
+    resx_file_path: Path, 
+    strings_to_add: Dict[str, str],
+    add_comment: str | None = None,
 ) -> Tuple[int, int, bool]:
     """
     Parses a .resx file minimally to check keys, then uses text manipulation
@@ -71,6 +73,7 @@ def add_strings_to_resx(
     Args:
         resx_file_path: Path to the .resx file.
         strings_to_add: Dictionary of {key: value} strings to add.
+        add_comment: Optional comment to add to the new data elements.
 
     Returns:
         A tuple containing (added_count, skipped_count, success_boolean).
@@ -146,6 +149,7 @@ def add_strings_to_resx(
             xml_snippet = (
                 f'{base_indentation}<data name="{key}" xml:space="preserve">\n'
                 f'{base_indentation}  <value>{escaped_value}</value>\n'
+                f'{base_indentation}  <comment>{add_comment}</comment>\n' if add_comment else ''
                 f'{base_indentation}</data>'
             )
             new_elements_xml.append(xml_snippet)
@@ -315,7 +319,7 @@ def main(
     any_changes_made_across_files = False
     for lang_code, strings_for_lang in all_strings.items():
         lang_code_lower = lang_code.strip().lower() if isinstance(lang_code, str) else ""
-        if lang_code_lower in ["base", "en", ""]:
+        if lang_code_lower in ("base", "en", ""):
              resx_filename = "Resources.resx"
         else:
              resx_filename = f"Resources.{lang_code.strip()}.resx"
@@ -325,7 +329,11 @@ def main(
             console.print(f"  [[bold red]Data Error[/]]: Expected a dictionary of strings for language '{lang_code}', but got {type(strings_for_lang)}. Skipping.")
             results.append((resx_file_path.name, "[bold red]Invalid Data Format[/]", 0, 0))
             continue
-        added, skipped, success = add_strings_to_resx(resx_file_path, strings_for_lang)
+            
+        # For non-base languages, add a 'Fuzzy' comment
+        add_comment = "Fuzzy" if lang_code_lower not in ("base", "en", "") else None
+            
+        added, skipped, success = add_strings_to_resx(resx_file_path, strings_for_lang, add_comment=add_comment)
         if success and added > 0:
             any_changes_made_across_files = True
         status = "[bold green]Success[/]"

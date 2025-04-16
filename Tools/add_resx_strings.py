@@ -149,9 +149,13 @@ def add_strings_to_resx(
             xml_snippet = (
                 f'{base_indentation}<data name="{key}" xml:space="preserve">\n'
                 f'{base_indentation}  <value>{escaped_value}</value>\n'
-                f'{base_indentation}  <comment>{add_comment}</comment>\n' if add_comment else ''
-                f'{base_indentation}</data>'
             )
+            
+            if add_comment:
+                xml_snippet += f'{base_indentation}  <comment>{add_comment}</comment>\n'
+                
+            xml_snippet += f'{base_indentation}</data>'
+            
             new_elements_xml.append(xml_snippet)
             added_count += 1
             changes_made = True

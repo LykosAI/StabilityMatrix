@@ -66,7 +66,7 @@
                         Orientation="Horizontal" />
                 </ui:ItemsRepeater.Layout>
                 <ui:ItemsRepeater.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="models:SafetensorMetadata+Tag">
                         <Button
                             Command="{Binding $parent[ui:ItemsRepeater].((dialogs:SafetensorMetadataViewModel)DataContext).CopyTagToClipboardCommand}"
                             CommandParameter="{Binding Name}"
@@ -100,7 +100,7 @@
                 IsVisible="{Binding !!Metadata.OtherMetadata.Count}"
                 ItemsSource="{Binding Metadata.OtherMetadata}">
                 <ui:ItemsRepeater.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="models:SafetensorMetadata+Metadata">
                         <StackPanel Margin="5" Orientation="Vertical">
                             <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
                             <TextBlock Text="{Binding Value}" />

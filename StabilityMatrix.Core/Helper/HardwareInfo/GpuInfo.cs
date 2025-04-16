@@ -37,7 +37,7 @@ public record GpuInfo
             && !Name.Contains("RTX 5000", StringComparison.OrdinalIgnoreCase);
     }
 
-    public bool IsTritonCompatibleGpu()
+    public bool IsAmpereOrNewerGpu()
     {
         if (Name is null)
             return false;

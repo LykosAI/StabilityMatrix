@@ -63,6 +63,18 @@ public class AccountsService : IAccountsService
         LykosAccountStatusUpdate += (_, args) => LykosStatus = args;
     }
 
+    public async Task<bool> HasStoredLykosAccountAsync()
+    {
+        if (LykosStatus?.IsConnected == true)
+        {
+            return true;
+        }
+
+        var secrets = await secretsManager.SafeLoadAsync();
+
+        return !string.IsNullOrEmpty(secrets.LykosAccountV2?.RefreshToken);
+    }
+
     public async Task LykosLoginAsync(string email, string password)
     {
         var secrets = await secretsManager.SafeLoadAsync();

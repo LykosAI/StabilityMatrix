@@ -362,7 +362,22 @@
                                 <ui:TeachingTip
                                     Title="{x:Static lang:Resources.TeachingTip_PromptAmplifier}"
                                     IsOpen="{Binding IsPromptAmplifyTeachingTipOpen, Mode=TwoWay}"
-                                    Target="{Binding #PART_AmplifyButton}" />
+                                    PreferredPlacement="Bottom"
+                                    Target="{Binding #PART_AmplifyButton}">
+                                    <StackPanel Orientation="Vertical">
+                                        <TextBlock
+                                            FontSize="13"
+                                            Foreground="#AAAAAA"
+                                            Text="All users get 60 free amplifications per month. Supporters get 1,000+ based on their support tier."
+                                            TextWrapping="Wrap" />
+                                        <HyperlinkButton
+                                            Margin="0,4,0,0"
+                                            Padding="4,8,4,8"
+                                            Content="More Info"
+                                            FontSize="13"
+                                            NavigateUri="https://lykos.ai/prompt-amplifier/help" />
+                                    </StackPanel>
+                                </ui:TeachingTip>
                                 <Button
                                     Padding="8,4"
                                     Command="{Binding DebugShowTokensCommand}"

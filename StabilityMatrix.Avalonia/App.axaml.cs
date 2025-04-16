@@ -527,11 +527,12 @@ public sealed class App : Application
                     if (retryCount > 3)
                     {
                         Logger.Info(
-                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to {Exception}",
+                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to ({Status}) {Msg}",
                             retryCount,
                             6,
                             timeSpan.TotalSeconds,
-                            result.Exception?.ToString()
+                            result?.Result.StatusCode,
+                            result?.Result.ToString()
                         );
                     }
                 }
@@ -554,11 +555,12 @@ public sealed class App : Application
                     if (retryCount > 4)
                     {
                         Logger.Info(
-                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to {Exception}",
+                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to ({Status}) {Msg}",
                             retryCount,
                             7,
                             timeSpan.TotalSeconds,
-                            result.Exception?.ToString()
+                            result?.Result.StatusCode,
+                            result?.Result.ToString()
                         );
                     }
                 }

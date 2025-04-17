@@ -1197,4 +1197,20 @@
   <data name="Action_Disable" xml:space="preserve">
     <value>비활성화</value>
   </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Lykos 계정 연결</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>연결된 기능을 사용하려면 Lykos 계정으로 로그인하세요.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>다시 로그인해주세요</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>로그인 유효 기간이 만료되었습니다. 계속하려면 다시 로그인해주세요.</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

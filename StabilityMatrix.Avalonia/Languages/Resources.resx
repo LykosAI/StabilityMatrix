@@ -1347,4 +1347,16 @@ Nope! Stability Matrix is still fully functional without one. But, your Lykos ac
   <data name="Action_Disable" xml:space="preserve">
     <value>Disable</value>
   </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Connect your Lykos Account</value>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Sign in with your Lykos Account to use connected features.</value>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Please Sign In Again</value>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Your login has expired. Please sign in again to continue.</value>
+  </data>
 </root>

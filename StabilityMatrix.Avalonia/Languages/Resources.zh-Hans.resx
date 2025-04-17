@@ -1361,4 +1361,20 @@
   <data name="Action_Disable" xml:space="preserve">
     <value>停用</value>
   </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>连接您的 Lykos 账户</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>请使用您的 Lykos 账户登录以使用连接功能。</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>请重新登录</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>您的登录已过期。请重新登录以继续。</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

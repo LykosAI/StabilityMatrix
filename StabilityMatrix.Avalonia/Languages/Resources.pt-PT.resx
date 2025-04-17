@@ -946,4 +946,20 @@
   <data name="Action_Disable" xml:space="preserve">
     <value>Desativar</value>
   </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Ligar a sua conta Lykos</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Inicie sessão com a sua conta Lykos para usar as funcionalidades ligadas.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Inicie sessão novamente</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>O seu início de sessão expirou. Inicie sessão novamente para continuar.</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

@@ -946,4 +946,20 @@
   <data name="Action_Disable" xml:space="preserve">
     <value>Deaktivieren</value>
   </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Lykos-Konto verbinden</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Melde dich mit deinem Lykos-Konto an, um verbundene Funktionen zu nutzen.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Bitte erneut anmelden</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Deine Anmeldung ist abgelaufen. Bitte melde dich erneut an, um fortzufahren.</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

@@ -1088,4 +1088,20 @@
   <data name="Action_Disable" xml:space="preserve">
     <value>Desactivar</value>
   </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Conectar cuenta de Lykos</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Inicia sesión con tu cuenta de Lykos para usar las funciones conectadas.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Por favor, inicia sesión de nuevo</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Tu inicio de sesión ha caducado. Por favor, inicia sesión de nuevo para continuar.</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

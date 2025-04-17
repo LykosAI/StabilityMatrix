@@ -3486,6 +3486,42 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sign in with your Lykos Account to use connected features..
+        /// </summary>
+        public static string Text_Login_ConnectDescription {
+            get {
+                return ResourceManager.GetString("Text_Login_ConnectDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connect your Lykos Account.
+        /// </summary>
+        public static string Text_Login_ConnectTitle {
+            get {
+                return ResourceManager.GetString("Text_Login_ConnectTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your login has expired. Please sign in again to continue..
+        /// </summary>
+        public static string Text_Login_ExpiredDescription {
+            get {
+                return ResourceManager.GetString("Text_Login_ExpiredDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please Sign In Again.
+        /// </summary>
+        public static string Text_Login_ExpiredTitle {
+            get {
+                return ResourceManager.GetString("Text_Login_ExpiredTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ## Heads Up: Lykos Account Sign-Out &amp; Security Upgrade
         ///
         ///We&apos;ve made some important behind-the-scenes improvements to how Stability Matrix handles Lykos accounts, upgrading to a more secure and convenient login system **(OAuth 2.0 with OpenID Connect)**. Because of this, you&apos;ve been signed out of your Lykos account.

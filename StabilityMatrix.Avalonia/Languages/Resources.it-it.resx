@@ -692,4 +692,20 @@
   <data name="Action_Disable" xml:space="preserve">
     <value>Disabilita</value>
   </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Collega il tuo account Lykos</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Accedi con il tuo account Lykos per utilizzare le funzionalità connesse.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Effettua nuovamente l&apos;accesso</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Il tuo accesso è scaduto. Effettua nuovamente l&apos;accesso per continuare.</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

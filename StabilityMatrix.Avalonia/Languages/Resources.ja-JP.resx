@@ -1246,4 +1246,20 @@
   <data name="Action_Disable" xml:space="preserve">
     <value>無効</value>
   </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Lykosアカウントを接続</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>接続機能を使用するには、Lykosアカウントでサインインしてください。</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>もう一度サインインしてください</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>ログインの有効期限が切れました。続けるには、もう一度サインインしてください。</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

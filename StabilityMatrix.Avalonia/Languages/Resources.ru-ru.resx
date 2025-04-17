@@ -1282,4 +1282,20 @@
   <data name="Action_Disable" xml:space="preserve">
     <value>Отключить</value>
   </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Подключить аккаунт Lykos</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Войдите в свой аккаунт Lykos, чтобы использовать подключенные функции.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Пожалуйста, войдите снова</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Срок действия вашего входа истёк. Пожалуйста, войдите снова, чтобы продолжить.</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

@@ -1201,4 +1201,20 @@
   <data name="Action_Disable" xml:space="preserve">
     <value>Devre Dışı Bırak</value>
   </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Lykos Hesabınızı Bağlayın</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Bağlı özellikleri kullanmak için Lykos hesabınızla oturum açın.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Lütfen Tekrar Oturum Açın</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Oturumunuzun süresi doldu. Devam etmek için lütfen tekrar oturum açın.</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

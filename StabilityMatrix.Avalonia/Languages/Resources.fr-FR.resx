@@ -1038,4 +1038,20 @@
   <data name="Action_Disable" xml:space="preserve">
     <value>Désactiver</value>
   </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Connecter le compte Lykos</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Connectez-vous avec votre compte Lykos pour utiliser les fonctionnalités connectées.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Veuillez vous reconnecter</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Votre connexion a expiré. Veuillez vous reconnecter pour continuer.</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

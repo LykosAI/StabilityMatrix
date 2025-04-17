@@ -1039,10 +1039,53 @@ public sealed class App : Application
                 .ForLogger()
                 .FilterMinLevel(NLog.LogLevel.Trace)
                 .WriteTo(
-                    new ConsoleTarget("console")
+                    new ColoredConsoleTarget("console")
                     {
-                        Layout = "[${level:uppercase=true}]\t${logger:shortName=true}\t${message}",
-                        DetectConsoleAvailable = true
+                        Layout =
+                            "[${level:uppercase=true}]\t${logger:shortName=true}\t${message}${onexception:\n${exception:format=tostring}}",
+                        DetectConsoleAvailable = true,
+                        EnableAnsiOutput = true,
+                        WordHighlightingRules =
+                        {
+                            new ConsoleWordHighlightingRule(
+                                "[TRACE]",
+                                ConsoleOutputColor.DarkGray,
+                                ConsoleOutputColor.NoChange
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[DEBUG]",
+                                ConsoleOutputColor.Gray,
+                                ConsoleOutputColor.NoChange
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[INFO]",
+                                ConsoleOutputColor.DarkGreen,
+                                ConsoleOutputColor.NoChange
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[WARN]",
+                                ConsoleOutputColor.Yellow,
+                                ConsoleOutputColor.NoChange
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[ERROR]",
+                                ConsoleOutputColor.White,
+                                ConsoleOutputColor.Red
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[FATAL]",
+                                ConsoleOutputColor.Black,
+                                ConsoleOutputColor.DarkRed
+                            )
+                        },
+                        RowHighlightingRules =
+                        {
+                            new ConsoleRowHighlightingRule(
+                                "level == LogLevel.Trace",
+                                ConsoleOutputColor.Gray,
+                                ConsoleOutputColor.NoChange
+                            ),
+                        }
                     }
                 )
                 .WithAsync();

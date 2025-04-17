@@ -1248,50 +1248,38 @@
   </data>
   <data name="Text_Login_ConnectTitle" xml:space="preserve">
     <value>Lykosアカウントを接続</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Text_Login_ConnectDescription" xml:space="preserve">
     <value>接続機能を使用するには、Lykosアカウントでサインインしてください。</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Text_Login_ExpiredTitle" xml:space="preserve">
     <value>もう一度サインインしてください</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Text_Login_ExpiredDescription" xml:space="preserve">
     <value>ログインの有効期限が切れました。続けるには、もう一度サインインしてください。</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Sponsorship_Title" xml:space="preserve">
     <value>Stability Matrixへのご支援</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
     <value>いつもStability Matrixをご支援いただき、誠にありがとうございます。</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
     <value>**{0}** のような機能は、サポーターの皆様への特典としてご提供しています。皆様のご支援のおかげで、サーバー費用を賄い、Stability Matrixの開発を継続できております。</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
     <value>**{0}** のような機能は、**{1}** サポーターレベル（またはそれ以上）からご利用いただけます。皆様のご支援のおかげで、高度な接続機能のサーバー費用を賄い、Stability Matrixの改善を続けることが可能となっております。</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
     <value>すでにPatreonでご支援いただいている場合は、引き続き機能をご利用いただくためにアカウント連携をお願いいたします。</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Label_AccountSettings" xml:space="preserve">
     <value>アカウント設定</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Action_ViewSupportOptions" xml:space="preserve">
     <value>支援オプションを表示</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Action_MaybeLater" xml:space="preserve">
     <value>後で確認する</value>
-    <comment>Fuzzy</comment>
   </data>
 </root>

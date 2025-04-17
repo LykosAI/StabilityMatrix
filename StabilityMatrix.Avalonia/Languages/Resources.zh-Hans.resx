@@ -1363,50 +1363,38 @@
   </data>
   <data name="Text_Login_ConnectTitle" xml:space="preserve">
     <value>连接您的 Lykos 账户</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Text_Login_ConnectDescription" xml:space="preserve">
     <value>请使用您的 Lykos 账户登录以使用连接功能。</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Text_Login_ExpiredTitle" xml:space="preserve">
     <value>请重新登录</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Text_Login_ExpiredDescription" xml:space="preserve">
     <value>您的登录已过期。请重新登录以继续。</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Sponsorship_Title" xml:space="preserve">
     <value>支持 Stability Matrix</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
     <value>感谢您支持 Stability Matrix！</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
     <value>**{0}** 等功能是我们为支持者提供的众多权益之一。您的贡献有助于我们支付服务器成本并支持 Stability Matrix 的开发。</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
     <value>**{0}** 等功能需达到 **{1}** 支持者等级（或更高）方可使用。您的贡献有助于我们支付更高级连接功能的服务器成本，并让我们能够为大家不断改进 Stability Matrix。</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
     <value>如果您已在 Patreon 上支持我们，请关联您的账户以继续。</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Label_AccountSettings" xml:space="preserve">
     <value>账户设置</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Action_ViewSupportOptions" xml:space="preserve">
     <value>查看支持选项</value>
-    <comment>Fuzzy</comment>
   </data>
   <data name="Action_MaybeLater" xml:space="preserve">
     <value>以后再说</value>
-    <comment>Fuzzy</comment>
   </data>
 </root>

@@ -267,6 +267,13 @@ def main(
         "-c",
         help="Read JSON data directly from the system clipboard instead of a file.",
     ),
+    extra_non_fuzzy_languages: List[str] = typer.Option(
+        [],
+        "--non-fuzzy",
+        "-nf",
+        help="List of additional languages that should not have 'Fuzzy' comments added.",
+        show_default=False,
+    ),
 ):
     """
     Adds new localization strings to .RESX files from JSON data (file or clipboard).
@@ -335,7 +342,8 @@ def main(
             continue
             
         # For non-base languages, add a 'Fuzzy' comment
-        add_comment = "Fuzzy" if lang_code_lower not in ("base", "en", "") else None
+        non_fuzzy_langs = ["base", "en", ""]
+        add_comment = "Fuzzy" if lang_code_lower not in non_fuzzy_langs else None
             
         added, skipped, success = add_strings_to_resx(resx_file_path, strings_for_lang, add_comment=add_comment)
         if success and added > 0:

@@ -339,6 +339,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Maybe Later.
+        /// </summary>
+        public static string Action_MaybeLater {
+            get {
+                return ResourceManager.GetString("Action_MaybeLater", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Move to Trash.
         /// </summary>
         public static string Action_MoveToTrash {
@@ -744,6 +753,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to View Support Options.
+        /// </summary>
+        public static string Action_ViewSupportOptions {
+            get {
+                return ResourceManager.GetString("Action_ViewSupportOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Yes.
         /// </summary>
         public static string Action_Yes {
@@ -791,6 +809,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Accounts {
             get {
                 return ResourceManager.GetString("Label_Accounts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Account Settings.
+        /// </summary>
+        public static string Label_AccountSettings {
+            get {
+                return ResourceManager.GetString("Label_AccountSettings", resourceCulture);
             }
         }
         
@@ -3365,6 +3392,51 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Progress_UpdateFailed {
             get {
                 return ResourceManager.GetString("Progress_UpdateFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If you&apos;re already supporting us on Patreon, please link your account to continue..
+        /// </summary>
+        public static string Sponsorship_ConnectPatreonPrompt {
+            get {
+                return ResourceManager.GetString("Sponsorship_ConnectPatreonPrompt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Thank you for being a Stability Matrix supporter!.
+        /// </summary>
+        public static string Sponsorship_ExistingSupporterPreamble {
+            get {
+                return ResourceManager.GetString("Sponsorship_ExistingSupporterPreamble", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Features like **{0}** are one of many benefits available to our supporters. Your contribution helps us cover server costs and supports Stability Matrix development..
+        /// </summary>
+        public static string Sponsorship_ReqAnyTier {
+            get {
+                return ResourceManager.GetString("Sponsorship_ReqAnyTier", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Features like **{0}** are available at the **{1}** supporter level (or higher). Your contribution helps us cover server costs for more advanced connected features and allows us to keep improving Stability Matrix for everyone..
+        /// </summary>
+        public static string Sponsorship_ReqSpecificTier {
+            get {
+                return ResourceManager.GetString("Sponsorship_ReqSpecificTier", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Support Stability Matrix.
+        /// </summary>
+        public static string Sponsorship_Title {
+            get {
+                return ResourceManager.GetString("Sponsorship_Title", resourceCulture);
             }
         }
         

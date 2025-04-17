@@ -1306,4 +1306,36 @@
     <value>Seu login expirou. Faça login novamente para continuar.</value>
     <comment>Fuzzy</comment>
   </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>Apoiar Stability Matrix</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>Obrigado por apoiar o Stability Matrix!</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>Recursos como **{0}** são um dos muitos benefícios disponíveis para nossos apoiadores. Sua contribuição nos ajuda a cobrir os custos do servidor e apoia o desenvolvimento do Stability Matrix.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>Recursos como **{0}** estão disponíveis no nível de apoiador **{1}** (ou superior). Sua contribuição nos ajuda a cobrir os custos do servidor para recursos conectados mais avançados e nos permite continuar melhorando o Stability Matrix para todos.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>Se você já nos apoia no Patreon, por favor, vincule sua conta para continuar.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>Configurações da conta</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>Ver opções de apoio</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>Mais tarde</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

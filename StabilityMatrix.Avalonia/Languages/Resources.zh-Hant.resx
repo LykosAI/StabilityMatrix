@@ -690,4 +690,36 @@
     <value>您的登入已過期。請重新登入以繼續。</value>
     <comment>Fuzzy</comment>
   </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>支持 Stability Matrix</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>感謝您支持 Stability Matrix！</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>**{0}** 等功能是我們為支持者提供的眾多權益之一。您的貢獻有助於我們支付伺服器成本並支持 Stability Matrix 的開發。</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>**{0}** 等功能需達到 **{1}** 支持者等級（或更高）方可使用。您的貢獻有助於我們支付更進階連接功能的伺服器成本，並讓我們能夠為大家不斷改進 Stability Matrix。</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>如果您已在 Patreon 上支持我們，請關聯您的帳戶以繼續。</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>帳戶設定</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>檢視支持選項</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>稍後再說</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

@@ -1298,4 +1298,36 @@
     <value>Срок действия вашего входа истёк. Пожалуйста, войдите снова, чтобы продолжить.</value>
     <comment>Fuzzy</comment>
   </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>Поддержка Stability Matrix</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>Спасибо за поддержку Stability Matrix!</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>Такие функции, как **{0}**, — это одно из многих преимуществ, доступных нашим сторонникам. Ваш вклад помогает нам покрывать расходы на серверы и поддерживает разработку Stability Matrix.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>Такие функции, как **{0}**, доступны на уровне поддержки **{1}** (или выше). Ваш вклад помогает нам покрывать расходы на серверы для более продвинутых подключенных функций и позволяет нам постоянно улучшать Stability Matrix для всех.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>Если Вы уже поддерживаете нас на Patreon, пожалуйста, привяжите свою учетную запись, чтобы продолжить.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>Настройки учетной записи</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>Посмотреть варианты поддержки</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>Позже</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

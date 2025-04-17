@@ -1217,4 +1217,36 @@
     <value>Oturumunuzun süresi doldu. Devam etmek için lütfen tekrar oturum açın.</value>
     <comment>Fuzzy</comment>
   </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>Stability Matrix Desteği</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>Stability Matrix destekçisi olduğunuz için teşekkür ederiz!</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>**{0}** gibi özellikler, destekçilerimize sunulan birçok avantajdan biridir. Katkınız, sunucu maliyetlerimizi karşılamamıza ve Stability Matrix&apos;in geliştirilmesini desteklememize yardımcı olur.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>**{0}** gibi özellikler, **{1}** destekçi seviyesinde (veya üzeri) kullanılabilir. Katkınız, daha gelişmiş bağlantılı özellikler için sunucu maliyetlerimizi karşılamamıza yardımcı olur ve Stability Matrix&apos;i herkes için sürekli iyileştirmemize olanak tanır.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>Bizi zaten Patreon&apos;da destekliyorsanız, devam etmek için lütfen hesabınızı bağlayın.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>Hesap Ayarları</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>Destek Seçeneklerini Görüntüle</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>Daha Sonra</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

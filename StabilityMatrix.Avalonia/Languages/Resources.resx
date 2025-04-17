@@ -1359,4 +1359,28 @@ Nope! Stability Matrix is still fully functional without one. But, your Lykos ac
   <data name="Text_Login_ExpiredDescription" xml:space="preserve">
     <value>Your login has expired. Please sign in again to continue.</value>
   </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>Support Stability Matrix</value>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>Thank you for being a Stability Matrix supporter!</value>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>Features like **{0}** are one of many benefits available to our supporters. Your contribution helps us cover server costs and supports Stability Matrix development.</value>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>Features like **{0}** are available at the **{1}** supporter level (or higher). Your contribution helps us cover server costs for more advanced connected features and allows us to keep improving Stability Matrix for everyone.</value>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>If you&apos;re already supporting us on Patreon, please link your account to continue.</value>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>Account Settings</value>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>View Support Options</value>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>Maybe Later</value>
+  </data>
 </root>

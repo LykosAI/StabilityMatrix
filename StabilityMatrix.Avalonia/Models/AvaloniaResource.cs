@@ -1,7 +1,5 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Avalonia.Platform;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -10,8 +8,9 @@ namespace StabilityMatrix.Avalonia.Models;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public readonly record struct AvaloniaResource(
-    Uri UriPath, 
-    UnixFileMode WriteUnixFileMode = UnixFileMode.None)
+    Uri UriPath,
+    UnixFileMode WriteUnixFileMode = UnixFileMode.None
+)
 {
     /// <summary>
     /// File name component of the Uri path.
@@ -24,16 +23,23 @@ public readonly record struct AvaloniaResource(
     public Uri RelativeAssetPath =>
         new Uri("avares://StabilityMatrix.Avalonia/Assets/").MakeRelativeUri(UriPath);
 
-    public AvaloniaResource(string uriPath, UnixFileMode writeUnixFileMode = UnixFileMode.None) 
-        : this(new Uri(uriPath), writeUnixFileMode)
-    {
-    }
-    
+    public AvaloniaResource(string uriPath, UnixFileMode writeUnixFileMode = UnixFileMode.None)
+        : this(new Uri(uriPath), writeUnixFileMode) { }
+
     /// <summary>
     /// Opens a stream to this resource.
     /// </summary>
     public Stream Open() => AssetLoader.Open(UriPath);
-    
+
+    public async Task<string> ReadAsStringAsync()
+    {
+        await using var stream = AssetLoader.Open(UriPath);
+        // Utf8 reader
+        using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        // Read all text
+        return await reader.ReadToEndAsync();
+    }
+
     /// <summary>
     /// Extracts this resource to a target file path.
     /// </summary>
@@ -42,7 +48,8 @@ public readonly record struct AvaloniaResource(
         if (outputPath.Exists)
         {
             // Skip if not overwriting
-            if (!overwrite) return;
+            if (!overwrite)
+                return;
             // Otherwise delete the file
             outputPath.Delete();
         }
@@ -55,7 +62,7 @@ public readonly record struct AvaloniaResource(
             File.SetUnixFileMode(outputPath, WriteUnixFileMode);
         }
     }
-    
+
     /// <summary>
     /// Extracts this resource to the output directory.
     /// </summary>

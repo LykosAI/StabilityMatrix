@@ -9,11 +9,11 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<FreeUModule>]
+[RegisterScoped<FreeUModule>]
 public class FreeUModule : ModuleBase
 {
     /// <inheritdoc />
-    public FreeUModule(ServiceManager<ViewModelBase> vmFactory)
+    public FreeUModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "FreeU";

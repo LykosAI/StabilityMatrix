@@ -15,11 +15,11 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<ControlNetModule>]
+[RegisterScoped<ControlNetModule>]
 public class ControlNetModule : ModuleBase
 {
     /// <inheritdoc />
-    public ControlNetModule(ServiceManager<ViewModelBase> vmFactory)
+    public ControlNetModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "ControlNet";

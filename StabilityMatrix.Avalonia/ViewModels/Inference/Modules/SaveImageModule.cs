@@ -9,11 +9,11 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<SaveImageModule>]
+[RegisterScoped<SaveImageModule>]
 public class SaveImageModule : ModuleBase
 {
     /// <inheritdoc />
-    public SaveImageModule(ServiceManager<ViewModelBase> vmFactory)
+    public SaveImageModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = Resources.Label_SaveIntermediateImage;

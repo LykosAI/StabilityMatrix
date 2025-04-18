@@ -12,13 +12,13 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(UpscalerCard))]
 [ManagedService]
-[RegisterTransient<UpscalerCardViewModel>]
+[RegisterScoped<UpscalerCardViewModel>]
 public partial class UpscalerCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "Upscaler";
 
     private readonly INotificationService notificationService;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
     private double scale = 2;
@@ -31,7 +31,7 @@ public partial class UpscalerCardViewModel : LoadableViewModelBase
     public UpscalerCardViewModel(
         IInferenceClientManager clientManager,
         INotificationService notificationService,
-        ServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory
     )
     {
         this.notificationService = notificationService;

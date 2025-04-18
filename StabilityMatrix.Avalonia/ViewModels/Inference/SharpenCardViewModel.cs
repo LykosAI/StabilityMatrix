@@ -9,7 +9,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SharpenCard))]
 [ManagedService]
-[RegisterTransient<SharpenCardViewModel>]
+[RegisterScoped<SharpenCardViewModel>]
 public partial class SharpenCardViewModel : LoadableViewModelBase
 {
     [Range(1, 31)]

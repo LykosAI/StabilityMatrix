@@ -33,7 +33,7 @@ public partial class OpenModelDbModelDetailsViewModel(
     IModelImportService modelImportService,
     INotificationService notificationService,
     ISettingsManager settingsManager,
-    ServiceManager<ViewModelBase> dialogFactory
+    IServiceManager<ViewModelBase> dialogFactory
 ) : ContentDialogViewModelBase
 {
     public class ModelResourceViewModel(IModelIndexService modelIndexService)

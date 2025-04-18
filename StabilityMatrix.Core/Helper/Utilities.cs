@@ -81,6 +81,14 @@ public static partial class Utilities
         return await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
     }
 
+    public static int GetNumDaysTilBeginningOfNextMonth()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var firstDayOfNextMonth = new DateTime(now.Year, now.Month, 1).AddMonths(1);
+        var daysUntilNextMonth = (firstDayOfNextMonth - now).Days;
+        return daysUntilNextMonth;
+    }
+
     public static string RemoveHtml(string? stringWithHtml)
     {
         var pruned =

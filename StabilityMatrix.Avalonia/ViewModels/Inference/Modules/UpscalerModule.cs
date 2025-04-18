@@ -10,11 +10,11 @@ using StabilityMatrix.Core.Extensions;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<UpscalerModule>]
+[RegisterScoped<UpscalerModule>]
 public class UpscalerModule : ModuleBase
 {
     /// <inheritdoc />
-    public UpscalerModule(ServiceManager<ViewModelBase> vmFactory)
+    public UpscalerModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "Upscaler";

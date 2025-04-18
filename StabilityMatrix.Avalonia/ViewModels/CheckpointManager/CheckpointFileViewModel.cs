@@ -60,7 +60,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     private readonly IModelIndexService modelIndexService;
     private readonly INotificationService notificationService;
     private readonly IDownloadService downloadService;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly ILogger logger;
 
     public bool CanShowTriggerWords => CheckpointFile.ConnectedModelInfo?.TrainedWords?.Length > 0;
@@ -73,7 +73,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         IModelIndexService modelIndexService,
         INotificationService notificationService,
         IDownloadService downloadService,
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         ILogger logger,
         LocalModelFile checkpointFile
     )

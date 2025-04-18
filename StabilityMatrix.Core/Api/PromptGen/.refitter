@@ -1,0 +1,16 @@
+{
+  "openApiPath": "http://localhost:5174/api/swagger.json",
+  "outputFolder": "./StabilityMatrix.Core/Api/PromptGen/Generated",
+  "outputFilename": "Refitter.g.cs",
+  "namespace": "StabilityMatrix.Core.Api.PromptGenApi",
+  "naming": {
+    "useOpenApiTitle": false,
+    "interfaceName": "PromptGenApi"
+  },
+  "includePathMatches": [
+    "^/account/me/tokens$",
+    "^/expand-prompt$"
+  ],
+  "trimUnusedSchema": true,
+  "operationNameGenerator": "SingleClientFromPathSegments"
+}

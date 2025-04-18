@@ -38,7 +38,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly IDownloadService downloadService;
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly ISettingsManager settingsManager;
-    private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly IServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
     private readonly IModelIndexService modelIndexService;
     private readonly IModelImportService modelImportService;
@@ -87,7 +87,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         IDownloadService downloadService,
         ITrackedDownloadService trackedDownloadService,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> dialogFactory,
+        IServiceManager<ViewModelBase> dialogFactory,
         INotificationService notificationService,
         IModelIndexService modelIndexService,
         IModelImportService modelImportService

@@ -31,7 +31,7 @@ public partial class SettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private PageViewModelBase? currentPage;
 
-    public SettingsViewModel(ServiceManager<ViewModelBase> vmFactory)
+    public SettingsViewModel(IServiceManager<ViewModelBase> vmFactory)
     {
         SubPages = new PageViewModelBase[]
         {

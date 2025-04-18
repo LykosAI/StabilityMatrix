@@ -74,7 +74,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly IPyRunner pyRunner;
-    private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly IServiceManager<ViewModelBase> dialogFactory;
     private readonly ICompletionProvider completionProvider;
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IModelIndexService modelIndexService;
@@ -205,7 +205,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         ISettingsManager settingsManager,
         IPrerequisiteHelper prerequisiteHelper,
         IPyRunner pyRunner,
-        ServiceManager<ViewModelBase> dialogFactory,
+        IServiceManager<ViewModelBase> dialogFactory,
         ITrackedDownloadService trackedDownloadService,
         SharedState sharedState,
         ICompletionProvider completionProvider,

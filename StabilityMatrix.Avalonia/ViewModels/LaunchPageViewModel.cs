@@ -48,7 +48,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     private readonly IPyRunner pyRunner;
     private readonly INotificationService notificationService;
     private readonly ISharedFolders sharedFolders;
-    private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly IServiceManager<ViewModelBase> dialogFactory;
     protected readonly IPackageFactory PackageFactory;
 
     // Regex to match if input contains a yes/no prompt,
@@ -113,7 +113,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         IPyRunner pyRunner,
         INotificationService notificationService,
         ISharedFolders sharedFolders,
-        ServiceManager<ViewModelBase> dialogFactory
+        IServiceManager<ViewModelBase> dialogFactory
     )
     {
         this.logger = logger;

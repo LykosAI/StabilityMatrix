@@ -8,10 +8,10 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<RescaleCfgModule>]
+[RegisterScoped<RescaleCfgModule>]
 public class RescaleCfgModule : ModuleBase
 {
-    public RescaleCfgModule(ServiceManager<ViewModelBase> vmFactory)
+    public RescaleCfgModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "CFG Rescale";

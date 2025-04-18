@@ -21,12 +21,12 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ControlNetCard))]
 [ManagedService]
-[RegisterTransient<ControlNetCardViewModel>]
+[RegisterScoped<ControlNetCardViewModel>]
 public partial class ControlNetCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "ControlNet";
 
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
     [Required]
@@ -67,7 +67,7 @@ public partial class ControlNetCardViewModel : LoadableViewModelBase
 
     public ControlNetCardViewModel(
         IInferenceClientManager clientManager,
-        ServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory
     )
     {
         this.vmFactory = vmFactory;

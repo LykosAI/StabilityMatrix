@@ -29,7 +29,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [RegisterTransient<MaskEditorViewModel>]
 [ManagedService]
 [View(typeof(MaskEditorDialog))]
-public partial class MaskEditorViewModel(ServiceManager<ViewModelBase> vmFactory)
+public partial class MaskEditorViewModel(IServiceManager<ViewModelBase> vmFactory)
     : LoadableViewModelBase,
         IDisposable
 {

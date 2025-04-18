@@ -20,7 +20,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(UnetModelCard))]
 [ManagedService]
-[RegisterTransient<UnetModelCardViewModel>]
+[RegisterScoped<UnetModelCardViewModel>]
 public partial class UnetModelCardViewModel(IInferenceClientManager clientManager)
     : LoadableViewModelBase,
         IParametersLoadableState,

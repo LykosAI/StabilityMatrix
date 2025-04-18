@@ -44,7 +44,7 @@ public partial class StackExpanderViewModel : StackViewModelBase
     public virtual IRelayCommand? SettingsCommand { get; set; }
 
     /// <inheritdoc />
-    public StackExpanderViewModel(ServiceManager<ViewModelBase> vmFactory)
+    public StackExpanderViewModel(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory) { }
 
     public override void OnContainerIndexChanged(int value)

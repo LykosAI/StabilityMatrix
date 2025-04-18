@@ -1249,4 +1249,32 @@
     <value>Daha Sonra</value>
     <comment>Fuzzy</comment>
   </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>Durum</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>Etkin</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>Etkin değil (Standart bağlantı kullanılıyor)</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Civitai gibi çevrimiçi depolardan modellere göz atarken daha hızlı arama sonuçları elde edin.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>Üçüncü taraf depolar için deneysel optimizasyon. Resmi olarak bağlı değildir; kullanılabilirlik değişiklik gösterebilir.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>Beta</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>Hızlandırılmış Model Arama</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

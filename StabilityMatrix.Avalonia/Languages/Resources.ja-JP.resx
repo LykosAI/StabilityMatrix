@@ -1282,4 +1282,25 @@
   <data name="Action_MaybeLater" xml:space="preserve">
     <value>後で確認する</value>
   </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>状態</value>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>有効</value>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>無効（標準接続を使用中）</value>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Civitaiなどのオンラインリポジトリからモデルを閲覧する際に、より高速な検索結果を体験できます。</value>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>第三者リポジトリ向けの実験的な最適化です。公式に提携しているものではありません。利用可能性は変動する場合があります。</value>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>ベータ版</value>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>加速モデル探索</value>
+  </data>
 </root>

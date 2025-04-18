@@ -1065,6 +1065,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Beta.
+        /// </summary>
+        public static string Label_Beta {
+            get {
+                return ResourceManager.GetString("Label_Beta", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Branch.
         /// </summary>
         public static string Label_Branch {
@@ -2919,6 +2928,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Status.
+        /// </summary>
+        public static string Label_Status {
+            get {
+                return ResourceManager.GetString("Label_Status", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Steps.
         /// </summary>
         public static string Label_Steps {
@@ -3320,6 +3338,51 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_YouAreUpToDate {
             get {
                 return ResourceManager.GetString("Label_YouAreUpToDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Active.
+        /// </summary>
+        public static string ModelDiscovery_Active {
+            get {
+                return ResourceManager.GetString("ModelDiscovery_Active", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Experience faster search results when browsing models from online repositories, such as Civitai..
+        /// </summary>
+        public static string ModelDiscovery_Description {
+            get {
+                return ResourceManager.GetString("ModelDiscovery_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Experimental optimization for third-party repositories. Not officially affiliated; availability may vary..
+        /// </summary>
+        public static string ModelDiscovery_Disclaimer {
+            get {
+                return ResourceManager.GetString("ModelDiscovery_Disclaimer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inactive (Using standard connection).
+        /// </summary>
+        public static string ModelDiscovery_Inactive {
+            get {
+                return ResourceManager.GetString("ModelDiscovery_Inactive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accelerated Model Discovery.
+        /// </summary>
+        public static string ModelDiscovery_Title {
+            get {
+                return ResourceManager.GetString("ModelDiscovery_Title", resourceCulture);
             }
         }
         

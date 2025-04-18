@@ -994,4 +994,32 @@
     <value>Vielleicht später</value>
     <comment>Fuzzy</comment>
   </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>Status</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>Aktiv</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>Inaktiv (Standardverbindung wird verwendet)</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Erleben Sie schnellere Suchergebnisse beim Durchsuchen von Modellen aus Online-Repositories wie Civitai.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>Experimentelle Optimierung für Repositories von Drittanbietern. Nicht offiziell angegliedert; Verfügbarkeit kann variieren.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>Beta</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>Beschleunigte Modellsuche</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

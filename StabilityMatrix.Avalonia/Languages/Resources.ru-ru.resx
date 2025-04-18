@@ -1330,4 +1330,32 @@
     <value>Позже</value>
     <comment>Fuzzy</comment>
   </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>Статус</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>Активно</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>Неактивно (Используется стандартное соединение)</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Получайте более быстрые результаты поиска при просмотре моделей из онлайн-репозиториев, таких как Civitai.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>Экспериментальная оптимизация для сторонних репозиториев. Официально не аффилирован; доступность может изменяться.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>Бета</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>Ускоренный поиск моделей</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

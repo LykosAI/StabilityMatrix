@@ -1397,4 +1397,25 @@
   <data name="Action_MaybeLater" xml:space="preserve">
     <value>以后再说</value>
   </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>未启用（使用标准连接）</value>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>从 Civitai 等在线存储库浏览模型时，体验更快的搜索结果。</value>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>针对第三方存储库的实验性优化。非官方合作；可用性可能有所不同。</value>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>测试版</value>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>加速模型搜索</value>
+  </data>
 </root>

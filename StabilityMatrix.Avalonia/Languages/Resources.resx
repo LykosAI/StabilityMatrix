@@ -1383,4 +1383,25 @@ Nope! Stability Matrix is still fully functional without one. But, your Lykos ac
   <data name="Action_MaybeLater" xml:space="preserve">
     <value>Maybe Later</value>
   </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>Inactive (Using standard connection)</value>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Experience faster search results when browsing models from online repositories, such as Civitai.</value>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>Experimental optimization for third-party repositories. Not officially affiliated; availability may vary.</value>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>Beta</value>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>Accelerated Model Discovery</value>
+  </data>
 </root>

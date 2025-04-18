@@ -1201,6 +1201,9 @@ The gallery images are often inpainted, but you will get something very similar 
                 .ToArray();
         });
 
+    public static SponsorshipPromptViewModel SponsorshipPromptViewModel =>
+        DialogFactory.Get<SponsorshipPromptViewModel>(vm => { });
+
     public static OpenArtWorkflowViewModel OpenArtWorkflowViewModel =>
         new(Services.GetRequiredService<ISettingsManager>(), Services.GetRequiredService<IPackageFactory>())
         {

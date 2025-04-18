@@ -600,6 +600,20 @@ public sealed class App : Application
             .AddPolicyHandler(retryPolicyLonger);
 
         services
+            .AddRefitClient<ILykosModelDiscoveryApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://discovery.lykos.ai/api/v1");
+                c.Timeout = TimeSpan.FromHours(1);
+                c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+            })
+            .AddPolicyHandler(retryPolicy)
+            .AddHttpMessageHandler(
+                serviceProvider =>
+                    new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
+            );
+
+        services
             .AddRefitClient<IPyPiApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {

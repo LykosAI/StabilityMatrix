@@ -2,7 +2,6 @@
     x:Class="StabilityMatrix.Avalonia.Views.CivitAiBrowserPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:avalonia="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:behaviors="clr-namespace:StabilityMatrix.Avalonia.Behaviors"
     xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
     xmlns:checkpointManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointManager"
@@ -10,6 +9,10 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:e="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
+    xmlns:effects="clr-namespace:StabilityMatrix.Avalonia.Effects"
+    xmlns:fa="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -367,13 +370,13 @@
                                             Margin="0,0,8,0"
                                             HorizontalAlignment="Right"
                                             Orientation="Horizontal">
-                                            <avalonia:Icon Value="fa-solid fa-heart" />
+                                            <fa:Icon Value="fa-solid fa-heart" />
                                             <TextBlock
                                                 Margin="4,0"
                                                 VerticalAlignment="Center"
                                                 Text="{Binding CivitModel.Stats.ThumbsUpCount, Converter={StaticResource KiloFormatterConverter}}" />
 
-                                            <avalonia:Icon Margin="4,0" Value="fa-solid fa-download" />
+                                            <fa:Icon Margin="4,0" Value="fa-solid fa-download" />
                                             <TextBlock
                                                 Margin="0,0,4,0"
                                                 VerticalAlignment="Center"
@@ -415,20 +418,77 @@
     <Grid RowDefinitions="Auto,*,Auto">
 
         <StackPanel Margin="8" Orientation="Vertical">
+
+            <ui:TeachingTip
+                x:Name="AcceleratorButtonTeachingTip"
+                ActionButtonCommand="{Binding UseDiscoveryToggleCommand}"
+                ActionButtonContent="{e:Ternary {Binding CivitUseDiscoveryApi},
+                                                True={x:Static lang:Resources.Action_Disable},
+                                                False={x:Static lang:Resources.Action_Enable}}"
+                FontSize="14"
+                PlacementMargin="12,0,0,0"
+                PreferredPlacement="BottomLeft"
+                Target="{Binding ElementName=AcceleratorButton}">
+                <ui:TeachingTip.Title>
+                    <MultiBinding StringFormat="{}{0} ({1})">
+                        <Binding Source="{x:Static lang:Resources.ModelDiscovery_Title}" />
+                        <Binding Source="{x:Static lang:Resources.Label_Beta}" />
+                    </MultiBinding>
+                </ui:TeachingTip.Title>
+                <StackPanel Spacing="4">
+                    <StackPanel Orientation="Horizontal">
+                        <Label Content="Status:" />
+                        <Label
+                            Classes="Green"
+                            Content="{x:Static lang:Resources.ModelDiscovery_Active}"
+                            IsVisible="{Binding CivitUseDiscoveryApi}"
+                            Theme="{StaticResource TagLabel}" />
+                        <Label
+                            Classes="White"
+                            Content="{x:Static lang:Resources.ModelDiscovery_Inactive}"
+                            IsVisible="{Binding !CivitUseDiscoveryApi}"
+                            Theme="{StaticResource TagLabel}" />
+                    </StackPanel>
+                    <TextBlock
+                        Text="{x:Static lang:Resources.ModelDiscovery_Description}"
+                        TextWrapping="Wrap"
+                        Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                    <Separator Margin="4" />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                        Text="{x:Static lang:Resources.ModelDiscovery_Disclaimer}"
+                        TextWrapping="Wrap"
+                        Theme="{StaticResource BodyTextBlockStyle}" />
+                </StackPanel>
+            </ui:TeachingTip>
+
             <Grid ColumnDefinitions="*,Auto">
 
                 <TextBox
+                    x:Name="SearchTextBox"
                     HorizontalAlignment="Stretch"
                     KeyDown="InputElement_OnKeyDown"
                     Text="{Binding SearchQuery, Mode=TwoWay}"
                     Watermark="{x:Static lang:Resources.Label_ModelSearchWatermark}">
                     <TextBox.InnerRightContent>
-                        <Button
-                            Classes="transparent-full"
-                            Command="{Binding ClearSearchQuery}"
-                            IsVisible="{Binding SearchQuery.Length}">
-                            <ui:SymbolIcon Symbol="Cancel" />
-                        </Button>
+                        <StackPanel Margin="2" Orientation="Horizontal">
+                            <Button
+                                Classes="transparent-full"
+                                Command="{Binding ClearSearchQuery}"
+                                IsVisible="{Binding SearchQuery.Length}">
+                                <ui:SymbolIcon Symbol="Cancel" />
+                            </Button>
+
+                            <Button
+                                x:Name="AcceleratorButton"
+                                Classes="accelerator-indicator"
+                                Classes.active="{Binding CivitUseDiscoveryApi}"
+                                Classes.searching="{Binding SearchModelsCommand.IsRunning}"
+                                Theme="{DynamicResource AcceleratorButtonStyle}">
+                                <fa:Icon FontSize="14" Value="fa-solid fa-bolt-lightning" />
+                            </Button>
+                        </StackPanel>
                     </TextBox.InnerRightContent>
                 </TextBox>
 

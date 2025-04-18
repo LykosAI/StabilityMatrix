@@ -396,6 +396,8 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         // Reset cache in case model differences
         Logger.Info("Toggled Discovery API, clearing cache");
 
+        await liteDbContext.CivitModels.DeleteAllAsync();
+        await liteDbContext.CivitModelVersions.DeleteAllAsync();
         var items = await liteDbContext.CivitModelQueryCache.DeleteAllAsync();
 
         Logger.Info("Deleted {Count} Civit model query cache entries", items);

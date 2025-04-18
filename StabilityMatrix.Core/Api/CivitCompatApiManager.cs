@@ -24,7 +24,7 @@ public class CivitCompatApiManager(
     {
         if (ShouldUseDiscoveryApi)
         {
-            logger.LogInformation($"Using Discovery API for {nameof(GetModels)}");
+            logger.LogDebug($"Using Discovery API for {nameof(GetModels)}");
             return discoveryApi.GetModels(request, transcodeAnimToImage: true, transcodeVideoToImage: true);
         }
 
@@ -33,11 +33,11 @@ public class CivitCompatApiManager(
 
     public Task<CivitModel> GetModelById(int id)
     {
-        if (ShouldUseDiscoveryApi)
+        /*if (ShouldUseDiscoveryApi)
         {
-            logger.LogInformation($"Using Discovery API for {nameof(GetModelById)}");
+            logger.LogDebug($"Using Discovery API for {nameof(GetModelById)}");
             return discoveryApi.GetModelById(id);
-        }
+        }*/
         return civitApi.GetModelById(id);
     }
 

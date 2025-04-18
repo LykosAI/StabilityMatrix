@@ -534,8 +534,8 @@ public sealed class App : Application
                             retryCount,
                             6,
                             timeSpan.TotalSeconds,
-                            result?.Result.StatusCode,
-                            result?.Result.ToString()
+                            result?.Result?.StatusCode,
+                            result?.Result?.ToString()
                         );
                     }
                 }
@@ -562,8 +562,8 @@ public sealed class App : Application
                             retryCount,
                             7,
                             timeSpan.TotalSeconds,
-                            result?.Result.StatusCode,
-                            result?.Result.ToString()
+                            result?.Result?.StatusCode,
+                            result?.Result?.ToString()
                         );
                     }
                 }

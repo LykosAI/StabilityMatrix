@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added new package - [Stable Diffusion WebUI Forge - Classic](https://github.com/Haoming02/sd-webui-forge-classic)
 - Added Accelerated Model Discovery (Beta) (⚡ icon in Civitai Browser) for Insider+ supporters. Utilizes an optimized connection for dramatically faster, more responsive browsing of online model repositories.
 - Added Undo/Redo commands to text editor context menus
+- Added Prompt Amplifier to Inference - click the magic wand 🪄 in the prompt editor to expand and enrich your ideas. Tailor the vibe with the ‘Feel’ selector and watch as your generations come to life with extra detail, coherence, and flair!
 ### Changed
 - Updated install for kohya_ss to support RTX 5000-series GPUs
 ### Fixed
@@ -17,6 +18,9 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Triton/Sage install option showing for incompatible GPUs
 - Fixed errors from invalid pip specifiers in requirements files
 - Fixed package images sometimes showing as blank due to concurrent image caching. Requests to same image resources are now de-duplicated
+### Supporters
+#### Visionaries
+- Big shout-out to our Visionary-tier patrons: Waterclouds, Corey T, bluepopsicle, and Bob S! Your steadfast support keeps Stability Matrix moving forward, and we couldn’t do it without you. 🚀 Thank you!
 
 ## v2.14.0-pre.1
 ### Added

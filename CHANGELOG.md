@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Triton/Sage install option showing for incompatible GPUs
 - Fixed errors from invalid pip specifiers in requirements files
 - Fixed package images sometimes showing as blank due to concurrent image caching. Requests to same image resources are now de-duplicated
+- Reduced memory usage from `ShowDisabledTooltipExtension`
 ### Supporters
 #### Visionaries
 - Big shout-out to our Visionary-tier patrons: Waterclouds, Corey T, bluepopsicle, and Bob S! Your steadfast support keeps Stability Matrix moving forward, and we couldn’t do it without you. 🚀 Thank you!

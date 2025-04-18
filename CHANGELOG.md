@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added Prompt Amplifier to Inference - click the magic wand 🪄 in the prompt editor to expand and enrich your ideas. Tailor the vibe with the ‘Feel’ selector and watch as your generations come to life with extra detail, coherence, and flair!
 ### Changed
 - Updated install for kohya_ss to support RTX 5000-series GPUs
+- Performance optimizations for Checkpoint Manager (progress indicators now fully uses Compiled Bindings)
 ### Fixed
 - Fixed Inference ControlNet Preprocessors using incorrect resolution and increased maximum of smallest dimension to 16384
 - Fixed Triton/Sage install option showing for incompatible GPUs

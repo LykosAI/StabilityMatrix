@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Data;
 using Avalonia.Threading;
@@ -15,7 +11,6 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
@@ -36,7 +31,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     private string thumbnailUri;
 
     [ObservableProperty]
-    private ProgressReport? progress;
+    private ProgressReport progress;
 
     [ObservableProperty]
     private bool isLoading;

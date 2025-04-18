@@ -1284,4 +1284,86 @@
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>Ir para Configurações</value>
   </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>Ativar</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>Desativar</value>
+  </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Conectar sua conta Lykos</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Entre com sua conta Lykos para usar os recursos conectados.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Faça login novamente</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Seu login expirou. Faça login novamente para continuar.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>Apoiar Stability Matrix</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>Obrigado por apoiar o Stability Matrix!</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>Recursos como **{0}** são um dos muitos benefícios disponíveis para nossos apoiadores. Sua contribuição nos ajuda a cobrir os custos do servidor e apoia o desenvolvimento do Stability Matrix.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>Recursos como **{0}** estão disponíveis no nível de apoiador **{1}** (ou superior). Sua contribuição nos ajuda a cobrir os custos do servidor para recursos conectados mais avançados e nos permite continuar melhorando o Stability Matrix para todos.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>Se você já nos apoia no Patreon, por favor, vincule sua conta para continuar.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>Configurações da conta</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>Ver opções de apoio</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>Mais tarde</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>Status</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>Ativo</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>Inativo (Usando conexão padrão)</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Experimente resultados de busca mais rápidos ao navegar por modelos de repositórios online, como o Civitai.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>Otimização experimental para repositórios de terceiros. Não afiliado oficialmente; a disponibilidade pode variar.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>Beta</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>Busca Acelerada de Modelos</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

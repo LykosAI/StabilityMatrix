@@ -1191,4 +1191,74 @@
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>설정으로 이동</value>
   </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>활성화</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>비활성화</value>
+  </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Lykos 계정 연결</value>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>연결된 기능을 사용하려면 Lykos 계정으로 로그인하세요.</value>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>다시 로그인해주세요</value>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>로그인 유효 기간이 만료되었습니다. 계속하려면 다시 로그인해주세요.</value>
+  </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>Stability Matrix 후원</value>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>Stability Matrix의 후원자가 되어 주셔서 감사합니다!</value>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>후원자분들께는 **{0}** 기능을 포함한 다양한 혜택이 제공됩니다. 회원님의 기여는 서버 비용을 충당하고 Stability Matrix 개발을 지원하는 데 도움이 됩니다.</value>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>**{0}** 기능은 **{1}** 후원자 등급(또는 그 이상)부터 이용 가능한 혜택입니다. 회원님의 기여는 더 고급 연결 기능을 위한 서버 비용을 충당하는 데 도움이 되며 모든 사용자를 위해 Stability Matrix를 계속 개선할 수 있게 해줍니다.</value>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>이미 Patreon에서 후원하고 계시다면, 계속 진행하려면 계정을 연결해 주세요.</value>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>계정 설정</value>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>후원 옵션 보기</value>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>나중에</value>
+  </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>상태</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>활성</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>비활성 (표준 연결 사용 중)</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Civitai와 같은 온라인 리포지토리에서 모델을 탐색할 때 더 빠른 검색 결과를 경험해 보세요。</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>타사 리포지토리에 대한 실험적인 최적화입니다. 공식적으로 제휴되지 않았으며, 사용 가능 여부는 달라질 수 있습니다。</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>베타</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>가속 모델 탐색</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

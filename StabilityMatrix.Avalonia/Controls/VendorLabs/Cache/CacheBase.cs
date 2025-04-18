@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -337,6 +338,7 @@ internal abstract class CacheBase<T>
         return value;
     }
 
+    [DebuggerDisableUserUnhandledExceptions]
     private async Task<T?> GetItemAsync(
         Uri uri,
         bool throwOnError,
@@ -375,7 +377,8 @@ internal abstract class CacheBase<T>
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine(ex.Message);
+            Debug.WriteLine($"Image loading failed for (url={uri}, file={fileName}): {ex.Message}");
+
             if (throwOnError)
             {
                 throw;
@@ -506,6 +509,7 @@ internal abstract class CacheBase<T>
         return instance;
     }
 
+    [DebuggerDisableUserUnhandledExceptions]
     private async Task<T?> DownloadFileAsync(
         Uri uri,
         string baseFile,

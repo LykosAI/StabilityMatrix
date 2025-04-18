@@ -3,16 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
 using Apizr;
 using Apizr.Logging;
 using AsyncAwaitBestPractices;
@@ -47,7 +42,6 @@ using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Polly.Timeout;
 using Refit;
-using Sentry;
 using StabilityMatrix.Avalonia.Behaviors;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
@@ -450,7 +444,7 @@ public sealed class App : Application
 
         Config = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .Build();
 
@@ -536,11 +530,12 @@ public sealed class App : Application
                     if (retryCount > 3)
                     {
                         Logger.Info(
-                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to {Exception}",
+                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to ({Status}) {Msg}",
                             retryCount,
                             6,
                             timeSpan.TotalSeconds,
-                            result.Exception?.ToString()
+                            result?.Result?.StatusCode,
+                            result?.Result?.ToString()
                         );
                     }
                 }
@@ -563,11 +558,12 @@ public sealed class App : Application
                     if (retryCount > 4)
                     {
                         Logger.Info(
-                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to {Exception}",
+                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to ({Status}) {Msg}",
                             retryCount,
                             7,
                             timeSpan.TotalSeconds,
-                            result.Exception?.ToString()
+                            result?.Result?.StatusCode,
+                            result?.Result?.ToString()
                         );
                     }
                 }
@@ -611,6 +607,20 @@ public sealed class App : Application
                 c.Timeout = TimeSpan.FromHours(1);
             })
             .AddPolicyHandler(retryPolicyLonger);
+
+        services
+            .AddRefitClient<ILykosModelDiscoveryApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://discovery.lykos.ai/api/v1");
+                c.Timeout = TimeSpan.FromHours(1);
+                c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+            })
+            .AddPolicyHandler(retryPolicy)
+            .AddHttpMessageHandler(
+                serviceProvider =>
+                    new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
+            );
 
         services
             .AddRefitClient<IPyPiApi>(defaultRefitSettings)
@@ -1061,10 +1071,53 @@ public sealed class App : Application
                 .ForLogger()
                 .FilterMinLevel(NLog.LogLevel.Trace)
                 .WriteTo(
-                    new ConsoleTarget("console")
+                    new ColoredConsoleTarget("console")
                     {
-                        Layout = "[${level:uppercase=true}]\t${logger:shortName=true}\t${message}",
-                        DetectConsoleAvailable = true
+                        Layout =
+                            "[${level:uppercase=true}]\t${logger:shortName=true}\t${message}${onexception:\n${exception:format=tostring}}",
+                        DetectConsoleAvailable = true,
+                        EnableAnsiOutput = true,
+                        WordHighlightingRules =
+                        {
+                            new ConsoleWordHighlightingRule(
+                                "[TRACE]",
+                                ConsoleOutputColor.DarkGray,
+                                ConsoleOutputColor.NoChange
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[DEBUG]",
+                                ConsoleOutputColor.Gray,
+                                ConsoleOutputColor.NoChange
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[INFO]",
+                                ConsoleOutputColor.DarkGreen,
+                                ConsoleOutputColor.NoChange
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[WARN]",
+                                ConsoleOutputColor.Yellow,
+                                ConsoleOutputColor.NoChange
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[ERROR]",
+                                ConsoleOutputColor.White,
+                                ConsoleOutputColor.Red
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[FATAL]",
+                                ConsoleOutputColor.Black,
+                                ConsoleOutputColor.DarkRed
+                            )
+                        },
+                        RowHighlightingRules =
+                        {
+                            new ConsoleRowHighlightingRule(
+                                "level == LogLevel.Trace",
+                                ConsoleOutputColor.Gray,
+                                ConsoleOutputColor.NoChange
+                            ),
+                        }
                     }
                 )
                 .WithAsync();

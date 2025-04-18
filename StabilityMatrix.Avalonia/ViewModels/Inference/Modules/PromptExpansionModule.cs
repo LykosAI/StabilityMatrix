@@ -9,10 +9,10 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<PromptExpansionModule>]
+[RegisterScoped<PromptExpansionModule>]
 public class PromptExpansionModule : ModuleBase
 {
-    public PromptExpansionModule(ServiceManager<ViewModelBase> vmFactory)
+    public PromptExpansionModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "Prompt Expansion";

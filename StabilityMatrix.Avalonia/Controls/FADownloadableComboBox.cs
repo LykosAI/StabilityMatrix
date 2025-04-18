@@ -55,7 +55,7 @@ public partial class FADownloadableComboBox : FAComboBox
         if (downloadable.DownloadableResource is not { } resource)
             return;
 
-        var vmFactory = App.Services.GetRequiredService<ServiceManager<ViewModelBase>>();
+        var vmFactory = App.Services.GetRequiredService<IServiceManager<ViewModelBase>>();
         var confirmDialog = vmFactory.Get<DownloadResourceViewModel>();
         confirmDialog.Resource = resource;
         confirmDialog.FileName = resource.FileName;

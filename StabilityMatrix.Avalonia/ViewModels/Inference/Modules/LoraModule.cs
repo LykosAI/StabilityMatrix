@@ -16,7 +16,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<LoraModule>]
+[RegisterScoped<LoraModule>]
 public partial class LoraModule : ModuleBase
 {
     /// <inheritdoc />
@@ -25,7 +25,7 @@ public partial class LoraModule : ModuleBase
     /// <inheritdoc />
     public override IRelayCommand SettingsCommand => OpenSettingsDialogCommand;
 
-    public LoraModule(ServiceManager<ViewModelBase> vmFactory)
+    public LoraModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "Lora";

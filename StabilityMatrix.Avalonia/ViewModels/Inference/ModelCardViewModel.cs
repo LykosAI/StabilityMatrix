@@ -20,10 +20,11 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ModelCard))]
 [ManagedService]
-[RegisterTransient<ModelCardViewModel>]
+[RegisterScoped<ModelCardViewModel>]
 public partial class ModelCardViewModel(
     IInferenceClientManager clientManager,
-    ServiceManager<ViewModelBase> vmFactory
+    IServiceManager<ViewModelBase> vmFactory,
+    TabContext tabContext
 ) : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
     [ObservableProperty]
@@ -384,6 +385,9 @@ public partial class ModelCardViewModel(
 
     partial void OnSelectedModelChanged(HybridModelFile? value)
     {
+        // Update TabContext with the selected model
+        tabContext.SelectedModel = value;
+
         if (!IsExtraNetworksEnabled)
             return;
 

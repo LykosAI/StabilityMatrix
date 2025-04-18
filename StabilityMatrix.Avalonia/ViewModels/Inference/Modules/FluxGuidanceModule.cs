@@ -7,10 +7,10 @@ using StabilityMatrix.Core.Attributes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<FluxGuidanceModule>]
+[RegisterScoped<FluxGuidanceModule>]
 public class FluxGuidanceModule : ModuleBase
 {
-    public FluxGuidanceModule(ServiceManager<ViewModelBase> vmFactory)
+    public FluxGuidanceModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "Use Flux Guidance";

@@ -3558,6 +3558,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Try out the new Prompt Amplifier! Enhance your prompts for better results!.
+        /// </summary>
+        public static string TeachingTip_PromptAmplifier {
+            get {
+                return ResourceManager.GetString("TeachingTip_PromptAmplifier", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The &apos;Open Web UI&apos; button has moved to the command bar.
         /// </summary>
         public static string TeachingTip_WebUiButtonMoved {

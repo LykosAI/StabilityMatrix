@@ -164,7 +164,7 @@ public static class DesignData
 
         Services = services.BuildServiceProvider();
 
-        var dialogFactory = Services.GetRequiredService<ServiceManager<ViewModelBase>>();
+        var dialogFactory = Services.GetRequiredService<IServiceManager<ViewModelBase>>();
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
         var downloadService = Services.GetRequiredService<IDownloadService>();
         var modelFinder = Services.GetRequiredService<ModelFinder>();
@@ -438,8 +438,8 @@ public static class DesignData
     [NotNull]
     public static UpdateViewModel? UpdateViewModel { get; private set; }
 
-    public static ServiceManager<ViewModelBase> DialogFactory =>
-        Services.GetRequiredService<ServiceManager<ViewModelBase>>();
+    public static IServiceManager<ViewModelBase> DialogFactory =>
+        Services.GetRequiredService<IServiceManager<ViewModelBase>>();
 
     public static MainWindowViewModel MainWindowViewModel =>
         Services.GetRequiredService<MainWindowViewModel>();

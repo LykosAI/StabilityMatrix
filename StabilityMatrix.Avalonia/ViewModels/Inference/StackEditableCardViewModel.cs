@@ -20,7 +20,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterTransient<StackEditableCardViewModel>]
 public partial class StackEditableCardViewModel : StackViewModelBase, IComfyStep
 {
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
     [property: JsonIgnore]
@@ -44,7 +44,7 @@ public partial class StackEditableCardViewModel : StackViewModelBase, IComfyStep
     public IReadOnlyList<Type> DefaultModules { get; set; } = Array.Empty<Type>();
 
     /// <inheritdoc />
-    public StackEditableCardViewModel(ServiceManager<ViewModelBase> vmFactory)
+    public StackEditableCardViewModel(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         this.vmFactory = vmFactory;

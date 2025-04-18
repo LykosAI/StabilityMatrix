@@ -13,7 +13,7 @@ using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
-[RegisterTransient<LayerDiffuseCardViewModel>]
+[RegisterScoped<LayerDiffuseCardViewModel>]
 [ManagedService]
 [View(typeof(LayerDiffuseCard))]
 public partial class LayerDiffuseCardViewModel : LoadableViewModelBase, IComfyStep

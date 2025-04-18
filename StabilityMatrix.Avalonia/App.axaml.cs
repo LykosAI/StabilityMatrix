@@ -53,6 +53,7 @@ using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Api.LykosAuthApi;
+using StabilityMatrix.Core.Api.PromptGenApi;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
@@ -132,6 +133,14 @@ public sealed class App : Application
         Config?["LykosAccountApiBaseUrl"] ?? "https://account.lykos.ai/";
 #else
     public const string LykosAccountApiBaseUrl = "https://account.lykos.ai/";
+#endif
+#if DEBUG
+    // ReSharper disable twice LocalizableElement
+    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+    public static string PromptGenApiBaseUrl =>
+        Config?["PromptGenApiBaseUrl"] ?? "https://promptgen.lykos.ai/api";
+#else
+    public const string PromptGenApiBaseUrl = "https://promptgen.lykos.ai/api";
 #endif
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -369,7 +378,7 @@ public sealed class App : Application
                 new MainWindowViewModel(
                     provider.GetRequiredService<ISettingsManager>(),
                     provider.GetRequiredService<IDiscordRichPresenceService>(),
-                    provider.GetRequiredService<ServiceManager<ViewModelBase>>(),
+                    provider.GetRequiredService<IServiceManager<ViewModelBase>>(),
                     provider.GetRequiredService<ITrackedDownloadService>(),
                     provider.GetRequiredService<IModelIndexService>(),
                     provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
@@ -641,6 +650,21 @@ public sealed class App : Application
             .ConfigureHttpClient(c =>
             {
                 c.BaseAddress = new Uri(LykosAuthApiBaseUrl);
+                c.Timeout = TimeSpan.FromHours(1);
+                c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddPolicyHandler(retryPolicy)
+            .AddHttpMessageHandler(
+                serviceProvider =>
+                    new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
+            );
+
+        services
+            .AddRefitClient<IPromptGenApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri(PromptGenApiBaseUrl);
                 c.Timeout = TimeSpan.FromHours(1);
                 c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
             })

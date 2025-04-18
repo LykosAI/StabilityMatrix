@@ -16,7 +16,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<HiresFixModule>]
+[RegisterScoped<HiresFixModule>]
 public partial class HiresFixModule : ModuleBase
 {
     /// <inheritdoc />
@@ -26,7 +26,7 @@ public partial class HiresFixModule : ModuleBase
     public override IRelayCommand SettingsCommand => OpenSettingsDialogCommand;
 
     /// <inheritdoc />
-    public HiresFixModule(ServiceManager<ViewModelBase> vmFactory)
+    public HiresFixModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "HiresFix";

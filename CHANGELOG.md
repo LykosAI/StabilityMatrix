@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.14.0-pre.2
+### Added
+- Added new package - [Stable Diffusion WebUI Forge - Classic](https://github.com/Haoming02/sd-webui-forge-classic)
+- Added Undo/Redo commands to text editor context menus
 ### Changed
 - Updated install for kohya_ss to support RTX 5000-series GPUs
 ### Fixed

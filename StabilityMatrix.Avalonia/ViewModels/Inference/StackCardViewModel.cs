@@ -16,7 +16,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public class StackCardViewModel : StackViewModelBase
 {
     /// <inheritdoc />
-    public StackCardViewModel(ServiceManager<ViewModelBase> vmFactory)
+    public StackCardViewModel(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory) { }
 
     /// <inheritdoc />

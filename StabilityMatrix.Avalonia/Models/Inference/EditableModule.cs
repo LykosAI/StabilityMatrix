@@ -47,9 +47,9 @@ public record EditableModule : StringValue
                 })
         );
 
-    public Func<ServiceManager<ViewModelBase>, ViewModelBase> Build { get; }
+    public Func<IServiceManager<ViewModelBase>, ViewModelBase> Build { get; }
 
-    private EditableModule(string value, Func<ServiceManager<ViewModelBase>, ViewModelBase> build)
+    private EditableModule(string value, Func<IServiceManager<ViewModelBase>, ViewModelBase> build)
         : base(value)
     {
         Build = build;

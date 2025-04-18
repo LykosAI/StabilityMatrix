@@ -12,7 +12,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SeedCard))]
 [ManagedService]
-[RegisterTransient<SeedCardViewModel>]
+[RegisterScoped<SeedCardViewModel>]
 public partial class SeedCardViewModel : LoadableViewModelBase
 {
     [ObservableProperty, NotifyPropertyChangedFor(nameof(RandomizeButtonToolTip))]

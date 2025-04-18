@@ -10,8 +10,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
-using OpenIddict.Client;
 using Injectio.Attributes;
+using OpenIddict.Client;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
@@ -39,7 +39,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 {
     private readonly IAccountsService accountsService;
     private readonly ISettingsManager settingsManager;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly INotificationService notificationService;
     private readonly ILykosAuthApiV2 lykosAuthApi;
 
@@ -74,7 +74,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     public AccountSettingsViewModel(
         IAccountsService accountsService,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         INotificationService notificationService,
         ILykosAuthApiV2 lykosAuthApi
     )

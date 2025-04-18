@@ -57,7 +57,7 @@ public partial class CheckpointsPageViewModel(
     IMetadataImportService metadataImportService,
     IModelImportService modelImportService,
     OpenModelDbManager openModelDbManager,
-    ServiceManager<ViewModelBase> dialogFactory,
+    IServiceManager<ViewModelBase> dialogFactory,
     ICivitBaseModelTypeService baseModelTypeService
 ) : PageViewModelBase
 {

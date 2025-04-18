@@ -7,11 +7,11 @@ using StabilityMatrix.Core.Attributes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterTransient<LayerDiffuseModule>]
+[RegisterScoped<LayerDiffuseModule>]
 public class LayerDiffuseModule : ModuleBase
 {
     /// <inheritdoc />
-    public LayerDiffuseModule(ServiceManager<ViewModelBase> vmFactory)
+    public LayerDiffuseModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "Layer Diffuse";

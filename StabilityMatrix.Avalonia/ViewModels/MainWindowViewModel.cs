@@ -40,7 +40,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly ISettingsManager settingsManager;
-    private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly IServiceManager<ViewModelBase> dialogFactory;
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IDiscordRichPresenceService discordRichPresenceService;
     private readonly IModelIndexService modelIndexService;
@@ -86,7 +86,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(
         ISettingsManager settingsManager,
         IDiscordRichPresenceService discordRichPresenceService,
-        ServiceManager<ViewModelBase> dialogFactory,
+        IServiceManager<ViewModelBase> dialogFactory,
         ITrackedDownloadService trackedDownloadService,
         IModelIndexService modelIndexService,
         Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler,

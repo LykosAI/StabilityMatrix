@@ -109,7 +109,8 @@ public partial class SelectModelVersionViewModel(
 
         if (allImages == null || !allImages.Any())
         {
-            allImages = new List<ImageSource> { new(Assets.NoImage) };
+            // allImages = new List<ImageSource> { new(Assets.NoImage) };
+            allImages = [];
             CanGoToNextImage = false;
         }
         else

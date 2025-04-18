@@ -343,6 +343,8 @@ def main(
             
         # For non-base languages, add a 'Fuzzy' comment
         non_fuzzy_langs = ["base", "en", ""]
+        if extra_non_fuzzy_languages:
+            non_fuzzy_langs.extend([lang.strip().lower() for lang in extra_non_fuzzy_languages])
         add_comment = "Fuzzy" if lang_code_lower not in non_fuzzy_langs else None
             
         added, skipped, success = add_strings_to_resx(resx_file_path, strings_for_lang, add_comment=add_comment)

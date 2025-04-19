@@ -84,15 +84,25 @@
             </sg:SpacedGrid>
 
             <!--  General  -->
-            <sg:SpacedGrid RowDefinitions="Auto,*,*" RowSpacing="4">
+            <sg:SpacedGrid RowDefinitions="Auto,*,*,*" RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
                     FontWeight="Medium"
                     Text="{x:Static lang:Resources.Label_General}" />
 
-                <!--  Image Viewer  -->
+                <!--  Filter Extra Networks  -->
                 <ui:SettingsExpander
                     Grid.Row="1"
+                    Header="Filter Extra Networks by Base Model"
+                    IconSource="Filter">
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch Margin="0,-8,0,-6" IsChecked="{Binding FilterExtraNetworksByBaseModel}" />
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+
+                <!--  Image Viewer  -->
+                <ui:SettingsExpander
+                    Grid.Row="2"
                     Header="{x:Static lang:Resources.Label_ImageViewer}"
                     IconSource="Image"
                     IsExpanded="True">
@@ -121,7 +131,7 @@
 
                 <!--  Output Image Files  -->
                 <ui:SettingsExpander
-                    Grid.Row="2"
+                    Grid.Row="3"
                     Header="{x:Static lang:Resources.Label_OutputImageFiles}"
                     IsExpanded="True">
                     <ui:SettingsExpander.IconSource>
@@ -146,7 +156,7 @@
 
                 <ui:TeachingTip
                     Title="Format Variables"
-                    Grid.Row="2"
+                    Grid.Row="3"
                     IsOpen="{Binding #OutputImageFileNameFormatTextBox.IsFocused}"
                     PreferredPlacement="Top"
                     Target="{Binding #OutputImageFileNameFormatTextBox, Mode=OneWay}">

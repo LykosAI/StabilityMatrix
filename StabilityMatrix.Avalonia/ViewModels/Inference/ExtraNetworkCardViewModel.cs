@@ -13,6 +13,8 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Services;
+
 #pragma warning disable CS0657 // Not a valid attribute location for this declaration
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -22,6 +24,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterTransient<ExtraNetworkCardViewModel>]
 public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
 {
+    private readonly ISettingsManager settingsManager;
     public const string ModuleKey = "ExtraNetwork";
 
     /// <summary>
@@ -60,8 +63,9 @@ public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
     public readonly SourceCache<HybridModelFile, string> LoraModelsSource = new(p => p.GetId());
 
     /// <inheritdoc/>
-    public ExtraNetworkCardViewModel(IInferenceClientManager clientManager)
+    public ExtraNetworkCardViewModel(IInferenceClientManager clientManager, ISettingsManager settingsManager)
     {
+        this.settingsManager = settingsManager;
         ClientManager = clientManager;
 
         var filterPredicate = this.WhenPropertyChanged(vm => vm.SelectedBaseModel)
@@ -83,6 +87,13 @@ public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
                 )
                 .ObserveOn(SynchronizationContext.Current)
                 .Subscribe()
+        );
+
+        AddDisposable(
+            settingsManager.RegisterPropertyChangedHandler(
+                s => s.FilterExtraNetworksByBaseModel,
+                _ => LoraModelsSource.Refresh()
+            )
         );
 
         LoraModelsSource.EditDiff(clientManager.LoraModels);
@@ -138,6 +149,9 @@ public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
 
     private bool FilterCompatibleLoras(HybridModelFile? lora)
     {
+        if (!settingsManager.Settings.FilterExtraNetworksByBaseModel)
+            return true;
+
         return SelectedBaseModel is null
             || lora?.Local?.ConnectedModelInfo == null
             || SelectedBaseModel.Local?.ConnectedModelInfo == null

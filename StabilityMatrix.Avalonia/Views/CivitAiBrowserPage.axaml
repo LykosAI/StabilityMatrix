@@ -10,7 +10,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:e="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
-    xmlns:effects="clr-namespace:StabilityMatrix.Avalonia.Effects"
     xmlns:fa="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"

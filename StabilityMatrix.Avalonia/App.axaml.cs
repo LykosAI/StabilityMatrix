@@ -661,6 +661,16 @@ public sealed class App : Application
             );
 
         services
+            .AddRefitClient<IRecommendedModelsApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri(LykosAuthApiBaseUrl);
+                c.Timeout = TimeSpan.FromHours(1);
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddPolicyHandler(retryPolicy);
+
+        services
             .AddRefitClient<IPromptGenApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {

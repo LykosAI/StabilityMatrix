@@ -673,7 +673,7 @@ public partial class CheckpointsPageViewModel(
         viewModel.Versions = versions
             .Select(version => new ModelVersionViewModel(modelIndexService, version))
             .ToImmutableArray();
-        viewModel.SelectedVersionViewModel = viewModel.Versions[0];
+        viewModel.SelectedVersionViewModel = viewModel.Versions.Any() ? viewModel.Versions[0] : null;
 
         dialog.Content = new SelectModelVersionDialog { DataContext = viewModel };
 
@@ -1107,7 +1107,7 @@ public partial class CheckpointsPageViewModel(
             previouslySelectedCategory
             ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
             ?? Categories.FirstOrDefault()
-            ?? categoriesCache.Items[0];
+            ?? (categoriesCache.Items.Any() ? categoriesCache.Items[0] : null);
 
         var dirPath = new DirectoryPath(SelectedCategory.Path);
 
@@ -1128,7 +1128,7 @@ public partial class CheckpointsPageViewModel(
                 previouslySelectedCategory
                 ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
                 ?? Categories.FirstOrDefault()
-                ?? categoriesCache.Items[0];
+                ?? (categoriesCache.Items.Any() ? categoriesCache.Items[0] : null);
         });
     }
 

@@ -254,8 +254,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 .TrackFirstTimeInstallAsync(
                     installedPackageNameMaybe,
                     recommendedModelsViewModel
-                        .Sd15Models.Concat(recommendedModelsViewModel.SdxlModels)
-                        .Where(x => x.IsSelected)
+                        .RecommendedModels.Where(x => x.IsSelected)
                         .Select(x => x.CivitModel.Name)
                         .ToList(),
                     false

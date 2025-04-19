@@ -15,7 +15,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterScoped<ControlNetModule>]
+[RegisterTransient<ControlNetModule>]
 public class ControlNetModule : ModuleBase
 {
     /// <inheritdoc />

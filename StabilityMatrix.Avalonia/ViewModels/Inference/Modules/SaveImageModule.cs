@@ -9,7 +9,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterScoped<SaveImageModule>]
+[RegisterTransient<SaveImageModule>]
 public class SaveImageModule : ModuleBase
 {
     /// <inheritdoc />

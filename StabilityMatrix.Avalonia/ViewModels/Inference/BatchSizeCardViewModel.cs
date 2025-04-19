@@ -11,7 +11,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(BatchSizeCard))]
 [ManagedService]
-[RegisterScoped<BatchSizeCardViewModel>]
+[RegisterTransient<BatchSizeCardViewModel>]
 public partial class BatchSizeCardViewModel : LoadableViewModelBase, IComfyStep
 {
     [NotifyDataErrorInfo]

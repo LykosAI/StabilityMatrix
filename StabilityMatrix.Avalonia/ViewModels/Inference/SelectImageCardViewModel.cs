@@ -29,7 +29,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SelectImageCard))]
 [ManagedService]
-[RegisterScoped<SelectImageCardViewModel>]
+[RegisterTransient<SelectImageCardViewModel>]
 public partial class SelectImageCardViewModel(
     INotificationService notificationService,
     IServiceManager<ViewModelBase> vmFactory

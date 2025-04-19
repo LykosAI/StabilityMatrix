@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Changed
 - Updated install for kohya_ss to support RTX 5000-series GPUs
 - (pre.2 re-release) Merged Inference GGUF workflows into the UNet model loader option (no longer need to choose GGUF separately)
+- (pre.2 re-release) Updated some date strings to take into account the user's locale
+- (pre.2 re-release) Fixed some crashes when using Accelerated Model Discovery
 ### Fixed
 - Fixed Inference ControlNet Preprocessors using incorrect resolution and increased maximum of smallest dimension to 16384
 - Fixed Triton/Sage install option showing for incompatible GPUs

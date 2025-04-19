@@ -27,7 +27,6 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
-using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
@@ -267,7 +266,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             .Where(v => !settingsManager.Settings.HideEarlyAccessModels || !v.IsEarlyAccess)
             .Select(version => new ModelVersionViewModel(modelIndexService, version))
             .ToImmutableArray();
-        viewModel.SelectedVersionViewModel = viewModel.Versions[0];
+        viewModel.SelectedVersionViewModel = viewModel.Versions.Any() ? viewModel.Versions[0] : null;
 
         // Update with latest version (including files) if we have no files
         if (model.ModelVersions?.FirstOrDefault()?.Files is not { Count: > 0 })
@@ -312,7 +311,9 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                             .Where(v => !settingsManager.Settings.HideEarlyAccessModels || !v.IsEarlyAccess)
                             .Select(version => new ModelVersionViewModel(modelIndexService, version))
                             .ToImmutableArray();
-                        viewModel.SelectedVersionViewModel = viewModel.Versions[0];
+                        viewModel.SelectedVersionViewModel = viewModel.Versions.Any()
+                            ? viewModel.Versions[0]
+                            : null;
                     });
 
                     // Save to db

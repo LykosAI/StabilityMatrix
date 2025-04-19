@@ -193,6 +193,24 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             if (args.PropertyName != sourcePropertyPath)
                 return;
 
+            // If TValue is a primitive type, check if there are changes first.
+            // If not, skip saving and property changed event.
+            if (typeof(TValue).IsPrimitive || typeof(TValue).IsEnum)
+            {
+                var settingsValue = settingsAccessor.Get(Settings);
+                var sourceValue = sourceInstanceAccessor.Get();
+                if (EqualityComparer<TValue>.Default.Equals(settingsValue, sourceValue))
+                {
+                    /*logger.LogTrace(
+                        "[RelayPropertyFor] {SourceType:l}.{SourceProperty:l} -> Settings.{SettingsProperty:l} (<No Changes>)",
+                        sourceTypeName,
+                        sourcePropertyPath,
+                        settingsPropertyPath
+                    );*/
+                    return;
+                }
+            }
+
             logger.LogTrace(
                 "[RelayPropertyFor] {SourceType:l}.{SourceProperty:l} -> Settings.{SettingsProperty:l}",
                 sourceTypeName,

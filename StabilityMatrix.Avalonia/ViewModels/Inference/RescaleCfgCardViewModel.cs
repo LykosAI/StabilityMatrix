@@ -9,7 +9,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(RescaleCfgCard))]
 [ManagedService]
-[RegisterScoped<RescaleCfgCardViewModel>]
+[RegisterTransient<RescaleCfgCardViewModel>]
 public partial class RescaleCfgCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "RescaleCFG";

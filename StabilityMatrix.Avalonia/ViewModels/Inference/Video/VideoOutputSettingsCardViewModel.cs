@@ -15,7 +15,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 
 [View(typeof(VideoOutputSettingsCard))]
 [ManagedService]
-[RegisterScoped<VideoOutputSettingsCardViewModel>]
+[RegisterTransient<VideoOutputSettingsCardViewModel>]
 public partial class VideoOutputSettingsCardViewModel
     : LoadableViewModelBase,
         IParametersLoadableState,

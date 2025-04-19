@@ -13,12 +13,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added Prompt Amplifier to Inference - click the magic wand 🪄 in the prompt editor to expand and enrich your ideas. Tailor the vibe with the ‘Feel’ selector and watch as your generations come to life with extra detail, coherence, and flair!
 ### Changed
 - Updated install for kohya_ss to support RTX 5000-series GPUs
+- (pre.2 re-release) Merged Inference GGUF workflows into the UNet model loader option (no longer need to choose GGUF separately)
 - Performance optimizations for Checkpoint Manager (progress indicators now fully uses Compiled Bindings)
 ### Fixed
 - Fixed Inference ControlNet Preprocessors using incorrect resolution and increased maximum of smallest dimension to 16384
 - Fixed Triton/Sage install option showing for incompatible GPUs
 - Fixed errors from invalid pip specifiers in requirements files
 - Fixed package images sometimes showing as blank due to concurrent image caching. Requests to same image resources are now de-duplicated
+- (pre.2 re-release) Fixed Inference Extra Networks card not allowing for more than one model at a time
 - Reduced memory usage from `ShowDisabledTooltipExtension`
 ### Supporters
 #### Visionaries

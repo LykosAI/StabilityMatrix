@@ -31,6 +31,7 @@ public partial class ModelCardViewModel(
     private HybridModelFile? selectedModel;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsGguf), nameof(ShowPrecisionSelection))]
     private HybridModelFile? selectedUnetModel;
 
     [ObservableProperty]
@@ -66,7 +67,7 @@ public partial class ModelCardViewModel(
     private bool isModelLoaderSelectionEnabled;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsStandaloneModelLoader), nameof(ShowPrecisionSelection))]
+    [NotifyPropertyChangedFor(nameof(IsStandaloneModelLoader))]
     private ModelLoader selectedModelLoader;
 
     [ObservableProperty]
@@ -99,11 +100,13 @@ public partial class ModelCardViewModel(
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
 
-    public List<ModelLoader> ModelLoaders { get; } = Enum.GetValues<ModelLoader>().ToList();
+    public List<ModelLoader> ModelLoaders { get; } =
+        Enum.GetValues<ModelLoader>().Except([ModelLoader.Gguf]).ToList();
 
-    public bool IsStandaloneModelLoader => SelectedModelLoader is ModelLoader.Unet or ModelLoader.Gguf;
-    public bool ShowPrecisionSelection => SelectedModelLoader is ModelLoader.Unet;
+    public bool IsStandaloneModelLoader => SelectedModelLoader is ModelLoader.Unet;
+    public bool ShowPrecisionSelection => SelectedModelLoader is ModelLoader.Unet && !IsGguf;
     public bool IsSd3Clip => SelectedClipType == "sd3";
+    public bool IsGguf => SelectedUnetModel?.RelativePath.EndsWith("gguf") ?? false;
 
     protected override void OnInitialLoaded()
     {
@@ -260,9 +263,9 @@ public partial class ModelCardViewModel(
     {
         var model = DeserializeModel<ModelCardModel>(state);
 
-        SelectedModelLoader = model.ModelLoader;
+        SelectedModelLoader = model.ModelLoader is ModelLoader.Gguf ? ModelLoader.Unet : model.ModelLoader;
 
-        if (model.ModelLoader is ModelLoader.Unet or ModelLoader.Gguf)
+        if (SelectedModelLoader is ModelLoader.Unet)
         {
             SelectedUnetModel = model.SelectedModelName is null
                 ? null
@@ -373,7 +376,7 @@ public partial class ModelCardViewModel(
 
     partial void OnSelectedModelLoaderChanged(ModelLoader value)
     {
-        if (value is ModelLoader.Unet or ModelLoader.Gguf)
+        if (value is ModelLoader.Unet)
         {
             if (!IsVaeSelectionEnabled)
                 IsVaeSelectionEnabled = true;
@@ -405,7 +408,7 @@ public partial class ModelCardViewModel(
 
     private void SetupStandaloneModelLoader(ModuleApplyStepEventArgs e)
     {
-        if (SelectedModelLoader is ModelLoader.Gguf)
+        if (SelectedModelLoader is ModelLoader.Unet && IsGguf)
         {
             var checkpointLoader = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.UnetLoaderGGUF

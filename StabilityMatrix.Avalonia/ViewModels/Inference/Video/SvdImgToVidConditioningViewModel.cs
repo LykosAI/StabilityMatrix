@@ -14,7 +14,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 
 [View(typeof(VideoGenerationSettingsCard))]
 [ManagedService]
-[RegisterScoped<SvdImgToVidConditioningViewModel>]
+[RegisterTransient<SvdImgToVidConditioningViewModel>]
 public partial class SvdImgToVidConditioningViewModel
     : LoadableViewModelBase,
         IParametersLoadableState,

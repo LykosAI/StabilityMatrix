@@ -15,6 +15,7 @@ using Refit;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Api;
+using StabilityMatrix.Core.Api.LykosAuthApi;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
@@ -30,7 +31,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
 {
     private readonly ILogger<RecommendedModelsViewModel> logger;
-    private readonly ILykosAuthApiV1 lykosApi;
+    private readonly IRecommendedModelsApi lykosApi;
     private readonly ICivitApi civitApi;
     private readonly ILiteDbContext liteDbContext;
     private readonly ISettingsManager settingsManager;
@@ -38,12 +39,13 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IDownloadService downloadService;
     private readonly IModelImportService modelImportService;
-    public SourceCache<RecommendedModelItemViewModel, int> CivitModels { get; } = new(p => p.ModelVersion.Id);
 
-    public IObservableCollection<RecommendedModelItemViewModel> Sd15Models { get; set; } =
-        new ObservableCollectionExtended<RecommendedModelItemViewModel>();
+    // Single source cache for all models
+    public SourceCache<RecommendedModelItemViewModel, int> AllRecommendedModelsCache { get; } =
+        new(p => p.ModelVersion.Id);
 
-    public IObservableCollection<RecommendedModelItemViewModel> SdxlModels { get; } =
+    // Single observable collection bound to the cache
+    public IObservableCollection<RecommendedModelItemViewModel> RecommendedModels { get; } =
         new ObservableCollectionExtended<RecommendedModelItemViewModel>();
 
     [ObservableProperty]
@@ -51,7 +53,7 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
 
     public RecommendedModelsViewModel(
         ILogger<RecommendedModelsViewModel> logger,
-        ILykosAuthApiV1 lykosApi,
+        IRecommendedModelsApi lykosApi,
         ICivitApi civitApi,
         ILiteDbContext liteDbContext,
         ISettingsManager settingsManager,
@@ -71,20 +73,12 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
         this.downloadService = downloadService;
         this.modelImportService = modelImportService;
 
-        CivitModels
+        // Bind the single collection to the cache
+        AllRecommendedModelsCache
             .Connect()
             .DeferUntilLoaded()
-            .Filter(f => f.ModelVersion.BaseModel == "SD 1.5")
-            .Bind(Sd15Models)
-            .ObserveOn(SynchronizationContext.Current)
-            .Subscribe();
-
-        CivitModels
-            .Connect()
-            .DeferUntilLoaded()
-            .Filter(f => f.ModelVersion.BaseModel == "SDXL 1.0" || f.ModelVersion.BaseModel == "Pony")
-            .Bind(SdxlModels)
-            .ObserveOn(SynchronizationContext.Current)
+            .Bind(RecommendedModels)
+            .ObserveOn(SynchronizationContext.Current!) // Use Current! if nullability context allows
             .Subscribe();
     }
 
@@ -94,69 +88,168 @@ public partial class RecommendedModelsViewModel : ContentDialogViewModelBase
             return;
 
         IsLoading = true;
+        AllRecommendedModelsCache.Clear(); // Clear cache before loading
 
         try
         {
-            var recommendedModels = await lykosApi.GetRecommendedModels();
+            // Call the V2 endpoint
+            var recommendedModelsResponse = await lykosApi.GetRecommendedModels();
 
-            CivitModels.AddOrUpdate(
-                recommendedModels.Items.Select(
-                    model =>
-                        new RecommendedModelItemViewModel
-                        {
-                            ModelVersion = model.ModelVersions.First(
-                                x =>
-                                    !x.BaseModel.Contains("Turbo", StringComparison.OrdinalIgnoreCase)
-                                    && !x.BaseModel.Contains("Lightning", StringComparison.OrdinalIgnoreCase)
-                            ),
-                            Author = $"by {model.Creator?.Username}",
-                            CivitModel = model
-                        }
-                )
-            );
+            var allModels = recommendedModelsResponse
+                .RecommendedModelsByCategory.SelectMany(kvp => kvp.Value) // Flatten the dictionary values (lists of models)
+                .DistinctBy(m => m.Id) // Ensure models appearing in multiple categories are only added once
+                .Select(model =>
+                {
+                    // Find the first non-Turbo/Lightning version, or default to the first version if none match
+                    var suitableVersion =
+                        model.ModelVersions?.FirstOrDefault(
+                            x =>
+                                !x.BaseModel.Contains("Turbo", StringComparison.OrdinalIgnoreCase)
+                                && !x.BaseModel.Contains("Lightning", StringComparison.OrdinalIgnoreCase)
+                                && x.Files != null
+                                && x.Files.Any(f => f.Type == CivitFileType.Model) // Ensure there's a model file
+                        )
+                        ?? model.ModelVersions?.FirstOrDefault(
+                            x => x.Files != null && x.Files.Any(f => f.Type == CivitFileType.Model)
+                        );
+
+                    if (suitableVersion == null)
+                    {
+                        logger.LogWarning(
+                            "Model {ModelName} (ID: {ModelId}) has no suitable model version file.",
+                            model.Name,
+                            model.Id
+                        );
+                        return null; // Skip this model if no suitable version found
+                    }
+
+                    return new RecommendedModelItemViewModel
+                    {
+                        ModelVersion = suitableVersion,
+                        Author = $"by {model.Creator?.Username}",
+                        CivitModel = model
+                    };
+                })
+                .Where(vm => vm != null); // Filter out nulls (models skipped due to no suitable version)
+
+            AllRecommendedModelsCache.AddOrUpdate(allModels);
         }
-        catch (Exception e)
+        catch (ApiException apiEx)
         {
-            // hide dialog and show error msg
-            logger.LogError(e, "Failed to get recommended models");
+            logger.LogError(
+                apiEx,
+                "API Error fetching recommended models V2. Status: {StatusCode}",
+                apiEx.StatusCode
+            );
             notificationService.Show(
                 "Failed to get recommended models",
-                "Please try again later or check the Model Browser tab for more models."
+                $"Could not reach the server. Please try again later. Error: {apiEx.StatusCode}"
             );
             OnCloseButtonClick();
         }
-
-        IsLoading = false;
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to get recommended models V2");
+            notificationService.Show(
+                "Failed to get recommended models",
+                "An unexpected error occurred. Please try again later or check the Model Browser tab."
+            );
+            OnCloseButtonClick();
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     [RelayCommand]
     private async Task DoImport()
     {
-        var selectedModels = SdxlModels.Where(x => x.IsSelected).Concat(Sd15Models.Where(x => x.IsSelected));
+        var selectedModels = RecommendedModels.Where(x => x.IsSelected).ToList(); // Use the single list
+
+        if (!selectedModels.Any())
+        {
+            notificationService.Show("No Models Selected", "Please select at least one model to import.");
+            return;
+        }
+
+        IsLoading = true; // Optionally show loading indicator during import
+
+        int successCount = 0;
+        int failCount = 0;
 
         foreach (var model in selectedModels)
         {
-            // Get latest version file
-            var modelFile = model.ModelVersion.Files?.FirstOrDefault(
-                x => x is { Type: CivitFileType.Model, IsPrimary: true }
-            );
+            // Get latest version file that is a Model type and marked primary, or fallback to first model file
+            var modelFile =
+                model.ModelVersion.Files?.FirstOrDefault(
+                    f => f is { Type: CivitFileType.Model, IsPrimary: true }
+                ) ?? model.ModelVersion.Files?.FirstOrDefault(f => f.Type == CivitFileType.Model);
+
             if (modelFile is null)
             {
-                continue;
+                logger.LogWarning(
+                    "Skipping import for {ModelName}: No suitable model file found in version {VersionId}.",
+                    model.CivitModel.Name,
+                    model.ModelVersion.Id
+                );
+                failCount++;
+                continue; // Skip if no suitable file
             }
 
-            var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
+            try
+            {
+                var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
+                var downloadDirectory = rootModelsDirectory.JoinDir(
+                    model.CivitModel.Type.ConvertTo<SharedFolderType>().GetStringValue()
+                );
 
-            var downloadDirectory = rootModelsDirectory.JoinDir(
-                model.CivitModel.Type.ConvertTo<SharedFolderType>().GetStringValue()
+                await modelImportService.DoImport(
+                    model.CivitModel,
+                    downloadDirectory,
+                    model.ModelVersion,
+                    modelFile
+                );
+                successCount++;
+                model.IsSelected = false; // De-select after successful import start
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to initiate import for model {ModelName}", model.CivitModel.Name);
+                failCount++;
+                // Consider notifying the user about the specific failure
+                notificationService.Show(
+                    "Import Failed",
+                    $"Could not start import for {model.CivitModel.Name}."
+                );
+            }
+        }
+
+        IsLoading = false; // Hide loading indicator
+
+        if (failCount == 0 && successCount > 0)
+        {
+            notificationService.Show(
+                "Import Started",
+                $"{successCount} model(s) added to the download queue."
             );
-
-            await modelImportService.DoImport(
-                model.CivitModel,
-                downloadDirectory,
-                model.ModelVersion,
-                modelFile
+            // Optionally close the dialog after successful import initiation
+            // OnCloseButtonClick();
+        }
+        else if (successCount > 0)
+        {
+            notificationService.Show(
+                "Import Partially Started",
+                $"{successCount} model(s) added to queue. {failCount} failed to start."
             );
         }
+        else if (failCount > 0)
+        {
+            notificationService.Show(
+                "Import Failed",
+                $"Could not start import for {failCount} selected model(s)."
+            );
+        }
+        // else: No models were actually selected or processed, already handled.
     }
 }

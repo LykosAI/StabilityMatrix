@@ -10,7 +10,7 @@ using StabilityMatrix.Core.Extensions;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterScoped<UpscalerModule>]
+[RegisterTransient<UpscalerModule>]
 public class UpscalerModule : ModuleBase
 {
     /// <inheritdoc />

@@ -9,7 +9,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(DiscreteModelSamplingCard))]
 [ManagedService]
-[RegisterScoped<DiscreteModelSamplingCardViewModel>]
+[RegisterTransient<DiscreteModelSamplingCardViewModel>]
 public partial class DiscreteModelSamplingCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "DiscreteModelSampling";

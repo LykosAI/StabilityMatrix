@@ -10,7 +10,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterScoped<FluxHiresFixModule>]
+[RegisterTransient<FluxHiresFixModule>]
 public class FluxHiresFixModule(IServiceManager<ViewModelBase> vmFactory) : HiresFixModule(vmFactory)
 {
     protected override void OnApplyStep(ModuleApplyStepEventArgs e)

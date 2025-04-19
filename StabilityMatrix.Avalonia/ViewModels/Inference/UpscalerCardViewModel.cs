@@ -12,7 +12,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(UpscalerCard))]
 [ManagedService]
-[RegisterScoped<UpscalerCardViewModel>]
+[RegisterTransient<UpscalerCardViewModel>]
 public partial class UpscalerCardViewModel : LoadableViewModelBase
 {
     public const string ModuleKey = "Upscaler";

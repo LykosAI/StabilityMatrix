@@ -77,7 +77,8 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         PromptCardViewModel.ApplyStep(applyArgs);
 
         // Setup Sampler and Refiner if enabled
-        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Gguf or ModelLoader.Unet;
+        var isUnetLoader =
+            ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet || ModelCardViewModel.IsGguf;
         if (isUnetLoader)
         {
             SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);

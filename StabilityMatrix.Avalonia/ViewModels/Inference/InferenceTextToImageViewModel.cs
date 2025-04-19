@@ -168,7 +168,7 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Load models
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Gguf or ModelLoader.Unet;
+        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet;
         var useSd3Latent =
             SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>() || isUnetLoader;
         var usePlasmaNoise = SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<PlasmaNoiseModule>();

@@ -16,7 +16,7 @@ using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
-[RegisterScoped<HiresFixModule>]
+[RegisterTransient<HiresFixModule>]
 public partial class HiresFixModule : ModuleBase
 {
     /// <inheritdoc />

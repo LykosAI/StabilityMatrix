@@ -156,6 +156,15 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
                     $"https://huggingface.co/{viewModel.Item.RepositoryPath}/resolve/main/{file}?download=true";
                 var sharedFolderType = viewModel.Item.ModelCategory.ConvertTo<SharedFolderType>();
                 var fileName = Path.GetFileName(file);
+
+                if (
+                    fileName.Equals("ae.safetensors", StringComparison.OrdinalIgnoreCase)
+                    && viewModel.Item.ModelName == "HiDream I1 VAE"
+                )
+                {
+                    fileName = "hidream_vae.safetensors";
+                }
+
                 var downloadPath = new FilePath(
                     Path.Combine(
                         Design.IsDesignMode ? string.Empty : settingsManager.ModelsDirectory,
@@ -164,6 +173,7 @@ public partial class HuggingFacePageViewModel : TabViewModelBase
                         fileName
                     )
                 );
+
                 downloadPath.Directory?.Create();
                 var download = trackedDownloadService.NewDownload(url, downloadPath);
                 download.ProgressUpdate += DownloadOnProgressUpdate;

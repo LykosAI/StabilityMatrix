@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added Accelerated Model Discovery (Beta) (⚡ icon in Civitai Browser) for Insider+ supporters. Utilizes an optimized connection for dramatically faster, more responsive browsing of online model repositories.
 - Added Undo/Redo commands to text editor context menus
 - Added Prompt Amplifier to Inference - click the magic wand 🪄 in the prompt editor to expand and enrich your ideas. Tailor the vibe with the ‘Feel’ selector and watch as your generations come to life with extra detail, coherence, and flair!
+- (pre.2 re-release) Added support for HiDream in Inference - see [ComfyUI Examples](https://comfyanonymous.github.io/ComfyUI_examples/hidream/) for more details
+- (pre.2 re-release) Added toggle for filtering Inference Extra Networks by base model
 ### Changed
 - Updated install for kohya_ss to support RTX 5000-series GPUs
 - (pre.2 re-release) Merged Inference GGUF workflows into the UNet model loader option (no longer need to choose GGUF separately)

@@ -92,10 +92,7 @@ public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
         AddDisposable(
             settingsManager.RegisterPropertyChangedHandler(
                 s => s.FilterExtraNetworksByBaseModel,
-                _ =>
-                {
-                    LoraModelsSource.Refresh();
-                }
+                _ => LoraModelsSource.Refresh()
             )
         );
 

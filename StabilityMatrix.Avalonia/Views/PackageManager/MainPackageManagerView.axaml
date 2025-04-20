@@ -6,11 +6,9 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Runtime"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
@@ -335,10 +333,10 @@
                                         <Button
                                             Margin="4,4,4,0"
                                             Padding="4"
-                                            markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
                                             Classes="borderless-success"
                                             Command="{Binding Update}"
-                                            IsEnabled="{Binding !IsRunning}">
+                                            IsEnabled="{Binding !IsRunning}"
+                                            ToolTip.ShowOnDisabled="True">
                                             <ToolTip.Tip>
                                                 <TextBlock>
                                                     <Run Text="{x:Static lang:Resources.Label_UpdateAvailable}" />

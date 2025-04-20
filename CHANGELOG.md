@@ -18,12 +18,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - (pre.2 re-release) Merged Inference GGUF workflows into the UNet model loader option (no longer need to choose GGUF separately)
 - (pre.2 re-release) Updated some date strings to take into account the user's locale
 - (pre.2 re-release) Fixed some crashes when using Accelerated Model Discovery
+- (pre.2 re-release) Performance optimizations for Checkpoint Manager (progress indicators now fully uses Compiled Bindings)
 ### Fixed
 - Fixed Inference ControlNet Preprocessors using incorrect resolution and increased maximum of smallest dimension to 16384
 - Fixed Triton/Sage install option showing for incompatible GPUs
 - Fixed errors from invalid pip specifiers in requirements files
 - Fixed package images sometimes showing as blank due to concurrent image caching. Requests to same image resources are now de-duplicated
 - (pre.2 re-release) Fixed Inference Extra Networks card not allowing for more than one model at a time
+- (pre.2 re-release) Reduced memory usage from `ShowDisabledTooltipExtension`
 ### Supporters
 #### Visionaries
 - Big shout-out to our Visionary-tier patrons: Waterclouds, Corey T, bluepopsicle, and Bob S! Your steadfast support keeps Stability Matrix moving forward, and we couldn’t do it without you. 🚀 Thank you!

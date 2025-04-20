@@ -29,7 +29,10 @@ public partial class HuggingfaceItemViewModel : ViewModelBase
                 ModelsDir,
                 Item.ModelCategory.ConvertTo<SharedFolderType>().ToString(),
                 Item.Subfolder ?? string.Empty,
-                Path.GetFileName(Item.Files[0])
+                Path.GetFileName(Item.Files[0]).Equals("ae.safetensors")
+                && Item.ModelName.Equals("HiDream I1 VAE")
+                    ? "hidream_vae.safetensors"
+                    : Path.GetFileName(Item.Files[0])
             )
         );
 

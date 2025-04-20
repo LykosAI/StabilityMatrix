@@ -215,6 +215,8 @@ public class Settings
 
     public int MaxConcurrentDownloads { get; set; }
 
+    public bool FilterExtraNetworksByBaseModel { get; set; } = true;
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

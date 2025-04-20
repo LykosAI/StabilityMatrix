@@ -425,6 +425,16 @@ public class ComfyNodeBuilder
         // no type, always sd3 I guess?
     }
 
+    public record QuadrupleCLIPLoader : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required string ClipName1 { get; init; }
+        public required string ClipName2 { get; init; }
+        public required string ClipName3 { get; init; }
+        public required string ClipName4 { get; init; }
+
+        // no type, always HiDream I guess?
+    }
+
     public record CLIPVisionLoader : ComfyTypedNodeBase<ClipVisionNodeConnection>
     {
         public required string ClipName { get; init; }

@@ -350,6 +350,39 @@ public static class RemoteModels
                 Author = "Google",
                 LicenseType = "Apache 2.0",
                 ContextType = SharedFolderType.TextEncoders,
+            },
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/clip_l_hidream.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI"),
+                HashSha256 = "706fdb88e22e18177b207837c02f4b86a652abca0302821f2bfa24ac6aea4f71",
+                Author = "OpenAI",
+                LicenseType = "MIT",
+                ContextType = SharedFolderType.TextEncoders
+            },
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/clip_g_hidream.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI"),
+                HashSha256 = "3771e70e36450e5199f30bad61a53faae85a2e02606974bcda0a6a573c0519d5",
+                Author = "OpenAI",
+                LicenseType = "MIT",
+                ContextType = SharedFolderType.TextEncoders
+            },
+            new()
+            {
+                Url = new Uri(
+                    "https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI/resolve/main/split_files/text_encoders/llama_3.1_8b_instruct_fp8_scaled.safetensors"
+                ),
+                InfoUrl = new Uri("https://huggingface.co/Comfy-Org/HiDream-I1_ComfyUI"),
+                HashSha256 = "9f86897bbeb933ef4fd06297740edb8dd962c94efcd92b373a11460c33765ea6",
+                Author = "Meta",
+                LicenseType = "llama3.1",
+                ContextType = SharedFolderType.TextEncoders
             }
         ];
 

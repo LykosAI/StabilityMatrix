@@ -347,66 +347,37 @@ public class ComfyUI(
 
         var pipArgs = new PipInstallArgs();
 
-        var isBlackwell =
-            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
-
-        if (isBlackwell && torchVersion is TorchIndex.Cuda)
+        pipArgs = torchVersion switch
         {
-            pipArgs = pipArgs
-                .AddArg("--pre")
-                .WithTorch()
-                .WithTorchVision()
-                .WithTorchAudio()
-                .WithTorchExtraIndex("nightly/cu128")
-                .AddArg("--upgrade");
-
-            if (installedPackage.PipOverrides != null)
-            {
-                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-            }
-            progress?.Report(
-                new ProgressReport(-1f, "Installing Torch for your shiny new GPU...", isIndeterminate: true)
-            );
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-        }
-        else
-        {
-            pipArgs = torchVersion switch
-            {
-                TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
-                _
-                    => pipArgs
-                        .AddArg("--upgrade")
-                        .WithTorch()
-                        .WithTorchVision()
-                        .WithTorchExtraIndex(
-                            torchVersion switch
-                            {
-                                TorchIndex.Cpu => "cpu",
-                                TorchIndex.Cuda => "cu126",
-                                TorchIndex.Rocm => "rocm6.2.4",
-                                TorchIndex.Mps => "cpu",
-                                _
-                                    => throw new ArgumentOutOfRangeException(
-                                        nameof(torchVersion),
-                                        torchVersion,
-                                        null
-                                    )
-                            }
-                        )
-            };
-        }
-
-        if (isBlackwell && torchVersion is TorchIndex.Cuda)
-        {
-            pipArgs = new PipInstallArgs();
-        }
+            TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
+            _
+                => pipArgs
+                    .AddArg("--upgrade")
+                    .WithTorch()
+                    .WithTorchVision()
+                    .WithTorchAudio()
+                    .WithTorchExtraIndex(
+                        torchVersion switch
+                        {
+                            TorchIndex.Cpu => "cpu",
+                            TorchIndex.Cuda => "cu128",
+                            TorchIndex.Rocm => "rocm6.2.4",
+                            TorchIndex.Mps => "cpu",
+                            _
+                                => throw new ArgumentOutOfRangeException(
+                                    nameof(torchVersion),
+                                    torchVersion,
+                                    null
+                                )
+                        }
+                    )
+        };
 
         var requirements = new FilePath(installLocation, "requirements.txt");
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(
             await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-            excludePattern: isBlackwell ? "torch$|torchvision$|torchaudio$|numpy" : "torch$|numpy"
+            excludePattern: "torch$|numpy"
         );
 
         // https://github.com/comfyanonymous/ComfyUI/pull/4121

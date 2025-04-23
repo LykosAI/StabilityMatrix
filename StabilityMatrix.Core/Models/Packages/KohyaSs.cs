@@ -159,11 +159,10 @@ public class KohyaSs(
         if (isBlackwell)
         {
             pipArgs = new PipInstallArgs()
-                .AddArg("--pre")
                 .WithTorch()
                 .WithTorchVision()
                 .WithTorchAudio()
-                .WithTorchExtraIndex("nightly/cu128")
+                .WithTorchExtraIndex("cu128")
                 .AddArg("--force-reinstall");
 
             if (installedPackage.PipOverrides != null)

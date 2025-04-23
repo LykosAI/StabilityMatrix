@@ -153,40 +153,12 @@ public class ForgeClassic(
             .ReadAllTextAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        var pipArgs = new PipInstallArgs();
-
-        var isBlackwell =
-            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
-        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-
-        if (isBlackwell && torchVersion is TorchIndex.Cuda)
-        {
-            pipArgs = pipArgs
-                .AddArg("--pre")
-                .WithTorch()
-                .WithTorchVision()
-                .WithTorchAudio()
-                .WithTorchExtraIndex("nightly/cu128")
-                .AddArg("--upgrade");
-
-            if (installedPackage.PipOverrides != null)
-            {
-                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-            }
-            progress?.Report(
-                new ProgressReport(-1f, "Installing Torch for your shiny new GPU...", isIndeterminate: true)
-            );
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-        }
-        else
-        {
-            pipArgs = pipArgs.WithTorch().WithTorchVision().WithTorchExtraIndex("cu126");
-        }
-
-        if (isBlackwell && torchVersion is TorchIndex.Cuda)
-        {
-            pipArgs = new PipInstallArgs();
-        }
+        var pipArgs = new PipInstallArgs()
+            .AddArg("--upgrade")
+            .WithTorch()
+            .WithTorchVision()
+            .WithTorchAudio()
+            .WithTorchExtraIndex("cu128");
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
 

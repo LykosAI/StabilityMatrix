@@ -272,6 +272,8 @@ public class Fooocus(
         // Pip version 24.1 deprecated numpy requirement spec used by torchsde 0.2.5
         await venvRunner.PipInstall(["pip==23.3.2"], onConsoleOutput).ConfigureAwait(false);
 
+        var isBlackwell =
+            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
         var pipArgs = new PipInstallArgs();
@@ -283,12 +285,13 @@ public class Fooocus(
         else
         {
             pipArgs = pipArgs
-                .WithTorch("==2.1.0")
-                .WithTorchVision("==0.16.0")
+                .WithTorch(isBlackwell ? string.Empty : "==2.1.0")
+                .WithTorchVision(isBlackwell ? string.Empty : "==0.16.0")
                 .WithTorchExtraIndex(
                     torchVersion switch
                     {
                         TorchIndex.Cpu => "cpu",
+                        TorchIndex.Cuda when isBlackwell => "cu128",
                         TorchIndex.Cuda => "cu121",
                         TorchIndex.Rocm => "rocm5.6",
                         TorchIndex.Mps => "cpu",

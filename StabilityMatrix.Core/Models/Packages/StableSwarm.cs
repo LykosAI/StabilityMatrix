@@ -172,7 +172,7 @@ public class StableSwarm(
     public override bool ShouldIgnoreReleases => true;
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         [
             PackagePrerequisite.Git,

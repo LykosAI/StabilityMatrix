@@ -5,6 +5,85 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.14.0
+### Added
+- **New Packages:**
+  - Added [Stable Diffusion WebUI Forge - Classic](https://github.com/Haoming02/sd-webui-forge-classic).
+  - Added [Stable Diffusion WebUI AMDGPU Forge](https://github.com/lshqqytiger/stable-diffusion-webui-amdgpu-forge).
+- **Accelerated Model Discovery (Beta):**
+  Added for Insider+ supporters (⚡ icon in Civitai Browser). Utilizes an optimized connection for dramatically faster browsing of online model repositories.
+- **Inference Enhancements:**
+  - Added **Prompt Amplifier**: click the magic wand 🪄 in the prompt editor to expand and enrich your ideas with selectable “Feel”.
+  - Added **HiDream** support (see [ComfyUI Examples](https://comfyanonymous.github.io/ComfyUI_examples/hidream/) for details).
+  - Added toggle for filtering Extra Networks by base model.
+  - Added Abstract Syntax Tree (AST) parsing for prompts for more robust internal structure understanding.
+  - Added hotkey (`Ctrl+Up` / `Ctrl+Down`) in prompt editors to adjust token/selection weight emphasis.
+  - Added **Plasma Noise** addon for text-to-image workflows.
+  - Added **Wan 2.1** Text-to-Video and Text-to-Image project types.
+  - Added **Align Your Steps** scheduler.
+  - Added support for **wildcards** in prompts (e.g., `{blue|green|red}`).
+  - Added **Rescale CFG** addon.
+  - Added **Swap Dimensions** button between width/height inputs.
+  - Added `Ctrl+Tab` / `Ctrl+Shift+Tab` shortcuts for navigating between Inference tabs.
+- **Model Management & Browsing:**
+  - Added **Safetensor Metadata viewer** to the Checkpoint Manager context menu (thanks @genteure!).
+  - Added Wan 2.1 files to the HuggingFace model browser.
+  - Added **OpenModelDB** tab to the Model Browser.
+  - Added new autocomplete tag source: [Danbooru/e621 merged tags](https://civitai.com/models/950325?modelVersionId=1419692).
+- **Package & System:**
+  - Added new Package Command for installing **Triton & SageAttention** in ComfyUI.
+- **UI & UX:**
+  - Added Undo/Redo commands to text editor context menus.
+
+### Changed
+- **Inference:**
+  - Merged Inference GGUF workflows into the UNet model loader option (no longer a separate choice).
+  - FaceDetailers now inherit the primary sampler/scheduler/etc. by default (can be manually overridden via ⚙️ button).
+  - Slightly rearranged the FaceDetailer card layout.
+  - Inference "Extra Networks" selector now filters extra networks based on the selected base model.
+  - Improved the quality of Inference inpainting via underlying workflow upgrades.
+- **Model Management & Browsing:**
+  - Updated the Civitai Model Browser base model selector to match the new Checkpoint Manager filter UI.
+  - Renamed some shared model folders to better reflect their contents.
+  - Performance optimizations for Checkpoint Manager (progress indicators now fully use Compiled Bindings).
+  - Improved Checkpoint Manager memory usage (thanks @FireGeek!).
+- **System & Packages:**
+  - Updated install for kohya_ss to support RTX 5000-series GPUs.
+  - Upgraded HIP SDK installs to 6.2.4 for ComfyUI-Zluda and AMDGPU-Forge.
+- **UI & UX:**
+  - Updated some date strings to take into account the user’s locale.
+  - Improved window state handling.
+  - Updated Japanese, Brazilian Portuguese, Chinese, and Russian translations.
+
+### Fixed
+- **Inference:**
+  - Fixed Inference ControlNet preprocessors using incorrect resolution and increased maximum smallest dimension to 16384.
+  - Fixed HiresFix addon not inheriting sampler/scheduler properly.
+  - Fixed some plus (+) buttons getting cut off in the UI.
+  - Fixed CFG Rescale addon interfering with refiner model.
+- **Model Management & Browsing:**
+  - Fixed Checkpoint Manager not displaying any models in some cases.
+  - Fixed missing base model options in the Metadata Editor.
+- **Packages & Installation:**
+  - Fixed errors from invalid pip specifiers in requirements files.
+  - Fixed RTX 5000-series GPU detection in certain cases.
+  - Fixed Package Updates and Change Version not using stored PyTorch index.
+- **UI & System:**
+  - Fixed package images sometimes showing as blank due to concurrent image caching; requests are now de-duplicated.
+  - Reduced memory usage from `ShowDisabledTooltipExtension`.
+  - Fixed Image Viewer issues:
+    - Fixed `FileNotFoundException` on fetching image size if navigating to a deleted image.
+    - (macOS) Fixed `FileNotFoundException` crash after deleting a viewed WebP animation.
+    - (macOS) Fixed WebP/GIF animations showing flipped RGB colors.
+    - (Windows) Fixed WebP animation files unable to be deleted without closing the app.
+  - Fixed window disappearing on macOS when the saved window size is very small.
+  - Fixed large white boxes appearing when tooltips are visible on macOS/Linux.
+### Supporters
+#### Visionaries
+Our heartfelt gratitude goes out to our amazing Visionary-tier Patrons: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Akiro_Senkai**, and **Ibixat**! Your exceptional support is fundamental to the ongoing development and success of Stability Matrix. We are immensely grateful for your partnership and belief in the project! 🙏
+#### Pioneers
+We also want to give a huge thank you to our dedicated Pioneer-tier Patrons: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, **NowFallenAngel**, **Al Gorithm**, and welcome to our newest Pioneer, **Noah M.**! Your consistent support and enthusiasm keep the momentum going. Thank you all for being such an important part of our community! ✨
+
 ## v2.14.0-pre.2
 ### Added
 - Added new package - [Stable Diffusion WebUI Forge - Classic](https://github.com/Haoming02/sd-webui-forge-classic)

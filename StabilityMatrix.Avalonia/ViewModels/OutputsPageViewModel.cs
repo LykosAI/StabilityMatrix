@@ -56,7 +56,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
     private readonly INavigationService<MainWindowViewModel> navigationService;
     private readonly ILogger<OutputsPageViewModel> logger;
     private readonly List<CancellationTokenSource> cancellationTokenSources = [];
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
 
     public override string Title => Resources.Label_OutputsPageTitle;
 
@@ -119,7 +119,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         INotificationService notificationService,
         INavigationService<MainWindowViewModel> navigationService,
         ILogger<OutputsPageViewModel> logger,
-        ServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory
     )
     {
         this.settingsManager = settingsManager;

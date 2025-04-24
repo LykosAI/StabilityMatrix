@@ -37,6 +37,7 @@ using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.OpenArt;
+using StabilityMatrix.Core.Models.Api.OpenModelsDb;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -163,7 +164,7 @@ public static class DesignData
 
         Services = services.BuildServiceProvider();
 
-        var dialogFactory = Services.GetRequiredService<ServiceManager<ViewModelBase>>();
+        var dialogFactory = Services.GetRequiredService<IServiceManager<ViewModelBase>>();
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
         var downloadService = Services.GetRequiredService<IDownloadService>();
         var modelFinder = Services.GetRequiredService<ModelFinder>();
@@ -437,8 +438,8 @@ public static class DesignData
     [NotNull]
     public static UpdateViewModel? UpdateViewModel { get; private set; }
 
-    public static ServiceManager<ViewModelBase> DialogFactory =>
-        Services.GetRequiredService<ServiceManager<ViewModelBase>>();
+    public static IServiceManager<ViewModelBase> DialogFactory =>
+        Services.GetRequiredService<IServiceManager<ViewModelBase>>();
 
     public static MainWindowViewModel MainWindowViewModel =>
         Services.GetRequiredService<MainWindowViewModel>();
@@ -458,45 +459,71 @@ public static class DesignData
     public static RecommendedModelsViewModel RecommendedModelsViewModel =>
         DialogFactory.Get<RecommendedModelsViewModel>(vm =>
         {
-            vm.Sd15Models = new ObservableCollectionExtended<RecommendedModelItemViewModel>()
-            {
-                new()
-                {
-                    ModelVersion = new CivitModelVersion
+            // Populate the single RecommendedModels collection for design time
+            vm.RecommendedModels.AddRange(
+                [
+                    new RecommendedModelItemViewModel
                     {
-                        Name = "BB95 Furry Mix",
-                        Description = "A furry mix of BB95",
-                        Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 },
-                        Images =
-                        [
-                            new CivitImage
-                            {
-                                Url =
-                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
-                            }
-                        ],
+                        CivitModel = new CivitModel { Name = "BB95 Furry Mix", Id = 1 }, // Added Id for clarity
+                        ModelVersion = new CivitModelVersion
+                        {
+                            Id = 101, // Added Id for clarity
+                            Name = "v1.0", // Example version name
+                            BaseModel = "SD 1.5", // Example base model
+                            Stats = new CivitModelStats { Rating = 4.5, RatingCount = 124 },
+                            Files = [new CivitFile { Type = CivitFileType.Model }], // Example file
+                            Images =
+                            [
+                                new CivitImage
+                                {
+                                    Type = "image", // Ensure type is set
+                                    Url =
+                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
+                                }
+                            ],
+                        },
+                        Author = "by bb95"
                     },
-                    Author = "bb95"
-                },
-                new()
-                {
-                    ModelVersion = new CivitModelVersion
+                    new RecommendedModelItemViewModel
                     {
-                        Name = "BB95 Furry Mix",
-                        Description = "A furry mix of BB95",
-                        Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 },
-                        Images =
-                        [
-                            new CivitImage
-                            {
-                                Url =
-                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
-                            }
-                        ],
+                        CivitModel = new CivitModel { Name = "DreamShaper XL", Id = 2 },
+                        ModelVersion = new CivitModelVersion
+                        {
+                            Id = 201,
+                            Name = "v2.1 Turbo",
+                            BaseModel = "SDXL 1.0",
+                            Stats = new CivitModelStats { Rating = 4.8, RatingCount = 589 },
+                            Files = [new CivitFile { Type = CivitFileType.Model, IsPrimary = true }],
+                            Images =
+                            [
+                                new CivitImage
+                                {
+                                    Type = "image",
+                                    // Placeholder - replace with an actual relevant image URL if possible
+                                    Url =
+                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/0cf3e133-4dde-458b-8a70-7451a3361472/width=450/00016-3919014893.jpeg"
+                                }
+                            ],
+                        },
+                        Author = "by Lykon"
                     },
-                    Author = "bb95"
-                }
-            };
+                    new RecommendedModelItemViewModel
+                    {
+                        CivitModel = new CivitModel { Name = "Another Model SD1.5", Id = 3 },
+                        ModelVersion = new CivitModelVersion
+                        {
+                            Id = 301,
+                            Name = "Final",
+                            BaseModel = "SD 1.5",
+                            Stats = new CivitModelStats { Rating = 4.2, RatingCount = 99 },
+                            Files = [new CivitFile { Type = CivitFileType.Model }],
+                            Images = [new CivitImage { Type = "image", Url = Assets.NoImage.ToString() }], // Use placeholder
+                        },
+                        Author = "by Creator3"
+                    }
+                    // Add more items as needed for design-time preview
+                ]
+            );
         });
     public static OutputsPageViewModel OutputsPageViewModel
     {
@@ -822,6 +849,11 @@ The gallery images are often inpainted, but you will get something very similar 
     public static InferenceImageUpscaleViewModel InferenceImageUpscaleViewModel =>
         DialogFactory.Get<InferenceImageUpscaleViewModel>();
 
+    public static InferenceWanTextToVideoViewModel InferenceWanTextToVideoViewModel =>
+        DialogFactory.Get<InferenceWanTextToVideoViewModel>();
+    public static InferenceWanImageToVideoViewModel InferenceWanImageToVideoViewModel =>
+        DialogFactory.Get<InferenceWanImageToVideoViewModel>();
+
     public static PackageImportViewModel PackageImportViewModel =>
         DialogFactory.Get<PackageImportViewModel>();
 
@@ -850,6 +882,7 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.IsCfgScaleEnabled = true;
             vm.IsSamplerSelectionEnabled = true;
             vm.IsDimensionsEnabled = true;
+            vm.IsLengthEnabled = true;
             vm.SelectedSampler = new ComfySampler("euler");
         });
 
@@ -869,9 +902,13 @@ The gallery images are often inpainted, but you will get something very similar 
         });
 
     public static ModelCardViewModel ModelCardViewModel => DialogFactory.Get<ModelCardViewModel>();
+    public static WanModelCardViewModel WanModelCardViewModel => DialogFactory.Get<WanModelCardViewModel>();
 
     public static ImgToVidModelCardViewModel ImgToVidModelCardViewModel =>
         DialogFactory.Get<ImgToVidModelCardViewModel>();
+
+    public static PlasmaNoiseCardViewModel PlasmaNoiseCardViewModel =>
+        DialogFactory.Get<PlasmaNoiseCardViewModel>();
 
     public static ImageGalleryCardViewModel ImageGalleryCardViewModel =>
         DialogFactory.Get<ImageGalleryCardViewModel>(vm =>
@@ -997,6 +1034,76 @@ The gallery images are often inpainted, but you will get something very similar 
         }
     }
 
+    public static OpenModelDbKeyedModel SampleOpenModelDbKeyedModel =>
+        new()
+        {
+            Id = "test-id",
+            Name = "16x PSNR Prretrained Model",
+            Author = "author123",
+            License = "Apache-2.0",
+            Tags = ["pretrained"],
+            Description =
+                "Pretrained: RRDB_PSNR_x4.pth\n\nThe original RRDB_PSNR_x4.pth model converted to 1x, 2x, 8x and 16x scales, intended to be used as pretrained models for new models at those scales. These are compatible with victor's 4xESRGAN.pth conversions",
+            Date = new DateOnly(2020, 4, 20),
+            Architecture = "esrgan",
+            Size = ["64nf", "23nb"],
+            Scale = 16,
+            InputChannels = 3,
+            OutputChannels = 3,
+            Resources =
+            [
+                new OpenModelDbResource
+                {
+                    Platform = "pytorch",
+                    Type = "pth",
+                    Size = 67254807,
+                    Sha256 = "d7ae3b9a3572a01d1ddfc788ebca253c872d959d3765bcb3b48c65a3ab2f9aba",
+                    Urls = ["https://drive.google.com/open?id=0"]
+                },
+                new OpenModelDbResource
+                {
+                    Platform = "onnx",
+                    Type = "onnx",
+                    Size = 20098601,
+                    Sha256 = "d7ae3b9a3572a01d1ddfc788ebca253c872d959d3765bcb3b48c65a3ab2f9aba",
+                    Urls = ["https://drive.google.com/open?id=0"]
+                }
+            ],
+            Images =
+            [
+                new OpenModelDbImage.Paired
+                {
+                    Lr = new Uri("https://imgsli.com/i/c9978a74-32ee-478b-b228-10744521fc21.jpg"),
+                    Sr = new Uri("https://imgsli.com/i/c90377d5-287d-4f1c-ab4c-96267bfaa04e.jpg"),
+                },
+                new OpenModelDbImage.Paired
+                {
+                    Lr = new Uri("https://imgsli.com/i/7c22ba75-01ca-407a-98b9-16e27ad6de55.jpg"),
+                    Sr = new Uri("https://imgsli.com/i/12aa0959-36db-49a1-8a0c-e58f99226395.jpg"),
+                },
+                new OpenModelDbImage.Paired
+                {
+                    Lr = new Uri("https://imgsli.com/i/83e9600a-a8ee-4f2b-96e7-f42dc7e5ab12.jpg"),
+                    Sr = new Uri("https://imgsli.com/i/a611b9a9-422f-44ed-882a-3ada8f478625.jpg"),
+                }
+            ]
+        };
+
+    public static OpenModelDbBrowserViewModel OpenModelDbBrowserViewModel
+    {
+        get
+        {
+            var vm = Services.GetRequiredService<OpenModelDbBrowserViewModel>();
+            return vm;
+        }
+    }
+
+    public static OpenModelDbModelDetailsViewModel OpenModelDbModelDetailsViewModel =>
+        DialogFactory.Get<OpenModelDbModelDetailsViewModel>(vm =>
+        {
+            vm.Model = SampleOpenModelDbKeyedModel;
+        });
+
     public static IList<ICompletionData> SampleCompletionData =>
         new List<ICompletionData>
         {
@@ -1120,6 +1227,9 @@ The gallery images are often inpainted, but you will get something very similar 
                 .ToArray();
         });
 
+    public static SponsorshipPromptViewModel SponsorshipPromptViewModel =>
+        DialogFactory.Get<SponsorshipPromptViewModel>(vm => { });
+
     public static OpenArtWorkflowViewModel OpenArtWorkflowViewModel =>
         new(Services.GetRequiredService<ISettingsManager>(), Services.GetRequiredService<IPackageFactory>())
         {
@@ -1202,7 +1312,7 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.VersionName = "1.0.0";
             vm.TrainedWords = "word1, word2, word3";
             vm.ModelType = CivitModelType.Checkpoint;
-            vm.BaseModelType = CivitBaseModelType.Pony;
+            vm.BaseModelType = "Pony";
         });
 
     public static MockGitVersionProvider MockGitVersionProvider => new();

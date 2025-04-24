@@ -59,20 +59,17 @@ public class InvokeAI : BaseGitPackage
         {
             [SharedFolderType.StableDiffusion] = [Path.Combine(RelativeRootPath, "autoimport", "main")],
             [SharedFolderType.Lora] = [Path.Combine(RelativeRootPath, "autoimport", "lora")],
-            [SharedFolderType.TextualInversion] = [Path.Combine(RelativeRootPath, "autoimport", "embedding")],
+            [SharedFolderType.Embeddings] = [Path.Combine(RelativeRootPath, "autoimport", "embedding")],
             [SharedFolderType.ControlNet] = [Path.Combine(RelativeRootPath, "autoimport", "controlnet")],
-            [SharedFolderType.InvokeIpAdapters15] =
+            [SharedFolderType.IpAdapters15] =
             [
                 Path.Combine(RelativeRootPath, "models", "sd-1", "ip_adapter")
             ],
-            [SharedFolderType.InvokeIpAdaptersXl] =
+            [SharedFolderType.IpAdaptersXl] =
             [
                 Path.Combine(RelativeRootPath, "models", "sdxl", "ip_adapter")
             ],
-            [SharedFolderType.InvokeClipVision] =
-            [
-                Path.Combine(RelativeRootPath, "models", "any", "clip_vision")
-            ],
+            [SharedFolderType.ClipVision] = [Path.Combine(RelativeRootPath, "models", "any", "clip_vision")],
             [SharedFolderType.T2IAdapter] = [Path.Combine(RelativeRootPath, "autoimport", "t2i_adapter")]
         };
 
@@ -384,6 +381,11 @@ public class InvokeAI : BaseGitPackage
             onConsoleOutput?.Invoke(new ProcessOutput { Text = result.StandardOutput });
         }
     }
+
+    // Invoke doing shared folders on startup instead
+    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) => Task.CompletedTask;
+
+    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) => Task.CompletedTask;
 
     private async Task<bool> SetupInvokeModelSharingConfig(
         Action<ProcessOutput>? onConsoleOutput,

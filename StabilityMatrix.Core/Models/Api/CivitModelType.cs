@@ -14,7 +14,7 @@ public enum CivitModelType
     [ConvertTo<SharedFolderType>(SharedFolderType.StableDiffusion)]
     Checkpoint,
 
-    [ConvertTo<SharedFolderType>(SharedFolderType.TextualInversion)]
+    [ConvertTo<SharedFolderType>(SharedFolderType.Embeddings)]
     TextualInversion,
 
     [ConvertTo<SharedFolderType>(SharedFolderType.Hypernetwork)]

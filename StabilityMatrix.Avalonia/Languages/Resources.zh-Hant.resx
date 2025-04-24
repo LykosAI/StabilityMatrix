@@ -668,4 +668,67 @@
 
 不，Stability Matrix 在沒有帳戶的情況下仍然可以正常運作。 但是，您的 Lykos 帳戶可以啟用一些額外的連接功能，例如為我們的 Patreon 支持者自動更新到開發版本（以及更多即將推出的功能）。</value>
   </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>啟用</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>停用</value>
+  </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>連接您的 Lykos 帳戶</value>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>請使用您的 Lykos 帳戶登入以使用連接功能。</value>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>請重新登入</value>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>您的登入已過期。請重新登入以繼續。</value>
+  </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>支持 Stability Matrix</value>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>感謝您支持 Stability Matrix！</value>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>**{0}** 等功能是我們為支持者提供的眾多權益之一。您的貢獻有助於我們支付伺服器成本並支持 Stability Matrix 的開發。</value>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>**{0}** 等功能需達到 **{1}** 支持者等級（或更高）方可使用。您的貢獻有助於我們支付更進階連接功能的伺服器成本，並讓我們能夠為大家不斷改進 Stability Matrix。</value>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>如果您已在 Patreon 上支持我們，請關聯您的帳戶以繼續。</value>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>帳戶設定</value>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>檢視支持選項</value>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>稍後再說</value>
+  </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>狀態</value>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>啟用</value>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>未啟用（使用標準連線）</value>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>從 Civitai 等線上儲存庫瀏覽模型時，體驗更快的搜尋結果。</value>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>針對第三方儲存庫的實驗性最佳化。非官方合作；可用性可能有所不同。</value>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>測試版</value>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>加速模型搜尋</value>
+  </data>
 </root>

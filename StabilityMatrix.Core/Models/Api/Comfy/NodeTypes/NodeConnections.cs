@@ -20,6 +20,8 @@ public class ControlNetNodeConnection : NodeConnectionBase;
 
 public class ClipVisionNodeConnection : NodeConnectionBase;
 
+public class ClipVisionOutputNodeConnection : NodeConnectionBase;
+
 public class SamplerNodeConnection : NodeConnectionBase;
 
 public class SigmasNodeConnection : NodeConnectionBase;

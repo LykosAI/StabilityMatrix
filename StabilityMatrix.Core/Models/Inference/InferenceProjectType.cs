@@ -8,5 +8,7 @@ public enum InferenceProjectType
     Inpainting,
     Upscale,
     ImageToVideo,
-    FluxTextToImage
+    FluxTextToImage,
+    WanTextToVideo,
+    WanImageToVideo,
 }

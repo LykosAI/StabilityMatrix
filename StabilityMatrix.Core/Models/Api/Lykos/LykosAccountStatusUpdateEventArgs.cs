@@ -23,4 +23,6 @@ public class LykosAccountStatusUpdateEventArgs : EventArgs
     public string? Email => Principal?.GetClaim(OpenIddictConstants.Claims.Email);
 
     public bool IsPatreonConnected => User?.PatreonId != null;
+
+    public bool IsActiveSupporter => User?.Roles.Contains("ActivePatron") == true;
 }

@@ -1,8 +1,12 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Drawing;
 using System.IO;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
 namespace StabilityMatrix.Avalonia.Extensions;
 
@@ -13,59 +17,60 @@ public static class ComfyNodeBuilderExtensions
         int width,
         int height,
         int batchSize = 1,
-        int? batchIndex = null
+        int? batchIndex = null,
+        int? length = null,
+        LatentType latentType = LatentType.Default
     )
     {
-        var emptyLatent = builder.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.EmptyLatentImage
-            {
-                Name = "EmptyLatentImage",
-                BatchSize = batchSize,
-                Height = height,
-                Width = width
-            }
-        );
-
-        builder.Connections.Primary = emptyLatent.Output;
-        builder.Connections.PrimarySize = new Size(width, height);
-
-        // If batch index is selected, add a LatentFromBatch
-        if (batchIndex is not null)
+        var primaryNodeConnection = latentType switch
         {
-            builder.Connections.Primary = builder
-                .Nodes.AddTypedNode(
-                    new ComfyNodeBuilder.LatentFromBatch
-                    {
-                        Name = "LatentFromBatch",
-                        Samples = builder.GetPrimaryAsLatent(),
-                        // remote expects a 0-based index, vm is 1-based
-                        BatchIndex = batchIndex.Value - 1,
-                        Length = 1
-                    }
-                )
-                .Output;
-        }
-    }
+            LatentType.Default
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.EmptyLatentImage
+                        {
+                            Name = "EmptyLatentImage",
+                            BatchSize = batchSize,
+                            Height = height,
+                            Width = width
+                        }
+                    )
+                    .Output,
+            LatentType.Sd3
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.EmptySD3LatentImage
+                        {
+                            Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.EmptySD3LatentImage)),
+                            BatchSize = batchSize,
+                            Height = height,
+                            Width = width
+                        }
+                    )
+                    .Output,
+            LatentType.Hunyuan
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.EmptyHunyuanLatentVideo
+                        {
+                            Name = builder.Nodes.GetUniqueName(
+                                nameof(ComfyNodeBuilder.EmptyHunyuanLatentVideo)
+                            ),
+                            BatchSize = batchSize,
+                            Height = height,
+                            Width = width,
+                            Length =
+                                length
+                                ?? throw new ValidationException(
+                                    "Length cannot be null when latentType is Hunyuan"
+                                )
+                        }
+                    )
+                    .Output,
+            _ => throw new ArgumentOutOfRangeException(nameof(latentType), latentType, null)
+        };
 
-    public static void SetupEmptySd3LatentSource(
-        this ComfyNodeBuilder builder,
-        int width,
-        int height,
-        int batchSize = 1,
-        int? batchIndex = null
-    )
-    {
-        var emptyLatent = builder.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.EmptySD3LatentImage
-            {
-                Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.EmptySD3LatentImage)),
-                BatchSize = batchSize,
-                Height = height,
-                Width = width
-            }
-        );
-
-        builder.Connections.Primary = emptyLatent.Output;
+        builder.Connections.Primary = primaryNodeConnection;
         builder.Connections.PrimarySize = new Size(width, height);
 
         // If batch index is selected, add a LatentFromBatch
@@ -178,15 +183,26 @@ public static class ComfyNodeBuilderExtensions
         builder.Connections.Primary = loadImage.Output1;
         builder.Connections.PrimarySize = imageSize;
 
-        // Encode VAE to latent with mask, and replace primary
+        // new betterer inpaint
         builder.Connections.Primary = builder
             .Nodes.AddTypedNode(
-                new ComfyNodeBuilder.VAEEncodeForInpaint
+                new ComfyNodeBuilder.VAEEncode
                 {
                     Name = builder.Nodes.GetUniqueName("VAEEncode"),
                     Pixels = loadImage.Output1,
-                    Mask = loadMask.Output,
                     Vae = builder.Connections.GetDefaultVAE()
+                }
+            )
+            .Output;
+
+        // latent noise mask for betterer inpaint
+        builder.Connections.Primary = builder
+            .Nodes.AddTypedNode(
+                new ComfyNodeBuilder.SetLatentNoiseMask
+                {
+                    Name = builder.Nodes.GetUniqueName("SetLatentNoiseMask"),
+                    Samples = builder.GetPrimaryAsLatent(),
+                    Mask = loadMask.Output
                 }
             )
             .Output;
@@ -251,5 +267,136 @@ public static class ComfyNodeBuilderExtensions
         builder.Connections.OutputNodes.Add(previewImage);
 
         return previewImage.Name;
+    }
+
+    public static void SetupPlasmaLatentSource(
+        this ComfyNodeBuilder builder,
+        int width,
+        int height,
+        ulong seed,
+        NoiseType noiseType,
+        int valueMin = -1,
+        int valueMax = -1,
+        int redMin = -1,
+        int redMax = -1,
+        int greenMin = -1,
+        int greenMax = -1,
+        int blueMin = -1,
+        int blueMax = -1,
+        double turbulence = 2.75d
+    )
+    {
+        var primaryNodeConnection = noiseType switch
+        {
+            NoiseType.Plasma
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.PlasmaNoise
+                        {
+                            Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.PlasmaNoise)),
+                            Height = height,
+                            Width = width,
+                            Seed = seed,
+                            ValueMin = valueMin,
+                            ValueMax = valueMax,
+                            RedMin = redMin,
+                            RedMax = redMax,
+                            GreenMin = greenMin,
+                            GreenMax = greenMax,
+                            BlueMin = blueMin,
+                            BlueMax = blueMax,
+                            Turbulence = turbulence,
+                        }
+                    )
+                    .Output,
+
+            NoiseType.Random
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.RandNoise
+                        {
+                            Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.RandNoise)),
+                            Height = height,
+                            Width = width,
+                            Seed = seed,
+                            ValueMin = valueMin,
+                            ValueMax = valueMax,
+                            RedMin = redMin,
+                            RedMax = redMax,
+                            GreenMin = greenMin,
+                            GreenMax = greenMax,
+                            BlueMin = blueMin,
+                            BlueMax = blueMax
+                        }
+                    )
+                    .Output,
+
+            NoiseType.Greyscale
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.GreyNoise
+                        {
+                            Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.GreyNoise)),
+                            Height = height,
+                            Width = width,
+                            Seed = seed,
+                            ValueMin = valueMin,
+                            ValueMax = valueMax,
+                            RedMin = redMin,
+                            RedMax = redMax,
+                            GreenMin = greenMin,
+                            GreenMax = greenMax,
+                            BlueMin = blueMin,
+                            BlueMax = blueMax
+                        }
+                    )
+                    .Output,
+
+            NoiseType.Brown
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.BrownNoise
+                        {
+                            Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.BrownNoise)),
+                            Height = height,
+                            Width = width,
+                            Seed = seed,
+                            ValueMin = valueMin,
+                            ValueMax = valueMax,
+                            RedMin = redMin,
+                            RedMax = redMax,
+                            GreenMin = greenMin,
+                            GreenMax = greenMax,
+                            BlueMin = blueMin,
+                            BlueMax = blueMax
+                        }
+                    )
+                    .Output,
+
+            NoiseType.Pink
+                => builder
+                    .Nodes.AddTypedNode(
+                        new ComfyNodeBuilder.PinkNoise
+                        {
+                            Name = builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.PinkNoise)),
+                            Height = height,
+                            Width = width,
+                            Seed = seed,
+                            ValueMin = valueMin,
+                            ValueMax = valueMax,
+                            RedMin = redMin,
+                            RedMax = redMax,
+                            GreenMin = greenMin,
+                            GreenMax = greenMax,
+                            BlueMin = blueMin,
+                            BlueMax = blueMax
+                        }
+                    )
+                    .Output,
+            _ => throw new ArgumentOutOfRangeException(nameof(noiseType), noiseType, null)
+        };
+
+        builder.Connections.Primary = primaryNodeConnection;
+        builder.Connections.PrimarySize = new Size(width, height);
     }
 }

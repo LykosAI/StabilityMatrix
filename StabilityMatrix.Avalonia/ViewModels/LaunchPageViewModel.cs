@@ -48,7 +48,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
     private readonly IPyRunner pyRunner;
     private readonly INotificationService notificationService;
     private readonly ISharedFolders sharedFolders;
-    private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly IServiceManager<ViewModelBase> dialogFactory;
     protected readonly IPackageFactory PackageFactory;
 
     // Regex to match if input contains a yes/no prompt,
@@ -113,7 +113,7 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         IPyRunner pyRunner,
         INotificationService notificationService,
         ISharedFolders sharedFolders,
-        ServiceManager<ViewModelBase> dialogFactory
+        IServiceManager<ViewModelBase> dialogFactory
     )
     {
         this.logger = logger;
@@ -591,14 +591,17 @@ public partial class LaunchPageViewModel : PageViewModelBase, IDisposable, IAsyn
         return dialog;
     }
 
-    public void Dispose()
+    protected override void Dispose(bool disposing)
     {
-        RunningPackage?.BasePackage.Shutdown();
-        RunningPackage = null;
+        if (disposing)
+        {
+            RunningPackage?.BasePackage.Shutdown();
+            RunningPackage = null;
 
-        Console.Dispose();
+            Console.Dispose();
+        }
 
-        GC.SuppressFinalize(this);
+        base.Dispose(disposing);
     }
 
     public async ValueTask DisposeAsync()

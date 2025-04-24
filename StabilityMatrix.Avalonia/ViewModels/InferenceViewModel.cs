@@ -18,6 +18,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
 using Injectio.Attributes;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Languages;
@@ -54,11 +55,12 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private readonly INotificationService notificationService;
 
     private readonly ISettingsManager settingsManager;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly IModelIndexService modelIndexService;
     private readonly ILiteDbContext liteDbContext;
     private readonly RunningPackageService runningPackageService;
     private Guid? selectedPackageId;
+    private List<IDisposable> scopes = [];
 
     public override string Title => Resources.Label_Inference;
     public override IconSource IconSource =>
@@ -97,7 +99,7 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     private IDisposable? onStartupComplete;
 
     public InferenceViewModel(
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
@@ -309,6 +311,11 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
     {
         await SyncTabStatesWithDatabase();
 
+        foreach (var scope in scopes)
+        {
+            scope.Dispose();
+        }
+
         GC.SuppressFinalize(this);
     }
 
@@ -383,9 +390,14 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
             return;
         }
 
+        // Create a new scope for this tab
+        var scope = vmFactory.CreateScope();
+
+        // Get the view model using the scope's service provider
         var tab =
-            vmFactory.Get(vmType) as InferenceTabViewModelBase
+            scope.ServiceManager.Get(vmType) as InferenceTabViewModelBase
             ?? throw new NullReferenceException($"Could not create view model of type {vmType}");
+
         Tabs.Add(tab);
 
         // Set as new selected tab
@@ -423,6 +435,13 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
             // Remove the tab
             Tabs.RemoveAt(index);
+
+            // Dispose the scope for this tab
+            if (index < scopes.Count)
+            {
+                scopes[index].Dispose();
+                scopes.RemoveAt(index);
+            }
         }
 
         // Update the database with the current tab
@@ -621,6 +640,32 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
         notificationService.Show("Saved", $"Saved project to {projectFile.Name}", NotificationType.Success);
     }
 
+    [RelayCommand]
+    private void GoForwardTabWithLooping()
+    {
+        if (SelectedTabIndex == Tabs.Count - 1)
+        {
+            SelectedTabIndex = 0;
+        }
+        else
+        {
+            SelectedTabIndex++;
+        }
+    }
+
+    [RelayCommand]
+    private void GoBackwardsTabWithLooping()
+    {
+        if (SelectedTabIndex == 0)
+        {
+            SelectedTabIndex = Tabs.Count - 1;
+        }
+        else
+        {
+            SelectedTabIndex--;
+        }
+    }
+
     private async Task AddTabFromFile(FilePath file)
     {
         await using var stream = file.Info.OpenRead();
@@ -638,13 +683,19 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
         document.VerifyVersion();
 
-        if (
-            document.ProjectType.ToViewModelType() is not { } vmType
-            || vmFactory.Get(vmType) is not InferenceTabViewModelBase vm
-        )
+        if (document.ProjectType.ToViewModelType() is not { } vmType)
         {
             throw new InvalidOperationException($"Unsupported project type: {document.ProjectType}");
         }
+
+        // Create a new scope for this tab
+        var scope = vmFactory.CreateScope();
+        scopes.Add(scope);
+
+        // Get the view model using the scope's service provider
+        var vm =
+            scope.ServiceManager.Get(vmType) as InferenceTabViewModelBase
+            ?? throw new NullReferenceException($"Could not create view model of type {vmType}");
 
         vm.LoadStateFromJsonObject(document.State);
         vm.ProjectFile = file;
@@ -658,13 +709,19 @@ public partial class InferenceViewModel : PageViewModelBase, IAsyncDisposable
 
     private async Task AddTabFromFileAsync(LocalImageFile imageFile, InferenceProjectType projectType)
     {
+        // Create a new scope for this tab
+        var scope = vmFactory.CreateScope();
+        scopes.Add(scope);
+
+        // Get the appropriate view model from the scope
         InferenceTabViewModelBase vm = projectType switch
         {
-            InferenceProjectType.TextToImage => vmFactory.Get<InferenceTextToImageViewModel>(),
-            InferenceProjectType.ImageToImage => vmFactory.Get<InferenceImageToImageViewModel>(),
-            InferenceProjectType.ImageToVideo => vmFactory.Get<InferenceImageToVideoViewModel>(),
-            InferenceProjectType.Upscale => vmFactory.Get<InferenceImageUpscaleViewModel>(),
-            InferenceProjectType.FluxTextToImage => vmFactory.Get<InferenceFluxTextToImageViewModel>(),
+            InferenceProjectType.TextToImage => scope.ServiceManager.Get<InferenceTextToImageViewModel>(),
+            InferenceProjectType.ImageToImage => scope.ServiceManager.Get<InferenceImageToImageViewModel>(),
+            InferenceProjectType.ImageToVideo => scope.ServiceManager.Get<InferenceImageToVideoViewModel>(),
+            InferenceProjectType.Upscale => scope.ServiceManager.Get<InferenceImageUpscaleViewModel>(),
+            InferenceProjectType.FluxTextToImage
+                => scope.ServiceManager.Get<InferenceFluxTextToImageViewModel>(),
         };
 
         switch (vm)

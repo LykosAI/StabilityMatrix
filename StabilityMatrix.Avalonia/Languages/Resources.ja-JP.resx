@@ -412,7 +412,7 @@
     <value>使用許諾契約書</value>
   </data>
   <data name="Label_FindConnectedMetadata" xml:space="preserve">
-    <value>メタデータが見つかりました</value>
+    <value>メタデータを探す</value>
   </data>
   <data name="Label_ShowModelImages" xml:space="preserve">
     <value>モデルの見出し画像を表示</value>
@@ -484,6 +484,7 @@
   </data>
   <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
     <value>既にあるデータは移動しません</value>
+    <comment>Fuzzy</comment>
   </data>
   <data name="Action_SelectDirectory" xml:space="preserve">
     <value>フォルダを選択</value>
@@ -1032,7 +1033,7 @@
     <value>Checkpoints</value>
   </data>
   <data name="Label_ModelBrowser" xml:space="preserve">
-    <value>Model Browser</value>
+    <value>Model Brouser</value>
   </data>
   <data name="Label_Workflows" xml:space="preserve">
     <value>ワークフロー</value>
@@ -1238,5 +1239,68 @@
   </data>
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>設定に移動</value>
+  </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>有効</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>無効</value>
+  </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Lykosアカウントを接続</value>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>接続機能を使用するには、Lykosアカウントでサインインしてください。</value>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>もう一度サインインしてください</value>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>ログインの有効期限が切れました。続けるには、もう一度サインインしてください。</value>
+  </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>Stability Matrixへのご支援</value>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>いつもStability Matrixをご支援いただき、誠にありがとうございます。</value>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>**{0}** のような機能は、サポーターの皆様への特典としてご提供しています。皆様のご支援のおかげで、サーバー費用を賄い、Stability Matrixの開発を継続できております。</value>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>**{0}** のような機能は、**{1}** サポーターレベル（またはそれ以上）からご利用いただけます。皆様のご支援のおかげで、高度な接続機能のサーバー費用を賄い、Stability Matrixの改善を続けることが可能となっております。</value>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>すでにPatreonでご支援いただいている場合は、引き続き機能をご利用いただくためにアカウント連携をお願いいたします。</value>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>アカウント設定</value>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>支援オプションを表示</value>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>後で確認する</value>
+  </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>状態</value>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>有効</value>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>無効（標準接続を使用中）</value>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Civitaiなどのオンラインリポジトリからモデルを閲覧する際に、より高速な検索結果を体験できます。</value>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>第三者リポジトリ向けの実験的な最適化です。公式に提携しているものではありません。利用可能性は変動する場合があります。</value>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>ベータ版</value>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>加速モデル探索</value>
   </data>
 </root>

@@ -187,12 +187,16 @@ public partial class RunningPackageViewModel : PageViewModelBase, IDisposable, I
         ConsoleInput = string.Empty;
     }
 
-    public void Dispose()
+    protected override void Dispose(bool disposing)
     {
-        RunningPackage.BasePackage.Shutdown();
-        Console.Dispose();
-        subscriptions.Dispose();
-        GC.SuppressFinalize(this);
+        if (disposing)
+        {
+            RunningPackage.BasePackage.Shutdown();
+            Console.Dispose();
+            subscriptions.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 
     public async ValueTask DisposeAsync()

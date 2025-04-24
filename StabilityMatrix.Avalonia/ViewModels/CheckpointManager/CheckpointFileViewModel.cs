@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Data;
 using Avalonia.Threading;
@@ -15,7 +11,6 @@ using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
@@ -36,7 +31,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     private string thumbnailUri;
 
     [ObservableProperty]
-    private ProgressReport? progress;
+    private ProgressReport progress;
 
     [ObservableProperty]
     private bool isLoading;
@@ -60,7 +55,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     private readonly IModelIndexService modelIndexService;
     private readonly INotificationService notificationService;
     private readonly IDownloadService downloadService;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly ILogger logger;
 
     public bool CanShowTriggerWords => CheckpointFile.ConnectedModelInfo?.TrainedWords?.Length > 0;
@@ -73,7 +68,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
         IModelIndexService modelIndexService,
         INotificationService notificationService,
         IDownloadService downloadService,
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         ILogger logger,
         LocalModelFile checkpointFile
     )
@@ -137,11 +132,24 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
     [Localizable(false)]
     private Task CopyModelUrl()
     {
-        return CheckpointFile.ConnectedModelInfo?.ModelId == null
-            ? Task.CompletedTask
-            : App.Clipboard.SetTextAsync(
-                $"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}"
-            );
+        if (!CheckpointFile.HasConnectedModel)
+            return Task.CompletedTask;
+
+        return CheckpointFile.ConnectedModelInfo.Source switch
+        {
+            ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId == null
+                => Task.CompletedTask,
+            ConnectedModelSource.Civitai when CheckpointFile.ConnectedModelInfo.ModelId != null
+                => App.Clipboard.SetTextAsync(
+                    $"https://civitai.com/models/{CheckpointFile.ConnectedModelInfo.ModelId}"
+                ),
+
+            ConnectedModelSource.OpenModelDb
+                => App.Clipboard.SetTextAsync(
+                    $"https://openmodeldb.info/models/{CheckpointFile.ConnectedModelInfo.ModelName}"
+                ),
+            _ => Task.CompletedTask
+        };
     }
 
     [RelayCommand]
@@ -394,7 +402,7 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             cmInfo.ModelDescription = vm.ModelDescription;
             cmInfo.Nsfw = vm.IsNsfw;
             cmInfo.Tags = vm.Tags.Split(',').Select(x => x.Trim()).ToArray();
-            cmInfo.BaseModel = vm.BaseModelType.GetStringValue();
+            cmInfo.BaseModel = vm.BaseModelType;
             cmInfo.TrainedWords = string.IsNullOrWhiteSpace(vm.TrainedWords)
                 ? null
                 : vm.TrainedWords.Split(',').Select(x => x.Trim()).ToArray();

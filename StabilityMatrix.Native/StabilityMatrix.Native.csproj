@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <Import Project="..\Runtimes.Default.props" />
+
 	<PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
 		<DefineConstants>Windows</DefineConstants>
 		<IsWindows>true</IsWindows>
@@ -20,13 +21,14 @@
 	<ItemGroup>
 		<ProjectReference Include="..\StabilityMatrix.Native.Abstractions\StabilityMatrix.Native.Abstractions.csproj" />
 	</ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" PrivateAssets="all" />
-    </ItemGroup>
+
 	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
 		<ProjectReference Include="..\StabilityMatrix.Native.Windows\StabilityMatrix.Native.Windows.csproj" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'osx-x64' Or '$(RuntimeIdentifier)' == 'osx-arm64'">
 		<ProjectReference Include="..\StabilityMatrix.Native.macOS\StabilityMatrix.Native.macOS.csproj" />
 	</ItemGroup>
+  <ItemGroup>
+      <PackageReference Include="JetBrains.Annotations" PrivateAssets="all" />
+  </ItemGroup>
 </Project>

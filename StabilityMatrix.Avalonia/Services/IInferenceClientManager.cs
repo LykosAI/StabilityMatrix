@@ -50,6 +50,7 @@ public interface IInferenceClientManager : IDisposable, INotifyPropertyChanged, 
     IObservableCollection<HybridModelFile> SamModels { get; }
     IObservableCollection<HybridModelFile> UnetModels { get; }
     IObservableCollection<HybridModelFile> ClipModels { get; }
+    IObservableCollection<HybridModelFile> ClipVisionModels { get; }
 
     Task CopyImageToInputAsync(FilePath imageFile, CancellationToken cancellationToken = default);
 

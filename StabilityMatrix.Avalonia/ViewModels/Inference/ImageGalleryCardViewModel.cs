@@ -29,7 +29,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class ImageGalleryCardViewModel : ViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
     private bool isPreviewOverlayEnabled;
@@ -56,7 +56,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
     public bool CanNavigateForward => SelectedImageIndex < ImageSources.Count - 1;
 
     public ImageGalleryCardViewModel(
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         ISettingsManager settingsManager
     )
     {
@@ -105,7 +105,7 @@ public partial class ImageGalleryCardViewModel : ViewModelBase
             {
                 if (sources.Count == 0)
                 {
-                    SelectedImageIndex = -1;
+                    SelectedImageIndex = 0;
                 }
                 else if (SelectedImageIndex == -1)
                 {

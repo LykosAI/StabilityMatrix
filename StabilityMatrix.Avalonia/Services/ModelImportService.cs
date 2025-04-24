@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +11,7 @@ using Python.Runtime;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Api.OpenModelsDb;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Services;
@@ -180,6 +183,116 @@ public class ModelImportService(
 
         // Add hash context action
         download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
+
+        await trackedDownloadService.TryStartDownload(download);
+    }
+
+    public Task DoOpenModelDbImport(
+        OpenModelDbKeyedModel model,
+        OpenModelDbResource resource,
+        DirectoryPath downloadFolder,
+        Action<TrackedDownload>? configureDownload = null
+    )
+    {
+        // todo: maybe can get actual filename from url?
+        ArgumentException.ThrowIfNullOrEmpty(model.Id, nameof(model));
+        ArgumentException.ThrowIfNullOrEmpty(resource.Type, nameof(resource));
+        var modelFileName = $"{model.Id}.{resource.Type}";
+
+        var modelUris = resource.Urls?.Select(u => new Uri(u, UriKind.Absolute)).ToArray();
+        if (modelUris is null || modelUris.Length == 0)
+        {
+            notificationService.Show(
+                new Notification(
+                    "Model has no download links",
+                    "This model has no download links available",
+                    NotificationType.Warning
+                )
+            );
+            return Task.CompletedTask;
+        }
+
+        return DoCustomImport(
+            modelUris,
+            modelFileName,
+            downloadFolder,
+            model.Images?.SelectImageAbsoluteUris().FirstOrDefault(),
+            configureDownload: configureDownload,
+            connectedModelInfo: new ConnectedModelInfo(model, resource, DateTimeOffset.Now)
+        );
+    }
+
+    public async Task DoCustomImport(
+        IEnumerable<Uri> modelUris,
+        string modelFileName,
+        DirectoryPath downloadFolder,
+        Uri? previewImageUri = null,
+        string? previewImageFileExtension = null,
+        ConnectedModelInfo? connectedModelInfo = null,
+        Action<TrackedDownload>? configureDownload = null
+    )
+    {
+        // Folders might be missing if user didn't install any packages yet
+        downloadFolder.Create();
+
+        // Fix invalid chars in FileName
+        var modelBaseFileName = Path.GetFileNameWithoutExtension(modelFileName);
+        modelBaseFileName = Path.GetInvalidFileNameChars()
+            .Aggregate(modelBaseFileName, (current, c) => current.Replace(c, '_'));
+        var modelFileExtension = Path.GetExtension(modelFileName);
+
+        var downloadPath = downloadFolder.JoinFile(modelBaseFileName + modelFileExtension);
+
+        // Save model info and preview image first if available
+        var cleanupFilePaths = new List<string>();
+        if (connectedModelInfo is not null)
+        {
+            await connectedModelInfo.SaveJsonToDirectory(downloadFolder, modelBaseFileName);
+            cleanupFilePaths.Add(
+                downloadFolder.JoinFile(modelBaseFileName + ConnectedModelInfo.FileExtension)
+            );
+        }
+        if (previewImageUri is not null)
+        {
+            if (previewImageFileExtension is null)
+            {
+                previewImageFileExtension = Path.GetExtension(previewImageUri.LocalPath);
+                if (string.IsNullOrEmpty(previewImageFileExtension))
+                {
+                    throw new InvalidOperationException(
+                        "Unable to get preview image file extension from from Uri, and no file extension provided"
+                    );
+                }
+            }
+
+            var previewImageDownloadPath = downloadFolder.JoinFile(
+                modelBaseFileName + ".preview" + previewImageFileExtension
+            );
+
+            await notificationService.TryAsync(
+                downloadService.DownloadToFileAsync(previewImageUri.ToString(), previewImageDownloadPath),
+                "Could not download preview image"
+            );
+
+            cleanupFilePaths.Add(previewImageDownloadPath);
+        }
+
+        // Create tracked download
+        // todo: support multiple uris
+        var modelUri = modelUris.First();
+        var download = trackedDownloadService.NewDownload(modelUri, downloadPath);
+
+        // Add hash info
+        // download.ExpectedHashSha256 = modelFile.Hashes.SHA256;
+
+        // Add files to cleanup list
+        download.ExtraCleanupFileNames.AddRange(cleanupFilePaths);
+
+        // Configure
+        configureDownload?.Invoke(download);
+
+        // Add hash context action
+        // download.ContextAction = CivitPostDownloadContextAction.FromCivitFile(modelFile);
 
         await trackedDownloadService.TryStartDownload(download);
     }

@@ -69,6 +69,9 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool isInferenceImageBrowserUseRecycleBinForDelete = true;
 
+    [ObservableProperty]
+    private bool filterExtraNetworksByBaseModel;
+
     public IEnumerable<FileNameFormatVar> OutputImageFileNameFormatVars =>
         FileNameFormatProvider
             .GetSample()
@@ -83,7 +86,7 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
         INotificationService notificationService,
         IPrerequisiteHelper prerequisiteHelper,
         IPyRunner pyRunner,
-        ServiceManager<ViewModelBase> dialogFactory,
+        IServiceManager<ViewModelBase> dialogFactory,
         ICompletionProvider completionProvider,
         ITrackedDownloadService trackedDownloadService,
         IModelIndexService modelIndexService,
@@ -120,6 +123,13 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
             this,
             vm => vm.IsInferenceImageBrowserUseRecycleBinForDelete,
             settings => settings.IsInferenceImageBrowserUseRecycleBinForDelete,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.FilterExtraNetworksByBaseModel,
+            settings => settings.FilterExtraNetworksByBaseModel,
             true
         );
 

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using Fusillade;
 using StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 
 namespace StabilityMatrix.Avalonia.Controls.VendorLabs;
@@ -20,7 +21,8 @@ public static class BetterAsyncImageCacheProvider
                             && !string.IsNullOrEmpty(assemblyName)
                                 ? Path.Combine(Path.GetTempPath(), assemblyName, "Cache")
                                 : Path.Combine(Path.GetTempPath(), "Cache"),
-                        CacheDuration = TimeSpan.FromDays(1)
+                        CacheDuration = TimeSpan.FromDays(1),
+                        HttpMessageHandler = NetCache.UserInitiated
                     }
                 ),
             LazyThreadSafetyMode.ExecutionAndPublication

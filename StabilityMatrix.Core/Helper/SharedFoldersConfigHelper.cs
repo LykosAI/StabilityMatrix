@@ -1,145 +1,181 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
-using StabilityMatrix.Core.Extensions;
+﻿using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Packages;
+using StabilityMatrix.Core.Models.Packages.Config;
 
 namespace StabilityMatrix.Core.Helper;
 
 public static class SharedFoldersConfigHelper
 {
+    // Cache strategies to avoid repeated instantiation
+    private static readonly Dictionary<ConfigFileType, IConfigSharingStrategy> Strategies =
+        new()
+        {
+            { ConfigFileType.Json, new JsonConfigSharingStrategy() },
+            { ConfigFileType.Yaml, new YamlConfigSharingStrategy() },
+            { ConfigFileType.Fds, new FdsConfigSharingStrategy() }
+            // Add more strategies here as needed
+        };
+
     /// <summary>
-    /// Updates a JSON object with shared folder layout rules, using the SourceTypes,
+    /// Updates a config file with shared folder layout rules, using the SourceTypes,
     /// converted to absolute paths using the sharedModelsDirectory.
     /// </summary>
-    public static async Task UpdateJsonConfigFileForSharedAsync(
+    public static async Task UpdateConfigFileForSharedAsync(
         SharedFolderLayout layout,
         string packageRootDirectory,
         string sharedModelsDirectory,
-        SharedFoldersConfigOptions? options = null
+        CancellationToken cancellationToken = default
     )
     {
         var configPath = Path.Combine(
             packageRootDirectory,
             layout.RelativeConfigPath ?? throw new InvalidOperationException("RelativeConfigPath is null")
         );
+        Directory.CreateDirectory(Path.GetDirectoryName(configPath)!); // Ensure directory exists
 
-        await using var stream = File.Open(configPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+        // Using FileStream ensures we handle file locking and async correctly
+        await using var stream = new FileStream(
+            configPath,
+            FileMode.OpenOrCreate,
+            FileAccess.ReadWrite,
+            FileShare.None
+        );
 
-        await UpdateJsonConfigFileAsync(
+        await UpdateConfigFileForSharedAsync(
                 layout,
+                packageRootDirectory,
+                sharedModelsDirectory,
                 stream,
-                rule =>
-                    rule.SourceTypes.Select(
-                        type => Path.Combine(sharedModelsDirectory, type.GetStringValue())
-                    ),
-                options
+                cancellationToken
             )
             .ConfigureAwait(false);
     }
 
     /// <summary>
-    /// Updates a JSON object with shared folder layout rules, using the TargetRelativePaths,
-    /// converted to absolute paths using the packageRootDirectory.
+    /// Updates a config file with shared folder layout rules, using the SourceTypes,
+    /// converted to absolute paths using the sharedModelsDirectory.
     /// </summary>
-    public static async Task UpdateJsonConfigFileForDefaultAsync(
+    public static async Task UpdateConfigFileForSharedAsync(
         SharedFolderLayout layout,
         string packageRootDirectory,
-        SharedFoldersConfigOptions? options = null
+        string sharedModelsDirectory,
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var fileType = layout.ConfigFileType ?? throw new InvalidOperationException("ConfigFileType is null");
+        var options = layout.ConfigSharingOptions;
+
+        if (!Strategies.TryGetValue(fileType, out var strategy))
+        {
+            throw new NotSupportedException($"Configuration file type '{fileType}' is not supported.");
+        }
+
+        await strategy
+            .UpdateAndWriteAsync(
+                stream,
+                layout,
+                rule =>
+                {
+                    // Handle Root, just use models directory (e.g., Swarm)
+                    if (rule.IsRoot)
+                    {
+                        return [sharedModelsDirectory];
+                    }
+
+                    var paths = rule.SourceTypes.Select(type => type.GetStringValue()) // Get the enum string value (e.g., "StableDiffusion")
+                        .Where(folderName => !string.IsNullOrEmpty(folderName)) // Filter out potentially empty mappings
+                        .Select(folderName => Path.Combine(sharedModelsDirectory, folderName)); // Combine with base models dir
+
+                    // If sub-path provided, add to all paths
+                    if (!string.IsNullOrEmpty(rule.SourceSubPath))
+                    {
+                        paths = paths.Select(path => Path.Combine(path, rule.SourceSubPath));
+                    }
+
+                    return paths;
+                },
+                [],
+                options,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Updates a config file with shared folder layout rules, using the TargetRelativePaths,
+    /// converted to absolute paths using the packageRootDirectory (restores default paths).
+    /// </summary>
+    public static async Task UpdateConfigFileForDefaultAsync(
+        SharedFolderLayout layout,
+        string packageRootDirectory,
+        CancellationToken cancellationToken = default
     )
     {
         var configPath = Path.Combine(
             packageRootDirectory,
             layout.RelativeConfigPath ?? throw new InvalidOperationException("RelativeConfigPath is null")
         );
+        Directory.CreateDirectory(Path.GetDirectoryName(configPath)!); // Ensure directory exists
 
-        await using var stream = File.Open(configPath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+        // Using FileStream ensures we handle file locking and async correctly
+        await using var stream = new FileStream(
+            configPath,
+            FileMode.OpenOrCreate,
+            FileAccess.ReadWrite,
+            FileShare.None
+        );
 
-        await UpdateJsonConfigFileAsync(
-                layout,
+        await UpdateConfigFileForDefaultAsync(layout, packageRootDirectory, stream, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Updates a config file with shared folder layout rules, using the TargetRelativePaths,
+    /// converted to absolute paths using the packageRootDirectory (restores default paths).
+    /// </summary>
+    public static async Task UpdateConfigFileForDefaultAsync(
+        SharedFolderLayout layout,
+        string packageRootDirectory,
+        Stream stream,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var fileType = layout.ConfigFileType ?? throw new InvalidOperationException("ConfigFileType is null");
+        var options = layout.ConfigSharingOptions;
+
+        if (!Strategies.TryGetValue(fileType, out var strategy))
+        {
+            throw new NotSupportedException($"Configuration file type '{fileType}' is not supported.");
+        }
+
+        var clearPaths = new List<string>();
+
+        // If using clear root option, add the root key
+        if (options.ConfigDefaultType is ConfigDefaultType.ClearRoot)
+        {
+            clearPaths.Add(options.RootKey ?? "");
+        }
+
+        await strategy
+            .UpdateAndWriteAsync(
                 stream,
+                layout,
                 rule =>
-                    rule.TargetRelativePaths.Select(NormalizePathSlashes)
-                        .Select(path => Path.Combine(packageRootDirectory, path)),
-                options
+                    rule.TargetRelativePaths.Select(
+                        path => Path.Combine(packageRootDirectory, NormalizePathSlashes(path))
+                    ), // Combine relative with package root
+                clearPaths,
+                options,
+                cancellationToken
             )
             .ConfigureAwait(false);
     }
 
-    private static async Task UpdateJsonConfigFileAsync(
-        SharedFolderLayout layout,
-        Stream configStream,
-        Func<SharedFolderLayoutRule, IEnumerable<string>> pathsSelector,
-        SharedFoldersConfigOptions? options = null
-    )
-    {
-        options ??= SharedFoldersConfigOptions.Default;
-
-        JsonObject jsonNode;
-
-        if (configStream.Length == 0)
-        {
-            jsonNode = new JsonObject();
-        }
-        else
-        {
-            jsonNode =
-                await JsonSerializer
-                    .DeserializeAsync<JsonObject>(configStream, options.JsonSerializerOptions)
-                    .ConfigureAwait(false) ?? new JsonObject();
-        }
-
-        UpdateJsonConfig(layout, jsonNode, pathsSelector, options);
-
-        configStream.Seek(0, SeekOrigin.Begin);
-        configStream.SetLength(0);
-
-        await JsonSerializer
-            .SerializeAsync(configStream, jsonNode, options.JsonSerializerOptions)
-            .ConfigureAwait(false);
-    }
-
-    private static void UpdateJsonConfig(
-        SharedFolderLayout layout,
-        JsonObject jsonObject,
-        Func<SharedFolderLayoutRule, IEnumerable<string>> pathsSelector,
-        SharedFoldersConfigOptions? options = null
-    )
-    {
-        options ??= SharedFoldersConfigOptions.Default;
-
-        var rulesByConfigPath = layout.GetRulesByConfigPath();
-
-        foreach (var (configPath, rule) in rulesByConfigPath)
-        {
-            // Get paths to write with selector
-            var paths = pathsSelector(rule).ToArray();
-
-            // Multiple elements or alwaysWriteArray is true, write as array
-            if (paths.Length > 1 || options.AlwaysWriteArray)
-            {
-                jsonObject[configPath] = new JsonArray(
-                    paths.Select(path => (JsonNode)JsonValue.Create(path)).ToArray()
-                );
-            }
-            // 1 element and alwaysWriteArray is false, write as string
-            else if (paths.Length == 1)
-            {
-                jsonObject[configPath] = paths[0];
-            }
-            else
-            {
-                jsonObject.Remove(configPath);
-            }
-        }
-    }
-
+    // Keep path normalization logic accessible if needed elsewhere, or inline it if only used here.
     private static string NormalizePathSlashes(string path)
     {
-        if (Compat.IsWindows)
-        {
-            return path.Replace('/', '\\');
-        }
-
-        return path;
+        // Replace forward slashes with backslashes on Windows, otherwise use forward slashes.
+        return path.Replace(Compat.IsWindows ? '/' : '\\', Path.DirectorySeparatorChar);
     }
 }

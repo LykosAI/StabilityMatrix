@@ -133,7 +133,7 @@
     <value>Язык</value>
   </data>
   <data name="Text_RelaunchRequiredToApplyLanguage" xml:space="preserve">
-    <value>Чтобы применить новый язык требуется перезапуск</value>
+    <value>Для применения нового языка, требуется перезапуск</value>
   </data>
   <data name="Action_Relaunch" xml:space="preserve">
     <value>Перезапустить</value>
@@ -175,7 +175,7 @@
     <value>Ослабление акцента</value>
   </data>
   <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
-    <value>Вложения / Текстовая инверсия</value>
+    <value>Embeddings / Textual Inversion</value>
   </data>
   <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
     <value>Сети (Lora / LyCORIS)</value>
@@ -184,7 +184,7 @@
     <value>Комментарии</value>
   </data>
   <data name="Label_ShowPixelGridAtHighZoomLevels" xml:space="preserve">
-    <value>Показывать пискельную сетку при максимальном масштабе</value>
+    <value>Отображать пиксельную сетку при больших уровнях масштабирования</value>
   </data>
   <data name="Label_Steps" xml:space="preserve">
     <value>Шаги</value>
@@ -196,7 +196,7 @@
     <value>Шаги корректора</value>
   </data>
   <data name="Label_CFGScale" xml:space="preserve">
-    <value>Внимание к запросу</value>
+    <value>Соответствие промпту</value>
   </data>
   <data name="Label_DenoisingStrength" xml:space="preserve">
     <value>Сила шумоподавления</value>
@@ -520,8 +520,7 @@
     <value>Добро пожаловать в Stability Matrix!</value>
   </data>
   <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
-    <value>Выберите желаемый интерфейс и нажмите &quot;Установить&quot; чтобы начать работу</value>
-    <comment>Fuzzy</comment>
+    <value>Выберите предпочитаемый интерфейс, чтобы начать</value>
   </data>
   <data name="Label_Installing" xml:space="preserve">
     <value>Установка</value>
@@ -563,7 +562,7 @@
     <value>Добавить пакет</value>
   </data>
   <data name="TeachingTip_AddPackageToGetStarted" xml:space="preserve">
-    <value>Добавьте пакет чтобы начать!</value>
+    <value>Добавьте пакет, чтобы начать!</value>
   </data>
   <data name="Label_EnvVarsTable_Name" xml:space="preserve">
     <value>Переменная</value>
@@ -908,7 +907,7 @@
     <value>Пропуск CLIP</value>
   </data>
   <data name="Label_ImageToVideo" xml:space="preserve">
-    <value>Картинка в Видео</value>
+    <value>Изображение в видео</value>
   </data>
   <data name="Label_Fps" xml:space="preserve">
     <value>Кадров в Секунду</value>
@@ -923,8 +922,7 @@
     <value>Кадры</value>
   </data>
   <data name="Label_MotionBucketId" xml:space="preserve">
-    <value>Motion Bucket ID</value>
-    <comment>Fuzzy</comment>
+    <value>Интенсивность движения (Motion Bucket ID)</value>
   </data>
   <data name="Label_AugmentationLevel" xml:space="preserve">
     <value>Уровень аугментации</value>
@@ -957,7 +955,7 @@
     <value>Здесь можно проверить прогресс установки и скачивания пакетов и моделей.</value>
   </data>
   <data name="Label_RecommendedModels" xml:space="preserve">
-    <value>Рекомендуемые Модели</value>
+    <value>Рекомендуемые модели</value>
   </data>
   <data name="Label_RecommendedModelsSubText" xml:space="preserve">
     <value>Пока ваш пакет устонавливается, вот несколько рекомендуемых моделей для того чтобы помочь вам начать.</value>
@@ -972,7 +970,7 @@
     <value>Требуется ComfyUI</value>
   </data>
   <data name="Label_ComfyRequiredDetail" xml:space="preserve">
-    <value>Требуется ComfyUI, чтобы установить этот пакет. Хотите ли вы установить его сейчас?</value>
+    <value>Для установки этого пакета требуется ComfyUI. Установить?</value>
   </data>
   <data name="Error_PleaseSelectDownloadLocation" xml:space="preserve">
     <value>Пожалуйста выберите место скачивания.</value>
@@ -1056,7 +1054,7 @@
     <value>Stability Matrix уже запущен</value>
   </data>
   <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
-    <value>{0} удалено успешно</value>
+    <value>{0} успешно удалён</value>
   </data>
   <data name="Label_WorkflowDeleted" xml:space="preserve">
     <value>Рабочий процесс удалён</value>
@@ -1131,7 +1129,7 @@
     <value>Копировать как растровое изображение</value>
   </data>
   <data name="Label_DisableUpdateCheck" xml:space="preserve">
-    <value>Отключите Проверку Обновлений</value>
+    <value>Отключить проверку обновлений</value>
   </data>
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>ПОЖАЛУЙСТА ИЗВЛЕКИТЕ ПРИЛОЖЕНИЕ ИЗ АРХИВА ПЕРЕЗ ЗАПУСКОМ STABILITY MATRIX</value>
@@ -1185,7 +1183,7 @@
     <value>Сид</value>
   </data>
   <data name="Label_NegativePrompt" xml:space="preserve">
-    <value>Анти-Запрос</value>
+    <value>Негативный промпт</value>
   </data>
   <data name="Label_NewFolder" xml:space="preserve">
     <value>Новая Папка</value>
@@ -1211,6 +1209,15 @@
   </data>
   <data name="Label_DependencySpecifiers" xml:space="preserve">
     <value>Спецификаторы зависимостей</value>
+  </data>
+  <data name="AnalyticsExample_InstallData" xml:space="preserve">
+    <value>{
+  &quot;packageName&quot;: &quot;stable-diffusion-webui&quot;,
+  &quot;packageVersion&quot;: &quot;v1.10.0&quot;,
+  &quot;isSuccess&quot;: true,
+  &quot;type&quot;: &quot;install&quot;,
+  &quot;timestamp&quot;: &quot;2024-09-04T02:14:04.1967404+00:00&quot;
+}</value>
   </data>
   <data name="Label_Analytics" xml:space="preserve">
     <value>Аналитика</value>
@@ -1268,5 +1275,87 @@
   </data>
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>Перейти к настройкам</value>
+  </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>Включить</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>Отключить</value>
+  </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Подключить аккаунт Lykos</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Войдите в свой аккаунт Lykos, чтобы использовать подключенные функции.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Пожалуйста, войдите снова</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Срок действия вашего входа истёк. Пожалуйста, войдите снова, чтобы продолжить.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>Поддержка Stability Matrix</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>Спасибо за поддержку Stability Matrix!</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>Такие функции, как **{0}**, — это одно из многих преимуществ, доступных нашим сторонникам. Ваш вклад помогает нам покрывать расходы на серверы и поддерживает разработку Stability Matrix.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>Такие функции, как **{0}**, доступны на уровне поддержки **{1}** (или выше). Ваш вклад помогает нам покрывать расходы на серверы для более продвинутых подключенных функций и позволяет нам постоянно улучшать Stability Matrix для всех.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>Если Вы уже поддерживаете нас на Patreon, пожалуйста, привяжите свою учетную запись, чтобы продолжить.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>Настройки учетной записи</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>Посмотреть варианты поддержки</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>Позже</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>Статус</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>Активно</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>Неактивно (Используется стандартное соединение)</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Получайте более быстрые результаты поиска при просмотре моделей из онлайн-репозиториев, таких как Civitai.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>Экспериментальная оптимизация для сторонних репозиториев. Официально не аффилирован; доступность может изменяться.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>Бета</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>Ускоренный поиск моделей</value>
+    <comment>Fuzzy</comment>
   </data>
 </root>

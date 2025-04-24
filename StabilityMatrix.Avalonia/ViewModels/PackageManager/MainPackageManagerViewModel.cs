@@ -42,7 +42,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 public partial class MainPackageManagerViewModel : PageViewModelBase
 {
     private readonly ISettingsManager settingsManager;
-    private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly IServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
     private readonly INavigationService<PackageManagerViewModel> packageNavigationService;
     private readonly ILogger<MainPackageManagerViewModel> logger;
@@ -72,7 +72,7 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
 
     public MainPackageManagerViewModel(
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> dialogFactory,
+        IServiceManager<ViewModelBase> dialogFactory,
         INotificationService notificationService,
         INavigationService<PackageManagerViewModel> packageNavigationService,
         ILogger<MainPackageManagerViewModel> logger,

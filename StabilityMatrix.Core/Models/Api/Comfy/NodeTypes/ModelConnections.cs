@@ -12,6 +12,7 @@ public record ModelConnections(string Name)
         VAE = other.VAE;
         Clip = other.Clip;
         Conditioning = other.Conditioning;
+        ClipVision = other.ClipVision;
     }
 
     public ModelNodeConnection? Model { get; set; }
@@ -21,4 +22,6 @@ public record ModelConnections(string Name)
     public ClipNodeConnection? Clip { get; set; }
 
     public ConditioningConnections? Conditioning { get; set; }
+
+    public ClipVisionNodeConnection? ClipVision { get; set; }
 }

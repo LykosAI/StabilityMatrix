@@ -1,0 +1,12 @@
+﻿<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:CompileBindings="True">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://StabilityMatrix.Avalonia/Styles/ControlThemes/BetterComboBoxStyles.axaml" />
+        <ResourceInclude Source="avares://StabilityMatrix.Avalonia/Styles/ControlThemes/HyperlinkIconButtonStyles.axaml" />
+        <ResourceInclude Source="avares://StabilityMatrix.Avalonia/Styles/ControlThemes/LabelStyles.axaml" />
+        <ResourceInclude Source="avares://StabilityMatrix.Avalonia/Styles/ControlThemes/LabelStyles.Dark.axaml" />
+        <ResourceInclude Source="avares://StabilityMatrix.Avalonia/Styles/ControlThemes/ListBoxStyles.axaml" />
+    </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

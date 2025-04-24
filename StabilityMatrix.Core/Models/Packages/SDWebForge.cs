@@ -97,13 +97,6 @@ public class SDWebForge(
             },
             new()
             {
-                Name = "Use DirectML",
-                Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
-                Options = ["--directml"]
-            },
-            new()
-            {
                 Name = "Skip Torch CUDA Test",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS,
@@ -120,7 +113,7 @@ public class SDWebForge(
         ];
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
-        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
+        [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps];
 
     public override async Task InstallPackage(
         string installLocation,
@@ -150,45 +143,20 @@ public class SDWebForge(
             SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
-        if (isBlackwell && torchVersion is TorchIndex.Cuda)
-        {
-            pipArgs = pipArgs
-                .AddArg("--upgrade")
-                .AddArg("--pre")
-                .WithTorch()
-                .WithTorchVision()
-                .WithTorchExtraIndex("nightly/cu128");
-
-            if (installedPackage.PipOverrides != null)
-            {
-                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-            }
-            progress?.Report(
-                new ProgressReport(-1f, "Installing Torch for your shiny new GPU...", isIndeterminate: true)
+        pipArgs = pipArgs
+            .WithTorch(isBlackwell ? string.Empty : "==2.3.1")
+            .WithTorchVision(isBlackwell ? string.Empty : "==0.18.1")
+            .WithTorchExtraIndex(
+                torchVersion switch
+                {
+                    TorchIndex.Cpu => "cpu",
+                    TorchIndex.Cuda when isBlackwell => "cu128",
+                    TorchIndex.Cuda => "cu121",
+                    TorchIndex.Rocm => "rocm5.7",
+                    TorchIndex.Mps => "cpu",
+                    _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                }
             );
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-        }
-        else
-        {
-            pipArgs = pipArgs
-                .WithTorch("==2.3.1")
-                .WithTorchVision("==0.18.1")
-                .WithTorchExtraIndex(
-                    torchVersion switch
-                    {
-                        TorchIndex.Cpu => "cpu",
-                        TorchIndex.Cuda => "cu121",
-                        TorchIndex.Rocm => "rocm5.7",
-                        TorchIndex.Mps => "cpu",
-                        _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
-                    }
-                );
-        }
-
-        if (isBlackwell && torchVersion is TorchIndex.Cuda)
-        {
-            pipArgs = new PipInstallArgs();
-        }
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
 

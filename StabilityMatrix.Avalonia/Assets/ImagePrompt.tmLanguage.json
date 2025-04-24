@@ -231,6 +231,57 @@
         }
       ]
     },
+    "wildcard": {
+      "begin": "(?<!\\\\)\\{",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.wildcard.begin.prompt"
+        }
+      },
+      "end": "\\}|$",
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.wildcard.end.prompt"
+        }
+      },
+      "name": "meta.structure.wildcard.prompt",
+      "patterns": [
+        {
+          "include": "#network"
+        },
+        {
+          "match": "\\|\\|+|\\|(?=\\})|(?<=\\{)\\||\\|\\s*\\|",
+          "name": "invalid.illegal.empty-option.prompt"
+        },
+        {
+          "match": "\\|",
+          "name": "keyword.operator.choice.prompt"
+        },
+        {
+          "match": "\\s+",
+          "name": "meta.embedded.whitespace"
+        },
+        {
+          "include": "#escape"
+        },
+        {
+          "include": "#parenthesized"
+        },
+        {
+          "include": "#array"
+        },
+        {
+          "include": "#separator"
+        },
+        {
+          "include": "#keyword"
+        },
+        {
+          "match": "[^\\{\\}\\|\\s,]+",
+          "name": "string.unquoted.wildcard-option.prompt"
+        }
+      ]
+    },
     "value": {
       "patterns": [
         {
@@ -238,6 +289,9 @@
         },
         {
           "include": "#escape"
+        },
+        {
+          "include": "#wildcard"
         },
         {
           "include": "#parenthesized"

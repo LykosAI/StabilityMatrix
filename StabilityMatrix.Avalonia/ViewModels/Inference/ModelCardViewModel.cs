@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.IO;
-using System.Linq;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Injectio.Attributes;
@@ -25,20 +20,25 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ModelCard))]
 [ManagedService]
-[RegisterTransient<ModelCardViewModel>]
+[RegisterScoped<ModelCardViewModel>]
 public partial class ModelCardViewModel(
     IInferenceClientManager clientManager,
-    ServiceManager<ViewModelBase> vmFactory
+    IServiceManager<ViewModelBase> vmFactory,
+    TabContext tabContext
 ) : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
     [ObservableProperty]
     private HybridModelFile? selectedModel;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsGguf), nameof(ShowPrecisionSelection))]
     private HybridModelFile? selectedUnetModel;
 
     [ObservableProperty]
     private bool isRefinerSelectionEnabled;
+
+    [ObservableProperty]
+    private bool showRefinerOption = true;
 
     [ObservableProperty]
     private HybridModelFile? selectedRefiner = HybridModelFile.None;
@@ -67,7 +67,7 @@ public partial class ModelCardViewModel(
     private bool isModelLoaderSelectionEnabled;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsStandaloneModelLoader), nameof(ShowPrecisionSelection))]
+    [NotifyPropertyChangedFor(nameof(IsStandaloneModelLoader))]
     private ModelLoader selectedModelLoader;
 
     [ObservableProperty]
@@ -80,7 +80,10 @@ public partial class ModelCardViewModel(
     private HybridModelFile? selectedClip3;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsSd3Clip))]
+    private HybridModelFile? selectedClip4;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSd3Clip), nameof(IsHiDreamClip))]
     private string? selectedClipType;
 
     [ObservableProperty]
@@ -92,19 +95,42 @@ public partial class ModelCardViewModel(
     [ObservableProperty]
     private bool isClipModelSelectionEnabled;
 
+    [ObservableProperty]
+    private double shift = 3.0d;
+
     public List<string> WeightDTypes { get; set; } = ["default", "fp8_e4m3fn", "fp8_e5m2"];
-    public List<string> ClipTypes { get; set; } = ["flux", "sd3"];
+    public List<string> ClipTypes { get; set; } = ["flux", "sd3", "HiDream"];
 
     public StackEditableCardViewModel ExtraNetworksStackCardViewModel { get; } =
         new(vmFactory) { Title = Resources.Label_ExtraNetworks, AvailableModules = [typeof(LoraModule)] };
 
     public IInferenceClientManager ClientManager { get; } = clientManager;
 
-    public List<ModelLoader> ModelLoaders { get; } = Enum.GetValues<ModelLoader>().ToList();
+    public List<ModelLoader> ModelLoaders { get; } =
+        Enum.GetValues<ModelLoader>().Except([ModelLoader.Gguf]).ToList();
 
-    public bool IsStandaloneModelLoader => SelectedModelLoader is ModelLoader.Unet or ModelLoader.Gguf;
-    public bool ShowPrecisionSelection => SelectedModelLoader is ModelLoader.Unet;
+    public bool IsStandaloneModelLoader => SelectedModelLoader is ModelLoader.Unet;
+    public bool ShowPrecisionSelection => SelectedModelLoader is ModelLoader.Unet && !IsGguf;
     public bool IsSd3Clip => SelectedClipType == "sd3";
+    public bool IsHiDreamClip => SelectedClipType == "HiDream";
+    public bool IsGguf => SelectedUnetModel?.RelativePath.EndsWith("gguf") ?? false;
+
+    protected override void OnInitialLoaded()
+    {
+        base.OnInitialLoaded();
+        ExtraNetworksStackCardViewModel.CardAdded += ExtraNetworksStackCardViewModelOnCardAdded;
+    }
+
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+        ExtraNetworksStackCardViewModel.CardAdded -= ExtraNetworksStackCardViewModelOnCardAdded;
+    }
+
+    private void ExtraNetworksStackCardViewModelOnCardAdded(object? sender, LoadableViewModelBase e)
+    {
+        OnSelectedModelChanged(SelectedModel);
+    }
 
     [RelayCommand]
     private static async Task OnConfigClickAsync()
@@ -230,9 +256,11 @@ public partial class ModelCardViewModel(
                 SelectedClip1Name = SelectedClip1?.RelativePath,
                 SelectedClip2Name = SelectedClip2?.RelativePath,
                 SelectedClip3Name = SelectedClip3?.RelativePath,
+                SelectedClip4Name = SelectedClip4?.RelativePath,
                 SelectedClipType = SelectedClipType,
                 IsClipModelSelectionEnabled = IsClipModelSelectionEnabled,
                 ModelLoader = SelectedModelLoader,
+                ShowRefinerOption = ShowRefinerOption,
                 ExtraNetworks = ExtraNetworksStackCardViewModel.SaveStateToJsonObject()
             }
         );
@@ -243,9 +271,12 @@ public partial class ModelCardViewModel(
     {
         var model = DeserializeModel<ModelCardModel>(state);
 
-        SelectedModelLoader = model.ModelLoader;
+        // uwu 123
+        // :thinknom:
+        // :thinkcode:
+        SelectedModelLoader = model.ModelLoader is ModelLoader.Gguf ? ModelLoader.Unet : model.ModelLoader;
 
-        if (model.ModelLoader is ModelLoader.Unet or ModelLoader.Gguf)
+        if (SelectedModelLoader is ModelLoader.Unet)
         {
             SelectedUnetModel = model.SelectedModelName is null
                 ? null
@@ -278,12 +309,17 @@ public partial class ModelCardViewModel(
             ? HybridModelFile.None
             : ClientManager.ClipModels.FirstOrDefault(x => x.RelativePath == model.SelectedClip3Name);
 
+        SelectedClip4 = model.SelectedClip3Name is null
+            ? HybridModelFile.None
+            : ClientManager.ClipModels.FirstOrDefault(x => x.RelativePath == model.SelectedClip4Name);
+
         SelectedClipType = model.SelectedClipType;
 
         ClipSkip = model.ClipSkip;
 
         IsVaeSelectionEnabled = model.IsVaeSelectionEnabled;
         IsRefinerSelectionEnabled = model.IsRefinerSelectionEnabled;
+        ShowRefinerOption = model.ShowRefinerOption;
         IsClipSkipEnabled = model.IsClipSkipEnabled;
         IsExtraNetworksEnabled = model.IsExtraNetworksEnabled;
         IsModelLoaderSelectionEnabled = model.IsModelLoaderSelectionEnabled;
@@ -324,7 +360,7 @@ public partial class ModelCardViewModel(
         if (model is null)
             return;
 
-        if (model.Local?.SharedFolderType is SharedFolderType.Unet)
+        if (model.Local?.SharedFolderType is SharedFolderType.DiffusionModels)
         {
             SelectedUnetModel = model;
         }
@@ -355,7 +391,7 @@ public partial class ModelCardViewModel(
 
     partial void OnSelectedModelLoaderChanged(ModelLoader value)
     {
-        if (value is ModelLoader.Unet or ModelLoader.Gguf)
+        if (value is ModelLoader.Unet)
         {
             if (!IsVaeSelectionEnabled)
                 IsVaeSelectionEnabled = true;
@@ -365,9 +401,29 @@ public partial class ModelCardViewModel(
         }
     }
 
+    partial void OnSelectedModelChanged(HybridModelFile? value)
+    {
+        // Update TabContext with the selected model
+        tabContext.SelectedModel = value;
+
+        if (!IsExtraNetworksEnabled)
+            return;
+
+        foreach (var card in ExtraNetworksStackCardViewModel.Cards)
+        {
+            if (card is not LoraModule loraModule)
+                continue;
+
+            if (loraModule.GetCard<ExtraNetworkCardViewModel>() is not { } cardViewModel)
+                continue;
+
+            cardViewModel.SelectedBaseModel = value;
+        }
+    }
+
     private void SetupStandaloneModelLoader(ModuleApplyStepEventArgs e)
     {
-        if (SelectedModelLoader is ModelLoader.Gguf)
+        if (SelectedModelLoader is ModelLoader.Unet && IsGguf)
         {
             var checkpointLoader = e.Nodes.AddTypedNode(
                 new ComfyNodeBuilder.UnetLoaderGGUF
@@ -392,6 +448,20 @@ public partial class ModelCardViewModel(
                 }
             );
             e.Builder.Connections.Base.Model = checkpointLoader.Output;
+        }
+
+        if (SelectedModelLoader is ModelLoader.Unet && IsHiDreamClip)
+        {
+            var modelSamplingSd3 = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.ModelSamplingSD3
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.ModelSamplingSD3)),
+                    Model = e.Builder.Connections.Base.Model,
+                    Shift = Shift
+                }
+            );
+
+            e.Builder.Connections.Base.Model = modelSamplingSd3.Output;
         }
 
         var vaeLoader = e.Nodes.AddTypedNode(
@@ -492,6 +562,29 @@ public partial class ModelCardViewModel(
     private void SetupClipLoaders(ModuleApplyStepEventArgs e)
     {
         if (
+            SelectedClip4 is { IsNone: false }
+            && SelectedClip3 is { IsNone: false }
+            && SelectedClip2 is { IsNone: false }
+            && SelectedClip1 is { IsNone: false }
+        )
+        {
+            var clipLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.QuadrupleCLIPLoader
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.QuadrupleCLIPLoader)),
+                    ClipName1 =
+                        SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
+                    ClipName2 =
+                        SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
+                    ClipName3 =
+                        SelectedClip3?.RelativePath ?? throw new ValidationException("No Clip3 Selected"),
+                    ClipName4 =
+                        SelectedClip4?.RelativePath ?? throw new ValidationException("No Clip4 Selected")
+                }
+            );
+            e.Builder.Connections.Base.Clip = clipLoader.Output;
+        }
+        else if (
             SelectedClip3 is { IsNone: false }
             && SelectedClip2 is { IsNone: false }
             && SelectedClip1 is { IsNone: false }
@@ -549,6 +642,7 @@ public partial class ModelCardViewModel(
         public string? SelectedClip1Name { get; init; }
         public string? SelectedClip2Name { get; init; }
         public string? SelectedClip3Name { get; init; }
+        public string? SelectedClip4Name { get; init; }
         public string? SelectedClipType { get; init; }
         public ModelLoader ModelLoader { get; init; }
         public int ClipSkip { get; init; } = 1;
@@ -559,6 +653,7 @@ public partial class ModelCardViewModel(
         public bool IsExtraNetworksEnabled { get; init; }
         public bool IsModelLoaderSelectionEnabled { get; init; }
         public bool IsClipModelSelectionEnabled { get; init; }
+        public bool ShowRefinerOption { get; init; }
 
         public JsonObject? ExtraNetworks { get; init; }
     }

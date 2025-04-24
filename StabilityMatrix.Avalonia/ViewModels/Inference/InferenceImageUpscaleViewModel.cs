@@ -25,7 +25,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [View(typeof(InferenceImageUpscaleView), persistent: true)]
 [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
 [ManagedService]
-[RegisterTransient<InferenceImageUpscaleViewModel>]
+[RegisterScoped<InferenceImageUpscaleViewModel>]
 public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -60,7 +60,7 @@ public class InferenceImageUpscaleViewModel : InferenceGenerationViewModelBase
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         RunningPackageService runningPackageService
     )
         : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)

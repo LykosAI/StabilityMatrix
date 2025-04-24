@@ -4,4 +4,4 @@ using Injectio.Attributes;
 namespace StabilityMatrix.Avalonia.Controls;
 
 [RegisterTransient<ExtraNetworkCard>]
-public class ExtraNetworkCard : TemplatedControl;
+public class ExtraNetworkCard : TemplatedControlBase;

@@ -3,16 +3,13 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
+using Apizr;
+using Apizr.Logging;
 using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
@@ -45,10 +42,10 @@ using Polly.Contrib.WaitAndRetry;
 using Polly.Extensions.Http;
 using Polly.Timeout;
 using Refit;
-using Sentry;
 using StabilityMatrix.Avalonia.Behaviors;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -56,6 +53,7 @@ using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Api.LykosAuthApi;
+using StabilityMatrix.Core.Api.PromptGenApi;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Converters.Json;
 using StabilityMatrix.Core.Database;
@@ -135,6 +133,14 @@ public sealed class App : Application
         Config?["LykosAccountApiBaseUrl"] ?? "https://account.lykos.ai/";
 #else
     public const string LykosAccountApiBaseUrl = "https://account.lykos.ai/";
+#endif
+#if DEBUG
+    // ReSharper disable twice LocalizableElement
+    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
+    public static string PromptGenApiBaseUrl =>
+        Config?["PromptGenApiBaseUrl"] ?? "https://promptgen.lykos.ai/api";
+#else
+    public const string PromptGenApiBaseUrl = "https://promptgen.lykos.ai/api";
 #endif
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -372,7 +378,7 @@ public sealed class App : Application
                 new MainWindowViewModel(
                     provider.GetRequiredService<ISettingsManager>(),
                     provider.GetRequiredService<IDiscordRichPresenceService>(),
-                    provider.GetRequiredService<ServiceManager<ViewModelBase>>(),
+                    provider.GetRequiredService<IServiceManager<ViewModelBase>>(),
                     provider.GetRequiredService<ITrackedDownloadService>(),
                     provider.GetRequiredService<IModelIndexService>(),
                     provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
@@ -438,7 +444,7 @@ public sealed class App : Application
 
         Config = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .Build();
 
@@ -524,11 +530,12 @@ public sealed class App : Application
                     if (retryCount > 3)
                     {
                         Logger.Info(
-                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to {Exception}",
+                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to ({Status}) {Msg}",
                             retryCount,
                             6,
                             timeSpan.TotalSeconds,
-                            result.Exception?.ToString()
+                            result?.Result?.StatusCode,
+                            result?.Result?.ToString()
                         );
                     }
                 }
@@ -551,11 +558,12 @@ public sealed class App : Application
                     if (retryCount > 4)
                     {
                         Logger.Info(
-                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to {Exception}",
+                            "Retry attempt {Count}/{Max} after {Seconds:N2}s due to ({Status}) {Msg}",
                             retryCount,
                             7,
                             timeSpan.TotalSeconds,
-                            result.Exception?.ToString()
+                            result?.Result?.StatusCode,
+                            result?.Result?.ToString()
                         );
                     }
                 }
@@ -601,6 +609,20 @@ public sealed class App : Application
             .AddPolicyHandler(retryPolicyLonger);
 
         services
+            .AddRefitClient<ILykosModelDiscoveryApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://discovery.lykos.ai/api/v1");
+                c.Timeout = TimeSpan.FromHours(1);
+                c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+            })
+            .AddPolicyHandler(retryPolicy)
+            .AddHttpMessageHandler(
+                serviceProvider =>
+                    new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
+            );
+
+        services
             .AddRefitClient<IPyPiApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {
@@ -639,6 +661,31 @@ public sealed class App : Application
             );
 
         services
+            .AddRefitClient<IRecommendedModelsApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri(LykosAuthApiBaseUrl);
+                c.Timeout = TimeSpan.FromHours(1);
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddPolicyHandler(retryPolicy);
+
+        services
+            .AddRefitClient<IPromptGenApi>(defaultRefitSettings)
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri(PromptGenApiBaseUrl);
+                c.Timeout = TimeSpan.FromHours(1);
+                c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+            .AddPolicyHandler(retryPolicy)
+            .AddHttpMessageHandler(
+                serviceProvider =>
+                    new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
+            );
+
+        services
             .AddRefitClient<ILykosAnalyticsApi>(defaultRefitSettings)
             .ConfigureHttpClient(c =>
             {
@@ -656,6 +703,23 @@ public sealed class App : Application
                 c.Timeout = TimeSpan.FromHours(1);
             })
             .AddPolicyHandler(retryPolicy);
+
+        // Apizr clients
+        services.AddApizrManagerFor<IOpenModelDbApi, OpenModelDbManager>(options =>
+        {
+            options
+                .WithRefitSettings(
+                    new RefitSettings(
+                        new SystemTextJsonContentSerializer(OpenModelDbApiJsonContext.Default.Options)
+                    )
+                )
+                .ConfigureHttpClientBuilder(c => c.AddPolicyHandler(retryPolicy))
+                .WithInMemoryCacheHandler()
+                .WithLogging(HttpTracerMode.ExceptionsOnly, HttpMessageParts.AllButResponseBody);
+        });
+        services.AddSingleton<OpenModelDbManager>(
+            sp => (OpenModelDbManager)sp.GetRequiredService<IApizrManager<IOpenModelDbApi>>()
+        );
 
         // Add Refit client managers
         services.AddHttpClient("A3Client").AddPolicyHandler(localRetryPolicy);
@@ -978,7 +1042,8 @@ public sealed class App : Application
             {
                 typeof(ConsoleViewModel),
                 typeof(LoadableViewModelBase),
-                typeof(TextEditorCompletionBehavior)
+                typeof(TextEditorCompletionBehavior),
+                typeof(CompletionProvider)
             };
 
             foreach (var type in typesToDisableTrace)
@@ -1016,10 +1081,53 @@ public sealed class App : Application
                 .ForLogger()
                 .FilterMinLevel(NLog.LogLevel.Trace)
                 .WriteTo(
-                    new ConsoleTarget("console")
+                    new ColoredConsoleTarget("console")
                     {
-                        Layout = "[${level:uppercase=true}]\t${logger:shortName=true}\t${message}",
-                        DetectConsoleAvailable = true
+                        Layout =
+                            "[${level:uppercase=true}]\t${logger:shortName=true}\t${message}${onexception:\n${exception:format=tostring}}",
+                        DetectConsoleAvailable = true,
+                        EnableAnsiOutput = true,
+                        WordHighlightingRules =
+                        {
+                            new ConsoleWordHighlightingRule(
+                                "[TRACE]",
+                                ConsoleOutputColor.DarkGray,
+                                ConsoleOutputColor.NoChange
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[DEBUG]",
+                                ConsoleOutputColor.Gray,
+                                ConsoleOutputColor.NoChange
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[INFO]",
+                                ConsoleOutputColor.DarkGreen,
+                                ConsoleOutputColor.NoChange
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[WARN]",
+                                ConsoleOutputColor.Yellow,
+                                ConsoleOutputColor.NoChange
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[ERROR]",
+                                ConsoleOutputColor.White,
+                                ConsoleOutputColor.Red
+                            ),
+                            new ConsoleWordHighlightingRule(
+                                "[FATAL]",
+                                ConsoleOutputColor.Black,
+                                ConsoleOutputColor.DarkRed
+                            )
+                        },
+                        RowHighlightingRules =
+                        {
+                            new ConsoleRowHighlightingRule(
+                                "level == LogLevel.Trace",
+                                ConsoleOutputColor.Gray,
+                                ConsoleOutputColor.NoChange
+                            ),
+                        }
                     }
                 )
                 .WithAsync();

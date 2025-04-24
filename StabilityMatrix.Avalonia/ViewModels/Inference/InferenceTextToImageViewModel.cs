@@ -18,6 +18,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Inference;
 using StabilityMatrix.Core.Services;
 using InferenceTextToImageView = StabilityMatrix.Avalonia.Views.Inference.InferenceTextToImageView;
@@ -28,13 +29,14 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), IsPersistent = true)]
 [ManagedService]
-[RegisterTransient<InferenceTextToImageViewModel>]
+[RegisterScoped<InferenceTextToImageViewModel>]
 public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly INotificationService notificationService;
     private readonly IModelIndexService modelIndexService;
+    private readonly TabContext tabContext;
 
     [JsonIgnore]
     public StackCardViewModel StackCardViewModel { get; }
@@ -61,14 +63,16 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IModelIndexService modelIndexService,
-        RunningPackageService runningPackageService
+        RunningPackageService runningPackageService,
+        TabContext tabContext
     )
         : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
     {
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;
+        this.tabContext = tabContext;
 
         // Get sub view models from service manager
 
@@ -76,6 +80,8 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         SeedCardViewModel.GenerateNewSeed();
 
         ModelCardViewModel = vmFactory.Get<ModelCardViewModel>();
+
+        // When the model changes in the ModelCardViewModel, we'll have access to it in the TabContext
 
         SamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>(samplerCard =>
         {
@@ -123,6 +129,22 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                         e.Sender is { IsRefinerSelectionEnabled: true, SelectedRefiner: not null };
                 })
         );
+
+        AddDisposable(
+            SamplerCardViewModel
+                .WhenPropertyChanged(x => x.SelectedScheduler)
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe(next =>
+                {
+                    var isAlignYourSteps = next.Value is { Name: "align_your_steps" };
+                    ModelCardViewModel.ShowRefinerOption = !isAlignYourSteps;
+
+                    if (isAlignYourSteps)
+                    {
+                        ModelCardViewModel.IsRefinerSelectionEnabled = false;
+                    }
+                })
+        );
     }
 
     /// <inheritdoc />
@@ -146,17 +168,40 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Load models
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Gguf or ModelLoader.Unet;
+        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet;
         var useSd3Latent =
             SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>() || isUnetLoader;
+        var usePlasmaNoise = SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<PlasmaNoiseModule>();
 
         if (useSd3Latent)
         {
-            builder.SetupEmptySd3LatentSource(
+            builder.SetupEmptyLatentSource(
                 SamplerCardViewModel.Width,
                 SamplerCardViewModel.Height,
                 BatchSizeCardViewModel.BatchSize,
-                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null
+                BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null,
+                latentType: LatentType.Sd3
+            );
+        }
+        else if (usePlasmaNoise)
+        {
+            var plasmaVm = SamplerCardViewModel
+                .ModulesCardViewModel.GetCard<PlasmaNoiseModule>()
+                .GetCard<PlasmaNoiseCardViewModel>();
+            builder.SetupPlasmaLatentSource(
+                SamplerCardViewModel.Width,
+                SamplerCardViewModel.Height,
+                builder.Connections.Seed,
+                plasmaVm.SelectedNoiseType,
+                plasmaVm.ValueMin,
+                plasmaVm.ValueMax,
+                plasmaVm.RedMin,
+                plasmaVm.RedMax,
+                plasmaVm.GreenMin,
+                plasmaVm.GreenMax,
+                plasmaVm.BlueMin,
+                plasmaVm.BlueMax,
+                plasmaVm.PlasmaTurbulence
             );
         }
         else
@@ -176,7 +221,11 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Setup Sampler and Refiner if enabled
         if (isUnetLoader)
         {
-            SamplerCardViewModel.ApplyStepsInitialFluxSampler(applyArgs);
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
+        }
+        else if (SamplerCardViewModel.SelectedScheduler?.Name is "align_your_steps")
+        {
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, false);
         }
         else
         {

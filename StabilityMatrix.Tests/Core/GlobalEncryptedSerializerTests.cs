@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Lykos;
+#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace StabilityMatrix.Tests.Core;
 

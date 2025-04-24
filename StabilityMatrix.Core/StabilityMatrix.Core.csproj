@@ -17,6 +17,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Apizr" />
+      <PackageReference Include="Apizr.Extensions.Microsoft.Caching" />
+      <PackageReference Include="Apizr.Extensions.Microsoft.DependencyInjection" />
+      <PackageReference Include="Apizr.Integrations.Fusillade" />
       <PackageReference Include="AsyncAwaitBestPractices" />
       <PackageReference Include="AutoCtor" />
       <PackageReference Include="Blake3" />
@@ -63,6 +67,7 @@
       <PackageReference Include="Sentry.NLog" />
       <PackageReference Include="SharpCompress" />
       <PackageReference Include="SkiaSharp" />
+      <PackageReference Include="TextMateSharp.Grammars" />
       <PackageReference Include="Websocket.Client" />
       <PackageReference Include="YamlDotNet" />
       <PackageReference Include="Yoh.Text.Json.NamingPolicies" />
@@ -75,5 +80,9 @@
       <Compile Update="Models\Api\Lykos\Analytics\PackageInstallAnalyticsRequest.cs">
         <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
       </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Api\PromptGen\Generated\" />
     </ItemGroup>
 </Project>

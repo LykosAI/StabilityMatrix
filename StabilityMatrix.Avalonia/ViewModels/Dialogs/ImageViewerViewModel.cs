@@ -69,7 +69,7 @@ public partial class ImageViewerViewModel(
 
     partial void OnImageSourceChanged(ImageSource? value)
     {
-        if (value?.LocalFile is { } localFile)
+        if (value?.LocalFile is { Exists: true } localFile)
         {
             FileNameText = localFile.Name;
             FileSizeText = Size.FormatBase10Bytes(localFile.GetSize(true));

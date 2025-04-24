@@ -7,19 +7,13 @@ using StabilityMatrix.Core.Models.Database;
 namespace StabilityMatrix.Core.Helper.Cache;
 
 [RegisterSingleton<IGithubApiCache, GithubApiCache>]
-public class GithubApiCache : IGithubApiCache
+public class GithubApiCache(
+    ILiteDbContext dbContext,
+    IGitHubClient githubApi,
+    ILogger<IGithubApiCache> logger
+) : IGithubApiCache
 {
-    private readonly ILiteDbContext dbContext;
-    private readonly IGitHubClient githubApi;
-    private readonly ILogger<IGithubApiCache> logger;
     private readonly TimeSpan cacheDuration = TimeSpan.FromMinutes(15);
-
-    public GithubApiCache(ILiteDbContext dbContext, IGitHubClient githubApi, ILogger<IGithubApiCache> logger)
-    {
-        this.dbContext = dbContext;
-        this.githubApi = githubApi;
-        this.logger = logger;
-    }
 
     public async Task<IEnumerable<Release>> GetAllReleases(string username, string repository)
     {
@@ -49,7 +43,7 @@ public class GithubApiCache : IGithubApiCache
 
             return newCacheEntry.AllReleases;
         }
-        catch (ApiException ex)
+        catch (Exception ex)
         {
             logger.LogWarning(ex, "Failed to get releases from Github API.");
             return cacheEntry?.AllReleases.OrderByDescending(x => x.CreatedAt) ?? Enumerable.Empty<Release>();
@@ -80,10 +74,10 @@ public class GithubApiCache : IGithubApiCache
 
             return newCacheEntry.Branches;
         }
-        catch (ApiException ex)
+        catch (Exception ex)
         {
             logger.LogWarning(ex, "Failed to get branches from Github API.");
-            return cacheEntry?.Branches ?? Enumerable.Empty<Branch>();
+            return cacheEntry?.Branches ?? [];
         }
     }
 
@@ -132,10 +126,10 @@ public class GithubApiCache : IGithubApiCache
 
             return newCacheEntry.Commits;
         }
-        catch (ApiException ex)
+        catch (Exception ex)
         {
             logger.LogWarning(ex, "Failed to get commits from Github API.");
-            return cacheEntry?.Commits ?? Enumerable.Empty<GitCommit>();
+            return cacheEntry?.Commits ?? [];
         }
     }
 

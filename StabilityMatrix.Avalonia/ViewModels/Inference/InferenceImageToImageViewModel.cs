@@ -17,7 +17,7 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceImageToImageView), IsPersistent = true)]
-[RegisterTransient<InferenceImageToImageViewModel>, ManagedService]
+[RegisterScoped<InferenceImageToImageViewModel>, ManagedService]
 public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
 {
     [JsonPropertyName("SelectImage")]
@@ -25,12 +25,13 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
 
     /// <inheritdoc />
     public InferenceImageToImageViewModel(
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,
         IModelIndexService modelIndexService,
-        RunningPackageService runningPackageService
+        RunningPackageService runningPackageService,
+        TabContext tabContext
     )
         : base(
             notificationService,
@@ -38,7 +39,8 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
             settingsManager,
             vmFactory,
             modelIndexService,
-            runningPackageService
+            runningPackageService,
+            tabContext
         )
     {
         SelectImageCardViewModel = vmFactory.Get<SelectImageCardViewModel>(vm =>
@@ -75,10 +77,15 @@ public class InferenceImageToImageViewModel : InferenceTextToImageViewModel
         PromptCardViewModel.ApplyStep(applyArgs);
 
         // Setup Sampler and Refiner if enabled
-        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Gguf or ModelLoader.Unet;
+        var isUnetLoader =
+            ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet || ModelCardViewModel.IsGguf;
         if (isUnetLoader)
         {
-            SamplerCardViewModel.ApplyStepsInitialFluxSampler(applyArgs);
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
+        }
+        else if (SamplerCardViewModel.SelectedScheduler?.Name is "align_your_steps")
+        {
+            SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, false);
         }
         else
         {

@@ -15,6 +15,12 @@ public partial class CivitAiBrowserPage : UserControlBase
     public CivitAiBrowserPage()
     {
         InitializeComponent();
+
+        AcceleratorButtonTeachingTip.Target = AcceleratorButton;
+        AcceleratorButton.Click += (s, e) =>
+        {
+            AcceleratorButtonTeachingTip.IsOpen ^= true;
+        };
     }
 
     private void ScrollViewer_OnScrollChanged(object? sender, ScrollChangedEventArgs e)

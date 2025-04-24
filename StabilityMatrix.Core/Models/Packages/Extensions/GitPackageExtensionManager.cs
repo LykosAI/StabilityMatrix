@@ -258,7 +258,12 @@ public abstract partial class GitPackageExtensionManager(IPrerequisiteHelper pre
             );
 
             await prerequisiteHelper
-                .CloneGitRepository(cloneRoot, repositoryUri.ToString(), version)
+                .CloneGitRepository(
+                    cloneRoot,
+                    repositoryUri.ToString(),
+                    version,
+                    progress.AsProcessOutputHandler()
+                )
                 .ConfigureAwait(false);
 
             progress?.Report(new ProgressReport(1f, message: $"Cloned {repositoryUri}"));
@@ -307,7 +312,12 @@ public abstract partial class GitPackageExtensionManager(IPrerequisiteHelper pre
             }
 
             await prerequisiteHelper
-                .UpdateGitRepository(repoPath, remoteUrlResult.StandardOutput!.Trim(), version)
+                .UpdateGitRepository(
+                    repoPath,
+                    remoteUrlResult.StandardOutput!.Trim(),
+                    version,
+                    progress.AsProcessOutputHandler()
+                )
                 .ConfigureAwait(false);
 
             progress?.Report(new ProgressReport(1f, message: $"Updated git repository {repoPath.Name}"));

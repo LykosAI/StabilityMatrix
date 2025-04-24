@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.Versioning;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
@@ -12,6 +13,8 @@ public interface IPrerequisiteHelper
     string GitBinPath { get; }
 
     bool IsPythonInstalled { get; }
+    bool IsVcBuildToolsInstalled { get; }
+    bool IsHipSdkInstalled { get; }
 
     Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null);
     Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null);
@@ -24,12 +27,11 @@ public interface IPrerequisiteHelper
     /// <summary>
     /// Run embedded git with the given arguments.
     /// </summary>
-    Task RunGit(ProcessArgs args, Action<ProcessOutput>? onProcessOutput, string? workingDirectory = null);
-
-    /// <summary>
-    /// Run embedded git with the given arguments.
-    /// </summary>
-    Task RunGit(ProcessArgs args, string? workingDirectory = null);
+    Task RunGit(
+        ProcessArgs args,
+        Action<ProcessOutput>? onProcessOutput = null,
+        string? workingDirectory = null
+    );
 
     Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null);
 
@@ -75,24 +77,35 @@ public interface IPrerequisiteHelper
         return version;
     }
 
-    async Task CloneGitRepository(string rootDir, string repositoryUrl, GitVersion? version = null)
+    async Task CloneGitRepository(
+        string rootDir,
+        string repositoryUrl,
+        GitVersion? version = null,
+        Action<ProcessOutput>? onProcessOutput = null
+    )
     {
         // Latest if no version is given
         if (version is null)
         {
-            await RunGit(["clone", "--depth", "1", repositoryUrl], rootDir).ConfigureAwait(false);
+            await RunGit(["clone", "--depth", "1", repositoryUrl], onProcessOutput, rootDir)
+                .ConfigureAwait(false);
         }
         else if (version.Tag is not null)
         {
-            await RunGit(["clone", "--depth", "1", version.Tag, repositoryUrl], rootDir)
+            await RunGit(["clone", "--depth", "1", version.Tag, repositoryUrl], onProcessOutput, rootDir)
                 .ConfigureAwait(false);
         }
         else if (version.Branch is not null && version.CommitSha is not null)
         {
-            await RunGit(["clone", "--depth", "1", "--branch", version.Branch, repositoryUrl], rootDir)
+            await RunGit(
+                    ["clone", "--depth", "1", "--branch", version.Branch, repositoryUrl],
+                    onProcessOutput,
+                    rootDir
+                )
                 .ConfigureAwait(false);
 
-            await RunGit(["checkout", version.CommitSha, "--force"], rootDir).ConfigureAwait(false);
+            await RunGit(["checkout", version.CommitSha, "--force"], onProcessOutput, rootDir)
+                .ConfigureAwait(false);
         }
         else
         {
@@ -100,45 +113,55 @@ public interface IPrerequisiteHelper
         }
     }
 
-    async Task UpdateGitRepository(string repositoryDir, string repositoryUrl, GitVersion version)
+    async Task UpdateGitRepository(
+        string repositoryDir,
+        string repositoryUrl,
+        GitVersion version,
+        Action<ProcessOutput>? onProcessOutput = null
+    )
     {
         if (!Directory.Exists(Path.Combine(repositoryDir, ".git")))
         {
-            await RunGit(["init"], repositoryDir).ConfigureAwait(false);
-            await RunGit(["remote", "add", "origin", repositoryUrl], repositoryDir).ConfigureAwait(false);
+            await RunGit(["init"], onProcessOutput, repositoryDir).ConfigureAwait(false);
+            await RunGit(["remote", "add", "origin", repositoryUrl], onProcessOutput, repositoryDir)
+                .ConfigureAwait(false);
         }
 
         // Specify Tag
         if (version.Tag is not null)
         {
-            await RunGit(["fetch", "--tags", "--force"], repositoryDir).ConfigureAwait(false);
-            await RunGit(["checkout", version.Tag, "--force"], repositoryDir).ConfigureAwait(false);
+            await RunGit(["fetch", "--tags", "--force"], onProcessOutput, repositoryDir)
+                .ConfigureAwait(false);
+            await RunGit(["checkout", version.Tag, "--force"], onProcessOutput, repositoryDir)
+                .ConfigureAwait(false);
             // Update submodules
-            await RunGit(["submodule", "update", "--init", "--recursive"], repositoryDir)
+            await RunGit(["submodule", "update", "--init", "--recursive"], onProcessOutput, repositoryDir)
                 .ConfigureAwait(false);
         }
         // Specify Branch + CommitSha
         else if (version.Branch is not null && version.CommitSha is not null)
         {
-            await RunGit(["fetch", "--force"], repositoryDir).ConfigureAwait(false);
+            await RunGit(["fetch", "--force"], onProcessOutput, repositoryDir).ConfigureAwait(false);
 
-            await RunGit(["checkout", version.CommitSha, "--force"], repositoryDir).ConfigureAwait(false);
+            await RunGit(["checkout", version.CommitSha, "--force"], onProcessOutput, repositoryDir)
+                .ConfigureAwait(false);
             // Update submodules
-            await RunGit(["submodule", "update", "--init", "--recursive"], repositoryDir)
+            await RunGit(["submodule", "update", "--init", "--recursive"], onProcessOutput, repositoryDir)
                 .ConfigureAwait(false);
         }
         // Specify Branch (Use latest commit)
         else if (version.Branch is not null)
         {
             // Fetch
-            await RunGit(["fetch", "--force"], repositoryDir).ConfigureAwait(false);
+            await RunGit(["fetch", "--force"], onProcessOutput, repositoryDir).ConfigureAwait(false);
             // Checkout
-            await RunGit(["checkout", version.Branch, "--force"], repositoryDir).ConfigureAwait(false);
+            await RunGit(["checkout", version.Branch, "--force"], onProcessOutput, repositoryDir)
+                .ConfigureAwait(false);
             // Pull latest
-            await RunGit(["pull", "--autostash", "origin", version.Branch], repositoryDir)
+            await RunGit(["pull", "--autostash", "origin", version.Branch], onProcessOutput, repositoryDir)
                 .ConfigureAwait(false);
             // Update submodules
-            await RunGit(["submodule", "update", "--init", "--recursive"], repositoryDir)
+            await RunGit(["submodule", "update", "--init", "--recursive"], onProcessOutput, repositoryDir)
                 .ConfigureAwait(false);
         }
         // Not specified
@@ -181,4 +204,5 @@ public interface IPrerequisiteHelper
     );
 
     Task<bool> FixGitLongPaths();
+    Task AddMissingLibsToVenv(DirectoryPath installedPackagePath, IProgress<ProgressReport>? progress = null);
 }

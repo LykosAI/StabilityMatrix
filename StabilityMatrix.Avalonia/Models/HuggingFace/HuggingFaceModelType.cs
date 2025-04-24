@@ -13,7 +13,7 @@ public enum HuggingFaceModelType
     BaseModel,
 
     [Description("CLIP / Text Encoders")]
-    [ConvertTo<SharedFolderType>(SharedFolderType.CLIP)]
+    [ConvertTo<SharedFolderType>(SharedFolderType.TextEncoders)]
     Clip,
 
     [Description("ControlNets (SD1.5)")]
@@ -33,15 +33,15 @@ public enum HuggingFaceModelType
     IpAdapter,
 
     [Description("IP Adapters (Diffusers SD1.5)")]
-    [ConvertTo<SharedFolderType>(SharedFolderType.InvokeIpAdapters15)]
+    [ConvertTo<SharedFolderType>(SharedFolderType.IpAdapters15)]
     DiffusersIpAdapter,
 
     [Description("IP Adapters (Diffusers SDXL)")]
-    [ConvertTo<SharedFolderType>(SharedFolderType.InvokeIpAdaptersXl)]
+    [ConvertTo<SharedFolderType>(SharedFolderType.IpAdaptersXl)]
     DiffusersIpAdapterXl,
 
-    [Description("CLIP Vision (Diffusers)")]
-    [ConvertTo<SharedFolderType>(SharedFolderType.InvokeClipVision)]
+    [Description("CLIP Vision")]
+    [ConvertTo<SharedFolderType>(SharedFolderType.ClipVision)]
     DiffusersClipVision,
 
     [Description("T2I Adapters")]
@@ -59,4 +59,12 @@ public enum HuggingFaceModelType
     [Description("SAM Models")]
     [ConvertTo<SharedFolderType>(SharedFolderType.Sams)]
     Sams,
+
+    [Description("UNet-Only Models")]
+    [ConvertTo<SharedFolderType>(SharedFolderType.DiffusionModels)]
+    Unet,
+
+    [Description("VAE")]
+    [ConvertTo<SharedFolderType>(SharedFolderType.VAE)]
+    Vae,
 }

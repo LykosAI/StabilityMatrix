@@ -14,5 +14,5 @@ public enum ModelLoader
     Nf4,
 
     [StringValue("UNet")]
-    Unet,
+    Unet
 }

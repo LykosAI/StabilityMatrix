@@ -17,7 +17,7 @@ using StabilityMatrix.Core.Git;
 namespace StabilityMatrix.Avalonia.Controls;
 
 [Localizable(false)]
-public partial class GitVersionSelector : TemplatedControl
+public partial class GitVersionSelector : TemplatedControlBase
 {
     public static readonly StyledProperty<IGitVersionProvider?> GitVersionProviderProperty =
         AvaloniaProperty.Register<GitVersionSelector, IGitVersionProvider?>(nameof(GitVersionProvider));

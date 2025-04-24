@@ -5,24 +5,25 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Diagnostics;
 
 namespace StabilityMatrix.Avalonia.Controls.VendorLabs.Cache;
 
+[Localizable(false)]
 internal abstract class CacheBase<T>
 {
-    private class ConcurrentRequest
+    private class ConcurrentRequest(Func<Task<T?>> factory)
     {
-        public Task<T?>? Task { get; set; }
+        private readonly Lazy<Task<T?>> _factory = new(factory, LazyThreadSafetyMode.ExecutionAndPublication);
+
+        public Task<T?> Task => _factory.Value;
 
         public bool EnsureCachedCopy { get; set; }
+
+        public bool IsCompletedSuccessfully =>
+            _factory is { IsValueCreated: true, Value.IsCompletedSuccessfully: true };
     }
 
     private readonly SemaphoreSlim _cacheFolderSemaphore = new SemaphoreSlim(1);
@@ -32,9 +33,9 @@ internal abstract class CacheBase<T>
     private string? _cacheFolder = null;
     protected InMemoryStorage<T>? InMemoryFileStorage = new();
 
-    private ConcurrentDictionary<string, ConcurrentRequest> _concurrentTasks =
-        new ConcurrentDictionary<string, ConcurrentRequest>();
+    private readonly ConcurrentDictionary<string, ConcurrentRequest> _concurrentTasks = new();
 
+    private HttpMessageHandler? _httpMessageHandler;
     private HttpClient? _httpClient = null;
 
     /// <summary>
@@ -44,10 +45,14 @@ internal abstract class CacheBase<T>
     {
         options ??= CacheOptions.Default;
         _baseFolder = options.BaseCachePath ?? null;
+        _cacheFolderName = options.CacheFolderName ?? null;
 
         CacheDuration = options.CacheDuration ?? TimeSpan.FromDays(1);
         MaxMemoryCacheCount = options.MaxMemoryCacheCount ?? 0;
         RetryCount = 1;
+
+        _httpMessageHandler = options.HttpMessageHandler;
+        _httpClient = options.HttpClient;
     }
 
     /// <summary>
@@ -82,9 +87,7 @@ internal abstract class CacheBase<T>
         {
             if (_httpClient == null)
             {
-                var messageHandler = new HttpClientHandler();
-
-                _httpClient = new HttpClient(messageHandler);
+                _httpClient = new HttpClient(_httpMessageHandler ?? new HttpClientHandler());
             }
 
             return _httpClient;
@@ -334,6 +337,7 @@ internal abstract class CacheBase<T>
         return value;
     }
 
+    [DebuggerDisableUserUnhandledExceptions]
     private async Task<T?> GetItemAsync(
         Uri uri,
         bool throwOnError,
@@ -341,49 +345,97 @@ internal abstract class CacheBase<T>
         CancellationToken cancellationToken
     )
     {
-        var instance = default(T);
-
         var fileName = GetCacheFileName(uri);
-        _concurrentTasks.TryGetValue(fileName, out var request);
 
-        // if similar request exists check if it was preCacheOnly and validate that current request isn't preCacheOnly
-        if (request != null && request.EnsureCachedCopy && !preCacheOnly)
+        // Check if already in memory cache
+        if (InMemoryFileStorage?.MaxItemCount > 0)
         {
-            if (request.Task != null)
-                await request.Task.ConfigureAwait(false);
-            request = null;
-        }
-
-        if (request == null)
-        {
-            request = new ConcurrentRequest()
+            var msi = InMemoryFileStorage?.GetItem(fileName, CacheDuration);
+            if (msi != null)
             {
-                Task = GetFromCacheOrDownloadAsync(uri, fileName, preCacheOnly, cancellationToken),
-                EnsureCachedCopy = preCacheOnly
-            };
-
-            _concurrentTasks[fileName] = request;
+                return msi.Item;
+            }
         }
+
+        // Atomically get or add
+        var request = _concurrentTasks.GetOrAdd(
+            fileName,
+            key =>
+            {
+                return new ConcurrentRequest(
+                    () => GetFromCacheOrDownloadAsync(uri, key, preCacheOnly, cancellationToken)
+                );
+            }
+        );
 
         try
         {
-            if (request.Task != null)
-                instance = await request.Task.ConfigureAwait(false);
+            // Wait for the task to complete
+            var itemTask = request.Task;
+            var instance = await itemTask.ConfigureAwait(false);
+
+            // --- Handle In-Memory Caching ---
+            // If the current request is not preCacheOnly, and the instance was successfully retrieved,
+            // ensure it's in the memory cache.
+            if (!preCacheOnly && instance != null && InMemoryFileStorage is { MaxItemCount: > 0 })
+            {
+                var memItem = InMemoryFileStorage.GetItem(fileName, CacheDuration);
+                if (memItem == null || memItem.Item == null) // Check if not already in memory or expired
+                {
+                    var folder = await GetCacheFolderAsync().ConfigureAwait(false);
+                    var lastWriteTime = DateTime.Now;
+                    if (folder != null)
+                    {
+                        var baseFile = Path.Combine(folder, fileName);
+                        try
+                        {
+                            if (File.Exists(baseFile)) // Check existence before FileInfo
+                                lastWriteTime = new FileInfo(baseFile).LastWriteTime;
+                        }
+                        catch (IOException ioEx)
+                        {
+                            Debug.WriteLine(
+                                $"CacheBase: Error getting FileInfo for memory cache update on {fileName}: {ioEx.Message}"
+                            );
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(
+                                $"CacheBase: Error getting FileInfo for memory cache update on {fileName}: {ex.Message}"
+                            );
+                        }
+                    }
+
+                    var msi = new InMemoryStorageItem<T>(fileName, lastWriteTime, instance);
+                    InMemoryFileStorage.SetItem(msi);
+                }
+            }
+
+            return instance;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine(ex.Message);
+            Debug.WriteLine($"CacheBase: Exception during GetItemAsync for {fileName} (URI: {uri}): {ex}");
+
+            // Attempt to remove the entry associated with the failed task.
+            _concurrentTasks.TryRemove(new KeyValuePair<string, ConcurrentRequest>(fileName, request));
+
             if (throwOnError)
             {
                 throw;
             }
+            return default;
         }
         finally
         {
-            _concurrentTasks.TryRemove(fileName, out _);
+            // If the request was created and its underlying task completed successfully, remove the entry.
+            // Ensure we don't remove entries for tasks still running.
+            if (request.IsCompletedSuccessfully)
+            {
+                // Remove the entry only if it still contains the Lazy instance we worked with.
+                _concurrentTasks.TryRemove(new KeyValuePair<string, ConcurrentRequest>(fileName, request));
+            }
         }
-
-        return instance;
     }
 
     private async Task<T?> GetFromCacheOrDownloadAsync(
@@ -503,6 +555,7 @@ internal abstract class CacheBase<T>
         return instance;
     }
 
+    [DebuggerDisableUserUnhandledExceptions]
     private async Task<T?> DownloadFileAsync(
         Uri uri,
         string baseFile,
@@ -511,6 +564,8 @@ internal abstract class CacheBase<T>
     )
     {
         var instance = default(T);
+
+        Debug.WriteLine($"CacheBase Getting: {uri}");
 
         using var ms = new MemoryStream();
         await using (var stream = await HttpClient.GetStreamAsync(uri, cancellationToken))

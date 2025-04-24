@@ -11,14 +11,15 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Video;
 
 [View(typeof(ModelCard))]
 [ManagedService]
-[RegisterTransient<ImgToVidModelCardViewModel>]
+[RegisterScoped<ImgToVidModelCardViewModel>]
 public class ImgToVidModelCardViewModel : ModelCardViewModel
 {
     public ImgToVidModelCardViewModel(
         IInferenceClientManager clientManager,
-        ServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory,
+        TabContext tabContext
     )
-        : base(clientManager, vmFactory)
+        : base(clientManager, vmFactory, tabContext)
     {
         DisableSettings = true;
     }

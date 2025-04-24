@@ -45,7 +45,7 @@ public partial class PackageCardViewModel(
     INotificationService notificationService,
     ISettingsManager settingsManager,
     INavigationService<PackageManagerViewModel> navigationService,
-    ServiceManager<ViewModelBase> vmFactory,
+    IServiceManager<ViewModelBase> vmFactory,
     RunningPackageService runningPackageService
 ) : ProgressViewModel
 {
@@ -239,10 +239,23 @@ public partial class PackageCardViewModel(
         }
     }
 
-    public override void OnUnloaded()
+    protected override void Dispose(bool disposing)
     {
+        if (!disposing)
+            return;
+
         EventManager.Instance.PackageRelaunchRequested -= InstanceOnPackageRelaunchRequested;
         runningPackageService.RunningPackages.CollectionChanged -= RunningPackagesOnCollectionChanged;
+
+        // Cleanup any running package event handlers
+        if (
+            Package?.Id != null
+            && runningPackageService.RunningPackages.TryGetValue(Package.Id, out var runningPackageVm)
+        )
+        {
+            runningPackageVm.RunningPackage.BasePackage.Exited -= BasePackageOnExited;
+            runningPackageVm.RunningPackage.BasePackage.StartupComplete -= RunningPackageOnStartupComplete;
+        }
     }
 
     public async Task Launch()
@@ -457,7 +470,11 @@ public partial class PackageCardViewModel(
                 basePackage,
                 Package.FullPath!.Unwrap(),
                 Package,
-                new UpdatePackageOptions { VersionOptions = versionOptions }
+                new UpdatePackageOptions
+                {
+                    VersionOptions = versionOptions,
+                    PythonOptions = { TorchIndex = Package.PreferredTorchIndex }
+                }
             );
             var steps = new List<IPackageStep> { updatePackageStep };
 
@@ -621,7 +638,11 @@ public partial class PackageCardViewModel(
                 basePackage,
                 Package.FullPath!.Unwrap(),
                 Package,
-                new UpdatePackageOptions { VersionOptions = versionOptions }
+                new UpdatePackageOptions
+                {
+                    VersionOptions = versionOptions,
+                    PythonOptions = { TorchIndex = Package.PreferredTorchIndex }
+                }
             );
             var steps = new List<IPackageStep> { updatePackageStep };
 

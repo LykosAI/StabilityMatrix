@@ -96,6 +96,10 @@ public class PackageFactory : IPackageFactory
                 => new Cogstudio(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             "ComfyUI-Zluda"
                 => new ComfyZluda(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "stable-diffusion-webui-amdgpu-forge"
+                => new ForgeAmdGpu(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "forge-classic"
+                => new ForgeClassic(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage))
         };
     }

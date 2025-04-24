@@ -61,7 +61,7 @@ public abstract partial class InferenceGenerationViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly RunningPackageService runningPackageService;
     private readonly INotificationService notificationService;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
 
     [JsonPropertyName("ImageGallery")]
     public ImageGalleryCardViewModel ImageGalleryCardViewModel { get; }
@@ -77,7 +77,7 @@ public abstract partial class InferenceGenerationViewModelBase
 
     /// <inheritdoc />
     protected InferenceGenerationViewModelBase(
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,

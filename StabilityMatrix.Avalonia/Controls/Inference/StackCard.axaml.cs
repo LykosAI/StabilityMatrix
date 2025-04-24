@@ -7,7 +7,7 @@ namespace StabilityMatrix.Avalonia.Controls;
 
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 [RegisterTransient<StackCard>]
-public class StackCard : TemplatedControl
+public class StackCard : TemplatedControlBase
 {
     public static readonly StyledProperty<int> SpacingProperty = AvaloniaProperty.Register<StackCard, int>(
         "Spacing",

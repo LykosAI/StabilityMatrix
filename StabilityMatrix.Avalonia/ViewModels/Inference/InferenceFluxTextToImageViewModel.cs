@@ -23,7 +23,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), IsPersistent = true)]
 [ManagedService]
-[RegisterTransient<InferenceFluxTextToImageViewModel>]
+[RegisterScoped<InferenceFluxTextToImageViewModel>]
 public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     private readonly INotificationService notificationService;
@@ -51,7 +51,7 @@ public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBas
     public SeedCardViewModel SeedCardViewModel { get; }
 
     public InferenceFluxTextToImageViewModel(
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,
@@ -128,17 +128,18 @@ public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBas
         BatchSizeCardViewModel.ApplyStep(applyArgs);
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        builder.SetupEmptySd3LatentSource(
+        builder.SetupEmptyLatentSource(
             SamplerCardViewModel.Width,
             SamplerCardViewModel.Height,
             BatchSizeCardViewModel.BatchSize,
-            BatchSizeCardViewModel.BatchIndex
+            BatchSizeCardViewModel.BatchIndex,
+            latentType: LatentType.Sd3
         );
 
         PromptCardViewModel.ApplyStep(applyArgs);
 
         // Do custom Sampler setup
-        SamplerCardViewModel.ApplyStepsInitialFluxSampler(applyArgs);
+        SamplerCardViewModel.ApplyStepsInitialCustomSampler(applyArgs, true);
 
         // Apply steps from our modules
         foreach (var module in ModulesCardViewModel.Cards.Cast<ModuleBase>())

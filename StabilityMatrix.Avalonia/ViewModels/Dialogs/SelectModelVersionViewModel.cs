@@ -38,10 +38,13 @@ public partial class SelectModelVersionViewModel(
     private readonly IDownloadService downloadService = downloadService;
 
     public required ContentDialog Dialog { get; set; }
-    public required IReadOnlyList<ModelVersionViewModel> Versions { get; set; }
+
     public required string Description { get; set; }
     public new required string Title { get; set; }
     public required CivitModel CivitModel { get; set; }
+
+    [ObservableProperty]
+    public IReadOnlyList<ModelVersionViewModel> versions = [];
 
     [ObservableProperty]
     private Bitmap? previewImage;
@@ -106,7 +109,8 @@ public partial class SelectModelVersionViewModel(
 
         if (allImages == null || !allImages.Any())
         {
-            allImages = new List<ImageSource> { new(Assets.NoImage) };
+            // allImages = new List<ImageSource> { new(Assets.NoImage) };
+            allImages = [];
             CanGoToNextImage = false;
         }
         else
@@ -333,7 +337,7 @@ public partial class SelectModelVersionViewModel(
             }
         }
 
-        if (downloadDirectory.ToString().EndsWith("Unet"))
+        if (downloadDirectory.ToString().EndsWith(SharedFolderType.DiffusionModels.GetStringValue()))
         {
             // also add StableDiffusion in case we have an AIO version
             var stableDiffusionDirectory = rootModelsDirectory.JoinDir(
@@ -370,7 +374,12 @@ public partial class SelectModelVersionViewModel(
             )
         )
         {
-            return rootModelsDirectory.JoinDir(SharedFolderType.Unet.GetStringValue());
+            return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
+        }
+
+        if (modelType is CivitModelType.Checkpoint && baseModelType == "Wan Video")
+        {
+            return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
         }
 
         return rootModelsDirectory.JoinDir(modelType.ConvertTo<SharedFolderType>().GetStringValue());

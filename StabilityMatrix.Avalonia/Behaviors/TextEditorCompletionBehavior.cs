@@ -43,25 +43,12 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
     }
 
     public static readonly StyledProperty<ITokenizerProvider?> TokenizerProviderProperty =
-        AvaloniaProperty.Register<TextEditorCompletionBehavior, ITokenizerProvider?>(
-            "TokenizerProvider"
-        );
+        AvaloniaProperty.Register<TextEditorCompletionBehavior, ITokenizerProvider?>("TokenizerProvider");
 
     public ITokenizerProvider? TokenizerProvider
     {
         get => GetValue(TokenizerProviderProperty);
         set => SetValue(TokenizerProviderProperty, value);
-    }
-
-    public static readonly StyledProperty<bool> IsEnabledProperty = AvaloniaProperty.Register<
-        TextEditorCompletionBehavior,
-        bool
-    >("IsEnabled", true);
-
-    public bool IsEnabled
-    {
-        get => GetValue(IsEnabledProperty);
-        set => SetValue(IsEnabledProperty, value);
     }
 
     protected override void OnAttached()
@@ -264,9 +251,7 @@ public class TextEditorCompletionBehavior : Behavior<TextEditor>
         // Still not found
         if (currentToken is null || currentTokenIndex == -1)
         {
-            Logger.Info(
-                $"Could not find token at caret offset {caret} for line {lineText.ToRepr()}"
-            );
+            Logger.Info($"Could not find token at caret offset {caret} for line {lineText.ToRepr()}");
             return null;
         }
 

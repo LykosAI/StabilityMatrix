@@ -11,7 +11,7 @@ using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.Controls;
 
-public class SettingsAccountLinkExpander : TemplatedControl
+public class SettingsAccountLinkExpander : TemplatedControlBase
 {
     private readonly List<object?> _items = new();
 
@@ -59,11 +59,10 @@ public class SettingsAccountLinkExpander : TemplatedControl
         set => SetValue(IsConnectedProperty, value);
     }
 
-    public static readonly StyledProperty<object?> OnDescriptionProperty =
-        AvaloniaProperty.Register<SettingsAccountLinkExpander, object?>(
-            "OnDescription",
-            Languages.Resources.Label_Connected
-        );
+    public static readonly StyledProperty<object?> OnDescriptionProperty = AvaloniaProperty.Register<
+        SettingsAccountLinkExpander,
+        object?
+    >("OnDescription", Languages.Resources.Label_Connected);
 
     public object? OnDescription
     {
@@ -71,8 +70,10 @@ public class SettingsAccountLinkExpander : TemplatedControl
         set => SetValue(OnDescriptionProperty, value);
     }
 
-    public static readonly StyledProperty<object?> OnDescriptionExtraProperty =
-        AvaloniaProperty.Register<SettingsAccountLinkExpander, object?>("OnDescriptionExtra");
+    public static readonly StyledProperty<object?> OnDescriptionExtraProperty = AvaloniaProperty.Register<
+        SettingsAccountLinkExpander,
+        object?
+    >("OnDescriptionExtra");
 
     public object? OnDescriptionExtra
     {
@@ -80,8 +81,10 @@ public class SettingsAccountLinkExpander : TemplatedControl
         set => SetValue(OnDescriptionExtraProperty, value);
     }
 
-    public static readonly StyledProperty<object?> OffDescriptionProperty =
-        AvaloniaProperty.Register<SettingsAccountLinkExpander, object?>("OffDescription");
+    public static readonly StyledProperty<object?> OffDescriptionProperty = AvaloniaProperty.Register<
+        SettingsAccountLinkExpander,
+        object?
+    >("OffDescription");
 
     public object? OffDescription
     {
@@ -89,11 +92,10 @@ public class SettingsAccountLinkExpander : TemplatedControl
         set => SetValue(OffDescriptionProperty, value);
     }
 
-    public static readonly StyledProperty<ICommand?> ConnectCommandProperty =
-        AvaloniaProperty.Register<SettingsAccountLinkExpander, ICommand?>(
-            nameof(ConnectCommand),
-            enableDataValidation: true
-        );
+    public static readonly StyledProperty<ICommand?> ConnectCommandProperty = AvaloniaProperty.Register<
+        SettingsAccountLinkExpander,
+        ICommand?
+    >(nameof(ConnectCommand), enableDataValidation: true);
 
     public ICommand? ConnectCommand
     {
@@ -101,11 +103,10 @@ public class SettingsAccountLinkExpander : TemplatedControl
         set => SetValue(ConnectCommandProperty, value);
     }
 
-    public static readonly StyledProperty<ICommand?> DisconnectCommandProperty =
-        AvaloniaProperty.Register<SettingsAccountLinkExpander, ICommand?>(
-            nameof(DisconnectCommand),
-            enableDataValidation: true
-        );
+    public static readonly StyledProperty<ICommand?> DisconnectCommandProperty = AvaloniaProperty.Register<
+        SettingsAccountLinkExpander,
+        ICommand?
+    >(nameof(DisconnectCommand), enableDataValidation: true);
 
     public ICommand? DisconnectCommand
     {

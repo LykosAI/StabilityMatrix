@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using StabilityMatrix.Core.Models.Api;
+﻿using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Lykos;
 
 namespace StabilityMatrix.Avalonia.Services;
@@ -12,6 +10,12 @@ public interface IAccountsService
     event EventHandler<CivitAccountStatusUpdateEventArgs>? CivitAccountStatusUpdate;
 
     LykosAccountStatusUpdateEventArgs? LykosStatus { get; }
+
+    /// <summary>
+    /// Returns whether SecretsManager has a stored Lykos V2 account.
+    /// Does not mean <see cref="LykosStatus"/> is populated or refresh/access tokens are valid.
+    /// </summary>
+    Task<bool> HasStoredLykosAccountAsync();
 
     [Obsolete]
     Task LykosSignupAsync(string email, string password, string username);
@@ -36,4 +40,6 @@ public interface IAccountsService
     Task CivitLogoutAsync();
 
     Task RefreshAsync();
+
+    Task RefreshLykosAsync();
 }

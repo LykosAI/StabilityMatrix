@@ -83,11 +83,6 @@ public class Settings
     public bool IsNavExpanded { get; set; }
     public bool IsImportAsConnected { get; set; }
     public bool ShowConnectedModelImages { get; set; }
-
-    [JsonConverter(typeof(JsonStringEnumConverter<SharedFolderType>))]
-    public SharedFolderType SharedFolderVisibleCategories { get; set; } =
-        SharedFolderType.StableDiffusion | SharedFolderType.Lora | SharedFolderType.LyCORIS;
-
     public WindowSettings? WindowSettings { get; set; }
 
     public ModelSearchOptions? ModelSearchOptions { get; set; }
@@ -170,6 +165,7 @@ public class Settings
     public Dictionary<NotificationKey, NotificationOption> NotificationOptions { get; set; } = new();
 
     public List<string> SelectedBaseModels { get; set; } = [];
+    public List<string> SelectedCivitBaseModels { get; set; } = [];
 
     public Size InferenceImageSize { get; set; } = new(150, 190);
 
@@ -211,11 +207,15 @@ public class Settings
 
     public bool HideEarlyAccessModels { get; set; }
 
+    public bool CivitUseDiscoveryApi { get; set; }
+
     public string? ModelDirectoryOverride { get; set; } = null;
 
     public GpuInfo? PreferredGpu { get; set; }
 
     public int MaxConcurrentDownloads { get; set; }
+
+    public bool FilterExtraNetworksByBaseModel { get; set; } = true;
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

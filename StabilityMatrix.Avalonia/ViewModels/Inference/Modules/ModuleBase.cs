@@ -8,10 +8,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 public abstract class ModuleBase : StackExpanderViewModel, IComfyStep, IInputImageProvider
 {
-    protected readonly ServiceManager<ViewModelBase> VmFactory;
+    protected readonly IServiceManager<ViewModelBase> VmFactory;
 
     /// <inheritdoc />
-    protected ModuleBase(ServiceManager<ViewModelBase> vmFactory)
+    protected ModuleBase(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         VmFactory = vmFactory;

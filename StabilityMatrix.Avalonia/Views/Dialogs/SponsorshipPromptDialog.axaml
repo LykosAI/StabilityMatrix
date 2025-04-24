@@ -1,0 +1,178 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.SponsorshipPromptDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:ctxt="clr-namespace:ColorTextBlock.Avalonia;assembly=ColorTextBlock.Avalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:icon="https://github.com/projektanker/icons.avalonia"
+    xmlns:iconExt="clr-namespace:FluentIcons.Avalonia.MarkupExtensions;assembly=FluentIcons.Avalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mde="clr-namespace:Markdown.Avalonia.Extensions;assembly=Markdown.Avalonia"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:sm="clr-namespace:StabilityMatrix.Avalonia"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:uip="using:FluentAvalonia.UI.Controls.Primitives"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    d:DataContext="{x:Static mocks:DesignData.SponsorshipPromptViewModel}"
+    d:DesignHeight="400"
+    d:DesignWidth="600"
+    x:DataType="vmDialogs:SponsorshipPromptViewModel"
+    mc:Ignorable="d">
+
+    <controls:UserControlBase.Resources>
+        <SolidColorBrush x:Key="BrushB0" Color="#FFFFFFFF" />
+        <DrawingImage x:Key="BrandsPatreonSymbolWhite">
+            <DrawingGroup>
+                <GeometryDrawing Brush="{DynamicResource BrushB0}" Geometry="F1 M1033.05 324.45C1032.86 186.55 925.46 73.53 799.45 32.75C642.97 -17.89 436.59 -10.55 287.17 59.95C106.07 145.41 49.18 332.61 47.06 519.31C45.32 672.81 60.64 1077.1 288.68 1079.98C458.12 1082.13 483.35 863.8 561.75 758.65C617.53 683.84 689.35 662.71 777.76 640.83C929.71 603.22 1033.27 483.3 1033.05 324.45Z" />
+            </DrawingGroup>
+        </DrawingImage>
+    </controls:UserControlBase.Resources>
+
+    <controls:UserControlBase.Styles>
+        <Style Selector="controls|BetterMarkdownScrollViewer">
+            <!--<Style Selector="^ctxt|CHyperlink">
+                <Style.Setters>
+                    <Setter Property="IsUnderline" Value="False" />
+                </Style.Setters>
+            </Style>
+            <Style Selector="^ctxt|CHyperlink:pointerover">
+                <Setter Property="IsUnderline" Value="True" />
+                <Setter Property="Foreground" Value="{StaticResource ThemeEldenRingOrangeColor}" />
+            </Style>-->
+            <Style Selector="^.Markdown_Avalonia_MarkdownViewer TextBlock">
+                <Style.Setters>
+                    <Setter Property="Margin" Value="0, 7, 0, 14" />
+                    <Setter Property="FontSize" Value="14" />
+                </Style.Setters>
+            </Style>
+        </Style>
+        <Style Selector="controls|BetterMarkdownScrollViewer &gt; ctxt|CTextBlock">
+            <Style.Setters>
+                <Setter Property="SelectionBrush" Value="{DynamicResource TextControlSelectionHighlightColor}" />
+                <Setter Property="FontSize" Value="24" />
+                <Setter Property="Margin" Value="0,5" />
+            </Style.Setters>
+        </Style>
+        <Style Selector="controls|BetterMarkdownScrollViewer &gt; TextBlock">
+            <Style.Setters>
+                <Setter Property="Margin" Value="0, 7, 0, 14" />
+                <Setter Property="FontSize" Value="24" />
+            </Style.Setters>
+        </Style>
+    </controls:UserControlBase.Styles>
+
+    <StackPanel Margin="8,4" Spacing="4">
+        <StackPanel
+            Margin="8"
+            Orientation="Horizontal"
+            Spacing="8">
+            <icon:Icon
+                Margin="0,2,0,0"
+                FontSize="18"
+                Foreground="#f97315"
+                Value="fa-solid fa-heart" />
+            <!--<fluentIcons:SymbolIcon
+                FontSize="28"
+                Foreground="#f97315"
+                IconVariant="Filled"
+                Symbol="Heart" />-->
+            <TextBlock
+                Text="{Binding Title}"
+                TextWrapping="Wrap"
+                Theme="{StaticResource SubtitleTextBlockStyle}" />
+
+        </StackPanel>
+
+        <controls:BetterMarkdownScrollViewer
+            Margin="4,0"
+            VerticalAlignment="Bottom"
+            IsVisible="{Binding IsExistingSupporter}"
+            Markdown="{Binding ExistingSupporterPreamble}" />
+
+        <!--  TextElement.Foreground="{DynamicResource TextFillColorSecondaryBrush}"  -->
+        <controls:BetterMarkdownScrollViewer
+            Margin="4,0"
+            VerticalAlignment="Bottom"
+            Markdown="{Binding FeatureText}" />
+
+        <ui:InfoBar
+            Title="{x:Static lang:Resources.Sponsorship_ConnectPatreonPrompt}"
+            IsClosable="False"
+            IsOpen="{Binding !IsPatreonConnected}">
+            <ui:InfoBar.IconSource>
+                <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
+            </ui:InfoBar.IconSource>
+            <ui:InfoBar.ActionButton>
+                <Button Command="{Binding NavigateToAccountSettingsCommand}" Content="{x:Static lang:Resources.Label_AccountSettings}" />
+            </ui:InfoBar.ActionButton>
+        </ui:InfoBar>
+
+        <!--<ui:InfoBar
+            Title="Not a supporter yet, or need to upgrade? Your contribution helps us keep improving Stability Matrix!"
+            IsOpen="True"
+            IsClosable="False">
+            <ui:InfoBar.IconSource>
+                <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
+            </ui:InfoBar.IconSource>
+            <ui:InfoBar.ActionButton>
+                <controls:HyperlinkIconButton Content="View Support Options"/>
+            </ui:InfoBar.ActionButton>
+        </ui:InfoBar>-->
+
+        <!--<ui:SettingsExpander
+            TextBlock.TextWrapping="Wrap"
+            Description="Link your Patreon account within Stability Matrix to activate your benefits"
+            Header="Already a Patreon supporter at this level?">
+            <ui:SettingsExpander.IconSource>
+                <ui:ImageIconSource
+                    Source="{StaticResource BrandsPatreonSymbolWhite}" />
+            </ui:SettingsExpander.IconSource>
+            <ui:SettingsExpander.Footer>
+                <Button Content="Account Settings"/>
+            </ui:SettingsExpander.Footer>
+        </ui:SettingsExpander>-->
+
+        <!--<TextBlock Text="Not a supporter yet, or need to upgrade?"></TextBlock>
+
+        <TextBlock Text="Your contribution helps us keep improving Stability Matrix!"></TextBlock>
+
+        <ui:SettingsExpander
+            TextBlock.TextWrapping="Wrap"
+            Description="Your contribution helps us keep improving Stability Matrix!"
+            Header="Not a supporter yet, or need to upgrade?">
+            <ui:SettingsExpander.IconSource>
+                <fluentIcons:SymbolIconSource
+                    IconVariant="Filled"
+                    Symbol="Star" />
+            </ui:SettingsExpander.IconSource>
+            <ui:SettingsExpander.Footer>
+                <Button>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <fluentIcons:SymbolIcon Symbol="Open" IconVariant="Light" />
+                        <TextBlock Text="View Support Options"/>
+                    </StackPanel>
+                </Button>
+            </ui:SettingsExpander.Footer>
+        </ui:SettingsExpander>
+
+        <controls:SettingsAccountLinkExpander
+            Header="Patreon"
+            HeaderTargetUri="{x:Static sm:Assets.PatreonUrl}"
+            IsConnected="False"
+            IsEnabled="True"
+            OffDescription="Access Preview and Dev release channels for auto-updates">
+            <controls:SettingsAccountLinkExpander.IconSource>
+                <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
+            </controls:SettingsAccountLinkExpander.IconSource>
+        </controls:SettingsAccountLinkExpander>-->
+
+
+
+    </StackPanel>
+</controls:UserControlBase>

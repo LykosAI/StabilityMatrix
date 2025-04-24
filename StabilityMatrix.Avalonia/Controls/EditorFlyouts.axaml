@@ -1,27 +1,40 @@
-﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-                    xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
-                    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls">
-    <!-- Context menu for editors -->
+﻿<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia">
+    <!--  Context menu for editors  -->
     <ui:FAMenuFlyout x:Key="EditorContextFlyout">
         <ui:MenuFlyoutItem
-            Text="Paste"
-            IconSource="Paste"
-            HotKey="Ctrl+V"
             Command="{x:Static controls:EditorCommands.PasteCommand}"
-            CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"/>
+            CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"
+            HotKey="Ctrl+V"
+            IconSource="Paste"
+            Text="Paste" />
         <ui:MenuFlyoutItem
-            Text="Copy"
-            IconSource="Copy"
-            HotKey="Ctrl+C"
             Command="{x:Static controls:EditorCommands.CopyCommand}"
-            CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"/>
+            CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"
+            HotKey="Ctrl+C"
+            IconSource="Copy"
+            Text="Copy" />
         <ui:MenuFlyoutItem
-            Text="Cut"
-            IconSource="Cut"
-            HotKey="Ctrl+X"
             Command="{x:Static controls:EditorCommands.CutCommand}"
-            CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"/>
+            CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"
+            HotKey="Ctrl+X"
+            IconSource="Cut"
+            Text="Cut" />
+        <ui:MenuFlyoutItem
+            Command="{x:Static controls:EditorCommands.UndoCommand}"
+            CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"
+            HotKey="Ctrl+Z"
+            IconSource="Undo"
+            Text="Undo" />
+        <ui:MenuFlyoutItem
+            Command="{x:Static controls:EditorCommands.RedoCommand}"
+            CommandParameter="{Binding $parent[avaloniaEdit:TextEditor]}"
+            HotKey="Ctrl+Y"
+            IconSource="Redo"
+            Text="Redo" />
     </ui:FAMenuFlyout>
 </ResourceDictionary>

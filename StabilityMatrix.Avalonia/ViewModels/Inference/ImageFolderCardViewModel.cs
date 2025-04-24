@@ -44,7 +44,7 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
     private readonly IImageIndexService imageIndexService;
     private readonly ISettingsManager settingsManager;
     private readonly INotificationService notificationService;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
 
     [ObservableProperty]
     private string? searchQuery;
@@ -63,7 +63,7 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
         IImageIndexService imageIndexService,
         ISettingsManager settingsManager,
         INotificationService notificationService,
-        ServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory
     )
     {
         this.logger = logger;

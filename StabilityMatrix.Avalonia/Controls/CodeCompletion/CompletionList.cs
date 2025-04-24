@@ -37,7 +37,7 @@ namespace StabilityMatrix.Avalonia.Controls.CodeCompletion;
 /// The listbox used inside the CompletionWindow, contains CompletionListBox.
 /// </summary>
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-public class CompletionList : TemplatedControl
+public class CompletionList : TemplatedControlBase
 {
     private CompletionListBox? _listBox;
 

@@ -1,0 +1,298 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    x:DataType="inference:PlasmaNoiseCardViewModel">
+
+    <Design.PreviewWith>
+        <Panel Width="400" Height="400">
+            <StackPanel
+                Width="400"
+                VerticalAlignment="Center"
+                Spacing="32">
+                <controls:PlasmaNoiseCard DataContext="{x:Static mocks:DesignData.PlasmaNoiseCardViewModel}" />
+            </StackPanel>
+        </Panel>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|PlasmaNoiseCard">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card Padding="12">
+                    <avalonia:SpacedGrid
+                        ColumnDefinitions="Auto,*,Auto,*"
+                        ColumnSpacing="8"
+                        RowDefinitions="*,*,*,*,*,*,*,*,*,*,*"
+                        RowSpacing="0">
+
+                        <!--  Noise Type Selector  -->
+                        <TextBlock
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Text="Noise Type"
+                            TextAlignment="Left" />
+
+                        <controls:BetterComboBox
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="3"
+                            Padding="8,6,4,6"
+                            HorizontalAlignment="Stretch"
+                            ItemsSource="{Binding NoiseTypes}"
+                            SelectedItem="{Binding SelectedNoiseType}" />
+
+                        <!--  Plasma Turbulence  -->
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding ShowPlasmaTurbulence}"
+                            Text="Turbulence"
+                            TextAlignment="Left" />
+                        <NumericUpDown
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="3"
+                            Margin="0,8,0,0"
+                            Padding="8,6,4,6"
+                            HorizontalAlignment="Stretch"
+                            FormatString="F2"
+                            Increment="0.05"
+                            IsVisible="{Binding ShowPlasmaTurbulence}"
+                            Maximum="32.0"
+                            Minimum="0.5"
+                            Value="{Binding PlasmaTurbulence}" />
+
+                        <!--  Value Clamping  -->
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            Text="Brightness Min"
+                            TextAlignment="Left" />
+                        <controls1:NumberBox
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            Maximum="255"
+                            Minimum="-1"
+                            SimpleNumberFormat="F0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Compact"
+                            Value="{Binding ValueMin}" />
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            Text="Max"
+                            TextAlignment="Left" />
+                        <controls1:NumberBox
+                            Grid.Row="2"
+                            Grid.Column="3"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            Maximum="255"
+                            Minimum="-1"
+                            SimpleNumberFormat="F0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Compact"
+                            Value="{Binding ValueMax}" />
+
+                        <!--  Per-Channel Toggle  -->
+                        <ToggleSwitch
+                            Grid.Row="3"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="2"
+                            Margin="0,16,0,0"
+                            Content="Per-Channel Clamping"
+                            IsChecked="{Binding IsPerChannelClampingEnabled}"
+                            ToolTip.Tip="Allows you to select brightness levels for R/G/B individually" />
+
+                        <!--  Plasma Sampler Toggle  -->
+                        <ToggleSwitch
+                            Grid.Row="3"
+                            Grid.Column="2"
+                            Grid.ColumnSpan="2"
+                            Margin="0,16,0,0"
+                            Content="Plasma Sampler"
+                            IsChecked="{Binding IsPlasmaSamplerEnabled}"
+                            ToolTip.Tip="Replaces the KSampler with a more random sampler" />
+
+                        <Separator
+                            Grid.Row="4"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="4"
+                            Margin="0,8"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}" />
+
+                        <!--  Red Clamping  -->
+                        <TextBlock
+                            Grid.Row="5"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}"
+                            Text="Red Brightness Min"
+                            TextAlignment="Left" />
+                        <controls1:NumberBox
+                            Grid.Row="5"
+                            Grid.Column="1"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}"
+                            Maximum="255"
+                            Minimum="-1"
+                            SimpleNumberFormat="F0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Compact"
+                            Value="{Binding RedMin}" />
+                        <TextBlock
+                            Grid.Row="5"
+                            Grid.Column="2"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}"
+                            Text="Max"
+                            TextAlignment="Left" />
+                        <controls1:NumberBox
+                            Grid.Row="5"
+                            Grid.Column="3"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}"
+                            Maximum="255"
+                            Minimum="-1"
+                            SimpleNumberFormat="F0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Compact"
+                            Value="{Binding RedMax}" />
+
+                        <!--  Green Clamping  -->
+                        <TextBlock
+                            Grid.Row="6"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}"
+                            Text="Green Brightness Min"
+                            TextAlignment="Left" />
+                        <controls1:NumberBox
+                            Grid.Row="6"
+                            Grid.Column="1"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}"
+                            Maximum="255"
+                            Minimum="-1"
+                            SimpleNumberFormat="F0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Compact"
+                            Value="{Binding GreenMin}" />
+                        <TextBlock
+                            Grid.Row="6"
+                            Grid.Column="2"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}"
+                            Text="Max"
+                            TextAlignment="Left" />
+                        <controls1:NumberBox
+                            Grid.Row="6"
+                            Grid.Column="3"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}"
+                            Maximum="255"
+                            Minimum="-1"
+                            SimpleNumberFormat="F0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Compact"
+                            Value="{Binding GreenMax}" />
+
+                        <!--  Blue Clamping  -->
+                        <TextBlock
+                            Grid.Row="7"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}"
+                            Text="Blue Brightness Min"
+                            TextAlignment="Left" />
+                        <controls1:NumberBox
+                            Grid.Row="7"
+                            Grid.Column="1"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}"
+                            Maximum="255"
+                            Minimum="-1"
+                            SimpleNumberFormat="F0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Compact"
+                            Value="{Binding BlueMin}" />
+                        <TextBlock
+                            Grid.Row="7"
+                            Grid.Column="2"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}"
+                            Text="Max"
+                            TextAlignment="Left" />
+                        <controls1:NumberBox
+                            Grid.Row="7"
+                            Grid.Column="3"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsPerChannelClampingEnabled}"
+                            Maximum="255"
+                            Minimum="-1"
+                            SimpleNumberFormat="F0"
+                            SmallChange="1"
+                            SpinButtonPlacementMode="Compact"
+                            Value="{Binding BlueMax}" />
+
+                        <Separator
+                            Grid.Row="8"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="4"
+                            Margin="0,16,0,8"
+                            IsVisible="{Binding IsPlasmaSamplerEnabled}" />
+
+                        <TextBlock
+                            Grid.Row="9"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsPlasmaSamplerEnabled}"
+                            Text="Latent Noise"
+                            TextAlignment="Left"
+                            ToolTip.Tip="How strong should the built in noise be. 0 means no noise is used, and 1 means it's adding all the noise" />
+                        <controls1:NumberBox
+                            Grid.Row="9"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="3"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsPlasmaSamplerEnabled}"
+                            Maximum="1"
+                            Minimum="0"
+                            SimpleNumberFormat="F2"
+                            SmallChange="0.01"
+                            SpinButtonPlacementMode="Inline"
+                            ToolTip.Tip="How strong should the built in noise be. 0 means no noise is used, and 1 means it's adding all the noise"
+                            Value="{Binding PlasmaSamplerLatentNoise}" />
+                    </avalonia:SpacedGrid>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

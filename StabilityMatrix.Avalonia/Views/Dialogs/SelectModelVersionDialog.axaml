@@ -11,7 +11,6 @@
     xmlns:fluentAvalonia="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-    xmlns:markupExtensions="clr-namespace:StabilityMatrix.Avalonia.MarkupExtensions"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
     d:DataContext="{x:Static designData:DesignData.SelectModelVersionViewModel}"
@@ -303,12 +302,12 @@
 
             <Button
                 Margin="8,0"
-                markupExtensions:ShowDisabledTooltipExtension.ShowOnDisabled="True"
                 Classes="accent"
                 Command="{Binding Import}"
                 Content="{x:Static lang:Resources.Action_Import}"
                 IsEnabled="{Binding IsImportEnabled}"
                 IsVisible="{Binding !SelectedFile.IsInstalled, TargetNullValue=True, FallbackValue=True}"
+                ToolTip.ShowOnDisabled="True"
                 ToolTip.Tip="{Binding ImportTooltip}" />
 
             <Button

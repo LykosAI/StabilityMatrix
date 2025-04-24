@@ -13,4 +13,10 @@ public static class EditorCommands
 
     public static RelayCommand<TextEditor> PasteCommand { get; } =
         new(editor => editor?.Paste(), editor => editor?.CanPaste ?? false);
+
+    public static RelayCommand<TextEditor> UndoCommand { get; } =
+        new(editor => editor?.Undo(), editor => editor?.CanUndo ?? false);
+
+    public static RelayCommand<TextEditor> RedoCommand { get; } =
+        new(editor => editor?.Redo(), editor => editor?.CanRedo ?? false);
 }

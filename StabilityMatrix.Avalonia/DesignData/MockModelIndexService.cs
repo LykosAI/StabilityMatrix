@@ -48,6 +48,11 @@ public class MockModelIndexService : IModelIndexService
         return Task.FromResult(Enumerable.Empty<LocalModelFile>());
     }
 
+    public Task<IEnumerable<LocalModelFile>> FindBySha256Async(string hashSha256)
+    {
+        return Task.FromResult(Enumerable.Empty<LocalModelFile>());
+    }
+
     /// <inheritdoc />
     public Task<bool> RemoveModelAsync(LocalModelFile model)
     {

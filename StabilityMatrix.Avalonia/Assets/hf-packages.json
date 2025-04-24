@@ -365,6 +365,15 @@
   },
   {
     "ModelCategory": "DiffusersClipVision",
+    "ModelName": "CLIP Vision H",
+    "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Files": [
+      "split_files/clip_vision/clip_vision_h.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "DiffusersClipVision",
     "ModelName": "IP Adapter Encoder",
     "RepositoryPath": "InvokeAI/ip_adapter_sd_image_encoder",
     "Files": [
@@ -943,7 +952,7 @@
   },
   {
     "ModelCategory": "Clip",
-    "ModelName": "T5XXL FP16",
+    "ModelName": "T5XXL fp16",
     "RepositoryPath": "comfyanonymous/flux_text_encoders",
     "Files": [
       "t5xxl_fp16.safetensors"
@@ -952,11 +961,209 @@
   },
   {
     "ModelCategory": "Clip",
-    "ModelName": "T5XXL FP8 E4M3FN",
+    "ModelName": "T5XXL fp8 e4m3fn",
     "RepositoryPath": "comfyanonymous/flux_text_encoders",
     "Files": [
       "t5xxl_fp8_e4m3fn.safetensors"
     ],
     "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Clip",
+    "ModelName": "UMT5XXL fp16",
+    "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Files": [
+      "split_files/text_encoders/umt5_xxl_fp16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Clip",
+    "ModelName": "UMT5XXL fp8 e4m3fn",
+    "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Files": [
+      "split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Clip",
+    "ModelName": "CLIP G (HiDream)",
+    "RepositoryPath": "Comfy-Org/HiDream-I1_ComfyUI",
+    "Files": [
+      "split_files/text_encoders/clip_g_hidream.safetensors"
+    ],
+    "LicenseType": "MIT"
+  },
+  {
+    "ModelCategory": "Clip",
+    "ModelName": "CLIP L (HiDream)",
+    "RepositoryPath": "Comfy-Org/HiDream-I1_ComfyUI",
+    "Files": [
+      "split_files/text_encoders/clip_l_hidream.safetensors"
+    ],
+    "LicenseType": "MIT"
+  },
+  {
+    "ModelCategory": "Clip",
+    "ModelName": "Llama 3.1 8b Instruct fp8",
+    "RepositoryPath": "Comfy-Org/HiDream-I1_ComfyUI",
+    "Files": [
+      "split_files/text_encoders/split_files/text_encoders/llama_3.1_8b_instruct_fp8_scaled.safetensors"
+    ],
+    "LicenseType": "Llama3.1"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.1 I2V 480p bf16",
+    "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.1_i2v_480p_14B_bf16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.1 I2V 480p fp8 e4m3fn",
+    "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.1 I2V 720p bf16",
+    "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.1_i2v_720p_14B_bf16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.1 I2V 720p fp8 e4m3fn",
+    "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.1_i2v_720p_14B_fp8_e4m3fn.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.1 T2V 1.3B bf16",
+    "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.1_t2v_1.3B_bf16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.1 T2V 1.3B fp16",
+    "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.1_t2v_1.3B_fp16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.1 T2V 14B bf16",
+    "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.1_t2v_14B_bf16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.1 T2V 14B fp8 e4m3fn",
+    "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.1_t2v_14B_fp8_e4m3fn.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "HiDream I1 Dev bf16",
+    "RepositoryPath": "Comfy-Org/HiDream-I1_ComfyUI",
+    "Files": [
+      "split_files/diffusion_models/hidream_i1_dev_bf16.safetensors"
+    ],
+    "LicenseType": "MIT"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "HiDream I1 Dev fp8",
+    "RepositoryPath": "Comfy-Org/HiDream-I1_ComfyUI",
+    "Files": [
+      "split_files/diffusion_models/hidream_i1_dev_fp8.safetensors"
+    ],
+    "LicenseType": "MIT"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "HiDream I1 Fast bf16",
+    "RepositoryPath": "Comfy-Org/HiDream-I1_ComfyUI",
+    "Files": [
+      "split_files/diffusion_models/hidream_i1_fast_bf16.safetensors"
+    ],
+    "LicenseType": "MIT"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "HiDream I1 Fast fp8",
+    "RepositoryPath": "Comfy-Org/HiDream-I1_ComfyUI",
+    "Files": [
+      "split_files/diffusion_models/hidream_i1_fast_fp8.safetensors"
+    ],
+    "LicenseType": "MIT"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "HiDream I1 Full fp16",
+    "RepositoryPath": "Comfy-Org/HiDream-I1_ComfyUI",
+    "Files": [
+      "split_files/diffusion_models/hidream_i1_full_fp16.safetensors"
+    ],
+    "LicenseType": "MIT"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "HiDream I1 Full fp8",
+    "RepositoryPath": "Comfy-Org/HiDream-I1_ComfyUI",
+    "Files": [
+      "split_files/diffusion_models/hidream_i1_full_fp8.safetensors"
+    ],
+    "LicenseType": "MIT"
+  },
+  {
+    "ModelCategory": "Vae",
+    "ModelName": "Flux.1 VAE",
+    "RepositoryPath": "black-forest-labs/FLUX.1-schnell",
+    "Files": [
+      "ae.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Vae",
+    "ModelName": "Wan 2.1 VAE",
+    "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
+    "Files": [
+      "split_files/vae/wan_2.1_vae.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Vae",
+    "ModelName": "HiDream I1 VAE",
+    "RepositoryPath": "Comfy-Org/HiDream-I1_ComfyUI",
+    "Files": [
+      "split_files/vae/ae.safetensors"
+    ],
+    "LicenseType": "MIT"
   }
 ]

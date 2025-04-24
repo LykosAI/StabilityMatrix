@@ -4,7 +4,233 @@ All notable changes to Stability Matrix will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
-  
+
+## v2.14.0
+### Added
+#### New Packages & Integrations
+- Added new package - [Stable Diffusion WebUI AMDGPU Forge](https://github.com/lshqqytiger/stable-diffusion-webui-amdgpu-forge)
+- Added new package - [Stable Diffusion WebUI Forge - Classic](https://github.com/Haoming02/sd-webui-forge-classic)
+- Added new Package Command (in the 3-dots menu) for installing Triton & SageAttention in ComfyUI
+#### Inference Features
+- Added Prompt Amplifier to Inference - click the magic wand 🪄 in the prompt editor to expand and enrich your ideas. Tailor the vibe with the ‘Feel’ selector and watch as your generations come to life with extra detail, coherence, and flair!
+- Added support for HiDream in Inference - see [ComfyUI Examples](https://comfyanonymous.github.io/ComfyUI_examples/hidream/) for more details
+- Added toggle for filtering Inference Extra Networks by base model
+- Added Rescale CFG addon to Inference
+- Added Swap Dimensions button between the width/height input in Inference
+- Added Ctrl+Tab/Ctrl+Shift+Tab shortcuts for navigating between Inference tabs
+- Added Align Your Steps scheduler to Inference
+- Added wildcards to Inference prompts, e.g. `{blue|green|red}` will randomly select one of the colors
+- Added Wan 2.1 Text to Video and Text to Image project types for Inference
+- Added new autocomplete tag source to Inference - [Danbooru/e621 merged tags](https://civitai.com/models/950325?modelVersionId=1419692)
+- Added Abstract Syntax Tree (AST) parsing for Inference prompts. This provides a more robust internal understanding of prompt structure, paving the way for future enhancements.
+- Added hotkey (`Ctrl+Up`/`Ctrl+Down`) in Inference prompt editors to adjust the weight emphasis of the token under the caret or the currently selected text.
+  - This automatically wraps the token/selection in parentheses `()` if it's not already weighted.
+  - It modifies existing weights within parentheses or adds weights if none exist (e.g. `(word:1.1)`).
+  - Handles selection spanning multiple tokens intelligently.
+- Added Plasma Noise addon to Inference for text to image workflows
+#### Model Management & Discovery
+- Added Accelerated Model Discovery (Beta) (⚡ icon in Civitai Browser) for Insider+ supporters. Utilizes an optimized connection for dramatically faster, more responsive browsing of online model repositories.
+- Added OpenModelDB tab to the Model Browser
+- Added Wan 2.1 files to the HuggingFace model browser
+#### User Interface & Experience (UI/UX)
+- Added Undo/Redo commands to text editor context menus
+#### Internal / Developer Changes
+- (Internal) Introduced unified strategy pattern (`IConfigSharingStrategy`) to for handling different config file formats (JSON, YAML, FDS).
+  - Added support for configuring nested paths in JSON and YAML files (e.g. `paths.models.vae`) via dot-notation in `SharedFolderLayoutRule.ConfigDocumentPaths`.
+  - Packages can now use the `SharedFolderLayout` property to define a `ConfigFileType` and `ConfigSharingOptions` (like `RootKey`), without needing to implement custom configuration logic.
+
+### Changed
+#### Inference Features
+- Improved the quality of Inference inpainting by upgrading the workflow behind the scenes. The workflow remains the same for you — just better results!
+- FaceDetailers in Inference will now inherit the primary sampler/scheduler/etc. by default. You can still manually set these by enabling the options via the ⚙️ button on the FaceDetailer card
+- Slightly rearranged the FaceDetailer card layout due to the above change
+- Inference "Extra Networks" selector now filters extra networks based on the selected base model
+- Merged Inference GGUF workflows into the UNet model loader option (no longer need to choose GGUF separately)
+#### Model Management & Discovery
+- Changed the names of some of the shared model folders to better reflect their contents
+- Improved Checkpoint Manager memory usage (thanks to @FireGeek for the profiling assistance!)
+- Performance optimizations for Checkpoint Manager (progress indicators now fully uses Compiled Bindings)
+#### Package Management & Compatibility
+- Upgraded HIP SDK installs to 6.2.4 for ComfyUI-Zluda and AMDGPU-Forge
+- Updated install for kohya_ss to support RTX 5000-series GPUs
+#### User Interface & Experience (UI/UX)
+- Improved window state handling
+- Updated some date strings to take into account the user's locale
+#### Localization
+- Updated Japanese, Brazilian Portuguese, Chinese, and Russian translations
+#### Internal / Developer Changes
+- (Internal) Upgraded FluentAvalonia to 2.3.0
+- (Internal) Refactored configuration-based shared folder logic: Centralized handling into `SharedFoldersConfigHelper` and format-specific strategies, removing custom file I/O logic from individual package classes for improved consistency and maintainability.
+  - Migrated packages ComfyUI (incl. Zluda), VladAutomatic (SD.Next), Sdfx, and StableSwarm to use the unified system for configuration and symlink based sharing.
+
+### Fixed
+#### Installation, Compatibility & Core Functionality
+- Fixed RTX 5000-series GPU detection in certain cases
+- Fixed Package Updates and Change Version not using stored PyTorch index and instead using the default recommended index.
+- Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI (for real this time)
+- Fixed errors from invalid pip specifiers in requirements files
+#### User Interface & Experience (UI/UX)
+- Fixed Image Viewer animation loader keeping file handles open, which resolves 2 different issues (OSes are fun):
+  - (macOS) Fixed `FileNotFoundException` crash when navigating to Inference tab after deleting a Webp animation file previously opened in the Image Viewer Dialog.
+  - (Windows) Fixed Webp animation files unable to be deleted without closing the app first.
+- Fixed Image Viewer `FileNotFoundException` on fetching image size, if navigating to a deleted image file.
+- (macOS) Fixed Webp / Gif animations RGB colors flipped.
+- Fixed window disappearing on macOS when the saved window size is very small
+- Fixed large white boxes appearing when tooltips are visible on macOS/Linux
+- Fixed package images sometimes showing as blank due to concurrent image caching. Requests to same image resources are now de-duplicated
+- Reduced memory usage from `ShowDisabledTooltipExtension`
+#### Inference & Workflows
+- Fixed some cases of missing custom nodes in SwarmUI
+- Fixed Inference ControlNet Preprocessors using incorrect resolution and increased maximum of smallest dimension to 16384
+- Fixed Inference Extra Networks card not allowing for more than one model at a time
+#### Model Management & Discovery
+- Fixed missing base model options in the Metadata Editor
+- Fixed some crashes when using Accelerated Model Discovery
+### Supporters
+#### Visionaries
+Our heartfelt gratitude goes out to our amazing Visionary-tier Patrons: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Akiro_Senkai**, and **Ibixat**! Your exceptional support is fundamental to the ongoing development and success of Stability Matrix. We are immensely grateful for your partnership and belief in the project! 🙏
+#### Pioneers
+We also want to give a huge thank you to our dedicated Pioneer-tier Patrons: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, **NowFallenAngel**, **Al Gorithm**, and welcome to our newest Pioneer, **Noah M.**! Your consistent support and enthusiasm keep the momentum going. Thank you all for being such an important part of our community! ✨
+
+## v2.14.0-pre.2
+### Added
+- Added new package - [Stable Diffusion WebUI Forge - Classic](https://github.com/Haoming02/sd-webui-forge-classic)
+- Added Accelerated Model Discovery (Beta) (⚡ icon in Civitai Browser) for Insider+ supporters. Utilizes an optimized connection for dramatically faster, more responsive browsing of online model repositories.
+- Added Undo/Redo commands to text editor context menus
+- Added Prompt Amplifier to Inference - click the magic wand 🪄 in the prompt editor to expand and enrich your ideas. Tailor the vibe with the ‘Feel’ selector and watch as your generations come to life with extra detail, coherence, and flair!
+- (pre.2 re-release) Added support for HiDream in Inference - see [ComfyUI Examples](https://comfyanonymous.github.io/ComfyUI_examples/hidream/) for more details
+- (pre.2 re-release) Added toggle for filtering Inference Extra Networks by base model
+### Changed
+- Updated install for kohya_ss to support RTX 5000-series GPUs
+- (pre.2 re-release) Merged Inference GGUF workflows into the UNet model loader option (no longer need to choose GGUF separately)
+- (pre.2 re-release) Updated some date strings to take into account the user's locale
+- (pre.2 re-release) Fixed some crashes when using Accelerated Model Discovery
+- (pre.2 re-release) Performance optimizations for Checkpoint Manager (progress indicators now fully uses Compiled Bindings)
+### Fixed
+- Fixed Inference ControlNet Preprocessors using incorrect resolution and increased maximum of smallest dimension to 16384
+- Fixed Triton/Sage install option showing for incompatible GPUs
+- Fixed errors from invalid pip specifiers in requirements files
+- Fixed package images sometimes showing as blank due to concurrent image caching. Requests to same image resources are now de-duplicated
+- (pre.2 re-release) Fixed Inference Extra Networks card not allowing for more than one model at a time
+- (pre.2 re-release) Reduced memory usage from `ShowDisabledTooltipExtension`
+### Supporters
+#### Visionaries
+- Big shout-out to our Visionary-tier patrons: Waterclouds, Corey T, bluepopsicle, and Bob S! Your steadfast support keeps Stability Matrix moving forward, and we couldn’t do it without you. 🚀 Thank you!
+
+## v2.14.0-pre.1
+### Added
+- Added new Package Command (in the 3-dots menu) for installing Triton & SageAttention in ComfyUI
+- Added Abstract Syntax Tree (AST) parsing for Inference prompts. This provides a more robust internal understanding of prompt structure, paving the way for future enhancements.
+- Added hotkey (`Ctrl+Up`/`Ctrl+Down`) in Inference prompt editors to adjust the weight emphasis of the token under the caret or the currently selected text.
+  - This automatically wraps the token/selection in parentheses `()` if it's not already weighted.
+  - It modifies existing weights within parentheses or adds weights if none exist (e.g. `(word:1.1)`).
+  - Handles selection spanning multiple tokens intelligently.
+- Added Plasma Noise addon to Inference for text to image workflows
+- (Internal) Introduced unified strategy pattern (`IConfigSharingStrategy`) to for handling different config file formats (JSON, YAML, FDS).
+  - Added support for configuring nested paths in JSON and YAML files (e.g. `paths.models.vae`) via dot-notation in `SharedFolderLayoutRule.ConfigDocumentPaths`.
+  - Packages can now use the `SharedFolderLayout` property to define a `ConfigFileType` and `ConfigSharingOptions` (like `RootKey`), without needing to implement custom configuration logic.
+### Changed
+- Changed the names of some of the shared model folders to better reflect their contents
+- Improved window state handling
+- Improved Checkpoint Manager memory usage (thanks to @FireGeek for the profiling assistance!)
+- Upgraded HIP SDK installs to 6.2.4 for ComfyUI-Zluda and AMDGPU-Forge
+- (Internal) Upgraded FluentAvalonia to 2.3.0
+- (Internal) Refactored configuration-based shared folder logic: Centralized handling into `SharedFoldersConfigHelper` and format-specific strategies, removing custom file I/O logic from individual package classes for improved consistency and maintainability.
+  - Migrated packages ComfyUI (incl. Zluda), VladAutomatic (SD.Next), Sdfx, and StableSwarm to use the unified system for configuration and symlink based sharing.
+### Fixed
+- Fixed RTX 5000-series GPU detection in certain cases
+- Fixed Image Viewer animation loader keeping file handles open, which resolves 2 different issues (OSes are fun):
+  - (macOS) Fixed `FileNotFoundException` crash when navigating to Inference tab after deleting a Webp animation file previously opened in the Image Viewer Dialog.
+  - (Windows) Fixed Webp animation files unable to be deleted without closing the app first.
+- Fixed Image Viewer `FileNotFoundException` on fetching image size, if navigating to a deleted image file.
+- (macOS) Fixed Webp / Gif animations RGB colors flipped.
+- Fixed Package Updates and Change Version not using stored PyTorch index and instead using the default recommended index.
+- Fixed some cases of missing custom nodes in SwarmUI
+- Fixed window disappearing on macOS when the saved window size is very small
+- Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI (for real this time)
+- Fixed missing base model options in the Metadata Editor
+- Fixed large white boxes appearing when tooltips are visible on macOS/Linux
+### Supporters
+#### Visionaries
+- A special shout-out to our fantastic Visionary-tier Patreon supporters: Waterclouds, Corey T, and our newest Visionaries, bluepopsicle and Bob S! Your continued generosity powers the future of Stability Matrix—thank you so much!
+
+## v2.14.0-dev.3
+### Added
+- Added Wan 2.1 Text to Video and Text to Image project types for Inference
+- Added Wan 2.1 files to the HuggingFace model browser
+- Added new package - [Stable Diffusion WebUI AMDGPU Forge](https://github.com/lshqqytiger/stable-diffusion-webui-amdgpu-forge)
+- Added support for RTX 5000-series GPUs in ComfyUI, Forge, and reForge
+- Added "Rebuild .NET Project" command to SwarmUI installs - available via the 3-dots menu -> Package Commands -> Rebuild .NET Project
+- Added new autocomplete tag source to Inference - [Danbooru/e621 merged tags](https://civitai.com/models/950325?modelVersionId=1419692)
+### Changed
+- Upgraded ComfyUI CUDA torch to 12.6
+- Upgraded Lykos account connection to use OAuth 2.0 device flow
+- (Internal) Updated Avalonia to 11.2.5
+### Fixed
+- Fixed [#1128](https://github.com/LykosAI/StabilityMatrix/issues/1128) - overwriting models when downloading multiple with the same name
+- Fixed ROCm torch indexes for ComfyUI & Forge
+- Fixed model browser sometimes downloading to `ModelsLora` or `ModelsStableDiffusion` folders instead of the correct folder
+- Fixed incorrect Unet folder path for ComfyUI users on Linux/macOS
+- Fixed [#1157](https://github.com/LykosAI/StabilityMatrix/issues/1157) - crash when broken symlinks exist in model directories
+- Fixed [#1154](https://github.com/LykosAI/StabilityMatrix/issues/1154) - increased width for package name on the package cards
+- Fixed ComfyUI-Zluda not being recognized as an option for Inference or SwarmUI
+- Fixed SwarmUI showing Python options in the 3-dots menu
+- Fixed SD.Next install failures in certain cases when using Zluda
+### Supporters
+#### Visionaries
+- Many thanks to our amazing Visionary-tier Patreon supporters, **Waterclouds**, **TheTekknician**, and **Corey T**! Your unwavering support is very much appreciated!
+
+## v2.14.0-dev.2
+### Added
+- Added Align Your Steps scheduler to Inference
+- Added wildcards to Inference prompts, e.g. `{blue|green|red}` will randomly select one of the colors
+- Added Safetensor Metadata viewer to the Checkpoint Manager context menu - thanks to @genteure!
+### Changed
+- Updated the Civitai Model Browser base model selector to match the new Checkpoint Manager filter UI 
+- FaceDetailers in Inference will now inherit the primary sampler/scheduler/etc. by default. You can still manually set these by enabling the options via the ⚙️ button on the FaceDetailer card
+- Slightly rearranged the FaceDetailer card layout due to the above change
+- "Remove symbolic links on shutdown" option now also removes links from Output Sharing
+- Inference "Extra Networks" selector now filters extra networks based on the selected base model
+- Updated Japanese, Brazilian Portuguese, Chinese, and Russian translations
+### Fixed
+- Fixed crash when dragging & dropping images in Inference (hopefully)
+- Fixed HiresFix Inference addon not inheriting sampler/scheduler properly
+- Fixed some plus (+) buttons getting cut off in the Inference UI
+- Fixed CFG Rescale addon interfering with refiner model in Inference
+- Fixed [#1083](https://github.com/LykosAI/StabilityMatrix/issues/1083) - "Show Nested Models" incorrectly displaying models from some non-nested folders
+- Fixed issue with InvokeAI model sharing when the host address is set to 0.0.0.0
+- Fixed issue when parsing index URLs in Python Dependencies Override menu
+- Fixed ComfyUI-Zluda not respecting pip user overrides
+- Fixed issue with Checkpoint Manager not displaying any models
+- (dev.2 re-release) Fixed autocomplete not showing in certain cases when using wildcards
+- (dev.2 re-release) Fixed package restart button not working 
+- (dev.2 re-release) Fixed [#1120](https://github.com/LykosAI/StabilityMatrix/issues/1120) - crash when right clicking in the console after restarting a package
+### Supporters
+#### Visionaries
+- A huge thank you to our incredible Visionary-tier Patreon supporters, **Waterclouds**, **TheTekknician**, and our newest Visionary, **Corey**! Your generous support is greatly appreciated!
+
+## v2.14.0-dev.1
+### Added
+- Added Rescale CFG addon to Inference
+- Added Swap Dimensions button between the width/height input in Inference
+- Added Ctrl+Tab/Ctrl+Shift+Tab shortcuts for navigating between Inference tabs
+- Added OpenModelDB tab to the Model Browser
+### Changed
+- Improved the quality of Inference inpainting by upgrading the workflow behind the scenes. The workflow remains the same for you — just better results!
+- Redesigned the Checkpoint Manager Filter flyout to include more options and improve the layout
+- "Clear All" button will now remain at the top of the Downloads list regardless of scroll position - thanks to @Genteure!
+- Improved image metadata parsing - thanks to @Genteure!
+### Fixed
+- Fixed Inference image selector card buttons taking up the whole height of the card
+- Fixed Inference mask editor failing to paint to the right-most edge on large images
+- Fixed Inference mask editor not showing the entire image in certain circumstances
+- Fixed an issue where certain sampler/scheduler combos would not get saved in image metadata - thanks to @yansigit!
+- Fixed [#1078](https://github.com/LykosAI/StabilityMatrix/issues/1078) - "Call from invalid thread" error after one-click install finishes
+- Fixed [#1080](https://github.com/LykosAI/StabilityMatrix/issues/1080) - Some models not displayed in Checkpoint Manager
+### Supporters
+#### Visionaries
+- Many thanks to our incredible Visionary-tier Patreon supporters, **Waterclouds** and **TheTekknician**! Your support helps us continue to improve Stability Matrix!
+
 ## v2.13.4
 ### Added
 - Added support for RTX 5000-series GPUs in ComfyUI, Forge, and reForge

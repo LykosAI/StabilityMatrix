@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
@@ -17,14 +18,15 @@ using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views.Dialogs;
+using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
+using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
-using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 
@@ -38,10 +40,12 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly IDownloadService downloadService;
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly ISettingsManager settingsManager;
-    private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly IServiceManager<ViewModelBase> dialogFactory;
     private readonly INotificationService notificationService;
     private readonly IModelIndexService modelIndexService;
     private readonly IModelImportService modelImportService;
+    private readonly ILiteDbContext liteDbContext;
+    private readonly CivitCompatApiManager civitApi;
 
     public Action<CheckpointBrowserCardViewModel>? OnDownloadStart { get; set; }
 
@@ -87,10 +91,12 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         IDownloadService downloadService,
         ITrackedDownloadService trackedDownloadService,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> dialogFactory,
+        IServiceManager<ViewModelBase> dialogFactory,
         INotificationService notificationService,
         IModelIndexService modelIndexService,
-        IModelImportService modelImportService
+        IModelImportService modelImportService,
+        ILiteDbContext liteDbContext,
+        CivitCompatApiManager civitApi
     )
     {
         this.downloadService = downloadService;
@@ -100,6 +106,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;
         this.modelImportService = modelImportService;
+        this.liteDbContext = liteDbContext;
+        this.civitApi = civitApi;
 
         // Update image when nsfw setting changes
         AddDisposable(
@@ -258,7 +266,66 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             .Where(v => !settingsManager.Settings.HideEarlyAccessModels || !v.IsEarlyAccess)
             .Select(version => new ModelVersionViewModel(modelIndexService, version))
             .ToImmutableArray();
-        viewModel.SelectedVersionViewModel = viewModel.Versions[0];
+        viewModel.SelectedVersionViewModel = viewModel.Versions.Any() ? viewModel.Versions[0] : null;
+
+        // Update with latest version (including files) if we have no files
+        if (model.ModelVersions?.FirstOrDefault()?.Files is not { Count: > 0 })
+        {
+            Task.Run(async () =>
+                {
+                    Logger.Debug("No files found for model {ModelId}. Updating versions...", model.Id);
+
+                    var latestModel = await civitApi.GetModelById(model.Id);
+                    var latestVersions = latestModel.ModelVersions ?? [];
+
+                    // Update our model
+                    civitModel.Description = latestModel.Description;
+                    civitModel = latestModel;
+                    foreach (var version in latestVersions)
+                    {
+                        if (version.Files is not { Count: > 0 })
+                            continue;
+
+                        var targetVersion = model.ModelVersions?.FirstOrDefault(v => v.Id == version.Id);
+                        if (targetVersion is null)
+                            continue;
+
+                        targetVersion.Files = version.Files;
+                        targetVersion.Description = version.Description;
+                        targetVersion.DownloadUrl = version.DownloadUrl;
+                    }
+
+                    // Reinitialize
+                    Logger.Debug("Updating Versions dialog");
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        var newHtmlDescription =
+                            $"""<html><body class="markdown-body">{model.Description}</body></html>""";
+
+                        viewModel.Dialog = dialog;
+                        viewModel.Title = latestModel.Name;
+
+                        viewModel.Description = newHtmlDescription;
+                        viewModel.CivitModel = latestModel;
+                        viewModel.Versions = (latestModel.ModelVersions ?? [])
+                            .Where(v => !settingsManager.Settings.HideEarlyAccessModels || !v.IsEarlyAccess)
+                            .Select(version => new ModelVersionViewModel(modelIndexService, version))
+                            .ToImmutableArray();
+                        viewModel.SelectedVersionViewModel = viewModel.Versions.Any()
+                            ? viewModel.Versions[0]
+                            : null;
+                    });
+
+                    // Save to db
+                    var upsertResult = await liteDbContext.UpsertCivitModelAsync(latestModel);
+                    Logger.Debug(
+                        "Update model {ModelId} with latest version: {Result}",
+                        model.Id,
+                        upsertResult
+                    );
+                })
+                .SafeFireAndForget(e => Logger.Error(e, "Failed to update model {ModelId}", model.Id));
+        }
 
         dialog.Content = new SelectModelVersionDialog { DataContext = viewModel };
 
@@ -286,7 +353,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
                 || model.BaseModelType == CivitBaseModelType.Flux1S.GetStringValue()
             )
             {
-                sharedFolder = SharedFolderType.Unet.GetStringValue();
+                sharedFolder = SharedFolderType.DiffusionModels.GetStringValue();
             }
 
             var defaultPath = Path.Combine(@"Models", sharedFolder);

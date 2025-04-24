@@ -1,0 +1,214 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.OpenModelDbModelDetailsDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models.Api.OpenModelsDb;assembly=StabilityMatrix.Core"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
+    xmlns:vm="clr-namespace:StabilityMatrix.Avalonia.ViewModels"
+    xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    d:DataContext="{x:Static mocks:DesignData.OpenModelDbModelDetailsViewModel}"
+    d:DesignHeight="800"
+    d:DesignWidth="800"
+    x:DataType="vmDialogs:OpenModelDbModelDetailsViewModel"
+    mc:Ignorable="d">
+    <controls:UserControlBase.Resources>
+        <input:StandardUICommand x:Key="ImportCommand" Command="{Binding ImportCommand}" />
+    </controls:UserControlBase.Resources>
+
+    <controls:UserControlBase.Styles>
+        <Style Selector="vendorLabs|BetterAsyncImage">
+            <Setter Property="ImageCache" Value="{x:Static controls:ImageLoaders.OpenModelDbImageCache}" />
+            <Setter Property="IsCacheEnabled" Value="True" />
+        </Style>
+    </controls:UserControlBase.Styles>
+
+    <Grid
+        Margin="8"
+        ColumnDefinitions="*,Auto,*"
+        RowDefinitions="Auto, Auto, Auto, Auto">
+
+        <Carousel
+            Grid.Row="0"
+            Grid.Column="0"
+            ItemsSource="{Binding ImageUris}"
+            Theme="{DynamicResource FullCarousel}">
+            <Carousel.ItemTemplate>
+                <DataTemplate DataType="{x:Type system:Uri}">
+                    <vendorLabs:BetterAsyncImage
+                        Height="300"
+                        Margin="8"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        Source="{Binding}"
+                        Stretch="UniformToFill" />
+                </DataTemplate>
+            </Carousel.ItemTemplate>
+        </Carousel>
+
+        <!--<Border
+            Grid.Row="0"
+            Grid.Column="1"
+            MaxHeight="360"
+            Background="#33000000"
+            CornerRadius="4" />-->
+
+        <Border
+            Grid.Row="0"
+            Grid.Column="2"
+            MaxHeight="360"
+            Margin="8,0"
+            Background="#33000000"
+            CornerRadius="4" />
+
+        <ListBox
+            Grid.Row="0"
+            Grid.Column="2"
+            MaxHeight="360"
+            Margin="8,8,8,0"
+            VerticalAlignment="Top"
+            Background="#AA000000"
+            ItemsSource="{Binding Resources}"
+            SelectedItem="{Binding SelectedResource}"
+            SelectionMode="AlwaysSelected">
+            <ListBox.Template>
+                <ControlTemplate>
+                    <ScrollViewer>
+                        <ItemsPresenter Margin="8" />
+                    </ScrollViewer>
+                </ControlTemplate>
+            </ListBox.Template>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type vmDialogs:OpenModelDbModelDetailsViewModel+ModelResourceViewModel}">
+                    <Grid
+                        Margin="0,4,0,4"
+                        ColumnDefinitions="Auto, *"
+                        RowDefinitions="Auto, Auto">
+                        <Grid.ContextFlyout>
+                            <ui:FAMenuFlyout>
+                                <ui:MenuFlyoutItem
+                                    Command="{StaticResource ImportCommand}"
+                                    CommandParameter="{Binding Resource}"
+                                    IconSource="Download"
+                                    IsVisible="{Binding IsInstalled}"
+                                    Text="{x:Static lang:Resources.Action_Import}" />
+                            </ui:FAMenuFlyout>
+                        </Grid.ContextFlyout>
+                        <fluent:SymbolIcon
+                            Grid.Row="0"
+                            Grid.RowSpan="2"
+                            Grid.Column="0"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Foreground="Lime"
+                            IsVisible="{Binding IsInstalled}"
+                            Symbol="Checkmark" />
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="0,4,0,4"
+                            Text="{Binding DisplayName}"
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="0,4,0,4"
+                            FontSize="11"
+                            Text="{Binding Resource.Size, Converter={x:Static converters:FileSizeConverters.HumanizeFileSizeConverter}}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <Expander
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="8,8"
+            ExpandDirection="Down"
+            Header="{x:Static lang:Resources.Label_ModelDescription}"
+            IsExpanded="True">
+            <ScrollViewer MaxHeight="300">
+                <controls:MarkdownViewer Text="{Binding Model.Description}" />
+            </ScrollViewer>
+        </Expander>
+
+        <StackPanel
+            Grid.Row="2"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="0,8,0,12"
+            HorizontalAlignment="Center"
+            IsVisible="{Binding !SelectedResource.IsInstalled}"
+            Orientation="Vertical">
+            <TextBlock
+                Margin="0,4"
+                HorizontalAlignment="Center"
+                Text="{x:Static lang:Resources.Label_SelectDownloadLocation}"
+                TextAlignment="Center" />
+            <ComboBox
+                MinWidth="300"
+                HorizontalAlignment="Center"
+                ItemsSource="{Binding AvailableInstallLocations}"
+                SelectedItem="{Binding SelectedInstallLocation}" />
+            <StackPanel
+                Margin="0,4"
+                HorizontalAlignment="Center"
+                IsVisible="{Binding IsCustomSelected}"
+                Orientation="Horizontal">
+                <TextBox MinWidth="260" Text="{Binding CustomInstallLocation}" />
+                <Button
+                    Margin="4,0,0,0"
+                    VerticalAlignment="Stretch"
+                    Command="{Binding SelectCustomFolder}">
+                    <ui:SymbolIcon Symbol="OpenFolder" />
+                </Button>
+            </StackPanel>
+            <TextBlock
+                Foreground="{DynamicResource ThemeRedColor}"
+                IsVisible="{Binding ShowEmptyPathWarning}"
+                Text="{x:Static lang:Resources.Error_PleaseSelectDownloadLocation}"
+                TextAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel
+            Grid.Row="3"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="0,8,0,8"
+            HorizontalAlignment="Center"
+            Orientation="Horizontal">
+            <Button
+                Margin="8,0"
+                HorizontalAlignment="Center"
+                Command="{Binding OnCloseButtonClick}"
+                Content="{x:Static lang:Resources.Action_Cancel}" />
+
+            <Button
+                Margin="8,0"
+                Classes="accent"
+                Command="{Binding ImportCommand}"
+                CommandParameter="{Binding SelectedResource}"
+                Content="{x:Static lang:Resources.Action_Import}"
+                IsVisible="{Binding !SelectedResource.IsInstalled, TargetNullValue=True, FallbackValue=True}" />
+
+            <Button
+                Margin="8,0"
+                Classes="danger"
+                Command="{Binding DeleteModelCommand}"
+                Content="{x:Static lang:Resources.Action_Delete}"
+                IsVisible="{Binding SelectedResource.IsInstalled, TargetNullValue=False, FallbackValue=False}" />
+        </StackPanel>
+
+    </Grid>
+</controls:UserControlBase>

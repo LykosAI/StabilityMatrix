@@ -1,14 +1,10 @@
-﻿using System;
-using System.Linq;
-using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Threading;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Primitives.PopupPositioning;
-using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -19,20 +15,6 @@ namespace StabilityMatrix.Avalonia.Controls;
 
 public class BetterComboBox : ComboBox
 {
-    public static readonly DirectProperty<BetterComboBox, IDataTemplate?> SelectionBoxItemTemplateProperty =
-        AvaloniaProperty.RegisterDirect<BetterComboBox, IDataTemplate?>(
-            nameof(SelectionBoxItemTemplate),
-            v => v.SelectionBoxItemTemplate,
-            (x, v) => x.SelectionBoxItemTemplate = v
-        );
-
-    public IDataTemplate? SelectionBoxItemTemplate
-    {
-        get => selectionBoxItemTemplate;
-        set => SetAndRaise(SelectionBoxItemTemplateProperty, ref selectionBoxItemTemplate, value);
-    }
-
-    private IDataTemplate? selectionBoxItemTemplate;
     private readonly Subject<string> inputSubject = new();
     private readonly IDisposable subscription;
     private readonly Popup inputPopup;

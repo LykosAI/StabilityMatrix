@@ -15,7 +15,7 @@
     <Design.PreviewWith>
         <Panel Width="400" Height="400">
             <StackPanel
-                Width="300"
+                Width="400"
                 VerticalAlignment="Center"
                 Spacing="32">
                 <controls:ModelCard DataContext="{x:Static mocks:DesignData.ModelCardViewModel}" />
@@ -47,7 +47,7 @@
                     <sg:SpacedGrid
                         ColumnDefinitions="Auto,*,Auto"
                         ColumnSpacing="8"
-                        RowDefinitions="*,*,*,*,*,*,*,*,*,*,*"
+                        RowDefinitions="*,*,*,*,*,*,*,*,*,*,*,*,*"
                         RowSpacing="0">
                         <!--  Model  -->
                         <TextBlock
@@ -89,6 +89,7 @@
                                     <ui:ToggleMenuFlyoutItem
                                         IconSource="{StaticResource IconCube}"
                                         IsChecked="{Binding IsRefinerSelectionEnabled}"
+                                        IsVisible="{Binding ShowRefinerOption}"
                                         Text="{x:Static lang:Resources.Label_Refiner}" />
                                     <ui:ToggleMenuFlyoutItem
                                         IconSource="{StaticResource IconCube}"
@@ -316,9 +317,15 @@
                             Grid.Column="0"
                             Margin="0,8,0,0"
                             VerticalAlignment="Center"
-                            IsVisible="{Binding IsSd3Clip}"
                             Text="Encoder 3"
-                            TextAlignment="Left" />
+                            TextAlignment="Left">
+                            <TextBlock.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                    <Binding Path="IsSd3Clip" />
+                                    <Binding Path="IsHiDreamClip" />
+                                </MultiBinding>
+                            </TextBlock.IsVisible>
+                        </TextBlock>
 
                         <controls:BetterDownloadableComboBox
                             Grid.Row="9"
@@ -327,14 +334,62 @@
                             Margin="0,8,0,0"
                             Padding="8,6,4,6"
                             HorizontalAlignment="Stretch"
-                            IsVisible="{Binding IsSd3Clip}"
                             ItemsSource="{Binding ClientManager.ClipModels}"
                             SelectedItem="{Binding SelectedClip3}"
+                            Theme="{StaticResource BetterComboBoxHybridModelTheme}">
+                            <controls:BetterDownloadableComboBox.IsVisible>
+                                <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                                    <Binding Path="IsSd3Clip" />
+                                    <Binding Path="IsHiDreamClip" />
+                                </MultiBinding>
+                            </controls:BetterDownloadableComboBox.IsVisible>
+                        </controls:BetterDownloadableComboBox>
+
+                        <!--  CLIP 4  -->
+                        <TextBlock
+                            Grid.Row="10"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsHiDreamClip}"
+                            Text="Encoder 4"
+                            TextAlignment="Left" />
+
+                        <controls:BetterDownloadableComboBox
+                            Grid.Row="10"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            Padding="8,6,4,6"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsHiDreamClip}"
+                            ItemsSource="{Binding ClientManager.ClipModels}"
+                            SelectedItem="{Binding SelectedClip4}"
                             Theme="{StaticResource BetterComboBoxHybridModelTheme}" />
+
+                        <TextBlock
+                            Grid.Row="11"
+                            Grid.Column="0"
+                            Margin="0,8,0,0"
+                            VerticalAlignment="Center"
+                            IsVisible="{Binding IsHiDreamClip}"
+                            Text="Shift" />
+                        <ui:NumberBox
+                            Grid.Row="11"
+                            Grid.Column="1"
+                            Grid.ColumnSpan="2"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Stretch"
+                            IsVisible="{Binding IsHiDreamClip}"
+                            SelectionHighlightColor="Transparent"
+                            SimpleNumberFormat="F2"
+                            SmallChange="0.25"
+                            SpinButtonPlacementMode="Inline"
+                            Value="{Binding Shift}" />
 
                         <!--  Extra Networks  -->
                         <Panel
-                            Grid.Row="10"
+                            Grid.Row="12"
                             Grid.Column="0"
                             Grid.ColumnSpan="3"
                             IsVisible="{Binding IsExtraNetworksEnabled}">

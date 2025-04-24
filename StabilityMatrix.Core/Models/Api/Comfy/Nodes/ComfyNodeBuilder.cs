@@ -136,6 +136,14 @@ public class ComfyNodeBuilder
         public required int Width { get; init; }
     }
 
+    public record EmptyHunyuanLatentVideo : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required int Width { get; init; }
+        public required int Height { get; init; }
+        public required int Length { get; init; }
+        public required int BatchSize { get; init; }
+    }
+
     public record CLIPSetLastLayer : ComfyTypedNodeBase<ClipNodeConnection>
     {
         public required ClipNodeConnection Clip { get; init; }
@@ -417,6 +425,28 @@ public class ComfyNodeBuilder
         // no type, always sd3 I guess?
     }
 
+    public record QuadrupleCLIPLoader : ComfyTypedNodeBase<ClipNodeConnection>
+    {
+        public required string ClipName1 { get; init; }
+        public required string ClipName2 { get; init; }
+        public required string ClipName3 { get; init; }
+        public required string ClipName4 { get; init; }
+
+        // no type, always HiDream I guess?
+    }
+
+    public record CLIPVisionLoader : ComfyTypedNodeBase<ClipVisionNodeConnection>
+    {
+        public required string ClipName { get; init; }
+    }
+
+    public record CLIPVisionEncode : ComfyTypedNodeBase<ClipVisionOutputNodeConnection>
+    {
+        public required ClipVisionNodeConnection ClipVision { get; init; }
+        public required ImageNodeConnection Image { get; init; }
+        public required string Crop { get; set; }
+    }
+
     public record FluxGuidance : ComfyTypedNodeBase<ConditioningNodeConnection>
     {
         public required ConditioningNodeConnection Conditioning { get; init; }
@@ -481,6 +511,67 @@ public class ComfyNodeBuilder
         public required bool Zsnr { get; init; }
     }
 
+    public record ModelSamplingSD3 : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        [Range(0, 100)]
+        public required double Shift { get; init; }
+    }
+
+    public record RescaleCFG : ComfyTypedNodeBase<ModelNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+        public required double Multiplier { get; init; }
+    }
+
+    public record SetLatentNoiseMask : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required LatentNodeConnection Samples { get; init; }
+        public required ImageMaskConnection Mask { get; init; }
+    }
+
+    public record AlignYourStepsScheduler : ComfyTypedNodeBase<SigmasNodeConnection>
+    {
+        /// <summary>
+        /// options: SD1, SDXL, SVD
+        /// </summary>
+        public required string ModelType { get; init; }
+
+        [Range(1, 10000)]
+        public required int Steps { get; init; }
+
+        [Range(0.0d, 1.0d)]
+        public required double Denoise { get; init; }
+    }
+
+    public record CFGGuider : ComfyTypedNodeBase<GuiderNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; set; }
+        public required ConditioningNodeConnection Positive { get; set; }
+        public required ConditioningNodeConnection Negative { get; set; }
+
+        [Range(0.0d, 100.0d)]
+        public required double Cfg { get; set; }
+    }
+
+    /// <summary>
+    /// outputs: positive, negative, latent
+    /// </summary>
+    public record WanImageToVideo
+        : ComfyTypedNodeBase<ConditioningNodeConnection, ConditioningNodeConnection, LatentNodeConnection>
+    {
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required VAENodeConnection Vae { get; init; }
+        public required ClipVisionOutputNodeConnection ClipVisionOutput { get; init; }
+        public required ImageNodeConnection StartImage { get; init; }
+        public required int Width { get; init; }
+        public required int Height { get; init; }
+        public required int Length { get; init; }
+        public required int BatchSize { get; init; }
+    }
+
     [TypedNodeOptions(
         Name = "CheckpointLoaderNF4",
         RequiredExtensions = ["https://github.com/comfyanonymous/ComfyUI_bitsandbytes_NF4"]
@@ -522,7 +613,7 @@ public class ComfyNodeBuilder
 
         public required string Preprocessor { get; init; }
 
-        [Range(64, 2048)]
+        [Range(64, 16384)]
         public int Resolution { get; init; } = 512;
     }
 
@@ -687,6 +778,273 @@ public class ComfyNodeBuilder
 
         public SamModelNodeConnection? SamModelOpt { get; set; }
         public SegmDetectorNodeConnection? SegmDetectorOpt { get; set; }
+    }
+
+    /// <summary>
+    /// Plasma Noise generation node (Lykos_JDC_Plasma)
+    /// </summary>
+    [TypedNodeOptions(
+        Name = "Lykos_JDC_Plasma",
+        RequiredExtensions = ["https://github.com/LykosAI/inference-comfy-plasma"]
+    )] // Name corrected, Extensions added
+    public record PlasmaNoise : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        [Range(128, 8192)]
+        public required int Width { get; init; } = 512;
+
+        [Range(128, 8192)]
+        public required int Height { get; init; } = 512;
+
+        [Range(0.5d, 32.0d)]
+        public required double Turbulence { get; init; } = 2.75;
+
+        [Range(-1, 255)]
+        public required int ValueMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int ValueMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int RedMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int RedMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int GreenMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int GreenMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int BlueMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int BlueMax { get; init; } = -1;
+
+        [Range(0UL, ulong.MaxValue)] // Match Python's max int size
+        public required ulong Seed { get; init; } = 0;
+    }
+
+    /// <summary>
+    /// Random Noise generation node (Lykos_JDC_RandNoise)
+    /// </summary>
+    [TypedNodeOptions(
+        Name = "Lykos_JDC_RandNoise",
+        RequiredExtensions = ["https://github.com/LykosAI/inference-comfy-plasma"]
+    )] // Name corrected, Extensions added
+    public record RandNoise : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        [Range(128, 8192)]
+        public required int Width { get; init; } = 512;
+
+        [Range(128, 8192)]
+        public required int Height { get; init; } = 512;
+
+        [Range(-1, 255)]
+        public required int ValueMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int ValueMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int RedMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int RedMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int GreenMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int GreenMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int BlueMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int BlueMax { get; init; } = -1;
+
+        [Range(0UL, ulong.MaxValue)]
+        public required ulong Seed { get; init; } = 0;
+    }
+
+    /// <summary>
+    /// Greyscale Noise generation node (Lykos_JDC_GreyNoise)
+    /// </summary>
+    [TypedNodeOptions(
+        Name = "Lykos_JDC_GreyNoise",
+        RequiredExtensions = ["https://github.com/LykosAI/inference-comfy-plasma"]
+    )] // Name corrected, Extensions added
+    public record GreyNoise : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        [Range(128, 8192)]
+        public required int Width { get; init; } = 512;
+
+        [Range(128, 8192)]
+        public required int Height { get; init; } = 512;
+
+        [Range(-1, 255)]
+        public required int ValueMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int ValueMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int RedMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int RedMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int GreenMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int GreenMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int BlueMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int BlueMax { get; init; } = -1;
+
+        [Range(0UL, ulong.MaxValue)]
+        public required ulong Seed { get; init; } = 0;
+    }
+
+    /// <summary>
+    /// Pink Noise generation node (Lykos_JDC_PinkNoise)
+    /// </summary>
+    [TypedNodeOptions(
+        Name = "Lykos_JDC_PinkNoise",
+        RequiredExtensions = ["https://github.com/LykosAI/inference-comfy-plasma"]
+    )] // Name corrected, Extensions added
+    public record PinkNoise : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        [Range(128, 8192)]
+        public required int Width { get; init; } = 512;
+
+        [Range(128, 8192)]
+        public required int Height { get; init; } = 512;
+
+        [Range(-1, 255)]
+        public required int ValueMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int ValueMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int RedMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int RedMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int GreenMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int GreenMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int BlueMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int BlueMax { get; init; } = -1;
+
+        [Range(0UL, ulong.MaxValue)]
+        public required ulong Seed { get; init; } = 0;
+    }
+
+    /// <summary>
+    /// Brown Noise generation node (Lykos_JDC_BrownNoise)
+    /// </summary>
+    [TypedNodeOptions(
+        Name = "Lykos_JDC_BrownNoise",
+        RequiredExtensions = new[] { "https://github.com/LykosAI/inference-comfy-plasma" }
+    )] // Name corrected, Extensions added
+    public record BrownNoise : ComfyTypedNodeBase<ImageNodeConnection>
+    {
+        [Range(128, 8192)]
+        public required int Width { get; init; } = 512;
+
+        [Range(128, 8192)]
+        public required int Height { get; init; } = 512;
+
+        [Range(-1, 255)]
+        public required int ValueMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int ValueMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int RedMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int RedMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int GreenMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int GreenMax { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int BlueMin { get; init; } = -1;
+
+        [Range(-1, 255)]
+        public required int BlueMax { get; init; } = -1;
+
+        [Range(0UL, ulong.MaxValue)]
+        public required ulong Seed { get; init; } = 0;
+    }
+
+    /// <summary>
+    /// Custom KSampler node using alternative noise distribution (Lykos_JDC_PlasmaSampler)
+    /// </summary>
+    [TypedNodeOptions(
+        Name = "Lykos_JDC_PlasmaSampler",
+        RequiredExtensions = ["https://github.com/LykosAI/inference-comfy-plasma"]
+    )] // Name corrected, Extensions added
+    public record PlasmaSampler : ComfyTypedNodeBase<LatentNodeConnection>
+    {
+        public required ModelNodeConnection Model { get; init; }
+
+        [Range(0UL, ulong.MaxValue)]
+        public required ulong NoiseSeed { get; init; } = 0;
+
+        [Range(1, 10000)]
+        public required int Steps { get; init; } = 20;
+
+        [Range(0.0d, 100.0d)]
+        public required double Cfg { get; init; } = 7.0;
+
+        [Range(0.0d, 1.0d)]
+        public required double Denoise { get; init; } = 0.9; // Default from Python code
+
+        [Range(0.0d, 1.0d)]
+        public required double LatentNoise { get; init; } = 0.05; // Default from Python code
+
+        /// <summary>
+        /// Noise distribution type. Expected values: "default", "rand".
+        /// Validation should ensure one of these values is passed.
+        /// </summary>
+        public required string DistributionType { get; init; } = "rand";
+
+        /// <summary>
+        /// Name of the KSampler sampler (e.g., "euler", "dpmpp_2m_sde").
+        /// Should correspond to available samplers in comfy.samplers.KSampler.SAMPLERS.
+        /// </summary>
+        public required string SamplerName { get; init; } // No default in Python, must be provided
+
+        /// <summary>
+        /// Name of the KSampler scheduler (e.g., "normal", "karras", "sgm_uniform").
+        /// Should correspond to available schedulers in comfy.samplers.KSampler.SCHEDULERS.
+        /// </summary>
+        public required string Scheduler { get; init; } // No default in Python, must be provided
+
+        public required ConditioningNodeConnection Positive { get; init; }
+        public required ConditioningNodeConnection Negative { get; init; }
+        public required LatentNodeConnection LatentImage { get; init; }
     }
 
     public ImageNodeConnection Lambda_LatentToImage(LatentNodeConnection latent, VAENodeConnection vae)
@@ -1147,6 +1505,9 @@ public class ComfyNodeBuilder
 
         public int BatchSize { get; set; } = 1;
         public int? BatchIndex { get; set; }
+        public int? PrimarySteps { get; set; }
+        public double? PrimaryCfg { get; set; }
+        public string? PrimaryModelType { get; set; }
 
         public OneOf<string, StringNodeConnection> PositivePrompt { get; set; }
         public OneOf<string, StringNodeConnection> NegativePrompt { get; set; }

@@ -70,5 +70,5 @@ public class CivitModel
             ModelVersions is { Count: > 0 }
                 ? ModelVersions[0].PublishedAt ?? DateTimeOffset.MinValue
                 : DateTimeOffset.MinValue
-        ).ToString("M/d/yy");
+        ).ToString("d", System.Globalization.CultureInfo.CurrentCulture);
 }

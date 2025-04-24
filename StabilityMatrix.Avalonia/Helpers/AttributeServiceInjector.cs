@@ -49,10 +49,21 @@ internal static partial class AttributeServiceInjector
         services.AddStabilityMatrixAvalonia();
     }
 
+    private static bool IsScoped(IServiceProvider serviceProvider)
+    {
+        // Hacky check for if service provider is scoped
+        var typeName = serviceProvider.GetType().Name;
+        if (typeName == "ServiceProviderEngineScope" || typeName.Contains("Scope"))
+        {
+            return true;
+        }
+        return false;
+    }
+
     /// <summary>
-    /// Adds a <see cref="ServiceManager{T}"/> to the <see cref="IServiceCollection"/>.
+    /// Adds a <see cref="IServiceManager{T}"/> to the <see cref="IServiceCollection"/>.
     /// </summary>
-    /// <param name="services">The <see cref="IServiceCollection"/> to which the <see cref="ServiceManager{T}"/> will be added.</param>
+    /// <param name="services">The <see cref="IServiceCollection"/> to which the <see cref="IServiceManager{T}"/> will be added.</param>
     /// <param name="serviceFilter">An optional filter for the services.</param>
     /// <typeparam name="TService">The base type of the services.</typeparam>
     /// <exception cref="InvalidOperationException"></exception>
@@ -61,13 +72,14 @@ internal static partial class AttributeServiceInjector
         Func<ServiceDescriptor, bool>? serviceFilter = null
     )
     {
-        return services.AddSingleton<ServiceManager<TService>>(provider =>
+        // Register main service manager as singleton
+        services.AddSingleton<ServiceManager<TService>>(provider =>
         {
             using var _ = CodeTimer.StartDebug(
                 callerName: $"{nameof(AddServiceManagerWithCurrentCollectionServices)}<{typeof(TService)}>"
             );
 
-            var serviceManager = new ServiceManager<TService>();
+            var serviceManager = new ServiceManager<TService>(provider);
 
             // Get registered services that are assignable to TService
             var serviceDescriptors = services.Where(s => s.ServiceType.IsAssignableTo(typeof(TService)));
@@ -84,10 +96,36 @@ internal static partial class AttributeServiceInjector
                 Debug.Assert(type is not null, "type is not null");
                 Debug.Assert(type.IsAssignableTo(typeof(TService)), "type is assignable to TService");
 
-                serviceManager.Register(type, () => (TService)provider.GetRequiredService(type));
+                if (service.Lifetime == ServiceLifetime.Scoped)
+                {
+                    serviceManager.RegisterScoped(type, sp => (TService)sp.GetRequiredService(type));
+                }
+                else
+                {
+                    serviceManager.Register(type, () => (TService)provider.GetRequiredService(type));
+                }
             }
 
             return serviceManager;
         });
+
+        // Register scoped for interface
+        services.AddScoped<IServiceManager<TService>>(provider =>
+        {
+            var rootServiceManager = provider.GetRequiredService<ServiceManager<TService>>();
+
+            // For non scoped, just return the singleton
+            if (!IsScoped(provider))
+            {
+                return rootServiceManager;
+            }
+
+            // For scoped, create a new instance using root and provider
+            var scopedServiceManager = new ScopedServiceManager<TService>(rootServiceManager, provider);
+
+            return scopedServiceManager;
+        });
+
+        return services;
     }
 }

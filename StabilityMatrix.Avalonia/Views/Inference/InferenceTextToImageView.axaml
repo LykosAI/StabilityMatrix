@@ -4,12 +4,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dock="clr-namespace:StabilityMatrix.Avalonia.Controls.Dock"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-    xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
-    xmlns:dock="clr-namespace:StabilityMatrix.Avalonia.Controls.Dock"
     xmlns:modelsInference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
+    xmlns:vmInference="using:StabilityMatrix.Avalonia.ViewModels.Inference"
     d:DataContext="{x:Static mocks:DesignData.InferenceTextToImageViewModel}"
     d:DesignHeight="800"
     d:DesignWidth="1000"
@@ -36,7 +36,7 @@
                     x:Name="MainLayout"
                     Id="MainLayout"
                     Orientation="Horizontal">
-                    
+
                     <!--  Left Pane  -->
                     <ToolDock
                         x:Name="ConfigPane"
@@ -47,19 +47,18 @@
                             x:Name="ConfigTool"
                             Title="Config"
                             x:DataType="Tool"
-                            Id="ConfigTool"
-                            CanClose="False">
-                            <controls:StackCard 
-                                Opacity="1"
-                                DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.StackCardViewModel}" />
+                            CanClose="False"
+                            Id="ConfigTool">
+                            <controls:StackCard DataContext="{ReflectionBinding ElementName=Dock, Path=DataContext.StackCardViewModel}" Opacity="1" />
                         </Tool>
                     </ToolDock>
 
                     <ProportionalDockSplitter x:Name="Splitter1" Id="Splitter1" />
 
-                    <ProportionalDock x:Name="PromptLayout"
-                                      Id="PromptLayout"
-                                      Orientation="Vertical">
+                    <ProportionalDock
+                        x:Name="PromptLayout"
+                        Id="PromptLayout"
+                        Orientation="Vertical">
                         <!--  Prompt Pane  -->
                         <ToolDock
                             x:Name="PromptPane"
@@ -70,104 +69,103 @@
                                 x:Name="PromptTool"
                                 Title="Prompt"
                                 x:DataType="Tool"
-                                Id="PromptTool"
-                                CanClose="False">
+                                CanClose="False"
+                                Id="PromptTool">
 
                                 <!--  Prompt and buttons  -->
                                 <Grid
-                                    Opacity="1"
                                     x:CompileBindings="False"
                                     DataContext="{Binding ElementName=Dock, Path=DataContext}"
+                                    Opacity="1"
                                     RowDefinitions="*,Auto">
                                     <!--  Prompt card  -->
-                                    <controls:PromptCard
-                                        VerticalAlignment="Stretch"
-                                        DataContext="{Binding PromptCardViewModel}" />
+                                    <controls:PromptCard VerticalAlignment="Stretch" DataContext="{Binding PromptCardViewModel}" />
                                 </Grid>
                             </Tool>
                         </ToolDock>
-                        
-                        <!--  Generate Dock -->
+
+                        <!--  Generate Dock  -->
                         <ToolDock
                             x:Name="GeneratePane"
                             Alignment="Left"
                             Id="PromptPane"
                             Proportion="0.1">
-                            <Tool x:Name="GenerateTool"
-                              Title="Generate"
-                              x:DataType="Tool"
-                              Id="GenerateTool"
-                              CanClose="False">
-                            <!--  Generate Buttons  -->
-                            
-                            <controls:Card DataContext="{Binding ElementName=Dock, Path=DataContext}"
-                                           x:CompileBindings="False"
-                                           Margin="0,6,0,0" Padding="8">
-                                <Grid
-                                    HorizontalAlignment="Center"
-                                    ColumnDefinitions="Auto,*,Auto"
-                                    RowDefinitions="Auto,*">
-                                    <Grid.Styles>
-                                        <Style Selector="Button">
-                                            <Setter Property="MinHeight" Value="32" />
-                                        </Style>
-                                    </Grid.Styles>
-                                    <Button
-                                        Grid.Row="1"
-                                        Margin="4,0"
-                                        Padding="12,8"
-                                        HorizontalAlignment="Left"
-                                        icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
-                                        Classes="transparent"
-                                        Command="{Binding GenerateImageCommand}"
-                                        CommandParameter="{x:Static modelsInference:GenerateFlags.HiresFixAndUseCurrentSeed}"
-                                        ToolTip.Tip="Generate with Hires Scaling" />
+                            <Tool
+                                x:Name="GenerateTool"
+                                Title="Generate"
+                                x:DataType="Tool"
+                                CanClose="False"
+                                Id="GenerateTool">
+                                <!--  Generate Buttons  -->
 
-                                    <!--  Main Generate Button  -->
-                                    <Button
-                                        x:Name="GenerateButton"
-                                        Grid.Row="1"
-                                        Grid.Column="1"
-                                        Width="130"
-                                        HorizontalAlignment="Stretch"
-                                        Classes="accent"
-                                        Command="{Binding GenerateImageCommand}"
-                                        ToolTip.Tip="{Binding $self.HotKey}"
-                                        HotKey="Ctrl+Enter"
-                                        CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
-                                        IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}">
-                                        <Panel>
-                                            <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}"
-                                                       Text="Generate Image" />
-                                            <controls:ProgressRing IsIndeterminate="True"
-                                                                   IsVisible="{Binding !#GenerateButton.IsEnabled}" />
-                                        </Panel>
-                                    </Button>
-                                    <!--  Cancel Button  -->
-                                    <Button
-                                        x:Name="CancelButton"
-                                        Grid.Row="1"
-                                        Grid.Column="1"
-                                        Width="130"
-                                        HorizontalAlignment="Stretch"
-                                        icons:Attached.Icon="fa-solid fa-stop"
-                                        Command="{Binding GenerateImageCancelCommand}"
-                                        IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
+                                <controls:Card
+                                    Margin="0,6,0,0"
+                                    Padding="8"
+                                    x:CompileBindings="False"
+                                    DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                    <Grid
+                                        HorizontalAlignment="Center"
+                                        ColumnDefinitions="Auto,*,Auto"
+                                        RowDefinitions="Auto,*">
+                                        <Grid.Styles>
+                                            <Style Selector="Button">
+                                                <Setter Property="MinHeight" Value="32" />
+                                            </Style>
+                                        </Grid.Styles>
+                                        <Button
+                                            Grid.Row="1"
+                                            Margin="4,0"
+                                            Padding="12,8"
+                                            HorizontalAlignment="Left"
+                                            icons:Attached.Icon="fa-solid fa-magnifying-glass-plus"
+                                            Classes="transparent"
+                                            Command="{Binding GenerateImageCommand}"
+                                            CommandParameter="{x:Static modelsInference:GenerateFlags.HiresFixAndUseCurrentSeed}"
+                                            ToolTip.Tip="Generate with Hires Scaling" />
 
-                                    <Button
-                                        Grid.Row="1"
-                                        Grid.Column="2"
-                                        Margin="4,0"
-                                        Padding="12,8"
-                                        HorizontalAlignment="Left"
-                                        icons:Attached.Icon="fa-solid fa-repeat"
-                                        Classes="transparent"
-                                        Command="{Binding GenerateImageCommand}"
-                                        CommandParameter="{x:Static modelsInference:GenerateFlags.UseCurrentSeed}"
-                                        ToolTip.Tip="Generate with current seed" />
-                                </Grid>
-                            </controls:Card>
-                        </Tool>
+                                        <!--  Main Generate Button  -->
+                                        <Button
+                                            x:Name="GenerateButton"
+                                            Grid.Row="1"
+                                            Grid.Column="1"
+                                            Width="130"
+                                            HorizontalAlignment="Stretch"
+                                            Classes="accent"
+                                            Command="{Binding GenerateImageCommand}"
+                                            CommandParameter="{x:Static modelsInference:GenerateFlags.None}"
+                                            HotKey="Ctrl+Enter"
+                                            IsVisible="{Binding !GenerateImageCommand.CanBeCanceled}"
+                                            ToolTip.Tip="{Binding $self.HotKey}">
+                                            <Panel>
+                                                <TextBlock IsVisible="{Binding #GenerateButton.IsEnabled}" Text="Generate Image" />
+                                                <controls:ProgressRing IsIndeterminate="True" IsVisible="{Binding !#GenerateButton.IsEnabled}" />
+                                            </Panel>
+                                        </Button>
+                                        <!--  Cancel Button  -->
+                                        <Button
+                                            x:Name="CancelButton"
+                                            Grid.Row="1"
+                                            Grid.Column="1"
+                                            Width="130"
+                                            HorizontalAlignment="Stretch"
+                                            icons:Attached.Icon="fa-solid fa-stop"
+                                            Command="{Binding GenerateImageCancelCommand}"
+                                            IsVisible="{Binding GenerateImageCommand.CanBeCanceled}" />
+
+                                        <Button
+                                            Grid.Row="1"
+                                            Grid.Column="2"
+                                            Margin="4,0"
+                                            Padding="12,8"
+                                            HorizontalAlignment="Left"
+                                            icons:Attached.Icon="fa-solid fa-repeat"
+                                            Classes="transparent"
+                                            Command="{Binding GenerateImageCommand}"
+                                            CommandParameter="{x:Static modelsInference:GenerateFlags.UseCurrentSeed}"
+                                            ToolTip.Tip="Generate with current seed" />
+                                    </Grid>
+                                </controls:Card>
+                            </Tool>
                         </ToolDock>
                     </ProportionalDock>
 
@@ -183,39 +181,35 @@
                             x:Name="ImageGalleryTool"
                             Title="Image Output"
                             x:DataType="Tool"
-                            Id="ImageGalleryTool"
-                            CanClose="False">
-                            
-                            <Grid
-                                x:CompileBindings="False"
-                                DataContext="{Binding ElementName=Dock, Path=DataContext}">
-                                <controls:ImageGalleryCard
-                                    Grid.Row="0"
-                                    DataContext="{Binding ImageGalleryCardViewModel}" />
-                                
-                                <StackPanel 
+                            CanClose="False"
+                            Id="ImageGalleryTool">
+
+                            <Grid x:CompileBindings="False" DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                <controls:ImageGalleryCard Grid.Row="0" DataContext="{Binding ImageGalleryCardViewModel}" />
+
+                                <StackPanel
+                                    Margin="2,1,2,4"
+                                    VerticalAlignment="Top"
                                     DataContext="{Binding OutputProgress}"
-                                    Margin="2,1,2,4" 
-                                    Spacing="4"
-                                    VerticalAlignment="Top">
+                                    Spacing="4">
                                     <ProgressBar
-                                        IsVisible="{Binding IsProgressVisible}"
                                         IsIndeterminate="{Binding IsIndeterminate}"
+                                        IsVisible="{Binding IsProgressVisible}"
                                         Maximum="{Binding Maximum}"
                                         Value="{Binding Value}" />
-                                    
-                                    <TextBlock 
+
+                                    <TextBlock
                                         Margin="0,10,0,0"
                                         IsVisible="{Binding IsTextVisible}"
-                                        TextAlignment="Center"
-                                        Text="{Binding Text}"/>
+                                        Text="{Binding Text}"
+                                        TextAlignment="Center" />
                                 </StackPanel>
                             </Grid>
                         </Tool>
                     </ToolDock>
-                    
+
                     <ProportionalDockSplitter x:Name="Splitter3" Id="Splitter3" />
-                    
+
                     <!--  Right Pane  -->
                     <ToolDock
                         x:Name="ImageFolderPane"
@@ -224,19 +218,33 @@
                         Proportion="0.1">
                         <Tool
                             x:Name="ImageFolderTool"
-                            x:DataType="Tool"
                             Title="Gallery"
-                            Id="ImageFolderTool"
-                            CanClose="False">
-                            
-                            <Grid
-                                x:CompileBindings="False"
-                                DataContext="{Binding ElementName=Dock, Path=DataContext}">
-                                <controls:ImageFolderCard
-                                    DataContext="{Binding ImageFolderCardViewModel}" />
+                            x:DataType="Tool"
+                            CanClose="False"
+                            Id="ImageFolderTool">
+
+                            <Grid x:CompileBindings="False" DataContext="{Binding ElementName=Dock, Path=DataContext}">
+                                <controls:ImageFolderCard DataContext="{Binding ImageFolderCardViewModel}" />
                             </Grid>
                         </Tool>
                     </ToolDock>
+
+
+                    <!--  bottom pane  -->
+                    <!--  <ToolDock  -->
+                    <!--  x:Name="LoraGallery"  -->
+                    <!--  Alignment="Bottom"  -->
+                    <!--  CanClose="False"  -->
+                    <!--  Id="LoraGallery"  -->
+                    <!--  IsCollapsable="True"  -->
+                    <!--  IsExpanded="False">  -->
+                    <!--  <Tool  -->
+                    <!--  x:Name="LoraGalleryTool"  -->
+                    <!--  Title="Lora Gallery"  -->
+                    <!--  x:DataType="Tool"  -->
+                    <!--  CanClose="True"  -->
+                    <!--  Id="LoraGalleryTool" />  -->
+                    <!-- </ToolDock> -->
 
                 </ProportionalDock>
             </RootDock>

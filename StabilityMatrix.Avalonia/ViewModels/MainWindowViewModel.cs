@@ -11,6 +11,7 @@ using FluentAvalonia.UI.Controls;
 using FluentAvalonia.UI.Media.Animation;
 using NLog;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -39,7 +40,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly ISettingsManager settingsManager;
-    private readonly ServiceManager<ViewModelBase> dialogFactory;
+    private readonly IServiceManager<ViewModelBase> dialogFactory;
     private readonly ITrackedDownloadService trackedDownloadService;
     private readonly IDiscordRichPresenceService discordRichPresenceService;
     private readonly IModelIndexService modelIndexService;
@@ -85,7 +86,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(
         ISettingsManager settingsManager,
         IDiscordRichPresenceService discordRichPresenceService,
-        ServiceManager<ViewModelBase> dialogFactory,
+        IServiceManager<ViewModelBase> dialogFactory,
         ITrackedDownloadService trackedDownloadService,
         IModelIndexService modelIndexService,
         Lazy<IModelDownloadLinkHandler> modelDownloadLinkHandler,
@@ -253,8 +254,7 @@ public partial class MainWindowViewModel : ViewModelBase
                 .TrackFirstTimeInstallAsync(
                     installedPackageNameMaybe,
                     recommendedModelsViewModel
-                        .Sd15Models.Concat(recommendedModelsViewModel.SdxlModels)
-                        .Where(x => x.IsSelected)
+                        .RecommendedModels.Where(x => x.IsSelected)
                         .Select(x => x.CivitModel.Name)
                         .ToList(),
                     false
@@ -355,6 +355,8 @@ public partial class MainWindowViewModel : ViewModelBase
             {
                 Logger.Error(ex, "Error during account migration notice check");
             });
+
+        await ShowMigrationTipIfNecessaryAsync();
     }
 
     private void PreloadPages()
@@ -503,5 +505,17 @@ public partial class MainWindowViewModel : ViewModelBase
 
         await viewModel.Preload();
         await dialog.ShowAsync();
+    }
+
+    private async Task ShowMigrationTipIfNecessaryAsync()
+    {
+        if (settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.SharedFolderMigrationTip))
+            return;
+
+        var folderReference = DialogHelper.CreateMarkdownDialog(MarkdownSnippets.SharedFolderMigration);
+        folderReference.CloseButtonText = Resources.Action_OK;
+        await folderReference.ShowAsync();
+
+        settingsManager.Transaction(s => s.SeenTeachingTips.Add(TeachingTip.SharedFolderMigrationTip));
     }
 }

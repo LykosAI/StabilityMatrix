@@ -79,7 +79,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
-    private readonly SourceCache<HybridModelFile, string> loraModelsSource = new(p => p.GetId());
+    public readonly SourceCache<HybridModelFile, string> LoraModelsSource = new(p => p.GetId());
 
     public IObservableCollection<HybridModelFile> LoraModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
@@ -142,6 +142,13 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     public IObservableCollection<HybridModelFile> ClipModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    private readonly SourceCache<HybridModelFile, string> clipVisionModelsSource = new(p => p.GetId());
+    private readonly SourceCache<HybridModelFile, string> downloadableClipVisionModelsSource =
+        new(p => p.GetId());
+
+    public IObservableCollection<HybridModelFile> ClipVisionModels { get; } =
+        new ObservableCollectionExtended<HybridModelFile>();
+
     public InferenceClientManager(
         ILogger<InferenceClientManager> logger,
         IApiFactory apiFactory,
@@ -181,7 +188,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
-        loraModelsSource
+        LoraModelsSource
             .Connect()
             .DeferUntilLoaded()
             .SortAndBind(
@@ -252,6 +259,19 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             )
             .DeferUntilLoaded()
             .Bind(ClipModels)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
+
+        clipVisionModelsSource
+            .Connect()
+            .Or(downloadableClipVisionModelsSource.Connect())
+            .SortBy(
+                f => f.ShortDisplayName,
+                SortDirection.Ascending,
+                SortOptimisations.ComparesImmutableValuesOnly
+            )
+            .DeferUntilLoaded()
+            .Bind(ClipVisionModels)
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -350,7 +370,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Get Lora model names
         if (await Client.GetNodeOptionNamesAsync("LoraLoader", "lora_name") is { } loraModelNames)
         {
-            loraModelsSource.EditDiff(
+            LoraModelsSource.EditDiff(
                 loraModelNames.Select(HybridModelFile.FromRemote),
                 HybridModelFile.Comparer
             );
@@ -468,6 +488,17 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             ];
             clipModelsSource.EditDiff(models, HybridModelFile.Comparer);
         }
+
+        // Get CLIP Vision model names from CLIPVisionLoader node
+        if (await Client.GetNodeOptionNamesAsync("CLIPVisionLoader", "clip_name") is { } clipVisionModelNames)
+        {
+            IEnumerable<HybridModelFile> models =
+            [
+                HybridModelFile.None,
+                ..clipVisionModelNames.Select(HybridModelFile.FromRemote)
+            ];
+            clipVisionModelsSource.EditDiff(models, HybridModelFile.Comparer);
+        }
     }
 
     /// <summary>
@@ -496,7 +527,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         downloadableControlNetModelsSource.EditDiff(downloadableControlNets, HybridModelFile.Comparer);
 
         // Load local Lora / LyCORIS models
-        loraModelsSource.EditDiff(
+        LoraModelsSource.EditDiff(
             modelIndexService
                 .FindByModelType(SharedFolderType.Lora | SharedFolderType.LyCORIS)
                 .Select(HybridModelFile.FromLocal),
@@ -556,12 +587,16 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         downloadableSamModelsSource.EditDiff(downloadableSamModels, HybridModelFile.Comparer);
 
         unetModelsSource.EditDiff(
-            modelIndexService.FindByModelType(SharedFolderType.Unet).Select(HybridModelFile.FromLocal),
+            modelIndexService
+                .FindByModelType(SharedFolderType.DiffusionModels)
+                .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
         clipModelsSource.EditDiff(
-            modelIndexService.FindByModelType(SharedFolderType.CLIP).Select(HybridModelFile.FromLocal),
+            modelIndexService
+                .FindByModelType(SharedFolderType.TextEncoders)
+                .Select(HybridModelFile.FromLocal),
             HybridModelFile.Comparer
         );
 
@@ -569,6 +604,16 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             u => !clipModelsSource.Lookup(u.GetId()).HasValue
         );
         downloadableClipModelsSource.EditDiff(downloadableClipModels, HybridModelFile.Comparer);
+
+        clipVisionModelsSource.EditDiff(
+            modelIndexService.FindByModelType(SharedFolderType.ClipVision).Select(HybridModelFile.FromLocal),
+            HybridModelFile.Comparer
+        );
+
+        var downloadableClipVisionModels = RemoteModels.ClipVisionModelFiles.Where(
+            u => !clipVisionModelsSource.Lookup(u.GetId()).HasValue
+        );
+        downloadableClipVisionModelsSource.EditDiff(downloadableClipVisionModels, HybridModelFile.Comparer);
 
         samplersSource.EditDiff(ComfySampler.Defaults, ComfySampler.Comparer);
 

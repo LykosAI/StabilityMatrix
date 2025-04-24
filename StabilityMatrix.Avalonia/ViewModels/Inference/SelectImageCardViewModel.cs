@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Avalonia.Input;
@@ -36,7 +32,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterTransient<SelectImageCardViewModel>]
 public partial class SelectImageCardViewModel(
     INotificationService notificationService,
-    ServiceManager<ViewModelBase> vmFactory
+    IServiceManager<ViewModelBase> vmFactory
 ) : LoadableViewModelBase, IDropTarget, IComfyStep, IInputImageProvider
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();

@@ -7,6 +7,7 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Config;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -40,26 +41,110 @@ public class Sdfx(
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
     public override List<LaunchOptionDefinition> LaunchOptions => [LaunchOptionDefinition.Extras];
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
+
+    public override SharedFolderLayout SharedFolderLayout =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = new[] { "data/models/checkpoints" },
-            [SharedFolderType.Diffusers] = new[] { "data/models/diffusers" },
-            [SharedFolderType.Lora] = new[] { "data/models/loras" },
-            [SharedFolderType.CLIP] = new[] { "data/models/clip" },
-            [SharedFolderType.InvokeClipVision] = new[] { "data/models/clip_vision" },
-            [SharedFolderType.TextualInversion] = new[] { "data/models/embeddings" },
-            [SharedFolderType.VAE] = new[] { "data/models/vae" },
-            [SharedFolderType.ApproxVAE] = new[] { "data/models/vae_approx" },
-            [SharedFolderType.ControlNet] = new[] { "data/models/controlnet/ControlNet" },
-            [SharedFolderType.GLIGEN] = new[] { "data/models/gligen" },
-            [SharedFolderType.ESRGAN] = new[] { "data/models/upscale_models" },
-            [SharedFolderType.Hypernetwork] = new[] { "data/models/hypernetworks" },
-            [SharedFolderType.IpAdapter] = new[] { "data/models/ipadapter/base" },
-            [SharedFolderType.InvokeIpAdapters15] = new[] { "data/models/ipadapter/sd15" },
-            [SharedFolderType.InvokeIpAdaptersXl] = new[] { "data/models/ipadapter/sdxl" },
-            [SharedFolderType.T2IAdapter] = new[] { "data/models/controlnet/T2IAdapter" },
-            [SharedFolderType.PromptExpansion] = new[] { "data/models/prompt_expansion" }
+            RelativeConfigPath = "sdfx.config.json",
+            ConfigFileType = ConfigFileType.Json,
+            Rules =
+            [
+                // Assuming JSON keys are top-level, adjust ConfigDocumentPaths if nested (e.g., "paths.models.checkpoints")
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.StableDiffusion],
+                    TargetRelativePaths = ["data/models/checkpoints"],
+                    ConfigDocumentPaths = ["path.models.checkpoints"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Diffusers],
+                    TargetRelativePaths = ["data/models/diffusers"],
+                    ConfigDocumentPaths = ["path.models.diffusers"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.VAE],
+                    TargetRelativePaths = ["data/models/vae"],
+                    ConfigDocumentPaths = ["path.models.vae"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
+                    TargetRelativePaths = ["data/models/loras"],
+                    ConfigDocumentPaths = ["path.models.loras"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Embeddings],
+                    TargetRelativePaths = ["data/models/embeddings"],
+                    ConfigDocumentPaths = ["path.models.embeddings"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Hypernetwork],
+                    TargetRelativePaths = ["data/models/hypernetworks"],
+                    ConfigDocumentPaths = ["path.models.hypernetworks"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes =
+                    [
+                        SharedFolderType.ESRGAN,
+                        SharedFolderType.RealESRGAN,
+                        SharedFolderType.SwinIR
+                    ],
+                    TargetRelativePaths = ["data/models/upscale_models"],
+                    ConfigDocumentPaths = ["path.models.upscale_models"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.TextEncoders],
+                    TargetRelativePaths = ["data/models/clip"],
+                    ConfigDocumentPaths = ["path.models.clip"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ClipVision],
+                    TargetRelativePaths = ["data/models/clip_vision"],
+                    ConfigDocumentPaths = ["path.models.clip_vision"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ControlNet, SharedFolderType.T2IAdapter],
+                    TargetRelativePaths = ["data/models/controlnet"],
+                    ConfigDocumentPaths = ["path.models.controlnet"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.GLIGEN],
+                    TargetRelativePaths = ["data/models/gligen"],
+                    ConfigDocumentPaths = ["path.models.gligen"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ApproxVAE],
+                    TargetRelativePaths = ["data/models/vae_approx"],
+                    ConfigDocumentPaths = ["path.models.vae_approx"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes =
+                    [
+                        SharedFolderType.IpAdapter,
+                        SharedFolderType.IpAdapters15,
+                        SharedFolderType.IpAdaptersXl
+                    ],
+                    TargetRelativePaths = ["data/models/ipadapter"],
+                    ConfigDocumentPaths = ["path.models.ipadapter"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.PromptExpansion],
+                    TargetRelativePaths = ["data/models/prompt_expansion"],
+                    ConfigDocumentPaths = ["path.models.prompt_expansion"]
+                },
+            ]
         };
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = new[] { "data/media/output" } };
@@ -175,105 +260,5 @@ public class Sdfx(
         pathBuilder.AddPath(Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs"));
 
         return env.SetItem("PATH", pathBuilder.ToString());
-    }
-
-    public override Task SetupModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    ) =>
-        sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink
-                => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
-            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
-            SharedFolderMethod.None => Task.CompletedTask,
-            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
-        };
-
-    public override Task RemoveModelFolderLinks(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
-    {
-        return sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
-            SharedFolderMethod.Configuration => RemoveConfigSection(installDirectory),
-            SharedFolderMethod.None => Task.CompletedTask,
-            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
-        };
-    }
-
-    private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)
-    {
-        var configPath = Path.Combine(installDirectory, "sdfx.config.json");
-
-        if (File.Exists(configPath))
-        {
-            var configText = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
-            var config = JsonSerializer.Deserialize<JsonObject>(configText) ?? new JsonObject();
-            var modelsDir = SettingsManager.ModelsDirectory;
-
-            var models = config.GetOrAddNonNullJsonObject(["paths", "models"]);
-
-            models["checkpoints"] = new JsonArray(Path.Combine(modelsDir, "StableDiffusion"));
-            models["vae"] = new JsonArray(Path.Combine(modelsDir, "VAE"));
-            models["loras"] = new JsonArray(
-                Path.Combine(modelsDir, "Lora"),
-                Path.Combine(modelsDir, "LyCORIS")
-            );
-            models["upscale_models"] = new JsonArray(
-                Path.Combine(modelsDir, "ESRGAN"),
-                Path.Combine(modelsDir, "RealESRGAN"),
-                Path.Combine(modelsDir, "SwinIR")
-            );
-            models["embeddings"] = new JsonArray(Path.Combine(modelsDir, "TextualInversion"));
-            models["hypernetworks"] = new JsonArray(Path.Combine(modelsDir, "Hypernetwork"));
-            models["controlnet"] = new JsonArray(
-                Path.Combine(modelsDir, "ControlNet"),
-                Path.Combine(modelsDir, "T2IAdapter")
-            );
-            models["clip"] = new JsonArray(Path.Combine(modelsDir, "CLIP"));
-            models["clip_vision"] = new JsonArray(Path.Combine(modelsDir, "InvokeClipVision"));
-            models["diffusers"] = new JsonArray(Path.Combine(modelsDir, "Diffusers"));
-            models["gligen"] = new JsonArray(Path.Combine(modelsDir, "GLIGEN"));
-            models["vae_approx"] = new JsonArray(Path.Combine(modelsDir, "ApproxVAE"));
-            models["ipadapter"] = new JsonArray(
-                Path.Combine(modelsDir, "IpAdapter"),
-                Path.Combine(modelsDir, "InvokeIpAdapters15"),
-                Path.Combine(modelsDir, "InvokeIpAdaptersXl")
-            );
-
-            await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
-        }
-    }
-
-    private async Task RemoveConfigSection(DirectoryPath installDirectory)
-    {
-        var configPath = Path.Combine(installDirectory, "sdfx.config.json");
-
-        if (File.Exists(configPath))
-        {
-            var configText = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
-            var config = JsonSerializer.Deserialize<JsonObject>(configText) ?? new JsonObject();
-
-            var models = config.GetOrAddNonNullJsonObject(["paths", "models"]);
-
-            models["checkpoints"] = new JsonArray(Path.Combine("data", "models", "checkpoints"));
-            models["clip"] = new JsonArray(Path.Combine("data", "models", "clip"));
-            models["clip_vision"] = new JsonArray(Path.Combine("data", "models", "clip_vision"));
-            models["controlnet"] = new JsonArray(Path.Combine("data", "models", "controlnet"));
-            models["diffusers"] = new JsonArray(Path.Combine("data", "models", "diffusers"));
-            models["embeddings"] = new JsonArray(Path.Combine("data", "models", "embeddings"));
-            models["gligen"] = new JsonArray(Path.Combine("data", "models", "gligen"));
-            models["ipadapter"] = new JsonArray(Path.Combine("data", "models", "ipadapter"));
-            models["hypernetworks"] = new JsonArray(Path.Combine("data", "models", "hypernetworks"));
-            models["loras"] = new JsonArray(Path.Combine("data", "models", "loras"));
-            models["upscale_models"] = new JsonArray(Path.Combine("data", "models", "upscale_models"));
-            models["vae"] = new JsonArray(Path.Combine("data", "models", "vae"));
-            models["vae_approx"] = new JsonArray(Path.Combine("data", "models", "vae_approx"));
-
-            await File.WriteAllTextAsync(configPath, config.ToString()).ConfigureAwait(false);
-        }
     }
 }

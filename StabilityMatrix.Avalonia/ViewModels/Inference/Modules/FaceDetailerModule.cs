@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.Input;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
 using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
@@ -14,13 +18,32 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 
 [ManagedService]
 [RegisterTransient<FaceDetailerModule>]
-public class FaceDetailerModule : ModuleBase, IValidatableModule
+public partial class FaceDetailerModule : ModuleBase, IValidatableModule
 {
-    public FaceDetailerModule(ServiceManager<ViewModelBase> vmFactory)
+    /// <inheritdoc />
+    public override bool IsSettingsEnabled => true;
+
+    /// <inheritdoc />
+    public override IRelayCommand SettingsCommand => OpenSettingsDialogCommand;
+
+    public FaceDetailerModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "Face Detailer";
         AddCards(vmFactory.Get<FaceDetailerViewModel>());
+    }
+
+    [RelayCommand]
+    private async Task OpenSettingsDialog()
+    {
+        var gridVm = VmFactory.Get<PropertyGridViewModel>(vm =>
+        {
+            vm.Title = $"{Title} {Resources.Label_Settings}";
+            vm.SelectedObject = Cards.ToArray();
+            vm.IncludeCategories = ["Settings"];
+        });
+
+        await gridVm.GetDialog().ShowAsync();
     }
 
     protected override void OnApplyStep(ModuleApplyStepEventArgs e)
@@ -38,6 +61,41 @@ public class FaceDetailerModule : ModuleBase, IValidatableModule
                 GetModelName(faceDetailerCard.BboxModel) ?? throw new ArgumentException("No BboxModel"),
         };
 
+        var samplerName =
+            (
+                faceDetailerCard.IsSamplerSelectionEnabled
+                    ? faceDetailerCard.Sampler?.Name
+                    : e.Builder.Connections.PrimarySampler?.Name
+            ) ?? throw new ArgumentException("No PrimarySampler");
+
+        var schedulerName =
+            (
+                faceDetailerCard.IsSchedulerSelectionEnabled
+                    ? faceDetailerCard.Scheduler?.Name
+                    : e.Builder.Connections.PrimaryScheduler?.Name
+            ) ?? throw new ArgumentException("No PrimaryScheduler");
+
+        if (schedulerName == "align_your_steps")
+        {
+            if (e.Builder.Connections.PrimaryModelType is null)
+            {
+                throw new ArgumentException("No Model Type for AYS");
+            }
+
+            schedulerName =
+                e.Builder.Connections.PrimaryModelType == "SDXL"
+                    ? ComfyScheduler.FaceDetailerAlignYourStepsSDXL.Name
+                    : ComfyScheduler.FaceDetailerAlignYourStepsSD1.Name;
+        }
+
+        var cfg = faceDetailerCard.IsCfgScaleEnabled
+            ? faceDetailerCard.Cfg
+            : e.Builder.Connections.PrimaryCfg ?? throw new ArgumentException("No CFG");
+
+        var steps = faceDetailerCard.IsStepsEnabled
+            ? faceDetailerCard.Steps
+            : e.Builder.Connections.PrimarySteps ?? throw new ArgumentException("No Steps");
+
         var faceDetailer = new ComfyNodeBuilder.FaceDetailer
         {
             Name = e.Builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.FaceDetailer)),
@@ -47,16 +105,10 @@ public class FaceDetailerModule : ModuleBase, IValidatableModule
             Seed = faceDetailerCard.InheritSeed
                 ? e.Builder.Connections.Seed
                 : Convert.ToUInt64(faceDetailerCard.SeedCardViewModel.Seed),
-            Steps = faceDetailerCard.Steps,
-            Cfg = faceDetailerCard.Cfg,
-            SamplerName =
-                faceDetailerCard.Sampler?.Name
-                ?? e.Builder.Connections.PrimarySampler?.Name
-                ?? throw new ArgumentException("No PrimarySampler"),
-            Scheduler =
-                faceDetailerCard.Scheduler?.Name
-                ?? e.Builder.Connections.PrimaryScheduler?.Name
-                ?? throw new ArgumentException("No PrimaryScheduler"),
+            Steps = steps,
+            Cfg = cfg,
+            SamplerName = samplerName,
+            Scheduler = schedulerName,
             Denoise = faceDetailerCard.Denoise,
             Feather = faceDetailerCard.Feather,
             NoiseMask = faceDetailerCard.NoiseMask,

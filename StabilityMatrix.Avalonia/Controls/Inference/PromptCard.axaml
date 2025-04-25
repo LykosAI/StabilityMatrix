@@ -110,11 +110,6 @@
                                                     icons:Attached.Icon="fa-solid fa-circle-info"
                                                     Classes="transparent-full"
                                                     Command="{Binding ShowAmplifierDisclaimerCommand}" />
-                                                <!--  <StackPanel  -->
-                                                <!--  HorizontalAlignment="Center"  -->
-                                                <!--  Orientation="Horizontal">  -->
-                                                <!--    -->
-                                                <!-- </StackPanel> -->
 
                                                 <Separator
                                                     Grid.Row="1"

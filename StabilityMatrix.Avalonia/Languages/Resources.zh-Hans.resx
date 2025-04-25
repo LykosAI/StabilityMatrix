@@ -1418,4 +1418,19 @@
   <data name="ModelDiscovery_Title" xml:space="preserve">
     <value>加速模型搜索</value>
   </data>
+  <data name="PromptAmplifier_Disclaimer" xml:space="preserve">
+    <value>### ✨ 新功能上线：Prompt Amplifier
+
+这是我们的 AI 助手，它使用实验性的 Spark 模型，能为您的提示生成更具创意的扩展。
+
+请注意：Prompt Amplifier 会在我们安全的云端环境中运行，**不会**在您的本地电脑上运行。
+
+### ☁️ 为何使用云端？
+
+Spark 模型规模庞大，算力需求堪比万亿参数的基础模型。我们重视本地功能，但 Spark 的高级能力需要云端支持，现在即可通过我们的云服务使用。
+
+### 🔒 隐私至上
+
+我们极其重视您的隐私（详情请参阅[生成式 AI 条款](https://lykos.ai/gen-ai-terms)）。Lykos AI 及必要的云服务提供商**绝不会**使用您的提示或生成结果来训练 AI 模型。我们仅在为确保功能正常运行时处理您的数据，**处理完成后也只保留必要的元数据（如时间、Token 数量），不保留提示内容本身**。您的数据绝不会被出售或共享。</value>
+  </data>
 </root>

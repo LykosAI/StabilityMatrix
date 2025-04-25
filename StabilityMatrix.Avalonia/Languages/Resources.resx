@@ -1408,7 +1408,7 @@ Nope! Stability Matrix is still fully functional without one. But, your Lykos ac
     <value>Accelerated Model Discovery</value>
   </data>
   <data name="PromptAmplifier_Disclaimer" xml:space="preserve">
-    <value>### 🪄 **Introducing: Prompt Amplifier**  
+    <value>### 🪄 Introducing: Prompt Amplifier  
 Our AI assistant, powered by our experimental Spark model, will generate creative expansions of your prompt.
 
 The Prompt Amplifier runs in our secure, enterprise-grade cloud environment—it does **not** run locally on your machine.

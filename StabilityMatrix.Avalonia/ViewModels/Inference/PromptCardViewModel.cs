@@ -99,7 +99,7 @@ public partial class PromptCardViewModel
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowLowTokenWarning), nameof(LowTokenWarningText))]
-    private int tokensRemaining;
+    private int tokensRemaining = -1;
 
     [ObservableProperty]
     private bool isFlyoutOpen;
@@ -567,6 +567,28 @@ public partial class PromptCardViewModel
     [RelayCommand]
     private async Task AmplifyPrompt()
     {
+        if (!settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.PromptAmplifyDisclaimer))
+        {
+            var dialog = DialogHelper.CreateMarkdownDialog(Resources.PromptAmplifier_Disclaimer);
+            dialog.PrimaryButtonText = "Continue";
+            dialog.CloseButtonText = "Back";
+            dialog.IsPrimaryButtonEnabled = true;
+            dialog.DefaultButton = ContentDialogButton.Primary;
+
+            var result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.Primary)
+            {
+                settingsManager.Transaction(settings =>
+                {
+                    settings.SeenTeachingTips.Add(TeachingTip.PromptAmplifyDisclaimer);
+                });
+            }
+            else
+            {
+                return;
+            }
+        }
+
         var valid = await ValidatePrompts();
         if (!valid)
             return;
@@ -673,6 +695,10 @@ public partial class PromptCardViewModel
             notificationService.Show("Prompt Amplifier Error", e.Message, NotificationType.Error);
         }
     }
+
+    [RelayCommand]
+    private Task ShowAmplifierDisclaimer() =>
+        DialogHelper.CreateMarkdownDialog(Resources.PromptAmplifier_Disclaimer).ShowAsync();
 
     partial void OnIsBalancedChanged(bool value)
     {

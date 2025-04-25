@@ -93,7 +93,6 @@
                                     <Button.Flyout>
                                         <controls:BetterFlyout>
                                             <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto">
-
                                                 <TextBlock
                                                     Grid.Row="0"
                                                     Grid.Column="0"
@@ -103,6 +102,14 @@
                                                     FontWeight="Light"
                                                     Text="Prompt Amplifier"
                                                     TextAlignment="Center" />
+                                                <Button
+                                                    Grid.Row="0"
+                                                    Grid.Column="1"
+                                                    Margin="16,0,0,0"
+                                                    HorizontalAlignment="Right"
+                                                    icons:Attached.Icon="fa-solid fa-circle-info"
+                                                    Classes="transparent-full"
+                                                    Command="{Binding ShowAmplifierDisclaimerCommand}" />
 
                                                 <Separator
                                                     Grid.Row="1"

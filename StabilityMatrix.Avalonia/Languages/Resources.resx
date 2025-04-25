@@ -1407,4 +1407,16 @@ Nope! Stability Matrix is still fully functional without one. But, your Lykos ac
   <data name="ModelDiscovery_Title" xml:space="preserve">
     <value>Accelerated Model Discovery</value>
   </data>
+  <data name="PromptAmplifier_Disclaimer" xml:space="preserve">
+    <value>### 🪄 **Introducing: Prompt Amplifier**  
+Our AI assistant, powered by our experimental Spark model, will generate creative expansions of your prompt.
+
+The Prompt Amplifier runs in our secure, enterprise-grade cloud environment—it does **not** run locally on your machine.
+
+### ☁️️ Why Cloud?  
+The Spark model operates at a scale comparable to trillion-parameter foundation models, requiring substantial computational power. While we’re committed to maximizing locally-runnable features, Spark’s advanced capabilities are available **now** via our cloud infrastructure.
+
+### 🔒 Privacy First
+We prioritize your privacy ([Gen AI Terms](&lt;https://lykos.ai/gen-ai-terms&gt;)). **Your prompts/outputs are NEVER used for AI training by Lykos AI or our necessary cloud infrastructure partners.** Secure processing occurs solely to generate your amplification, **after which we only retain metadata (like timestamps and token counts), not the prompt content itself.** Your data is never sold or shared.</value>
+  </data>
 </root>

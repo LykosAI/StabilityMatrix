@@ -3459,6 +3459,21 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ### 🪄 **Introducing: Prompt Amplifier**  
+        ///Our AI assistant, powered by our experimental Spark model, will generate creative expansions of your prompt.
+        ///
+        ///The Prompt Amplifier runs in our secure, enterprise-grade cloud environment—it does **not** run locally on your machine.
+        ///
+        ///### ☁️️ Why Cloud?  
+        ///The Spark model operates at a scale comparable to trillion-parameter foundation models, requiring substantial computational power. While we’re committed to maximizing locally-runnable features, Spark’s advanced [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string PromptAmplifier_Disclaimer {
+            get {
+                return ResourceManager.GetString("PromptAmplifier_Disclaimer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to If you&apos;re already supporting us on Patreon, please link your account to continue..
         /// </summary>
         public static string Sponsorship_ConnectPatreonPrompt {

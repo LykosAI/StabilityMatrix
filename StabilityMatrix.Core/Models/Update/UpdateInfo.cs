@@ -27,7 +27,7 @@ public record UpdateInfo
     public required string HashBlake3 { get; init; }
 
     /// <summary>
-    /// ED25519 signature of the semicolon seperated string:
+    /// ED25519 signature of the semicolon separated string:
     /// "version + releaseDate + channel + type + url + changelog + hash_blake3"
     /// verifiable using our stored public key
     /// </summary>

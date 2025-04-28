@@ -223,7 +223,7 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
                 else
                 {
                     // Insert the weight before the closing parenthesis.
-                    replacementOffset = parenthesizedNode.EndIndex; // Insert at the end of parenthesized node
+                    replacementOffset = parenthesizedNode.EndIndex - 1; // EndIndex is exclusive, so -1
                     replacementLength = 0; // insert
                     newText = $":{FormatWeight(newWeight)}";
                 }

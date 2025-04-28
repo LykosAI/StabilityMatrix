@@ -28,7 +28,7 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
         var rootNode = new DocumentNode
         {
             Span = new TextSpan(startIndex, endIndex - startIndex),
-            Content = nodes
+            Content = nodes,
         };
 
         return new PromptSyntaxTree(sourceText, rootNode, tokenizeResult.Tokens.ToList());
@@ -163,7 +163,7 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
         {
             Raw = number,
             Span = new TextSpan(token.StartIndex, token.Length),
-            Value = decimal.Parse(number, CultureInfo.InvariantCulture)
+            Value = decimal.Parse(number, CultureInfo.InvariantCulture),
         };
     }
 
@@ -181,8 +181,14 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
 
         while (MoreTokens())
         {
+            // Check if no more tokens to consume.
             if (PeekToken() is not { } nextToken)
+            {
+                // Ensure we have length set
+                if (node.Span.Length == 0)
+                    throw new InvalidOperationException("Unexpected end of input.");
                 break;
+            }
 
             if (nextToken.Scopes.Contains("punctuation.separator.weight.prompt"))
             {
@@ -200,10 +206,17 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
                 node.Weight = ParseNumber();
             }
             // We're supposed to check `punctuation.definition.array.end.prompt` here, textmate is not parsing it
-            // separately with current tmLanguage grammar, so use `meta.structure.weight.prompt` for now
+            // separately always with current tmLanguage grammar, so ALSO use `meta.structure.weight.prompt` for now
             // We check this AFTER `punctuation.separator.weight.prompt` to avoid consuming the ':'
-            else if (nextToken.Scopes.Contains("meta.structure.weight.prompt"))
+            else if (
+                nextToken.Scopes.Contains("punctuation.definition.array.end.prompt")
+                || nextToken.Scopes.Contains("meta.structure.weight.prompt")
+            )
             {
+                // Verify contents
+                if (GetTextSubstring(nextToken) != ")")
+                    throw new InvalidOperationException("Expected closing parenthesis.");
+
                 ConsumeToken(); // Consume the ')'
                 node.EndIndex = nextToken.EndIndex; // Set end index
                 break;
@@ -287,7 +300,7 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
             NetworkType = type,
             ModelName = name,
             ModelWeight = modelWeight,
-            ClipWeight = clipWeight
+            ClipWeight = clipWeight,
         };
     }
 
@@ -299,7 +312,7 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
 
         var node = new ArrayNode
         {
-            Span = new TextSpan(openBracket.StartIndex, 0) // Set start index
+            Span = new TextSpan(openBracket.StartIndex, 0), // Set start index
         };
 
         while (MoreTokens())
@@ -334,7 +347,7 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
 
         var node = new WildcardNode
         {
-            Span = new TextSpan(openBraceToken.StartIndex, 0) // Set start index
+            Span = new TextSpan(openBraceToken.StartIndex, 0), // Set start index
         };
 
         while (MoreTokens())
@@ -378,7 +391,7 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
                         StartIndex = result.StartIndex,
                         EndIndex = sourceText.Length,
                         Length = sourceText.Length - result.StartIndex,
-                        Scopes = result.Scopes
+                        Scopes = result.Scopes,
                     };
                 }
             }
@@ -405,7 +418,7 @@ public class PromptSyntaxBuilder(ITokenizeLineResult tokenizeResult, string sour
                     StartIndex = result.StartIndex,
                     EndIndex = sourceText.Length,
                     Length = sourceText.Length - result.StartIndex,
-                    Scopes = result.Scopes
+                    Scopes = result.Scopes,
                 };
             }
         }

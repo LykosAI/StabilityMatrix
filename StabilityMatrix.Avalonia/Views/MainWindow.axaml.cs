@@ -41,9 +41,11 @@ using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using TeachingTip = FluentAvalonia.UI.Controls.TeachingTip;
+#if DEBUG
+using StabilityMatrix.Avalonia.Extensions;
+#endif
 #if SM_LOG_WINDOW
 using StabilityMatrix.Avalonia.Diagnostics.Views;
-using StabilityMatrix.Avalonia.Extensions;
 #endif
 
 namespace StabilityMatrix.Avalonia.Views;

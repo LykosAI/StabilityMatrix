@@ -166,8 +166,8 @@
         <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\StabilityMatrix.Avalonia.Diagnostics\StabilityMatrix.Avalonia.Diagnostics.csproj" />
+    <ItemGroup Condition="$(SM_IncludeLogWindow) == 'true'">
+        <ProjectReference Include="..\StabilityMatrix.Avalonia.Diagnostics\StabilityMatrix.Avalonia.Diagnostics.csproj" />
     </ItemGroup>
     
     <ItemGroup>

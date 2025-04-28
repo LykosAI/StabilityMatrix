@@ -41,7 +41,7 @@ using StabilityMatrix.Core.Models.Update;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using TeachingTip = FluentAvalonia.UI.Controls.TeachingTip;
-#if DEBUG
+#if SM_LOG_WINDOW
 using StabilityMatrix.Avalonia.Diagnostics.Views;
 using StabilityMatrix.Avalonia.Extensions;
 #endif
@@ -93,6 +93,9 @@ public partial class MainWindow : AppWindowBase
 #if DEBUG
         this.AttachDevTools();
         this.AttachDebugSaveScreenshot();
+#endif
+
+#if SM_LOG_WINDOW
         LogWindow.Attach(this, App.Services);
 #endif
         TitleBar.ExtendsContentIntoTitleBar = true;
@@ -131,7 +134,7 @@ public partial class MainWindow : AppWindowBase
                     return Dispatcher
                         .UIThread.InvokeAsync(() => StartupInitialize(lazyViewModel, cancellationToken))
                         .GetTask();
-                }
+                },
             };
         }
         else
@@ -327,7 +330,7 @@ public partial class MainWindow : AppWindowBase
         dialog.Buttons = new List<TaskDialogButton>
         {
             new("Exit", TaskDialogStandardResult.Yes),
-            TaskDialogButton.CancelButton
+            TaskDialogButton.CancelButton,
         };
         dialog.Buttons[0].IsDefault = true;
 
@@ -358,15 +361,11 @@ public partial class MainWindow : AppWindowBase
             return;
 
         // Navigate to first page
-        Dispatcher.UIThread.Post(
-            () =>
-                navigationService.NavigateTo(
-                    vm.Pages[0],
-                    new BetterSlideNavigationTransition
-                    {
-                        Effect = SlideNavigationTransitionEffect.FromBottom
-                    }
-                )
+        Dispatcher.UIThread.Post(() =>
+            navigationService.NavigateTo(
+                vm.Pages[0],
+                new BetterSlideNavigationTransition { Effect = SlideNavigationTransitionEffect.FromBottom }
+            )
         );
 
         // Check show update teaching tip
@@ -475,7 +474,7 @@ public partial class MainWindow : AppWindowBase
         {
             WindowTransparencyLevel.Mica,
             WindowTransparencyLevel.AcrylicBlur,
-            WindowTransparencyLevel.Blur
+            WindowTransparencyLevel.Blur,
         };
 
         if (ActualThemeVariant == ThemeVariant.Dark)

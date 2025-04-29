@@ -641,45 +641,6 @@
   <data name="Label_Branch" xml:space="preserve">
     <value>Branch</value>
   </data>
-  <data name="Label_AutoScrollToEnd" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_License" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_SharedModelStrategyShort" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_PleaseSelectDataDirectory" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_DataFolderName" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_CurrentDirectory" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Text_AppWillRelaunchAfterUpdate" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Action_RemindMeLater" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Action_InstallNow" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_ReleaseNotes" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Action_OpenProjectEllipsis" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Action_SaveAsEllipsis" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Action_RestoreDefaultLayout" xml:space="preserve">
-    <value></value>
-  </data>
   <data name="Label_CivitAi" xml:space="preserve">
     <value>CivitAI</value>
   </data>

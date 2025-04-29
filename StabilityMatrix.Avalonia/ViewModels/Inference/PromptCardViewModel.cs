@@ -230,7 +230,6 @@ public partial class PromptCardViewModel
         {
             try
             {
-                await accountsService.RefreshLykosAsync();
                 var isLoggedIn = await accountsService.HasStoredLykosAccountAsync();
                 if (!isLoggedIn)
                 {

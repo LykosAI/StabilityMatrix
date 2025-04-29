@@ -5,6 +5,11 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.14.1
+### Changed
+- Fixed incorrect ROCmLibs being installed for RX 6800/6800XT users of Comfy-Zluda or AMDGPU-Forge
+- Fixed missing text when missing localized versions for Italian and Chinese languages
+
 ## v2.14.0
 ### Added
 #### New Packages & Integrations

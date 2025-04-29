@@ -222,14 +222,22 @@ public partial class PromptCardViewModel
         {
             IsPromptAmplifyTeachingTipOpen = true;
         }
+    }
 
+    protected override Task OnInitialLoadedAsync()
+    {
         _ = Task.Run(async () =>
         {
             try
             {
-                if (accountsService.LykosStatus == null)
+                var isLoggedIn = await accountsService.HasStoredLykosAccountAsync();
+                if (isLoggedIn)
                 {
-                    await accountsService.RefreshAsync();
+                    await accountsService.RefreshLykosAsync();
+                }
+                else
+                {
+                    return;
                 }
 
                 SetTokenThreshold();
@@ -259,6 +267,8 @@ public partial class PromptCardViewModel
                 TokensRemaining = -1;
             }
         });
+
+        return Task.CompletedTask;
     }
 
     private void SetTokenThreshold()

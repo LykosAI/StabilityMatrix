@@ -12,7 +12,7 @@ using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Attributes;
-using StabilityMatrix.Core.Extensions;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Services;
 
@@ -26,6 +26,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
 {
     private readonly ISettingsManager settingsManager;
+    private readonly ModelCompatChecker modelCompatChecker = new();
+
     public const string ModuleKey = "ExtraNetwork";
 
     /// <summary>
@@ -161,11 +163,7 @@ public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
         if (!settingsManager.Settings.FilterExtraNetworksByBaseModel)
             return true;
 
-        return SelectedBaseModel is null
-            || lora?.Local?.ConnectedModelInfo == null
-            || SelectedBaseModel.Local?.ConnectedModelInfo == null
-            || lora.Local?.ConnectedModelInfo?.BaseModel
-                == SelectedBaseModel.Local?.ConnectedModelInfo?.BaseModel;
+        return modelCompatChecker.IsLoraCompatibleWithBaseModel(lora, SelectedBaseModel) ?? true;
     }
 
     internal class ExtraNetworkCardModel

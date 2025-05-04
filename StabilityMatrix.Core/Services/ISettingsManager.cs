@@ -92,6 +92,15 @@ public interface ISettingsManager
     );
 
     /// <summary>
+    /// Creates an observable sequence that notifies when the specified settings property changes.
+    /// Emits the initial value upon subscription and subsequent changes.
+    /// </summary>
+    /// <typeparam name="T">The type of the property value.</typeparam>
+    /// <param name="settingsProperty">An expression representing the settings property to observe.</param>
+    /// <returns>An observable sequence of the property's values.</returns>
+    IObservable<T> ObservePropertyChanged<T>(Expression<Func<Settings, T>> settingsProperty);
+
+    /// <summary>
     /// Attempts to locate and set the library path
     /// Return true if found, false otherwise
     /// </summary>

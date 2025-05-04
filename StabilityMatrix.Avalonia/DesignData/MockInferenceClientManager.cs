@@ -30,6 +30,8 @@ public partial class MockInferenceClientManager : ObservableObject, IInferenceCl
     public IObservableCollection<HybridModelFile> LoraModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
+    public IObservable<IChangeSet<HybridModelFile, string>> LoraModelsChangeSet { get; }
+
     public IObservableCollection<HybridModelFile> PromptExpansionModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 

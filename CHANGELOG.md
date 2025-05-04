@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.14.1
+### Changed
+- Updated Inference Extra Networks (Lora / LyCORIS) base model filtering to consider SDXL variations (e.g., Noob AI / Illustrious) as compatible, unrecognized models or models with no base model will be considered compatible.
 ### Fixed
 - Fixed Inference hotkey weight adjustment multi-line behavior, now works as expected like the first line.
 - Fixed updates to versions with commit hash version parts not being recognized when the current version has no commit hash part.

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -60,24 +61,41 @@ public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
     [ObservableProperty]
     private HybridModelFile? selectedBaseModel;
 
-    public readonly SourceCache<HybridModelFile, string> LoraModelsSource = new(p => p.GetId());
-
     /// <inheritdoc/>
     public ExtraNetworkCardViewModel(IInferenceClientManager clientManager, ISettingsManager settingsManager)
     {
         this.settingsManager = settingsManager;
         ClientManager = clientManager;
 
-        var filterPredicate = this.WhenPropertyChanged(vm => vm.SelectedBaseModel)
+        // Observable signal when SelectedBaseModel changes
+        var baseModelChangedSignal = this.WhenPropertyChanged(vm => vm.SelectedBaseModel)
             .Throttle(TimeSpan.FromMilliseconds(50))
-            .DistinctUntilChanged()
-            .ObserveOn(SynchronizationContext.Current)
-            .Select(_ => (Func<HybridModelFile, bool>)FilterCompatibleLoras);
+            .Select(_ => Unit.Default);
+
+        // Observable signal when the FilterExtraNetworksByBaseModel setting changes
+        var settingChangedSignal = settingsManager
+            .ObservePropertyChanged(s => s.FilterExtraNetworksByBaseModel)
+            .Select(_ => Unit.Default);
+
+        // Combine signals
+        var reapplyFilterSignal = Observable
+            .Merge([baseModelChangedSignal, settingChangedSignal])
+            // StartWith ensures the filter is applied at least once initially
+            .StartWith(Unit.Default);
+
+        var filterPredicate = reapplyFilterSignal
+            .ObserveOn(SynchronizationContext.Current!)
+            .Select(_ =>
+            {
+                if (!settingsManager.Settings.FilterExtraNetworksByBaseModel)
+                    return (Func<HybridModelFile, bool>)(_ => true);
+
+                return (Func<HybridModelFile, bool>)FilterCompatibleLoras;
+            });
 
         AddDisposable(
-            LoraModelsSource
-                .Connect()
-                .DeferUntilLoaded()
+            ClientManager
+                .LoraModelsChangeSet.DeferUntilLoaded()
                 .Filter(filterPredicate)
                 .SortAndBind(
                     LoraModels,
@@ -85,18 +103,9 @@ public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
                         .Ascending(f => f.Type)
                         .ThenByAscending(f => f.SortKey)
                 )
-                .ObserveOn(SynchronizationContext.Current)
+                .ObserveOn(SynchronizationContext.Current!)
                 .Subscribe()
         );
-
-        AddDisposable(
-            settingsManager.RegisterPropertyChangedHandler(
-                s => s.FilterExtraNetworksByBaseModel,
-                _ => LoraModelsSource.Refresh()
-            )
-        );
-
-        LoraModelsSource.EditDiff(clientManager.LoraModels);
     }
 
     public IObservableCollection<HybridModelFile> LoraModels { get; } =
@@ -118,7 +127,7 @@ public partial class ExtraNetworkCardViewModel : DisposableLoadableViewModelBase
                 IsModelWeightEnabled = IsModelWeightEnabled,
                 IsClipWeightEnabled = IsClipWeightEnabled,
                 ModelWeight = ModelWeight,
-                ClipWeight = ClipWeight
+                ClipWeight = ClipWeight,
             }
         );
     }

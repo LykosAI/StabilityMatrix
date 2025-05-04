@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Fixed
 - Fixed Inference hotkey weight adjustment multi-line behavior, now works as expected like the first line.
 - Fixed updates to versions with commit hash version parts not being recognized when the current version has no commit hash part.
+- Fixed Inference Extra Networks card not updating with newly added model files.
 
 ## v2.14.0
 ### Added

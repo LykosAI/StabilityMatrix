@@ -111,8 +111,8 @@
     <PackageVersion Include="Dock.Serializer" Version="11.2.0" />
     <PackageVersion Include="FluentAvalonia.BreadcrumbBar" Version="2.0.2" />
     <PackageVersion Include="FluentAvaloniaUI" Version="2.3.0" />
-    <PackageVersion Include="FluentIcons.Avalonia" Version="1.1.249" />
-    <PackageVersion Include="FluentIcons.Avalonia.Fluent" Version="1.1.249" />
+    <PackageVersion Include="FluentIcons.Avalonia" Version="1.1.293" />
+    <PackageVersion Include="FluentIcons.Avalonia.Fluent" Version="1.1.293" />
     <PackageVersion Include="Markdown.Avalonia" Version="11.0.3-a1" />
     <PackageVersion Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.4.0" />
     <PackageVersion Include="SpacedGrid-Avalonia" Version="11.0.0" />

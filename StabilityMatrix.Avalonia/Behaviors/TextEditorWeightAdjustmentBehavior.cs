@@ -7,6 +7,7 @@ using AvaloniaEdit;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.PromptSyntax;
 using TextMateSharp.Grammars;
 
@@ -86,7 +87,10 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
 
     private void TextEditor_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (!e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.Key is not (Key.Up or Key.Down))
+        // Control for Win / Cmd for macOS
+        var modifier = Compat.IsMacOS ? KeyModifiers.Meta : KeyModifiers.Control;
+
+        if (!e.KeyModifiers.HasFlag(modifier) || e.Key is not (Key.Up or Key.Down))
             return;
 
         e.Handled = true;

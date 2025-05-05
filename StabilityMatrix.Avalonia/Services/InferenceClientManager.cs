@@ -47,7 +47,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     private ComfyClient? client;
 
     [MemberNotNullWhen(true, nameof(Client))]
-    public bool IsConnected => Client is not null;
+    public virtual bool IsConnected => Client is not null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanUserConnect))]
@@ -367,7 +367,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             throw new InvalidOperationException("Client is not connected");
     }
 
-    private async Task LoadSharedPropertiesAsync()
+    protected virtual async Task LoadSharedPropertiesAsync()
     {
         EnsureConnected();
 
@@ -526,7 +526,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     /// <summary>
     /// Clears shared properties and sets them to local defaults
     /// </summary>
-    private void ResetSharedProperties()
+    protected void ResetSharedProperties()
     {
         // Load local models
         modelsSource.EditDiff(
@@ -784,12 +784,6 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         }
     }
 
-    /// <inheritdoc />
-    public Task ConnectAsync(CancellationToken cancellationToken = default)
-    {
-        return ConnectAsyncImpl(new Uri("http://127.0.0.1:8188"), cancellationToken);
-    }
-
     private async Task MigrateLinksIfNeeded(PackagePair packagePair)
     {
         if (packagePair.InstalledPackage.FullPath is not { } packagePath)
@@ -827,7 +821,16 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     }
 
     /// <inheritdoc />
-    public async Task ConnectAsync(PackagePair packagePair, CancellationToken cancellationToken = default)
+    public virtual Task ConnectAsync(CancellationToken cancellationToken = default)
+    {
+        return ConnectAsyncImpl(new Uri("http://127.0.0.1:8188"), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public virtual async Task ConnectAsync(
+        PackagePair packagePair,
+        CancellationToken cancellationToken = default
+    )
     {
         if (IsConnected)
             return;

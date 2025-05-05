@@ -835,7 +835,12 @@ public class WindowsPrerequisiteHelper(
         }
 
         // gfx1031
-        if (name.Contains("6700") || name.Contains("6750") || name.Contains("6800") || name.Contains("6850"))
+        if (
+            name.Contains("6700")
+            || name.Contains("6750")
+            || name.Contains("6800M")
+            || name.Contains("6850M")
+        )
         {
             return "https://github.com/likelovewant/ROCmLibs-for-gfx1103-AMD780M-APU/releases/download/v0.6.2.4/rocm.gfx1031.for.hip.sdk.6.2.4.littlewu.s.logic.7z";
         }

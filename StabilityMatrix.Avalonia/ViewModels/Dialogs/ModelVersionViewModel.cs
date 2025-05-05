@@ -10,6 +10,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 public partial class ModelVersionViewModel : ObservableObject
 {
     private readonly IModelIndexService modelIndexService;
+    
+    public string VersionDescription { get; set; }
 
     [ObservableProperty]
     private CivitModelVersion modelVersion;
@@ -37,6 +39,9 @@ public partial class ModelVersionViewModel : ObservableObject
             ModelVersion.Files?.Select(file => new CivitFileViewModel(modelIndexService, file))
                 ?? new List<CivitFileViewModel>()
         );
+        
+        VersionDescription =
+            $"""<html><body class="markdown-body">{modelVersion.Description}</body></html>""";
     }
 
     public void RefreshInstallStatus()

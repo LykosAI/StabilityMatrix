@@ -303,6 +303,9 @@
   <data name="Label_ModelDescription" xml:space="preserve">
     <value>Model Description</value>
   </data>
+  <data name="Label_ModelVersionDescription" xml:space="preserve">
+    <value>About this version</value>
+  </data>
   <data name="Label_NewVersionAvailable" xml:space="preserve">
     <value>A new version of Stability Matrix is available!</value>
   </data>

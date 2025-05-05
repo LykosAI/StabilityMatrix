@@ -24,7 +24,7 @@
         MinHeight="450"
         Margin="8"
         ColumnDefinitions="*,Auto,*"
-        RowDefinitions="Auto, Auto, *, Auto">
+        RowDefinitions="Auto, Auto, *, Auto, Auto">
 
         <Grid.Resources>
             <input:StandardUICommand x:Key="ImportCommand" Command="{Binding Import}" />
@@ -287,8 +287,20 @@
             </ScrollViewer>
         </Expander>
 
-        <StackPanel
+        <Expander
             Grid.Row="3"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="8,8"
+            ExpandDirection="Down"
+            Header="{x:Static lang:Resources.Label_ModelVersionDescription}">
+            <ScrollViewer MaxHeight="300">
+                <controls:MarkdownViewer Html="{Binding SelectedVersionViewModel.VersionDescription}" />
+            </ScrollViewer>
+        </Expander>
+
+        <StackPanel
+            Grid.Row="4"
             Grid.Column="0"
             Grid.ColumnSpan="3"
             Margin="0,8,0,0"

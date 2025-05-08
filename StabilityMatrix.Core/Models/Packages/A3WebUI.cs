@@ -59,7 +59,7 @@ public class A3WebUI(
             [SharedFolderType.VAE] = ["models/VAE"],
             [SharedFolderType.DeepDanbooru] = ["models/deepbooru"],
             [SharedFolderType.Karlo] = ["models/karlo"],
-            [SharedFolderType.TextualInversion] = ["embeddings"],
+            [SharedFolderType.Embeddings] = ["embeddings"],
             [SharedFolderType.Hypernetwork] = ["models/hypernetworks"],
             [SharedFolderType.ControlNet] = ["models/controlnet/ControlNet"],
             [SharedFolderType.Codeformer] = ["models/Codeformer"],
@@ -67,11 +67,11 @@ public class A3WebUI(
             [SharedFolderType.AfterDetailer] = ["models/adetailer"],
             [SharedFolderType.T2IAdapter] = ["models/controlnet/T2IAdapter"],
             [SharedFolderType.IpAdapter] = ["models/controlnet/IpAdapter"],
-            [SharedFolderType.InvokeIpAdapters15] = ["models/controlnet/DiffusersIpAdapters"],
-            [SharedFolderType.InvokeIpAdaptersXl] = ["models/controlnet/DiffusersIpAdaptersXL"],
+            [SharedFolderType.IpAdapters15] = ["models/controlnet/DiffusersIpAdapters"],
+            [SharedFolderType.IpAdaptersXl] = ["models/controlnet/DiffusersIpAdaptersXL"],
             [SharedFolderType.SVD] = ["models/svd"],
-            [SharedFolderType.CLIP] = ["models/text_encoder"],
-            [SharedFolderType.Unet] = ["models/Stable-diffusion/unet"],
+            [SharedFolderType.TextEncoders] = ["models/text_encoder"],
+            [SharedFolderType.DiffusionModels] = ["models/Stable-diffusion/unet"],
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>

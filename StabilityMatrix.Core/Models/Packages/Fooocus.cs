@@ -4,6 +4,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Config;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -152,13 +153,11 @@ public class Fooocus(
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.Configuration, SharedFolderMethod.None };
 
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
-        ((ISharedFolderLayoutPackage)this).LegacySharedFolders;
-
-    public virtual SharedFolderLayout SharedFolderLayout =>
+    public override SharedFolderLayout SharedFolderLayout =>
         new()
         {
             RelativeConfigPath = "config.txt",
+            ConfigFileType = ConfigFileType.Json,
             Rules =
             [
                 new SharedFolderLayoutRule
@@ -174,7 +173,7 @@ public class Fooocus(
                 },
                 new SharedFolderLayoutRule
                 {
-                    SourceTypes = [SharedFolderType.CLIP],
+                    SourceTypes = [SharedFolderType.TextEncoders],
                     TargetRelativePaths = ["models/clip"]
                 },
                 new SharedFolderLayoutRule
@@ -194,7 +193,7 @@ public class Fooocus(
                 },
                 new SharedFolderLayoutRule
                 {
-                    SourceTypes = [SharedFolderType.TextualInversion],
+                    SourceTypes = [SharedFolderType.Embeddings],
                     TargetRelativePaths = ["models/embeddings"],
                     ConfigDocumentPaths = ["path_embeddings"]
                 },
@@ -218,7 +217,7 @@ public class Fooocus(
                 },
                 new SharedFolderLayoutRule
                 {
-                    SourceTypes = [SharedFolderType.InvokeClipVision],
+                    SourceTypes = [SharedFolderType.ClipVision],
                     TargetRelativePaths = ["models/clip_vision"],
                     ConfigDocumentPaths = ["path_clip_vision"]
                 },
@@ -280,6 +279,8 @@ public class Fooocus(
         // Pip version 24.1 deprecated numpy requirement spec used by torchsde 0.2.5
         await venvRunner.PipInstall(["pip==23.3.2"], onConsoleOutput).ConfigureAwait(false);
 
+        var isBlackwell =
+            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
 
         var pipArgs = new PipInstallArgs();
@@ -291,12 +292,13 @@ public class Fooocus(
         else
         {
             pipArgs = pipArgs
-                .WithTorch("==2.1.0")
-                .WithTorchVision("==0.16.0")
+                .WithTorch(isBlackwell ? string.Empty : "==2.1.0")
+                .WithTorchVision(isBlackwell ? string.Empty : "==0.16.0")
                 .WithTorchExtraIndex(
                     torchVersion switch
                     {
                         TorchIndex.Cpu => "cpu",
+                        TorchIndex.Cuda when isBlackwell => "cu128",
                         TorchIndex.Cuda => "cu121",
                         TorchIndex.Rocm => "rocm5.6",
                         TorchIndex.Mps => "cpu",
@@ -351,60 +353,6 @@ public class Fooocus(
             [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
             HandleConsoleOutput,
             OnExit
-        );
-    }
-
-    public override Task SetupModelFolders(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
-    {
-        return sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink
-                => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
-            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
-            SharedFolderMethod.None => Task.CompletedTask,
-            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
-        };
-    }
-
-    public override Task RemoveModelFolderLinks(
-        DirectoryPath installDirectory,
-        SharedFolderMethod sharedFolderMethod
-    )
-    {
-        return sharedFolderMethod switch
-        {
-            SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
-            SharedFolderMethod.Configuration => WriteDefaultConfig(installDirectory),
-            SharedFolderMethod.None => Task.CompletedTask,
-            _ => throw new ArgumentOutOfRangeException(nameof(sharedFolderMethod), sharedFolderMethod, null)
-        };
-    }
-
-    private async Task SetupModelFoldersConfig(DirectoryPath installDirectory)
-    {
-        // doesn't always exist on first install
-        installDirectory.JoinDir(OutputFolderName).Create();
-
-        await SharedFoldersConfigHelper
-            .UpdateJsonConfigFileForSharedAsync(
-                SharedFolderLayout,
-                installDirectory,
-                SettingsManager.ModelsDirectory
-            )
-            .ConfigureAwait(false);
-    }
-
-    private Task WriteDefaultConfig(DirectoryPath installDirectory)
-    {
-        // doesn't always exist on first install
-        installDirectory.JoinDir(OutputFolderName).Create();
-
-        return SharedFoldersConfigHelper.UpdateJsonConfigFileForDefaultAsync(
-            SharedFolderLayout,
-            installDirectory
         );
     }
 }

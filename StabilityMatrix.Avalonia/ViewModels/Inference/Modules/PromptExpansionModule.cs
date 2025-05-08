@@ -12,7 +12,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 [RegisterTransient<PromptExpansionModule>]
 public class PromptExpansionModule : ModuleBase
 {
-    public PromptExpansionModule(ServiceManager<ViewModelBase> vmFactory)
+    public PromptExpansionModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "Prompt Expansion";

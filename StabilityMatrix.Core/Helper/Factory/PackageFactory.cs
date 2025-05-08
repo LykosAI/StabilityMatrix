@@ -230,6 +230,8 @@ public class PackageFactory : IPackageFactory
                     prerequisiteHelper,
                     pyInstallationManager
                 ),
+            "forge-classic"
+                => new ForgeClassic(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage))
         };
     }

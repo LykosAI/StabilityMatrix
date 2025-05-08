@@ -29,8 +29,9 @@ public class VoltaML(
     public override string LaunchCommand => "main.py";
 
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/voltaml/preview.webp");
-
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
+    public override string Disclaimer => "This package may no longer be actively maintained";
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.UltraNightmare;
+    public override bool OfferInOneClickInstaller => false;
 
     // There are releases but the manager just downloads the latest commit anyways,
     // so we'll just limit to commit mode to be more consistent
@@ -42,7 +43,7 @@ public class VoltaML(
         {
             [SharedFolderType.StableDiffusion] = new[] { "data/models" },
             [SharedFolderType.Lora] = new[] { "data/lora" },
-            [SharedFolderType.TextualInversion] = new[] { "data/textual-inversion" },
+            [SharedFolderType.Embeddings] = new[] { "data/textual-inversion" },
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>

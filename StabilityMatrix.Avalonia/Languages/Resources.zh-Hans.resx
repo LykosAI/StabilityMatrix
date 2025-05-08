@@ -1281,54 +1281,6 @@
   <data name="Text_RestartMayBeRequiredForSystemChanges" xml:space="preserve">
     <value>系统更改可能需要重启才能生效。</value>
   </data>
-  <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Text_UnexpectedError_Description" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Text_UnexpectedErrorRecoverable_Description" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Action_ShowLogInExplorer" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Action_ShowLogInFinder" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_ExtensionPacks" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_NoExtensionPacksFound" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_OpenExtensionPacksFolder" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_InstallExtensionPack" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_AddToExistingPack" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_NewExtensionPack" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_CreateExtensionPackExplanation" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_ImportExtensionPacksExplanation" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_OrWithHyphensAround" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Action_OpenOnOpenModelDb" xml:space="preserve">
-    <value></value>
-  </data>
-  <data name="Label_Wildcards" xml:space="preserve">
-    <value></value>
-  </data>
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>前往设置</value>
   </data>
@@ -1354,5 +1306,83 @@
 ### Lykos 帐户是必需的吗？
 
 不，Stability Matrix 在没有帐户的情况下仍然可以正常运行。 但是，您的 Lykos 帐户可以启用一些额外的连接功能，例如为我们的 Patreon 支持者自动更新到开发版本（以及更多即将推出的功能）。</value>
+  </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>停用</value>
+  </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>连接您的 Lykos 账户</value>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>请使用您的 Lykos 账户登录以使用连接功能。</value>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>请重新登录</value>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>您的登录已过期。请重新登录以继续。</value>
+  </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>支持 Stability Matrix</value>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>感谢您支持 Stability Matrix！</value>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>**{0}** 等功能是我们为支持者提供的众多权益之一。您的贡献有助于我们支付服务器成本并支持 Stability Matrix 的开发。</value>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>**{0}** 等功能需达到 **{1}** 支持者等级（或更高）方可使用。您的贡献有助于我们支付更高级连接功能的服务器成本，并让我们能够为大家不断改进 Stability Matrix。</value>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>如果您已在 Patreon 上支持我们，请关联您的账户以继续。</value>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>账户设置</value>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>查看支持选项</value>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>以后再说</value>
+  </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>未启用（使用标准连接）</value>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>从 Civitai 等在线存储库浏览模型时，体验更快的搜索结果。</value>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>针对第三方存储库的实验性优化。非官方合作；可用性可能有所不同。</value>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>测试版</value>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>加速模型搜索</value>
+  </data>
+  <data name="PromptAmplifier_Disclaimer" xml:space="preserve">
+    <value>### ✨ 新功能上线：Prompt Amplifier
+
+这是我们的 AI 助手，它使用实验性的 Spark 模型，能为您的提示生成更具创意的扩展。
+
+请注意：Prompt Amplifier 会在我们安全的云端环境中运行，**不会**在您的本地电脑上运行。
+
+### ☁️ 为何使用云端？
+
+Spark 模型规模庞大，算力需求堪比万亿参数的基础模型。我们重视本地功能，但 Spark 的高级能力需要云端支持，现在即可通过我们的云服务使用。
+
+### 🔒 隐私至上
+
+我们极其重视您的隐私（详情请参阅[生成式 AI 条款](https://lykos.ai/gen-ai-terms)）。Lykos AI 及必要的云服务提供商**绝不会**使用您的提示或生成结果来训练 AI 模型。我们仅在为确保功能正常运行时处理您的数据，**处理完成后也只保留必要的元数据（如时间、Token 数量），不保留提示内容本身**。您的数据绝不会被出售或共享。</value>
   </data>
 </root>

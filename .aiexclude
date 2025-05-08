@@ -1,0 +1,30 @@
+# Docs
+LICENSE
+CHANGELOG.md
+
+# Legacy
+StabilityMatrix/
+
+# Tests
+*.verified.*
+
+# Misc projects
+StabilityMatrix.Native/
+StabilityMatrix.Native.*/
+StabilityMatrix.Avalonia.Diagnostics/
+StabilityMatrix.Avalonia.Diagnostics/
+StabilityMatrix.UITests/
+
+# Vendored
+Avalonia.Gif/
+
+# Configs
+*.editorconfig
+*.DotSettings
+
+# Assets
+*.svg
+StabilityMatrix.Avalonia/Assets/Fonts/
+StabilityMatrix.Avalonia/Assets/linux-x64/
+StabilityMatrix.Avalonia/Assets/macos-arm64/
+StabilityMatrix.Avalonia/Assets/win-x64/

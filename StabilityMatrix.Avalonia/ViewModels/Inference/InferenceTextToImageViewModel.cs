@@ -29,13 +29,14 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), IsPersistent = true)]
 [ManagedService]
-[RegisterTransient<InferenceTextToImageViewModel>]
+[RegisterScoped<InferenceTextToImageViewModel>]
 public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly INotificationService notificationService;
     private readonly IModelIndexService modelIndexService;
+    private readonly TabContext tabContext;
 
     [JsonIgnore]
     public StackCardViewModel StackCardViewModel { get; }
@@ -62,14 +63,16 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         INotificationService notificationService,
         IInferenceClientManager inferenceClientManager,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IModelIndexService modelIndexService,
-        RunningPackageService runningPackageService
+        RunningPackageService runningPackageService,
+        TabContext tabContext
     )
         : base(vmFactory, inferenceClientManager, notificationService, settingsManager, runningPackageService)
     {
         this.notificationService = notificationService;
         this.modelIndexService = modelIndexService;
+        this.tabContext = tabContext;
 
         // Get sub view models from service manager
 
@@ -77,6 +80,8 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         SeedCardViewModel.GenerateNewSeed();
 
         ModelCardViewModel = vmFactory.Get<ModelCardViewModel>();
+
+        // When the model changes in the ModelCardViewModel, we'll have access to it in the TabContext
 
         SamplerCardViewModel = vmFactory.Get<SamplerCardViewModel>(samplerCard =>
         {
@@ -163,9 +168,10 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
         // Load models
         ModelCardViewModel.ApplyStep(applyArgs);
 
-        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Gguf or ModelLoader.Unet;
+        var isUnetLoader = ModelCardViewModel.SelectedModelLoader is ModelLoader.Unet;
         var useSd3Latent =
             SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>() || isUnetLoader;
+        var usePlasmaNoise = SamplerCardViewModel.ModulesCardViewModel.IsModuleEnabled<PlasmaNoiseModule>();
 
         if (useSd3Latent)
         {
@@ -175,6 +181,27 @@ public class InferenceTextToImageViewModel : InferenceGenerationViewModelBase, I
                 BatchSizeCardViewModel.BatchSize,
                 BatchSizeCardViewModel.IsBatchIndexEnabled ? BatchSizeCardViewModel.BatchIndex : null,
                 latentType: LatentType.Sd3
+            );
+        }
+        else if (usePlasmaNoise)
+        {
+            var plasmaVm = SamplerCardViewModel
+                .ModulesCardViewModel.GetCard<PlasmaNoiseModule>()
+                .GetCard<PlasmaNoiseCardViewModel>();
+            builder.SetupPlasmaLatentSource(
+                SamplerCardViewModel.Width,
+                SamplerCardViewModel.Height,
+                builder.Connections.Seed,
+                plasmaVm.SelectedNoiseType,
+                plasmaVm.ValueMin,
+                plasmaVm.ValueMax,
+                plasmaVm.RedMin,
+                plasmaVm.RedMax,
+                plasmaVm.GreenMin,
+                plasmaVm.GreenMax,
+                plasmaVm.BlueMin,
+                plasmaVm.BlueMax,
+                plasmaVm.PlasmaTurbulence
             );
         }
         else

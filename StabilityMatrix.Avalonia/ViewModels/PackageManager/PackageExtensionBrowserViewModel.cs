@@ -48,7 +48,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
 {
     private readonly INotificationService notificationService;
     private readonly ISettingsManager settingsManager;
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly CompositeDisposable cleanUp;
 
@@ -116,7 +116,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     public PackageExtensionBrowserViewModel(
         INotificationService notificationService,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IPrerequisiteHelper prerequisiteHelper
     )
     {

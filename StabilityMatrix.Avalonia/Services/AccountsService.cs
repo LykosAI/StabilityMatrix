@@ -63,6 +63,18 @@ public class AccountsService : IAccountsService
         LykosAccountStatusUpdate += (_, args) => LykosStatus = args;
     }
 
+    public async Task<bool> HasStoredLykosAccountAsync()
+    {
+        if (LykosStatus?.IsConnected == true)
+        {
+            return true;
+        }
+
+        var secrets = await secretsManager.SafeLoadAsync();
+
+        return !string.IsNullOrEmpty(secrets.LykosAccountV2?.RefreshToken);
+    }
+
     public async Task LykosLoginAsync(string email, string password)
     {
         var secrets = await secretsManager.SafeLoadAsync();
@@ -179,6 +191,13 @@ public class AccountsService : IAccountsService
 
         await RefreshLykosAsync(secrets);
         await RefreshCivitAsync(secrets);
+    }
+
+    public async Task RefreshLykosAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+
+        await RefreshLykosAsync(secrets);
     }
 
     private async Task RefreshLykosAsync(Secrets secrets)

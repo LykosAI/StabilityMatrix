@@ -36,9 +36,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinitelyScroll
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-    private readonly ICivitApi civitApi;
+    private readonly CivitCompatApiManager civitApi;
     private readonly ISettingsManager settingsManager;
     private readonly ILiteDbContext liteDbContext;
+    private readonly IConnectedServiceManager connectedServiceManager;
     private readonly INotificationService notificationService;
     private readonly ICivitBaseModelTypeService baseModelTypeService;
     private bool dontSearch = false;
@@ -104,6 +105,11 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     private IObservableCollection<BaseModelOptionViewModel> allBaseModels =
         new ObservableCollectionExtended<BaseModelOptionViewModel>();
 
+    [ObservableProperty]
+    private bool civitUseDiscoveryApi;
+
+    public bool UseLocalCache => true;
+
     public double StatsResizeFactor => Math.Clamp(ResizeFactor, 0.75d, 1.25d);
 
     public IEnumerable<CivitPeriod> AllCivitPeriods =>
@@ -126,10 +132,11 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         SelectedBaseModels.Count > 0 && SelectedBaseModels.Count < AllBaseModels.Count;
 
     public CivitAiBrowserViewModel(
-        ICivitApi civitApi,
+        CivitCompatApiManager civitApi,
         ISettingsManager settingsManager,
-        ServiceManager<ViewModelBase> dialogFactory,
+        IServiceManager<ViewModelBase> dialogFactory,
         ILiteDbContext liteDbContext,
+        IConnectedServiceManager connectedServiceManager,
         INotificationService notificationService,
         ICivitBaseModelTypeService baseModelTypeService
     )
@@ -137,6 +144,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         this.civitApi = civitApi;
         this.settingsManager = settingsManager;
         this.liteDbContext = liteDbContext;
+        this.connectedServiceManager = connectedServiceManager;
         this.notificationService = notificationService;
         this.baseModelTypeService = baseModelTypeService;
 
@@ -270,6 +278,15 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             )
         );
 
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                model => model.CivitUseDiscoveryApi,
+                settings => settings.CivitUseDiscoveryApi,
+                true
+            )
+        );
+
         EventManager.Instance.NavigateAndFindCivitAuthorRequested += OnNavigateAndFindCivitAuthorRequested;
     }
 
@@ -361,6 +378,31 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         return !card.CivitModel.Nsfw || ShowNsfw;
     }
 
+    [RelayCommand]
+    private async Task OnUseDiscoveryToggle()
+    {
+        if (CivitUseDiscoveryApi)
+        {
+            CivitUseDiscoveryApi = false;
+        }
+        else
+        {
+            if (!await connectedServiceManager.PromptEnableCivitUseDiscoveryApi())
+                return;
+
+            CivitUseDiscoveryApi = true;
+        }
+
+        // Reset cache in case model differences
+        Logger.Info("Toggled Discovery API, clearing cache");
+
+        await liteDbContext.CivitModels.DeleteAllAsync();
+        await liteDbContext.CivitModelVersions.DeleteAllAsync();
+        var items = await liteDbContext.CivitModelQueryCache.DeleteAllAsync();
+
+        Logger.Info("Deleted {Count} Civit model query cache entries", items);
+    }
+
     /// <summary>
     /// Background update task
     /// </summary>
@@ -432,20 +474,24 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                 .Where(m => m.Mode == null)
                 .ToList();
 
-            // Database update calls will invoke `OnModelsUpdated`
-            // Add to database
-            await liteDbContext.UpsertCivitModelAsync(models);
-            // Add as cache entry
-            var cacheNew = await liteDbContext.UpsertCivitModelQueryCacheEntryAsync(
-                new()
-                {
-                    Id = ObjectHash.GetMd5Guid(request),
-                    InsertedAt = DateTimeOffset.UtcNow,
-                    Request = request,
-                    Items = models,
-                    Metadata = modelsResponse?.Metadata
-                }
-            );
+            var cacheNew = true;
+            if (UseLocalCache)
+            {
+                // Database update calls will invoke `OnModelsUpdated`
+                // Add to database
+                await liteDbContext.UpsertCivitModelAsync(models);
+                // Add as cache entry
+                cacheNew = await liteDbContext.UpsertCivitModelQueryCacheEntryAsync(
+                    new()
+                    {
+                        Id = ObjectHash.GetMd5Guid(request),
+                        InsertedAt = DateTimeOffset.UtcNow,
+                        Request = request,
+                        Items = models,
+                        Metadata = modelsResponse?.Metadata
+                    }
+                );
+            }
 
             if (cacheNew)
             {
@@ -554,7 +600,8 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         {
             Nsfw = "true", // Handled by local view filter
             Sort = SortMode,
-            Period = SelectedPeriod
+            Period = SelectedPeriod,
+            Limit = 30
         };
 
         if (NextPageCursor != null)
@@ -637,10 +684,17 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         }
 
         // See if query is cached
-        var cachedQuery = await liteDbContext.TryQueryWithClearOnExceptionAsync(
-            liteDbContext.CivitModelQueryCache,
-            liteDbContext.CivitModelQueryCache.IncludeAll().FindByIdAsync(ObjectHash.GetMd5Guid(modelRequest))
-        );
+        CivitModelQueryCacheEntry? cachedQuery = null;
+
+        if (UseLocalCache)
+        {
+            cachedQuery = await liteDbContext.TryQueryWithClearOnExceptionAsync(
+                liteDbContext.CivitModelQueryCache,
+                liteDbContext
+                    .CivitModelQueryCache.IncludeAll()
+                    .FindByIdAsync(ObjectHash.GetMd5Guid(modelRequest))
+            );
+        }
 
         // If cached, update model cards
         if (cachedQuery is not null)

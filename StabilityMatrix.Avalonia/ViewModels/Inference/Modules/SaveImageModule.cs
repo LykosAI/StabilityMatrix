@@ -13,7 +13,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 public class SaveImageModule : ModuleBase
 {
     /// <inheritdoc />
-    public SaveImageModule(ServiceManager<ViewModelBase> vmFactory)
+    public SaveImageModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = Resources.Label_SaveIntermediateImage;

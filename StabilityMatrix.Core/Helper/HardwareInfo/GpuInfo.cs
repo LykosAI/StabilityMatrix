@@ -37,6 +37,20 @@ public record GpuInfo
             && !Name.Contains("RTX 5000", StringComparison.OrdinalIgnoreCase);
     }
 
+    public bool IsAmpereOrNewerGpu()
+    {
+        if (Name is null)
+            return false;
+
+        return IsNvidia
+            && Name.Contains("RTX", StringComparison.OrdinalIgnoreCase)
+            && !Name.Contains("RTX 20")
+            && !Name.Contains("RTX 4000")
+            && !Name.Contains("RTX 5000")
+            && !Name.Contains("RTX 6000")
+            && !Name.Contains("RTX 8000");
+    }
+
     public bool IsAmd => Name?.Contains("amd", StringComparison.OrdinalIgnoreCase) ?? false;
     public bool IsIntel => Name?.Contains("arc", StringComparison.OrdinalIgnoreCase) ?? false;
 

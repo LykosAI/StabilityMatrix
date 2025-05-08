@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Apizr;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
@@ -23,6 +17,7 @@ using Fusillade;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -36,7 +31,6 @@ using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
-using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -47,6 +41,7 @@ using CheckpointSortMode = StabilityMatrix.Core.Models.CheckpointSortMode;
 using Notification = Avalonia.Controls.Notifications.Notification;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
+using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
 
 namespace StabilityMatrix.Avalonia.ViewModels;
 
@@ -62,7 +57,7 @@ public partial class CheckpointsPageViewModel(
     IMetadataImportService metadataImportService,
     IModelImportService modelImportService,
     OpenModelDbManager openModelDbManager,
-    ServiceManager<ViewModelBase> dialogFactory,
+    IServiceManager<ViewModelBase> dialogFactory,
     ICivitBaseModelTypeService baseModelTypeService
 ) : PageViewModelBase
 {
@@ -216,6 +211,15 @@ public partial class CheckpointsPageViewModel(
                     (Func<LocalModelFile, bool>)(
                         file =>
                             string.IsNullOrWhiteSpace(SearchQuery)
+                            || (
+                                SearchQuery.StartsWith("#")
+                                && (
+                                    file.ConnectedModelInfo?.Tags.Contains(
+                                        SearchQuery.Substring(1),
+                                        StringComparer.OrdinalIgnoreCase
+                                    ) ?? false
+                                )
+                            )
                             || file.DisplayModelFileName.Contains(
                                 SearchQuery,
                                 StringComparison.OrdinalIgnoreCase
@@ -352,6 +356,7 @@ public partial class CheckpointsPageViewModel(
                             x
                         )
                 )
+                .DisposeMany()
                 .SortAndBind(Models, comparerObservable)
                 .WhenPropertyChanged(p => p.IsSelected)
                 .Throttle(TimeSpan.FromMilliseconds(50))
@@ -480,6 +485,14 @@ public partial class CheckpointsPageViewModel(
 
         // make sure a sort happens
         OnPropertyChanged(nameof(SortConnectedModelsFirst));
+    }
+
+    public override async Task OnLoadedAsync()
+    {
+        if (Design.IsDesignMode)
+            return;
+
+        await ShowFolderMapTipIfNecessaryAsync();
     }
 
     public void ClearSearchQuery()
@@ -660,7 +673,7 @@ public partial class CheckpointsPageViewModel(
         viewModel.Versions = versions
             .Select(version => new ModelVersionViewModel(modelIndexService, version))
             .ToImmutableArray();
-        viewModel.SelectedVersionViewModel = viewModel.Versions[0];
+        viewModel.SelectedVersionViewModel = viewModel.Versions.Any() ? viewModel.Versions[0] : null;
 
         dialog.Content = new SelectModelVersionDialog { DataContext = viewModel };
 
@@ -821,6 +834,13 @@ public partial class CheckpointsPageViewModel(
         Models.ForEach(x => x.IsSelected = true);
     }
 
+    [RelayCommand]
+    private async Task ShowFolderReference()
+    {
+        var dialog = DialogHelper.CreateMarkdownDialog(MarkdownSnippets.SMFolderMap);
+        await dialog.ShowAsync();
+    }
+
     public async Task ImportFilesAsync(IEnumerable<string> files, DirectoryPath destinationFolder)
     {
         if (destinationFolder.FullPath == settingsManager.ModelsDirectory)
@@ -871,6 +891,89 @@ public partial class CheckpointsPageViewModel(
         SelectedCategory = Categories
             .SelectMany(c => c.Flatten())
             .FirstOrDefault(x => x.Path == destinationFolder.FullPath);
+    }
+
+    public async Task MoveBetweenFolders(
+        List<CheckpointFileViewModel>? sourceFiles,
+        DirectoryPath destinationFolder
+    )
+    {
+        if (sourceFiles != null && sourceFiles.Count() > 0)
+        {
+            var sourceDirectory = Path.GetDirectoryName(
+                sourceFiles[0].CheckpointFile.GetFullPath(settingsManager.ModelsDirectory)
+            );
+            foreach (CheckpointFileViewModel sourceFile in sourceFiles)
+            {
+                if (
+                    destinationFolder.FullPath == settingsManager.ModelsDirectory
+                    || (sourceDirectory != null && sourceDirectory == destinationFolder.FullPath)
+                )
+                {
+                    notificationService.Show(
+                        "Invalid Folder",
+                        "Please select a different folder to import the files into.",
+                        NotificationType.Error
+                    );
+                    return;
+                }
+
+                try
+                {
+                    var sourcePath = new FilePath(
+                        sourceFile.CheckpointFile.GetFullPath(settingsManager.ModelsDirectory)
+                    );
+                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(sourcePath);
+                    var sourceCmInfoPath = Path.Combine(
+                        sourcePath.Directory!,
+                        $"{fileNameWithoutExt}.cm-info.json"
+                    );
+                    var sourcePreviewPath = Path.Combine(
+                        sourcePath.Directory!,
+                        $"{fileNameWithoutExt}.preview.jpeg"
+                    );
+                    var destinationFilePath = Path.Combine(destinationFolder, sourcePath.Name);
+                    var destinationCmInfoPath = Path.Combine(
+                        destinationFolder,
+                        $"{fileNameWithoutExt}.cm-info.json"
+                    );
+                    var destinationPreviewPath = Path.Combine(
+                        destinationFolder,
+                        $"{fileNameWithoutExt}.preview.jpeg"
+                    );
+
+                    // Move files
+                    if (File.Exists(sourcePath))
+                        await FileTransfers.MoveFileAsync(sourcePath, destinationFilePath);
+
+                    if (File.Exists(sourceCmInfoPath))
+                        await FileTransfers.MoveFileAsync(sourceCmInfoPath, destinationCmInfoPath);
+
+                    if (File.Exists(sourcePreviewPath))
+                        await FileTransfers.MoveFileAsync(sourcePreviewPath, destinationPreviewPath);
+
+                    notificationService.Show(
+                        "Model moved successfully",
+                        $"Moved '{sourcePath.Name}' to '{Path.GetFileName(destinationFolder)}'"
+                    );
+                }
+                catch (FileTransferExistsException)
+                {
+                    notificationService.Show(
+                        "Failed to move file",
+                        "Destination file exists",
+                        NotificationType.Error
+                    );
+                }
+            }
+
+            SelectedCategory = Categories
+                .SelectMany(c => c.Flatten())
+                .FirstOrDefault(x => x.Path == sourceDirectory);
+
+            await modelIndexService.RefreshIndex();
+            DelayedClearProgress(TimeSpan.FromSeconds(1.5));
+        }
     }
 
     public async Task MoveBetweenFolders(LocalModelFile sourceFile, DirectoryPath destinationFolder)
@@ -952,15 +1055,30 @@ public partial class CheckpointsPageViewModel(
                 "*",
                 EnumerationOptionConstants.TopLevelOnly
             )
-            .Select(
-                d =>
-                    new CheckpointCategory
+            .Select(d =>
+            {
+                var folderName = Path.GetFileName(d);
+                if (
+                    Enum.TryParse(folderName, out SharedFolderType folderType)
+                    && folderType.GetDescription() != folderName
+                )
+                {
+                    return new CheckpointCategory
                     {
                         Path = d,
-                        Name = Path.GetFileName(d),
+                        Name = folderName,
+                        Tooltip = folderType.GetDescription() ?? folderType.GetStringValue(),
                         SubDirectories = GetSubfolders(d)
-                    }
-            )
+                    };
+                }
+
+                return new CheckpointCategory
+                {
+                    Path = d,
+                    Name = folderName,
+                    SubDirectories = GetSubfolders(d)
+                };
+            })
             .ToList();
 
         foreach (var checkpointCategory in modelCategories.SelectMany(c => c.Flatten()))
@@ -976,6 +1094,7 @@ public partial class CheckpointsPageViewModel(
         {
             Path = settingsManager.ModelsDirectory,
             Name = "All Models",
+            Tooltip = "All Models",
             Count = modelIndexService.ModelIndex.Values.SelectMany(x => x).Count()
         };
 
@@ -988,7 +1107,7 @@ public partial class CheckpointsPageViewModel(
             previouslySelectedCategory
             ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
             ?? Categories.FirstOrDefault()
-            ?? categoriesCache.Items[0];
+            ?? (categoriesCache.Items.Any() ? categoriesCache.Items[0] : null);
 
         var dirPath = new DirectoryPath(SelectedCategory.Path);
 
@@ -1009,7 +1128,7 @@ public partial class CheckpointsPageViewModel(
                 previouslySelectedCategory
                 ?? Categories.FirstOrDefault(x => x.Path == previouslySelectedCategory?.Path)
                 ?? Categories.FirstOrDefault()
-                ?? categoriesCache.Items[0];
+                ?? (categoriesCache.Items.Any() ? categoriesCache.Items[0] : null);
         });
     }
 
@@ -1035,9 +1154,11 @@ public partial class CheckpointsPageViewModel(
                     continue;
             }
 
+            var folderName = Path.GetFileName(dir);
             var category = new CheckpointCategory
             {
-                Name = Path.GetFileName(dir),
+                Name = folderName,
+                Tooltip = folderName,
                 Path = dir,
                 Count = dirInfo
                     .Info.EnumerateFileSystemInfos("*", EnumerationOptionConstants.AllDirectories)
@@ -1134,5 +1255,17 @@ public partial class CheckpointsPageViewModel(
     private bool FilterCategories(CheckpointCategory category)
     {
         return !HideEmptyRootCategories || category is { Count: > 0 };
+    }
+
+    private async Task ShowFolderMapTipIfNecessaryAsync()
+    {
+        if (settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.FolderMapTip))
+            return;
+
+        var folderReference = DialogHelper.CreateMarkdownDialog(MarkdownSnippets.SMFolderMap);
+        folderReference.CloseButtonText = Resources.Action_OK;
+        await folderReference.ShowAsync();
+
+        settingsManager.Transaction(s => s.SeenTeachingTips.Add(TeachingTip.FolderMapTip));
     }
 }

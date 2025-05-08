@@ -37,9 +37,6 @@ public class Cogstudio(
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.None };
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
-        ((ISharedFolderLayoutPackage)this).LegacySharedFolders;
-    public virtual SharedFolderLayout SharedFolderLayout => new();
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Text2Vid] = new[] { "output" } };
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
@@ -47,7 +44,7 @@ public class Cogstudio(
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;
     public override string OutputFolderName => "output";
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
 
     public override async Task InstallPackage(
         string installLocation,

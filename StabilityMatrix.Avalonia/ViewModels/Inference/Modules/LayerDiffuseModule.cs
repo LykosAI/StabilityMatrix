@@ -11,7 +11,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 public class LayerDiffuseModule : ModuleBase
 {
     /// <inheritdoc />
-    public LayerDiffuseModule(ServiceManager<ViewModelBase> vmFactory)
+    public LayerDiffuseModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "Layer Diffuse";

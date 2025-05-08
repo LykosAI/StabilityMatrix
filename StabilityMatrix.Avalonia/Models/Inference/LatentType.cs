@@ -4,5 +4,6 @@ public enum LatentType
 {
     Default,
     Sd3,
-    Hunyuan
+    Hunyuan,
+    Plasma
 }

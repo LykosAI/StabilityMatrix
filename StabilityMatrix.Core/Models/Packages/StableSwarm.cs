@@ -8,6 +8,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.FDS;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Packages.Config;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -120,23 +121,60 @@ public class StableSwarm(
             LaunchOptionDefinition.Extras
         ];
 
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
+    public override SharedFolderLayout SharedFolderLayout =>
         new()
         {
-            [SharedFolderType.StableDiffusion] = ["Models/Stable-Diffusion"],
-            [SharedFolderType.Lora] = ["Models/Lora"],
-            [SharedFolderType.VAE] = ["Models/VAE"],
-            [SharedFolderType.TextualInversion] = ["Models/Embeddings"],
-            [SharedFolderType.ControlNet] = ["Models/controlnet"],
-            [SharedFolderType.InvokeClipVision] = ["Models/clip_vision"]
+            RelativeConfigPath = Path.Combine("Data/Settings.fds"),
+            ConfigFileType = ConfigFileType.Fds,
+            Rules =
+            [
+                new SharedFolderLayoutRule { IsRoot = true, ConfigDocumentPaths = ["ModelRoot"], },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.StableDiffusion],
+                    TargetRelativePaths = ["Models/Stable-Diffusion"],
+                    ConfigDocumentPaths = ["SDModelFolder"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
+                    TargetRelativePaths = ["Models/Lora"],
+                    ConfigDocumentPaths = ["SDLoraFolder"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.VAE],
+                    TargetRelativePaths = ["Models/VAE"],
+                    ConfigDocumentPaths = ["SDVAEFolder"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.Embeddings],
+                    TargetRelativePaths = ["Models/Embeddings"],
+                    ConfigDocumentPaths = ["SDEmbeddingFolder"]
+                },
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ControlNet, SharedFolderType.T2IAdapter],
+                    TargetRelativePaths = ["Models/controlnet"],
+                    ConfigDocumentPaths = ["SDControlNetsFolder"]
+                }, // Assuming Swarm maps T2I to ControlNet folder
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.ClipVision],
+                    TargetRelativePaths = ["Models/clip_vision"],
+                    ConfigDocumentPaths = ["SDClipVisionFolder"]
+                },
+            ]
         };
+
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = [OutputFolderName] };
     public override string MainBranch => "master";
     public override bool ShouldIgnoreReleases => true;
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         [
             PackagePrerequisite.Git,
@@ -232,7 +270,7 @@ public class StableSwarm(
                     ),
                     SDEmbeddingFolder = Path.Combine(
                         settingsManager.ModelsDirectory,
-                        SharedFolderType.TextualInversion.ToString()
+                        SharedFolderType.Embeddings.ToString()
                     ),
                     SDControlNetsFolder = Path.Combine(
                         settingsManager.ModelsDirectory,
@@ -240,7 +278,7 @@ public class StableSwarm(
                     ),
                     SDClipVisionFolder = Path.Combine(
                         settingsManager.ModelsDirectory,
-                        SharedFolderType.InvokeClipVision.ToString()
+                        SharedFolderType.ClipVision.ToString()
                     )
                 };
             }
@@ -276,15 +314,29 @@ public class StableSwarm(
 
                 ProcessArgs args = ["--", comfyVenvPath, "main.py", comfyArgs];
 
+                // Create a wrapper batch file that runs zluda.exe
+                var wrapperScriptPath = Path.Combine(installLocation, "Data", "zluda_wrapper.bat");
+                var scriptContent = $"""
+                                     @echo off
+                                     "{zludaPath}" {args}
+                                     """;
+
+                // Ensure the Data directory exists
+                Directory.CreateDirectory(Path.Combine(installLocation, "Data"));
+
+                // Write the batch file
+                await File.WriteAllTextAsync(wrapperScriptPath, scriptContent, cancellationToken)
+                    .ConfigureAwait(false);
+
                 dataSection.Set(
                     "settings",
                     new ComfyUiSelfStartSettings
                     {
-                        StartScript = zludaPath,
+                        StartScript = wrapperScriptPath,
                         DisableInternalArgs = false,
                         AutoUpdate = false,
                         UpdateManagedNodes = "true",
-                        ExtraArgs = args
+                        ExtraArgs = string.Empty // Arguments are already in the batch file
                     }.Save(true)
                 );
             }
@@ -393,14 +445,14 @@ public class StableSwarm(
         if (needsMigrate)
         {
             await prerequisiteHelper
-                .RunGit(["remote", "set-url", "origin", GithubUrl], package.FullPath)
+                .RunGit(["remote", "set-url", "origin", GithubUrl], workingDirectory: package.FullPath)
                 .ConfigureAwait(false);
         }
 
         return await base.CheckForUpdates(package).ConfigureAwait(false);
     }
 
-    public override Task SetupModelFolders(
+    /*public override Task SetupModelFolders(
         DirectoryPath installDirectory,
         SharedFolderMethod sharedFolderMethod
     ) =>
@@ -408,7 +460,7 @@ public class StableSwarm(
         {
             SharedFolderMethod.Symlink
                 => base.SetupModelFolders(installDirectory, SharedFolderMethod.Symlink),
-            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory), // TODO
+            SharedFolderMethod.Configuration => SetupModelFoldersConfig(installDirectory),
             _ => Task.CompletedTask
         };
 
@@ -421,7 +473,7 @@ public class StableSwarm(
             SharedFolderMethod.Symlink => base.RemoveModelFolderLinks(installDirectory, sharedFolderMethod),
             SharedFolderMethod.Configuration => RemoveModelFoldersConfig(installDirectory),
             _ => Task.CompletedTask
-        };
+        };*/
 
     public override async Task WaitForShutdown()
     {
@@ -491,7 +543,7 @@ public class StableSwarm(
             );
             paths.Set(
                 "SDEmbeddingFolder",
-                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.TextualInversion.ToString())
+                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.Embeddings.ToString())
             );
             paths.Set(
                 "SDControlNetsFolder",
@@ -499,7 +551,7 @@ public class StableSwarm(
             );
             paths.Set(
                 "SDClipVisionFolder",
-                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.InvokeClipVision.ToString())
+                Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.ClipVision.ToString())
             );
             section.Set("Paths", paths);
             section.SaveToFile(settingsPath);
@@ -517,7 +569,7 @@ public class StableSwarm(
             SDVAEFolder = Path.Combine(settingsManager.ModelsDirectory, SharedFolderType.VAE.ToString()),
             SDEmbeddingFolder = Path.Combine(
                 settingsManager.ModelsDirectory,
-                SharedFolderType.TextualInversion.ToString()
+                SharedFolderType.Embeddings.ToString()
             ),
             SDControlNetsFolder = Path.Combine(
                 settingsManager.ModelsDirectory,
@@ -525,7 +577,7 @@ public class StableSwarm(
             ),
             SDClipVisionFolder = Path.Combine(
                 settingsManager.ModelsDirectory,
-                SharedFolderType.InvokeClipVision.ToString()
+                SharedFolderType.ClipVision.ToString()
             )
         };
 

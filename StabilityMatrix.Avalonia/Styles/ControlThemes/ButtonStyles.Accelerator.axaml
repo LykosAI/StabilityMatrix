@@ -1,0 +1,215 @@
+﻿<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:fa="https://github.com/projektanker/icons.avalonia">
+
+    <Design.PreviewWith>
+        <Border
+            MinWidth="300"
+            MinHeight="200"
+            Padding="20">
+            <StackPanel HorizontalAlignment="Center" Spacing="8">
+                <Button Classes="accelerator-indicator" Theme="{DynamicResource AcceleratorButtonStyle}">
+                    <fa:Icon FontSize="14" Value="fa-solid fa-bolt-lightning" />
+                </Button>
+                <Button Classes="accelerator-indicator active" Theme="{DynamicResource AcceleratorButtonStyle}">
+                    <fa:Icon FontSize="14" Value="fa-solid fa-bolt-lightning" />
+                </Button>
+                <Button Classes="accelerator-indicator active searching" Theme="{DynamicResource AcceleratorButtonStyle}">
+                    <fa:Icon FontSize="14" Value="fa-solid fa-bolt-lightning" />
+                </Button>
+                <Button Classes="accelerator-indicator active flash" Theme="{DynamicResource AcceleratorButtonStyle}">
+                    <fa:Icon FontSize="14" Value="fa-solid fa-bolt-lightning" />
+                </Button>
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+
+    <SolidColorBrush x:Key="AccentFillColorDefaultBrush">#ff822d</SolidColorBrush>
+    <Color x:Key="AccentFillColorDefault">#ff822d</Color>
+
+    <!--  ControlTheme for the standard Avalonia Button  -->
+    <ControlTheme x:Key="AcceleratorButtonStyle" TargetType="Button">
+        <!--  Define the full template structure  -->
+        <Setter Property="Template">
+            <ControlTemplate TargetType="Button">
+                <!--  Main Border for background, border, etc.  -->
+                <Border
+                    Name="RootBorder"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    ClipToBounds="True"
+                    CornerRadius="{TemplateBinding CornerRadius}">
+
+                    <Panel>
+                        <!--  Glow Element: Added Border inside RootBorder  -->
+                        <Border
+                            Name="GlowElement"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch"
+                            Background="{DynamicResource AccentFillColorDefaultBrush}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            IsHitTestVisible="False"
+                            Opacity="0">
+                            <!--  Transitions for smooth opacity changes  -->
+                            <Border.Transitions>
+                                <Transitions>
+                                    <DoubleTransition
+                                        Easing="SineEaseOut"
+                                        Property="Opacity"
+                                        Duration="0.3" />
+                                </Transitions>
+                            </Border.Transitions>
+                        </Border>
+
+                        <!--  Content Presenter: Sits on top of the GlowElement  -->
+                        <ContentPresenter
+                            Name="PART_ContentPresenter"
+                            Padding="{TemplateBinding Padding}"
+                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                            Content="{TemplateBinding Content}"
+                            ContentTemplate="{TemplateBinding ContentTemplate}"
+                            RecognizesAccessKey="True"
+                            TextBlock.Foreground="{TemplateBinding Foreground}" />
+                    </Panel>
+
+                </Border>
+            </ControlTemplate>
+        </Setter>
+
+        <!--  Base Styling  -->
+        <Setter Property="Background" Value="{DynamicResource SystemControlTransparentBrush}" />
+        <!--<Setter Property="Background" Value="{DynamicResource ButtonBackground}" />-->
+        <!--<Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />-->
+        <!--<Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrush}" />-->
+        <Setter Property="BorderBrush" Value="{DynamicResource SystemControlTransparentBrush}" />
+        <Setter Property="BorderThickness" Value="{DynamicResource ButtonBorderThemeThickness}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource ControlCornerRadius}" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+
+        <Style Selector="^.accelerator-indicator">
+            <Style Selector="^:pointerover">
+                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{DynamicResource ButtonBackgroundDisabled}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundDisabled}" />
+                    <!--<Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPointerOver}" />-->
+                </Style>
+            </Style>
+
+            <Style Selector="^:pressed">
+                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                    <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundPressed}" />
+                    <!--<Setter Property="Foreground" Value="{DynamicResource ButtonForegroundPressed}" />-->
+                </Style>
+            </Style>
+        </Style>
+
+
+        <!--  Add Base Transitions  -->
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0.15" />
+                <BrushTransition Property="Foreground" Duration="0.15" />
+                <BrushTransition Property="BorderBrush" Duration="0.15" />
+            </Transitions>
+        </Setter>
+
+        <!--  *** Styles for Accelerator States (using classes) ***  -->
+
+        <!--  State: Not Eligible (Disabled)  -->
+        <Style Selector="^.accelerator-indicator:disabled">
+            <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
+            <!--  Ensure Glow is off  -->
+            <Style Selector="^ /template/ Border#GlowElement">
+                <Setter Property="Opacity" Value="0" />
+            </Style>
+        </Style>
+
+        <!--  State: Eligible, Proxy OFF (Default Enabled Look)  -->
+        <Style Selector="^.accelerator-indicator:not(.active):not(:disabled)">
+            <!--  Use default button foreground  -->
+            <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundDisabled}" />
+            <!--  Ensure Glow is off  -->
+            <Style Selector="^ /template/ Border#GlowElement">
+                <Setter Property="Opacity" Value="0" />
+            </Style>
+        </Style>
+
+        <!--  State: Eligible, Proxy ON (Active Idle Look)  -->
+        <Style Selector="^.accelerator-indicator.active:not(.searching):not(:disabled)">
+            <!--  Set Foreground to Accent color  -->
+            <Setter Property="Foreground" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+            <!--  Ensure Glow is off when idle  -->
+            <Style Selector="^ /template/ Border#GlowElement">
+                <Setter Property="Opacity" Value="0" />
+            </Style>
+        </Style>
+
+        <!--  Animation: Search Active Glow (Proxy ON)  -->
+        <Style Selector="^.accelerator-indicator.active.searching:not(:disabled)">
+            <!--  Ensure Foreground is Accent  -->
+            <Setter Property="Foreground" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+            <!--  Animate the GlowElement  -->
+            <Style Selector="^ /template/ Border#GlowElement">
+                <Style.Animations>
+                    <Animation
+                        IterationCount="INFINITE"
+                        PlaybackDirection="Alternate"
+                        Duration="1.5">
+                        <KeyFrame Cue="0%">
+                            <Setter Property="Opacity" Value="0.15" />
+                        </KeyFrame>
+                        <KeyFrame Cue="100%">
+                            <Setter Property="Opacity" Value="0.35" />
+                        </KeyFrame>
+                    </Animation>
+                </Style.Animations>
+            </Style>
+        </Style>
+
+        <!--  Animation: Search Start Flash (Proxy ON)  -->
+        <Style Selector="^.accelerator-indicator.active.flash:not(:disabled)">
+            <!--  Animate the main button Foreground  -->
+            <Style.Animations>
+                <Animation FillMode="None" Duration="0.3">
+                    <KeyFrame Cue="0%">
+                        <!--  Flash to default  -->
+                        <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
+                    </KeyFrame>
+                    <KeyFrame Cue="50%">
+                        <!--  Back to accent  -->
+                        <Setter Property="Foreground" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="Foreground" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
+        <!--  Standard Hover/Pressed states (optional, adjust as needed)  -->
+        <Style Selector="^:pointerover /template/ Border#RootBorder">
+            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPointerOver}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushPointerOver}" />
+        </Style>
+        <Style Selector="^:pressed /template/ Border#RootBorder">
+            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressed}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushPressed}" />
+            <Setter Property="RenderTransform" Value="scale(0.98)" />
+            <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+        </Style>
+        <Style Selector="^:focus-visible /template/ Border#RootBorder">
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBorderBrushFocused}" />
+            <Setter Property="BoxShadow" Value="{DynamicResource FocusBoxShadow}" />
+        </Style>
+
+    </ControlTheme>
+
+</ResourceDictionary>

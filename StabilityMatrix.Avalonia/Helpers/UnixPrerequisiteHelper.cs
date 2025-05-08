@@ -67,6 +67,9 @@ public class UnixPrerequisiteHelper(
     // Cached store of whether or not git is installed
     private bool? isGitInstalled;
 
+    public bool IsVcBuildToolsInstalled => false;
+    public bool IsHipSdkInstalled => false;
+
     // Helper method to get Python download URL for a specific version
     private RemoteResource GetPythonDownloadResource(PyVersion version)
     {
@@ -244,8 +247,7 @@ public class UnixPrerequisiteHelper(
         return RunGit(args, workingDirectory);
     }
 
-    /// <inheritdoc />
-    public async Task RunGit(ProcessArgs args, string? workingDirectory = null)
+    private async Task RunGit(ProcessArgs args, string? workingDirectory = null)
     {
         var command = args.Prepend("git");
 
@@ -567,6 +569,16 @@ public class UnixPrerequisiteHelper(
     [UnsupportedOSPlatform("Linux")]
     [UnsupportedOSPlatform("macOS")]
     public Task<bool> FixGitLongPaths()
+    {
+        throw new PlatformNotSupportedException();
+    }
+
+    [UnsupportedOSPlatform("Linux")]
+    [UnsupportedOSPlatform("macOS")]
+    public Task AddMissingLibsToVenv(
+        DirectoryPath installedPackagePath,
+        IProgress<ProgressReport>? progress = null
+    )
     {
         throw new PlatformNotSupportedException();
     }

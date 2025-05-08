@@ -26,7 +26,7 @@ public partial class FaceDetailerModule : ModuleBase, IValidatableModule
     /// <inheritdoc />
     public override IRelayCommand SettingsCommand => OpenSettingsDialogCommand;
 
-    public FaceDetailerModule(ServiceManager<ViewModelBase> vmFactory)
+    public FaceDetailerModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "Face Detailer";

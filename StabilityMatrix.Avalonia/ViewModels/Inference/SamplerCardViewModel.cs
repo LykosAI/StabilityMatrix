@@ -1,7 +1,5 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -123,7 +121,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     public SamplerCardViewModel(
         IInferenceClientManager clientManager,
-        ServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory
     )
     {
         ClientManager = clientManager;
@@ -137,7 +135,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
                 typeof(LayerDiffuseModule),
                 typeof(FluxGuidanceModule),
                 typeof(DiscreteModelSamplingModule),
-                typeof(RescaleCfgModule)
+                typeof(RescaleCfgModule),
+                typeof(PlasmaNoiseModule)
             ];
         });
     }
@@ -364,6 +363,18 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
         var useFluxGuidance = ModulesCardViewModel.IsModuleEnabled<FluxGuidanceModule>();
 
+        var isPlasmaEnabled = ModulesCardViewModel.IsModuleEnabled<PlasmaNoiseModule>();
+        var usePlasmaSampler = false;
+
+        if (isPlasmaEnabled)
+        {
+            var plasmaViewModel = ModulesCardViewModel
+                .GetCard<PlasmaNoiseModule>()
+                .GetCard<PlasmaNoiseCardViewModel>();
+
+            usePlasmaSampler = plasmaViewModel.IsPlasmaSamplerEnabled;
+        }
+
         if (useFluxGuidance)
         {
             // Flux guidance
@@ -423,6 +434,33 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             );
 
             e.Builder.Connections.Primary = sampler.Output1;
+        }
+        else if (usePlasmaSampler)
+        {
+            var plasmaViewModel = ModulesCardViewModel
+                .GetCard<PlasmaNoiseModule>()
+                .GetCard<PlasmaNoiseCardViewModel>();
+
+            var sampler = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.PlasmaSampler
+                {
+                    Name = "PlasmaSampler",
+                    Model = e.Temp.Base.Model!.Unwrap(),
+                    NoiseSeed = e.Builder.Connections.Seed,
+                    SamplerName = primarySampler.Name,
+                    Scheduler = primaryScheduler.Name,
+                    Steps = Steps,
+                    Cfg = useFluxGuidance ? 1.0d : CfgScale,
+                    Positive = conditioning.Positive,
+                    Negative = conditioning.Negative,
+                    LatentImage = primaryLatent,
+                    Denoise = DenoiseStrength,
+                    DistributionType = "rand",
+                    LatentNoise = plasmaViewModel.PlasmaSamplerLatentNoise
+                }
+            );
+
+            e.Builder.Connections.Primary = sampler.Output;
         }
         // Use KSampler if no refiner, otherwise need KSamplerAdvanced
         else if (e.Builder.Connections.Refiner.Model is null)

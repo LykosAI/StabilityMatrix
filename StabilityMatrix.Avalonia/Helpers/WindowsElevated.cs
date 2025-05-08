@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
-using System.Linq;
 using System.Runtime.Versioning;
-using System.Threading.Tasks;
+using StabilityMatrix.Core.Models.FileInterfaces;
 
 namespace StabilityMatrix.Avalonia.Helpers;
 
@@ -20,7 +19,32 @@ public static class WindowsElevated
         process.StartInfo.FileName = "cmd.exe";
         process.StartInfo.Arguments = $"/c {args}";
         process.StartInfo.UseShellExecute = true;
-        process.StartInfo.CreateNoWindow = true;
+        process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+        process.StartInfo.Verb = "runas";
+
+        process.Start();
+        await process.WaitForExitAsync().ConfigureAwait(false);
+
+        return process.ExitCode;
+    }
+
+    /// <summary>
+    /// Move a file or folder from source to target using elevated privileges.
+    /// </summary>
+    public static async Task<int> Robocopy(
+        DirectoryPath sourcePath,
+        DirectoryPath targetPath,
+        FilePath? targetFile = null
+    )
+    {
+        var targetStr = targetFile is null ? string.Empty : $" \"{targetFile.Name}\"";
+        var args = $"\"{sourcePath.FullPath}\" \"{targetPath.FullPath}\"{targetStr} /E /MOVE /IS /IT";
+
+        using var process = new Process();
+        process.StartInfo.FileName = "Robocopy.exe";
+        process.StartInfo.Arguments = args;
+        process.StartInfo.UseShellExecute = true;
+        process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
         process.StartInfo.Verb = "runas";
 
         process.Start();

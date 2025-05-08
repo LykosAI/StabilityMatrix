@@ -1341,4 +1341,82 @@ Nope! Stability Matrix is still fully functional without one. But, your Lykos ac
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>Go to Settings</value>
   </data>
+  <data name="TeachingTip_PromptAmplifier" xml:space="preserve">
+    <value>Try out the new Prompt Amplifier! Enhance your prompts for better results!</value>
+  </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>Enable</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>Disable</value>
+  </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Connect your Lykos Account</value>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Sign in with your Lykos Account to use connected features.</value>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Please Sign In Again</value>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Your login has expired. Please sign in again to continue.</value>
+  </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>Support Stability Matrix</value>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>Thank you for being a Stability Matrix supporter!</value>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>Features like **{0}** are one of many benefits available to our supporters. Your contribution helps us cover server costs and supports Stability Matrix development.</value>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>Features like **{0}** are available at the **{1}** supporter level (or higher). Your contribution helps us cover server costs for more advanced connected features and allows us to keep improving Stability Matrix for everyone.</value>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>If you&apos;re already supporting us on Patreon, please link your account to continue.</value>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>Account Settings</value>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>View Support Options</value>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>Maybe Later</value>
+  </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>Inactive (Using standard connection)</value>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Experience faster search results when browsing models from online repositories, such as Civitai.</value>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>Experimental optimization for third-party repositories. Not officially affiliated; availability may vary.</value>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>Beta</value>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>Accelerated Model Discovery</value>
+  </data>
+  <data name="PromptAmplifier_Disclaimer" xml:space="preserve">
+    <value>### 🪄 Introducing: Prompt Amplifier  
+Our AI assistant, powered by our experimental Spark model, will generate creative expansions of your prompt.
+
+The Prompt Amplifier runs in our secure, enterprise-grade cloud environment—it does **not** run locally on your machine.
+
+### ☁️️ Why Cloud?  
+The Spark model operates at a scale comparable to trillion-parameter foundation models, requiring substantial computational power. While we’re committed to maximizing locally-runnable features, Spark’s advanced capabilities are available **now** via our cloud infrastructure.
+
+### 🔒 Privacy First
+We prioritize your privacy ([Gen AI Terms](&lt;https://lykos.ai/gen-ai-terms&gt;)). **Your prompts/outputs are NEVER used for AI training by Lykos AI or our necessary cloud infrastructure partners.** Secure processing occurs solely to generate your amplification, **after which we only retain metadata (like timestamps and token counts), not the prompt content itself.** Your data is never sold or shared.</value>
+  </data>
 </root>

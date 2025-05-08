@@ -22,7 +22,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [RegisterTransient<LykosLoginViewModel>, ManagedService]
 public partial class LykosLoginViewModel(
     IAccountsService accountsService,
-    ServiceManager<ViewModelBase> vmFactory
+    IServiceManager<ViewModelBase> vmFactory
 ) : TaskDialogViewModelBase
 {
     [ObservableProperty]

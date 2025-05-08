@@ -46,7 +46,7 @@ public partial class PackageCardViewModel(
     INotificationService notificationService,
     ISettingsManager settingsManager,
     INavigationService<PackageManagerViewModel> navigationService,
-    ServiceManager<ViewModelBase> vmFactory,
+    IServiceManager<ViewModelBase> vmFactory,
     RunningPackageService runningPackageService
 ) : ProgressViewModel
 {
@@ -471,7 +471,11 @@ public partial class PackageCardViewModel(
                 basePackage,
                 Package.FullPath!.Unwrap(),
                 Package,
-                new UpdatePackageOptions { VersionOptions = versionOptions }
+                new UpdatePackageOptions
+                {
+                    VersionOptions = versionOptions,
+                    PythonOptions = { TorchIndex = Package.PreferredTorchIndex }
+                }
             );
             var steps = new List<IPackageStep> { updatePackageStep };
 
@@ -635,7 +639,11 @@ public partial class PackageCardViewModel(
                 basePackage,
                 Package.FullPath!.Unwrap(),
                 Package,
-                new UpdatePackageOptions { VersionOptions = versionOptions }
+                new UpdatePackageOptions
+                {
+                    VersionOptions = versionOptions,
+                    PythonOptions = { TorchIndex = Package.PreferredTorchIndex }
+                }
             );
             var steps = new List<IPackageStep> { updatePackageStep };
 

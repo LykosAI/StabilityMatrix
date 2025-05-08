@@ -27,24 +27,18 @@ public class KohyaSs(
     public override string LicenseType => "Apache-2.0";
     public override string LicenseUrl => "https://github.com/bmaltais/kohya_ss/blob/master/LICENSE.md";
     public override string LaunchCommand => "kohya_gui.py";
-
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/kohyass/preview.webp");
     public override string OutputFolderName => string.Empty;
-
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
 
     public override TorchIndex GetRecommendedTorchVersion() => TorchIndex.Cuda;
-
-    public override string Disclaimer =>
-        "Nvidia GPU with at least 8GB VRAM is recommended. May be unstable on Linux.";
 
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.UltraNightmare;
     public override PackageType PackageType => PackageType.SdTraining;
     public override bool OfferInOneClickInstaller => false;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.None;
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda];
-    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
-        new[] { SharedFolderMethod.None };
+    public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods => [SharedFolderMethod.None];
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         base.Prerequisites.Concat([PackagePrerequisite.Tkinter]);
 
@@ -146,7 +140,6 @@ public class KohyaSs(
 
         if (Compat.IsWindows)
         {
-            // Install
             await venvRunner
                 .CustomInstall(["setup/setup_windows.py", "--headless"], onConsoleOutput)
                 .ConfigureAwait(false);
@@ -163,6 +156,49 @@ public class KohyaSs(
                     onConsoleOutput
                 )
                 .ConfigureAwait(false);
+        }
+
+        var isBlackwell =
+            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
+
+        if (isBlackwell)
+        {
+            pipArgs = new PipInstallArgs()
+                .WithTorch()
+                .WithTorchVision()
+                .WithTorchAudio()
+                .WithTorchExtraIndex("cu128")
+                .AddArg("--force-reinstall");
+
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+            pipArgs = new PipInstallArgs()
+                .AddArg("--pre")
+                .AddArg("-U")
+                .AddArg("--no-deps")
+                .AddArg("xformers");
+
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+            pipArgs = new PipInstallArgs().AddArg("-U").AddArg("bitsandbytes");
+
+            if (installedPackage.PipOverrides != null)
+            {
+                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            }
+
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+            await venvRunner.PipInstall("numpy==1.26.4", onConsoleOutput).ConfigureAwait(false);
         }
     }
 

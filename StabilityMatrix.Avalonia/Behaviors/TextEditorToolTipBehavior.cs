@@ -39,17 +39,6 @@ public class TextEditorToolTipBehavior : Behavior<TextEditor>
         set => SetValue(TokenizerProviderProperty, value);
     }
 
-    public static readonly StyledProperty<bool> IsEnabledProperty = AvaloniaProperty.Register<
-        TextEditorCompletionBehavior,
-        bool
-    >("IsEnabled", true);
-
-    public bool IsEnabled
-    {
-        get => GetValue(IsEnabledProperty);
-        set => SetValue(IsEnabledProperty, value);
-    }
-
     protected override void OnAttached()
     {
         base.OnAttached();

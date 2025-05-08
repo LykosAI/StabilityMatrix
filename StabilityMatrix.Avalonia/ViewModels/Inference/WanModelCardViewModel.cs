@@ -11,6 +11,7 @@ using StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Comfy.Nodes;
+using StabilityMatrix.Core.Models.Api.Comfy.NodeTypes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
@@ -19,7 +20,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterTransient<WanModelCardViewModel>]
 public partial class WanModelCardViewModel(
     IInferenceClientManager clientManager,
-    ServiceManager<ViewModelBase> vmFactory
+    IServiceManager<ViewModelBase> vmFactory
 ) : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
     [ObservableProperty]
@@ -97,14 +98,30 @@ public partial class WanModelCardViewModel(
 
     public void ApplyStep(ModuleApplyStepEventArgs e)
     {
-        var modelLoader = e.Nodes.AddTypedNode(
-            new ComfyNodeBuilder.UNETLoader
-            {
-                Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
-                UnetName = SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected"),
-                WeightDtype = SelectedDType ?? "fp8_e4m3fn_fast"
-            }
-        );
+        ComfyTypedNodeBase<ModelNodeConnection> modelLoader;
+        if (SelectedModel?.RelativePath.EndsWith("gguf", StringComparison.OrdinalIgnoreCase) is true)
+        {
+            modelLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.UnetLoaderGGUF
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UnetLoaderGGUF)),
+                    UnetName =
+                        SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected")
+                }
+            );
+        }
+        else
+        {
+            modelLoader = e.Nodes.AddTypedNode(
+                new ComfyNodeBuilder.UNETLoader
+                {
+                    Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
+                    UnetName =
+                        SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected"),
+                    WeightDtype = SelectedDType ?? "fp8_e4m3fn_fast"
+                }
+            );
+        }
 
         var modelSamplingSd3 = e.Nodes.AddTypedNode(
             new ComfyNodeBuilder.ModelSamplingSD3

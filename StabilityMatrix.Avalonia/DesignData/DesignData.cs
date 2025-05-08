@@ -167,7 +167,7 @@ public static class DesignData
 
         Services = services.BuildServiceProvider();
 
-        var dialogFactory = Services.GetRequiredService<ServiceManager<ViewModelBase>>();
+        var dialogFactory = Services.GetRequiredService<IServiceManager<ViewModelBase>>();
         var settingsManager = Services.GetRequiredService<ISettingsManager>();
         var downloadService = Services.GetRequiredService<IDownloadService>();
         var modelFinder = Services.GetRequiredService<ModelFinder>();
@@ -441,8 +441,8 @@ public static class DesignData
     [NotNull]
     public static UpdateViewModel? UpdateViewModel { get; private set; }
 
-    public static ServiceManager<ViewModelBase> DialogFactory =>
-        Services.GetRequiredService<ServiceManager<ViewModelBase>>();
+    public static IServiceManager<ViewModelBase> DialogFactory =>
+        Services.GetRequiredService<IServiceManager<ViewModelBase>>();
 
     public static MainWindowViewModel MainWindowViewModel =>
         Services.GetRequiredService<MainWindowViewModel>();
@@ -462,45 +462,71 @@ public static class DesignData
     public static RecommendedModelsViewModel RecommendedModelsViewModel =>
         DialogFactory.Get<RecommendedModelsViewModel>(vm =>
         {
-            vm.Sd15Models = new ObservableCollectionExtended<RecommendedModelItemViewModel>()
-            {
-                new()
-                {
-                    ModelVersion = new CivitModelVersion
+            // Populate the single RecommendedModels collection for design time
+            vm.RecommendedModels.AddRange(
+                [
+                    new RecommendedModelItemViewModel
                     {
-                        Name = "BB95 Furry Mix",
-                        Description = "A furry mix of BB95",
-                        Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 },
-                        Images =
-                        [
-                            new CivitImage
-                            {
-                                Url =
-                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
-                            }
-                        ],
+                        CivitModel = new CivitModel { Name = "BB95 Furry Mix", Id = 1 }, // Added Id for clarity
+                        ModelVersion = new CivitModelVersion
+                        {
+                            Id = 101, // Added Id for clarity
+                            Name = "v1.0", // Example version name
+                            BaseModel = "SD 1.5", // Example base model
+                            Stats = new CivitModelStats { Rating = 4.5, RatingCount = 124 },
+                            Files = [new CivitFile { Type = CivitFileType.Model }], // Example file
+                            Images =
+                            [
+                                new CivitImage
+                                {
+                                    Type = "image", // Ensure type is set
+                                    Url =
+                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
+                                }
+                            ],
+                        },
+                        Author = "by bb95"
                     },
-                    Author = "bb95"
-                },
-                new()
-                {
-                    ModelVersion = new CivitModelVersion
+                    new RecommendedModelItemViewModel
                     {
-                        Name = "BB95 Furry Mix",
-                        Description = "A furry mix of BB95",
-                        Stats = new CivitModelStats { Rating = 3.5, RatingCount = 24 },
-                        Images =
-                        [
-                            new CivitImage
-                            {
-                                Url =
-                                    "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
-                            }
-                        ],
+                        CivitModel = new CivitModel { Name = "DreamShaper XL", Id = 2 },
+                        ModelVersion = new CivitModelVersion
+                        {
+                            Id = 201,
+                            Name = "v2.1 Turbo",
+                            BaseModel = "SDXL 1.0",
+                            Stats = new CivitModelStats { Rating = 4.8, RatingCount = 589 },
+                            Files = [new CivitFile { Type = CivitFileType.Model, IsPrimary = true }],
+                            Images =
+                            [
+                                new CivitImage
+                                {
+                                    Type = "image",
+                                    // Placeholder - replace with an actual relevant image URL if possible
+                                    Url =
+                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/0cf3e133-4dde-458b-8a70-7451a3361472/width=450/00016-3919014893.jpeg"
+                                }
+                            ],
+                        },
+                        Author = "by Lykon"
                     },
-                    Author = "bb95"
-                }
-            };
+                    new RecommendedModelItemViewModel
+                    {
+                        CivitModel = new CivitModel { Name = "Another Model SD1.5", Id = 3 },
+                        ModelVersion = new CivitModelVersion
+                        {
+                            Id = 301,
+                            Name = "Final",
+                            BaseModel = "SD 1.5",
+                            Stats = new CivitModelStats { Rating = 4.2, RatingCount = 99 },
+                            Files = [new CivitFile { Type = CivitFileType.Model }],
+                            Images = [new CivitImage { Type = "image", Url = Assets.NoImage.ToString() }], // Use placeholder
+                        },
+                        Author = "by Creator3"
+                    }
+                    // Add more items as needed for design-time preview
+                ]
+            );
         });
     public static OutputsPageViewModel OutputsPageViewModel
     {
@@ -884,6 +910,9 @@ The gallery images are often inpainted, but you will get something very similar 
     public static ImgToVidModelCardViewModel ImgToVidModelCardViewModel =>
         DialogFactory.Get<ImgToVidModelCardViewModel>();
 
+    public static PlasmaNoiseCardViewModel PlasmaNoiseCardViewModel =>
+        DialogFactory.Get<PlasmaNoiseCardViewModel>();
+
     public static ImageGalleryCardViewModel ImageGalleryCardViewModel =>
         DialogFactory.Get<ImageGalleryCardViewModel>(vm =>
         {
@@ -1201,6 +1230,9 @@ The gallery images are often inpainted, but you will get something very similar 
                 .ToArray();
         });
 
+    public static SponsorshipPromptViewModel SponsorshipPromptViewModel =>
+        DialogFactory.Get<SponsorshipPromptViewModel>(vm => { });
+
     public static OpenArtWorkflowViewModel OpenArtWorkflowViewModel =>
         new(Services.GetRequiredService<ISettingsManager>(), Services.GetRequiredService<IPackageFactory>())
         {
@@ -1283,7 +1315,7 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.VersionName = "1.0.0";
             vm.TrainedWords = "word1, word2, word3";
             vm.ModelType = CivitModelType.Checkpoint;
-            vm.BaseModelType = CivitBaseModelType.Pony;
+            vm.BaseModelType = "Pony";
         });
 
     public static MockGitVersionProvider MockGitVersionProvider => new();

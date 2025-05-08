@@ -1195,4 +1195,86 @@
   <data name="Action_GoToSettings" xml:space="preserve">
     <value>Ayarlara Git</value>
   </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>Etkinleştir</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>Devre Dışı Bırak</value>
+  </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Lykos Hesabınızı Bağlayın</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Bağlı özellikleri kullanmak için Lykos hesabınızla oturum açın.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Lütfen Tekrar Oturum Açın</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Oturumunuzun süresi doldu. Devam etmek için lütfen tekrar oturum açın.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>Stability Matrix Desteği</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>Stability Matrix destekçisi olduğunuz için teşekkür ederiz!</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>**{0}** gibi özellikler, destekçilerimize sunulan birçok avantajdan biridir. Katkınız, sunucu maliyetlerimizi karşılamamıza ve Stability Matrix&apos;in geliştirilmesini desteklememize yardımcı olur.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>**{0}** gibi özellikler, **{1}** destekçi seviyesinde (veya üzeri) kullanılabilir. Katkınız, daha gelişmiş bağlantılı özellikler için sunucu maliyetlerimizi karşılamamıza yardımcı olur ve Stability Matrix&apos;i herkes için sürekli iyileştirmemize olanak tanır.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>Bizi zaten Patreon&apos;da destekliyorsanız, devam etmek için lütfen hesabınızı bağlayın.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>Hesap Ayarları</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>Destek Seçeneklerini Görüntüle</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>Daha Sonra</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>Durum</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>Etkin</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>Etkin değil (Standart bağlantı kullanılıyor)</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Civitai gibi çevrimiçi depolardan modellere göz atarken daha hızlı arama sonuçları elde edin.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>Üçüncü taraf depolar için deneysel optimizasyon. Resmi olarak bağlı değildir; kullanılabilirlik değişiklik gösterebilir.</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>Beta</value>
+    <comment>Fuzzy</comment>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>Hızlandırılmış Model Arama</value>
+    <comment>Fuzzy</comment>
+  </data>
 </root>

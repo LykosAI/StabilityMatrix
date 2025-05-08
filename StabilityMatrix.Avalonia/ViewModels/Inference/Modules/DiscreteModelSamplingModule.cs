@@ -11,7 +11,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 [RegisterTransient<DiscreteModelSamplingModule>]
 public class DiscreteModelSamplingModule : ModuleBase
 {
-    public DiscreteModelSamplingModule(ServiceManager<ViewModelBase> vmFactory)
+    public DiscreteModelSamplingModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "Discrete Model Sampling";

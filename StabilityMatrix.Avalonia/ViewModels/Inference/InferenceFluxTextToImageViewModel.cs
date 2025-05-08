@@ -23,7 +23,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(InferenceTextToImageView), IsPersistent = true)]
 [ManagedService]
-[RegisterTransient<InferenceFluxTextToImageViewModel>]
+[RegisterScoped<InferenceFluxTextToImageViewModel>]
 public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBase, IParametersLoadableState
 {
     private readonly INotificationService notificationService;
@@ -51,7 +51,7 @@ public class InferenceFluxTextToImageViewModel : InferenceGenerationViewModelBas
     public SeedCardViewModel SeedCardViewModel { get; }
 
     public InferenceFluxTextToImageViewModel(
-        ServiceManager<ViewModelBase> vmFactory,
+        IServiceManager<ViewModelBase> vmFactory,
         IInferenceClientManager inferenceClientManager,
         INotificationService notificationService,
         ISettingsManager settingsManager,

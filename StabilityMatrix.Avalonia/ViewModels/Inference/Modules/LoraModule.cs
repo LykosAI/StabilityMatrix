@@ -25,7 +25,7 @@ public partial class LoraModule : ModuleBase
     /// <inheritdoc />
     public override IRelayCommand SettingsCommand => OpenSettingsDialogCommand;
 
-    public LoraModule(ServiceManager<ViewModelBase> vmFactory)
+    public LoraModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "Lora";

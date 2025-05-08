@@ -18,7 +18,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterTransient<FaceDetailerViewModel>]
 public partial class FaceDetailerViewModel : LoadableViewModelBase
 {
-    private readonly ServiceManager<ViewModelBase> vmFactory;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
     public const string ModuleKey = "FaceDetailer";
 
     [ObservableProperty]
@@ -133,7 +133,7 @@ public partial class FaceDetailerViewModel : LoadableViewModelBase
     /// <inheritdoc/>
     public FaceDetailerViewModel(
         IInferenceClientManager clientManager,
-        ServiceManager<ViewModelBase> vmFactory
+        IServiceManager<ViewModelBase> vmFactory
     )
     {
         this.vmFactory = vmFactory;

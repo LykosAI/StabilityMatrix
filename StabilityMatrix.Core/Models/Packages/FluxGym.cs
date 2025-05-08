@@ -42,22 +42,19 @@ public class FluxGym(
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
         new[] { SharedFolderMethod.Symlink, SharedFolderMethod.None };
 
-    public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
-        ((ISharedFolderLayoutPackage)this).LegacySharedFolders;
-
-    public virtual SharedFolderLayout SharedFolderLayout =>
+    public override SharedFolderLayout SharedFolderLayout =>
         new()
         {
             Rules =
             [
                 new SharedFolderLayoutRule
                 {
-                    SourceTypes = [SharedFolderType.CLIP],
+                    SourceTypes = [SharedFolderType.TextEncoders],
                     TargetRelativePaths = ["models/clip"]
                 },
                 new SharedFolderLayoutRule
                 {
-                    SourceTypes = [SharedFolderType.Unet],
+                    SourceTypes = [SharedFolderType.DiffusionModels],
                     TargetRelativePaths = ["models/unet"]
                 },
                 new SharedFolderLayoutRule
@@ -68,7 +65,7 @@ public class FluxGym(
             ]
         };
 
-    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders { get; }
+    public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders => null;
     public override IEnumerable<TorchIndex> AvailableTorchIndices => new[] { TorchIndex.Cuda };
     public override string MainBranch => "main";
     public override bool ShouldIgnoreReleases => true;

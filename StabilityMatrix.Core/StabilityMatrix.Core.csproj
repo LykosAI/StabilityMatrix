@@ -67,6 +67,7 @@
       <PackageReference Include="Sentry.NLog" />
       <PackageReference Include="SharpCompress" />
       <PackageReference Include="SkiaSharp" />
+      <PackageReference Include="TextMateSharp.Grammars" />
       <PackageReference Include="System.Runtime.Serialization.Formatters" />
       <PackageReference Include="Websocket.Client" />
       <PackageReference Include="YamlDotNet" />
@@ -80,5 +81,9 @@
       <Compile Update="Models\Api\Lykos\Analytics\PackageInstallAnalyticsRequest.cs">
         <Generator>MSBuild:GenerateCodeFromAttributes</Generator>
       </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Api\PromptGen\Generated\" />
     </ItemGroup>
 </Project>

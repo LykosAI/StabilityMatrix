@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Converters.Json;
+using StabilityMatrix.Core.Helper;
 
 namespace StabilityMatrix.Core.Models.Settings;
 
@@ -20,7 +21,7 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
     public static NotificationKey Inference_PromptCompleted =>
         new("Inference_PromptCompleted")
         {
-            DefaultOption = NotificationOption.NativePush,
+            DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
             Level = NotificationLevel.Success,
             DisplayName = "Inference Prompt Completed"
         };
@@ -28,7 +29,7 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
     public static NotificationKey Download_Completed =>
         new("Download_Completed")
         {
-            DefaultOption = NotificationOption.NativePush,
+            DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
             Level = NotificationLevel.Success,
             DisplayName = "Download Completed"
         };
@@ -36,7 +37,7 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
     public static NotificationKey Download_Failed =>
         new("Download_Failed")
         {
-            DefaultOption = NotificationOption.NativePush,
+            DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
             Level = NotificationLevel.Error,
             DisplayName = "Download Failed"
         };
@@ -44,7 +45,7 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
     public static NotificationKey Download_Canceled =>
         new("Download_Canceled")
         {
-            DefaultOption = NotificationOption.NativePush,
+            DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
             Level = NotificationLevel.Warning,
             DisplayName = "Download Canceled"
         };
@@ -52,7 +53,7 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
     public static NotificationKey Package_Install_Completed =>
         new("Package_Install_Completed")
         {
-            DefaultOption = NotificationOption.NativePush,
+            DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
             Level = NotificationLevel.Success,
             DisplayName = "Package Install Completed"
         };
@@ -60,7 +61,7 @@ public record NotificationKey(string Value) : StringValue(Value), IParsable<Noti
     public static NotificationKey Package_Install_Failed =>
         new("Package_Install_Failed")
         {
-            DefaultOption = NotificationOption.NativePush,
+            DefaultOption = Compat.IsLinux ? NotificationOption.AppToast : NotificationOption.NativePush,
             Level = NotificationLevel.Error,
             DisplayName = "Package Install Failed"
         };

@@ -10,7 +10,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference.Modules;
 [RegisterTransient<FluxGuidanceModule>]
 public class FluxGuidanceModule : ModuleBase
 {
-    public FluxGuidanceModule(ServiceManager<ViewModelBase> vmFactory)
+    public FluxGuidanceModule(IServiceManager<ViewModelBase> vmFactory)
         : base(vmFactory)
     {
         Title = "Use Flux Guidance";

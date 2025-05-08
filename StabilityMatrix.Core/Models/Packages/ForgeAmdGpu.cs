@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -32,7 +33,7 @@ public class ForgeAmdGpu(
         "https://github.com/lshqqytiger/stable-diffusion-webui-amdgpu-forge/blob/main/LICENSE.txt";
 
     public override string Disclaimer =>
-        "Prerequisite install may require admin privileges and a reboot."
+        "Prerequisite install may require admin privileges and a reboot. "
         + "AMD GPUs under the RX 6800 may require additional manual setup.";
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Zluda];
@@ -59,6 +60,12 @@ public class ForgeAmdGpu(
         )
             .ToList();
 
+    public override bool InstallRequiresAdmin => true;
+
+    public override string AdminRequiredReason =>
+        "HIP SDK installation and (if applicable) ROCmLibs patching requires admin "
+        + "privileges for accessing the HIP SDK files in the Program Files directory.";
+
     public override async Task InstallPackage(
         string installLocation,
         InstalledPackage installedPackage,
@@ -68,6 +75,12 @@ public class ForgeAmdGpu(
         CancellationToken cancellationToken = default
     )
     {
+        if (!PrerequisiteHelper.IsHipSdkInstalled) // for updates
+        {
+            progress?.Report(new ProgressReport(-1, "Installing HIP SDK 6.2", isIndeterminate: true));
+            await PrerequisiteHelper.InstallPackageRequirements(this, progress).ConfigureAwait(false);
+        }
+
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         await using var venvRunner = await SetupVenvPure(
                 installLocation,
@@ -86,6 +99,13 @@ public class ForgeAmdGpu(
         CancellationToken cancellationToken = default
     )
     {
+        if (!PrerequisiteHelper.IsHipSdkInstalled)
+        {
+            throw new MissingPrerequisiteException(
+                "HIP SDK",
+                "Your package has not yet been upgraded to use HIP SDK 6.2. To continue, please update this package or select \"Change Version\" from the 3-dots menu to have it upgraded automatically for you"
+            );
+        }
         await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
             .ConfigureAwait(false);
         var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
@@ -93,14 +113,14 @@ public class ForgeAmdGpu(
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
             "AMD",
             "ROCm",
-            "5.7"
+            "6.2"
         );
         var hipBinPath = Path.Combine(hipPath, "bin");
         var envVars = new Dictionary<string, string>
         {
             ["ZLUDA_COMGR_LOG_LEVEL"] = "1",
             ["HIP_PATH"] = hipPath,
-            ["HIP_PATH_57"] = hipPath,
+            ["HIP_PATH_62"] = hipPath,
             ["GIT"] = portableGitBin.JoinFile("git.exe")
         };
         envVars.Update(settingsManager.Settings.EnvironmentVariables);

@@ -81,7 +81,7 @@ public class WindowsPrerequisiteHelper(
     private string PortableGitDownloadPath => Path.Combine(HomeDir, "PortableGit.7z.exe");
     private string GitExePath => Path.Combine(PortableGitInstallDir, "bin", "git.exe");
     private string TkinterZipPath => Path.Combine(AssetsDir, "tkinter.zip");
-    private string TkinterExtractPath => Path.Combine(AssetsDir, "Python31011"); // Updated from Python310 to Python31011
+    private string TkinterExtractPath => Path.Combine(AssetsDir, "Python310");
     private string TkinterExistsPath => Path.Combine(TkinterExtractPath, "tkinter");
     private string NodeExistsPath => Path.Combine(AssetsDir, "nodejs", "npm.cmd");
     private string NodeDownloadPath => Path.Combine(AssetsDir, "nodejs.zip");

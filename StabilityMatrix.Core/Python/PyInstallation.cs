@@ -25,7 +25,10 @@ public class PyInstallation
     /// <summary>
     /// The name of the Python directory
     /// </summary>
-    public string DirectoryName => $"Python{Version.Major}{Version.Minor}{Version.Micro}";
+    public string DirectoryName =>
+        Version == PyInstallationManager.Python_3_10_11
+            ? "Python310"
+            : $"Python{Version.Major}{Version.Minor}{Version.Micro}";
 
     /// <summary>
     /// Path to the Python installation directory

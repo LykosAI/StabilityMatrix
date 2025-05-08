@@ -35,7 +35,7 @@ public class PyRunner : IPyRunner
     public string GetPythonDirName(PyVersion? version = null) =>
         version != null
             ? $"Python{version.Value.Major}{version.Value.Minor}{version.Value.Micro}"
-            : "Python31011"; // Default to 3.10.11 for compatibility
+            : "Python310"; // Default to 3.10.11 for compatibility
 
     /// <summary>
     /// Get the Python directory for the given version, or the default version if none specified
@@ -94,7 +94,7 @@ public class PyRunner : IPyRunner
     }
 
     // Legacy properties for compatibility - these use the default Python version
-    public const string PythonDirName = "Python31011"; // Changed from "Python310" to include micro version
+    public const string PythonDirName = "Python310"; // Changed from "Python310" to include micro version
     public static string PythonDir => Path.Combine(GlobalConfig.LibraryDir, "Assets", PythonDirName);
 
     /// <summary>

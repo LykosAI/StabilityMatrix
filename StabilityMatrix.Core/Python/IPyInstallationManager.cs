@@ -29,9 +29,4 @@ public interface IPyInstallationManager
     /// Gets the default installation
     /// </summary>
     PyInstallation GetDefaultInstallation();
-
-    /// <summary>
-    /// Checks if legacy directory structure exists and migrates it to the new format
-    /// </summary>
-    Task MigrateFromLegacyDirectories();
 }

@@ -306,12 +306,6 @@ public sealed class App : Application
         // Setup uri handler for `stabilitymatrix://` protocol
         Program.UriHandler.RegisterUriScheme();
 
-        // Migrate Python legacy directories if needed
-        Services
-            .GetRequiredService<IPyInstallationManager>()
-            .MigrateFromLegacyDirectories()
-            .SafeFireAndForget(ex => Logger.Error(ex, "Failed to migrate Python legacy directories"));
-
         // Setup activation protocol handlers (uri handler on macOS)
         if (Compat.IsMacOS && this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
         {

@@ -70,45 +70,4 @@ public class PyInstallationManager() : IPyInstallationManager
     {
         return GetInstallation(DefaultVersion);
     }
-
-    /// <summary>
-    /// Checks if legacy directory structure exists and migrates it to the new format
-    /// </summary>
-    public async Task MigrateFromLegacyDirectories()
-    {
-        var legacyDir = Path.Combine(GlobalConfig.LibraryDir, "Assets", "Python310");
-        if (Directory.Exists(legacyDir))
-        {
-            Logger.Info("Found legacy Python310 directory, attempting to migrate");
-
-            // Construct the path for the new directory with micro version
-            var newDir = Path.Combine(GlobalConfig.LibraryDir, "Assets", "Python31011");
-
-            // Skip if the new directory already exists (already migrated or both installed separately)
-            if (Directory.Exists(newDir))
-            {
-                Logger.Info("New Python31011 directory already exists, skipping migration");
-                return;
-            }
-
-            try
-            {
-                // Create parent directory if it doesn't exist
-                var parentDir = Path.GetDirectoryName(newDir);
-                if (parentDir != null && !Directory.Exists(parentDir))
-                {
-                    Directory.CreateDirectory(parentDir);
-                }
-
-                // Move the directory
-                await Task.Run(() => Directory.Move(legacyDir, newDir)).ConfigureAwait(false);
-                Logger.Info("Successfully migrated legacy Python310 directory to Python31011");
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Failed to migrate legacy Python310 directory to Python31011");
-                throw;
-            }
-        }
-    }
 }

@@ -126,7 +126,7 @@ public class Settings
         new()
         {
             // Fixes potential setuptools error on Portable Windows Python
-            ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib",
+            // ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib",
             // Suppresses 'A new release of pip is available' messages
             ["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
         };

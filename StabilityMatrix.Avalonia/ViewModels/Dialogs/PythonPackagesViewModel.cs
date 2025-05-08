@@ -111,18 +111,10 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
                     )
                 );
 
-                var envVars = new Dictionary<string, string>();
-                if (pyBaseInstall.Version == PyInstallationManager.Python_3_10_11)
-                {
-                    envVars["SETUPTOOLS_USE_DISTUTILS"] = "stdlib";
-                }
-
-                envVars.Update(settingsManager.Settings.EnvironmentVariables);
-
                 await using var venvRunner = await pyBaseInstall.CreateVenvRunnerAsync(
                     VenvPath,
                     workingDirectory: VenvPath.Parent,
-                    environmentVariables: envVars
+                    environmentVariables: settingsManager.Settings.EnvironmentVariables
                 );
 
                 var packages = await venvRunner.PipList();
@@ -180,7 +172,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
 
         if (value.PipShowResult is null)
         {
-            value.LoadExtraInfo(VenvPath!).SafeFireAndForget();
+            value.LoadExtraInfo(VenvPath!, pyBaseInstall!).SafeFireAndForget();
         }
     }
 

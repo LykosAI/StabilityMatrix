@@ -84,6 +84,13 @@ public class PyBaseInstall(PyInstallation installation)
             {
                 envVarDict = envVarDict.SetItem(key, value);
             }
+
+            if (Version.ToString() == "3.10.11" && !envVarDict.ContainsKey("SETUPTOOLS_USE_DISTUTILS"))
+            {
+                // Fixes potential setuptools error on Portable Windows Python
+                envVarDict = envVarDict.SetItem("SETUPTOOLS_USE_DISTUTILS", "stdlib");
+            }
+
             venvRunner.EnvironmentVariables = envVarDict;
         }
 

@@ -36,13 +36,13 @@ public class MockLaunchPageViewModel : LaunchPageViewModel
     public override BasePackage? SelectedBasePackage =>
         SelectedPackage?.PackageName != "dank-diffusion"
             ? base.SelectedBasePackage
-            : new DankDiffusion(null!, null!, null!, null!);
+            : new DankDiffusion(null!, null!, null!, null!, null!);
 
     protected override Task LaunchImpl(string? command)
     {
         IsLaunchTeachingTipsOpen = false;
 
-        RunningPackage = new PackagePair(null!, new DankDiffusion(null!, null!, null!, null!));
+        RunningPackage = new PackagePair(null!, new DankDiffusion(null!, null!, null!, null!, null!));
 
         Console.Document.Insert(
             0,

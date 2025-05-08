@@ -18,9 +18,7 @@ public class FluxGym(
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
     IPyInstallationManager pyInstallationManager
-)
-    : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager),
-        ISharedFolderLayoutPackage
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "FluxGym";
     public override string DisplayName { get; set; } = "FluxGym";

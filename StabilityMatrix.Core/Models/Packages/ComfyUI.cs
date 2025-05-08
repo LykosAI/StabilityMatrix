@@ -256,11 +256,7 @@ public class ComfyUI(
             {
                 Name = "Cross Attention Method",
                 Type = LaunchOptionType.Bool,
-                InitialValue = Compat.IsMacOS
-                    ? "--use-pytorch-cross-attention"
-                    : (Compat.IsWindows && HardwareHelper.HasAmdGpu())
-                        ? "--use-quad-cross-attention"
-                        : null,
+                InitialValue = "--use-pytorch-cross-attention",
                 Options =
                 [
                     "--use-split-cross-attention",

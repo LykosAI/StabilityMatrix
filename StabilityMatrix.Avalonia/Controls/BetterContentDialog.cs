@@ -394,7 +394,9 @@ public class BetterContentDialog : ContentDialog
         if (Content is Control { DataContext: ViewModelBase viewModel })
         {
             viewModel.OnLoaded();
-            Dispatcher.UIThread.InvokeAsync(viewModel.OnLoadedAsync).SafeFireAndForget();
+
+            // idk what else is calling this but this makes it get called twice??
+            // Dispatcher.UIThread.InvokeAsync(viewModel.OnLoadedAsync).SafeFireAndForget();
         }
     }
 }

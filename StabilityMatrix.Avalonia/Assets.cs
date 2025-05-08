@@ -130,16 +130,16 @@ internal static class Assets
         );
 
     [SupportedOSPlatform("windows")]
-    public static RemoteResource Python3_10_16DownloadUrl =>
+    public static RemoteResource Python3_10_17DownloadUrl =>
         Compat.Switch(
             (
                 PlatformKind.Windows | PlatformKind.X64,
                 new RemoteResource
                 {
                     Url = new Uri(
-                        "https://github.com/astral-sh/python-build-standalone/releases/download/20250311/cpython-3.10.16+20250311-x86_64-pc-windows-msvc-install_only.tar.gz"
+                        "https://github.com/astral-sh/python-build-standalone/releases/download/20250409/cpython-3.10.17+20250409-x86_64-pc-windows-msvc-install_only.tar.gz"
                     ),
-                    HashSha256 = "e9502814cf831be43b98908bc46ef1d70c6f97a80fc9f93224119a1a25ac8bf5"
+                    HashSha256 = "00c3df6add536bf80df7932ae6b98f3d1dfe1b3ec26d00aaa9457b3e8edf06a2"
                 }
             ),
             (
@@ -147,9 +147,20 @@ internal static class Assets
                 new RemoteResource
                 {
                     Url = new Uri(
-                        "https://github.com/astral-sh/python-build-standalone/releases/download/20250311/cpython-3.10.16+20250311-x86_64-unknown-linux-gnu-install_only.tar.gz"
+                        "https://github.com/astral-sh/python-build-standalone/releases/download/20250409/cpython-3.10.17+20250409-x86_64-unknown-linux-gnu-install_only.tar.gz"
                     ),
-                    HashSha256 = "fa6a4f258af00a1dcd6c89dcc13f77b752249dddf91eb02e30bc2620c325f93f"
+                    HashSha256 = "ba9e325b2d3ccacc1673f98aada0ee38f7d2d262c52253e2b36f745c9ae6e070"
+                }
+            ),
+            (
+                PlatformKind.MacOS | PlatformKind.Arm,
+                new RemoteResource
+                {
+                    // Requires our distribution with signed dylib for gatekeeper
+                    Url = new Uri(
+                        "https://github.com/astral-sh/python-build-standalone/releases/download/20250409/cpython-3.10.17+20250409-aarch64-apple-darwin-install_only.tar.gz"
+                    ),
+                    HashSha256 = "e1de414b707bcf35061c83b2a3d895995027f7d20cc960563bae57ed6e2aa01f"
                 }
             )
         );

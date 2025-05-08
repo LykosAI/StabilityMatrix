@@ -199,10 +199,10 @@ public class WindowsPrerequisiteHelper(
             await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_11, progress);
         }
 
-        if (prerequisites.Contains(PackagePrerequisite.Python31016))
+        if (prerequisites.Contains(PackagePrerequisite.Python31017))
         {
-            await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_16, progress);
-            await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_16, progress);
+            await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_17, progress);
+            await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_17, progress);
         }
 
         if (prerequisites.Contains(PackagePrerequisite.Git))
@@ -241,7 +241,7 @@ public class WindowsPrerequisiteHelper(
         await InstallVcRedistIfNecessary(progress);
         await UnpackResourcesIfNecessary(progress);
         await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
-        await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_16, progress);
+        await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_17, progress);
         await InstallGitIfNecessary(progress);
         await InstallNodeIfNecessary(progress);
         await InstallVcBuildToolsIfNecessary(progress);
@@ -292,9 +292,9 @@ public class WindowsPrerequisiteHelper(
         {
             remote = Assets.PythonDownloadUrl;
         }
-        else if (version == PyInstallationManager.Python_3_10_16)
+        else if (version == PyInstallationManager.Python_3_10_17)
         {
-            remote = Assets.Python3_10_16DownloadUrl;
+            remote = Assets.Python3_10_17DownloadUrl;
         }
         else
         {

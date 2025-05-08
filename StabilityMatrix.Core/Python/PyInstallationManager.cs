@@ -14,7 +14,7 @@ public class PyInstallationManager() : IPyInstallationManager
 
     // Default Python versions
     public static readonly PyVersion Python_3_10_11 = new(3, 10, 11);
-    public static readonly PyVersion Python_3_10_16 = new(3, 10, 16);
+    public static readonly PyVersion Python_3_10_17 = new(3, 10, 17);
 
     /// <summary>
     /// List of available Python versions
@@ -22,13 +22,13 @@ public class PyInstallationManager() : IPyInstallationManager
     public static readonly IReadOnlyList<PyVersion> AvailableVersions = new List<PyVersion>
     {
         Python_3_10_11,
-        Python_3_10_16
+        Python_3_10_17
     };
 
     /// <summary>
     /// The default Python version to use if none is specified
     /// </summary>
-    public static readonly PyVersion DefaultVersion = Python_3_10_16;
+    public static readonly PyVersion DefaultVersion = Python_3_10_17;
 
     /// <summary>
     /// Gets all available Python installations

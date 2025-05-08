@@ -89,7 +89,7 @@ public static class DesignData
                                 Version = new InstalledPackageVersion { InstalledReleaseVersion = "v1.0.0" },
                                 LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                                 LastUpdateCheck = DateTimeOffset.Now,
-                                PythonVersion = PyInstallationManager.Python_3_10_16.StringValue
+                                PythonVersion = PyInstallationManager.Python_3_10_17.StringValue
                             },
                             new()
                             {
@@ -103,7 +103,7 @@ public static class DesignData
                                 },
                                 LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                                 LastUpdateCheck = DateTimeOffset.Now,
-                                PythonVersion = PyInstallationManager.Python_3_10_16.StringValue
+                                PythonVersion = PyInstallationManager.Python_3_10_17.StringValue
                             },
                             new()
                             {
@@ -117,7 +117,7 @@ public static class DesignData
                                 },
                                 LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                                 LastUpdateCheck = DateTimeOffset.Now,
-                                PythonVersion = PyInstallationManager.Python_3_10_16.StringValue
+                                PythonVersion = PyInstallationManager.Python_3_10_17.StringValue
                             }
                         },
                         ActiveInstalledPackageId = activePackageId

@@ -123,7 +123,7 @@ public partial class PackageInstallDetailViewModel(
         AvailablePythonVersions =
         [
             PyInstallationManager.Python_3_10_11,
-            PyInstallationManager.Python_3_10_16
+            PyInstallationManager.Python_3_10_17
         ];
         SelectedPythonVersion = PyInstallationManager.DefaultVersion;
 

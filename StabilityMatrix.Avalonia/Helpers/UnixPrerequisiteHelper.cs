@@ -78,9 +78,9 @@ public class UnixPrerequisiteHelper(
             return Assets.PythonDownloadUrl;
         }
 
-        if (version == PyInstallationManager.Python_3_10_16)
+        if (version == PyInstallationManager.Python_3_10_17)
         {
-            return Assets.Python3_10_16DownloadUrl;
+            return Assets.Python3_10_17DownloadUrl;
         }
 
         throw new ArgumentException($"Unsupported Python version: {version}", nameof(version));
@@ -113,10 +113,10 @@ public class UnixPrerequisiteHelper(
             await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_11, progress);
         }
 
-        if (prerequisites.Contains(PackagePrerequisite.Python31016))
+        if (prerequisites.Contains(PackagePrerequisite.Python31017))
         {
-            await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_16, progress);
-            await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_16, progress);
+            await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_17, progress);
+            await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_17, progress);
         }
 
         if (prerequisites.Contains(PackagePrerequisite.Git))
@@ -178,7 +178,7 @@ public class UnixPrerequisiteHelper(
     {
         await UnpackResourcesIfNecessary(progress);
         await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
-        await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_16, progress);
+        await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_17, progress);
     }
 
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)

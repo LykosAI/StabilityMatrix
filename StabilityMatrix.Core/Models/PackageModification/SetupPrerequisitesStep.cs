@@ -18,7 +18,7 @@ public class SetupPrerequisitesStep(
         {
             if (
                 package.Prerequisites.Contains(PackagePrerequisite.Python310)
-                || package.Prerequisites.Contains(PackagePrerequisite.Python31016)
+                || package.Prerequisites.Contains(PackagePrerequisite.Python31017)
             )
             {
                 await prerequisiteHelper

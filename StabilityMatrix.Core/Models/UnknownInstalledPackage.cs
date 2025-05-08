@@ -12,7 +12,7 @@ public class UnknownInstalledPackage : InstalledPackage
             Id = Guid.NewGuid(),
             PackageName = UnknownPackage.Key,
             DisplayName = name,
-            PythonVersion = PyInstallationManager.Python_3_10_16.StringValue,
+            PythonVersion = PyInstallationManager.Python_3_10_17.StringValue,
             LibraryPath = $"Packages{System.IO.Path.DirectorySeparatorChar}{name}",
         };
     }

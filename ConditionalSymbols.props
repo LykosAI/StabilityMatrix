@@ -4,11 +4,18 @@
     <SM_IncludeAllConditionals>false</SM_IncludeAllConditionals>
     <!-- Mode for ServiceProvider registrations: CodeGeneration, Reflection -->
     <SM_RegisterServiceMode>CodeGeneration</SM_RegisterServiceMode>
+    <!-- true to include StabilityMatrix.Avalonia.Diagnostic for log window -->
+    <SM_IncludeLogWindow>false</SM_IncludeLogWindow>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(SM_IncludeAllConditionals)' == 'true'">
     <!-- REGISTER_SERVICE_USAGES: Include Injectio attributes -->
     <DefineConstants>$(DefineConstants);REGISTER_SERVICE_USAGES</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(SM_IncludeLogWindow)' == 'true'">
+    <!-- SM_LOG_WINDOW: Include Avalonia diagnostic window -->
+    <DefineConstants>$(DefineConstants);SM_LOG_WINDOW</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Label="RegisterServiceMode Definitions">

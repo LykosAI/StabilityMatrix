@@ -7,6 +7,7 @@ using AvaloniaEdit;
 using NLog;
 using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.PromptSyntax;
 using TextMateSharp.Grammars;
 
@@ -86,7 +87,10 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
 
     private void TextEditor_KeyDown(object? sender, KeyEventArgs e)
     {
-        if (!e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.Key is not (Key.Up or Key.Down))
+        // Control for Win / Cmd for macOS
+        var modifier = Compat.IsMacOS ? KeyModifiers.Meta : KeyModifiers.Control;
+
+        if (!e.KeyModifiers.HasFlag(modifier) || e.Key is not (Key.Up or Key.Down))
             return;
 
         e.Handled = true;
@@ -125,15 +129,25 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
 
         try
         {
-            if (
-                (editorSelectionSegment != null ? GetSelectedTokenSpan() : GetCaretTokenSpan())
-                is not { } tokenSegment
-            )
-                return;
-
-            // 2. Tokenize the entire text
+            // 1. Tokenize the entire text
             var text = textEditor.Document.Text;
             var tokenizeResult = TokenizerProvider.TokenizeLine(text);
+
+            // 2. Get the token segment
+            if (
+                (
+                    editorSelectionSegment != null
+                        ? GetSelectedTokenSpan(tokenizeResult)
+                        : GetCaretTokenSpan(tokenizeResult)
+                )
+                is not { } tokenSegment
+            )
+            {
+                Logger.Warn("No token segment found");
+                return;
+            }
+
+            Logger.Debug("Token segment: {Segment}", tokenSegment);
 
             // 3. Build the AST
             var astBuilder = new PromptSyntaxBuilder(tokenizeResult, text);
@@ -145,7 +159,8 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
             // If empty use intersection instead
             if (selectedNodes.Count == 0)
             {
-                selectedNodes = ast.RootNode.Content.Where(node => node.Span.IntersectsWith(tokenSegment))
+                selectedNodes = ast
+                    .RootNode.Content.Where(node => node.Span.IntersectsWith(tokenSegment))
                     .ToList();
             }
 
@@ -174,7 +189,11 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
 
             // Go up and find the first parenthesized node, if any
             // (Considering only the first and last of the smallest nodes)
-            var parenthesisTargets = smallestNodes.Take(1).Concat(smallestNodes.TakeLast(1)).ToList();
+            var parenthesisTargets = smallestNodes.Take(1).ToList();
+            if (smallestNodes.Count > 1)
+            {
+                parenthesisTargets.Add(smallestNodes.Last());
+            }
 
             Logger.Trace("Parenthesis targets: {Nodes}", parenthesisTargets);
 
@@ -182,6 +201,8 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
                 .SelectMany(x => x.AncestorsAndSelf())
                 .OfType<ParenthesizedNode>()
                 .FirstOrDefault();
+
+            // Logger.Trace("Parenthesized node: {Node} of {Nodes}", parenthesizedNode, parenthesisTargets);
 
             var currentWeight = 1.0;
             int replacementOffset; // Offset to start replacing text
@@ -206,7 +227,7 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
                 else
                 {
                     // Insert the weight before the closing parenthesis.
-                    replacementOffset = parenthesizedNode.EndIndex; // Insert at the end of parenthesized node
+                    replacementOffset = parenthesizedNode.EndIndex - 1; // EndIndex is exclusive, so -1
                     replacementLength = 0; // insert
                     newText = $":{FormatWeight(newWeight)}";
                 }
@@ -224,6 +245,12 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
             }
 
             // 8. Replace the text.
+            Logger.Debug(
+                "Replacing source text {SrcText} at {SrcRange}, with new text {NewText}",
+                text[replacementOffset..(replacementOffset + replacementLength)],
+                new TextSpan(replacementOffset, replacementLength),
+                newText
+            );
             textEditor.Document.Replace(replacementOffset, replacementLength, newText);
 
             // Plus 1 to caret if we added parenthesis
@@ -256,7 +283,7 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
         }
     }
 
-    private TextSpan? GetSelectedTokenSpan()
+    private TextSpan? GetSelectedTokenSpan(ITokenizeLineResult result)
     {
         if (textEditor is null)
             return null;
@@ -267,25 +294,14 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
         var selectionStart = textEditor.SelectionStart;
         var selectionEnd = selectionStart + textEditor.SelectionLength;
 
-        var startLine = textEditor.Document.GetLineByOffset(selectionStart);
-        var endLine = textEditor.Document.GetLineByOffset(selectionEnd);
-
-        // For simplicity, we'll assume the selection is on a single line.
-        // Multi-line weight adjustment would be significantly more complex.
-        if (startLine.LineNumber != endLine.LineNumber)
-            return null;
-
-        var lineText = textEditor.Document.GetText(startLine.Offset, startLine.Length);
-        var result = TokenizerProvider!.TokenizeLine(lineText);
-
         IToken? startToken = null;
         IToken? endToken = null;
 
         // Find the tokens that intersect the selection.
         foreach (var token in result.Tokens)
         {
-            var tokenStart = token.StartIndex + startLine.Offset;
-            var tokenEnd = token.EndIndex + startLine.Offset;
+            var tokenStart = token.StartIndex;
+            var tokenEnd = token.EndIndex;
 
             if (tokenEnd > selectionStart && startToken is null)
             {
@@ -306,23 +322,15 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
             return null;
 
         // Ensure end index is within length of text
-        var endIndex = Math.Min(endToken.EndIndex + startLine.Offset, textEditor.Document.TextLength);
+        var endIndex = Math.Min(endToken.EndIndex, textEditor.Document.TextLength);
 
         return TextSpan.FromBounds(startToken.StartIndex, endIndex);
     }
 
-    private TextSpan? GetCaretTokenSpan()
+    private TextSpan? GetCaretTokenSpan(ITokenizeLineResult result)
     {
-        var caret = textEditor!.CaretOffset;
-
-        // Get the line the caret is on
-        var line = textEditor.Document.GetLineByOffset(caret);
-        var lineText = textEditor.Document.GetText(line.Offset, line.Length);
-
-        var caretAbsoluteOffset = caret - line.Offset;
-
-        // Tokenize
-        var result = TokenizerProvider!.TokenizeLine(lineText);
+        var caretAbsoluteOffset = textEditor!.CaretOffset;
+        var textEndOffset = textEditor.Document.TextLength;
 
         IToken? currentToken = null;
         var currentTokenIndex = -1;
@@ -331,11 +339,11 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
         {
             var token = result.Tokens[i];
             // If we see a line comment token anywhere, return null
-            var isComment = token.Scopes.Any(s => s.Contains("comment.line"));
+            /*var isComment = token.Scopes.Any(s => s.Contains("comment.line"));
             if (isComment)
             {
                 return null;
-            }
+            }*/
 
             // Find match
             if (caretAbsoluteOffset >= token.StartIndex && caretAbsoluteOffset < token.EndIndex)
@@ -354,18 +362,33 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
             }
         }
 
-        // Check if the token is a separator, if so check the next token instead
-        if (
-            currentToken?.Scopes is { } scopes
-            && scopes.Contains("meta.structure.array.prompt")
-            && scopes.Contains("punctuation.separator.variable.prompt")
-        )
+        // Check if the token is a separator, if so check the previous or next token instead
+        if (currentToken?.Scopes is { } scopes && scopes.Contains("punctuation.separator.variable.prompt"))
         {
             // Check if we have a prev token
-            var nextToken = result.Tokens.ElementAtOrDefault(currentTokenIndex - 1);
-            if (nextToken is not null)
+            if (
+                result.Tokens.ElementAtOrDefault(currentTokenIndex - 1) is { } prevToken
+                && !prevToken.Scopes.Contains("punctuation.separator.variable.prompt")
+            )
             {
-                // Use the next token instead
+                Logger.Trace(
+                    "Matched on seperator, using previous token: {Current} -> {Prev}",
+                    currentToken,
+                    prevToken
+                );
+                currentToken = prevToken;
+            }
+            // Check if we have a next token
+            else if (
+                result.Tokens.ElementAtOrDefault(currentTokenIndex + 1) is { } nextToken
+                && !nextToken.Scopes.Contains("punctuation.separator.variable.prompt")
+            )
+            {
+                Logger.Trace(
+                    "Matched on seperator, using next token: {Current} -> {Next}",
+                    currentToken,
+                    nextToken
+                );
                 currentToken = nextToken;
             }
         }
@@ -382,11 +405,11 @@ public class TextEditorWeightAdjustmentBehavior : Behavior<TextEditor>
             return null;
         }
 
-        var startOffset = currentToken.StartIndex + line.Offset;
-        var endOffset = currentToken.EndIndex + line.Offset;
-
         // Cap the offsets by the line offsets
-        return TextSpan.FromBounds(Math.Max(startOffset, line.Offset), Math.Min(endOffset, line.EndOffset));
+        var startOffset = Math.Max(currentToken.StartIndex, 0);
+        var endOffset = Math.Min(currentToken.EndIndex, textEndOffset);
+
+        return TextSpan.FromBounds(startOffset, endOffset);
     }
 
     [Localizable(false)]

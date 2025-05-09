@@ -70,7 +70,7 @@ using Application = Avalonia.Application;
 using Logger = NLog.Logger;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using ProductHeaderValue = Octokit.ProductHeaderValue;
-#if DEBUG
+#if SM_LOG_WINDOW
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer;
 using StabilityMatrix.Avalonia.Diagnostics.LogViewer.Extensions;
 #endif
@@ -373,35 +373,32 @@ public sealed class App : Application
 
     internal static void ConfigurePageViewModels(IServiceCollection services)
     {
-        services.AddSingleton<MainWindowViewModel>(
-            provider =>
-                new MainWindowViewModel(
-                    provider.GetRequiredService<ISettingsManager>(),
-                    provider.GetRequiredService<IDiscordRichPresenceService>(),
-                    provider.GetRequiredService<IServiceManager<ViewModelBase>>(),
-                    provider.GetRequiredService<ITrackedDownloadService>(),
-                    provider.GetRequiredService<IModelIndexService>(),
-                    provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
-                    provider.GetRequiredService<INotificationService>(),
-                    provider.GetRequiredService<IAnalyticsHelper>(),
-                    provider.GetRequiredService<IUpdateHelper>(),
-                    provider.GetRequiredService<ISecretsManager>(),
-                    provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),
-                    provider.GetRequiredService<INavigationService<SettingsViewModel>>()
-                )
-                {
-                    Pages =
-                    {
-                        provider.GetRequiredService<PackageManagerViewModel>(),
-                        provider.GetRequiredService<InferenceViewModel>(),
-                        provider.GetRequiredService<CheckpointsPageViewModel>(),
-                        provider.GetRequiredService<CheckpointBrowserViewModel>(),
-                        provider.GetRequiredService<OutputsPageViewModel>(),
-                        provider.GetRequiredService<WorkflowsPageViewModel>()
-                    },
-                    FooterPages = { provider.GetRequiredService<SettingsViewModel>() }
-                }
-        );
+        services.AddSingleton<MainWindowViewModel>(provider => new MainWindowViewModel(
+            provider.GetRequiredService<ISettingsManager>(),
+            provider.GetRequiredService<IDiscordRichPresenceService>(),
+            provider.GetRequiredService<IServiceManager<ViewModelBase>>(),
+            provider.GetRequiredService<ITrackedDownloadService>(),
+            provider.GetRequiredService<IModelIndexService>(),
+            provider.GetRequiredService<Lazy<IModelDownloadLinkHandler>>(),
+            provider.GetRequiredService<INotificationService>(),
+            provider.GetRequiredService<IAnalyticsHelper>(),
+            provider.GetRequiredService<IUpdateHelper>(),
+            provider.GetRequiredService<ISecretsManager>(),
+            provider.GetRequiredService<INavigationService<MainWindowViewModel>>(),
+            provider.GetRequiredService<INavigationService<SettingsViewModel>>()
+        )
+        {
+            Pages =
+            {
+                provider.GetRequiredService<PackageManagerViewModel>(),
+                provider.GetRequiredService<InferenceViewModel>(),
+                provider.GetRequiredService<CheckpointsPageViewModel>(),
+                provider.GetRequiredService<CheckpointBrowserViewModel>(),
+                provider.GetRequiredService<OutputsPageViewModel>(),
+                provider.GetRequiredService<WorkflowsPageViewModel>(),
+            },
+            FooterPages = { provider.GetRequiredService<SettingsViewModel>() },
+        });
     }
 
     internal static IServiceCollection ConfigureServices()
@@ -426,20 +423,20 @@ public sealed class App : Application
 
         ConfigurePageViewModels(services);
 
-        services.AddServiceManagerWithCurrentCollectionServices<ViewModelBase>(
-            s => s.ServiceType.GetCustomAttributes<ManagedServiceAttribute>().Any()
+        services.AddServiceManagerWithCurrentCollectionServices<ViewModelBase>(s =>
+            s.ServiceType.GetCustomAttributes<ManagedServiceAttribute>().Any()
         );
 
         // Other services
         services.AddSingleton<ITrackedDownloadService, TrackedDownloadService>();
-        services.AddSingleton<IDisposable>(
-            provider => (IDisposable)provider.GetRequiredService<ITrackedDownloadService>()
+        services.AddSingleton<IDisposable>(provider =>
+            (IDisposable)provider.GetRequiredService<ITrackedDownloadService>()
         );
 
         // Rich presence
         services.AddSingleton<IDiscordRichPresenceService, DiscordRichPresenceService>();
-        services.AddSingleton<IDisposable>(
-            provider => provider.GetRequiredService<IDiscordRichPresenceService>()
+        services.AddSingleton<IDisposable>(provider =>
+            provider.GetRequiredService<IDiscordRichPresenceService>()
         );
 
         Config = new ConfigurationBuilder()
@@ -482,7 +479,7 @@ public sealed class App : Application
         var jsonSerializerOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         };
         jsonSerializerOptions.Converters.Add(new ObjectToInferredTypesConverter());
         jsonSerializerOptions.Converters.Add(new DefaultUnknownEnumConverter<CivitFileType>());
@@ -494,7 +491,7 @@ public sealed class App : Application
 
         var defaultRefitSettings = new RefitSettings
         {
-            ContentSerializer = new SystemTextJsonContentSerializer(jsonSerializerOptions)
+            ContentSerializer = new SystemTextJsonContentSerializer(jsonSerializerOptions),
         };
 
         // Refit settings for IApiFactory
@@ -512,7 +509,7 @@ public sealed class App : Application
             HttpStatusCode.InternalServerError, // 500
             HttpStatusCode.BadGateway, // 502
             HttpStatusCode.ServiceUnavailable, // 503
-            HttpStatusCode.GatewayTimeout // 504
+            HttpStatusCode.GatewayTimeout, // 504
         };
 
         // Default retry policy: ~30s max
@@ -617,10 +614,9 @@ public sealed class App : Application
                 c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
             })
             .AddPolicyHandler(retryPolicy)
-            .AddHttpMessageHandler(
-                serviceProvider =>
-                    new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
-            );
+            .AddHttpMessageHandler(serviceProvider => new TokenAuthHeaderHandler(
+                serviceProvider.GetRequiredService<LykosAuthTokenProvider>()
+            ));
 
         services
             .AddRefitClient<IPyPiApi>(defaultRefitSettings)
@@ -640,10 +636,9 @@ public sealed class App : Application
             })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy)
-            .AddHttpMessageHandler(
-                serviceProvider =>
-                    new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
-            );
+            .AddHttpMessageHandler(serviceProvider => new TokenAuthHeaderHandler(
+                serviceProvider.GetRequiredService<LykosAuthTokenProvider>()
+            ));
 
         services
             .AddRefitClient<ILykosAuthApiV2>(defaultRefitSettings)
@@ -655,10 +650,9 @@ public sealed class App : Application
             })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy)
-            .AddHttpMessageHandler(
-                serviceProvider =>
-                    new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
-            );
+            .AddHttpMessageHandler(serviceProvider => new TokenAuthHeaderHandler(
+                serviceProvider.GetRequiredService<LykosAuthTokenProvider>()
+            ));
 
         services
             .AddRefitClient<IRecommendedModelsApi>(defaultRefitSettings)
@@ -680,10 +674,9 @@ public sealed class App : Application
             })
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy)
-            .AddHttpMessageHandler(
-                serviceProvider =>
-                    new TokenAuthHeaderHandler(serviceProvider.GetRequiredService<LykosAuthTokenProvider>())
-            );
+            .AddHttpMessageHandler(serviceProvider => new TokenAuthHeaderHandler(
+                serviceProvider.GetRequiredService<LykosAuthTokenProvider>()
+            ));
 
         services
             .AddRefitClient<ILykosAnalyticsApi>(defaultRefitSettings)
@@ -717,8 +710,8 @@ public sealed class App : Application
                 .WithInMemoryCacheHandler()
                 .WithLogging(HttpTracerMode.ExceptionsOnly, HttpMessageParts.AllButResponseBody);
         });
-        services.AddSingleton<OpenModelDbManager>(
-            sp => (OpenModelDbManager)sp.GetRequiredService<IApizrManager<IOpenModelDbApi>>()
+        services.AddSingleton<OpenModelDbManager>(sp =>
+            (OpenModelDbManager)sp.GetRequiredService<IApizrManager<IOpenModelDbApi>>()
         );
 
         // Add Refit client managers
@@ -730,13 +723,12 @@ public sealed class App : Application
             .AddPolicyHandler(retryPolicy);
 
         // Add Refit client factory
-        services.AddSingleton<IApiFactory, ApiFactory>(
-            provider =>
-                new ApiFactory(provider.GetRequiredService<IHttpClientFactory>())
-                {
-                    RefitSettings = apiFactoryRefitSettings,
-                }
-        );
+        services.AddSingleton<IApiFactory, ApiFactory>(provider => new ApiFactory(
+            provider.GetRequiredService<IHttpClientFactory>()
+        )
+        {
+            RefitSettings = apiFactoryRefitSettings,
+        });
 
         // Add OpenId
         services
@@ -762,9 +754,9 @@ public sealed class App : Application
                             OpenIddictConstants.Scopes.Email,
                             OpenIddictConstants.Scopes.OpenId,
                             "api",
-                            OpenIddictConstants.Scopes.OfflineAccess
+                            OpenIddictConstants.Scopes.OfflineAccess,
                         },
-                        RedirectUri = Program.MessagePipeUri.Append("/callback/login/lykos")
+                        RedirectUri = Program.MessagePipeUri.Append("/callback/login/lykos"),
                     }
                 );
             });
@@ -789,7 +781,7 @@ public sealed class App : Application
                 new NLogProviderOptions
                 {
                     IgnoreEmptyEventId = false,
-                    CaptureEventId = EventIdCaptureType.Legacy
+                    CaptureEventId = EventIdCaptureType.Legacy,
                 }
             );
 #else
@@ -1043,7 +1035,7 @@ public sealed class App : Application
                 typeof(ConsoleViewModel),
                 typeof(LoadableViewModelBase),
                 typeof(TextEditorCompletionBehavior),
-                typeof(CompletionProvider)
+                typeof(CompletionProvider),
             };
 
             foreach (var type in typesToDisableTrace)
@@ -1118,7 +1110,7 @@ public sealed class App : Application
                                 "[FATAL]",
                                 ConsoleOutputColor.Black,
                                 ConsoleOutputColor.DarkRed
-                            )
+                            ),
                         },
                         RowHighlightingRules =
                         {
@@ -1127,7 +1119,7 @@ public sealed class App : Application
                                 ConsoleOutputColor.Gray,
                                 ConsoleOutputColor.NoChange
                             ),
-                        }
+                        },
                     }
                 )
                 .WithAsync();
@@ -1147,12 +1139,12 @@ public sealed class App : Application
                             "${specialfolder:folder=ApplicationData}/StabilityMatrix/Logs/app.{#}.log",
                         ArchiveDateFormat = "yyyy-MM-dd HH_mm_ss",
                         ArchiveNumbering = ArchiveNumberingMode.Date,
-                        MaxArchiveFiles = 9
+                        MaxArchiveFiles = 9,
                     }
                 )
                 .WithAsync();
 
-#if DEBUG
+#if SM_LOG_WINDOW
             // LogViewer target when debug mode
             builder
                 .ForLogger()
@@ -1220,7 +1212,7 @@ public sealed class App : Application
                 new FilePickerSaveOptions()
                 {
                     SuggestedFileName = "screenshot.png",
-                    ShowOverwritePrompt = true
+                    ShowOverwritePrompt = true,
                 }
             );
 
@@ -1246,20 +1238,20 @@ public sealed class App : Application
         });
     }
 
-    [Conditional("DEBUG")]
+    [Conditional("SM_LOG_WINDOW")]
     private static void ConditionalAddLogViewer(IServiceCollection services)
     {
-#if DEBUG
+#if SM_LOG_WINDOW
         services.AddLogViewer();
 #endif
     }
 
-    [Conditional("DEBUG")]
+    [Conditional("SM_LOG_WINDOW")]
     private static void ConditionalAddLogViewerNLog(ISetupBuilder setupBuilder)
     {
-#if DEBUG
-        setupBuilder.SetupExtensions(
-            extensionBuilder => extensionBuilder.RegisterTarget<DataStoreLoggerTarget>("DataStoreLogger")
+#if SM_LOG_WINDOW
+        setupBuilder.SetupExtensions(extensionBuilder =>
+            extensionBuilder.RegisterTarget<DataStoreLoggerTarget>("DataStoreLogger")
         );
 #endif
     }

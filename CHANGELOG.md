@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.14.1
 ### Changed
+- Updated Inference Extra Networks (Lora / LyCORIS) base model filtering to consider SDXL variations (e.g., Noob AI / Illustrious) as compatible, unrecognized models or models with no base model will be considered compatible.
+- Changed hotkey for Inference prompt weight adjustment to (`⌘+Up`/`⌘+Down`) on macOS
+### Fixed
+- Fixed Inference hotkey weight adjustment multi-line behavior, now works as expected like the first line.
+- Fixed updates to versions with commit hash version parts not being recognized when the current version has no commit hash part.
+- Fixed Inference Extra Networks card not updating with newly added model files.
 - Fixed incorrect ROCmLibs being installed for RX 6800/6800XT users of Comfy-Zluda or AMDGPU-Forge
 - Fixed missing text when missing localized versions for Italian and Chinese languages
 

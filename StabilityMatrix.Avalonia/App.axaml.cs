@@ -640,7 +640,7 @@ public sealed class App : Application
                 (sp, c) =>
                 {
                     var options = sp.GetRequiredService<IOptions<ApiOptions>>().Value;
-                    c.BaseAddress = options.AuthApiBaseUrl;
+                    c.BaseAddress = options.LykosAuthApiBaseUrl;
                     c.Timeout = TimeSpan.FromHours(1);
                 }
             )
@@ -656,7 +656,7 @@ public sealed class App : Application
                 (sp, c) =>
                 {
                     var options = sp.GetRequiredService<IOptions<ApiOptions>>().Value;
-                    c.BaseAddress = options.AuthApiBaseUrl;
+                    c.BaseAddress = options.LykosAuthApiBaseUrl;
                     c.Timeout = TimeSpan.FromHours(1);
                     c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
                 }
@@ -673,7 +673,7 @@ public sealed class App : Application
                 (sp, c) =>
                 {
                     var options = sp.GetRequiredService<IOptions<ApiOptions>>().Value;
-                    c.BaseAddress = options.AuthApiBaseUrl;
+                    c.BaseAddress = options.LykosAuthApiBaseUrl;
                     c.Timeout = TimeSpan.FromHours(1);
                 }
             )
@@ -686,7 +686,7 @@ public sealed class App : Application
                 (sp, c) =>
                 {
                     var options = sp.GetRequiredService<IOptions<ApiOptions>>().Value;
-                    c.BaseAddress = options.PromptGenApiBaseUrl;
+                    c.BaseAddress = options.LykosPromptGenApiBaseUrl;
                     c.Timeout = TimeSpan.FromHours(1);
                     c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
                 }
@@ -703,7 +703,7 @@ public sealed class App : Application
                 (sp, c) =>
                 {
                     var options = sp.GetRequiredService<IOptions<ApiOptions>>().Value;
-                    c.BaseAddress = options.AnalyticsApiBaseUrl;
+                    c.BaseAddress = options.LykosAnalyticsApiBaseUrl;
                     c.Timeout = TimeSpan.FromMinutes(5);
                 }
             )
@@ -768,7 +768,7 @@ public sealed class App : Application
                     new OpenIddictClientRegistration
                     {
                         ProviderName = OpenIdClientConstants.LykosAccount.ProviderName,
-                        Issuer = apiOptions.AccountApiBaseUrl,
+                        Issuer = apiOptions.LykosAccountApiBaseUrl,
                         ClientId = "ai.lykos.stabilitymatrix",
                         Scopes =
                         {

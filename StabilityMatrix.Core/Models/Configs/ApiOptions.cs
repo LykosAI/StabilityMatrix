@@ -8,20 +8,20 @@ public record ApiOptions
     /// <summary>
     /// Base URL for Lykos Authentication API
     /// </summary>
-    public Uri AuthApiBaseUrl { get; init; } = new("https://auth.lykos.ai");
+    public Uri LykosAuthApiBaseUrl { get; init; } = new("https://auth.lykos.ai");
 
     /// <summary>
     /// Base URL for Lykos Analytics API
     /// </summary>
-    public Uri AnalyticsApiBaseUrl { get; init; } = new("https://analytics.lykos.ai");
+    public Uri LykosAnalyticsApiBaseUrl { get; init; } = new("https://analytics.lykos.ai");
 
     /// <summary>
     /// Base URL for Lykos Account API
     /// </summary>
-    public Uri AccountApiBaseUrl { get; init; } = new("https://account.lykos.ai/");
+    public Uri LykosAccountApiBaseUrl { get; init; } = new("https://account.lykos.ai/");
 
     /// <summary>
     /// Base URL for PromptGen API
     /// </summary>
-    public Uri PromptGenApiBaseUrl { get; init; } = new("https://promptgen.lykos.ai/api");
+    public Uri LykosPromptGenApiBaseUrl { get; init; } = new("https://promptgen.lykos.ai/api");
 }

@@ -48,6 +48,9 @@ public class WindowsPrerequisiteHelper(
         "https://download.amd.com/developer/eula/rocm-hub/AMD-Software-PRO-Edition-24.Q4-Win10-Win11-For-HIP.exe";
     private const string PythonLibsDownloadUrl = "https://cdn.lykos.ai/python_libs_for_sage.zip";
 
+    private const string UvWindowsDownloadUrl =
+        "https://github.com/astral-sh/uv/releases/download/0.7.3/uv-x86_64-pc-windows-msvc.zip";
+
     private string HomeDir => settingsManager.LibraryDir;
 
     private string VcRedistDownloadPath => Path.Combine(HomeDir, "vcredist.x64.exe");
@@ -103,6 +106,11 @@ public class WindowsPrerequisiteHelper(
 
     private string HipInstalledPath =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "AMD", "ROCm", "6.2");
+
+    private string UvDownloadPath => Path.Combine(AssetsDir, "uv.zip");
+    private string UvExtractPath => Path.Combine(AssetsDir, "uv");
+    public string UvExePath => Path.Combine(UvExtractPath, "uv.exe");
+    public bool IsUvInstalled => File.Exists(UvExePath);
 
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsVcBuildToolsInstalled => Directory.Exists(VcBuildToolsExistsPath);
@@ -181,12 +189,51 @@ public class WindowsPrerequisiteHelper(
     public Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null) =>
         InstallPackageRequirements(package.Prerequisites.ToList(), progress);
 
+    public async Task InstallUvIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (IsUvInstalled)
+        {
+            Logger.Debug("UV already installed at {UvExePath}", UvExePath);
+            return;
+        }
+
+        Logger.Info("UV not found at {UvExePath}, downloading...", UvExePath);
+
+        Directory.CreateDirectory(AssetsDir);
+
+        // Download UV zip
+        await downloadService.DownloadToFileAsync(UvWindowsDownloadUrl, UvDownloadPath, progress: progress);
+
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing UV package manager..."
+            )
+        );
+
+        // Create extraction directory
+        Directory.CreateDirectory(UvExtractPath);
+
+        // Extract UV
+        await ArchiveHelper.Extract(UvDownloadPath, UvExtractPath, progress);
+
+        progress?.Report(
+            new ProgressReport(progress: 1f, message: "UV installation complete", type: ProgressType.Generic)
+        );
+
+        // Clean up download
+        File.Delete(UvDownloadPath);
+    }
+
     public async Task InstallPackageRequirements(
         List<PackagePrerequisite> prerequisites,
         IProgress<ProgressReport>? progress = null
     )
     {
         await UnpackResourcesIfNecessary(progress);
+        await InstallUvIfNecessary(progress);
 
         if (prerequisites.Contains(PackagePrerequisite.HipSdk))
         {
@@ -197,12 +244,6 @@ public class WindowsPrerequisiteHelper(
         {
             await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
             await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_11, progress);
-        }
-
-        if (prerequisites.Contains(PackagePrerequisite.Python31017))
-        {
-            await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_17, progress);
-            await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_17, progress);
         }
 
         if (prerequisites.Contains(PackagePrerequisite.Git))
@@ -246,6 +287,7 @@ public class WindowsPrerequisiteHelper(
         await InstallNodeIfNecessary(progress);
         await InstallVcBuildToolsIfNecessary(progress);
         await InstallHipSdkIfNecessary(progress);
+        await InstallUvIfNecessary(progress);
     }
 
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -291,10 +333,6 @@ public class WindowsPrerequisiteHelper(
         if (version == PyInstallationManager.Python_3_10_11)
         {
             remote = Assets.PythonDownloadUrl;
-        }
-        else if (version == PyInstallationManager.Python_3_10_17)
-        {
-            remote = Assets.Python3_10_17DownloadUrl;
         }
         else
         {
@@ -436,7 +474,7 @@ public class WindowsPrerequisiteHelper(
         IProgress<ProgressReport>? progress = null
     )
     {
-        var installation = pyInstallationManager.GetInstallation(version);
+        var installation = await pyInstallationManager.GetInstallationAsync(version);
 
         // Check if pip and venv are installed for this version
         if (!installation.PipInstalled || !installation.VenvInstalled)

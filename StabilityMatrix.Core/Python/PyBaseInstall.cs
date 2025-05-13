@@ -42,13 +42,7 @@ public class PyBaseInstall(PyInstallation installation)
     /// </summary>
     public PyVersion Version => Installation.Version;
 
-    /// <summary>
-    /// Create a virtual environment with this Python installation as the base
-    /// </summary>
-    public PyVenvRunner CreateVenv(DirectoryPath venvPath)
-    {
-        return new PyVenvRunner(this, venvPath);
-    }
+    public bool UsesUv => Installation.UsesUv;
 
     /// <summary>
     /// Create a virtual environment with this Python installation as the base and
@@ -60,7 +54,7 @@ public class PyBaseInstall(PyInstallation installation)
     /// <param name="withDefaultTclTkEnv">Whether to set up the default Tkinter environment variables (Windows)</param>
     /// <param name="withQueriedTclTkEnv">Whether to query and set up Tkinter environment variables (Unix)</param>
     /// <returns>A configured PyVenvRunner instance</returns>
-    public PyVenvRunner CreateVenvRunner(
+    public IPyVenvRunner CreateVenvRunner(
         DirectoryPath venvPath,
         DirectoryPath? workingDirectory = null,
         IReadOnlyDictionary<string, string>? environmentVariables = null,
@@ -68,7 +62,15 @@ public class PyBaseInstall(PyInstallation installation)
         bool withQueriedTclTkEnv = false
     )
     {
-        var venvRunner = new PyVenvRunner(this, venvPath);
+        IPyVenvRunner venvRunner;
+        if (Version == PyInstallationManager.Python_3_10_11)
+        {
+            venvRunner = new PyVenvRunner(this, venvPath);
+        }
+        else
+        {
+            venvRunner = new UvVenvRunner(this, venvPath);
+        }
 
         // Set working directory if provided
         if (workingDirectory != null)
@@ -134,7 +136,7 @@ public class PyBaseInstall(PyInstallation installation)
     /// <param name="withDefaultTclTkEnv">Whether to set up the default Tkinter environment variables (Windows)</param>
     /// <param name="withQueriedTclTkEnv">Whether to query and set up Tkinter environment variables (Unix)</param>
     /// <returns>A configured PyVenvRunner instance</returns>
-    public async Task<PyVenvRunner> CreateVenvRunnerAsync(
+    public async Task<IPyVenvRunner> CreateVenvRunnerAsync(
         string venvPath,
         string? workingDirectory = null,
         IReadOnlyDictionary<string, string>? environmentVariables = null,

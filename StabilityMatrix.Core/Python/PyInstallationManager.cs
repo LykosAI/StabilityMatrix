@@ -1,73 +1,189 @@
 using Injectio.Attributes;
 using NLog;
-using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Python;
 
 /// <summary>
-/// Manages multiple Python installations
+/// Manages multiple Python installations, potentially leveraging UV.
 /// </summary>
 [RegisterSingleton<IPyInstallationManager, PyInstallationManager>]
-public class PyInstallationManager() : IPyInstallationManager
+public class PyInstallationManager(IUvManager uvManager, ISettingsManager settingsManager)
+    : IPyInstallationManager
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    // Default Python versions
+    // Default Python versions - these are TARGET versions SM knows about
     public static readonly PyVersion Python_3_10_11 = new(3, 10, 11);
     public static readonly PyVersion Python_3_10_17 = new(3, 10, 17);
 
     /// <summary>
-    /// List of available Python versions
+    /// List of preferred/target Python versions StabilityMatrix officially supports.
+    /// UV can be used to fetch these if not present.
     /// </summary>
-    public static readonly IReadOnlyList<PyVersion> AvailableVersions = new List<PyVersion>
+    public static readonly IReadOnlyList<PyVersion> OldVersions = new List<PyVersion>
     {
-        Python_3_10_11,
-        Python_3_10_17
-    };
+        Python_3_10_11
+    }.AsReadOnly();
 
     /// <summary>
-    /// The default Python version to use if none is specified
+    /// The default Python version to use if none is specified.
     /// </summary>
-    public static readonly PyVersion DefaultVersion = Python_3_10_17;
+    public static readonly PyVersion DefaultVersion = Python_3_10_17; // Or your preferred default
 
     /// <summary>
-    /// Gets all available Python installations
+    /// Gets all discoverable Python installations (legacy and UV-managed).
+    /// This is now an async method.
     /// </summary>
-    public IEnumerable<PyInstallation> GetAllInstallations()
+    public async Task<IEnumerable<PyInstallation>> GetAllInstallationsAsync()
     {
-        foreach (var version in AvailableVersions)
+        var allInstallations = new List<PyInstallation>();
+        var discoveredInstallPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase); // To avoid duplicates by path
+
+        // 1. Legacy/Bundled Installations (based on TargetVersions and expected paths)
+        Logger.Debug("Discovering legacy/bundled Python installations...");
+        foreach (var version in OldVersions)
         {
-            yield return new PyInstallation(version);
-        }
-    }
-
-    /// <summary>
-    /// Gets all installed Python installations
-    /// </summary>
-    public IEnumerable<PyInstallation> GetInstalledInstallations()
-    {
-        foreach (var installation in GetAllInstallations())
-        {
-            if (installation.Exists())
+            // The PyInstallation constructor (PyVersion version) now calculates the default path.
+            var legacyPyInstall = new PyInstallation(version);
+            if (legacyPyInstall.Exists() && discoveredInstallPaths.Add(legacyPyInstall.InstallPath))
             {
-                yield return installation;
+                allInstallations.Add(legacyPyInstall);
+                Logger.Debug($"Found legacy Python: {legacyPyInstall}");
             }
         }
+
+        // 2. UV-Managed Installations
+        if (await uvManager.IsUvAvailableAsync().ConfigureAwait(false))
+        {
+            Logger.Debug("Discovering UV-managed Python installations...");
+            try
+            {
+                var uvPythons = await uvManager
+                    .ListAvailablePythonsAsync(installedOnly: true)
+                    .ConfigureAwait(false);
+                foreach (var uvPythonInfo in uvPythons)
+                {
+                    if (discoveredInstallPaths.Add(uvPythonInfo.InstallPath)) // Check if we haven't already added this path (e.g., UV installed to a legacy spot)
+                    {
+                        var uvPyInstall = new PyInstallation(uvPythonInfo.Version, uvPythonInfo.InstallPath);
+                        if (uvPyInstall.Exists()) // Double check, UV said it's installed
+                        {
+                            allInstallations.Add(uvPyInstall);
+                            Logger.Debug($"Found UV-managed Python: {uvPyInstall}");
+                        }
+                        else
+                        {
+                            Logger.Warn(
+                                $"UV listed Python at {uvPythonInfo.InstallPath} as installed, but PyInstallation.Exists() check failed."
+                            );
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Failed to list UV-managed Python installations.");
+            }
+        }
+        else
+        {
+            Logger.Debug("UV management of base Pythons is enabled, but UV is not available/detected.");
+        }
+
+        // Return distinct by version, prioritizing (if necessary, though path check helps)
+        // For now, just distinct by the PyInstallation object itself (which considers version and path)
+        return allInstallations.Distinct().OrderBy(p => p.Version).ToList();
+    }
+
+    public async Task<IReadOnlyList<UvPythonInfo>> GetAllAvailablePythonsAsync()
+    {
+        var allPythons = await uvManager.ListAvailablePythonsAsync().ConfigureAwait(false);
+        var filteredPythons = allPythons
+            .Where(p => p is { Source: "cpython", Version.Minor: >= 10 and <= 12 })
+            .OrderBy(p => p.Version)
+            .ToList();
+
+        var legacyPythonPath = Path.Combine(settingsManager.LibraryDir, "Assets", "Python310");
+        filteredPythons.Insert(
+            0,
+            new UvPythonInfo(Python_3_10_11, legacyPythonPath, true, "cpython", null, null, null)
+        );
+        return filteredPythons;
     }
 
     /// <summary>
-    /// Gets an installation for a specific version
+    /// Gets an installation for a specific version.
+    /// If not found, and UV is configured, it may attempt to install it using UV.
+    /// This is now an async method.
     /// </summary>
-    public PyInstallation GetInstallation(PyVersion version)
+    public async Task<PyInstallation> GetInstallationAsync(PyVersion version)
     {
-        return new PyInstallation(version);
+        // 1. Try to find an already existing installation (legacy or UV-managed)
+        var existingInstallations = await GetAllInstallationsAsync().ConfigureAwait(false);
+
+        // Try exact match first
+        var exactMatch = existingInstallations.FirstOrDefault(p => p.Version == version);
+        if (exactMatch != null)
+        {
+            Logger.Debug($"Found existing exact match for Python {version}: {exactMatch.InstallPath}");
+            return exactMatch;
+        }
+
+        // 2. If not found, and UV is allowed to install missing base Pythons, try to install it with UV
+        if (await uvManager.IsUvAvailableAsync().ConfigureAwait(false))
+        {
+            Logger.Info($"Python {version} not found. Attempting to install with UV.");
+            try
+            {
+                var installedUvPython = await uvManager
+                    .InstallPythonVersionAsync(version)
+                    .ConfigureAwait(false);
+                if (
+                    installedUvPython.HasValue
+                    && !string.IsNullOrWhiteSpace(installedUvPython.Value.InstallPath)
+                )
+                {
+                    var newPyInstall = new PyInstallation(
+                        installedUvPython.Value.Version,
+                        installedUvPython.Value.InstallPath
+                    );
+                    if (newPyInstall.Exists())
+                    {
+                        Logger.Info(
+                            $"Successfully installed Python {installedUvPython.Value.Version} with UV at {newPyInstall.InstallPath}"
+                        );
+                        return newPyInstall;
+                    }
+
+                    Logger.Error(
+                        $"UV reported successful install of Python {installedUvPython.Value.Version} at {newPyInstall.InstallPath}, but PyInstallation.Exists() check failed."
+                    );
+                }
+                else
+                {
+                    Logger.Warn(
+                        $"UV failed to install Python {version}. Result from UV manager was null or had no path."
+                    );
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, $"Error attempting to install Python {version} with UV.");
+            }
+        }
+
+        // 3. Fallback: Return a PyInstallation object representing the *expected* legacy path.
+        //    The caller can then check .Exists() on it.
+        //    This maintains compatibility with code that might expect a PyInstallation object even if the files aren't there.
+        Logger.Warn(
+            $"Python {version} not found and UV installation was not attempted or failed. Returning prospective legacy PyInstallation object."
+        );
+        return new PyInstallation(version); // This constructor uses the default/legacy path.
     }
 
-    /// <summary>
-    /// Gets the default installation
-    /// </summary>
-    public PyInstallation GetDefaultInstallation()
+    public async Task<PyInstallation> GetDefaultInstallationAsync()
     {
-        return GetInstallation(DefaultVersion);
+        return await GetInstallationAsync(DefaultVersion).ConfigureAwait(false);
     }
 }

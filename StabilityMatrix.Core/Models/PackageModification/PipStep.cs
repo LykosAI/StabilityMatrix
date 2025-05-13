@@ -37,7 +37,15 @@ public class PipStep : IPackageStep
             environmentVariables: EnvironmentVariables
         );
 
-        venvRunner.RunDetached(Args.Prepend(["-m", "pip"]), progress.AsProcessOutputHandler());
+        if (BaseInstall.UsesUv && Args.Contains("install"))
+        {
+            var uvArgs = Args.ToString().Replace("install ", string.Empty);
+            await venvRunner.PipInstall(uvArgs, progress.AsProcessOutputHandler()).ConfigureAwait(false);
+        }
+        else
+        {
+            venvRunner.RunDetached(Args.Prepend(["-m", "pip"]), progress.AsProcessOutputHandler());
+        }
 
         await ProcessRunner.WaitForExitConditionAsync(venvRunner.Process).ConfigureAwait(false);
     }

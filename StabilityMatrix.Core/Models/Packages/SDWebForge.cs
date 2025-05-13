@@ -142,7 +142,7 @@ public class SDWebForge(
             .ReadAllTextAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        var pipArgs = new PipInstallArgs("setuptools==69.5.1");
+        var pipArgs = new PipInstallArgs();
 
         var isBlackwell =
             SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
@@ -163,6 +163,16 @@ public class SDWebForge(
                 }
             );
 
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+        pipArgs = new PipInstallArgs(
+            "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip"
+        );
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
 
         if (installedPackage.PipOverrides != null)
@@ -171,6 +181,7 @@ public class SDWebForge(
         }
 
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }
 }

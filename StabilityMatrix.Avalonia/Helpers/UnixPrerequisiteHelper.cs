@@ -32,6 +32,11 @@ public class UnixPrerequisiteHelper(
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private const string UvMacDownloadUrl =
+        "https://github.com/astral-sh/uv/releases/download/0.7.3/uv-aarch64-apple-darwin.tar.gz";
+    private const string UvLinuxDownloadUrl =
+        "https://github.com/astral-sh/uv/releases/download/0.7.3/uv-x86_64-unknown-linux-gnu.tar.gz";
+
     private DirectoryPath HomeDir => settingsManager.LibraryDir;
     private DirectoryPath AssetsDir => HomeDir.JoinDir("Assets");
 
@@ -69,6 +74,10 @@ public class UnixPrerequisiteHelper(
 
     public bool IsVcBuildToolsInstalled => false;
     public bool IsHipSdkInstalled => false;
+    private string UvDownloadPath => Path.Combine(AssetsDir, "uv.tar.gz");
+    private string UvExtractPath => Path.Combine(AssetsDir, "uv");
+    public string UvExePath => Path.Combine(UvExtractPath, "uv");
+    public bool IsUvInstalled => File.Exists(UvExePath);
 
     // Helper method to get Python download URL for a specific version
     private RemoteResource GetPythonDownloadResource(PyVersion version)
@@ -76,11 +85,6 @@ public class UnixPrerequisiteHelper(
         if (version == PyInstallationManager.Python_3_10_11)
         {
             return Assets.PythonDownloadUrl;
-        }
-
-        if (version == PyInstallationManager.Python_3_10_17)
-        {
-            return Assets.Python3_10_17DownloadUrl;
         }
 
         throw new ArgumentException($"Unsupported Python version: {version}", nameof(version));
@@ -118,6 +122,8 @@ public class UnixPrerequisiteHelper(
             await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_17, progress);
             await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_17, progress);
         }
+
+        await InstallUvIfNecessary(progress);
 
         if (prerequisites.Contains(PackagePrerequisite.Git))
         {
@@ -179,6 +185,7 @@ public class UnixPrerequisiteHelper(
         await UnpackResourcesIfNecessary(progress);
         await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
         await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_17, progress);
+        await InstallUvIfNecessary(progress);
     }
 
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -516,6 +523,53 @@ public class UnixPrerequisiteHelper(
                 await pyRunner.InstallPackage("virtualenv", version).ConfigureAwait(false);
             }
         }
+    }
+
+    public async Task InstallUvIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (IsUvInstalled)
+        {
+            Logger.Debug("UV already installed at {UvExePath}", UvExePath);
+            return;
+        }
+
+        Logger.Info("UV not found at {UvExePath}, downloading...", UvExePath);
+
+        Directory.CreateDirectory(AssetsDir);
+
+        var downloadUrl = Compat.IsMacOS ? UvMacDownloadUrl : UvLinuxDownloadUrl;
+
+        // Download UV archive
+        await downloadService.DownloadToFileAsync(downloadUrl, UvDownloadPath, progress: progress);
+
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing UV package manager..."
+            )
+        );
+
+        // Create extraction directory
+        Directory.CreateDirectory(UvExtractPath);
+
+        // Extract UV
+        await ArchiveHelper.Extract7ZTar(UvDownloadPath, UvExtractPath);
+
+        // Make the UV executable executable
+        if (File.Exists(UvExePath))
+        {
+            var process = ProcessRunner.StartAnsiProcess("chmod", ["+x", UvExePath]);
+            await process.WaitForExitAsync();
+        }
+
+        progress?.Report(
+            new ProgressReport(progress: 1f, message: "UV installation complete", type: ProgressType.Generic)
+        );
+
+        // Clean up download
+        File.Delete(UvDownloadPath);
     }
 
     private async Task DownloadAndExtractPrerequisite(

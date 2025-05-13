@@ -1092,6 +1092,41 @@ public partial class MainSettingsViewModel : PageViewModelBase
         }
     }
 
+    [RelayCommand]
+    private async Task DebugInstallUv()
+    {
+        await prerequisiteHelper.InstallUvIfNecessary();
+        notificationService.Show("Installed Uv", "Uv has been installed.", NotificationType.Success);
+    }
+
+    [RelayCommand]
+    private async Task DebugRunUv()
+    {
+        var textFields = new TextBoxField[]
+        {
+            new() { Label = "uv", Watermark = "uv" }
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("UV Run", "", textFields);
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var uv = new UvManager(settingsManager);
+
+            var result = await uv.ListAvailablePythonsAsync(onConsoleOutput: output =>
+            {
+                Logger.Info(output.Text);
+            });
+
+            var sb = new StringBuilder();
+            foreach (var info in result)
+            {
+                sb.AppendLine($"{info}\r\n\r\n");
+            }
+            await DialogHelper.CreateMarkdownDialog(sb.ToString()).ShowAsync();
+        }
+    }
+
     #endregion
 
     #region Debug Commands
@@ -1113,7 +1148,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugShowGitVersionSelectorDialogCommand),
             new CommandItem(DebugShowMockGitVersionSelectorDialogCommand),
             new CommandItem(DebugWhichCommand),
-            new CommandItem(DebugRobocopyCommand)
+            new CommandItem(DebugRobocopyCommand),
+            new CommandItem(DebugInstallUvCommand),
+            new CommandItem(DebugRunUvCommand)
         ];
 
     [RelayCommand]

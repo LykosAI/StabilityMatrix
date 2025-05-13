@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using StabilityMatrix.Core.Models.Progress;
-
 namespace StabilityMatrix.Core.Python;
 
 /// <summary>
@@ -11,22 +6,23 @@ namespace StabilityMatrix.Core.Python;
 public interface IPyInstallationManager
 {
     /// <summary>
-    /// Gets all available Python installations
+    /// Gets all discoverable Python installations (legacy and UV-managed).
+    /// This is now an async method.
     /// </summary>
-    IEnumerable<PyInstallation> GetAllInstallations();
+    Task<IEnumerable<PyInstallation>> GetAllInstallationsAsync();
 
     /// <summary>
-    /// Gets all installed Python installations
+    /// Gets an installation for a specific version.
+    /// If not found, and UV is configured, it may attempt to install it using UV.
+    /// This is now an async method.
     /// </summary>
-    IEnumerable<PyInstallation> GetInstalledInstallations();
+    Task<PyInstallation> GetInstallationAsync(PyVersion version);
 
     /// <summary>
-    /// Gets an installation for a specific version
+    /// Gets the default installation.
+    /// This is now an async method.
     /// </summary>
-    PyInstallation GetInstallation(PyVersion version);
+    Task<PyInstallation> GetDefaultInstallationAsync();
 
-    /// <summary>
-    /// Gets the default installation
-    /// </summary>
-    PyInstallation GetDefaultInstallation();
+    Task<IReadOnlyList<UvPythonInfo>> GetAllAvailablePythonsAsync();
 }

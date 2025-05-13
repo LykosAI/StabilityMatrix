@@ -67,16 +67,6 @@ public interface IPyRunner
     Task<PyVersionInfo> GetVersionInfo();
 
     /// <summary>
-    /// Create a PyBaseInstall from the current installation
-    /// </summary>
-    PyBaseInstall CreateBaseInstall();
-
-    /// <summary>
-    /// Create a PyBaseInstall from a specific Python version
-    /// </summary>
-    PyBaseInstall CreateBaseInstall(PyVersion version);
-
-    /// <summary>
     /// Get Python directory name for the given version
     /// </summary>
     string GetPythonDirName(PyVersion? version = null);

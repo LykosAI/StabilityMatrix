@@ -106,7 +106,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             else
             {
                 pyBaseInstall ??= new PyBaseInstall(
-                    pyInstallationManager.GetInstallation(
+                    await pyInstallationManager.GetInstallationAsync(
                         PythonVersion ?? PyInstallationManager.Python_3_10_11
                     )
                 );
@@ -138,7 +138,9 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             return;
 
         pyBaseInstall ??= new PyBaseInstall(
-            pyInstallationManager.GetInstallation(PythonVersion ?? PyInstallationManager.Python_3_10_11)
+            await pyInstallationManager.GetInstallationAsync(
+                PythonVersion ?? PyInstallationManager.Python_3_10_11
+            )
         );
         await using var venvRunner = await pyBaseInstall.CreateVenvRunnerAsync(
             VenvPath,

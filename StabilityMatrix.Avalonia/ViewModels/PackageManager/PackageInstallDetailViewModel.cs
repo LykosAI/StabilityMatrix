@@ -41,11 +41,11 @@ public partial class PackageInstallDetailViewModel(
     ISettingsManager settingsManager,
     INotificationService notificationService,
     ILogger<PackageInstallDetailViewModel> logger,
-    IPyRunner pyRunner,
     IPrerequisiteHelper prerequisiteHelper,
     INavigationService<PackageManagerViewModel> packageNavigationService,
     IPackageFactory packageFactory,
-    IAnalyticsHelper analyticsHelper
+    IAnalyticsHelper analyticsHelper,
+    IPyInstallationManager pyInstallationManager
 ) : PageViewModelBase
 {
     public BasePackage SelectedPackage { get; } = package;
@@ -120,11 +120,8 @@ public partial class PackageInstallDetailViewModel(
         SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
 
         // Initialize Python versions
-        AvailablePythonVersions =
-        [
-            PyInstallationManager.Python_3_10_11,
-            PyInstallationManager.Python_3_10_17
-        ];
+        var pythonVersions = await pyInstallationManager.GetAllAvailablePythonsAsync();
+        AvailablePythonVersions = new ObservableCollection<PyVersion>(pythonVersions.Select(x => x.Version));
         SelectedPythonVersion = PyInstallationManager.DefaultVersion;
 
         allOptions = await SelectedPackage.GetAllVersionOptions();
@@ -211,11 +208,11 @@ public partial class PackageInstallDetailViewModel(
                     settingsManager,
                     notificationService,
                     logger,
-                    pyRunner,
                     prerequisiteHelper,
                     packageNavigationService,
                     packageFactory,
-                    analyticsHelper
+                    analyticsHelper,
+                    pyInstallationManager
                 );
                 packageNavigationService.NavigateTo(vm);
                 return;

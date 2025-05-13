@@ -94,7 +94,7 @@ public class PyRunner : IPyRunner
     }
 
     // Legacy properties for compatibility - these use the default Python version
-    public const string PythonDirName = "Python310"; // Changed from "Python310" to include micro version
+    public const string PythonDirName = "Python310";
     public static string PythonDir => Path.Combine(GlobalConfig.LibraryDir, "Assets", PythonDirName);
 
     /// <summary>
@@ -163,7 +163,7 @@ public class PyRunner : IPyRunner
         if (!PythonEngine.IsInitialized)
         {
             // Get the installation for this version
-            var installation = installationManager.GetInstallation(version);
+            var installation = await installationManager.GetInstallationAsync(version).ConfigureAwait(false);
             if (!installation.Exists())
             {
                 throw new FileNotFoundException(
@@ -229,7 +229,9 @@ public class PyRunner : IPyRunner
             return;
 
         // Get the default installation
-        var defaultInstallation = installationManager.GetDefaultInstallation();
+        var defaultInstallation = await installationManager
+            .GetDefaultInstallationAsync()
+            .ConfigureAwait(false);
         if (!defaultInstallation.Exists())
         {
             throw new FileNotFoundException(
@@ -249,8 +251,9 @@ public class PyRunner : IPyRunner
         // Use either the specified version or the current installation
         var installation =
             version != null
-                ? installationManager.GetInstallation(version.Value)
-                : currentInstallation ?? installationManager.GetDefaultInstallation();
+                ? await installationManager.GetInstallationAsync(version.Value).ConfigureAwait(false)
+                : currentInstallation
+                    ?? await installationManager.GetDefaultInstallationAsync().ConfigureAwait(false);
 
         var getPipPath = Path.Combine(installation.InstallPath, "get-pip.pyc");
 
@@ -283,8 +286,9 @@ public class PyRunner : IPyRunner
         // Use either the specified version or the current installation
         var installation =
             version != null
-                ? installationManager.GetInstallation(version.Value)
-                : currentInstallation ?? installationManager.GetDefaultInstallation();
+                ? await installationManager.GetInstallationAsync(version.Value).ConfigureAwait(false)
+                : currentInstallation
+                    ?? await installationManager.GetDefaultInstallationAsync().ConfigureAwait(false);
 
         if (!File.Exists(installation.PipExePath))
         {
@@ -421,23 +425,5 @@ public class PyRunner : IPyRunner
             info[3].As<string>(),
             info[4].As<int>()
         );
-    }
-
-    /// <summary>
-    /// Create a PyBaseInstall from the current installation
-    /// </summary>
-    public PyBaseInstall CreateBaseInstall()
-    {
-        var installation = currentInstallation ?? installationManager.GetDefaultInstallation();
-        return new PyBaseInstall(installation);
-    }
-
-    /// <summary>
-    /// Create a PyBaseInstall from a specific Python version
-    /// </summary>
-    public PyBaseInstall CreateBaseInstall(PyVersion version)
-    {
-        var installation = installationManager.GetInstallation(version);
-        return new PyBaseInstall(installation);
     }
 }

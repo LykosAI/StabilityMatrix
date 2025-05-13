@@ -15,6 +15,7 @@ public class PackageFactory : IPackageFactory
     private readonly IDownloadService downloadService;
     private readonly IPrerequisiteHelper prerequisiteHelper;
     private readonly IPyRunner pyRunner;
+    private readonly IUvManager uvManager;
     private readonly IPyInstallationManager pyInstallationManager;
 
     /// <summary>

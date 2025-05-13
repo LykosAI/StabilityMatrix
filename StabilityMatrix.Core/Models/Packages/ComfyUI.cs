@@ -2,7 +2,6 @@
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using NLog;
-using Python.Runtime;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -16,10 +15,6 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
-using YamlDotNet.Core;
-using YamlDotNet.RepresentationModel;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -672,7 +667,11 @@ public class ComfyUI(
         if (installedPackage?.FullPath is null)
             return;
 
-        var installSageStep = new InstallSageAttentionStep(DownloadService, PrerequisiteHelper)
+        var installSageStep = new InstallSageAttentionStep(
+            DownloadService,
+            PrerequisiteHelper,
+            PyInstallationManager
+        )
         {
             InstalledPackage = installedPackage,
             WorkingDirectory = new DirectoryPath(installedPackage.FullPath),

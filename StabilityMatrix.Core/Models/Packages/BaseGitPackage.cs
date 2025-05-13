@@ -29,7 +29,7 @@ public abstract class BaseGitPackage : BasePackage
     protected readonly IDownloadService DownloadService;
     protected readonly IPrerequisiteHelper PrerequisiteHelper;
     protected readonly IPyInstallationManager PyInstallationManager;
-    public PyVenvRunner? VenvRunner;
+    public IPyVenvRunner? VenvRunner;
 
     public virtual string RepositoryName => Name;
     public virtual string RepositoryAuthor => Author;
@@ -162,7 +162,7 @@ public abstract class BaseGitPackage : BasePackage
     /// Setup the virtual environment for the package.
     /// </summary>
     [MemberNotNull(nameof(VenvRunner))]
-    public async Task<PyVenvRunner> SetupVenv(
+    public async Task<IPyVenvRunner> SetupVenv(
         string installedPackagePath,
         string venvName = "venv",
         bool forceRecreate = false,
@@ -198,7 +198,7 @@ public abstract class BaseGitPackage : BasePackage
     /// Like <see cref="SetupVenv"/>, but does not set the <see cref="VenvRunner"/> property.
     /// Returns a new <see cref="PyVenvRunner"/> instance.
     /// </summary>
-    public async Task<PyVenvRunner> SetupVenvPure(
+    public async Task<IPyVenvRunner> SetupVenvPure(
         string installedPackagePath,
         string venvName = "venv",
         bool forceRecreate = false,
@@ -208,7 +208,9 @@ public abstract class BaseGitPackage : BasePackage
     {
         // Use either the specific version or the default one
         var baseInstall = pythonVersion.HasValue
-            ? new PyBaseInstall(PyInstallationManager.GetInstallation(pythonVersion.Value))
+            ? new PyBaseInstall(
+                await PyInstallationManager.GetInstallationAsync(pythonVersion.Value).ConfigureAwait(false)
+            )
             : PyBaseInstall.Default;
 
         var venvRunner = await baseInstall

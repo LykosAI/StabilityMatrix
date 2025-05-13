@@ -33,9 +33,9 @@ public partial class PackageInstallBrowserViewModel(
     ISettingsManager settingsManager,
     INotificationService notificationService,
     ILogger<PackageInstallDetailViewModel> logger,
-    IPyRunner pyRunner,
     IPrerequisiteHelper prerequisiteHelper,
-    IAnalyticsHelper analyticsHelper
+    IAnalyticsHelper analyticsHelper,
+    IPyInstallationManager pyInstallationManager
 ) : PageViewModelBase
 {
     [ObservableProperty]
@@ -122,11 +122,11 @@ public partial class PackageInstallBrowserViewModel(
             settingsManager,
             notificationService,
             logger,
-            pyRunner,
             prerequisiteHelper,
             packageNavigationService,
             packageFactory,
-            analyticsHelper
+            analyticsHelper,
+            pyInstallationManager
         );
 
         Dispatcher.UIThread.Post(

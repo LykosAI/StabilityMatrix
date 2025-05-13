@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 
 namespace StabilityMatrix.Core.Python;
 
@@ -75,6 +76,45 @@ public readonly struct PyVersion : IEquatable<PyVersion>, IComparable<PyVersion>
             version = default;
             return false;
         }
+    }
+
+    // Inside PyVersion.cs (or a new PyVersionParser.cs utility class)
+
+    public static bool TryParseFromComplexString(string versionString, out PyVersion version)
+    {
+        version = default;
+        if (string.IsNullOrWhiteSpace(versionString))
+            return false;
+
+        // Regex to capture major.minor.micro and optional pre-release (e.g., a6, rc1)
+        // It tries to be greedy on the numeric part.
+        var match = Regex.Match(
+            versionString,
+            @"^(?<major>\d+)(?:\.(?<minor>\d+))?(?:\.(?<micro>\d+))?(?:[a-zA-Z]+\d*)?$"
+        );
+
+        if (!match.Success)
+            return false;
+
+        if (!int.TryParse(match.Groups["major"].Value, out var major))
+            return false;
+
+        var minor = 0;
+        if (match.Groups["minor"].Success && !string.IsNullOrEmpty(match.Groups["minor"].Value))
+        {
+            if (!int.TryParse(match.Groups["minor"].Value, out minor))
+                return false;
+        }
+
+        var micro = 0;
+        if (match.Groups["micro"].Success && !string.IsNullOrEmpty(match.Groups["micro"].Value))
+        {
+            if (!int.TryParse(match.Groups["micro"].Value, out micro))
+                return false;
+        }
+
+        version = new PyVersion(major, minor, micro);
+        return true;
     }
 
     /// <summary>

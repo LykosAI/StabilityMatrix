@@ -139,6 +139,14 @@ public class Settings
     {
         get
         {
+            // add here when can use GlobalConfig
+            DefaultEnvironmentVariables["UV_CACHE_DIR"] = Path.Combine(
+                GlobalConfig.LibraryDir,
+                "Assets",
+                "uv",
+                "cache"
+            );
+
             if (UserEnvironmentVariables is null || UserEnvironmentVariables.Count == 0)
             {
                 return DefaultEnvironmentVariables;

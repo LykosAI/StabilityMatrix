@@ -70,57 +70,54 @@ public static class DesignData
         if (isInitialized)
             throw new InvalidOperationException("DesignData is already initialized.");
 
-        var services = App.ConfigureServices();
+        var services = App.ConfigureServices(disableMessagePipeInterprocess: true);
 
         var activePackageId = Guid.NewGuid();
-        services.AddSingleton<ISettingsManager, MockSettingsManager>(
-            _ =>
-                new MockSettingsManager
+        services.AddSingleton<ISettingsManager, MockSettingsManager>(_ => new MockSettingsManager
+        {
+            Settings =
+            {
+                InstalledPackages = new List<InstalledPackage>
                 {
-                    Settings =
+                    new()
                     {
-                        InstalledPackages = new List<InstalledPackage>
+                        Id = activePackageId,
+                        DisplayName = "My Installed Package",
+                        PackageName = "stable-diffusion-webui",
+                        Version = new InstalledPackageVersion { InstalledReleaseVersion = "v1.0.0" },
+                        LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
+                        LastUpdateCheck = DateTimeOffset.Now,
+                    },
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        DisplayName = "Comfy Diffusion WebUI Dev Branch Long Name",
+                        PackageName = "ComfyUI",
+                        Version = new InstalledPackageVersion
                         {
-                            new()
-                            {
-                                Id = activePackageId,
-                                DisplayName = "My Installed Package",
-                                PackageName = "stable-diffusion-webui",
-                                Version = new InstalledPackageVersion { InstalledReleaseVersion = "v1.0.0" },
-                                LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
-                                LastUpdateCheck = DateTimeOffset.Now
-                            },
-                            new()
-                            {
-                                Id = Guid.NewGuid(),
-                                DisplayName = "Comfy Diffusion WebUI Dev Branch Long Name",
-                                PackageName = "ComfyUI",
-                                Version = new InstalledPackageVersion
-                                {
-                                    InstalledBranch = "master",
-                                    InstalledCommitSha = "abc12uwu345568972abaedf7g7e679a98879e879f87ga8"
-                                },
-                                LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
-                                LastUpdateCheck = DateTimeOffset.Now
-                            },
-                            new()
-                            {
-                                Id = Guid.NewGuid(),
-                                DisplayName = "Running Comfy",
-                                PackageName = "ComfyUI",
-                                Version = new InstalledPackageVersion
-                                {
-                                    InstalledBranch = "master",
-                                    InstalledCommitSha = "abc12uwu345568972abaedf7g7e679a98879e879f87ga8"
-                                },
-                                LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
-                                LastUpdateCheck = DateTimeOffset.Now
-                            }
+                            InstalledBranch = "master",
+                            InstalledCommitSha = "abc12uwu345568972abaedf7g7e679a98879e879f87ga8",
                         },
-                        ActiveInstalledPackageId = activePackageId
-                    }
-                }
-        );
+                        LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
+                        LastUpdateCheck = DateTimeOffset.Now,
+                    },
+                    new()
+                    {
+                        Id = Guid.NewGuid(),
+                        DisplayName = "Running Comfy",
+                        PackageName = "ComfyUI",
+                        Version = new InstalledPackageVersion
+                        {
+                            InstalledBranch = "master",
+                            InstalledCommitSha = "abc12uwu345568972abaedf7g7e679a98879e879f87ga8",
+                        },
+                        LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
+                        LastUpdateCheck = DateTimeOffset.Now,
+                    },
+                },
+                ActiveInstalledPackageId = activePackageId,
+            },
+        });
 
         // General services
         services
@@ -182,7 +179,7 @@ public static class DesignData
                     Type = LaunchOptionType.String,
                     Description = "The host name for the Web UI",
                     DefaultValue = "localhost",
-                    Options = { "--host" }
+                    Options = { "--host" },
                 }
             ),
             LaunchOptionCard.FromDefinition(
@@ -190,9 +187,9 @@ public static class DesignData
                 {
                     Name = "API",
                     Type = LaunchOptionType.Bool,
-                    Options = { "--api" }
+                    Options = { "--api" },
                 }
-            )
+            ),
         };
         LaunchOptionsViewModel.UpdateFilterCards();
 
@@ -276,8 +273,8 @@ public static class DesignData
                     Creator = new CivitCreator
                     {
                         Image = "https://gravatar.com/avatar/fe74084ae8a081dc2283f5bde4736756ad?f=y&d=retro",
-                        Username = "creator-1"
-                    }
+                        Username = "creator-1",
+                    },
                 };
             }),
             dialogFactory.Get<CheckpointBrowserCardViewModel>(vm =>
@@ -299,18 +296,18 @@ public static class DesignData
                                     NsfwLevel = 1,
                                     Url =
                                         "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/"
-                                        + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
-                                }
-                            }
-                        }
+                                        + "78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                                },
+                            },
+                        },
                     ],
                     Creator = new CivitCreator
                     {
                         Image = "https://gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?f=y&d=retro",
-                        Username = "creator-2"
-                    }
+                        Username = "creator-2",
+                    },
                 };
-            })
+            }),
         };
 
         CheckpointsPageViewModel.Categories = new ObservableCollectionExtended<CheckpointCategory>
@@ -319,9 +316,9 @@ public static class DesignData
             {
                 Name = "Category 1",
                 Path = "path1",
-                SubDirectories = [new CheckpointCategory { Name = "SubCategory 1", Path = "path3" }]
+                SubDirectories = [new CheckpointCategory { Name = "SubCategory 1", Path = "path3" }],
             },
-            new() { Name = "Category 2", Path = "path2" }
+            new() { Name = "Category 2", Path = "path2" },
         };
 
         CheckpointsPageViewModel.Models = new ObservableCollectionExtended<CheckpointFileViewModel>()
@@ -353,8 +350,8 @@ public static class DesignData
                             Fp = "fp16",
                             Size = "pruned",
                         },
-                        TrainedWords = ["aurora", "lightning"]
-                    }
+                        TrainedWords = ["aurora", "lightning"],
+                    },
                 }
             ),
             new(
@@ -367,7 +364,7 @@ public static class DesignData
                 new LocalModelFile
                 {
                     RelativePath = "~/Models/Lora/model.safetensors",
-                    SharedFolderType = SharedFolderType.StableDiffusion
+                    SharedFolderType = SharedFolderType.StableDiffusion,
                 }
             ),
         };
@@ -376,7 +373,7 @@ public static class DesignData
             new PackageModificationRunner
             {
                 CurrentProgress = new ProgressReport(0.5f, "Installing package...", "Installing... 50%"),
-                ModificationCompleteMessage = "Package installed successfully"
+                ModificationCompleteMessage = "Package installed successfully",
             }
         )
         {
@@ -386,7 +383,7 @@ public static class DesignData
                 IsIndeterminate = false,
                 Text = "UwU Install",
                 Description = "Installing...",
-            }
+            },
         };
 
         ProgressManagerViewModel.ProgressItems.AddRange(
@@ -411,9 +408,9 @@ public static class DesignData
                         IsIndeterminate = false,
                         Text = "Waiting on other downloads to finish",
                         Description = "Waiting on other downloads to finish",
-                    }
+                    },
                 },
-                packageInstall
+                packageInstall,
             ]
         );
 
@@ -478,11 +475,11 @@ public static class DesignData
                                 {
                                     Type = "image", // Ensure type is set
                                     Url =
-                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg"
-                                }
+                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
+                                },
                             ],
                         },
-                        Author = "by bb95"
+                        Author = "by bb95",
                     },
                     new RecommendedModelItemViewModel
                     {
@@ -501,11 +498,11 @@ public static class DesignData
                                     Type = "image",
                                     // Placeholder - replace with an actual relevant image URL if possible
                                     Url =
-                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/0cf3e133-4dde-458b-8a70-7451a3361472/width=450/00016-3919014893.jpeg"
-                                }
+                                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/0cf3e133-4dde-458b-8a70-7451a3361472/width=450/00016-3919014893.jpeg",
+                                },
                             ],
                         },
-                        Author = "by Lykon"
+                        Author = "by Lykon",
                     },
                     new RecommendedModelItemViewModel
                     {
@@ -519,8 +516,8 @@ public static class DesignData
                             Files = [new CivitFile { Type = CivitFileType.Model }],
                             Images = [new CivitImage { Type = "image", Url = Assets.NoImage.ToString() }], // Use placeholder
                         },
-                        Author = "by Creator3"
-                    }
+                        Author = "by Creator3",
+                    },
                     // Add more items as needed for design-time preview
                 ]
             );
@@ -537,9 +534,9 @@ public static class DesignData
                     {
                         AbsolutePath =
                             "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/78fd2a0a-42b6-42b0-9815-81cb11bb3d05/00009-2423234823.jpeg",
-                        ImageType = LocalImageFileType.TextToImage
+                        ImageType = LocalImageFileType.TextToImage,
                     }
-                )
+                ),
             };
             vm.Categories = new ObservableCollectionExtended<TreeViewDirectory>
             {
@@ -547,9 +544,9 @@ public static class DesignData
                 {
                     Name = "Category 1",
                     Path = "path1",
-                    SubDirectories = [new TreeViewDirectory { Name = "SubCategory 1", Path = "path3" }]
+                    SubDirectories = [new TreeViewDirectory { Name = "SubCategory 1", Path = "path3" }],
                 },
-                new() { Name = "Category 2", Path = "path2" }
+                new() { Name = "Category 2", Path = "path2" },
             };
             return vm;
         }
@@ -587,7 +584,7 @@ public static class DesignData
                         Title = "Cool Extension",
                         Description = "This is an interesting extension",
                         Reference = new Uri("https://github.com/LykosAI/StabilityMatrix"),
-                        Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")]
+                        Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")],
                     },
                     new PackageExtension
                     {
@@ -595,16 +592,16 @@ public static class DesignData
                         Title = "Cool Extension",
                         Description = "This is an interesting extension",
                         Reference = new Uri("https://github.com/LykosAI/StabilityMatrix"),
-                        Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")]
-                    }
+                        Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")],
+                    },
                 ],
                 [
                     new InstalledPackageExtension
                     {
                         GitRepositoryUrl = "https://github.com/LykosAI/StabilityMatrix",
-                        Paths = [new DirectoryPath("example-dir")]
+                        Paths = [new DirectoryPath("example-dir")],
                     },
-                    new InstalledPackageExtension { Paths = [new DirectoryPath("example-dir-2")] }
+                    new InstalledPackageExtension { Paths = [new DirectoryPath("example-dir-2")] },
                 ]
             );
             vm.AddExtensionPacks(
@@ -622,16 +619,16 @@ public static class DesignData
                                     Author = "TestAuthor",
                                     Title = "Test",
                                     Reference = new Uri("https://github.com/LykosAI/StabilityMatrix"),
-                                    Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")]
+                                    Files = [new Uri("https://github.com/LykosAI/StabilityMatrix")],
                                 },
                                 Version = new PackageExtensionVersion
                                 {
                                     Branch = "main",
-                                    CommitSha = "abcd123"
-                                }
-                            }
-                        ]
-                    }
+                                    CommitSha = "abcd123",
+                                },
+                            },
+                        ],
+                    },
                 ]
             );
         });
@@ -679,9 +676,9 @@ public static class DesignData
                 {
                     [UpdateChannel.Stable] = update,
                     [UpdateChannel.Preview] = update,
-                    [UpdateChannel.Development] = update
+                    [UpdateChannel.Development] = update,
                 },
-                CheckedAt = DateTimeOffset.UtcNow
+                CheckedAt = DateTimeOffset.UtcNow,
             };
             return vm;
         }
@@ -717,8 +714,8 @@ The gallery images are often inpainted, but you will get something very similar 
                             {
                                 Format = CivitModelFormat.SafeTensor,
                                 Fp = "fp16",
-                                Size = "pruned"
-                            }
+                                Size = "pruned",
+                            },
                         },
                         new()
                         {
@@ -728,12 +725,12 @@ The gallery images are often inpainted, but you will get something very similar 
                             {
                                 Format = CivitModelFormat.SafeTensor,
                                 Fp = "fp32",
-                                Size = "full"
+                                Size = "full",
                             },
-                            Hashes = new CivitFileHashes { BLAKE3 = "ABCD" }
-                        }
-                    }
-                }
+                            Hashes = new CivitFileHashes { BLAKE3 = "ABCD" },
+                        },
+                    },
+                },
             };
             var sampleViewModel = new ModelVersionViewModel(
                 Services.GetRequiredService<IModelIndexService>(),
@@ -782,7 +779,7 @@ The gallery images are often inpainted, but you will get something very similar 
     public static EnvVarsViewModel EnvVarsViewModel =>
         DialogFactory.Get<EnvVarsViewModel>(viewModel =>
         {
-            viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair> { new("UWU", "TRUE"), };
+            viewModel.EnvVars = new ObservableCollection<EnvVarKeyPair> { new("UWU", "TRUE") };
         });
 
     public static PythonPackagesViewModel PythonPackagesViewModel =>
@@ -865,7 +862,7 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.SelectedObject = new INotifyPropertyChanged[]
             {
                 new MockPropertyGridObject(),
-                new MockPropertyGridObjectAlt()
+                new MockPropertyGridObjectAlt(),
             };
             vm.ExcludeCategories = ["Excluded Category"];
         });
@@ -1023,11 +1020,11 @@ The gallery images are often inpainted, but you will get something very similar 
                             {
                                 Url = new Uri(
                                     "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512"
-                                )
-                            }
-                        ]
-                    }
-                }
+                                ),
+                            },
+                        ],
+                    },
+                },
             };
 
             return vm;
@@ -1058,7 +1055,7 @@ The gallery images are often inpainted, but you will get something very similar 
                     Type = "pth",
                     Size = 67254807,
                     Sha256 = "d7ae3b9a3572a01d1ddfc788ebca253c872d959d3765bcb3b48c65a3ab2f9aba",
-                    Urls = ["https://drive.google.com/open?id=0"]
+                    Urls = ["https://drive.google.com/open?id=0"],
                 },
                 new OpenModelDbResource
                 {
@@ -1066,8 +1063,8 @@ The gallery images are often inpainted, but you will get something very similar 
                     Type = "onnx",
                     Size = 20098601,
                     Sha256 = "d7ae3b9a3572a01d1ddfc788ebca253c872d959d3765bcb3b48c65a3ab2f9aba",
-                    Urls = ["https://drive.google.com/open?id=0"]
-                }
+                    Urls = ["https://drive.google.com/open?id=0"],
+                },
             ],
             Images =
             [
@@ -1085,8 +1082,8 @@ The gallery images are often inpainted, but you will get something very similar 
                 {
                     Lr = new Uri("https://imgsli.com/i/83e9600a-a8ee-4f2b-96e7-f42dc7e5ab12.jpg"),
                     Sr = new Uri("https://imgsli.com/i/a611b9a9-422f-44ed-882a-3ada8f478625.jpg"),
-                }
-            ]
+                },
+            ],
         };
 
     public static OpenModelDbBrowserViewModel OpenModelDbBrowserViewModel
@@ -1139,8 +1136,8 @@ The gallery images are often inpainted, but you will get something very similar 
                     ConnectedModelInfo = new ConnectedModelInfo
                     {
                         ModelName = "Art Shaper (very long name example)",
-                        VersionName = "Style v8 (very long name)"
-                    }
+                        VersionName = "Style v8 (very long name)",
+                    },
                 }
             ),
             HybridModelFile.FromLocal(
@@ -1153,8 +1150,8 @@ The gallery images are often inpainted, but you will get something very similar 
                     ConnectedModelInfo = new ConnectedModelInfo
                     {
                         ModelName = "Background Arts",
-                        VersionName = "Anime Style v10"
-                    }
+                        VersionName = "Anime Style v10",
+                    },
                 }
             ),
             HybridModelFile.FromRemote("v1-5-pruned-emaonly.safetensors"),
@@ -1211,7 +1208,7 @@ The gallery images are often inpainted, but you will get something very similar 
             )
         )
         {
-            Label = "Test Image"
+            Label = "Test Image",
         };
 
     public static ControlNetCardViewModel ControlNetCardViewModel =>
@@ -1239,7 +1236,7 @@ The gallery images are often inpainted, but you will get something very similar 
                 Creator = new OpenArtCreator
                 {
                     Name = "Test Creator Name",
-                    Username = "Test Creator Username"
+                    Username = "Test Creator Username",
                 },
                 Thumbnails =
                 [
@@ -1247,8 +1244,8 @@ The gallery images are often inpainted, but you will get something very similar 
                     {
                         Url = new Uri(
                             "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a318ac1f-3ad0-48ac-98cc-79126febcc17/width=1500"
-                        )
-                    }
+                        ),
+                    },
                 ],
                 NodesIndex =
                 [
@@ -1279,9 +1276,9 @@ The gallery images are often inpainted, but you will get something very similar 
                     "SAMLoader",
                     "UltralyticsDetectorProvider",
                     "FaceDetailer",
-                    ","
-                ]
-            }
+                    ",",
+                ],
+            },
         };
 
     public static SafetensorMetadataViewModel SafetensorMetadataViewModel =>
@@ -1298,7 +1295,7 @@ The gallery images are often inpainted, but you will get something very similar 
                     new("Name1", "Value1"),
                     new("Name2", "Value2"),
                     new("Name3", "Value3"),
-                }
+                },
             };
         });
 

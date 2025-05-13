@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
@@ -9,6 +10,7 @@ namespace StabilityMatrix.Core.Models;
 /// <summary>
 /// Model file union that may be remote or local.
 /// </summary>
+[Localizable(false)]
 [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public record HybridModelFile : ISearchText, IDownloadableResource
 {
@@ -46,15 +48,14 @@ public record HybridModelFile : ISearchText, IDownloadableResource
         {
             HybridModelType.Local => Local!.RelativePathFromSharedFolder,
             HybridModelType.Remote => RemoteName!,
-            HybridModelType.Downloadable
-                => DownloadableResource!.Value.RelativeDirectory == null
-                    ? DownloadableResource!.Value.FileName
-                    : Path.Combine(
-                        DownloadableResource!.Value.RelativeDirectory,
-                        DownloadableResource!.Value.FileName
-                    ),
+            HybridModelType.Downloadable => DownloadableResource!.Value.RelativeDirectory == null
+                ? DownloadableResource!.Value.FileName
+                : Path.Combine(
+                    DownloadableResource!.Value.RelativeDirectory,
+                    DownloadableResource!.Value.FileName
+                ),
             HybridModelType.None => throw new InvalidOperationException(),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(),
         };
 
     [JsonIgnore]

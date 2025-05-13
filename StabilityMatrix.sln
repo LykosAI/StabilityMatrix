@@ -25,6 +25,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Native.Abst
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Native.macOS", "StabilityMatrix.Native.macOS\StabilityMatrix.Native.macOS.csproj", "{473AE646-17E4-4247-9271-858D257DFFE1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "analyzers", "analyzers", "{87BDF27C-A933-4FE5-A734-57AB61BFF15A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Analyzers", "analyzers\StabilityMatrix.Analyzers\StabilityMatrix.Analyzers.csproj", "{BDE3B28C-F4AD-4A00-AA91-A1DA706AE4E4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StabilityMatrix.Analyzers.CodeFixes", "analyzers\StabilityMatrix.Analyzers.CodeFixes\StabilityMatrix.Analyzers.CodeFixes.csproj", "{32B22C7D-BF47-4D77-A9D7-FFD863650FCB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,11 +79,23 @@ Global
 		{473AE646-17E4-4247-9271-858D257DFFE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{473AE646-17E4-4247-9271-858D257DFFE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{473AE646-17E4-4247-9271-858D257DFFE1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDE3B28C-F4AD-4A00-AA91-A1DA706AE4E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDE3B28C-F4AD-4A00-AA91-A1DA706AE4E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDE3B28C-F4AD-4A00-AA91-A1DA706AE4E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDE3B28C-F4AD-4A00-AA91-A1DA706AE4E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32B22C7D-BF47-4D77-A9D7-FFD863650FCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32B22C7D-BF47-4D77-A9D7-FFD863650FCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32B22C7D-BF47-4D77-A9D7-FFD863650FCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32B22C7D-BF47-4D77-A9D7-FFD863650FCB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {97DDAF21-661E-4E36-ABC3-BF2052415919}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BDE3B28C-F4AD-4A00-AA91-A1DA706AE4E4} = {87BDF27C-A933-4FE5-A734-57AB61BFF15A}
+		{32B22C7D-BF47-4D77-A9D7-FFD863650FCB} = {87BDF27C-A933-4FE5-A734-57AB61BFF15A}
 	EndGlobalSection
 EndGlobal

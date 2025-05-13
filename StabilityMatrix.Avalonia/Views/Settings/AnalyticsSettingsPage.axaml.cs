@@ -1,11 +1,11 @@
-﻿using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+﻿using Avalonia.Markup.Xaml;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Controls;
 
 namespace StabilityMatrix.Avalonia.Views.Settings;
 
 [RegisterTransient<AnalyticsSettingsPage>]
-public partial class AnalyticsSettingsPage : UserControl
+public partial class AnalyticsSettingsPage : UserControlBase
 {
     public AnalyticsSettingsPage()
     {

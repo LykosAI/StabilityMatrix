@@ -100,6 +100,9 @@ public class ViewModelControlConventionAnalyzer : DiagnosticAnalyzer
         var templatedControlBaseSymbol = context.Compilation.GetTypeByMetadataName(
             "StabilityMatrix.Avalonia.Controls.TemplatedControlBase"
         );
+        var appWindowBaseSymbol = context.Compilation.GetTypeByMetadataName(
+            "StabilityMatrix.Avalonia.Controls.AppWindowBase"
+        );
         var viewAttributeSymbol = context.Compilation.GetTypeByMetadataName(
             "StabilityMatrix.Core.Attributes.ViewAttribute"
         );
@@ -135,8 +138,10 @@ public class ViewModelControlConventionAnalyzer : DiagnosticAnalyzer
                 var inheritsTemplatedControlBase =
                     templatedControlBaseSymbol != null
                     && DoesInheritFrom(controlTypeSymbol, templatedControlBaseSymbol);
+                var inheritsAppWindowBase =
+                    appWindowBaseSymbol != null && DoesInheritFrom(controlTypeSymbol, appWindowBaseSymbol);
 
-                if (!inheritsUserControlBase && !inheritsTemplatedControlBase)
+                if (!inheritsUserControlBase && !inheritsTemplatedControlBase && !inheritsAppWindowBase)
                 {
                     var location = directViewAttribute.ApplicationSyntaxReference?.GetSyntax(
                         context.CancellationToken

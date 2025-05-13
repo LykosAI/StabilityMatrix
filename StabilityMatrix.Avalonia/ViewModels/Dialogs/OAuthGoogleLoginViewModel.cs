@@ -9,6 +9,7 @@ using DeviceId.Encoders;
 using Injectio.Attributes;
 using MessagePipe;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSec.Cryptography;
 using Refit;
 using StabilityMatrix.Avalonia.Services;
@@ -17,6 +18,7 @@ using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api.Lykos;
+using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -29,7 +31,8 @@ public class OAuthGoogleLoginViewModel(
     IDistributedSubscriber<string, Uri> uriHandlerSubscriber,
     ILogger<OAuthGoogleLoginViewModel> logger,
     ILykosAuthApiV1 lykosAuthApi,
-    IAccountsService accountsService
+    IAccountsService accountsService,
+    IOptions<ApiOptions> apiOptions
 ) : OAuthLoginViewModel(baseLogger, uriHandlerSubscriber)
 {
     private string? challenge;
@@ -137,7 +140,7 @@ public class OAuthGoogleLoginViewModel(
     {
         (challenge, verifier) = GeneratePkceSha256ChallengePair();
 
-        var redirectUri = new Uri(App.LykosAuthApiBaseUrl).Append("/api/open/sm/oauth/google/callback");
+        var redirectUri = apiOptions.Value.LykosAuthApiBaseUrl.Append("/api/open/sm/oauth/google/callback");
 
         logger.LogDebug("Requesting Google OAuth URL...");
 

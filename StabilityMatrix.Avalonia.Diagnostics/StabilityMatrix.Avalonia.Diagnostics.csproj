@@ -1,10 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
+    <Import Project="..\ConditionalSymbols.props" />
+    <Import Project="..\Runtimes.Default.props" />
+    
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
-        <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
     </PropertyGroup>

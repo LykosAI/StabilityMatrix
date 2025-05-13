@@ -391,12 +391,11 @@ public class BetterContentDialog : ContentDialog
         }
 
         // Also call the vm's OnLoad
-        if (Content is Control { DataContext: ViewModelBase viewModel })
+        // (UserControlBase handles this now, so we don't need to)
+        /*if (Content is Control { DataContext: ViewModelBase viewModel })
         {
             viewModel.OnLoaded();
-
-            // idk what else is calling this but this makes it get called twice??
-            // Dispatcher.UIThread.InvokeAsync(viewModel.OnLoadedAsync).SafeFireAndForget();
-        }
+            Dispatcher.UIThread.InvokeAsync(viewModel.OnLoadedAsync).SafeFireAndForget();
+        }*/
     }
 }

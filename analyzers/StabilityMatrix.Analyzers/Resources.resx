@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="SM0001_Title" xml:space="preserve">
+        <value>Control associated with ViewModelBase must inherit UserControlBase or TemplatedControlBase</value>
+    </data>
+    <data name="SM0001_MessageFormat" xml:space="preserve">
+        <value>Control '{0}' must inherit from '{2}' or '{3}' because its associated ViewModel '{1}' inherits from ViewModelBase</value>
+    </data>
+    <data name="SM0001_Description" xml:space="preserve">
+        <value>ViewModels inheriting from ViewModelBase rely on lifecycle methods (OnLoaded/OnUnloaded) called by UserControlBase or TemplatedControlBase. Ensure the control specified in the [View] attribute inherits from one of these.</value>
+    </data>
+    <data name="SM0002_Title" xml:space="preserve">
+        <value>ViewModel inheriting ViewModelBase should have a [View] attribute</value>
+    </data>
+    <data name="SM0002_MessageFormat" xml:space="preserve">
+        <value>ViewModel '{0}' inherits from ViewModelBase but does not have a [View(...)] attribute to specify its corresponding control</value>
+    </data>
+    <data name="SM0002_Description" xml:space="preserve">
+        <value>Concrete ViewModels inheriting from ViewModelBase should specify their associated UI control via the [View(typeof(YourControl))] attribute.</value>
+    </data>
+</root>

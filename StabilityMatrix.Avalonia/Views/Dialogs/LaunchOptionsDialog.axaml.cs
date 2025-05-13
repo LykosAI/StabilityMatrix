@@ -1,11 +1,11 @@
-﻿using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+﻿using Avalonia.Markup.Xaml;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Controls;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
 [RegisterTransient<LaunchOptionsDialog>]
-public partial class LaunchOptionsDialog : UserControl
+public partial class LaunchOptionsDialog : UserControlBase
 {
     public LaunchOptionsDialog()
     {

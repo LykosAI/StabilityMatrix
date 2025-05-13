@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Net;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
@@ -57,11 +54,11 @@ public partial class LykosLoginViewModel(
 
     public string SignupFooterMarkdown { get; } =
         """
-                                                  By signing up, you are creating a
-                                                  [lykos.ai](https://lykos.ai) Account and agree to our
-                                                  [Terms](https://lykos.ai/terms-and-conditions) and
-                                                  [Privacy Policy](https://lykos.ai/privacy)
-                                                  """;
+            By signing up, you are creating a
+            [lykos.ai](https://lykos.ai) Account and agree to our
+            [Terms](https://lykos.ai/terms-and-conditions) and
+            [Privacy Policy](https://lykos.ai/privacy)
+            """;
 
     private bool CanExecuteContinueButtonClick()
     {
@@ -90,12 +87,11 @@ public partial class LykosLoginViewModel(
         {
             LoginError = e.StatusCode switch
             {
-                HttpStatusCode.Unauthorized
-                    => new AppException(
-                        "Incorrect email or password",
-                        "Please try again or reset your password"
-                    ),
-                _ => new AppException("Failed to login", $"{e.StatusCode} - {e.Message}")
+                HttpStatusCode.Unauthorized => new AppException(
+                    "Incorrect email or password",
+                    "Please try again or reset your password"
+                ),
+                _ => new AppException("Failed to login", $"{e.StatusCode} - {e.Message}"),
             };
         }
     }
@@ -136,7 +132,7 @@ public partial class LykosLoginViewModel(
         dialog.Buttons = new List<TaskDialogButton>
         {
             GetCommandButton(Resources.Action_Continue, ContinueButtonClickCommand),
-            GetCloseButton()
+            GetCloseButton(),
         };
         return dialog;
     }

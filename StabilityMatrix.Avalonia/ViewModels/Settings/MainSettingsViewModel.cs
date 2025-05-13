@@ -97,7 +97,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private string? selectedTheme;
 
-    public IReadOnlyList<string> AvailableThemes { get; } = new[] { "Light", "Dark", "System", };
+    public IReadOnlyList<string> AvailableThemes { get; } = new[] { "Light", "Dark", "System" };
 
     [ObservableProperty]
     private CultureInfo selectedLanguage;
@@ -112,7 +112,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         Enum.GetValues<NumberFormatMode>().Where(mode => mode != default).ToList();
 
     public IReadOnlyList<float> AnimationScaleOptions { get; } =
-        new[] { 0f, 0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f, };
+        new[] { 0f, 0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f };
 
     public IReadOnlyList<HolidayMode> HolidayModes { get; } = Enum.GetValues<HolidayMode>().ToList();
 
@@ -179,8 +179,10 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private MemoryInfo memoryInfo;
 
-    private readonly DispatcherTimer hardwareInfoUpdateTimer =
-        new() { Interval = TimeSpan.FromSeconds(2.627) };
+    private readonly DispatcherTimer hardwareInfoUpdateTimer = new()
+    {
+        Interval = TimeSpan.FromSeconds(2.627),
+    };
 
     public Task<CpuInfo> CpuInfoAsync => HardwareHelper.GetCpuInfoAsync();
 
@@ -343,8 +345,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
         var gpuInfos = HardwareHelper.IterGpuInfo();
         GpuInfoCollection = new ObservableCollection<GpuInfo>(gpuInfos);
         PreferredGpu ??=
-            GpuInfos.FirstOrDefault(
-                gpu => gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
+            GpuInfos.FirstOrDefault(gpu =>
+                gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
             ) ?? GpuInfos.FirstOrDefault();
 
         // Start accounts update
@@ -405,7 +407,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         {
             "Dark" => ThemeVariant.Dark,
             "Light" => ThemeVariant.Light,
-            _ => ThemeVariant.Default
+            _ => ThemeVariant.Default,
         };
     }
 
@@ -428,7 +430,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 Content = Resources.Text_RelaunchRequiredToApplyLanguage,
                 DefaultButton = ContentDialogButton.Primary,
                 PrimaryButtonText = Resources.Action_Relaunch,
-                CloseButtonText = Resources.Action_RelaunchLater
+                CloseButtonText = Resources.Action_RelaunchLater,
             };
 
             Dispatcher.UIThread.InvokeAsync(async () =>
@@ -496,13 +498,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             current.Select(kvp => new EnvVarKeyPair(kvp.Key, kvp.Value))
         );
 
-        var dialog = new BetterContentDialog
-        {
-            Content = new EnvVarsDialog { DataContext = viewModel },
-            PrimaryButtonText = Resources.Action_Save,
-            IsPrimaryButtonEnabled = true,
-            CloseButtonText = Resources.Action_Cancel,
-        };
+        var dialog = viewModel.GetDialog();
 
         if (await dialog.ShowAsync() == ContentDialogResult.Primary)
         {
@@ -539,7 +535,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             Title = Resources.Label_PythonVersionInfo,
             Content = result,
             PrimaryButtonText = Resources.Action_OK,
-            IsPrimaryButtonEnabled = true
+            IsPrimaryButtonEnabled = true,
         };
         await dialog.ShowAsync();
     }
@@ -568,7 +564,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             FileName = processPath,
             Args = dialogResult.Value.Text,
             WorkingDirectory = Compat.AppCurrentDir,
-            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary()
+            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary(),
         };
 
         ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
@@ -607,7 +603,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             FileName = processPath,
             Args = dialogResult.Value.Text,
             WorkingDirectory = Compat.AppCurrentDir,
-            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary()
+            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary(),
         };
 
         ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
@@ -646,8 +642,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 Resources.Label_AppData
             ),
             new CommandItem(
-                new AsyncRelayCommand(
-                    () => ProcessRunner.OpenFolderBrowser(Compat.AppDataHome.JoinDir("Logs"))
+                new AsyncRelayCommand(() =>
+                    ProcessRunner.OpenFolderBrowser(Compat.AppDataHome.JoinDir("Logs"))
                 ),
                 Resources.Label_Logs
             ),
@@ -660,11 +656,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 Resources.Label_Checkpoints
             ),
             new CommandItem(
-                new AsyncRelayCommand(
-                    () => ProcessRunner.OpenFolderBrowser(settingsManager.LibraryDir.JoinDir("Packages"))
+                new AsyncRelayCommand(() =>
+                    ProcessRunner.OpenFolderBrowser(settingsManager.LibraryDir.JoinDir("Packages"))
                 ),
                 Resources.Label_Packages
-            )
+            ),
         ];
 
     #endregion
@@ -724,7 +720,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             Content = "You will be prompted for administrator privileges. Continue?",
             PrimaryButtonText = Resources.Action_Yes,
             CloseButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary,
         };
 
         if (await dialog.ShowAsync() != ContentDialogResult.Primary)
@@ -793,7 +789,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
-            Content = new SelectDataDirectoryDialog { DataContext = viewModel }
+            Content = new SelectDataDirectoryDialog { DataContext = viewModel },
         };
 
         var result = await dialog.ShowAsync();
@@ -861,15 +857,15 @@ public partial class MainSettingsViewModel : PageViewModelBase
         var assembly = Assembly.GetExecutingAssembly();
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         DebugPaths = $"""
-                      Current Working Directory [Environment.CurrentDirectory]
-                        "{Environment.CurrentDirectory}"
-                      App Directory [Assembly.GetExecutingAssembly().Location]
-                        "{assembly.Location}"
-                      App Directory [AppContext.BaseDirectory]
-                        "{AppContext.BaseDirectory}"
-                      AppData Directory [SpecialFolder.ApplicationData]
-                        "{appData}"
-                      """;
+            Current Working Directory [Environment.CurrentDirectory]
+              "{Environment.CurrentDirectory}"
+            App Directory [Assembly.GetExecutingAssembly().Location]
+              "{assembly.Location}"
+            App Directory [AppContext.BaseDirectory]
+              "{AppContext.BaseDirectory}"
+            AppData Directory [SpecialFolder.ApplicationData]
+              "{appData}"
+            """;
 
         // 1. Check portable mode
         var appDir = Compat.AppCurrentDir;
@@ -877,18 +873,18 @@ public partial class MainSettingsViewModel : PageViewModelBase
         var isPortableMode = File.Exists(expectedPortableFile);
 
         DebugCompatInfo = $"""
-                            Platform: {Compat.Platform}
-                            AppData: {Compat.AppData}
-                            AppDataHome: {Compat.AppDataHome}
-                            AppCurrentDir: {Compat.AppCurrentDir}
-                            ExecutableName: {Compat.GetExecutableName()}
-                            AppName: {Compat.GetAppName()}
-                            -- Settings --
-                            Expected Portable Marker file: {expectedPortableFile}
-                            Portable Marker file exists: {isPortableMode}
-                            IsLibraryDirSet = {settingsManager.IsLibraryDirSet}
-                            IsPortableMode = {settingsManager.IsPortableMode}
-                            """;
+            Platform: {Compat.Platform}
+            AppData: {Compat.AppData}
+            AppDataHome: {Compat.AppDataHome}
+            AppCurrentDir: {Compat.AppCurrentDir}
+            ExecutableName: {Compat.GetExecutableName()}
+            AppName: {Compat.GetAppName()}
+            -- Settings --
+            Expected Portable Marker file: {expectedPortableFile}
+            Portable Marker file exists: {isPortableMode}
+            IsLibraryDirSet = {settingsManager.IsLibraryDirSet}
+            IsPortableMode = {settingsManager.IsPortableMode}
+            """;
 
         // Get Gpu info
         var gpuInfo = "";
@@ -920,7 +916,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             DefaultButton = ContentDialogButton.Primary,
             Title = "Test title",
             PrimaryButtonText = Resources.Action_OK,
-            CloseButtonText = Resources.Action_Close
+            CloseButtonText = Resources.Action_Close,
         };
 
         var result = await dialog.ShowAsync();
@@ -968,7 +964,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
 
         var bitmap = WriteableBitmap.Decode(stream);
 
-        var galleryImages = new List<ImageSource> { new(bitmap), };
+        var galleryImages = new List<ImageSource> { new(bitmap) };
         galleryImages.AddRange(files.Select(f => new ImageSource(f.Path.ToString())));
 
         var imageBox = new ImageGalleryCard
@@ -978,7 +974,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             DataContext = dialogFactory.Get<ImageGalleryCardViewModel>(vm =>
             {
                 vm.ImageSources.AddRange(galleryImages);
-            })
+            }),
         };
 
         var dialog = new BetterContentDialog
@@ -1045,8 +1041,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
     {
         var textFields = new TextBoxField[]
         {
-            new() { Label = "Url", },
-            new() { Label = "File path" }
+            new() { Label = "Url" },
+            new() { Label = "File path" },
         };
 
         var dialog = DialogHelper.CreateTextEntryDialog("Add download", "", textFields);
@@ -1080,7 +1076,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         var textFields = new TextBoxField[]
         {
             new() { Label = "Source" },
-            new() { Label = "Destination" }
+            new() { Label = "Destination" },
         };
 
         var dialog = DialogHelper.CreateTextEntryDialog("Robocopy", "", textFields);
@@ -1161,7 +1157,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             GitVersionProvider = new CachedCommandGitVersionProvider(
                 "https://github.com/ltdrdata/ComfyUI-Manager",
                 prerequisiteHelper
-            )
+            ),
         };
         var dialog = vm.GetDialog();
 
@@ -1229,7 +1225,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         var textFields = new TextBoxField[]
         {
             new() { Label = "Blake3 Hash" },
-            new() { Label = "SharedFolderType" }
+            new() { Label = "SharedFolderType" },
         };
 
         var dialog = DialogHelper.CreateTextEntryDialog("Find Local Model", "", textFields);
@@ -1330,7 +1326,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             {
                 Title = "Test Notification",
                 Body = "Here is some message",
-                Buttons = { ("Action", "__Debug_Action"), ("Close", "__Debug_Close"), }
+                Buttons = { ("Action", "__Debug_Action"), ("Close", "__Debug_Close") },
             }
         );
     }
@@ -1360,8 +1356,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
         if (files.Count == 0)
             return;
 
-        var images = await Task.Run(
-            () => files.Select(f => LocalImageFile.FromPath(f.TryGetLocalPath()!)).ToList()
+        var images = await Task.Run(() =>
+            files.Select(f => LocalImageFile.FromPath(f.TryGetLocalPath()!)).ToList()
         );
 
         var successfulFiles = new List<LocalImageFile>();
@@ -1449,7 +1445,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             {
                 Title = Resources.Label_ChangesApplied,
                 Content = Resources.Text_RestartMayBeRequiredForSystemChanges,
-                CloseButtonText = Resources.Action_Close
+                CloseButtonText = Resources.Action_Close,
             }.ShowAsync();
         }
         catch (Win32Exception e)

@@ -11,14 +11,23 @@ public enum CivitBaseModelType
     [StringValue("AuraFlow")]
     AuraFlow,
 
+    [StringValue("CogVideoX")]
+    CogVideoX,
+
     [StringValue("Flux.1 S")]
     Flux1S,
 
     [StringValue("Flux.1 D")]
     Flux1D,
 
+    [StringValue("HiDream")]
+    HiDream,
+
     [StringValue("Hunyuan 1")]
     Hunyuan1,
+
+    [StringValue("Hunyuan Video")]
+    HunyuanVideo,
 
     [StringValue("Illustrious")]
     Illustrious,
@@ -26,11 +35,20 @@ public enum CivitBaseModelType
     [StringValue("Kolors")]
     Kolors,
 
+    [StringValue("LTXV")]
+    Ltxv,
+
     [StringValue("Lumina")]
     Lumina,
 
     [StringValue("Mochi")]
     Mochi,
+
+    [StringValue("NoobAI")]
+    NoobAi,
+
+    [StringValue("ODOR")]
+    Odor,
 
     [StringValue("PixArt a")]
     PixArtA,
@@ -38,17 +56,38 @@ public enum CivitBaseModelType
     [StringValue("PixArt E")]
     PixArtE,
 
+    [StringValue("Playground v2")]
+    PlaygroundV2,
+
     [StringValue("Pony")]
     Pony,
+
+    [StringValue("SD 1.4")]
+    Sd14,
 
     [StringValue("SD 1.5")]
     Sd15,
 
+    [StringValue("SD 1.5 Hyper")]
+    Sd15Hyper,
+
     [StringValue("SD 1.5 LCM")]
     Sd15Lcm,
 
+    [StringValue("SD 2.0")]
+    Sd20,
+
+    [StringValue("SD 2.0 768")]
+    Sd20_768,
+
     [StringValue("SD 2.1")]
     Sd21,
+
+    [StringValue("SD 2.1 768")]
+    Sd21_768,
+
+    [StringValue("SD 2.1 Unclip")]
+    Sd21Unclip,
 
     [StringValue("SD 3")]
     Sd3,
@@ -89,8 +128,14 @@ public enum CivitBaseModelType
     [StringValue("SVD")]
     SVD,
 
+    [StringValue("SVD XT")]
+    SvdXt,
+
     [StringValue("Stable Cascade")]
     StableCascade,
+
+    [StringValue("Wan Video")]
+    WanVideo,
 
     Other,
 }

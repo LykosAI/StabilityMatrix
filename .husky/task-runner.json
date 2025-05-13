@@ -4,7 +4,7 @@
          "name": "Run csharpier",
          "group": "pre-commit",
          "command": "dotnet",
-         "args": [ "csharpier", "${staged}" ],
+         "args": [ "csharpier", "format", "${staged}" ],
          "include": [ "**/*.cs" ]
       }, 
       {

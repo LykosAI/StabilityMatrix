@@ -301,6 +301,20 @@ public class SettingsManager(ILogger<SettingsManager> logger) : ISettingsManager
             });
     }
 
+    /// <inheritdoc />
+    public IObservable<T> ObservePropertyChanged<T>(Expression<Func<Settings, T>> settingsProperty)
+    {
+        var settingsAccessor = CompiledExpression.CreateAccessor(settingsProperty);
+
+        return Observable
+            .FromEventPattern<EventHandler<RelayPropertyChangedEventArgs>, RelayPropertyChangedEventArgs>(
+                h => SettingsPropertyChanged += h,
+                h => SettingsPropertyChanged -= h
+            )
+            .Where(args => args.EventArgs.PropertyName == settingsAccessor.FullName)
+            .Select(_ => settingsAccessor.Get(Settings));
+    }
+
     /// <summary>
     /// Attempts to locate and set the library path
     /// Return true if found, false otherwise

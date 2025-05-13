@@ -7,7 +7,7 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <ApplicationIcon>./Assets/Icon.ico</ApplicationIcon>
-        <Version>2.14.0-dev.999</Version>
+        <Version>2.15.0-dev.999</Version>
         <InformationalVersion>$(Version)</InformationalVersion>
         <EnableWindowsTargeting>true</EnableWindowsTargeting>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -164,10 +164,18 @@
     <ItemGroup>
         <ProjectReference Include="..\Avalonia.Gif\Avalonia.Gif.csproj" />
         <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
+        <ProjectReference Include="..\analyzers\StabilityMatrix.Analyzers\StabilityMatrix.Analyzers.csproj"
+                          PrivateAssets="all"
+                          ReferenceOutputAssembly="false"
+                          OutputItemType="Analyzer" />
+        <ProjectReference Include="..\analyzers\StabilityMatrix.Analyzers.CodeFixes\StabilityMatrix.Analyzers.CodeFixes.csproj"
+                          PrivateAssets="all"
+                          ReferenceOutputAssembly="false"
+                          OutputItemType="Analyzer" />
     </ItemGroup>
 
-    <ItemGroup>
-      <ProjectReference Condition="'$(Configuration)' == 'Debug'" Include="..\StabilityMatrix.Avalonia.Diagnostics\StabilityMatrix.Avalonia.Diagnostics.csproj" />
+    <ItemGroup Condition="$(SM_IncludeLogWindow) == 'true'">
+        <ProjectReference Include="..\StabilityMatrix.Avalonia.Diagnostics\StabilityMatrix.Avalonia.Diagnostics.csproj" />
     </ItemGroup>
     
     <ItemGroup>

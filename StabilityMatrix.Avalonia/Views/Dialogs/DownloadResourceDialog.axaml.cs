@@ -1,14 +1,14 @@
-﻿using Avalonia.Controls;
-using Avalonia.Input;
+﻿using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
 [RegisterTransient<DownloadResourceDialog>]
-public partial class DownloadResourceDialog : UserControl
+public partial class DownloadResourceDialog : UserControlBase
 {
     public DownloadResourceDialog()
     {

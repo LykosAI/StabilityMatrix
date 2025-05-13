@@ -164,6 +164,14 @@
     <ItemGroup>
         <ProjectReference Include="..\Avalonia.Gif\Avalonia.Gif.csproj" />
         <ProjectReference Include="..\StabilityMatrix.Core\StabilityMatrix.Core.csproj" />
+        <ProjectReference Include="..\analyzers\StabilityMatrix.Analyzers\StabilityMatrix.Analyzers.csproj"
+                          PrivateAssets="all"
+                          ReferenceOutputAssembly="false"
+                          OutputItemType="Analyzer" />
+        <ProjectReference Include="..\analyzers\StabilityMatrix.Analyzers.CodeFixes\StabilityMatrix.Analyzers.CodeFixes.csproj"
+                          PrivateAssets="all"
+                          ReferenceOutputAssembly="false"
+                          OutputItemType="Analyzer" />
     </ItemGroup>
 
     <ItemGroup Condition="$(SM_IncludeLogWindow) == 'true'">

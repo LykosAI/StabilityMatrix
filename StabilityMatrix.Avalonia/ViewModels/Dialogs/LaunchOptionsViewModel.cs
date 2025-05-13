@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.ComponentModel;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using FuzzySharp;
 using Injectio.Attributes;
@@ -58,7 +54,7 @@ public partial class LaunchOptionsViewModel : ContentDialogViewModelBase
         {
             Title = text.ToLowerInvariant(),
             Type = LaunchOptionType.Bool,
-            Options = Array.Empty<LaunchOption>()
+            Options = Array.Empty<LaunchOption>(),
         };
 
         var extracted = Process.ExtractTop(searchCard, Cards, c => c.Title.ToLowerInvariant());

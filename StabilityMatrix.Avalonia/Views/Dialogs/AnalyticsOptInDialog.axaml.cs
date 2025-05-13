@@ -1,11 +1,11 @@
-﻿using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+﻿using Avalonia.Markup.Xaml;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Controls;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
 [RegisterTransient<AnalyticsOptInDialog>]
-public partial class AnalyticsOptInDialog : UserControl
+public partial class AnalyticsOptInDialog : UserControlBase
 {
     public AnalyticsOptInDialog()
     {

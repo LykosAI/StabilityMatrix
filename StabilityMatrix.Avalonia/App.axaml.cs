@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
@@ -30,6 +27,7 @@ using MessagePipe.Interprocess.Workers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NLog;
 using NLog.Config;
 using NLog.Extensions.Logging;
@@ -45,6 +43,7 @@ using Refit;
 using StabilityMatrix.Avalonia.Behaviors;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Logging;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels;
@@ -66,7 +65,9 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
+using ApiOptions = StabilityMatrix.Core.Models.Configs.ApiOptions;
 using Application = Avalonia.Application;
+using Debug = System.Diagnostics.Debug;
 using Logger = NLog.Logger;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 using ProductHeaderValue = Octokit.ProductHeaderValue;
@@ -111,38 +112,6 @@ public sealed class App : Application
     [NotNull]
     public static IConfiguration? Config { get; private set; }
 
-#if DEBUG
-    // ReSharper disable twice LocalizableElement
-    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-    public static string LykosAuthApiBaseUrl => Config?["LykosAuthApiBaseUrl"] ?? "https://auth.lykos.ai";
-#else
-    public const string LykosAuthApiBaseUrl = "https://auth.lykos.ai";
-#endif
-#if DEBUG
-    // ReSharper disable twice LocalizableElement
-    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-    public static string LykosAnalyticsApiBaseUrl =>
-        Config?["LykosAnalyticsApiBaseUrl"] ?? "https://analytics.lykos.ai";
-#else
-    public const string LykosAnalyticsApiBaseUrl = "https://analytics.lykos.ai";
-#endif
-#if DEBUG
-    // ReSharper disable twice LocalizableElement
-    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-    public static string LykosAccountApiBaseUrl =>
-        Config?["LykosAccountApiBaseUrl"] ?? "https://account.lykos.ai/";
-#else
-    public const string LykosAccountApiBaseUrl = "https://account.lykos.ai/";
-#endif
-#if DEBUG
-    // ReSharper disable twice LocalizableElement
-    // ReSharper disable once ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-    public static string PromptGenApiBaseUrl =>
-        Config?["PromptGenApiBaseUrl"] ?? "https://promptgen.lykos.ai/api";
-#else
-    public const string PromptGenApiBaseUrl = "https://promptgen.lykos.ai/api";
-#endif
-
     // ReSharper disable once MemberCanBePrivate.Global
     public IClassicDesktopStyleApplicationLifetime? DesktopLifetime =>
         ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
@@ -177,16 +146,6 @@ public sealed class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // Remove DataAnnotations validation plugin since we're using INotifyDataErrorInfo from MvvmToolkit
-        var dataValidationPluginsToRemove = BindingPlugins
-            .DataValidators.OfType<DataAnnotationsValidationPlugin>()
-            .ToArray();
-
-        foreach (var plugin in dataValidationPluginsToRemove)
-        {
-            BindingPlugins.DataValidators.Remove(plugin);
-        }
-
         base.OnFrameworkInitializationCompleted();
 
         if (Design.IsDesignMode)
@@ -197,6 +156,16 @@ public sealed class App : Application
         else
         {
             ConfigureServiceProvider();
+        }
+
+        // Remove DataAnnotations validation plugin since we're using INotifyDataErrorInfo from MvvmToolkit
+        var dataValidationPluginsToRemove = BindingPlugins
+            .DataValidators.OfType<DataAnnotationsValidationPlugin>()
+            .ToArray();
+
+        foreach (var plugin in dataValidationPluginsToRemove)
+        {
+            BindingPlugins.DataValidators.Remove(plugin);
         }
 
         if (DesktopLifetime is not null)
@@ -401,14 +370,60 @@ public sealed class App : Application
         });
     }
 
-    internal static IServiceCollection ConfigureServices()
+    [MemberNotNull(nameof(Config))]
+    internal static IServiceCollection ConfigureServices(bool disableMessagePipeInterprocess = false)
     {
         var services = new ServiceCollection();
+
+        // --- Configuration ---
+        Config = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables()
+            .Build();
+
+        services.AddOptions();
+        services.AddSingleton(Config);
+
+        services.Configure<DebugOptions>(Config.GetSection("Debug"));
+        services.Configure<ApiOptions>(Config.GetSection("Api"));
+
+        var apiOptions = Config.GetSection("Api").Get<ApiOptions>() ?? new ApiOptions();
+
+        // --- Logging ---
+        ConditionalAddLogViewer(services);
+        var logConfig = ConfigureLogging();
+
+        services.AddLogging(builder =>
+        {
+            // builder.ClearProviders();
+            builder
+                .AddFilter("Microsoft.Extensions.Http", LogLevel.Warning)
+                .AddFilter("Microsoft.Extensions.Http.DefaultHttpClientFactory", LogLevel.Warning)
+                .AddFilter("Microsoft", LogLevel.Warning)
+                .AddFilter("System", LogLevel.Warning);
+
+            builder.SetMinimumLevel(LogLevel.Trace);
+
+#if SM_LOG_WINDOW
+            builder.AddNLog(
+                logConfig,
+                new NLogProviderOptions
+                {
+                    IgnoreEmptyEventId = false,
+                    CaptureEventId = EventIdCaptureType.Legacy,
+                }
+            );
+#else
+            builder.AddNLog(logConfig);
+#endif
+        });
+
+        // --- Services ---
         services.AddMemoryCache();
         services.AddLazyInstance();
 
         // Named pipe interprocess communication on Windows and Linux for uri handling
-        if (Compat.IsWindows || Compat.IsLinux)
+        if (!disableMessagePipeInterprocess && (Compat.IsWindows || Compat.IsLinux))
         {
             services.AddMessagePipe().AddNamedPipeInterprocess("StabilityMatrix");
         }
@@ -438,14 +453,6 @@ public sealed class App : Application
         services.AddSingleton<IDisposable>(provider =>
             provider.GetRequiredService<IDiscordRichPresenceService>()
         );
-
-        Config = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables()
-            .Build();
-
-        services.Configure<DebugOptions>(Config.GetSection(nameof(DebugOptions)));
 
         if (Compat.IsWindows)
         {
@@ -629,11 +636,14 @@ public sealed class App : Application
 
         services
             .AddRefitClient<ILykosAuthApiV1>(defaultRefitSettings)
-            .ConfigureHttpClient(c =>
-            {
-                c.BaseAddress = new Uri(LykosAuthApiBaseUrl);
-                c.Timeout = TimeSpan.FromHours(1);
-            })
+            .ConfigureHttpClient(
+                (sp, c) =>
+                {
+                    var options = sp.GetRequiredService<IOptions<ApiOptions>>().Value;
+                    c.BaseAddress = options.LykosAuthApiBaseUrl;
+                    c.Timeout = TimeSpan.FromHours(1);
+                }
+            )
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy)
             .AddHttpMessageHandler(serviceProvider => new TokenAuthHeaderHandler(
@@ -642,12 +652,15 @@ public sealed class App : Application
 
         services
             .AddRefitClient<ILykosAuthApiV2>(defaultRefitSettings)
-            .ConfigureHttpClient(c =>
-            {
-                c.BaseAddress = new Uri(LykosAuthApiBaseUrl);
-                c.Timeout = TimeSpan.FromHours(1);
-                c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
-            })
+            .ConfigureHttpClient(
+                (sp, c) =>
+                {
+                    var options = sp.GetRequiredService<IOptions<ApiOptions>>().Value;
+                    c.BaseAddress = options.LykosAuthApiBaseUrl;
+                    c.Timeout = TimeSpan.FromHours(1);
+                    c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+                }
+            )
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy)
             .AddHttpMessageHandler(serviceProvider => new TokenAuthHeaderHandler(
@@ -656,22 +669,28 @@ public sealed class App : Application
 
         services
             .AddRefitClient<IRecommendedModelsApi>(defaultRefitSettings)
-            .ConfigureHttpClient(c =>
-            {
-                c.BaseAddress = new Uri(LykosAuthApiBaseUrl);
-                c.Timeout = TimeSpan.FromHours(1);
-            })
+            .ConfigureHttpClient(
+                (sp, c) =>
+                {
+                    var options = sp.GetRequiredService<IOptions<ApiOptions>>().Value;
+                    c.BaseAddress = options.LykosAuthApiBaseUrl;
+                    c.Timeout = TimeSpan.FromHours(1);
+                }
+            )
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy);
 
         services
             .AddRefitClient<IPromptGenApi>(defaultRefitSettings)
-            .ConfigureHttpClient(c =>
-            {
-                c.BaseAddress = new Uri(PromptGenApiBaseUrl);
-                c.Timeout = TimeSpan.FromHours(1);
-                c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
-            })
+            .ConfigureHttpClient(
+                (sp, c) =>
+                {
+                    var options = sp.GetRequiredService<IOptions<ApiOptions>>().Value;
+                    c.BaseAddress = options.LykosPromptGenApiBaseUrl;
+                    c.Timeout = TimeSpan.FromHours(1);
+                    c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "");
+                }
+            )
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy)
             .AddHttpMessageHandler(serviceProvider => new TokenAuthHeaderHandler(
@@ -680,11 +699,14 @@ public sealed class App : Application
 
         services
             .AddRefitClient<ILykosAnalyticsApi>(defaultRefitSettings)
-            .ConfigureHttpClient(c =>
-            {
-                c.BaseAddress = new Uri(LykosAnalyticsApiBaseUrl);
-                c.Timeout = TimeSpan.FromMinutes(5);
-            })
+            .ConfigureHttpClient(
+                (sp, c) =>
+                {
+                    var options = sp.GetRequiredService<IOptions<ApiOptions>>().Value;
+                    c.BaseAddress = options.LykosAnalyticsApiBaseUrl;
+                    c.Timeout = TimeSpan.FromMinutes(5);
+                }
+            )
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
             .AddPolicyHandler(retryPolicy);
 
@@ -746,7 +768,7 @@ public sealed class App : Application
                     new OpenIddictClientRegistration
                     {
                         ProviderName = OpenIdClientConstants.LykosAccount.ProviderName,
-                        Issuer = new Uri(LykosAccountApiBaseUrl),
+                        Issuer = apiOptions.LykosAccountApiBaseUrl,
                         ClientId = "ai.lykos.stabilitymatrix",
                         Scopes =
                         {
@@ -760,34 +782,6 @@ public sealed class App : Application
                     }
                 );
             });
-
-        ConditionalAddLogViewer(services);
-
-        var logConfig = ConfigureLogging();
-
-        // Add logging
-        services.AddLogging(builder =>
-        {
-            builder.ClearProviders();
-            builder
-                .AddFilter("Microsoft.Extensions.Http", LogLevel.Warning)
-                .AddFilter("Microsoft.Extensions.Http.DefaultHttpClientFactory", LogLevel.Warning)
-                .AddFilter("Microsoft", LogLevel.Warning)
-                .AddFilter("System", LogLevel.Warning);
-            builder.SetMinimumLevel(LogLevel.Trace);
-#if DEBUG
-            builder.AddNLog(
-                logConfig,
-                new NLogProviderOptions
-                {
-                    IgnoreEmptyEventId = false,
-                    CaptureEventId = EventIdCaptureType.Legacy,
-                }
-            );
-#else
-            builder.AddNLog(logConfig);
-#endif
-        });
 
         return services;
     }
@@ -1022,12 +1016,19 @@ public sealed class App : Application
 
         ConditionalAddLogViewerNLog(setupBuilder);
 
+        LogManager
+            .Setup()
+            .SetupExtensions(builder => builder.RegisterTarget<RichConsoleTarget>("RichConsole"));
+
+        setupBuilder.LoadConfigurationFromSection(Config);
         setupBuilder.LoadConfiguration(builder =>
         {
-            // Filter some sources to be warn levels or above only
+            // Filter some sources to be 'Warn' level or above only
             builder.ForLogger("System.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.*").WriteToNil(NLog.LogLevel.Warn);
             builder.ForLogger("Microsoft.Extensions.Http.*").WriteToNil(NLog.LogLevel.Warn);
+            // Info or above
+            builder.ForLogger("OpenIddict.*").WriteToNil(NLog.LogLevel.Warn);
 
             // Disable some trace logging by default, unless overriden by app settings
             var typesToDisableTrace = new[]
@@ -1069,80 +1070,21 @@ public sealed class App : Application
             }*/
 
             // Console logging
-            builder
-                .ForLogger()
-                .FilterMinLevel(NLog.LogLevel.Trace)
-                .WriteTo(
-                    new ColoredConsoleTarget("console")
-                    {
-                        Layout =
-                            "[${level:uppercase=true}]\t${logger:shortName=true}\t${message}${onexception:\n${exception:format=tostring}}",
-                        DetectConsoleAvailable = true,
-                        EnableAnsiOutput = true,
-                        WordHighlightingRules =
-                        {
-                            new ConsoleWordHighlightingRule(
-                                "[TRACE]",
-                                ConsoleOutputColor.DarkGray,
-                                ConsoleOutputColor.NoChange
-                            ),
-                            new ConsoleWordHighlightingRule(
-                                "[DEBUG]",
-                                ConsoleOutputColor.Gray,
-                                ConsoleOutputColor.NoChange
-                            ),
-                            new ConsoleWordHighlightingRule(
-                                "[INFO]",
-                                ConsoleOutputColor.DarkGreen,
-                                ConsoleOutputColor.NoChange
-                            ),
-                            new ConsoleWordHighlightingRule(
-                                "[WARN]",
-                                ConsoleOutputColor.Yellow,
-                                ConsoleOutputColor.NoChange
-                            ),
-                            new ConsoleWordHighlightingRule(
-                                "[ERROR]",
-                                ConsoleOutputColor.White,
-                                ConsoleOutputColor.Red
-                            ),
-                            new ConsoleWordHighlightingRule(
-                                "[FATAL]",
-                                ConsoleOutputColor.Black,
-                                ConsoleOutputColor.DarkRed
-                            ),
-                        },
-                        RowHighlightingRules =
-                        {
-                            new ConsoleRowHighlightingRule(
-                                "level == LogLevel.Trace",
-                                ConsoleOutputColor.Gray,
-                                ConsoleOutputColor.NoChange
-                            ),
-                        },
-                    }
-                )
-                .WithAsync();
+            var consoleTarget = new RichConsoleTarget("console") { Theme = RichNLogTheme.Code2 };
+            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Trace).WriteTo(consoleTarget).WithAsync();
 
             // File logging
-            builder
-                .ForLogger()
-                .FilterMinLevel(NLog.LogLevel.Debug)
-                .WriteTo(
-                    new FileTarget("logfile")
-                    {
-                        Layout =
-                            "${longdate}|${level:uppercase=true}|${logger}|${message:withexception=true}",
-                        FileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/Logs/app.log",
-                        ArchiveOldFileOnStartup = true,
-                        ArchiveFileName =
-                            "${specialfolder:folder=ApplicationData}/StabilityMatrix/Logs/app.{#}.log",
-                        ArchiveDateFormat = "yyyy-MM-dd HH_mm_ss",
-                        ArchiveNumbering = ArchiveNumberingMode.Date,
-                        MaxArchiveFiles = 9,
-                    }
-                )
-                .WithAsync();
+            var fileTarget = new FileTarget("logfile")
+            {
+                Layout = "${longdate}|${level:uppercase=true}|${logger}|${message:withexception=true}",
+                FileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/Logs/app.log",
+                ArchiveOldFileOnStartup = true,
+                ArchiveFileName = "${specialfolder:folder=ApplicationData}/StabilityMatrix/Logs/app.{#}.log",
+                ArchiveDateFormat = "yyyy-MM-dd HH_mm_ss",
+                ArchiveNumbering = ArchiveNumberingMode.Date,
+                MaxArchiveFiles = 9,
+            };
+            builder.ForLogger().FilterMinLevel(NLog.LogLevel.Debug).WriteTo(fileTarget).WithAsync();
 
 #if SM_LOG_WINDOW
             // LogViewer target when debug mode

@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
 using Injectio.Attributes;
+using Microsoft.Extensions.Options;
 using OpenIddict.Client;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
@@ -24,6 +25,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Lykos;
+using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using Symbol = FluentIcons.Common.Symbol;
@@ -42,6 +44,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly INotificationService notificationService;
     private readonly ILykosAuthApiV2 lykosAuthApi;
+    private readonly IOptions<ApiOptions> apiOptions;
 
     /// <inheritdoc />
     public override string Title => "Accounts";
@@ -69,14 +72,16 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private CivitAccountStatusUpdateEventArgs civitStatus = CivitAccountStatusUpdateEventArgs.Disconnected;
 
-    public string LykosAccountManageUrl => new Uri(App.LykosAccountApiBaseUrl).Append("/manage").ToString();
+    public string LykosAccountManageUrl =>
+        apiOptions.Value.LykosAccountApiBaseUrl.Append("/manage").ToString();
 
     public AccountSettingsViewModel(
         IAccountsService accountsService,
         ISettingsManager settingsManager,
         IServiceManager<ViewModelBase> vmFactory,
         INotificationService notificationService,
-        ILykosAuthApiV2 lykosAuthApi
+        ILykosAuthApiV2 lykosAuthApi,
+        IOptions<ApiOptions> apiOptions
     )
     {
         this.accountsService = accountsService;
@@ -84,6 +89,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         this.vmFactory = vmFactory;
         this.notificationService = notificationService;
         this.lykosAuthApi = lykosAuthApi;
+        this.apiOptions = apiOptions;
 
         accountsService.LykosAccountStatusUpdate += (_, args) =>
         {
@@ -128,15 +134,15 @@ public partial class AccountSettingsViewModel : PageViewModelBase
                 Title = "About Account Credentials",
                 Content = """
                     Account credentials and tokens are stored locally on your computer, with at-rest AES encryption. 
-                    
+
                     If you make changes to your computer hardware, you may need to re-login to your accounts.
-                    
+
                     Account tokens will not be viewable after saving, please make a note of them if you need to use them elsewhere.
                     """,
                 PrimaryButtonText = Resources.Action_Continue,
                 CloseButtonText = Resources.Action_Cancel,
                 DefaultButton = ContentDialogButton.Primary,
-                MaxDialogWidth = 400
+                MaxDialogWidth = 400,
             };
 
             if (await dialog.ShowAsync() != ContentDialogResult.Primary)
@@ -144,8 +150,8 @@ public partial class AccountSettingsViewModel : PageViewModelBase
                 return false;
             }
 
-            settingsManager.Transaction(
-                s => s.SeenTeachingTips.Add(TeachingTip.AccountsCredentialsStorageNotice)
+            settingsManager.Transaction(s =>
+                s.SeenTeachingTips.Add(TeachingTip.AccountsCredentialsStorageNotice)
             );
         }
 
@@ -161,7 +167,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         var vm = vmFactory.Get<OAuthDeviceAuthViewModel>();
         vm.ChallengeRequest = new OpenIddictClientModels.DeviceChallengeRequest
         {
-            ProviderName = OpenIdClientConstants.LykosAccount.ProviderName
+            ProviderName = OpenIdClientConstants.LykosAccount.ProviderName,
         };
         await vm.ShowDialogAsync();
 
@@ -236,15 +242,15 @@ public partial class AccountSettingsViewModel : PageViewModelBase
                     {
                         throw new ValidationException("API key is required");
                     }
-                }
-            }
+                },
+            },
         };
 
         var dialog = DialogHelper.CreateTextEntryDialog(
             "Connect CivitAI Account",
             """
             Login to [CivitAI](https://civitai.com/) and head to your [Account](https://civitai.com/user/account) page
-            
+
             Add a new API key and paste it below
             """,
             "avares://StabilityMatrix.Avalonia/Assets/guide-civitai-api.webp",

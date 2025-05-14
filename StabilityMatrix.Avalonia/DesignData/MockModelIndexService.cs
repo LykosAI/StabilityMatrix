@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Nito.Disposables.Internals;
+﻿using Nito.Disposables.Internals;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Services;
@@ -12,7 +8,23 @@ namespace StabilityMatrix.Avalonia.DesignData;
 public class MockModelIndexService : IModelIndexService
 {
     /// <inheritdoc />
-    public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; } = new();
+    public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; } =
+        new()
+        {
+            [SharedFolderType.Lora] =
+            [
+                new LocalModelFile
+                {
+                    RelativePath = "Lora/mock_model_1.safetensors",
+                    SharedFolderType = SharedFolderType.Lora,
+                },
+                new LocalModelFile
+                {
+                    RelativePath = "Lora/mock_model_2.safetensors",
+                    SharedFolderType = SharedFolderType.Lora,
+                },
+            ],
+        };
 
     /// <inheritdoc />
     public IReadOnlySet<string> ModelIndexBlake3Hashes =>
@@ -27,7 +39,7 @@ public class MockModelIndexService : IModelIndexService
     /// <inheritdoc />
     public IEnumerable<LocalModelFile> FindByModelType(SharedFolderType types)
     {
-        return Array.Empty<LocalModelFile>();
+        return ModelIndex.Where(kvp => (kvp.Key & types) != 0).SelectMany(kvp => kvp.Value);
     }
 
     /// <inheritdoc />

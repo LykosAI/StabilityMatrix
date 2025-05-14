@@ -7,6 +7,7 @@
     xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
     xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:i="clr-namespace:Avalonia.Xaml.Interactivity;assembly=Avalonia.Xaml.Interactivity"
+    xmlns:iconExt="clr-namespace:FluentIcons.Avalonia.Fluent.MarkupExtensions;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
@@ -48,7 +49,8 @@
                                 Grid.Row="0"
                                 Grid.Column="0"
                                 Grid.ColumnSpan="2"
-                                Margin="4,0,4,8"
+                                Margin="4,0,4,4"
+                                VerticalAlignment="Top"
                                 Orientation="Horizontal">
                                 <TextBlock FontSize="14" Text="Prompt" />
                                 <icons:Icon
@@ -60,35 +62,40 @@
                             <StackPanel
                                 Grid.Row="0"
                                 Grid.Column="1"
-                                Margin="0,0,0,4"
+                                Margin="0,-2,0,4"
                                 HorizontalAlignment="Right"
-                                Orientation="Horizontal">
-
-                                <Panel>
-                                    <Button
-                                        x:Name="PART_HelpButton"
-                                        Margin="0,-2,0,0"
-                                        Padding="10,4"
-                                        VerticalAlignment="Top"
-                                        VerticalContentAlignment="Top"
-                                        icons:Attached.Icon="fa-solid fa-question"
-                                        Classes="transparent-full"
-                                        Command="{Binding ShowHelpDialogCommand}" />
-
-                                    <ui:TeachingTip
-                                        Title="{x:Static lang:Resources.TeachingTip_InferencePromptHelpButton}"
-                                        IsOpen="{Binding IsHelpButtonTeachingTipOpen, Mode=TwoWay}"
-                                        Target="{Binding #PART_HelpButton}" />
-                                </Panel>
-
+                                VerticalAlignment="Top"
+                                Orientation="Horizontal"
+                                Spacing="0">
+                                <StackPanel.Styles>
+                                    <!--  Set Button Stuff  -->
+                                    <Style Selector="StackPanel &gt; Button">
+                                        <Setter Property="Padding" Value="6,4" />
+                                        <Setter Property="Height" Value="24" />
+                                        <Setter Property="VerticalAlignment" Value="Top" />
+                                    </Style>
+                                </StackPanel.Styles>
                                 <Button
-                                    x:Name="PART_AmplifyButton"
-                                    Margin="0,-2,0,0"
-                                    Padding="10,4"
+                                    x:Name="PART_HelpButton"
                                     VerticalAlignment="Top"
                                     VerticalContentAlignment="Top"
-                                    icons:Attached.Icon="fa-solid fa-wand-magic-sparkles"
-                                    Classes="accent"
+                                    icons:Attached.Icon="fa-solid fa-question"
+                                    Classes="transparent-full"
+                                    Command="{Binding ShowHelpDialogCommand}" />
+                                <ui:TeachingTip
+                                    Title="{x:Static lang:Resources.TeachingTip_InferencePromptHelpButton}"
+                                    IsOpen="{Binding IsHelpButtonTeachingTipOpen, Mode=TwoWay}"
+                                    Target="{Binding #PART_HelpButton}" />
+                                <Button
+                                    x:Name="PART_AmplifyButton"
+                                    Padding="6,2,6,1"
+                                    VerticalAlignment="Top"
+                                    VerticalContentAlignment="Top"
+                                    Classes="transparent-full"
+                                    Content="{iconExt:FluentIcon Icon=SlideTextSparkle,
+                                                                 IconVariant=Regular,
+                                                                 IconSize=Size20,
+                                                                 FontSize=19}"
                                     ToolTip.Tip="Prompt Amplifier">
                                     <Button.Flyout>
                                         <controls:BetterFlyout>
@@ -385,11 +392,14 @@
                                             NavigateUri="https://lykos.ai/prompt-amplifier/help" />
                                     </StackPanel>
                                 </ui:TeachingTip>
-                                <Button
-                                    Padding="8,4"
-                                    Command="{Binding DebugShowTokensCommand}"
-                                    Content="Show Tokens"
-                                    IsVisible="{Binding SharedState.IsDebugMode}" />
+                                <Button Classes="transparent-full" Content="{iconExt:FluentIcon Icon=MoreVertical, FontSize=16, IconVariant=Regular}">
+                                    <Button.Flyout>
+                                        <MenuFlyout>
+                                            <!--  ReSharper disable once Xaml.RedundantResource  -->
+                                            <MenuItem Command="{Binding DebugShowTokensCommand}" Header="(Debug) Show Tokens" />
+                                        </MenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
 
                             </StackPanel>
 

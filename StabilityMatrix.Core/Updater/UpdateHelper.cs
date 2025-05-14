@@ -203,8 +203,8 @@ public class UpdateHelper : IUpdateHelper
             foreach (
                 var channel in Enum.GetValues(typeof(UpdateChannel))
                     .Cast<UpdateChannel>()
-                    .Where(
-                        c => c > UpdateChannel.Unknown && c <= settingsManager.Settings.PreferredUpdateChannel
+                    .Where(c =>
+                        c > UpdateChannel.Unknown && c <= settingsManager.Settings.PreferredUpdateChannel
                     )
             )
             {
@@ -221,7 +221,7 @@ public class UpdateHelper : IUpdateHelper
                             UpdateChannels = updateManifest
                                 .Updates.Select(kv => (kv.Key, kv.Value.GetInfoForCurrentPlatform()))
                                 .Where(kv => kv.Item2 is not null)
-                                .ToDictionary(kv => kv.Item1, kv => kv.Item2)!
+                                .ToDictionary(kv => kv.Item1, kv => kv.Item2)!,
                         }
                     );
                     return;
@@ -235,7 +235,7 @@ public class UpdateHelper : IUpdateHelper
                 UpdateChannels = updateManifest
                     .Updates.Select(kv => (kv.Key, kv.Value.GetInfoForCurrentPlatform()))
                     .Where(kv => kv.Item2 is not null)
-                    .ToDictionary(kv => kv.Item1, kv => kv.Item2)!
+                    .ToDictionary(kv => kv.Item1, kv => kv.Item2)!,
             };
             OnUpdateStatusChanged(args);
         }
@@ -275,6 +275,12 @@ public class UpdateHelper : IUpdateHelper
                 // Same version available, check if we both have commit hash metadata
                 var updateHash = update.Version.Metadata;
                 var appHash = Compat.AppVersion.Metadata;
+
+                // Always assume update if (We don't have hash && Update has hash)
+                if (string.IsNullOrEmpty(updateHash) && !string.IsNullOrEmpty(appHash))
+                {
+                    return true;
+                }
 
                 // Trim both to the lower length, to a minimum of 7 characters
                 var minLength = Math.Min(7, Math.Min(updateHash.Length, appHash.Length));

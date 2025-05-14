@@ -277,7 +277,7 @@ public class UpdateHelper : IUpdateHelper
                 var appHash = Compat.AppVersion.Metadata;
 
                 // Always assume update if (We don't have hash && Update has hash)
-                if (string.IsNullOrEmpty(updateHash) && !string.IsNullOrEmpty(appHash))
+                if (string.IsNullOrEmpty(appHash) && !string.IsNullOrEmpty(updateHash))
                 {
                     return true;
                 }

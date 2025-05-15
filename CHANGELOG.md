@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed incorrect ROCmLibs being installed for RX 6800/6800XT users of Comfy-Zluda or AMDGPU-Forge
 - Fixed missing text when missing localized versions for Italian and Chinese languages
 - Fixed Python Packages dialog errors and potentially other issues due to concurrent OnLoaded events
+### Supporters
+#### 🌟 Visionaries
+Big cheers to our incredible Visionary-tier Patrons: **bluepopsicle**, **Bob S**, **Ibixat**, **Waterclouds**, and **Corey T**! 🚀 Your amazing support lets us dream bigger and reach further every single month. Thanks for being the driving force behind Stability Matrix - we genuinely couldn't do it without you!
+#### 🚀 Pioneers
+Huge thanks to our fantastic Pioneer-tier Patrons: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, and **Noah M**! Special shoutout and welcome back to **TheTekknician**, and a warm welcome aboard to our newest Pioneers: **USATechDude**, **SeraphOfSalem**, and **Thom**! ✨ Your continued support keeps our community vibrant and pushes us to keep creating. You all rock!
 
 ## v2.14.0
 ### Added

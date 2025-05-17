@@ -20,8 +20,7 @@ public partial class UpdateChannelCard : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsLatestVersionUpdateable))]
     private SemVersion? latestVersion;
 
-    public string? LatestVersionString =>
-        LatestVersion is null ? null : $"Latest: v{LatestVersion}";
+    public string? LatestVersionString => LatestVersion is null ? null : $"Latest: v{LatestVersion}";
 
     [ObservableProperty]
     private bool isSelectable = true;
@@ -48,6 +47,12 @@ public partial class UpdateChannelCard : ObservableObject
                     // Same version available, check if we both have commit hash metadata
                     var updateHash = LatestVersion.Metadata;
                     var appHash = Compat.AppVersion.Metadata;
+
+                    // Always assume update if (We don't have hash && Update has hash)
+                    if (string.IsNullOrEmpty(appHash) && !string.IsNullOrEmpty(updateHash))
+                    {
+                        return true;
+                    }
 
                     // Trim both to the lower length, to a minimum of 7 characters
                     var minLength = Math.Min(7, Math.Min(updateHash.Length, appHash.Length));

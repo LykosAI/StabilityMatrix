@@ -58,6 +58,7 @@ public abstract class BasePackage(ISettingsManager settingsManager)
     public virtual bool UsesVenv => true;
     public virtual bool InstallRequiresAdmin => false;
     public virtual string? AdminRequiredReason => null;
+    public virtual PyVersion RecommendedPythonVersion => PyInstallationManager.Python_3_10_17;
 
     /// <summary>
     /// Returns a list of extra commands that can be executed for this package.
@@ -299,7 +300,7 @@ public abstract class BasePackage(ISettingsManager settingsManager)
             PackagePrerequisite.Git,
             PackagePrerequisite.Python310,
             PackagePrerequisite.VcRedist,
-            PackagePrerequisite.VcBuildTools
+            PackagePrerequisite.VcBuildTools,
         ];
 
     protected async Task InstallCudaTorch(

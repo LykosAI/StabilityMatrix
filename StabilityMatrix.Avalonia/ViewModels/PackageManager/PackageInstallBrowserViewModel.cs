@@ -52,6 +52,9 @@ public partial class PackageInstallBrowserViewModel(
     public IObservableCollection<BasePackage> TrainingPackages { get; } =
         new ObservableCollectionExtended<BasePackage>();
 
+    public IObservableCollection<BasePackage> LegacyPackages { get; } =
+        new ObservableCollectionExtended<BasePackage>();
+
     public override string Title => "Add Package";
     public override IconSource IconSource => new SymbolIconSource { Symbol = Symbol.Add };
 
@@ -65,12 +68,9 @@ public partial class PackageInstallBrowserViewModel(
             .AsObservable();
 
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchFilter)
-            .Select(
-                _ =>
-                    new Func<BasePackage, bool>(
-                        p => p.DisplayName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
-                    )
-            )
+            .Select(_ => new Func<BasePackage, bool>(p =>
+                p.DisplayName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase)
+            ))
             .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
@@ -80,12 +80,12 @@ public partial class PackageInstallBrowserViewModel(
             .Filter(incompatiblePredicate)
             .Filter(searchPredicate)
             .Where(p => p is { PackageType: PackageType.SdInference })
-            .Sort(
+            .SortAndBind(
+                InferencePackages,
                 SortExpressionComparer<BasePackage>
                     .Ascending(p => p.InstallerSortOrder)
                     .ThenByAscending(p => p.DisplayName)
             )
-            .Bind(InferencePackages)
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -95,12 +95,27 @@ public partial class PackageInstallBrowserViewModel(
             .Filter(incompatiblePredicate)
             .Filter(searchPredicate)
             .Where(p => p is { PackageType: PackageType.SdTraining })
-            .Sort(
+            .SortAndBind(
+                TrainingPackages,
                 SortExpressionComparer<BasePackage>
                     .Ascending(p => p.InstallerSortOrder)
                     .ThenByAscending(p => p.DisplayName)
             )
-            .Bind(TrainingPackages)
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe();
+
+        packageSource
+            .Connect()
+            .DeferUntilLoaded()
+            .Filter(incompatiblePredicate)
+            .Filter(searchPredicate)
+            .Where(p => p is { PackageType: PackageType.Legacy })
+            .SortAndBind(
+                LegacyPackages,
+                SortExpressionComparer<BasePackage>
+                    .Ascending(p => p.InstallerSortOrder)
+                    .ThenByAscending(p => p.DisplayName)
+            )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 

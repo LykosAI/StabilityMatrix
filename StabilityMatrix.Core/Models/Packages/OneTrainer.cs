@@ -66,17 +66,26 @@ public class OneTrainer(
         {
             TorchIndex.Cuda => "requirements-cuda.txt",
             TorchIndex.Rocm => "requirements-rocm.txt",
-            _ => "requirements-default.txt"
+            _ => "requirements-default.txt",
         };
 
         await venvRunner.PipInstall(["-r", requirementsFileName], onConsoleOutput).ConfigureAwait(false);
-        await venvRunner.PipInstall(["-r", "requirements-global.txt"], onConsoleOutput).ConfigureAwait(false);
+
+        var requirementsGlobal = new FilePath(installLocation, "requirements-global.txt");
+        var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(
+            (await requirementsGlobal.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)).Replace(
+                "-e ",
+                ""
+            ),
+            "scipy==1.15.1; sys_platform != 'win32'"
+        );
 
         if (installedPackage.PipOverrides != null)
         {
-            var pipArgs = new PipInstallArgs().WithUserOverrides(installedPackage.PipOverrides);
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
         }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(
@@ -91,7 +100,7 @@ public class OneTrainer(
             .ConfigureAwait(false);
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             onConsoleOutput,
             OnExit
         );

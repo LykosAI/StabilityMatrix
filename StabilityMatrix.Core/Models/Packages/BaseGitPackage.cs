@@ -92,7 +92,7 @@ public abstract class BaseGitPackage : BasePackage
                 IsLatest = true,
                 IsPrerelease = false,
                 BranchName = MainBranch,
-                CommitHash = commits?.FirstOrDefault()?.Sha
+                CommitHash = commits?.FirstOrDefault()?.Sha,
             };
         }
 
@@ -104,7 +104,7 @@ public abstract class BaseGitPackage : BasePackage
             {
                 IsLatest = true,
                 IsPrerelease = false,
-                BranchName = MainBranch
+                BranchName = MainBranch,
             };
         }
 
@@ -114,7 +114,7 @@ public abstract class BaseGitPackage : BasePackage
         {
             IsLatest = true,
             IsPrerelease = latestRelease.Prerelease,
-            VersionTag = latestRelease.TagName!
+            VersionTag = latestRelease.TagName!,
         };
     }
 
@@ -135,15 +135,12 @@ public abstract class BaseGitPackage : BasePackage
             var releasesList = allReleases.ToList();
             if (releasesList.Any())
             {
-                packageVersionOptions.AvailableVersions = releasesList.Select(
-                    r =>
-                        new PackageVersion
-                        {
-                            TagName = r.TagName!,
-                            ReleaseNotesMarkdown = r.Body,
-                            IsPrerelease = r.Prerelease
-                        }
-                );
+                packageVersionOptions.AvailableVersions = releasesList.Select(r => new PackageVersion
+                {
+                    TagName = r.TagName!,
+                    ReleaseNotesMarkdown = r.Body,
+                    IsPrerelease = r.Prerelease,
+                });
             }
         }
 
@@ -151,9 +148,11 @@ public abstract class BaseGitPackage : BasePackage
         var allBranches = await GithubApi
             .GetAllBranches(RepositoryAuthor, RepositoryName)
             .ConfigureAwait(false);
-        packageVersionOptions.AvailableBranches = allBranches.Select(
-            b => new PackageVersion { TagName = $"{b.Name}", ReleaseNotesMarkdown = string.Empty }
-        );
+        packageVersionOptions.AvailableBranches = allBranches.Select(b => new PackageVersion
+        {
+            TagName = $"{b.Name}",
+            ReleaseNotesMarkdown = string.Empty,
+        });
 
         return packageVersionOptions;
     }
@@ -228,12 +227,17 @@ public abstract class BaseGitPackage : BasePackage
             await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         }
 
+        // ensure pip is installed
+        await venvRunner.PipInstall("pip", onConsoleOutput).ConfigureAwait(false);
+
         if (!Compat.IsWindows)
             return venvRunner;
 
         try
         {
-            await PrerequisiteHelper.AddMissingLibsToVenv(installedPackagePath).ConfigureAwait(false);
+            await PrerequisiteHelper
+                .AddMissingLibsToVenv(installedPackagePath, baseInstall)
+                .ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -279,7 +283,7 @@ public abstract class BaseGitPackage : BasePackage
                         ? versionOptions.VersionTag
                         : versionOptions.BranchName ?? MainBranch,
                     GithubUrl,
-                    installLocation
+                    installLocation,
                 },
                 progress?.AsProcessOutputHandler()
             )
@@ -490,7 +494,7 @@ public abstract class BaseGitPackage : BasePackage
             return new InstalledPackageVersion
             {
                 InstalledReleaseVersion = versionOptions.VersionTag,
-                IsPrerelease = versionOptions.IsPrerelease
+                IsPrerelease = versionOptions.IsPrerelease,
             };
         }
 
@@ -561,7 +565,7 @@ public abstract class BaseGitPackage : BasePackage
         {
             InstalledBranch = versionOptions.BranchName,
             InstalledCommitSha = versionOptions.CommitHash,
-            IsPrerelease = versionOptions.IsPrerelease
+            IsPrerelease = versionOptions.IsPrerelease,
         };
     }
 
@@ -677,7 +681,7 @@ public abstract class BaseGitPackage : BasePackage
                 Path.Combine("ControlNet", "ControlNet"),
                 Path.Combine("IPAdapter", "base"),
                 Path.Combine("IPAdapter", "sd15"),
-                Path.Combine("IPAdapter", "sdxl")
+                Path.Combine("IPAdapter", "sdxl"),
             ];
 
             foreach (var duplicatePath in duplicatePaths)

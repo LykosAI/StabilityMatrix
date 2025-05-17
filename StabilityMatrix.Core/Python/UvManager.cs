@@ -33,6 +33,9 @@ public partial class UvManager : IUvManager
 
     public UvManager(ISettingsManager settingsManager)
     {
+        if (!settingsManager.IsLibraryDirSet)
+            return;
+
         uvPythonInstallPath = new DirectoryPath(settingsManager.LibraryDir, "Assets", "Python");
         uvExecutablePath = Path.Combine(
             settingsManager.LibraryDir,
@@ -97,7 +100,7 @@ public partial class UvManager : IUvManager
         var envVars = new Dictionary<string, string>
         {
             // Always use the centrally configured path
-            ["UV_PYTHON_INSTALL_DIR"] = uvPythonInstallPath
+            ["UV_PYTHON_INSTALL_DIR"] = uvPythonInstallPath,
         };
 
         var result = await ProcessRunner
@@ -229,8 +232,8 @@ public partial class UvManager : IUvManager
                             if (keyParts.Length > i + 1)
                                 architecture = keyParts
                                     .Skip(i + 1)
-                                    .FirstOrDefault(
-                                        p => p.Contains("x86_64") || p.Contains("amd64") || p.Contains("arm")
+                                    .FirstOrDefault(p =>
+                                        p.Contains("x86_64") || p.Contains("amd64") || p.Contains("arm")
                                     );
                             if (keyParts.Length > i + 1)
                                 osInfo = string.Join("-", keyParts.Skip(i + 1).Where(p => p != architecture));
@@ -249,8 +252,8 @@ public partial class UvManager : IUvManager
                             if (keyParts.Length > i + 2)
                                 architecture = keyParts
                                     .Skip(i + 2)
-                                    .FirstOrDefault(
-                                        p => p.Contains("x86_64") || p.Contains("amd64") || p.Contains("arm")
+                                    .FirstOrDefault(p =>
+                                        p.Contains("x86_64") || p.Contains("amd64") || p.Contains("arm")
                                     );
                             if (keyParts.Length > i + 2)
                                 osInfo = string.Join("-", keyParts.Skip(i + 2).Where(p => p != architecture));
@@ -271,12 +274,11 @@ public partial class UvManager : IUvManager
 
                     if (pyVersion.HasValue && architecture == null)
                     {
-                        architecture = keyParts.FirstOrDefault(
-                            p =>
-                                p.Contains("x86_64")
-                                || p.Contains("amd64")
-                                || p.Contains("arm64")
-                                || p.Contains("aarch64")
+                        architecture = keyParts.FirstOrDefault(p =>
+                            p.Contains("x86_64")
+                            || p.Contains("amd64")
+                            || p.Contains("arm64")
+                            || p.Contains("aarch64")
                         );
                     }
 
@@ -375,7 +377,7 @@ public partial class UvManager : IUvManager
         var envVars = new Dictionary<string, string>
         {
             // Always use the centrally configured path
-            ["UV_PYTHON_INSTALL_DIR"] = uvPythonInstallPath
+            ["UV_PYTHON_INSTALL_DIR"] = uvPythonInstallPath,
         };
 
         Logger.Debug(
@@ -437,10 +439,9 @@ public partial class UvManager : IUvManager
             var subdirectories = Directory.GetDirectories(uvPythonInstallPath);
             var potentialDirs = subdirectories
                 .Select(dir => new { Path = dir, DirInfo = new DirectoryInfo(dir) })
-                .Where(
-                    x =>
-                        x.DirInfo.Name.StartsWith("cpython-", StringComparison.OrdinalIgnoreCase)
-                        || x.DirInfo.Name.StartsWith("pypy-", StringComparison.OrdinalIgnoreCase)
+                .Where(x =>
+                    x.DirInfo.Name.StartsWith("cpython-", StringComparison.OrdinalIgnoreCase)
+                    || x.DirInfo.Name.StartsWith("pypy-", StringComparison.OrdinalIgnoreCase)
                 )
                 .Where(x => x.DirInfo.Name.Contains($"{version.Major}.{version.Minor}"))
                 .OrderByDescending(x => x.DirInfo.CreationTimeUtc)

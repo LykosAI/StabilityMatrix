@@ -8,6 +8,7 @@ using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Api.Invoke;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -18,7 +19,13 @@ using StabilityMatrix.Core.Services;
 namespace StabilityMatrix.Core.Models.Packages;
 
 [RegisterSingleton<BasePackage, InvokeAI>(Duplicate = DuplicateStrategy.Append)]
-public class InvokeAI : BaseGitPackage
+public class InvokeAI(
+    IGithubApiCache githubApi,
+    ISettingsManager settingsManager,
+    IDownloadService downloadService,
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private const string RelativeRootPath = "invokeai-root";
@@ -46,15 +53,6 @@ public class InvokeAI : BaseGitPackage
 
     public override string MainBranch => "main";
 
-    public InvokeAI(
-        IGithubApiCache githubApi,
-        ISettingsManager settingsManager,
-        IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper,
-        IPyInstallationManager pyInstallationManager
-    )
-        : base(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager) { }
-
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
         {
@@ -64,14 +62,14 @@ public class InvokeAI : BaseGitPackage
             [SharedFolderType.ControlNet] = [Path.Combine(RelativeRootPath, "autoimport", "controlnet")],
             [SharedFolderType.IpAdapters15] =
             [
-                Path.Combine(RelativeRootPath, "models", "sd-1", "ip_adapter")
+                Path.Combine(RelativeRootPath, "models", "sd-1", "ip_adapter"),
             ],
             [SharedFolderType.IpAdaptersXl] =
             [
-                Path.Combine(RelativeRootPath, "models", "sdxl", "ip_adapter")
+                Path.Combine(RelativeRootPath, "models", "sdxl", "ip_adapter"),
             ],
             [SharedFolderType.ClipVision] = [Path.Combine(RelativeRootPath, "models", "any", "clip_vision")],
-            [SharedFolderType.T2IAdapter] = [Path.Combine(RelativeRootPath, "autoimport", "t2i_adapter")]
+            [SharedFolderType.T2IAdapter] = [Path.Combine(RelativeRootPath, "autoimport", "t2i_adapter")],
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -86,19 +84,21 @@ public class InvokeAI : BaseGitPackage
             {
                 Name = "Root Directory",
                 Type = LaunchOptionType.String,
-                Options = ["--root"]
+                Options = ["--root"],
             },
             new()
             {
                 Name = "Config File",
                 Type = LaunchOptionType.String,
-                Options = ["--config"]
+                Options = ["--config"],
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.Rocm, TorchIndex.Mps];
+
+    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_12_10;
 
     public override TorchIndex GetRecommendedTorchVersion()
     {
@@ -111,12 +111,17 @@ public class InvokeAI : BaseGitPackage
     }
 
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
-        [
-            PackagePrerequisite.Python310,
-            PackagePrerequisite.VcRedist,
-            PackagePrerequisite.Git,
-            PackagePrerequisite.Node
-        ];
+        [PackagePrerequisite.Python310, PackagePrerequisite.VcRedist, PackagePrerequisite.Git];
+
+    public override Task DownloadPackage(
+        string installLocation,
+        DownloadPackageOptions options,
+        IProgress<ProgressReport>? progress = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return Task.CompletedTask;
+    }
 
     public override async Task InstallPackage(
         string installLocation,
@@ -130,9 +135,6 @@ public class InvokeAI : BaseGitPackage
         // Setup venv
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        var venvPath = Path.Combine(installLocation, "venv");
-        var exists = Directory.Exists(venvPath);
-
         await using var venvRunner = await SetupVenvPure(
                 installLocation,
                 pythonVersion: options.PythonOptions.PythonVersion
@@ -142,123 +144,32 @@ public class InvokeAI : BaseGitPackage
 
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
 
-        await SetupAndBuildInvokeFrontend(
-                installLocation,
-                progress,
-                onConsoleOutput,
-                venvRunner.EnvironmentVariables
-            )
-            .ConfigureAwait(false);
-
-        var pipCommandArgs = "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
-
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var torchInstallArgs = new PipInstallArgs();
-
-        switch (torchVersion)
+        var isBlackwell =
+            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
+        var index = torchVersion switch
         {
-            case TorchIndex.Cuda:
-                torchInstallArgs = torchInstallArgs
-                    .WithTorch("==2.4.1")
-                    .WithTorchVision("==0.19.1")
-                    .WithXFormers("==0.0.28.post1")
-                    .WithTorchExtraIndex("cu124");
+            TorchIndex.Cpu => "https://download.pytorch.org/whl/cpu",
+            TorchIndex.Cuda when isBlackwell => "https://download.pytorch.org/whl/cu128",
+            TorchIndex.Cuda => "https://download.pytorch.org/whl/cu126",
+            TorchIndex.Rocm => "https://download.pytorch.org/whl/rocm6.2.4",
+            TorchIndex.Mps => "https://download.pytorch.org/whl/cpu",
+            _ => string.Empty,
+        };
 
-                Logger.Info("Starting InvokeAI install (CUDA)...");
-                pipCommandArgs =
-                    "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu124";
-                break;
+        var invokeInstallArgs = new PipInstallArgs(
+            $"invokeai=={options.VersionOptions.VersionTag?.Replace("v", string.Empty)}"
+        );
 
-            case TorchIndex.Rocm:
-                torchInstallArgs = torchInstallArgs
-                    .WithTorch("==2.2.2")
-                    .WithTorchVision("==0.17.2")
-                    .WithExtraIndex("rocm5.6");
-
-                Logger.Info("Starting InvokeAI install (ROCm)...");
-                pipCommandArgs =
-                    "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/rocm5.6";
-                break;
-
-            case TorchIndex.Mps:
-                // For Apple silicon, use MPS
-                Logger.Info("Starting InvokeAI install (MPS)...");
-                pipCommandArgs = "-e . --use-pep517";
-                break;
+        if (!string.IsNullOrWhiteSpace(index))
+        {
+            invokeInstallArgs = invokeInstallArgs.AddArg("--index").AddArg(index);
         }
 
-        if (installedPackage.PipOverrides != null)
-        {
-            torchInstallArgs = torchInstallArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
+        invokeInstallArgs = invokeInstallArgs.AddArg("--force-reinstall");
 
-        if (torchInstallArgs.Arguments.Count > 0)
-        {
-            await venvRunner.PipInstall(torchInstallArgs, onConsoleOutput).ConfigureAwait(false);
-        }
-
-        await venvRunner
-            .PipInstall($"{pipCommandArgs}{(exists ? " --upgrade" : "")}", onConsoleOutput)
-            .ConfigureAwait(false);
-
-        await venvRunner.PipInstall("rich packaging python-dotenv", onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall(invokeInstallArgs, onConsoleOutput).ConfigureAwait(false);
         progress?.Report(new ProgressReport(1f, "Done!", isIndeterminate: false));
-    }
-
-    private async Task SetupAndBuildInvokeFrontend(
-        string installLocation,
-        IProgress<ProgressReport>? progress,
-        Action<ProcessOutput>? onConsoleOutput,
-        IReadOnlyDictionary<string, string>? envVars = null
-    )
-    {
-        await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
-        await PrerequisiteHelper
-            .RunNpm(["i", "pnpm@8"], installLocation, envVars: envVars)
-            .ConfigureAwait(false);
-
-        if (Compat.IsMacOS || Compat.IsLinux)
-        {
-            await PrerequisiteHelper
-                .RunNpm(["i", "vite", "--ignore-scripts=true"], installLocation, envVars: envVars)
-                .ConfigureAwait(false);
-        }
-
-        var pnpmPath = Path.Combine(
-            installLocation,
-            "node_modules",
-            ".bin",
-            Compat.IsWindows ? "pnpm.cmd" : "pnpm"
-        );
-
-        var vitePath = Path.Combine(
-            installLocation,
-            "node_modules",
-            ".bin",
-            Compat.IsWindows ? "vite.cmd" : "vite"
-        );
-
-        var invokeFrontendPath = Path.Combine(installLocation, "invokeai", "frontend", "web");
-
-        var process = ProcessRunner.StartAnsiProcess(
-            pnpmPath,
-            "i --ignore-scripts=true --force",
-            invokeFrontendPath,
-            onConsoleOutput,
-            envVars
-        );
-
-        await process.WaitForExitAsync().ConfigureAwait(false);
-
-        process = ProcessRunner.StartAnsiProcess(
-            Compat.IsWindows ? pnpmPath : vitePath,
-            "build",
-            invokeFrontendPath,
-            onConsoleOutput,
-            envVars
-        );
-
-        await process.WaitForExitAsync().ConfigureAwait(false);
     }
 
     public override Task RunPackage(
@@ -297,19 +208,6 @@ public class InvokeAI : BaseGitPackage
 
         VenvRunner.UpdateEnvironmentVariables(env => GetEnvVars(env, installedPackagePath));
 
-        // fix frontend build missing for people who updated to v3.6 before the fix
-        var frontendExistsPath = Path.Combine(installedPackagePath, relativeFrontendBuildPath);
-        if (!Directory.Exists(frontendExistsPath))
-        {
-            await SetupAndBuildInvokeFrontend(
-                    installedPackagePath,
-                    null,
-                    onConsoleOutput,
-                    VenvRunner.EnvironmentVariables
-                )
-                .ConfigureAwait(false);
-        }
-
         // Launch command is for a console entry point, and not a direct script
         var entryPoint = await VenvRunner.GetEntryPoint(command).ConfigureAwait(false);
 
@@ -327,10 +225,10 @@ public class InvokeAI : BaseGitPackage
         // above the minimum in invokeai.frontend.install.widgets
 
         var code = $"""
-                    import sys
-                    from {split[0]} import {split[1]}
-                    sys.exit({split[1]}())
-                    """;
+            import sys
+            from {split[0]} import {split[1]}
+            sys.exit({split[1]}())
+            """;
 
         if (runDetached)
         {
@@ -417,7 +315,7 @@ public class InvokeAI : BaseGitPackage
             {
                 ContentSerializer = new SystemTextJsonContentSerializer(
                     new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
-                )
+                ),
             }
         );
 
@@ -434,7 +332,7 @@ public class InvokeAI : BaseGitPackage
                     new InstallModelRequest
                     {
                         Name = Path.GetFileNameWithoutExtension(model.Path),
-                        Description = Path.GetFileName(model.Path)
+                        Description = Path.GetFileName(model.Path),
                     },
                     source: model.Path,
                     inplace: true
@@ -447,10 +345,9 @@ public class InvokeAI : BaseGitPackage
         var installCheckCount = 0;
 
         while (
-            !installStatus.All(
-                x =>
-                    (x.Status != null && x.Status.Equals("completed", StringComparison.OrdinalIgnoreCase))
-                    || (x.Status != null && x.Status.Equals("error", StringComparison.OrdinalIgnoreCase))
+            !installStatus.All(x =>
+                (x.Status != null && x.Status.Equals("completed", StringComparison.OrdinalIgnoreCase))
+                || (x.Status != null && x.Status.Equals("error", StringComparison.OrdinalIgnoreCase))
             )
         )
         {
@@ -461,7 +358,7 @@ public class InvokeAI : BaseGitPackage
                     new ProcessOutput
                     {
                         Text =
-                            "This may take awhile, feel free to use the web interface while the rest of your models are imported.\n"
+                            "This may take awhile, feel free to use the web interface while the rest of your models are imported.\n",
                     }
                 );
 
@@ -478,7 +375,7 @@ public class InvokeAI : BaseGitPackage
                 {
                     Text =
                         $"\nWaiting for model import... ({installStatus.Count(x => (x.Status != null && !x.Status.Equals("completed",
-                        StringComparison.OrdinalIgnoreCase)) && !x.Status.Equals("error", StringComparison.OrdinalIgnoreCase))} remaining)\n"
+                        StringComparison.OrdinalIgnoreCase)) && !x.Status.Equals("error", StringComparison.OrdinalIgnoreCase))} remaining)\n",
                 }
             );
             await Task.Delay(5000).ConfigureAwait(false);

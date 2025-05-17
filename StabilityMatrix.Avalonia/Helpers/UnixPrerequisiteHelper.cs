@@ -191,7 +191,7 @@ public class UnixPrerequisiteHelper(
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         // Array of (asset_uri, extract_to)
-        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir), };
+        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir) };
 
         progress?.Report(new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true));
 
@@ -219,10 +219,10 @@ public class UnixPrerequisiteHelper(
                 {
                     new TextBlock
                     {
-                        Text = "The current operation requires Git. Please install it to continue."
+                        Text = "The current operation requires Git. Please install it to continue.",
                     },
                     new SelectableTextBlock { Text = "$ sudo apt install git" },
-                }
+                },
             },
             PrimaryButtonText = Resources.Action_Retry,
             CloseButtonText = Resources.Action_Close,
@@ -631,6 +631,7 @@ public class UnixPrerequisiteHelper(
     [UnsupportedOSPlatform("macOS")]
     public Task AddMissingLibsToVenv(
         DirectoryPath installedPackagePath,
+        PyBaseInstall baseInstall,
         IProgress<ProgressReport>? progress = null
     )
     {

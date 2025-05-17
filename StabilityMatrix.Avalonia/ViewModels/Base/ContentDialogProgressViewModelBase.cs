@@ -9,6 +9,9 @@ public partial class ContentDialogProgressViewModelBase : ConsoleProgressViewMod
     [ObservableProperty]
     private bool hideCloseButton;
 
+    [ObservableProperty]
+    private bool autoScrollToBottom = true;
+
     public event EventHandler<ContentDialogResult>? PrimaryButtonClick;
     public event EventHandler<ContentDialogResult>? SecondaryButtonClick;
     public event EventHandler<ContentDialogResult>? CloseButtonClick;

@@ -39,37 +39,37 @@ public class RuinedFooocus(
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 Description = "Sets the listen port",
-                Options = { "--port" }
+                Options = { "--port" },
             },
             new()
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to share on Gradio",
-                Options = { "--share" }
+                Options = { "--share" },
             },
             new()
             {
                 Name = "Listen",
                 Type = LaunchOptionType.String,
                 Description = "Set the listen interface",
-                Options = { "--listen" }
+                Options = { "--listen" },
             },
             new()
             {
                 Name = "Auth",
                 Type = LaunchOptionType.String,
                 Description = "Set credentials username/password",
-                Options = { "--auth" }
+                Options = { "--auth" },
             },
             new()
             {
                 Name = "No Browser",
                 Type = LaunchOptionType.Bool,
                 Description = "Do not launch in browser",
-                Options = { "--nobrowser" }
+                Options = { "--nobrowser" },
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override async Task InstallPackage(
@@ -96,7 +96,7 @@ public class RuinedFooocus(
 
             var requirements = new FilePath(installLocation, "requirements_versions.txt");
             var pipArgs = new PipInstallArgs()
-                .WithTorchExtraIndex("cu121")
+                .WithTorchExtraIndex("cu128")
                 .WithParsedFromRequirementsTxt(
                     await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
                     "--extra-index-url.*|--index-url.*"
@@ -112,13 +112,13 @@ public class RuinedFooocus(
         else
         {
             await base.InstallPackage(
-                installLocation,
-                installedPackage,
-                options,
-                progress,
-                onConsoleOutput,
-                cancellationToken
-            )
+                    installLocation,
+                    installedPackage,
+                    options,
+                    progress,
+                    onConsoleOutput,
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
         }
 

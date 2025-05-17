@@ -41,63 +41,63 @@ public class ForgeClassic(
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
-                Options = ["--server-name"]
+                Options = ["--server-name"],
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7860",
-                Options = ["--port"]
+                Options = ["--port"],
             },
             new()
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to share on Gradio",
-                Options = { "--share" }
+                Options = { "--share" },
             },
             new()
             {
                 Name = "Xformers",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to use xformers",
-                Options = { "--xformers" }
+                Options = { "--xformers" },
             },
             new()
             {
                 Name = "Use SageAttention",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to use sage attention",
-                Options = { "--sage" }
+                Options = { "--sage" },
             },
             new()
             {
                 Name = "Pin Shared Memory",
                 Type = LaunchOptionType.Bool,
                 Options = { "--pin-shared-memory" },
-                InitialValue = SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() ?? false
+                InitialValue = SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() ?? false,
             },
             new()
             {
                 Name = "CUDA Malloc",
                 Type = LaunchOptionType.Bool,
                 Options = { "--cuda-malloc" },
-                InitialValue = SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() ?? false
+                InitialValue = SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() ?? false,
             },
             new()
             {
                 Name = "CUDA Stream",
                 Type = LaunchOptionType.Bool,
                 Options = { "--cuda-stream" },
-                InitialValue = SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() ?? false
+                InitialValue = SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() ?? false,
             },
             new()
             {
                 Name = "Auto Launch",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to auto launch the webui",
-                Options = { "--auto-launch" }
+                Options = { "--auto-launch" },
             },
             new()
             {
@@ -105,7 +105,7 @@ public class ForgeClassic(
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to skip python version check",
                 Options = { "--skip-python-version-check" },
-                InitialValue = true
+                InitialValue = true,
             },
             LaunchOptionDefinition.Extras,
         ];
@@ -165,7 +165,16 @@ public class ForgeClassic(
             .WithTorchAudio()
             .WithTorchExtraIndex("cu128");
 
-        pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+        pipArgs = new PipInstallArgs(
+            "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip"
+        ).WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
 
         if (installedPackage.PipOverrides != null)
         {

@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using AvaloniaEdit.Document;
 using AvaloniaEdit.Utils;
 using DynamicData.Binding;
 using Microsoft.Extensions.DependencyInjection;
@@ -1311,6 +1312,25 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.ModelType = CivitModelType.Checkpoint;
             vm.BaseModelType = "Pony";
         });
+
+    public static PackageInstallProgressItemViewModel PackageInstallProgressItemViewModel =>
+        new(
+            new PackageModificationRunner
+            {
+                CurrentProgress = new ProgressReport(50, "Installing Package", "Description"),
+                ModificationCompleteMessage = "Install Complete",
+            }
+        )
+        {
+            Progress = new ContentDialogProgressViewModelBase
+            {
+                Value = 50,
+                CloseWhenFinished = true,
+                Text = "Installing Package",
+                Description = "Description",
+                Console = { Document = new TextDocument("Hello world") },
+            },
+        };
 
     public static MockGitVersionProvider MockGitVersionProvider => new();
 

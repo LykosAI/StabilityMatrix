@@ -16,6 +16,7 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
     // Default Python versions - these are TARGET versions SM knows about
     public static readonly PyVersion Python_3_10_11 = new(3, 10, 11);
     public static readonly PyVersion Python_3_10_17 = new(3, 10, 17);
+    public static readonly PyVersion Python_3_12_10 = new(3, 12, 10);
 
     /// <summary>
     /// List of preferred/target Python versions StabilityMatrix officially supports.
@@ -23,13 +24,13 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
     /// </summary>
     public static readonly IReadOnlyList<PyVersion> OldVersions = new List<PyVersion>
     {
-        Python_3_10_11
+        Python_3_10_11,
     }.AsReadOnly();
 
     /// <summary>
     /// The default Python version to use if none is specified.
     /// </summary>
-    public static readonly PyVersion DefaultVersion = Python_3_10_17; // Or your preferred default
+    public static readonly PyVersion DefaultVersion = Python_3_10_11; // Or your preferred default
 
     /// <summary>
     /// Gets all discoverable Python installations (legacy and UV-managed).

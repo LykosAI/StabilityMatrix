@@ -62,15 +62,7 @@ public class PyBaseInstall(PyInstallation installation)
         bool withQueriedTclTkEnv = false
     )
     {
-        IPyVenvRunner venvRunner;
-        if (Version == PyInstallationManager.Python_3_10_11)
-        {
-            venvRunner = new PyVenvRunner(this, venvPath);
-        }
-        else
-        {
-            venvRunner = new UvVenvRunner(this, venvPath);
-        }
+        IPyVenvRunner venvRunner = new UvVenvRunner(this, venvPath);
 
         // Set working directory if provided
         if (workingDirectory != null)

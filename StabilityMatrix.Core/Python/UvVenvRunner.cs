@@ -346,10 +346,9 @@ public class UvVenvRunner : IPyVenvRunner
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
             )
             .Select(line => line.Trim())
-            .FirstOrDefault(
-                line =>
-                    line.StartsWith("[", StringComparison.OrdinalIgnoreCase)
-                    && line.EndsWith("]", StringComparison.OrdinalIgnoreCase)
+            .FirstOrDefault(line =>
+                line.StartsWith("[", StringComparison.OrdinalIgnoreCase)
+                && line.EndsWith("]", StringComparison.OrdinalIgnoreCase)
             );
 
         if (jsonLine is null)
@@ -560,16 +559,17 @@ public class UvVenvRunner : IPyVenvRunner
         {
             var portableGitBin = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
             var venvBin = RootPath.JoinDir(RelativeBinPath);
+            var uvFolder = GlobalConfig.LibraryDir.JoinDir("Assets", "uv");
             if (env.TryGetValue("PATH", out var pathValue))
             {
                 env = env.SetItem(
                     "PATH",
-                    Compat.GetEnvPathWithExtensions(portableGitBin, venvBin, pathValue)
+                    Compat.GetEnvPathWithExtensions(portableGitBin, venvBin, uvFolder, pathValue)
                 );
             }
             else
             {
-                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(portableGitBin, venvBin));
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(portableGitBin, uvFolder, venvBin));
             }
             env = env.SetItem("GIT", portableGitBin.JoinFile("git.exe"));
         }
@@ -719,11 +719,11 @@ public class UvVenvRunner : IPyVenvRunner
     {
         // ReSharper disable once StringLiteralTypo
         var code = $"""
-                   from importlib.metadata import entry_points
-                   
-                   results = entry_points(group='console_scripts', name='{entryPointName}')
-                   print(tuple(results)[0].value, end='')
-                   """;
+            from importlib.metadata import entry_points
+
+            results = entry_points(group='console_scripts', name='{entryPointName}')
+            print(tuple(results)[0].value, end='')
+            """;
 
         var result = await Run($"-c \"{code}\"").ConfigureAwait(false);
         if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.StandardOutput))

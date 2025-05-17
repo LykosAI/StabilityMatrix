@@ -208,7 +208,11 @@ public interface IPrerequisiteHelper
     );
 
     Task<bool> FixGitLongPaths();
-    Task AddMissingLibsToVenv(DirectoryPath installedPackagePath, IProgress<ProgressReport>? progress = null);
+    Task AddMissingLibsToVenv(
+        DirectoryPath installedPackagePath,
+        PyBaseInstall baseInstall,
+        IProgress<ProgressReport>? progress = null
+    );
     Task InstallPythonIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
     Task InstallVirtualenvIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
     Task InstallTkinterIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);

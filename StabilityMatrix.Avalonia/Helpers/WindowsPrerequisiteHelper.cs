@@ -147,7 +147,7 @@ public class WindowsPrerequisiteHelper(
             onProcessOutput,
             environmentVariables: new Dictionary<string, string>
             {
-                { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) }
+                { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) },
             }
         );
         await process.WaitForExitAsync().ConfigureAwait(false);
@@ -165,7 +165,7 @@ public class WindowsPrerequisiteHelper(
             workingDirectory: workingDirectory,
             environmentVariables: new Dictionary<string, string>
             {
-                { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) }
+                { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) },
             }
         );
     }
@@ -293,7 +293,7 @@ public class WindowsPrerequisiteHelper(
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         // Array of (asset_uri, extract_to)
-        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir), };
+        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir) };
 
         progress?.Report(new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true));
 
@@ -738,7 +738,7 @@ public class WindowsPrerequisiteHelper(
             Arguments = "-install -log hip_install.log",
             UseShellExecute = true,
             CreateNoWindow = true,
-            Verb = "runas"
+            Verb = "runas",
         };
 
         if (Process.Start(info) is { } process)
@@ -790,38 +790,50 @@ public class WindowsPrerequisiteHelper(
     [SupportedOSPlatform("Windows")]
     public async Task AddMissingLibsToVenv(
         DirectoryPath installedPackagePath,
+        PyBaseInstall baseInstall,
         IProgress<ProgressReport>? progress = null
     )
     {
         var venvLibsDir = installedPackagePath.JoinDir("venv", "libs");
         var venvIncludeDir = installedPackagePath.JoinDir("venv", "include");
-        if (
-            venvLibsDir.Exists
-            && venvIncludeDir.Exists
-            && venvLibsDir.JoinFile("python3.lib").Exists
-            && venvLibsDir.JoinFile("python310.lib").Exists
-        )
+        if (venvLibsDir.Exists && venvIncludeDir.Exists && venvLibsDir.JoinFile("python3.lib").Exists)
         {
             Logger.Debug("Python libs already installed at {VenvLibsDir}", venvLibsDir);
             return;
         }
 
-        var downloadPath = installedPackagePath.JoinFile("python_libs_for_sage.zip");
-        var venvDir = installedPackagePath.JoinDir("venv");
-        await downloadService
-            .DownloadToFileAsync(PythonLibsDownloadUrl, downloadPath, progress)
-            .ConfigureAwait(false);
+        var sourceLibsDir = new DirectoryPath(baseInstall.RootPath, "libs");
+        var sourceIncludeDir = new DirectoryPath(baseInstall.RootPath, "include");
 
-        progress?.Report(
-            new ProgressReport(-1f, message: "Extracting Python libraries", isIndeterminate: true)
-        );
-        await ArchiveHelper.Extract7Z(downloadPath, venvDir, progress);
+        var destLibsDir = installedPackagePath.JoinDir("venv", "libs");
+        var destIncludeDir = installedPackagePath.JoinDir("venv", "include");
+        var destIncludeScriptsDir = installedPackagePath.JoinDir("venv", "Scripts", "include");
 
-        var includeFolder = venvDir.JoinDir("include");
-        var scriptsIncludeFolder = venvDir.JoinDir("Scripts").JoinDir("include");
-        await includeFolder.CopyToAsync(scriptsIncludeFolder);
+        destLibsDir.Create();
+        destIncludeDir.Create();
+        destIncludeScriptsDir.Create();
 
-        await downloadPath.DeleteAsync();
+        // Copy libs
+        await sourceLibsDir.CopyToAsync(destLibsDir);
+        await sourceIncludeDir.CopyToAsync(destIncludeDir);
+        await sourceIncludeDir.CopyToAsync(destIncludeScriptsDir);
+
+        // var downloadPath = installedPackagePath.JoinFile("python_libs_for_sage.zip");
+        // var venvDir = installedPackagePath.JoinDir("venv");
+        // await downloadService
+        //     .DownloadToFileAsync(PythonLibsDownloadUrl, downloadPath, progress)
+        //     .ConfigureAwait(false);
+        //
+        // progress?.Report(
+        //     new ProgressReport(-1f, message: "Extracting Python libraries", isIndeterminate: true)
+        // );
+        // await ArchiveHelper.Extract7Z(downloadPath, venvDir, progress);
+        //
+        // var includeFolder = venvDir.JoinDir("include");
+        // var scriptsIncludeFolder = venvDir.JoinDir("Scripts").JoinDir("include");
+        // await includeFolder.CopyToAsync(scriptsIncludeFolder);
+        //
+        // await downloadPath.DeleteAsync();
     }
 
     private async Task DownloadAndExtractPrerequisite(
@@ -902,14 +914,14 @@ public class WindowsPrerequisiteHelper(
         {
             _ when downloadUrl.Contains("gfx1201") => null,
             _ when downloadUrl.Contains("gfx1150") => "rocm gfx1150 for hip skd 6.2.4",
-            _ when downloadUrl.Contains("gfx1103.AMD")
-                => "rocm gfx1103 AMD 780M phoenix V5.0 for hip skd 6.2.4",
+            _ when downloadUrl.Contains("gfx1103.AMD") =>
+                "rocm gfx1103 AMD 780M phoenix V5.0 for hip skd 6.2.4",
             _ when downloadUrl.Contains("gfx1034") => "rocm gfx1034-gfx1035-gfx1036 for hip sdk 6.2.4",
             _ when downloadUrl.Contains("gfx1032") => "rocm gfx1032 for hip skd 6.2.4(navi21 logic)",
             _ when downloadUrl.Contains("gfx1031") => "rocm gfx1031 for hip skd 6.2.4 (littlewu's logic)",
-            _ when downloadUrl.Contains("gfx1010")
-                => "rocm gfx1010-xnack-gfx1011-xnack-gfx1012-xnack- for hip sdk 6.2.4",
-            _ => null
+            _ when downloadUrl.Contains("gfx1010") =>
+                "rocm gfx1010-xnack-gfx1011-xnack-gfx1012-xnack- for hip sdk 6.2.4",
+            _ => null,
         };
 
         var librarySourceDir = rocmLibsExtractPath;

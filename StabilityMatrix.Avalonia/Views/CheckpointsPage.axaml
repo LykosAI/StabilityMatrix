@@ -646,7 +646,7 @@
                                         Name="ModelCardBottom"
                                         Padding="8"
                                         CornerRadius="0,0,8,8"
-                                        IsHitTestVisible="False">
+                                        IsHitTestVisible="True">
 
                                         <StackPanel>
                                             <Grid ColumnDefinitions="*, Auto">
@@ -684,7 +684,7 @@
                                                 Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                                 Text="{Binding CheckpointFile.FileName}"
                                                 TextWrapping="NoWrap"
-                                                ToolTip.Tip="{Binding CheckpointFile.FileName}" />
+                                                ToolTip.Tip="{Binding CheckpointFile.RelativePath}" />
 
                                             <TextBlock
                                                 MaxWidth="300"

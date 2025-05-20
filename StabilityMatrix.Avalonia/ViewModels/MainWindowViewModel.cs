@@ -539,9 +539,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 return;
             }
 
-            var transaction = settingsManager.BeginTransaction();
+            using var transaction = settingsManager.BeginTransaction();
             transaction.Settings.PreferredGpu = matchedGpuInfo;
-            transaction.Dispose();
         }
         catch (Exception)
         {

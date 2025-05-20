@@ -41,7 +41,7 @@ public record GpuInfo
         if (ComputeCapability is null)
             return false;
 
-        return IsNvidia && ComputeCapabilityValue >= 12.0m;
+        return ComputeCapabilityValue >= 12.0m;
     }
 
     public bool IsAmpereOrNewerGpu()
@@ -49,7 +49,7 @@ public record GpuInfo
         if (ComputeCapability is null)
             return false;
 
-        return IsNvidia && ComputeCapabilityValue >= 8.6m;
+        return ComputeCapabilityValue >= 8.6m;
     }
 
     public bool IsLegacyNvidiaGpu()
@@ -57,7 +57,7 @@ public record GpuInfo
         if (ComputeCapability is null)
             return false;
 
-        return IsNvidia && ComputeCapabilityValue < 7.5m;
+        return ComputeCapabilityValue < 7.5m;
     }
 
     public bool IsAmd => Name?.Contains("amd", StringComparison.OrdinalIgnoreCase) ?? false;

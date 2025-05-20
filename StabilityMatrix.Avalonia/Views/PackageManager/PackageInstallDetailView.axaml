@@ -12,6 +12,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
+    xmlns:python="clr-namespace:StabilityMatrix.Core.Python;assembly=StabilityMatrix.Core"
     d:DataContext="{x:Static designData:DesignData.PackageInstallDetailViewModel}"
     d:DesignHeight="850"
     d:DesignWidth="800"
@@ -193,6 +194,21 @@
                             VerticalAlignment="Center"
                             VerticalContentAlignment="Center"
                             IsChecked="{Binding IsOutputSharingEnabled}" />
+                    </StackPanel>
+
+                    <StackPanel Margin="0,4,24,0" Orientation="Vertical">
+                        <Label Content="Python Version" />
+                        <controls:BetterComboBox
+                            MinWidth="150"
+                            MinHeight="38"
+                            ItemsSource="{Binding AvailablePythonVersions}"
+                            SelectedItem="{Binding SelectedPythonVersion}">
+                            <controls:BetterComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type python:PyVersion}">
+                                    <TextBlock Margin="8,4,0,4" Text="{Binding StringValue}" />
+                                </DataTemplate>
+                            </controls:BetterComboBox.ItemTemplate>
+                        </controls:BetterComboBox>
                     </StackPanel>
                 </WrapPanel>
             </Expander>

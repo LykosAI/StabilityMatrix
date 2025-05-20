@@ -13,10 +13,7 @@ using StabilityMatrix.Core.Processes;
 
 namespace StabilityMatrix.Core.Python;
 
-/// <summary>
-/// Python runner using a subprocess, mainly for venv support.
-/// </summary>
-public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
+public class UvVenvRunner : IPyVenvRunner
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -114,7 +111,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
     /// </summary>
     public List<string> SuppressOutput { get; } = new() { "fatal: not a git repository" };
 
-    internal PyVenvRunner(PyBaseInstall baseInstall, DirectoryPath rootPath)
+    internal UvVenvRunner(PyBaseInstall baseInstall, DirectoryPath rootPath)
     {
         BaseInstall = baseInstall;
         RootPath = rootPath;
@@ -130,6 +127,9 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
 
     /// <returns>True if the venv has a Scripts\python.exe file</returns>
     public bool Exists() => PythonPath.Exists;
+
+    private FilePath UvExecutablePath =>
+        new(GlobalConfig.LibraryDir, "Assets", "uv", Compat.IsWindows ? "uv.exe" : "uv");
 
     /// <summary>
     /// Creates a venv at the configured path.
@@ -149,11 +149,17 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
         RootPath.Create();
 
         // Create venv (copy mode if windows)
-        var args = new string[] { "-m", "virtualenv", Compat.IsWindows ? "--always-copy" : "", RootPath };
+        var args = new ProcessArgsBuilder(
+            "venv",
+            RootPath.ToString(),
+            "--allow-existing",
+            "--python",
+            BaseInstall.PythonExePath
+        );
 
         var venvProc = ProcessRunner.StartAnsiProcess(
-            BaseInstall.PythonExePath,
-            args,
+            UvExecutablePath,
+            args.ToProcessArgs(),
             WorkingDirectory?.FullPath,
             onConsoleOutput
         );
@@ -232,9 +238,9 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
     /// </summary>
     public async Task PipInstall(ProcessArgs args, Action<ProcessOutput>? outputDataReceived = null)
     {
-        if (!File.Exists(PipPath))
+        if (!File.Exists(UvExecutablePath))
         {
-            throw new FileNotFoundException("pip not found", PipPath);
+            throw new FileNotFoundException("uv not found", UvExecutablePath);
         }
 
         // Record output for errors
@@ -249,7 +255,11 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
             outputDataReceived?.Invoke(s);
         });
 
-        RunDetached(args.Prepend("-m pip install").Concat("--exists-action s"), outputAction);
+        RunUvDetached(
+            args.Prepend(["pip", "install"])
+                .Concat(["--index-strategy", "unsafe-first-match", "--python", PythonPath.ToString()]),
+            outputAction
+        );
         await Process.WaitForExitAsync().ConfigureAwait(false);
 
         // Check return code
@@ -267,9 +277,9 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
     /// </summary>
     public async Task PipUninstall(ProcessArgs args, Action<ProcessOutput>? outputDataReceived = null)
     {
-        if (!File.Exists(PipPath))
+        if (!File.Exists(UvExecutablePath))
         {
-            throw new FileNotFoundException("pip not found", PipPath);
+            throw new FileNotFoundException("uv not found", UvExecutablePath);
         }
 
         // Record output for errors
@@ -284,7 +294,10 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
             outputDataReceived?.Invoke(s);
         });
 
-        RunDetached($"-m pip uninstall -y {args}", outputAction);
+        RunUvDetached(
+            args.Prepend(["pip", "uninstall"]).Concat(["--python", PythonPath.ToString()]),
+            outputAction
+        );
         await Process.WaitForExitAsync().ConfigureAwait(false);
 
         // Check return code
@@ -301,17 +314,15 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
     /// </summary>
     public async Task<IReadOnlyList<PipPackageInfo>> PipList()
     {
-        if (!File.Exists(PipPath))
+        if (!File.Exists(UvExecutablePath))
         {
-            throw new FileNotFoundException("pip not found", PipPath);
+            throw new FileNotFoundException("uv not found", UvExecutablePath);
         }
-
-        SetPyvenvCfg(BaseInstall.RootPath);
 
         var result = await ProcessRunner
             .GetProcessResultAsync(
-                PythonPath,
-                "-m pip list --format=json",
+                UvExecutablePath,
+                ["pip", "list", "--format=json", "--python", PythonPath.ToString()],
                 WorkingDirectory?.FullPath,
                 EnvironmentVariables
             )
@@ -332,10 +343,9 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
                 StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries
             )
             .Select(line => line.Trim())
-            .FirstOrDefault(
-                line =>
-                    line.StartsWith("[", StringComparison.OrdinalIgnoreCase)
-                    && line.EndsWith("]", StringComparison.OrdinalIgnoreCase)
+            .FirstOrDefault(line =>
+                line.StartsWith("[", StringComparison.OrdinalIgnoreCase)
+                && line.EndsWith("]", StringComparison.OrdinalIgnoreCase)
             );
 
         if (jsonLine is null)
@@ -354,17 +364,15 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
     /// </summary>
     public async Task<PipShowResult?> PipShow(string packageName)
     {
-        if (!File.Exists(PipPath))
+        if (!File.Exists(UvExecutablePath))
         {
-            throw new FileNotFoundException("pip not found", PipPath);
+            throw new FileNotFoundException("uv not found", UvExecutablePath);
         }
-
-        SetPyvenvCfg(BaseInstall.RootPath);
 
         var result = await ProcessRunner
             .GetProcessResultAsync(
-                PythonPath,
-                new[] { "-m", "pip", "show", packageName },
+                UvExecutablePath,
+                ["pip", "show", packageName, "--python", PythonPath.ToString()],
                 WorkingDirectory?.FullPath,
                 EnvironmentVariables
             )
@@ -548,16 +556,17 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
         {
             var portableGitBin = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
             var venvBin = RootPath.JoinDir(RelativeBinPath);
+            var uvFolder = GlobalConfig.LibraryDir.JoinDir("Assets", "uv");
             if (env.TryGetValue("PATH", out var pathValue))
             {
                 env = env.SetItem(
                     "PATH",
-                    Compat.GetEnvPathWithExtensions(portableGitBin, venvBin, pathValue)
+                    Compat.GetEnvPathWithExtensions(portableGitBin, venvBin, uvFolder, pathValue)
                 );
             }
             else
             {
-                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(portableGitBin, venvBin));
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(portableGitBin, uvFolder, venvBin));
             }
             env = env.SetItem("GIT", portableGitBin.JoinFile("git.exe"));
         }
@@ -609,6 +618,96 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
         }
     }
 
+    [MemberNotNull(nameof(Process))]
+    private void RunUvDetached(
+        ProcessArgs args,
+        Action<ProcessOutput>? outputDataReceived,
+        Action<int>? onExit = null
+    )
+    {
+        var arguments = args.ToString();
+
+        if (!UvExecutablePath.Exists)
+        {
+            throw new FileNotFoundException("uv not found", PythonPath);
+        }
+
+        Logger.Info(
+            "Launching uv process [{UvExecutablePath}] "
+                + "in working directory [{WorkingDirectory}] with args {Arguments}",
+            UvExecutablePath,
+            WorkingDirectory?.ToString(),
+            arguments
+        );
+
+        var filteredOutput =
+            outputDataReceived == null
+                ? null
+                : new Action<ProcessOutput>(s =>
+                {
+                    if (SuppressOutput.Any(s.Text.Contains))
+                    {
+                        Logger.Info("Filtered output: {S}", s);
+                        return;
+                    }
+                    outputDataReceived.Invoke(s);
+                });
+
+        var env = EnvironmentVariables;
+
+        // Disable pip caching - uses significant memory for large packages like torch
+        // env["PIP_NO_CACHE_DIR"] = "true";
+
+        // On windows, add portable git to PATH and binary as GIT
+        if (Compat.IsWindows)
+        {
+            var portableGitBin = GlobalConfig.LibraryDir.JoinDir("PortableGit", "bin");
+            var venvBin = RootPath.JoinDir(RelativeBinPath);
+            if (env.TryGetValue("PATH", out var pathValue))
+            {
+                env = env.SetItem(
+                    "PATH",
+                    Compat.GetEnvPathWithExtensions(portableGitBin, venvBin, pathValue)
+                );
+            }
+            else
+            {
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(portableGitBin, venvBin));
+            }
+            env = env.SetItem("GIT", portableGitBin.JoinFile("git.exe"));
+        }
+        else
+        {
+            if (env.TryGetValue("PATH", out var pathValue))
+            {
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions(pathValue));
+            }
+            else
+            {
+                env = env.SetItem("PATH", Compat.GetEnvPathWithExtensions());
+            }
+        }
+
+        Logger.Info("PATH: {Path}", env["PATH"]);
+
+        Process = ProcessRunner.StartAnsiProcess(
+            UvExecutablePath,
+            arguments,
+            workingDirectory: WorkingDirectory?.FullPath,
+            outputDataReceived: filteredOutput,
+            environmentVariables: env
+        );
+
+        if (onExit != null)
+        {
+            Process.EnableRaisingEvents = true;
+            Process.Exited += (sender, _) =>
+            {
+                onExit((sender as AnsiProcess)?.ExitCode ?? -1);
+            };
+        }
+    }
+
     /// <summary>
     /// Get entry points for a package.
     /// https://packaging.python.org/en/latest/specifications/entry-points/#entry-points
@@ -617,11 +716,11 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
     {
         // ReSharper disable once StringLiteralTypo
         var code = $"""
-                   from importlib.metadata import entry_points
-                   
-                   results = entry_points(group='console_scripts', name='{entryPointName}')
-                   print(tuple(results)[0].value, end='')
-                   """;
+            from importlib.metadata import entry_points
+
+            results = entry_points(group='console_scripts', name='{entryPointName}')
+            print(tuple(results)[0].value, end='')
+            """;
 
         var result = await Run($"-c \"{code}\"").ConfigureAwait(false);
         if (result.ExitCode == 0 && !string.IsNullOrWhiteSpace(result.StandardOutput))
@@ -672,7 +771,7 @@ public class PyVenvRunner : IDisposable, IAsyncDisposable, IPyVenvRunner
         GC.SuppressFinalize(this);
     }
 
-    ~PyVenvRunner()
+    ~UvVenvRunner()
     {
         Dispose();
     }

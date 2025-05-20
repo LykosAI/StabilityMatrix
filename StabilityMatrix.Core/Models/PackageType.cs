@@ -3,5 +3,6 @@
 public enum PackageType
 {
     SdInference,
-    SdTraining
+    SdTraining,
+    Legacy,
 }

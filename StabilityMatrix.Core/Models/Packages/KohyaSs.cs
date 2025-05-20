@@ -3,6 +3,7 @@ using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
+using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -16,8 +17,9 @@ public class KohyaSs(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyRunner runner
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPyRunner runner,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "kohya_ss";
     public override string DisplayName { get; set; } = "kohya_ss";
@@ -48,51 +50,58 @@ public class KohyaSs(
                 Name = "Listen Address",
                 Type = LaunchOptionType.String,
                 DefaultValue = "127.0.0.1",
-                Options = ["--listen"]
+                Options = ["--listen"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
-                Options = ["--port"]
+                Options = ["--port"],
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Skip Requirements Verification",
+                Type = LaunchOptionType.Bool,
+                Options = ["--noverify"],
+                InitialValue = true,
             },
             new LaunchOptionDefinition
             {
                 Name = "Username",
                 Type = LaunchOptionType.String,
-                Options = ["--username"]
+                Options = ["--username"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Password",
                 Type = LaunchOptionType.String,
-                Options = ["--password"]
+                Options = ["--password"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Auto-Launch Browser",
                 Type = LaunchOptionType.Bool,
-                Options = ["--inbrowser"]
+                Options = ["--inbrowser"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
-                Options = ["--share"]
+                Options = ["--share"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Headless",
                 Type = LaunchOptionType.Bool,
-                Options = ["--headless"]
+                Options = ["--headless"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Language",
                 Type = LaunchOptionType.String,
-                Options = ["--language"]
+                Options = ["--language"],
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override async Task InstallPackage(
@@ -122,10 +131,14 @@ public class KohyaSs(
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
         // Setup venv
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         // Extra dep needed before running setup since v23.0.x
-        var pipArgs = new PipInstallArgs("rich", "packaging");
+        var pipArgs = new PipInstallArgs("rich", "packaging", "setuptools", "uv");
         if (installedPackage.PipOverrides != null)
         {
             pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
@@ -133,68 +146,54 @@ public class KohyaSs(
 
         await venvRunner.PipInstall(pipArgs).ConfigureAwait(false);
 
-        if (Compat.IsWindows)
+        // install torch
+        pipArgs = new PipInstallArgs()
+            .WithTorch()
+            .WithTorchVision()
+            .WithTorchAudio()
+            .WithXFormers()
+            .WithTorchExtraIndex("cu128")
+            .AddArg("--force-reinstall");
+
+        if (installedPackage.PipOverrides != null)
         {
-            await venvRunner
-                .CustomInstall(["setup/setup_windows.py", "--headless"], onConsoleOutput)
-                .ConfigureAwait(false);
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
         }
-        else if (Compat.IsLinux)
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+        if (Compat.IsLinux)
         {
             await venvRunner
                 .CustomInstall(
                     [
                         "setup/setup_linux.py",
                         "--platform-requirements-file=requirements_linux.txt",
-                        "--no_run_accelerate"
+                        "--no_run_accelerate",
                     ],
                     onConsoleOutput
                 )
                 .ConfigureAwait(false);
+            pipArgs = new PipInstallArgs();
         }
-
-        var isBlackwell =
-            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
-
-        if (isBlackwell)
+        else if (Compat.IsWindows)
         {
+            var requirements = new FilePath(installLocation, "requirements_windows.txt");
             pipArgs = new PipInstallArgs()
-                .WithTorch()
-                .WithTorchVision()
-                .WithTorchAudio()
-                .WithTorchExtraIndex("cu128")
-                .AddArg("--force-reinstall");
-
-            if (installedPackage.PipOverrides != null)
-            {
-                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-            }
-
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-
-            pipArgs = new PipInstallArgs()
-                .AddArg("--pre")
-                .AddArg("-U")
-                .AddArg("--no-deps")
-                .AddArg("xformers");
-
-            if (installedPackage.PipOverrides != null)
-            {
-                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-            }
-
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-
-            pipArgs = new PipInstallArgs().AddArg("-U").AddArg("bitsandbytes");
-
-            if (installedPackage.PipOverrides != null)
-            {
-                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-            }
-
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-            await venvRunner.PipInstall("numpy==1.26.4", onConsoleOutput).ConfigureAwait(false);
+                .WithParsedFromRequirementsTxt(
+                    await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+                    "bitsandbytes==0\\.44\\.0"
+                )
+                .AddArg("bitsandbytes");
         }
+
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall("numpy==1.26.4", onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(
@@ -205,7 +204,8 @@ public class KohyaSs(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -224,7 +224,7 @@ public class KohyaSs(
         }
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );

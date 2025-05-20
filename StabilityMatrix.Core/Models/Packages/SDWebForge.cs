@@ -16,8 +16,9 @@ public class SDWebForge(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : A3WebUI(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : A3WebUI(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "stable-diffusion-webui-forge";
     public override string DisplayName { get; set; } = "Stable Diffusion WebUI Forge";
@@ -126,7 +127,11 @@ public class SDWebForge(
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
@@ -137,7 +142,7 @@ public class SDWebForge(
             .ReadAllTextAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        var pipArgs = new PipInstallArgs("setuptools==69.5.1");
+        var pipArgs = new PipInstallArgs();
 
         var isBlackwell =
             SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
@@ -158,6 +163,16 @@ public class SDWebForge(
                 }
             );
 
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+        pipArgs = new PipInstallArgs(
+            "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip"
+        );
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
 
         if (installedPackage.PipOverrides != null)
@@ -166,6 +181,7 @@ public class SDWebForge(
         }
 
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }
 }

@@ -2640,6 +2640,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unsupported Python Versions.
+        /// </summary>
+        public static string Label_PythonVersionWarningTitle {
+            get {
+                return ResourceManager.GetString("Label_PythonVersionWarningTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to PyTorch Version.
         /// </summary>
         public static string Label_PyTorchVersion {
@@ -2892,6 +2901,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show Unsupported Python Versions.
+        /// </summary>
+        public static string Label_ShowUnsupportedPythonVersions {
+            get {
+                return ResourceManager.GetString("Label_ShowUnsupportedPythonVersions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Skip first-time setup.
         /// </summary>
         public static string Label_SkipSetup {
@@ -3077,6 +3095,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_UnknownPackage {
             get {
                 return ResourceManager.GetString("Label_UnknownPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You may encounter problems with some packages when using unsupported Python versions.
+        /// </summary>
+        public static string Label_UnsupportedPythonVersionDetails {
+            get {
+                return ResourceManager.GetString("Label_UnsupportedPythonVersionDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This will show all available Python versions, including those that are not supported by Stability Matrix. Are you sure?.
+        /// </summary>
+        public static string Label_UnsupportedPythonVersionWarningDescription {
+            get {
+                return ResourceManager.GetString("Label_UnsupportedPythonVersionWarningDescription", resourceCulture);
             }
         }
         

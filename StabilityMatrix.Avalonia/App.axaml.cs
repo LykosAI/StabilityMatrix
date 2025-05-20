@@ -63,6 +63,7 @@ using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Configs;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 using StabilityMatrix.Core.Updater;
 using ApiOptions = StabilityMatrix.Core.Models.Configs.ApiOptions;

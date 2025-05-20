@@ -126,9 +126,9 @@ public class Settings
         new()
         {
             // Fixes potential setuptools error on Portable Windows Python
-            ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib",
+            // ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib",
             // Suppresses 'A new release of pip is available' messages
-            ["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
+            ["PIP_DISABLE_PIP_VERSION_CHECK"] = "1",
         };
 
     [JsonPropertyName("EnvironmentVariables")]
@@ -139,6 +139,14 @@ public class Settings
     {
         get
         {
+            // add here when can use GlobalConfig
+            DefaultEnvironmentVariables["UV_CACHE_DIR"] = Path.Combine(
+                GlobalConfig.LibraryDir,
+                "Assets",
+                "uv",
+                "cache"
+            );
+
             if (UserEnvironmentVariables is null || UserEnvironmentVariables.Count == 0)
             {
                 return DefaultEnvironmentVariables;
@@ -216,6 +224,8 @@ public class Settings
     public int MaxConcurrentDownloads { get; set; }
 
     public bool FilterExtraNetworksByBaseModel { get; set; } = true;
+
+    public bool ShowAllAvailablePythonVersions { get; set; }
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

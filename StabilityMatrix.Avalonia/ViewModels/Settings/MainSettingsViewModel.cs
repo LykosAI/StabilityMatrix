@@ -156,6 +156,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private int maxConcurrentDownloads;
 
+    [ObservableProperty]
+    private bool showAllAvailablePythonVersions;
+
     #region System Settings
 
     [ObservableProperty]
@@ -306,6 +309,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.MaxConcurrentDownloads,
             settings => settings.MaxConcurrentDownloads,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ShowAllAvailablePythonVersions,
+            settings => settings.ShowAllAvailablePythonVersions,
             true
         );
 
@@ -629,6 +639,31 @@ public partial class MainSettingsViewModel : PageViewModelBase
                 NotificationType.Error
             );
         }
+    }
+
+    partial void OnShowAllAvailablePythonVersionsChanged(bool value)
+    {
+        if (!value)
+            return;
+
+        Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            var dialog = DialogHelper.CreateMarkdownDialog(
+                Resources.Label_UnsupportedPythonVersionWarningDescription,
+                Resources.Label_PythonVersionWarningTitle
+            );
+            dialog.IsPrimaryButtonEnabled = true;
+            dialog.IsSecondaryButtonEnabled = true;
+            dialog.PrimaryButtonText = Resources.Action_Yes;
+            dialog.CloseButtonText = Resources.Label_No;
+            dialog.DefaultButton = ContentDialogButton.Primary;
+
+            var result = await dialog.ShowAsync();
+            if (result is not ContentDialogResult.Primary)
+            {
+                ShowAllAvailablePythonVersions = false;
+            }
+        });
     }
 
     #endregion
@@ -1088,6 +1123,41 @@ public partial class MainSettingsViewModel : PageViewModelBase
         }
     }
 
+    [RelayCommand]
+    private async Task DebugInstallUv()
+    {
+        await prerequisiteHelper.InstallUvIfNecessary();
+        notificationService.Show("Installed Uv", "Uv has been installed.", NotificationType.Success);
+    }
+
+    [RelayCommand]
+    private async Task DebugRunUv()
+    {
+        var textFields = new TextBoxField[]
+        {
+            new() { Label = "uv", Watermark = "uv" },
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("UV Run", "", textFields);
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var uv = new UvManager(settingsManager);
+
+            var result = await uv.ListAvailablePythonsAsync(onConsoleOutput: output =>
+            {
+                Logger.Info(output.Text);
+            });
+
+            var sb = new StringBuilder();
+            foreach (var info in result)
+            {
+                sb.AppendLine($"{info}\r\n\r\n");
+            }
+            await DialogHelper.CreateMarkdownDialog(sb.ToString()).ShowAsync();
+        }
+    }
+
     #endregion
 
     #region Debug Commands
@@ -1110,6 +1180,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugShowMockGitVersionSelectorDialogCommand),
             new CommandItem(DebugWhichCommand),
             new CommandItem(DebugRobocopyCommand),
+            new CommandItem(DebugInstallUvCommand),
+            new CommandItem(DebugRunUvCommand),
         ];
 
     [RelayCommand]

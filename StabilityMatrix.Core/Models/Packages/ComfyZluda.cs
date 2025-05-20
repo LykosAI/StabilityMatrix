@@ -19,8 +19,9 @@ public class ComfyZluda(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : ComfyUI(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : ComfyUI(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     private const string ZludaPatchDownloadUrl =
         "https://github.com/lshqqytiger/ZLUDA/releases/download/rel.dba64c0966df2c71e82255e942c96e2e1cea3a2d/ZLUDA-windows-rocm6-amd64.zip";
@@ -65,7 +66,11 @@ public class ComfyZluda(
         }
 
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         var pipArgs = new PipInstallArgs()
@@ -160,8 +165,8 @@ public class ComfyZluda(
                 "Your package has not yet been upgraded to use HIP SDK 6.2. To continue, please update this package or select \"Change Version\" from the 3-dots menu to have it upgraded automatically for you"
             );
         }
-
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
         var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
         var hipPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),

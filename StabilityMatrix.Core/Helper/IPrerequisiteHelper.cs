@@ -5,6 +5,7 @@ using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Helper;
 
@@ -17,6 +18,9 @@ public interface IPrerequisiteHelper
     bool IsHipSdkInstalled { get; }
 
     Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null);
+    Task InstallUvIfNecessary(IProgress<ProgressReport>? progress = null);
+    string UvExePath { get; }
+    bool IsUvInstalled { get; }
     Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null);
     Task InstallGitIfNecessary(IProgress<ProgressReport>? progress = null);
     Task InstallPythonIfNecessary(IProgress<ProgressReport>? progress = null);
@@ -204,5 +208,12 @@ public interface IPrerequisiteHelper
     );
 
     Task<bool> FixGitLongPaths();
-    Task AddMissingLibsToVenv(DirectoryPath installedPackagePath, IProgress<ProgressReport>? progress = null);
+    Task AddMissingLibsToVenv(
+        DirectoryPath installedPackagePath,
+        PyBaseInstall baseInstall,
+        IProgress<ProgressReport>? progress = null
+    );
+    Task InstallPythonIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
+    Task InstallVirtualenvIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
+    Task InstallTkinterIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null);
 }

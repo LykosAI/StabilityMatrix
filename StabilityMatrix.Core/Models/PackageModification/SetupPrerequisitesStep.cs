@@ -5,26 +5,14 @@ using StabilityMatrix.Core.Python;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
-public class SetupPrerequisitesStep : IPackageStep
+public class SetupPrerequisitesStep(
+    IPrerequisiteHelper prerequisiteHelper,
+    BasePackage package,
+    PyVersion? pythonVersion = null
+) : IPackageStep
 {
-    private readonly IPrerequisiteHelper prerequisiteHelper;
-    private readonly IPyRunner pyRunner;
-    private readonly BasePackage package;
-
-    public SetupPrerequisitesStep(
-        IPrerequisiteHelper prerequisiteHelper,
-        IPyRunner pyRunner,
-        BasePackage package
-    )
-    {
-        this.prerequisiteHelper = prerequisiteHelper;
-        this.pyRunner = pyRunner;
-        this.package = package;
-    }
-
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        // package and platform-specific requirements install
         await prerequisiteHelper.InstallPackageRequirements(package, progress).ConfigureAwait(false);
     }
 

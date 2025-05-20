@@ -641,6 +641,31 @@ public partial class MainSettingsViewModel : PageViewModelBase
         }
     }
 
+    partial void OnShowAllAvailablePythonVersionsChanged(bool value)
+    {
+        if (!value)
+            return;
+
+        Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            var dialog = DialogHelper.CreateMarkdownDialog(
+                Resources.Label_UnsupportedPythonVersionWarningDescription,
+                Resources.Label_PythonVersionWarningTitle
+            );
+            dialog.IsPrimaryButtonEnabled = true;
+            dialog.IsSecondaryButtonEnabled = true;
+            dialog.PrimaryButtonText = Resources.Action_Yes;
+            dialog.CloseButtonText = Resources.Label_No;
+            dialog.DefaultButton = ContentDialogButton.Primary;
+
+            var result = await dialog.ShowAsync();
+            if (result is not ContentDialogResult.Primary)
+            {
+                ShowAllAvailablePythonVersions = false;
+            }
+        });
+    }
+
     #endregion
 
     #region Directory Shortcuts

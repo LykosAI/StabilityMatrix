@@ -223,9 +223,9 @@
 
                 <ui:SettingsExpander
                     Grid.Row="4"
-                    Margin="8,0,8,4"
-                    Description="NOTE: Python versions &gt;= 3.13 have not been thoroughly tested and you may encounter issues with some packages"
-                    Header="Show All Python Versions">
+                    Margin="8,4,8,4"
+                    Description="{x:Static lang:Resources.Label_UnsupportedPythonVersionDetails}"
+                    Header="{x:Static lang:Resources.Label_ShowUnsupportedPythonVersions}">
                     <ui:SettingsExpander.IconSource>
                         <controls:FASymbolIconSource Symbol="fa-brands fa-python" />
                     </ui:SettingsExpander.IconSource>

@@ -1419,4 +1419,16 @@ The Spark model operates at a scale comparable to trillion-parameter foundation 
 ### 🔒 Privacy First
 We prioritize your privacy ([Gen AI Terms](&lt;https://lykos.ai/gen-ai-terms&gt;)). **Your prompts/outputs are NEVER used for AI training by Lykos AI or our necessary cloud infrastructure partners.** Secure processing occurs solely to generate your amplification, **after which we only retain metadata (like timestamps and token counts), not the prompt content itself.** Your data is never sold or shared.</value>
   </data>
+  <data name="Label_ShowUnsupportedPythonVersions" xml:space="preserve">
+    <value>Show Unsupported Python Versions</value>
+  </data>
+  <data name="Label_UnsupportedPythonVersionDetails" xml:space="preserve">
+    <value>You may encounter problems with some packages when using unsupported Python versions</value>
+  </data>
+  <data name="Label_UnsupportedPythonVersionWarningDescription" xml:space="preserve">
+    <value>This will show all available Python versions, including those that are not supported by Stability Matrix. Are you sure?</value>
+  </data>
+  <data name="Label_PythonVersionWarningTitle" xml:space="preserve">
+    <value>Python Version Warning</value>
+  </data>
 </root>

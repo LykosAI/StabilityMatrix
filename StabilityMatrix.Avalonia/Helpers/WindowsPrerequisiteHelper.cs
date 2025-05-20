@@ -282,7 +282,6 @@ public class WindowsPrerequisiteHelper(
         await InstallVcRedistIfNecessary(progress);
         await UnpackResourcesIfNecessary(progress);
         await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
-        await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_17, progress);
         await InstallGitIfNecessary(progress);
         await InstallNodeIfNecessary(progress);
         await InstallVcBuildToolsIfNecessary(progress);

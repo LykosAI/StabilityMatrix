@@ -1429,6 +1429,6 @@ We prioritize your privacy ([Gen AI Terms](&lt;https://lykos.ai/gen-ai-terms&gt;
     <value>This will show all available Python versions, including those that are not supported by Stability Matrix. Are you sure?</value>
   </data>
   <data name="Label_PythonVersionWarningTitle" xml:space="preserve">
-    <value>Python Version Warning</value>
+    <value>Unsupported Python Versions</value>
   </data>
 </root>

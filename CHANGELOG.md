@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.15.0-dev.1
+### Added
+- Added Python Version selector for all new package installs
+### Changed
+- Updated all Python version management, virtual environment creation, and pip installs to use `uv` for improved reliability, compatibility, and speed
+
 ## v2.14.1
 ### Changed
 - Updated Inference Extra Networks (Lora / LyCORIS) base model filtering to consider SDXL variations (e.g., Noob AI / Illustrious) as compatible, unrecognized models or models with no base model will be considered compatible.

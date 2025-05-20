@@ -2640,7 +2640,7 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python Version Warning.
+        ///   Looks up a localized string similar to Unsupported Python Versions.
         /// </summary>
         public static string Label_PythonVersionWarningTitle {
             get {

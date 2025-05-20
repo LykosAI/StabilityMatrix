@@ -495,9 +495,9 @@ public class UnixPrerequisiteHelper(
     )
     {
         // Check if pip and venv are installed for this version
-        var pipInstalled = File.Exists(Path.Combine(GetPythonDir(version), "pip"));
+        var pipInstalled = File.Exists(Path.Combine(GetPythonDir(version), "bin", "pip3"));
         var venvInstalled = Directory.Exists(
-            Path.Combine(GetPythonDir(version), "lib", "site-packages", "virtualenv")
+            Path.Combine(GetPythonDir(version), "Scripts", "virtualenv" + Compat.ExeExtension)
         );
 
         if (!pipInstalled || !venvInstalled)
@@ -557,9 +557,62 @@ public class UnixPrerequisiteHelper(
         // Extract UV
         await ArchiveHelper.Extract7ZTar(UvDownloadPath, UvExtractPath);
 
-        // Make the UV executable executable
-        if (File.Exists(UvExePath))
+        // On Mac/Linux, the extraction might create a platform-specific folder
+        // (e.g., uv-aarch64-apple-darwin or uv-x86_64-unknown-linux-gnu)
+        // We need to move both the uv and uvx executables from that folder to the expected location
+
+        // Find platform-specific directory
+        var platformSpecificDir = Directory
+            .GetDirectories(UvExtractPath)
+            .FirstOrDefault(dir => Path.GetFileName(dir).StartsWith("uv-"));
+
+        if (platformSpecificDir != null)
         {
+            Logger.Debug("Found platform-specific UV directory: {PlatformDir}", platformSpecificDir);
+
+            // List of files to move: uv and uvx
+            var filesToMove = new Dictionary<string, string>
+            {
+                { Path.Combine(platformSpecificDir, "uv"), Path.Combine(UvExtractPath, "uv") },
+                { Path.Combine(platformSpecificDir, "uvx"), Path.Combine(UvExtractPath, "uvx") },
+            };
+
+            var anyFilesMoved = false;
+
+            // Move each file if it exists
+            foreach (var entry in filesToMove)
+            {
+                var sourcePath = entry.Key;
+                var destPath = entry.Value;
+
+                if (File.Exists(sourcePath))
+                {
+                    Logger.Debug("Moving file from {Source} to {Destination}", sourcePath, destPath);
+
+                    // Ensure the destination doesn't exist before moving
+                    if (File.Exists(destPath))
+                    {
+                        File.Delete(destPath);
+                    }
+
+                    File.Move(sourcePath, destPath);
+                    anyFilesMoved = true;
+
+                    // Make the executable file executable
+                    var process = ProcessRunner.StartAnsiProcess("chmod", ["+x", destPath]);
+                    await process.WaitForExitAsync();
+                }
+            }
+
+            // Delete the now-empty platform directory after moving all files
+            if (anyFilesMoved)
+            {
+                Directory.Delete(platformSpecificDir, true);
+            }
+        }
+        else if (File.Exists(UvExePath))
+        {
+            // For Windows or if we already have the file in the right place, just make it executable
             var process = ProcessRunner.StartAnsiProcess("chmod", ["+x", UvExePath]);
             await process.WaitForExitAsync();
         }

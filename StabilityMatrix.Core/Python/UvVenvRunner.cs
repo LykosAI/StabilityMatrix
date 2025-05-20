@@ -111,14 +111,11 @@ public class UvVenvRunner : IPyVenvRunner
     /// </summary>
     public List<string> SuppressOutput { get; } = new() { "fatal: not a git repository" };
 
-    private UvManager uvManager;
-
     internal UvVenvRunner(PyBaseInstall baseInstall, DirectoryPath rootPath)
     {
         BaseInstall = baseInstall;
         RootPath = rootPath;
         EnvironmentVariables = EnvironmentVariables.SetItem("VIRTUAL_ENV", rootPath.FullPath);
-        uvManager = new UvManager();
     }
 
     public void UpdateEnvironmentVariables(

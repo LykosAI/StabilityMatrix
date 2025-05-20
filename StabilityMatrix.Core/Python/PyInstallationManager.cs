@@ -100,10 +100,11 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
     public async Task<IReadOnlyList<UvPythonInfo>> GetAllAvailablePythonsAsync()
     {
         var allPythons = await uvManager.ListAvailablePythonsAsync().ConfigureAwait(false);
-        var filteredPythons = allPythons
-            .Where(p => p is { Source: "cpython", Version.Minor: >= 10 and <= 12 })
-            .OrderBy(p => p.Version)
-            .ToList();
+        Func<UvPythonInfo, bool> isSupportedVersion = settingsManager.Settings.ShowAllAvailablePythonVersions
+            ? p => p is { Source: "cpython", Version.Minor: >= 10 }
+            : p => p is { Source: "cpython", Version.Minor: >= 10 and <= 12 };
+
+        var filteredPythons = allPythons.Where(isSupportedVersion).OrderBy(p => p.Version).ToList();
 
         var legacyPythonPath = Path.Combine(settingsManager.LibraryDir, "Assets", "Python310");
         filteredPythons.Insert(

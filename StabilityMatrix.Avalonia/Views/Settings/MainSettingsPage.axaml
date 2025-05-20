@@ -154,7 +154,7 @@
             </Grid>
 
             <!--  Environment Options  -->
-            <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
                 <TextBlock
                     Margin="0,0,0,8"
                     FontWeight="Medium"
@@ -218,6 +218,19 @@
                                 </DropDownButton.Flyout>
                             </DropDownButton>
                         </StackPanel>
+                    </ui:SettingsExpander.Footer>
+                </ui:SettingsExpander>
+
+                <ui:SettingsExpander
+                    Grid.Row="4"
+                    Margin="8,0,8,4"
+                    Description="NOTE: Python versions &gt;= 3.13 have not been thoroughly tested and you may encounter issues with some packages"
+                    Header="Show All Python Versions">
+                    <ui:SettingsExpander.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-brands fa-python" />
+                    </ui:SettingsExpander.IconSource>
+                    <ui:SettingsExpander.Footer>
+                        <ToggleSwitch IsChecked="{Binding ShowAllAvailablePythonVersions}" />
                     </ui:SettingsExpander.Footer>
                 </ui:SettingsExpander>
             </Grid>

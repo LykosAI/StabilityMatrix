@@ -128,7 +128,7 @@ public class Settings
             // Fixes potential setuptools error on Portable Windows Python
             // ["SETUPTOOLS_USE_DISTUTILS"] = "stdlib",
             // Suppresses 'A new release of pip is available' messages
-            ["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
+            ["PIP_DISABLE_PIP_VERSION_CHECK"] = "1",
         };
 
     [JsonPropertyName("EnvironmentVariables")]
@@ -224,6 +224,8 @@ public class Settings
     public int MaxConcurrentDownloads { get; set; }
 
     public bool FilterExtraNetworksByBaseModel { get; set; } = true;
+
+    public bool ShowAllAvailablePythonVersions { get; set; }
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

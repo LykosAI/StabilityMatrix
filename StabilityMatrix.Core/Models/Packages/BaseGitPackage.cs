@@ -212,6 +212,11 @@ public abstract class BaseGitPackage : BasePackage
             )
             : PyBaseInstall.Default;
 
+        if (!PrerequisiteHelper.IsUvInstalled)
+        {
+            await PrerequisiteHelper.InstallUvIfNecessary().ConfigureAwait(false);
+        }
+
         var venvRunner = await baseInstall
             .CreateVenvRunnerAsync(
                 Path.Combine(installedPackagePath, venvName),

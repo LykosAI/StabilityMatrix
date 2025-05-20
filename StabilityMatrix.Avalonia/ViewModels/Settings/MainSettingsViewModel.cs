@@ -156,6 +156,9 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private int maxConcurrentDownloads;
 
+    [ObservableProperty]
+    private bool showAllAvailablePythonVersions;
+
     #region System Settings
 
     [ObservableProperty]
@@ -306,6 +309,13 @@ public partial class MainSettingsViewModel : PageViewModelBase
             this,
             vm => vm.MaxConcurrentDownloads,
             settings => settings.MaxConcurrentDownloads,
+            true
+        );
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.ShowAllAvailablePythonVersions,
+            settings => settings.ShowAllAvailablePythonVersions,
             true
         );
 
@@ -1100,7 +1110,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     {
         var textFields = new TextBoxField[]
         {
-            new() { Label = "uv", Watermark = "uv" }
+            new() { Label = "uv", Watermark = "uv" },
         };
 
         var dialog = DialogHelper.CreateTextEntryDialog("UV Run", "", textFields);
@@ -1146,7 +1156,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
             new CommandItem(DebugWhichCommand),
             new CommandItem(DebugRobocopyCommand),
             new CommandItem(DebugInstallUvCommand),
-            new CommandItem(DebugRunUvCommand)
+            new CommandItem(DebugRunUvCommand),
         ];
 
     [RelayCommand]

@@ -13,6 +13,7 @@ namespace StabilityMatrix.Core.Python;
 [RegisterSingleton<IUvManager, UvManager>]
 public partial class UvManager : IUvManager
 {
+    private readonly ISettingsManager settingsManager;
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly string uvExecutablePath;
     private readonly DirectoryPath uvPythonInstallPath;
@@ -33,24 +34,13 @@ public partial class UvManager : IUvManager
 
     public UvManager(ISettingsManager settingsManager)
     {
+        this.settingsManager = settingsManager;
         if (!settingsManager.IsLibraryDirSet)
             return;
 
         uvPythonInstallPath = new DirectoryPath(settingsManager.LibraryDir, "Assets", "Python");
         uvExecutablePath = Path.Combine(
             settingsManager.LibraryDir,
-            "Assets",
-            "uv",
-            Compat.IsWindows ? "uv.exe" : "uv"
-        );
-        Logger.Debug($"UvManager initialized with uv executable path: {uvExecutablePath}");
-    }
-
-    public UvManager()
-    {
-        uvPythonInstallPath = new DirectoryPath(GlobalConfig.LibraryDir, "Assets", "Python");
-        uvExecutablePath = Path.Combine(
-            GlobalConfig.LibraryDir,
             "Assets",
             "uv",
             Compat.IsWindows ? "uv.exe" : "uv"
@@ -97,6 +87,11 @@ public partial class UvManager : IUvManager
         // Keep implementation from previous correct version (using UvPythonListOutputRegex)
         // ... existing implementation ...
         var args = new ProcessArgsBuilder("python", "list");
+        if (settingsManager.Settings.ShowAllAvailablePythonVersions)
+        {
+            args = args.AddArg("--all-versions");
+        }
+
         var envVars = new Dictionary<string, string>
         {
             // Always use the centrally configured path
@@ -137,20 +132,28 @@ public partial class UvManager : IUvManager
                 var key = match.Groups["key"].Value.Trim();
                 var statusOrPath = match.Groups["status_or_path"].Value.Trim();
 
+                // Handle symlinks by removing the -> and everything after it
+                if (statusOrPath.Contains(" -> "))
+                {
+                    statusOrPath = statusOrPath.Substring(0, statusOrPath.IndexOf(" -> ")).Trim();
+                }
+
                 string? actualInstallPath = null; // This should be the INNER path (e.g., .../cpython-...)
                 var isInstalled = false;
+                var isDownloadAvailable = false;
 
                 // --- Path Detection Logic ---
                 if (statusOrPath.Equals("<download available>", StringComparison.OrdinalIgnoreCase))
                 {
                     isInstalled = false;
+                    isDownloadAvailable = true;
                 }
                 // Check if it looks like a path to an executable -> derive inner path
                 else if (
                     File.Exists(statusOrPath)
                     && (
                         statusOrPath.EndsWith("python.exe", StringComparison.OrdinalIgnoreCase)
-                        || statusOrPath.EndsWith("python", StringComparison.OrdinalIgnoreCase)
+                        || statusOrPath.Contains("/python3.", StringComparison.OrdinalIgnoreCase)
                     )
                 )
                 {
@@ -174,16 +177,15 @@ public partial class UvManager : IUvManager
                         );
                     }
 
-                    if (actualInstallPath != null && actualInstallPath.StartsWith(uvPythonInstallPath))
+                    if (actualInstallPath != null)
                     {
+                        // Check if installation exists
                         var quickCheck = new PyInstallation(new PyVersion(0, 0, 0), actualInstallPath); // Use temp version
                         isInstalled = quickCheck.Exists();
-                        if (!isInstalled)
-                            actualInstallPath = null;
                     }
                 }
                 // Check if it's a directory path -> Assume it's the INNER path
-                else if (Directory.Exists(statusOrPath) && statusOrPath.StartsWith(uvPythonInstallPath))
+                else if (Directory.Exists(statusOrPath))
                 {
                     var quickCheck = new PyInstallation(new PyVersion(0, 0, 0), statusOrPath); // Use temp version
                     isInstalled = quickCheck.Exists();
@@ -271,7 +273,6 @@ public partial class UvManager : IUvManager
                     {
                         pyVersion = fallbackParsedVer;
                     }
-
                     if (pyVersion.HasValue && architecture == null)
                     {
                         architecture = keyParts.FirstOrDefault(p =>
@@ -298,10 +299,18 @@ public partial class UvManager : IUvManager
                 {
                     actualInstallPath ??= string.Empty;
 
-                    if (
-                        actualInstallPath == string.Empty
-                        || actualInstallPath.StartsWith(uvPythonInstallPath)
-                    )
+                    // Only include Pythons that are:
+                    // 1. "<download available>" OR
+                    // 2. Installed in our uvPythonInstallPath
+                    bool shouldInclude =
+                        isDownloadAvailable
+                        || (
+                            isInstalled
+                            && !string.IsNullOrEmpty(actualInstallPath)
+                            && actualInstallPath.StartsWith(uvPythonInstallPath)
+                        );
+
+                    if (shouldInclude)
                     {
                         pythons.Add(
                             new UvPythonInfo(

@@ -146,13 +146,17 @@ public class KohyaSs(
 
         await venvRunner.PipInstall(pipArgs).ConfigureAwait(false);
 
+        var isLegacyNvidia =
+            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+        var torchExtraIndex = isLegacyNvidia ? "cu126" : "cu128";
+
         // install torch
         pipArgs = new PipInstallArgs()
             .WithTorch()
             .WithTorchVision()
             .WithTorchAudio()
             .WithXFormers()
-            .WithTorchExtraIndex("cu128")
+            .WithTorchExtraIndex(torchExtraIndex)
             .AddArg("--force-reinstall");
 
         if (installedPackage.PipOverrides != null)

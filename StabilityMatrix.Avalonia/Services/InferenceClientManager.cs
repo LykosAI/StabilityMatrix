@@ -210,16 +210,6 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
-        loraModelsSource
-            .Connect()
-            .DeferUntilLoaded()
-            .SortAndBind(
-                LoraModels,
-                SortExpressionComparer<HybridModelFile>.Ascending(f => f.Type).ThenByAscending(f => f.SortKey)
-            )
-            .ObserveOn(SynchronizationContext.Current)
-            .Subscribe();
-
         promptExpansionModelsSource
             .Connect()
             .Or(downloadablePromptExpansionModelsSource.Connect())

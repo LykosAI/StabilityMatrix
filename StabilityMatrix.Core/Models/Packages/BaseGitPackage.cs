@@ -8,6 +8,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.GlobalConfig;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -475,6 +476,23 @@ public abstract class BaseGitPackage : BasePackage
                 IsPrerelease = versionOptions.IsPrerelease
             };
         }
+
+            // Determine the shared folder method to use
+            var sharedFolderMethodToUse = installedPackage.PreferredSharedFolderMethod ?? RecommendedSharedFolderMethod;
+
+            // Temporarily remove symlinks if using Symlink method
+            if (sharedFolderMethodToUse == SharedFolderMethod.Symlink)
+            {
+                if (this.SharedFolders is not null)
+                {
+                    Helper.SharedFolders.RemoveLinksForPackage(this.SharedFolders, new DirectoryPath(installedPackage.FullPath!));
+                }
+
+                if (this.SharedOutputFolders is not null && installedPackage.UseSharedOutputFolder)
+                {
+                    Helper.SharedFolders.RemoveLinksForPackage(this.SharedOutputFolders, new DirectoryPath(installedPackage.FullPath!));
+                }
+            }
 
         // fetch
         progress?.Report(new ProgressReport(-1f, "Fetching data...", isIndeterminate: true));

@@ -168,7 +168,7 @@
 
             <sg:SpacedGrid
                 Margin="0,6,0,0"
-                RowDefinitions="Auto,*,*"
+                RowDefinitions="Auto,*,*,*"
                 RowSpacing="4">
                 <TextBlock
                     Margin="0,0,0,4"
@@ -190,6 +190,26 @@
                     <controls:SettingsAccountLinkExpander.IsLoading>
                         <MultiBinding Converter="{x:Static BoolConverters.Or}">
                             <Binding Path="ConnectCivitCommand.IsRunning" />
+                            <Binding Path="!IsInitialUpdateFinished" />
+                        </MultiBinding>
+                    </controls:SettingsAccountLinkExpander.IsLoading>
+                </controls:SettingsAccountLinkExpander>
+
+                <controls:SettingsAccountLinkExpander
+                    Grid.Row="3"
+                    ConnectCommand="{Binding ConnectHuggingFaceCommand}"
+                    DisconnectCommand="{Binding DisconnectHuggingFaceCommand}"
+                    Header="Hugging Face"
+                    HeaderTargetUri="https://huggingface.co/settings/tokens"
+                    IsConnected="{Binding IsHuggingFaceConnected}"
+                    OffDescription="Connect to Download Models that require login from Hugging Face"
+                    OnDescriptionExtra="{Binding HuggingFaceUsernameWithParentheses}">
+                    <controls:SettingsAccountLinkExpander.IconSource>
+                        <ui:SymbolIconSource Symbol="Globe" />
+                    </controls:SettingsAccountLinkExpander.IconSource>
+                    <controls:SettingsAccountLinkExpander.IsLoading>
+                        <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                            <Binding Path="ConnectHuggingFaceCommand.IsRunning" />
                             <Binding Path="!IsInitialUpdateFinished" />
                         </MultiBinding>
                     </controls:SettingsAccountLinkExpander.IsLoading>

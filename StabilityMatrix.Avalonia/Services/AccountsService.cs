@@ -39,9 +39,14 @@ public class AccountsService : IAccountsService
     /// <inheritdoc />
     public event EventHandler<CivitAccountStatusUpdateEventArgs>? CivitAccountStatusUpdate;
 
+    /// <inheritdoc />
+    public event EventHandler<HuggingFaceAccountStatusUpdateEventArgs>? HuggingFaceAccountStatusUpdate;
+
     public LykosAccountStatusUpdateEventArgs? LykosStatus { get; private set; }
 
     public CivitAccountStatusUpdateEventArgs? CivitStatus { get; private set; }
+
+    public HuggingFaceAccountStatusUpdateEventArgs? HuggingFaceStatus { get; private set; }
 
     public AccountsService(
         ILogger<AccountsService> logger,
@@ -61,6 +66,8 @@ public class AccountsService : IAccountsService
 
         // Update our own status when the Lykos account status changes
         LykosAccountStatusUpdate += (_, args) => LykosStatus = args;
+        CivitAccountStatusUpdate += (_, args) => CivitStatus = args; // Assuming this was intended
+        HuggingFaceAccountStatusUpdate += (_, args) => HuggingFaceStatus = args;
     }
 
     public async Task<bool> HasStoredLykosAccountAsync()
@@ -191,6 +198,7 @@ public class AccountsService : IAccountsService
 
         await RefreshLykosAsync(secrets);
         await RefreshCivitAsync(secrets);
+        await RefreshHuggingFaceAsync(secrets);
     }
 
     public async Task RefreshLykosAsync()
@@ -198,6 +206,12 @@ public class AccountsService : IAccountsService
         var secrets = await secretsManager.SafeLoadAsync();
 
         await RefreshLykosAsync(secrets);
+    }
+
+    public async Task RefreshHuggingFaceAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        await RefreshHuggingFaceAsync(secrets);
     }
 
     private async Task RefreshLykosAsync(Secrets secrets)
@@ -253,6 +267,23 @@ public class AccountsService : IAccountsService
         }
 
         OnLykosAccountStatusUpdate(LykosAccountStatusUpdateEventArgs.Disconnected);
+    }
+
+    private async Task RefreshHuggingFaceAsync(Secrets secrets)
+    {
+        if (!string.IsNullOrWhiteSpace(secrets.HuggingFaceToken))
+        {
+            // For now, simply assume it's connected if a token exists.
+            // No actual API call to validate the token or get username.
+            // Username can be added later if an API call is implemented.
+            OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs { IsConnected = true, Username = null }); 
+        }
+        else
+        {
+            OnHuggingFaceAccountStatusUpdate(HuggingFaceAccountStatusUpdateEventArgs.Disconnected);
+        }
+        // Keep the Task return type for async consistency, even if not awaiting anything here.
+        await Task.CompletedTask; 
     }
 
     private async Task RefreshCivitAsync(Secrets secrets)
@@ -323,5 +354,34 @@ public class AccountsService : IAccountsService
         }
 
         CivitAccountStatusUpdate?.Invoke(this, e);
+    }
+
+    private void OnHuggingFaceAccountStatusUpdate(HuggingFaceAccountStatusUpdateEventArgs e)
+    {
+        if (!e.IsConnected && HuggingFaceStatus?.IsConnected == true)
+        {
+            logger.LogInformation("Hugging Face account disconnected");
+        }
+        else if (e.IsConnected && HuggingFaceStatus?.IsConnected == false)
+        {
+            // Assuming Username might be null for now as we are not fetching it.
+            logger.LogInformation("Hugging Face account connected" + (string.IsNullOrWhiteSpace(e.Username) ? "" : $" (User: {e.Username})"));
+        }
+        HuggingFaceAccountStatusUpdate?.Invoke(this, e);
+    }
+
+    public async Task HuggingFaceLoginAsync(string token)
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        secrets = secrets with { HuggingFaceToken = token };
+        await secretsManager.SaveAsync(secrets);
+        await RefreshHuggingFaceAsync(secrets);
+    }
+
+    public async Task HuggingFaceLogoutAsync()
+    {
+        var secrets = await secretsManager.SafeLoadAsync();
+        await secretsManager.SaveAsync(secrets with { HuggingFaceToken = null });
+        OnHuggingFaceAccountStatusUpdate(HuggingFaceAccountStatusUpdateEventArgs.Disconnected);
     }
 }

@@ -57,6 +57,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     [NotifyCanExecuteChangedFor(nameof(ConnectLykosCommand))]
     [NotifyCanExecuteChangedFor(nameof(ConnectPatreonCommand))]
     [NotifyCanExecuteChangedFor(nameof(ConnectCivitCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ConnectHuggingFaceCommand))]
     private bool isInitialUpdateFinished;
 
     [ObservableProperty]
@@ -71,6 +72,19 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 
     [ObservableProperty]
     private CivitAccountStatusUpdateEventArgs civitStatus = CivitAccountStatusUpdateEventArgs.Disconnected;
+
+    // Assume HuggingFaceAccountStatusUpdateEventArgs will be created with at least these properties
+    // For now, using a placeholder or assuming a structure like:
+    // public record HuggingFaceAccountStatusUpdateEventArgs(bool IsConnected, string? Username);
+    // Initialize with a disconnected state.
+    [ObservableProperty]
+    private HuggingFaceAccountStatusUpdateEventArgs huggingFaceStatus = new(false, null);
+
+    [ObservableProperty]
+    private bool isHuggingFaceConnected;
+
+    [ObservableProperty]
+    private string huggingFaceUsernameWithParentheses = string.Empty;
 
     public string LykosAccountManageUrl =>
         apiOptions.Value.LykosAccountApiBaseUrl.Append("/manage").ToString();
@@ -107,6 +121,16 @@ public partial class AccountSettingsViewModel : PageViewModelBase
             {
                 IsInitialUpdateFinished = true;
                 CivitStatus = args;
+            });
+        };
+
+        accountsService.HuggingFaceAccountStatusUpdate += (_, args) =>
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                IsInitialUpdateFinished = true;
+                HuggingFaceStatus = args;
+                // IsHuggingFaceConnected and HuggingFaceUsernameWithParentheses will be updated by OnHuggingFaceStatusChanged
             });
         };
     }
@@ -277,6 +301,47 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         return accountsService.CivitLogoutAsync();
     }
 
+    [RelayCommand(CanExecute = nameof(IsInitialUpdateFinished))]
+    private async Task ConnectHuggingFace()
+    {
+        if (!await BeforeConnectCheck())
+            return;
+
+        var fields = new[]
+        {
+            new TextBoxField("Hugging Face Token", isPassword: true, validator: s =>
+            {
+                if (string.IsNullOrWhiteSpace(s))
+                {
+                    throw new ValidationException("Token is required");
+                }
+            })
+        };
+
+        var (result, values) = await DialogHelper.CreateTextEntryDialog(
+            "Connect Hugging Face Account",
+            "Go to [Hugging Face settings](https://huggingface.co/settings/tokens) to create a new Access Token. Ensure it has read permissions. Paste the token below.",
+            fields,
+            image: null // Or a relevant image if available
+        );
+
+        if (result == DialogResult.Primary && values.TryGetValue("Hugging Face Token", out var token))
+        {
+            // Assuming HuggingFaceLoginAsync will be added to IAccountsService
+            await accountsService.HuggingFaceLoginAsync(token);
+            // Optionally refresh:
+            await accountsService.RefreshAsync(); 
+            // or await accountsService.RefreshHuggingFaceAsync(); // if a specific refresh is implemented
+        }
+    }
+
+    [RelayCommand]
+    private Task DisconnectHuggingFace()
+    {
+        // Assuming HuggingFaceLogoutAsync will be added to IAccountsService
+        return accountsService.HuggingFaceLogoutAsync();
+    }
+
     /// <summary>
     /// Update the Lykos profile image URL when the user changes.
     /// </summary>
@@ -296,4 +361,27 @@ public partial class AccountSettingsViewModel : PageViewModelBase
             LykosProfileImageUrl = null;
         }
     }
+
+    partial void OnHuggingFaceStatusChanged(HuggingFaceAccountStatusUpdateEventArgs value)
+    {
+        IsHuggingFaceConnected = value.IsConnected;
+        if (value.IsConnected && !string.IsNullOrWhiteSpace(value.Username))
+        {
+            HuggingFaceUsernameWithParentheses = $"({value.Username})";
+        }
+        else if (value.IsConnected)
+        {
+            HuggingFaceUsernameWithParentheses = "(Connected)"; // Fallback if no username
+        }
+        else
+        {
+            HuggingFaceUsernameWithParentheses = string.Empty;
+        }
+    }
 }
+
+// Placeholder for the event args class, actual definition will be in Core project
+// namespace StabilityMatrix.Core.Services 
+// { 
+//     public record HuggingFaceAccountStatusUpdateEventArgs(bool IsConnected, string? Username); 
+// }

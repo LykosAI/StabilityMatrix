@@ -361,5 +361,21 @@ public class DownloadService : IDownloadService
                 );
             }
         }
+        // Check if Hugging Face download
+        else if (url.Host.Equals("huggingface.co", StringComparison.OrdinalIgnoreCase))
+        {
+            var secrets = await secretsManager.SafeLoadAsync().ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(secrets.HuggingFaceToken))
+            {
+                logger.LogTrace(
+                    "Adding Hugging Face auth header for download {Url}",
+                    url
+                );
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                    "Bearer",
+                    secrets.HuggingFaceToken
+                );
+            }
+        }
     }
 }

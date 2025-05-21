@@ -3,9 +3,7 @@ using System.Globalization;
 using System.Text.Json.Serialization;
 using Semver;
 using StabilityMatrix.Core.Converters.Json;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper.HardwareInfo;
-using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Update;
 
 namespace StabilityMatrix.Core.Models.Settings;
@@ -227,6 +225,8 @@ public class Settings
 
     public bool ShowAllAvailablePythonVersions { get; set; }
 
+    public Dictionary<string, LastDownloadLocationInfo> ModelTypeDownloadPreferences { get; set; } = new();
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic
@@ -303,4 +303,6 @@ public class Settings
 [JsonSerializable(typeof(bool))]
 [JsonSerializable(typeof(int))]
 [JsonSerializable(typeof(string))]
+[JsonSerializable(typeof(LastDownloadLocationInfo))]
+[JsonSerializable(typeof(Dictionary<string, LastDownloadLocationInfo>))]
 internal partial class SettingsSerializerContext : JsonSerializerContext;

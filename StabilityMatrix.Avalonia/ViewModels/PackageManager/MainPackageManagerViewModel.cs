@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Immutable;
 using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Threading;
@@ -35,7 +29,6 @@ namespace StabilityMatrix.Avalonia.ViewModels.PackageManager;
 /// <summary>
 ///  This is our ViewModel for the second page
 /// </summary>
-
 [View(typeof(MainPackageManagerView))]
 [ManagedService]
 [RegisterSingleton<MainPackageManagerViewModel>]
@@ -88,6 +81,7 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
 
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
         EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
+        EventManager.Instance.RefreshPackageListRequested += RefreshPackageListRequested;
 
         var installed = installedPackages.Connect();
         var unknown = unknownInstalledPackages.Connect();
@@ -96,13 +90,12 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
             .Or(unknown)
             .DeferUntilLoaded()
             .Bind(Packages)
-            .Transform(
-                p =>
-                    dialogFactory.Get<PackageCardViewModel>(vm =>
-                    {
-                        vm.Package = p;
-                        vm.OnLoadedAsync().SafeFireAndForget();
-                    })
+            .Transform(p =>
+                dialogFactory.Get<PackageCardViewModel>(vm =>
+                {
+                    vm.Package = p;
+                    vm.OnLoadedAsync().SafeFireAndForget();
+                })
             )
             .Bind(PackageCards)
             .ObserveOn(SynchronizationContext.Current)
@@ -175,12 +168,21 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
         NavigateToSubPage(typeof(PackageInstallBrowserViewModel));
     }
 
-    private async Task LoadPackages()
+    private async Task LoadPackages(bool clearFirst = false)
     {
+        if (clearFirst)
+        {
+            installedPackages.Clear();
+        }
         installedPackages.EditDiff(settingsManager.Settings.InstalledPackages, InstalledPackage.Comparer);
 
         var currentUnknown = await Task.Run(IndexUnknownPackages);
         unknownInstalledPackages.Edit(s => s.Load(currentUnknown));
+    }
+
+    private void RefreshPackageListRequested(object? sender, EventArgs e)
+    {
+        LoadPackages(true).SafeFireAndForget();
     }
 
     private async Task CheckPackagesForUpdates()

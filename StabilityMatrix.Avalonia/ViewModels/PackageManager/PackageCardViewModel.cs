@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Collections.Specialized;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
+using Avalonia.Data;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -117,8 +113,8 @@ public partial class PackageCardViewModel(
         if (runningPackageService.RunningPackages.Select(x => x.Value) is not { } runningPackages)
             return;
 
-        var runningViewModel = runningPackages.FirstOrDefault(
-            x => x.RunningPackage.InstalledPackage.Id == Package?.Id
+        var runningViewModel = runningPackages.FirstOrDefault(x =>
+            x.RunningPackage.InstalledPackage.Id == Package?.Id
         );
         if (runningViewModel is not null)
         {
@@ -442,7 +438,7 @@ public partial class PackageCardViewModel(
             var runner = new PackageModificationRunner
             {
                 ModificationCompleteMessage = $"Updated {packageName}",
-                ModificationFailedMessage = $"Could not update {packageName}"
+                ModificationFailedMessage = $"Could not update {packageName}",
             };
 
             runner.Completed += (_, completedRunner) =>
@@ -474,7 +470,7 @@ public partial class PackageCardViewModel(
                 new UpdatePackageOptions
                 {
                     VersionOptions = versionOptions,
-                    PythonOptions = { TorchIndex = Package.PreferredTorchIndex }
+                    PythonOptions = { TorchIndex = Package.PreferredTorchIndex },
                 }
             );
             var steps = new List<IPackageStep> { updatePackageStep };
@@ -519,8 +515,8 @@ public partial class PackageCardViewModel(
             Buttons = new List<TaskDialogButton>
             {
                 new(Resources.Action_Import, TaskDialogStandardResult.Yes) { IsDefault = true },
-                new(Resources.Action_Cancel, TaskDialogStandardResult.Cancel)
-            }
+                new(Resources.Action_Cancel, TaskDialogStandardResult.Cancel),
+            },
         };
 
         dialog.Closing += async (sender, e) =>
@@ -602,9 +598,9 @@ public partial class PackageCardViewModel(
                 Buttons = new List<TaskDialogButton>
                 {
                     new(Resources.Action_Update, TaskDialogStandardResult.Yes) { IsDefault = true },
-                    new(Resources.Action_Cancel, TaskDialogStandardResult.Cancel)
+                    new(Resources.Action_Cancel, TaskDialogStandardResult.Cancel),
                 },
-                XamlRoot = App.VisualRoot
+                XamlRoot = App.VisualRoot,
             };
 
             var result = await dialog.ShowAsync(true);
@@ -614,7 +610,7 @@ public partial class PackageCardViewModel(
             var runner = new PackageModificationRunner
             {
                 ModificationCompleteMessage = $"Updated {packageName}",
-                ModificationFailedMessage = $"Could not update {packageName}"
+                ModificationFailedMessage = $"Could not update {packageName}",
             };
 
             var versionOptions = new DownloadPackageVersionOptions();
@@ -642,7 +638,7 @@ public partial class PackageCardViewModel(
                 new UpdatePackageOptions
                 {
                     VersionOptions = versionOptions,
-                    PythonOptions = { TorchIndex = Package.PreferredTorchIndex }
+                    PythonOptions = { TorchIndex = Package.PreferredTorchIndex },
                 }
             );
             var steps = new List<IPackageStep> { updatePackageStep };
@@ -744,7 +740,7 @@ public partial class PackageCardViewModel(
             CloseOnClickOutside = true,
             FullSizeDesired = true,
             IsFooterVisible = false,
-            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled
+            ContentVerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
         };
 
         await dialog.ShowAsync();
@@ -811,7 +807,7 @@ public partial class PackageCardViewModel(
             DefaultButton = ContentDialogButton.Primary,
             ContentMargin = new Thickness(32, 16),
             Padding = new Thickness(0, 16),
-            Content = new LaunchOptionsDialog { DataContext = viewModel, }
+            Content = new LaunchOptionsDialog { DataContext = viewModel },
         };
 
         var result = await dialog.ShowAsync();
@@ -821,6 +817,62 @@ public partial class PackageCardViewModel(
             // Save config
             var args = viewModel.AsLaunchArgs();
             settingsManager.SaveLaunchArgs(Package.Id, args);
+        }
+    }
+
+    [RelayCommand]
+    private async Task Rename()
+    {
+        if (Package is null || IsUnknownPackage)
+            return;
+
+        var currentName = Package.DisplayName ?? Package.PackageName ?? string.Empty;
+        var field = new TextBoxField
+        {
+            Label = Resources.Label_DisplayName,
+            Text = currentName,
+            Watermark = Resources.Watermark_EnterPackageName,
+            Validator = text =>
+            {
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    throw new DataValidationException(Resources.Validation_PackageNameCannotBeEmpty);
+                }
+
+                var directoryPath = new DirectoryPath(Path.GetDirectoryName(Package.FullPath!)!, text);
+                if (directoryPath.Exists)
+                {
+                    throw new DataValidationException(
+                        string.Format(Resources.ValidationError_PackageExists, text)
+                    );
+                }
+            },
+        };
+
+        var result = await DialogHelper.GetTextEntryDialogResultAsync(
+            field,
+            string.Format(Resources.Description_RenamePackage, currentName)
+        );
+
+        if (result.Result == ContentDialogResult.Primary && field.IsValid && field.Text != currentName)
+        {
+            var newPackagePath = new DirectoryPath(Path.GetDirectoryName(Package.FullPath!)!, field.Text);
+
+            var existingPath = new DirectoryPath(Package.FullPath!);
+            await existingPath.MoveToAsync(newPackagePath);
+
+            Package.DisplayName = field.Text;
+            settingsManager.Transaction(s =>
+            {
+                var packageToUpdate = s.InstalledPackages.FirstOrDefault(p => p.Id == Package.Id);
+                if (packageToUpdate != null)
+                {
+                    packageToUpdate.DisplayName = field.Text;
+                    packageToUpdate.LibraryPath = Path.Combine("Packages", field.Text);
+                }
+            });
+
+            EventManager.Instance.OnRefreshPackageListRequested();
         }
     }
 

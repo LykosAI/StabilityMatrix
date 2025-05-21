@@ -125,7 +125,7 @@ public class KohyaSs(
         await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
 
         // Extra dep needed before running setup since v23.0.x
-        var pipArgs = new PipInstallArgs("rich", "packaging");
+        var pipArgs = new PipInstallArgs("rich", "packaging", "setuptools", "uv");
         if (installedPackage.PipOverrides != null)
         {
             pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
@@ -133,9 +133,6 @@ public class KohyaSs(
 
         await venvRunner.PipInstall(pipArgs).ConfigureAwait(false);
 
-<<<<<<< HEAD
-        if (Compat.IsWindows)
-=======
         var isLegacyNvidia =
             SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
         var torchExtraIndex = isLegacyNvidia ? "cu126" : "cu128";
@@ -150,68 +147,44 @@ public class KohyaSs(
             .AddArg("--force-reinstall");
 
         if (installedPackage.PipOverrides != null)
->>>>>>> c422920b (Merge pull request #1076 from ionite34/fix-legacy-gpu)
         {
-            await venvRunner
-                .CustomInstall(["setup/setup_windows.py", "--headless"], onConsoleOutput)
-                .ConfigureAwait(false);
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
         }
-        else if (Compat.IsLinux)
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+        if (Compat.IsLinux)
         {
             await venvRunner
                 .CustomInstall(
                     [
                         "setup/setup_linux.py",
                         "--platform-requirements-file=requirements_linux.txt",
-                        "--no_run_accelerate"
+                        "--no_run_accelerate",
                     ],
                     onConsoleOutput
                 )
                 .ConfigureAwait(false);
+            pipArgs = new PipInstallArgs();
         }
-
-        var isBlackwell =
-            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
-
-        if (isBlackwell)
+        else if (Compat.IsWindows)
         {
+            var requirements = new FilePath(installLocation, "requirements_windows.txt");
             pipArgs = new PipInstallArgs()
-                .WithTorch()
-                .WithTorchVision()
-                .WithTorchAudio()
-                .WithTorchExtraIndex("cu128")
-                .AddArg("--force-reinstall");
-
-            if (installedPackage.PipOverrides != null)
-            {
-                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-            }
-
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-
-            pipArgs = new PipInstallArgs()
-                .AddArg("--pre")
-                .AddArg("-U")
-                .AddArg("--no-deps")
-                .AddArg("xformers");
-
-            if (installedPackage.PipOverrides != null)
-            {
-                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-            }
-
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-
-            pipArgs = new PipInstallArgs().AddArg("-U").AddArg("bitsandbytes");
-
-            if (installedPackage.PipOverrides != null)
-            {
-                pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-            }
-
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-            await venvRunner.PipInstall("numpy==1.26.4", onConsoleOutput).ConfigureAwait(false);
+                .WithParsedFromRequirementsTxt(
+                    await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
+                    "bitsandbytes==0\\.44\\.0"
+                )
+                .AddArg("bitsandbytes");
         }
+
+        if (installedPackage.PipOverrides != null)
+        {
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall("numpy==1.26.4", onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(

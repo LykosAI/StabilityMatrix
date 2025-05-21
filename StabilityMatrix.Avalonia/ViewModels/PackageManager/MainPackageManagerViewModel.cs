@@ -81,7 +81,6 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
 
         EventManager.Instance.InstalledPackagesChanged += OnInstalledPackagesChanged;
         EventManager.Instance.OneClickInstallFinished += OnOneClickInstallFinished;
-        EventManager.Instance.RefreshPackageListRequested += RefreshPackageListRequested;
 
         var installed = installedPackages.Connect();
         var unknown = unknownInstalledPackages.Connect();
@@ -168,21 +167,12 @@ public partial class MainPackageManagerViewModel : PageViewModelBase
         NavigateToSubPage(typeof(PackageInstallBrowserViewModel));
     }
 
-    private async Task LoadPackages(bool clearFirst = false)
+    private async Task LoadPackages()
     {
-        if (clearFirst)
-        {
-            installedPackages.Clear();
-        }
         installedPackages.EditDiff(settingsManager.Settings.InstalledPackages, InstalledPackage.Comparer);
 
         var currentUnknown = await Task.Run(IndexUnknownPackages);
         unknownInstalledPackages.Edit(s => s.Load(currentUnknown));
-    }
-
-    private void RefreshPackageListRequested(object? sender, EventArgs e)
-    {
-        LoadPackages(true).SafeFireAndForget();
     }
 
     private async Task CheckPackagesForUpdates()

@@ -53,7 +53,6 @@ public class EventManager
     public event EventHandler? RecommendedModelsDialogClosed;
     public event EventHandler? WorkflowInstalled;
     public event EventHandler<string>? DeleteModelRequested;
-    public event EventHandler? RefreshPackageListRequested;
 
     public void OnGlobalProgressChanged(int progress) => GlobalProgressChanged?.Invoke(this, progress);
 
@@ -115,6 +114,4 @@ public class EventManager
 
     public void OnNavigateAndFindCivitAuthorRequested(string? author) =>
         NavigateAndFindCivitAuthorRequested?.Invoke(this, author);
-
-    public void OnRefreshPackageListRequested() => RefreshPackageListRequested?.Invoke(this, EventArgs.Empty);
 }

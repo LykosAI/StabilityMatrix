@@ -307,31 +307,31 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         if (!await BeforeConnectCheck())
             return;
 
-        var fields = new[]
+        var field = new TextBoxField 
         {
-            new TextBoxField("Hugging Face Token", isPassword: true, validator: s =>
+            Label = "Hugging Face Token", // Assuming Label is for the prompt
+            IsPassword = true, // Assuming TextBoxField has an IsPassword property
+            Validator = s =>
             {
                 if (string.IsNullOrWhiteSpace(s))
                 {
                     throw new ValidationException("Token is required");
                 }
-            })
+            },
         };
 
-        var (result, values) = await DialogHelper.CreateTextEntryDialog(
+        var dialog = DialogHelper.CreateTextEntryDialog(
             "Connect Hugging Face Account",
             "Go to [Hugging Face settings](https://huggingface.co/settings/tokens) to create a new Access Token. Ensure it has read permissions. Paste the token below.",
-            fields,
-            image: null // Or a relevant image if available
+            [field] 
         );
 
-        if (result == DialogResult.Primary && values.TryGetValue("Hugging Face Token", out var token))
+        var result = await dialog.ShowAsync();
+
+        if (result == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(field.Text))
         {
-            // Assuming HuggingFaceLoginAsync will be added to IAccountsService
-            await accountsService.HuggingFaceLoginAsync(token);
-            // Optionally refresh:
-            await accountsService.RefreshAsync(); 
-            // or await accountsService.RefreshHuggingFaceAsync(); // if a specific refresh is implemented
+            await accountsService.HuggingFaceLoginAsync(field.Text); 
+            await accountsService.RefreshAsync();
         }
     }
 
@@ -397,9 +397,3 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         }
     }
 }
-
-// Placeholder for the event args class, actual definition will be in Core project
-// namespace StabilityMatrix.Core.Services
-// {
-//     public record HuggingFaceAccountStatusUpdateEventArgs(bool IsConnected, string? Username, string? ErrorMessage = null); 
-// }

@@ -17,8 +17,8 @@ public static partial class HardwareHelper
     private static IReadOnlyList<GpuInfo>? cachedGpuInfos;
     private static readonly object cachedGpuInfosLock = new();
 
-    private static readonly Lazy<IHardwareInfo> HardwareInfoLazy =
-        new(() => new Hardware.Info.HardwareInfo());
+    private static readonly Lazy<IHardwareInfo> HardwareInfoLazy = new(() => new Hardware.Info.HardwareInfo()
+    );
 
     public static IHardwareInfo HardwareInfo => HardwareInfoLazy.Value;
 
@@ -27,7 +27,7 @@ public static partial class HardwareHelper
         var processInfo = new ProcessStartInfo("bash", "-c \"" + command + "\"")
         {
             UseShellExecute = false,
-            RedirectStandardOutput = true
+            RedirectStandardOutput = true,
         };
 
         var process = Process.Start(processInfo);
@@ -103,7 +103,7 @@ public static partial class HardwareHelper
             {
                 Index = gpuIndex++,
                 Name = name,
-                MemoryBytes = memoryBytes
+                MemoryBytes = memoryBytes,
             };
         }
     }
@@ -127,7 +127,7 @@ public static partial class HardwareHelper
             {
                 Index = i,
                 Name = videoController.Name,
-                MemoryBytes = gpuMemoryBytes
+                MemoryBytes = gpuMemoryBytes,
             };
         }
     }
@@ -168,7 +168,7 @@ public static partial class HardwareHelper
                                 {
                                     Name = gpu.Name,
                                     Index = index,
-                                    MemoryBytes = gpu.MemoryBytes
+                                    MemoryBytes = gpu.MemoryBytes,
                                 }
                         );
 
@@ -205,9 +205,9 @@ public static partial class HardwareHelper
         {
             FileName = "nvidia-smi",
             UseShellExecute = false,
-            Arguments = "--query-gpu name,memory.total --format=csv",
+            Arguments = "--query-gpu name,memory.total,compute_cap --format=csv",
             RedirectStandardOutput = true,
-            CreateNoWindow = true
+            CreateNoWindow = true,
         };
 
         var process = Process.Start(psi);
@@ -224,7 +224,7 @@ public static partial class HardwareHelper
         {
             var gpu = results[index];
             var datas = gpu.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            if (datas is not { Length: 2 })
+            if (datas is not { Length: 3 })
                 continue;
 
             var memory = Regex.Replace(datas[1], @"([A-Z])\w+", "").Trim();
@@ -234,7 +234,8 @@ public static partial class HardwareHelper
                 {
                     Name = datas[0],
                     Index = index,
-                    MemoryBytes = Convert.ToUInt64(memory) * Size.MiB
+                    MemoryBytes = Convert.ToUInt64(memory) * Size.MiB,
+                    ComputeCapability = datas[2].Trim(),
                 }
             );
         }
@@ -253,12 +254,13 @@ public static partial class HardwareHelper
     public static bool HasBlackwellGpu()
     {
         return IterGpuInfo()
-            .Any(
-                gpu =>
-                    gpu is { IsNvidia: true, Name: not null }
-                    && gpu.Name.Contains("RTX 50", StringComparison.OrdinalIgnoreCase)
-                    && !gpu.Name.Contains("RTX 5000", StringComparison.OrdinalIgnoreCase)
-            );
+            .Any(gpu => gpu is { IsNvidia: true, Name: not null, ComputeCapabilityValue: >= 12.0m });
+    }
+
+    public static bool HasLegacyNvidiaGpu()
+    {
+        return IterGpuInfo()
+            .Any(gpu => gpu is { IsNvidia: true, Name: not null, ComputeCapabilityValue: < 7.5m });
     }
 
     /// <summary>
@@ -322,7 +324,7 @@ public static partial class HardwareHelper
         {
             TotalInstalledBytes = (ulong)installedMemoryKb * 1024,
             TotalPhysicalBytes = memoryStatus.UllTotalPhys,
-            AvailablePhysicalBytes = memoryStatus.UllAvailPhys
+            AvailablePhysicalBytes = memoryStatus.UllAvailPhys,
         };
     }
 
@@ -336,7 +338,7 @@ public static partial class HardwareHelper
             return new MemoryInfo
             {
                 TotalPhysicalBytes = HardwareInfo.MemoryStatus.TotalPhysical,
-                TotalInstalledBytes = HardwareInfo.MemoryStatus.TotalPhysical
+                TotalInstalledBytes = HardwareInfo.MemoryStatus.TotalPhysical,
             };
         }
 
@@ -344,7 +346,7 @@ public static partial class HardwareHelper
         {
             TotalPhysicalBytes = HardwareInfo.MemoryStatus.TotalPhysical,
             TotalInstalledBytes = HardwareInfo.MemoryStatus.TotalPhysical,
-            AvailablePhysicalBytes = HardwareInfo.MemoryStatus.AvailablePhysical
+            AvailablePhysicalBytes = HardwareInfo.MemoryStatus.AvailablePhysical,
         };
     }
 

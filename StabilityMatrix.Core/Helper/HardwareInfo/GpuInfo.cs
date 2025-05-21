@@ -5,13 +5,22 @@ public record GpuInfo
     public int Index { get; set; }
     public string? Name { get; init; } = string.Empty;
     public ulong MemoryBytes { get; init; }
+    public string? ComputeCapability { get; init; }
+
+    /// <summary>
+    /// Gets the compute capability as a comparable decimal value (e.g. "8.6" becomes 8.6m)
+    /// Returns null if compute capability is not available
+    /// </summary>
+    public decimal? ComputeCapabilityValue =>
+        ComputeCapability != null && decimal.TryParse(ComputeCapability, out var value) ? value : null;
+
     public MemoryLevel? MemoryLevel =>
         MemoryBytes switch
         {
             <= 0 => HardwareInfo.MemoryLevel.Unknown,
             < 4 * Size.GiB => HardwareInfo.MemoryLevel.Low,
             < 8 * Size.GiB => HardwareInfo.MemoryLevel.Medium,
-            _ => HardwareInfo.MemoryLevel.High
+            _ => HardwareInfo.MemoryLevel.High,
         };
 
     public bool IsNvidia
@@ -29,26 +38,26 @@ public record GpuInfo
 
     public bool IsBlackwellGpu()
     {
-        if (Name is null)
+        if (ComputeCapability is null)
             return false;
 
-        return IsNvidia
-            && Name.Contains("RTX 50", StringComparison.OrdinalIgnoreCase)
-            && !Name.Contains("RTX 5000", StringComparison.OrdinalIgnoreCase);
+        return ComputeCapabilityValue >= 12.0m;
     }
 
     public bool IsAmpereOrNewerGpu()
     {
-        if (Name is null)
+        if (ComputeCapability is null)
             return false;
 
-        return IsNvidia
-            && Name.Contains("RTX", StringComparison.OrdinalIgnoreCase)
-            && !Name.Contains("RTX 20")
-            && !Name.Contains("RTX 4000")
-            && !Name.Contains("RTX 5000")
-            && !Name.Contains("RTX 6000")
-            && !Name.Contains("RTX 8000");
+        return ComputeCapabilityValue >= 8.6m;
+    }
+
+    public bool IsLegacyNvidiaGpu()
+    {
+        if (ComputeCapability is null)
+            return false;
+
+        return ComputeCapabilityValue < 7.5m;
     }
 
     public bool IsAmd => Name?.Contains("amd", StringComparison.OrdinalIgnoreCase) ?? false;

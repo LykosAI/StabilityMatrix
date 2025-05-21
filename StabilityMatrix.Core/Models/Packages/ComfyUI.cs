@@ -342,6 +342,12 @@ public class ComfyUI(
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var isLegacyNvidia =
+            torchVersion == TorchIndex.Cuda
+            && (
+                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+                ?? HardwareHelper.HasLegacyNvidiaGpu()
+            );
 
         var pipArgs = new PipInstallArgs();
 
@@ -357,6 +363,7 @@ public class ComfyUI(
                     torchVersion switch
                     {
                         TorchIndex.Cpu => "cpu",
+                        TorchIndex.Cuda when isLegacyNvidia => "cu126",
                         TorchIndex.Cuda => "cu128",
                         TorchIndex.Rocm => "rocm6.2.4",
                         TorchIndex.Mps => "cpu",

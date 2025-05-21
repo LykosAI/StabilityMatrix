@@ -94,9 +94,14 @@ public class RuinedFooocus(
 
             progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
+            var isLegacyNvidia =
+                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+                ?? HardwareHelper.HasLegacyNvidiaGpu();
+            var torchExtraIndex = isLegacyNvidia ? "cu126" : "cu128";
+
             var requirements = new FilePath(installLocation, "requirements_versions.txt");
             var pipArgs = new PipInstallArgs()
-                .WithTorchExtraIndex("cu128")
+                .WithTorchExtraIndex(torchExtraIndex)
                 .WithParsedFromRequirementsTxt(
                     await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
                     "--extra-index-url.*|--index-url.*"

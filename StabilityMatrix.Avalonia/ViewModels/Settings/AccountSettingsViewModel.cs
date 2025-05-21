@@ -260,6 +260,7 @@ public partial class AccountSettingsViewModel : PageViewModelBase
             new()
             {
                 Label = Resources.Label_ApiKey,
+                IsPassword = true, // Added this line
                 Validator = s =>
                 {
                     if (string.IsNullOrWhiteSpace(s))

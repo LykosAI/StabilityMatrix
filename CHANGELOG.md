@@ -22,6 +22,11 @@ A massive thank you to our esteemed Visionary-tier Patrons: **Waterclouds**, **b
 ### Fixed
 - Fixed [#1268](https://github.com/LykosAI/StabilityMatrix/issues/1268) - wrong torch index used for Nvidia 1000-series GPUs and older
 - Fixed [#1269](https://github.com/LykosAI/StabilityMatrix/issues/1269), [#1257](https://github.com/LykosAI/StabilityMatrix/issues/1257), [#1234](https://github.com/LykosAI/StabilityMatrix/issues/1234) - "no such file or directory" errors when updating certain packages after folder migration
+### Supporters
+#### 🌟 Visionaries
+Our deepest gratitude to the brilliant Visionary-tier Patrons: **Waterclouds**, **bluepopsicle**, **Bob S**, **Ibixat**, and **Corey T**! Your incredible backing is instrumental in shaping the future of Stability Matrix and empowering us to deliver cutting-edge features. Thank you for believing in our vision! 🙏
+#### 🚀 Pioneers
+A huge shout-out to our fantastic Pioneer-tier Patrons: **Mr. Unknown**, **tankfox**, **Szir777**, **Noah M**, **USATechDude**, **Thom**, **TheTekknician**, and **SeraphOfSalem**! Your consistent support and active engagement are vital to our community's growth and our ongoing development efforts. You truly make a difference! ✨
 
 ## v2.14.1
 ### Changed

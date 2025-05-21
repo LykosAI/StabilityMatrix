@@ -153,12 +153,16 @@ public class ForgeClassic(
             .ReadAllTextAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        var isLegacyNvidia =
+            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+        var torchExtraIndex = isLegacyNvidia ? "cu126" : "cu128";
+
         var pipArgs = new PipInstallArgs()
             .AddArg("--upgrade")
             .WithTorch()
             .WithTorchVision()
             .WithTorchAudio()
-            .WithTorchExtraIndex("cu128");
+            .WithTorchExtraIndex(torchExtraIndex);
 
         pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
 

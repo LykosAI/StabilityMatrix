@@ -857,9 +857,29 @@ public partial class PackageCardViewModel(
         if (result.Result == ContentDialogResult.Primary && field.IsValid && field.Text != currentName)
         {
             var newPackagePath = new DirectoryPath(Path.GetDirectoryName(Package.FullPath!)!, field.Text);
-
             var existingPath = new DirectoryPath(Package.FullPath!);
-            await existingPath.MoveToAsync(newPackagePath);
+            if (existingPath.FullPath == newPackagePath.FullPath)
+                return;
+
+            try
+            {
+                await existingPath.MoveToAsync(newPackagePath);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(
+                    ex,
+                    "Failed to rename package directory from {OldPath} to {NewPath}",
+                    existingPath.FullPath,
+                    newPackagePath.FullPath
+                );
+                notificationService.Show(
+                    Resources.Label_UnexpectedErrorOccurred,
+                    ex.Message,
+                    NotificationType.Error
+                );
+                return;
+            }
 
             Package.DisplayName = field.Text;
             settingsManager.Transaction(s =>

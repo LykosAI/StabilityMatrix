@@ -96,11 +96,7 @@ public class RuinedFooocus(
 
             var requirements = new FilePath(installLocation, "requirements_versions.txt");
             var pipArgs = new PipInstallArgs()
-<<<<<<< HEAD
-                .WithTorchExtraIndex("cu121")
-=======
                 .WithTorchExtraIndex(torchExtraIndex)
->>>>>>> c422920b (Merge pull request #1076 from ionite34/fix-legacy-gpu)
                 .WithParsedFromRequirementsTxt(
                     await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
                     "--extra-index-url.*|--index-url.*"

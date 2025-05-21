@@ -89,9 +89,18 @@ public class RuinedFooocus(
 
             progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
+            var isLegacyNvidia =
+                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+                ?? HardwareHelper.HasLegacyNvidiaGpu();
+            var torchExtraIndex = isLegacyNvidia ? "cu126" : "cu128";
+
             var requirements = new FilePath(installLocation, "requirements_versions.txt");
             var pipArgs = new PipInstallArgs()
+<<<<<<< HEAD
                 .WithTorchExtraIndex("cu121")
+=======
+                .WithTorchExtraIndex(torchExtraIndex)
+>>>>>>> c422920b (Merge pull request #1076 from ionite34/fix-legacy-gpu)
                 .WithParsedFromRequirementsTxt(
                     await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
                     "--extra-index-url.*|--index-url.*"

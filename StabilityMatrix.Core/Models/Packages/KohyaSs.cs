@@ -133,7 +133,24 @@ public class KohyaSs(
 
         await venvRunner.PipInstall(pipArgs).ConfigureAwait(false);
 
+<<<<<<< HEAD
         if (Compat.IsWindows)
+=======
+        var isLegacyNvidia =
+            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+        var torchExtraIndex = isLegacyNvidia ? "cu126" : "cu128";
+
+        // install torch
+        pipArgs = new PipInstallArgs()
+            .WithTorch()
+            .WithTorchVision()
+            .WithTorchAudio()
+            .WithXFormers()
+            .WithTorchExtraIndex(torchExtraIndex)
+            .AddArg("--force-reinstall");
+
+        if (installedPackage.PipOverrides != null)
+>>>>>>> c422920b (Merge pull request #1076 from ionite34/fix-legacy-gpu)
         {
             await venvRunner
                 .CustomInstall(["setup/setup_windows.py", "--headless"], onConsoleOutput)

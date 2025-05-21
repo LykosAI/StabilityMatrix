@@ -439,6 +439,28 @@ public abstract class BaseGitPackage : BasePackage
                 .ConfigureAwait(false);
         }
 
+        var sharedFolderMethodToUse =
+            installedPackage.PreferredSharedFolderMethod ?? RecommendedSharedFolderMethod;
+        // Temporarily remove symlinks if using Symlink method
+        if (sharedFolderMethodToUse == SharedFolderMethod.Symlink)
+        {
+            if (SharedFolders is not null)
+            {
+                Helper.SharedFolders.RemoveLinksForPackage(
+                    SharedFolders,
+                    new DirectoryPath(installedPackage.FullPath!)
+                );
+            }
+
+            if (SharedOutputFolders is not null && installedPackage.UseSharedOutputFolder)
+            {
+                Helper.SharedFolders.RemoveLinksForPackage(
+                    SharedOutputFolders,
+                    new DirectoryPath(installedPackage.FullPath!)
+                );
+            }
+        }
+
         var versionOptions = options.VersionOptions;
 
         if (!string.IsNullOrWhiteSpace(versionOptions.VersionTag))

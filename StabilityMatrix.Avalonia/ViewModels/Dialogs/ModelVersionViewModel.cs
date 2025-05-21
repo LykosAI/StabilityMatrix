@@ -27,25 +27,24 @@ public partial class ModelVersionViewModel : ObservableObject
         ModelVersion = modelVersion;
 
         IsInstalled =
-            ModelVersion.Files?.Any(
-                file =>
-                    file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-                    && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
+            ModelVersion.Files?.Any(file =>
+                file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
             ) ?? false;
 
         CivitFileViewModels = new ObservableCollection<CivitFileViewModel>(
-            ModelVersion.Files?.Select(file => new CivitFileViewModel(modelIndexService, file))
-                ?? new List<CivitFileViewModel>()
+            (
+                ModelVersion.Files?.Select(file => new CivitFileViewModel(modelIndexService, file)) ?? []
+            ).OrderBy(a => a.CivitFile.Type == CivitFileType.TrainingData ? 1 : 0)
         );
     }
 
     public void RefreshInstallStatus()
     {
         IsInstalled =
-            ModelVersion.Files?.Any(
-                file =>
-                    file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-                    && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
+            ModelVersion.Files?.Any(file =>
+                file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
             ) ?? false;
     }
 }

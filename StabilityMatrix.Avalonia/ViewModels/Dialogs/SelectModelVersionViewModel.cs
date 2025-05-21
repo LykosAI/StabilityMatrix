@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.ObjectModel;
 using Avalonia.Controls.Notifications;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
@@ -22,7 +17,9 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
+using Size = StabilityMatrix.Core.Helper.Size;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 
@@ -95,15 +92,19 @@ public partial class SelectModelVersionViewModel(
     {
         SelectedVersionViewModel = Versions[0];
         CanGoToNextImage = true;
+
+        // LoadInstallLocations() is called within OnSelectedFileChanged, which is triggered by OnSelectedVersionViewModelChanged.
+        // However, to apply preferences correctly, we need AvailableInstallLocations populated first.
+        // It might be better to ensure LoadInstallLocations is called before trying to apply preferences.
+        // For now, we rely on the chain: OnLoaded -> sets SelectedVersionViewModel -> OnSelectedVersionViewModelChanged -> sets SelectedFile -> OnSelectedFileChanged -> LoadInstallLocations
+        // Then, we apply preferences if available.
     }
 
     partial void OnSelectedVersionViewModelChanged(ModelVersionViewModel? value)
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
         var allImages = value
-            ?.ModelVersion
-            ?.Images
-            ?.Where(img => img.Type == "image" && (nsfwEnabled || img.NsfwLevel <= 1))
+            ?.ModelVersion?.Images?.Where(img => img.Type == "image" && (nsfwEnabled || img.NsfwLevel <= 1))
             ?.Select(x => new ImageSource(x.Url))
             .ToList();
 
@@ -124,6 +125,11 @@ public partial class SelectModelVersionViewModel(
             SelectedFile = SelectedVersionViewModel?.CivitFileViewModels.FirstOrDefault();
             ImageUrls = new ObservableCollection<ImageSource>(allImages);
             SelectedImageIndex = 0;
+
+            // Apply saved preferences after SelectedFile change has potentially called LoadInstallLocations
+            // It's crucial that LoadInstallLocations runs before this to populate AvailableInstallLocations
+            // and set an initial SelectedInstallLocation.
+            ApplySavedDownloadPreference();
         });
     }
 
@@ -161,10 +167,17 @@ public partial class SelectModelVersionViewModel(
     {
         if (value?.Equals("Custom...", StringComparison.OrdinalIgnoreCase) is true)
         {
-            Dispatcher.UIThread.InvokeAsync(SelectCustomFolder);
+            // Only invoke the folder picker if a custom location isn't already set (e.g., by loading preferences).
+            // If the user manually selects "Custom..." and CustomInstallLocation was previously cleared (due to a non-custom selection),
+            // then string.IsNullOrWhiteSpace(this.CustomInstallLocation) will be true, and the dialog will show.
+            if (string.IsNullOrWhiteSpace(this.CustomInstallLocation))
+            {
+                Dispatcher.UIThread.InvokeAsync(SelectCustomFolder);
+            }
         }
         else
         {
+            // If a non-custom location is selected, clear any existing custom path.
             CustomInstallLocation = string.Empty;
         }
 
@@ -183,6 +196,7 @@ public partial class SelectModelVersionViewModel(
 
     public void Import()
     {
+        SaveCurrentDownloadPreference();
         Dialog.Hide(ContentDialogResult.Primary);
     }
 
@@ -296,13 +310,15 @@ public partial class SelectModelVersionViewModel(
                         settingsManager.ModelsDirectory,
                         CivitModel.Type.ConvertTo<SharedFolderType>().GetStringValue()
                     )
-                )
+                ),
             }
         );
 
         if (files.FirstOrDefault()?.TryGetLocalPath() is { } path)
         {
             CustomInstallLocation = path;
+            // Potentially save preference here if selection is considered final upon folder picking for custom.
+            // However, saving on Import() is more robust as it's the explicit confirmation.
         }
     }
 
@@ -383,5 +399,75 @@ public partial class SelectModelVersionViewModel(
         }
 
         return rootModelsDirectory.JoinDir(modelType.ConvertTo<SharedFolderType>().GetStringValue());
+    }
+
+    private void ApplySavedDownloadPreference()
+    {
+        if (CivitModel?.Type == null || !settingsManager.IsLibraryDirSet)
+            return;
+
+        var modelTypeKey = CivitModel.Type.ToString();
+        if (
+            settingsManager.Settings.ModelTypeDownloadPreferences.TryGetValue(
+                modelTypeKey,
+                out var preference
+            )
+        )
+        {
+            if (
+                preference.SelectedInstallLocation == "Custom..."
+                && !string.IsNullOrWhiteSpace(preference.CustomInstallLocation)
+            )
+            {
+                // Ensure "Custom..." is an option or add it if necessary, though LoadInstallLocations should handle it.
+                if (AvailableInstallLocations.Contains("Custom..."))
+                {
+                    CustomInstallLocation = preference.CustomInstallLocation ?? string.Empty;
+                    SelectedInstallLocation = "Custom...";
+                }
+            }
+            // If the saved SelectedInstallLocation is a custom path directly (legacy or direct set)
+            // and it's not in AvailableInstallLocations, but CustomInstallLocation is set from preference.
+            else if (
+                !string.IsNullOrWhiteSpace(preference.CustomInstallLocation)
+                && preference.SelectedInstallLocation == preference.CustomInstallLocation
+            )
+            {
+                if (AvailableInstallLocations.Contains("Custom..."))
+                {
+                    CustomInstallLocation = preference.CustomInstallLocation ?? string.Empty;
+                    SelectedInstallLocation = "Custom...";
+                }
+            }
+            else if (
+                preference.SelectedInstallLocation != null
+                && AvailableInstallLocations.Contains(preference.SelectedInstallLocation)
+            )
+            {
+                SelectedInstallLocation = preference.SelectedInstallLocation;
+            }
+        }
+    }
+
+    private void SaveCurrentDownloadPreference()
+    {
+        if (
+            CivitModel?.Type == null
+            || !settingsManager.IsLibraryDirSet
+            || string.IsNullOrEmpty(SelectedInstallLocation)
+        )
+            return;
+
+        var modelTypeKey = CivitModel.Type.ToString();
+        var preference = new LastDownloadLocationInfo
+        {
+            SelectedInstallLocation = SelectedInstallLocation,
+            CustomInstallLocation = IsCustomSelected ? CustomInstallLocation : null,
+        };
+
+        settingsManager.Transaction(s =>
+        {
+            s.ModelTypeDownloadPreferences[modelTypeKey] = preference;
+        });
     }
 }

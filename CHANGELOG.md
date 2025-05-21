@@ -8,8 +8,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.15.0-dev.1
 ### Added
 - Added Python Version selector for all new package installs
+- Added the ability to rename packages
 ### Changed
 - Updated all Python version management, virtual environment creation, and pip installs to use `uv` for improved reliability, compatibility, and speed
+- The Civitai model browser Download Location selector will now remember the last location used based on the model type
+### Supporters
+#### 🌟 Visionaries
+A massive thank you to our esteemed Visionary-tier Patrons: **Waterclouds**, **bluepopsicle**, **Bob S**, **Ibixat**, and **Corey T**! Your exceptional commitment propels Stability Matrix to new heights and allows us to push the boundaries of innovation. We're incredibly grateful for your foundational support! 🚀
 
 ## v2.14.2
 ### Changed

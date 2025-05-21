@@ -356,29 +356,6 @@ public class ComfyUI(
         pipArgs = torchVersion switch
         {
             TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
-<<<<<<< HEAD
-            _
-                => pipArgs
-                    .AddArg("--upgrade")
-                    .WithTorch()
-                    .WithTorchVision()
-                    .WithTorchAudio()
-                    .WithTorchExtraIndex(
-                        torchVersion switch
-                        {
-                            TorchIndex.Cpu => "cpu",
-                            TorchIndex.Cuda => "cu128",
-                            TorchIndex.Rocm => "rocm6.2.4",
-                            TorchIndex.Mps => "cpu",
-                            _
-                                => throw new ArgumentOutOfRangeException(
-                                    nameof(torchVersion),
-                                    torchVersion,
-                                    null
-                                )
-                        }
-                    )
-=======
             _ => pipArgs
                 .AddArg("--upgrade")
                 .WithTorch()
@@ -395,7 +372,6 @@ public class ComfyUI(
                         _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null),
                     }
                 ),
->>>>>>> c422920b (Merge pull request #1076 from ionite34/fix-legacy-gpu)
         };
 
         var requirements = new FilePath(installLocation, "requirements.txt");

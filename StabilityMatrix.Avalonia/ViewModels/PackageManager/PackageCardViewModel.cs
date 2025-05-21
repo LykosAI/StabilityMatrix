@@ -49,7 +49,10 @@ public partial class PackageCardViewModel(
     private string webUiUrl = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PackageDisplayName))]
     private InstalledPackage? package;
+
+    public string? PackageDisplayName => Package?.DisplayName;
 
     [ObservableProperty]
     private Uri? cardImageSource;
@@ -882,6 +885,7 @@ public partial class PackageCardViewModel(
             }
 
             Package.DisplayName = field.Text;
+            OnPropertyChanged(nameof(PackageDisplayName));
             settingsManager.Transaction(s =>
             {
                 var packageToUpdate = s.InstalledPackages.FirstOrDefault(p => p.Id == Package.Id);
@@ -891,8 +895,6 @@ public partial class PackageCardViewModel(
                     packageToUpdate.LibraryPath = Path.Combine("Packages", field.Text);
                 }
             });
-
-            EventManager.Instance.OnRefreshPackageListRequested();
         }
     }
 

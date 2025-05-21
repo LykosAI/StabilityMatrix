@@ -85,10 +85,10 @@
                                         Margin="8,0,0,0"
                                         FontSize="16"
                                         FontWeight="SemiBold"
-                                        Text="{Binding Package.DisplayName}"
+                                        Text="{Binding PackageDisplayName}"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap"
-                                        ToolTip.Tip="{Binding Package.DisplayName}" />
+                                        ToolTip.Tip="{Binding PackageDisplayName}" />
                                     <TextBlock
                                         Grid.Row="1"
                                         Grid.Column="0"

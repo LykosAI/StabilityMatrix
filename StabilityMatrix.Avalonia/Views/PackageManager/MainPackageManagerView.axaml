@@ -155,10 +155,13 @@
                                                         <icons:Icon Value="fa-brands fa-github" />
                                                     </MenuItem.Icon>
                                                 </MenuItem>
-                                                <MenuItem
-                                                    Command="{Binding RenameCommand}"
-                                                    Header="{x:Static lang:Resources.Action_Rename}"
-                                                    IsVisible="{Binding !IsUnknownPackage}">
+                                                <MenuItem Command="{Binding RenameCommand}" Header="{x:Static lang:Resources.Action_Rename}">
+                                                    <MenuItem.IsVisible>
+                                                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                            <Binding Path="!IsUnknownPackage" />
+                                                            <Binding Path="!IsRunning" />
+                                                        </MultiBinding>
+                                                    </MenuItem.IsVisible>
                                                     <MenuItem.Icon>
                                                         <ui:SymbolIcon Symbol="Rename" />
                                                     </MenuItem.Icon>

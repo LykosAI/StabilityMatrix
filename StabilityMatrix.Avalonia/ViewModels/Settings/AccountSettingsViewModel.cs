@@ -307,32 +307,30 @@ public partial class AccountSettingsViewModel : PageViewModelBase
         if (!await BeforeConnectCheck())
             return;
 
-        var field = new TextBoxField
+        var fields = new[]
         {
-            Text = "Hugging Face Token",
-            Validator = s =>
+            new TextBoxField("Hugging Face Token", isPassword: true, validator: s =>
             {
                 if (string.IsNullOrWhiteSpace(s))
                 {
                     throw new ValidationException("Token is required");
                 }
-            },
+            })
         };
 
-        var dialog = DialogHelper.CreateTextEntryDialog(
+        var (result, values) = await DialogHelper.CreateTextEntryDialog(
             "Connect Hugging Face Account",
             "Go to [Hugging Face settings](https://huggingface.co/settings/tokens) to create a new Access Token. Ensure it has read permissions. Paste the token below.",
-            [field]
+            fields,
+            image: null // Or a relevant image if available
         );
 
-        var result = await dialog.ShowAsync();
-
-        if (result == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(field.Text))
+        if (result == DialogResult.Primary && values.TryGetValue("Hugging Face Token", out var token))
         {
             // Assuming HuggingFaceLoginAsync will be added to IAccountsService
-            await accountsService.HuggingFaceLoginAsync(field.Text);
+            await accountsService.HuggingFaceLoginAsync(token);
             // Optionally refresh:
-            await accountsService.RefreshAsync();
+            await accountsService.RefreshAsync(); 
             // or await accountsService.RefreshHuggingFaceAsync(); // if a specific refresh is implemented
         }
     }
@@ -367,17 +365,35 @@ public partial class AccountSettingsViewModel : PageViewModelBase
     partial void OnHuggingFaceStatusChanged(HuggingFaceAccountStatusUpdateEventArgs value)
     {
         IsHuggingFaceConnected = value.IsConnected;
-        if (value.IsConnected && !string.IsNullOrWhiteSpace(value.Username))
+
+        if (value.IsConnected)
         {
-            HuggingFaceUsernameWithParentheses = $"({value.Username})";
-        }
-        else if (value.IsConnected)
-        {
-            HuggingFaceUsernameWithParentheses = "(Connected)"; // Fallback if no username
+            if (!string.IsNullOrWhiteSpace(value.Username))
+            {
+                HuggingFaceUsernameWithParentheses = $"({value.Username})";
+            }
+            else
+            {
+                HuggingFaceUsernameWithParentheses = "(Connected)"; // Fallback if no username
+            }
         }
         else
         {
             HuggingFaceUsernameWithParentheses = string.Empty;
+            if (!string.IsNullOrWhiteSpace(value.ErrorMessage))
+            {
+                // Assuming INotificationService.Show takes these parameters and NotificationType.Error is valid.
+                // Dispatcher.UIThread.Post might be needed if Show itself doesn't handle UI thread marshalling,
+                // but usually notification services are designed to be called from any thread.
+                // The event handler for HuggingFaceAccountStatusUpdate already posts to UIThread,
+                // so this method (OnHuggingFaceStatusChanged) is already on the UI thread.
+                notificationService.Show(
+                    "Hugging Face Connection Error",
+                    $"Failed to connect Hugging Face account: {value.ErrorMessage}. Please check your token and try again.",
+                    NotificationType.Error, // Assuming NotificationType.Error exists and is correct
+                    TimeSpan.FromSeconds(10) // Display for 10 seconds, or TimeSpan.Zero for persistent
+                );
+            }
         }
     }
 }
@@ -385,5 +401,5 @@ public partial class AccountSettingsViewModel : PageViewModelBase
 // Placeholder for the event args class, actual definition will be in Core project
 // namespace StabilityMatrix.Core.Services
 // {
-//     public record HuggingFaceAccountStatusUpdateEventArgs(bool IsConnected, string? Username);
+//     public record HuggingFaceAccountStatusUpdateEventArgs(bool IsConnected, string? Username, string? ErrorMessage = null); 
 // }

@@ -31,6 +31,7 @@ public class AccountsService : IAccountsService
     private readonly ILykosAuthApiV1 lykosAuthApi;
     private readonly ILykosAuthApiV2 lykosAuthApiV2;
     private readonly ICivitTRPCApi civitTRPCApi;
+    private readonly IHuggingFaceApi huggingFaceApi; // Added
     private readonly OpenIddictClientService openIdClient;
 
     /// <inheritdoc />
@@ -54,6 +55,7 @@ public class AccountsService : IAccountsService
         ILykosAuthApiV1 lykosAuthApi,
         ILykosAuthApiV2 lykosAuthApiV2,
         ICivitTRPCApi civitTRPCApi,
+        IHuggingFaceApi huggingFaceApi, // Added
         OpenIddictClientService openIdClient
     )
     {
@@ -62,6 +64,7 @@ public class AccountsService : IAccountsService
         this.lykosAuthApi = lykosAuthApi;
         this.lykosAuthApiV2 = lykosAuthApiV2;
         this.civitTRPCApi = civitTRPCApi;
+        this.huggingFaceApi = huggingFaceApi; // Added
         this.openIdClient = openIdClient;
 
         // Update our own status when the Lykos account status changes
@@ -273,17 +276,39 @@ public class AccountsService : IAccountsService
     {
         if (!string.IsNullOrWhiteSpace(secrets.HuggingFaceToken))
         {
-            // For now, simply assume it's connected if a token exists.
-            // No actual API call to validate the token or get username.
-            // Username can be added later if an API call is implemented.
-            OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs { IsConnected = true, Username = null }); 
+            try
+            {
+                var response = await huggingFaceApi.GetCurrentUserAsync($"Bearer {secrets.HuggingFaceToken}");
+                if (response.IsSuccessStatusCode && response.Content != null)
+                {
+                    // Token is valid, user info fetched
+                    logger.LogInformation("Hugging Face token is valid. User: {Username}", response.Content.Name);
+                    OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs(true, response.Content.Name));
+                }
+                else
+                {
+                    // Token is likely invalid or other API error
+                    logger.LogWarning("Hugging Face token validation failed. Status: {StatusCode}, Error: {Error}, Content: {Content}", response.StatusCode, response.Error?.ToString(), await response.Error?.GetContentAsAsync<string>() ?? "N/A");
+                    OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs(false, null, $"Token validation failed: {response.StatusCode}"));
+                }
+            }
+            catch (ApiException apiEx)
+            {
+                // Handle Refit's ApiException (network issues, non-success status codes not caught by IsSuccessStatusCode if IApiResponse isn't used directly)
+                logger.LogError(apiEx, "Hugging Face API request failed during token validation. Content: {Content}", await apiEx.GetContentAsAsync<string>() ?? "N/A");
+                OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs(false, null, "API request failed during token validation."));
+            }
+            catch (Exception ex)
+            {
+                // Handle other unexpected errors
+                logger.LogError(ex, "An unexpected error occurred during Hugging Face token validation.");
+                OnHuggingFaceAccountStatusUpdate(new HuggingFaceAccountStatusUpdateEventArgs(false, null, "An unexpected error occurred."));
+            }
         }
         else
         {
             OnHuggingFaceAccountStatusUpdate(HuggingFaceAccountStatusUpdateEventArgs.Disconnected);
         }
-        // Keep the Task return type for async consistency, even if not awaiting anything here.
-        await Task.CompletedTask; 
     }
 
     private async Task RefreshCivitAsync(Secrets secrets)
@@ -366,6 +391,10 @@ public class AccountsService : IAccountsService
         {
             // Assuming Username might be null for now as we are not fetching it.
             logger.LogInformation("Hugging Face account connected" + (string.IsNullOrWhiteSpace(e.Username) ? "" : $" (User: {e.Username})"));
+        }
+        else if (!e.IsConnected && !string.IsNullOrWhiteSpace(e.ErrorMessage))
+        {
+            logger.LogWarning("Hugging Face connection/validation failed: {ErrorMessage}", e.ErrorMessage);
         }
         HuggingFaceAccountStatusUpdate?.Invoke(this, e);
     }

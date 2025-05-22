@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Changed
 - Updated all Python version management, virtual environment creation, and pip installs to use `uv` for improved reliability, compatibility, and speed
 - The Civitai model browser Download Location selector will now remember the last location used based on the model type
+- New installs of ComfyUI, SD.Next, and InvokeAI will now use Python 3.12.10, unless otherwise specified in the Advanced Options during installation
+- New installs of all other packages will now use Python 3.10.17, unless otherwise specified in the Advanced Options during installation
 ### Supporters
 #### 🌟 Visionaries
 A massive thank you to our esteemed Visionary-tier Patrons: **Waterclouds**, **bluepopsicle**, **Bob S**, **Ibixat**, and **Corey T**! Your exceptional commitment propels Stability Matrix to new heights and allows us to push the boundaries of innovation. We're incredibly grateful for your foundational support! 🚀

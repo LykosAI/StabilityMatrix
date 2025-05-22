@@ -1,9 +1,9 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using NLog;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
@@ -15,6 +15,12 @@ public partial class UvManager : IUvManager
 {
     private readonly ISettingsManager settingsManager;
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+    private static readonly JsonSerializerOptions JsonSettings = new()
+    {
+        Converters = { new JsonStringEnumConverter() },
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
     private readonly string uvExecutablePath;
     private readonly DirectoryPath uvPythonInstallPath;
 
@@ -86,7 +92,7 @@ public partial class UvManager : IUvManager
     {
         // Keep implementation from previous correct version (using UvPythonListOutputRegex)
         // ... existing implementation ...
-        var args = new ProcessArgsBuilder("python", "list");
+        var args = new ProcessArgsBuilder("python", "list", "--output-format", "json");
         if (settingsManager.Settings.ShowAllAvailablePythonVersions)
         {
             args = args.AddArg("--all-versions");
@@ -98,8 +104,10 @@ public partial class UvManager : IUvManager
             ["UV_PYTHON_INSTALL_DIR"] = uvPythonInstallPath,
         };
 
+        var uvDirectory = Path.GetDirectoryName(uvExecutablePath);
+
         var result = await ProcessRunner
-            .GetProcessResultAsync(uvExecutablePath, args, environmentVariables: envVars)
+            .GetProcessResultAsync(uvExecutablePath, args, uvDirectory, envVars)
             .ConfigureAwait(false);
 
         if (!result.IsSuccessExitCode)
@@ -111,230 +119,40 @@ public partial class UvManager : IUvManager
         }
 
         var pythons = new List<UvPythonInfo>();
-        var lines = result.StandardOutput?.SplitLines(StringSplitOptions.RemoveEmptyEntries) ?? [];
-
-        foreach (var line in lines)
+        var json = result.StandardOutput;
+        if (string.IsNullOrWhiteSpace(json))
         {
-            var trimmedLine = line.Trim();
-            if (
-                string.IsNullOrWhiteSpace(trimmedLine)
-                || trimmedLine.StartsWith("uv ", StringComparison.OrdinalIgnoreCase)
-                || trimmedLine.Contains(" distributions:", StringComparison.OrdinalIgnoreCase)
-            ) // Skip headers
-            {
-                continue;
-            }
-
-            var match = UvPythonListRegex.Match(trimmedLine);
-
-            if (match.Success)
-            {
-                var key = match.Groups["key"].Value.Trim();
-                var statusOrPath = match.Groups["status_or_path"].Value.Trim();
-
-                // Handle symlinks by removing the -> and everything after it
-                if (statusOrPath.Contains(" -> "))
-                {
-                    statusOrPath = statusOrPath.Substring(0, statusOrPath.IndexOf(" -> ")).Trim();
-                }
-
-                string? actualInstallPath = null; // This should be the INNER path (e.g., .../cpython-...)
-                var isInstalled = false;
-                var isDownloadAvailable = false;
-
-                // --- Path Detection Logic ---
-                if (statusOrPath.Equals("<download available>", StringComparison.OrdinalIgnoreCase))
-                {
-                    isInstalled = false;
-                    isDownloadAvailable = true;
-                }
-                // Check if it looks like a path to an executable -> derive inner path
-                else if (
-                    File.Exists(statusOrPath)
-                    && (
-                        statusOrPath.EndsWith("python.exe", StringComparison.OrdinalIgnoreCase)
-                        || statusOrPath.Contains("/python3.", StringComparison.OrdinalIgnoreCase)
-                    )
-                )
-                {
-                    var exeDir = Path.GetDirectoryName(statusOrPath);
-                    var dirName = Path.GetFileName(exeDir);
-                    if (
-                        dirName != null
-                        && (
-                            dirName.Equals("bin", StringComparison.OrdinalIgnoreCase)
-                            || dirName.Equals("Scripts", StringComparison.OrdinalIgnoreCase)
-                        )
-                    )
-                    {
-                        actualInstallPath = Path.GetDirectoryName(exeDir); // Go one level up to Python root
-                    }
-                    else
-                    {
-                        actualInstallPath = exeDir;
-                        Logger.Warn(
-                            $"Python executable found at '{statusOrPath}' but not in expected bin/Scripts subdir. Assuming parent '{actualInstallPath}' is Python root."
-                        );
-                    }
-
-                    if (actualInstallPath != null)
-                    {
-                        // Check if installation exists
-                        var quickCheck = new PyInstallation(new PyVersion(0, 0, 0), actualInstallPath); // Use temp version
-                        isInstalled = quickCheck.Exists();
-                    }
-                }
-                // Check if it's a directory path -> Assume it's the INNER path
-                else if (Directory.Exists(statusOrPath))
-                {
-                    var quickCheck = new PyInstallation(new PyVersion(0, 0, 0), statusOrPath); // Use temp version
-                    isInstalled = quickCheck.Exists();
-                    if (isInstalled)
-                    {
-                        actualInstallPath = statusOrPath;
-                    }
-                    else
-                    {
-                        Logger.Trace(
-                            $"Path '{statusOrPath}' for key '{key}' exists as directory but doesn't pass PyInstallation.Exists(). Marking as not installed."
-                        );
-                        isInstalled = false;
-                    }
-                }
-                else
-                {
-                    isInstalled = false;
-                }
-                // --- End Path Detection ---
-
-                if (installedOnly && !isInstalled)
-                    continue;
-
-                // ... (Parse key for version, source, arch, os as before - using PyVersion.TryParseFromComplexString) ...
-                string? source = null;
-                PyVersion? pyVersion = null;
-                string? architecture = null;
-                string? osInfo = null;
-
-                var keyParts = key.Split('-');
-                if (keyParts.Length > 1)
-                {
-                    source = keyParts[0];
-                    // ... (robust version parsing logic using PyVersion.TryParseFromComplexString) ...
-                    // ... (heuristic arch/os parsing logic) ...
-                    for (var i = 1; i < keyParts.Length; ++i)
-                    {
-                        if (!char.IsDigit(keyParts[i][0]))
-                            continue;
-
-                        if (PyVersion.TryParseFromComplexString(keyParts[i], out var parsedVer))
-                        {
-                            pyVersion = parsedVer;
-                            // Infer arch/os from remaining parts
-                            if (keyParts.Length > i + 1)
-                                architecture = keyParts
-                                    .Skip(i + 1)
-                                    .FirstOrDefault(p =>
-                                        p.Contains("x86_64") || p.Contains("amd64") || p.Contains("arm")
-                                    );
-                            if (keyParts.Length > i + 1)
-                                osInfo = string.Join("-", keyParts.Skip(i + 1).Where(p => p != architecture));
-                            break;
-                        }
-
-                        if (
-                            i + 1 < keyParts.Length
-                            && PyVersion.TryParseFromComplexString(
-                                $"{keyParts[i]}-{keyParts[i + 1]}",
-                                out parsedVer
-                            )
-                        )
-                        {
-                            pyVersion = parsedVer;
-                            if (keyParts.Length > i + 2)
-                                architecture = keyParts
-                                    .Skip(i + 2)
-                                    .FirstOrDefault(p =>
-                                        p.Contains("x86_64") || p.Contains("amd64") || p.Contains("arm")
-                                    );
-                            if (keyParts.Length > i + 2)
-                                osInfo = string.Join("-", keyParts.Skip(i + 2).Where(p => p != architecture));
-                            break;
-                        }
-                    }
-
-                    if (
-                        !pyVersion.HasValue
-                        && PyVersion.TryParseFromComplexString(
-                            string.Join("-", keyParts.Skip(1)),
-                            out var fallbackParsedVer
-                        )
-                    )
-                    {
-                        pyVersion = fallbackParsedVer;
-                    }
-                    if (pyVersion.HasValue && architecture == null)
-                    {
-                        architecture = keyParts.FirstOrDefault(p =>
-                            p.Contains("x86_64")
-                            || p.Contains("amd64")
-                            || p.Contains("arm64")
-                            || p.Contains("aarch64")
-                        );
-                    }
-
-                    if (pyVersion.HasValue && osInfo == null)
-                    {
-                        var osParts = keyParts
-                            .Skip(1)
-                            .Where(p => !PyVersion.TryParseFromComplexString(p, out _))
-                            .Where(p => p != architecture)
-                            .ToList();
-                        if (osParts.Any())
-                            osInfo = string.Join("-", osParts);
-                    }
-                }
-
-                if (pyVersion.HasValue)
-                {
-                    actualInstallPath ??= string.Empty;
-
-                    // Only include Pythons that are:
-                    // 1. "<download available>" OR
-                    // 2. Installed in our uvPythonInstallPath
-                    bool shouldInclude =
-                        isDownloadAvailable
-                        || (
-                            isInstalled
-                            && !string.IsNullOrEmpty(actualInstallPath)
-                            && actualInstallPath.StartsWith(uvPythonInstallPath)
-                        );
-
-                    if (shouldInclude)
-                    {
-                        pythons.Add(
-                            new UvPythonInfo(
-                                pyVersion.Value,
-                                actualInstallPath,
-                                isInstalled,
-                                source,
-                                architecture,
-                                osInfo,
-                                key
-                            )
-                        );
-                    }
-                }
-                else
-                {
-                    Logger.Warn($"Could not parse PyVersion from UV Python key: '{key}'");
-                }
-            }
-            else
-            {
-                Logger.Trace($"Line did not match UV Python list output regex: '{trimmedLine}'");
-            }
+            Logger.Warn("UV Python list output is empty or null.");
+            return pythons.AsReadOnly();
         }
+
+        var uvPythonListEntries = JsonSerializer.Deserialize<List<UvPythonListEntry>>(json, JsonSettings);
+        if (uvPythonListEntries == null)
+        {
+            Logger.Warn("Failed to deserialize UV Python list output.");
+            return pythons.AsReadOnly();
+        }
+
+        var filteredPythons = uvPythonListEntries
+            .Where(e => e.Path == null || e.Path.StartsWith(uvPythonInstallPath))
+            .Where(e =>
+                settingsManager.Settings.ShowAllAvailablePythonVersions
+                || (!e.Version.Contains("a") && !e.Version.Contains("b"))
+            )
+            .Select(e => new UvPythonInfo
+            {
+                InstallPath = e.Path,
+                Version = e.VersionParts,
+                Architecture = e.Arch,
+                IsInstalled = e.Path != null,
+                Key = e.Key,
+                Os = e.Os.ToLowerInvariant(),
+                Source = e.Implementation.ToLowerInvariant(),
+                Libc = e.Libc,
+                Variant = e.Variant,
+            });
+
+        pythons.AddRange(filteredPythons);
 
         return pythons.AsReadOnly();
     }
@@ -473,7 +291,9 @@ public partial class UvManager : IUvManager
                     inferredSource,
                     null,
                     null,
-                    inferredKey
+                    inferredKey,
+                    null,
+                    null
                 );
             }
         }

@@ -1,5 +1,6 @@
 using Injectio.Attributes;
 using NLog;
+using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Python;
@@ -105,12 +106,34 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
             : p => p is { Source: "cpython", Version.Minor: >= 10 and <= 12 };
 
         var filteredPythons = allPythons.Where(isSupportedVersion).OrderBy(p => p.Version).ToList();
-
         var legacyPythonPath = Path.Combine(settingsManager.LibraryDir, "Assets", "Python310");
-        filteredPythons.Insert(
-            0,
-            new UvPythonInfo(Python_3_10_11, legacyPythonPath, true, "cpython", null, null, null)
-        );
+
+        if (
+            filteredPythons.Any(x => x.Version == Python_3_10_11 && x.InstallPath == legacyPythonPath)
+            is false
+        )
+        {
+            var legacyPythonKey =
+                Compat.IsWindows ? "python-3.10.11-embed-amd64"
+                : Compat.IsMacOS ? "cpython-3.10.11-macos-arm64"
+                : "cpython-3.10.11-x86_64-unknown-linux-gnu";
+
+            filteredPythons.Insert(
+                0,
+                new UvPythonInfo(
+                    Python_3_10_11,
+                    legacyPythonPath,
+                    true,
+                    "cpython",
+                    null,
+                    null,
+                    legacyPythonKey,
+                    null,
+                    null
+                )
+            );
+        }
+
         return filteredPythons;
     }
 

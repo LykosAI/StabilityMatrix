@@ -20,6 +20,7 @@ A massive thank you to our esteemed Visionary-tier Patrons: **Waterclouds**, **b
 ### Changed
 - Changed Nvidia GPU detection to use compute capability level instead of the GPU name for certain feature gates / torch indexes
 ### Fixed
+- Fixed [#1266](https://github.com/LykosAI/StabilityMatrix/issues/1266) - crash when moving or deleting Lora models in the Checkpoint Manager
 - Fixed [#1268](https://github.com/LykosAI/StabilityMatrix/issues/1268) - wrong torch index used for Nvidia 1000-series GPUs and older
 - Fixed [#1269](https://github.com/LykosAI/StabilityMatrix/issues/1269), [#1257](https://github.com/LykosAI/StabilityMatrix/issues/1257), [#1234](https://github.com/LykosAI/StabilityMatrix/issues/1234) - "no such file or directory" errors when updating certain packages after folder migration
 ### Supporters

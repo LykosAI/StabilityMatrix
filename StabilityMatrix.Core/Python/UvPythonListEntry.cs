@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using NLog;
 
 namespace StabilityMatrix.Core.Python;
 
@@ -44,7 +45,17 @@ public class UvPythonListEntry
                 return PyVersion.Parse(version);
             }
 
-            return PyVersion.Parse(Version);
+            try
+            {
+                return PyVersion.Parse(Version);
+            }
+            catch (Exception e)
+            {
+                LogManager
+                    .GetCurrentClassLogger()
+                    .Error(e, "Failed to parse Python version: {Version}", Version);
+                return new PyVersion(0, 0, 0);
+            }
         }
     }
 

@@ -202,10 +202,10 @@
                     Header="Hugging Face"
                     HeaderTargetUri="https://huggingface.co/settings/tokens"
                     IsConnected="{Binding IsHuggingFaceConnected}"
-                    OffDescription="Connect to Download Models that require login from Hugging Face"
+                    OffDescription="Connect to download models that require login from Hugging Face"
                     OnDescriptionExtra="{Binding HuggingFaceUsernameWithParentheses}">
                     <controls:SettingsAccountLinkExpander.IconSource>
-                        <ui:SymbolIconSource Symbol="Globe" />
+                        <ui:BitmapIconSource UriSource="avares://StabilityMatrix.Avalonia/Assets/brands-hf-logo.png" />
                     </controls:SettingsAccountLinkExpander.IconSource>
                     <controls:SettingsAccountLinkExpander.IsLoading>
                         <MultiBinding Converter="{x:Static BoolConverters.Or}">

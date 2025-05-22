@@ -95,9 +95,10 @@ public partial class ProgressManagerViewModel : PageViewModelBase
             switch (state)
             {
                 case ProgressState.Success:
-                    var imageFile = e.DownloadDirectory.EnumerateFiles(
-                        $"{Path.GetFileNameWithoutExtension(e.FileName)}.preview.*"
-                    )
+                    var imageFile = e
+                        .DownloadDirectory.EnumerateFiles(
+                            $"{Path.GetFileNameWithoutExtension(e.FileName)}.preview.*"
+                        )
                         .FirstOrDefault();
 
                     notificationService
@@ -107,7 +108,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                             {
                                 Title = "Download Completed",
                                 Body = $"Download of {e.FileName} completed successfully.",
-                                BodyImagePath = imageFile?.FullPath
+                                BodyImagePath = imageFile?.FullPath,
                             }
                         )
                         .SafeFireAndForget();
@@ -129,48 +130,32 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                                 "This asset is in Early Access. Please check the asset page for more information.";
                         }
                         else if (
-                            exception is UnauthorizedAccessException
-                            || exception.InnerException is UnauthorizedAccessException
+                            exception is CivitLoginRequiredException
+                            || exception.InnerException is CivitLoginRequiredException
                         )
                         {
-                            Dispatcher.UIThread.InvokeAsync(async () =>
-                            {
-                                var errorDialog = new BetterContentDialog
-                                {
-                                    Title = Resources.Label_DownloadFailed,
-                                    Content = Resources.Label_CivitAiLoginRequired,
-                                    PrimaryButtonText = "Go to Settings",
-                                    SecondaryButtonText = "Close",
-                                    DefaultButton = ContentDialogButton.Primary
-                                };
-
-                                var result = await errorDialog.ShowAsync();
-                                if (result == ContentDialogResult.Primary)
-                                {
-                                    navigationService.NavigateTo<SettingsViewModel>(
-                                        new SuppressNavigationTransitionInfo()
-                                    );
-                                    await Task.Delay(100);
-                                    settingsNavService.NavigateTo<AccountSettingsViewModel>(
-                                        new SuppressNavigationTransitionInfo()
-                                    );
-                                }
-                            });
-
+                            ShowCivitLoginRequiredDialog();
+                            return;
+                        }
+                        else if (
+                            exception is HuggingFaceLoginRequiredException
+                            || exception.InnerException is HuggingFaceLoginRequiredException
+                        )
+                        {
+                            ShowHuggingFaceLoginRequiredDialog();
                             return;
                         }
                     }
 
-                    Dispatcher.UIThread.InvokeAsync(
-                        async () =>
-                            await notificationService.ShowPersistentAsync(
-                                NotificationKey.Download_Failed,
-                                new Notification
-                                {
-                                    Title = "Download Failed",
-                                    Body = $"Download of {e.FileName} failed: {msg}"
-                                }
-                            )
+                    Dispatcher.UIThread.InvokeAsync(async () =>
+                        await notificationService.ShowPersistentAsync(
+                            NotificationKey.Download_Failed,
+                            new Notification
+                            {
+                                Title = "Download Failed",
+                                Body = $"Download of {e.FileName} failed: {msg}",
+                            }
+                        )
                     );
 
                     break;
@@ -181,7 +166,7 @@ public partial class ProgressManagerViewModel : PageViewModelBase
                             new Notification
                             {
                                 Title = "Download Cancelled",
-                                Body = $"Download of {e.FileName} was cancelled."
+                                Body = $"Download of {e.FileName} was cancelled.",
                             }
                         )
                         .SafeFireAndForget();
@@ -192,6 +177,56 @@ public partial class ProgressManagerViewModel : PageViewModelBase
         var vm = new DownloadProgressItemViewModel(trackedDownloadService, e);
 
         ProgressItems.Add(vm);
+    }
+
+    private void ShowCivitLoginRequiredDialog()
+    {
+        Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            var errorDialog = new BetterContentDialog
+            {
+                Title = Resources.Label_DownloadFailed,
+                Content = Resources.Label_CivitAiLoginRequired,
+                PrimaryButtonText = "Go to Settings",
+                SecondaryButtonText = "Close",
+                DefaultButton = ContentDialogButton.Primary,
+            };
+
+            var result = await errorDialog.ShowAsync();
+            if (result == ContentDialogResult.Primary)
+            {
+                navigationService.NavigateTo<SettingsViewModel>(new SuppressNavigationTransitionInfo());
+                await Task.Delay(100);
+                settingsNavService.NavigateTo<AccountSettingsViewModel>(
+                    new SuppressNavigationTransitionInfo()
+                );
+            }
+        });
+    }
+
+    private void ShowHuggingFaceLoginRequiredDialog()
+    {
+        Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            var errorDialog = new BetterContentDialog
+            {
+                Title = Resources.Label_DownloadFailed,
+                Content = Resources.Label_HuggingFaceLoginRequired,
+                PrimaryButtonText = "Go to Settings",
+                SecondaryButtonText = "Close",
+                DefaultButton = ContentDialogButton.Primary,
+            };
+
+            var result = await errorDialog.ShowAsync();
+            if (result == ContentDialogResult.Primary)
+            {
+                navigationService.NavigateTo<SettingsViewModel>(new SuppressNavigationTransitionInfo());
+                await Task.Delay(100);
+                settingsNavService.NavigateTo<AccountSettingsViewModel>(
+                    new SuppressNavigationTransitionInfo()
+                );
+            }
+        });
     }
 
     public void AddDownloads(IEnumerable<TrackedDownload> downloads)

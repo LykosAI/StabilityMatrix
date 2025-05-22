@@ -8,15 +8,28 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ## v2.15.0-dev.1
 ### Added
 - Added Python Version selector for all new package installs
+- Added the ability to rename packages
 ### Changed
 - Updated all Python version management, virtual environment creation, and pip installs to use `uv` for improved reliability, compatibility, and speed
+- The Civitai model browser Download Location selector will now remember the last location used based on the model type
+- New installs of ComfyUI, SD.Next, and InvokeAI will now use Python 3.12.10, unless otherwise specified in the Advanced Options during installation
+- New installs of all other packages will now use Python 3.10.17, unless otherwise specified in the Advanced Options during installation
+### Supporters
+#### 🌟 Visionaries
+A massive thank you to our esteemed Visionary-tier Patrons: **Waterclouds**, **bluepopsicle**, **Bob S**, **Ibixat**, and **Corey T**! Your exceptional commitment propels Stability Matrix to new heights and allows us to push the boundaries of innovation. We're incredibly grateful for your foundational support! 🚀
 
 ## v2.14.2
 ### Changed
 - Changed Nvidia GPU detection to use compute capability level instead of the GPU name for certain feature gates / torch indexes
 ### Fixed
+- Fixed [#1266](https://github.com/LykosAI/StabilityMatrix/issues/1266) - crash when moving or deleting Lora models in the Checkpoint Manager
 - Fixed [#1268](https://github.com/LykosAI/StabilityMatrix/issues/1268) - wrong torch index used for Nvidia 1000-series GPUs and older
 - Fixed [#1269](https://github.com/LykosAI/StabilityMatrix/issues/1269), [#1257](https://github.com/LykosAI/StabilityMatrix/issues/1257), [#1234](https://github.com/LykosAI/StabilityMatrix/issues/1234) - "no such file or directory" errors when updating certain packages after folder migration
+### Supporters
+#### 🌟 Visionaries
+Our deepest gratitude to the brilliant Visionary-tier Patrons: **Waterclouds**, **bluepopsicle**, **Bob S**, **Ibixat**, and **Corey T**! Your incredible backing is instrumental in shaping the future of Stability Matrix and empowering us to deliver cutting-edge features. Thank you for believing in our vision! 🙏
+#### 🚀 Pioneers
+A huge shout-out to our fantastic Pioneer-tier Patrons: **Mr. Unknown**, **tankfox**, **Szir777**, **Noah M**, **USATechDude**, **Thom**, **TheTekknician**, and **SeraphOfSalem**! Your consistent support and active engagement are vital to our community's growth and our ongoing development efforts. You truly make a difference! ✨
 
 ## v2.14.1
 ### Changed

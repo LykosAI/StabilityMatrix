@@ -1437,4 +1437,16 @@ We prioritize your privacy ([Gen AI Terms](&lt;https://lykos.ai/gen-ai-terms&gt;
   <data name="Label_LoginRequired" xml:space="preserve">
     <value>Login required to download this model</value>
   </data>
+  <data name="Watermark_EnterPackageName" xml:space="preserve">
+    <value>Enter package name</value>
+  </data>
+  <data name="Validation_PackageNameCannotBeEmpty" xml:space="preserve">
+    <value>Package name cannot be empty</value>
+  </data>
+  <data name="Description_RenamePackage" xml:space="preserve">
+    <value>Enter a new name for '{0}'</value>
+  </data>
+  <data name="ValidationError_PackageExists" xml:space="preserve">
+    <value>Package named '{0}' already exists</value>
+  </data>
 </root>

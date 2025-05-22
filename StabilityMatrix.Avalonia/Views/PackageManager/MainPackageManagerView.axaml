@@ -85,10 +85,10 @@
                                         Margin="8,0,0,0"
                                         FontSize="16"
                                         FontWeight="SemiBold"
-                                        Text="{Binding Package.DisplayName}"
+                                        Text="{Binding PackageDisplayName}"
                                         TextTrimming="CharacterEllipsis"
                                         TextWrapping="NoWrap"
-                                        ToolTip.Tip="{Binding Package.DisplayName}" />
+                                        ToolTip.Tip="{Binding PackageDisplayName}" />
                                     <TextBlock
                                         Grid.Row="1"
                                         Grid.Column="0"
@@ -153,6 +153,17 @@
                                                     IsVisible="{Binding !IsUnknownPackage}">
                                                     <MenuItem.Icon>
                                                         <icons:Icon Value="fa-brands fa-github" />
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
+                                                <MenuItem Command="{Binding RenameCommand}" Header="{x:Static lang:Resources.Action_Rename}">
+                                                    <MenuItem.IsVisible>
+                                                        <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                            <Binding Path="!IsUnknownPackage" />
+                                                            <Binding Path="!IsRunning" />
+                                                        </MultiBinding>
+                                                    </MenuItem.IsVisible>
+                                                    <MenuItem.Icon>
+                                                        <ui:SymbolIcon Symbol="Rename" />
                                                     </MenuItem.Icon>
                                                 </MenuItem>
 

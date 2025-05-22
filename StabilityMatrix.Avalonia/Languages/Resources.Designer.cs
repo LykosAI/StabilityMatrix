@@ -786,6 +786,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enter a new name for &apos;{0}&apos;.
+        /// </summary>
+        public static string Description_RenamePackage {
+            get {
+                return ResourceManager.GetString("Description_RenamePackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please select a download location..
         /// </summary>
         public static string Error_PleaseSelectDownloadLocation {
@@ -3923,11 +3932,38 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Package name cannot be empty.
+        /// </summary>
+        public static string Validation_PackageNameCannotBeEmpty {
+            get {
+                return ResourceManager.GetString("Validation_PackageNameCannotBeEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Package named &apos;{0}&apos; already exists.
+        /// </summary>
+        public static string ValidationError_PackageExists {
+            get {
+                return ResourceManager.GetString("ValidationError_PackageExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to PLEASE EXTRACT THE APP FROM THE ZIP FILE BEFORE RUNNING STABILITY MATRIX.
         /// </summary>
         public static string Warning_PleaseExtractFirst {
             get {
                 return ResourceManager.GetString("Warning_PleaseExtractFirst", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter package name.
+        /// </summary>
+        public static string Watermark_EnterPackageName {
+            get {
+                return ResourceManager.GetString("Watermark_EnterPackageName", resourceCulture);
             }
         }
     }

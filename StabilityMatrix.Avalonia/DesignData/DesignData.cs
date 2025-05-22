@@ -214,6 +214,33 @@ public static class DesignData
             null
         );
 
+        PackageInstallDetailViewModel.AvailablePythonVersions = new ObservableCollection<UvPythonInfo>(
+            [
+                new UvPythonInfo(
+                    PyInstallationManager.Python_3_10_17,
+                    "C:\\SMData\\Data\\Data\\Assets\\Python\\cpython-3.11.12-windows-x86_64-none",
+                    true,
+                    "cpython",
+                    "x86_64",
+                    "windows",
+                    "cpython-3.10.17-windows-x86_64-none",
+                    "default",
+                    "none"
+                ),
+                new UvPythonInfo(
+                    PyInstallationManager.Python_3_12_10,
+                    null,
+                    false,
+                    "cpython",
+                    "x86_64",
+                    "windows",
+                    "guh I can't be bothered",
+                    "freethreaded",
+                    "none"
+                ),
+            ]
+        );
+
         /*ObservableCacheEx.AddOrUpdate(
             OldCheckpointsPageViewModel.CheckpointFoldersCache,
             new CheckpointFolder[]

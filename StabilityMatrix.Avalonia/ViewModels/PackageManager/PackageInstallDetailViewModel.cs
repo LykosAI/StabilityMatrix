@@ -97,10 +97,10 @@ public partial class PackageInstallDetailViewModel(
     private bool canInstall;
 
     [ObservableProperty]
-    private ObservableCollection<PyVersion> availablePythonVersions = new();
+    private ObservableCollection<UvPythonInfo> availablePythonVersions = new();
 
     [ObservableProperty]
-    private PyVersion selectedPythonVersion;
+    private UvPythonInfo selectedPythonVersion;
 
     public PythonPackageSpecifiersViewModel PythonPackageSpecifiersViewModel { get; } =
         new() { Title = null };
@@ -110,7 +110,9 @@ public partial class PackageInstallDetailViewModel(
     public override async Task OnLoadedAsync()
     {
         if (Design.IsDesignMode)
+        {
             return;
+        }
 
         OnInstallNameChanged(InstallName);
 
@@ -120,9 +122,10 @@ public partial class PackageInstallDetailViewModel(
         SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
 
         // Initialize Python versions
+        await prerequisiteHelper.InstallUvIfNecessary();
         var pythonVersions = await pyInstallationManager.GetAllAvailablePythonsAsync();
-        AvailablePythonVersions = new ObservableCollection<PyVersion>(pythonVersions.Select(x => x.Version));
-        SelectedPythonVersion = GetRecommendedPyVersion() ?? SelectedPackage.RecommendedPythonVersion;
+        AvailablePythonVersions = new ObservableCollection<UvPythonInfo>(pythonVersions);
+        SelectedPythonVersion = GetRecommendedPyVersion() ?? AvailablePythonVersions.LastOrDefault();
 
         allOptions = await SelectedPackage.GetAllVersionOptions();
         if (ShowReleaseMode)
@@ -268,13 +271,13 @@ public partial class PackageInstallDetailViewModel(
             PreferredSharedFolderMethod = SelectedSharedFolderMethod,
             UseSharedOutputFolder = IsOutputSharingEnabled,
             PipOverrides = pipOverrides.Count > 0 ? pipOverrides : null,
-            PythonVersion = SelectedPythonVersion.StringValue,
+            PythonVersion = SelectedPythonVersion.Version.StringValue,
         };
 
         var steps = new List<IPackageStep>
         {
             new SetPackageInstallingStep(settingsManager, InstallName),
-            new SetupPrerequisitesStep(prerequisiteHelper, SelectedPackage, SelectedPythonVersion),
+            new SetupPrerequisitesStep(prerequisiteHelper, SelectedPackage, SelectedPythonVersion.Version),
             new DownloadPackageVersionStep(
                 SelectedPackage,
                 installLocation,
@@ -292,7 +295,7 @@ public partial class PackageInstallDetailViewModel(
                     PythonOptions =
                     {
                         TorchIndex = SelectedTorchIndex,
-                        PythonVersion = SelectedPythonVersion,
+                        PythonVersion = SelectedPythonVersion.Version,
                     },
                 }
             ),
@@ -421,6 +424,8 @@ public partial class PackageInstallDetailViewModel(
         SelectedCommit = commit;
     }
 
-    private PyVersion? GetRecommendedPyVersion() =>
-        AvailablePythonVersions.FirstOrDefault(x => x.Equals(SelectedPackage.RecommendedPythonVersion));
+    private UvPythonInfo? GetRecommendedPyVersion() =>
+        AvailablePythonVersions.FirstOrDefault(x =>
+            x.Version.Equals(SelectedPackage.RecommendedPythonVersion)
+        );
 }

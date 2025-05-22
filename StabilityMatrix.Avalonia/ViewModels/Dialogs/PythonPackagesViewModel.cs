@@ -41,6 +41,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
     private readonly ILogger<PythonPackagesViewModel> logger;
     private readonly ISettingsManager settingsManager;
     private readonly IPyInstallationManager pyInstallationManager;
+    private readonly IPrerequisiteHelper prerequisiteHelper;
     private PyBaseInstall? pyBaseInstall;
 
     public DirectoryPath? VenvPath { get; set; }
@@ -179,9 +180,10 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
     }
 
     /// <inheritdoc />
-    public override Task OnLoadedAsync()
+    public override async Task OnLoadedAsync()
     {
-        return Refresh();
+        await prerequisiteHelper.InstallUvIfNecessary();
+        await Refresh();
     }
 
     public void AddPackages(params PipPackageInfo[] packages)
@@ -244,8 +246,8 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
                 VenvDirectory = VenvPath,
                 WorkingDirectory = VenvPath.Parent,
                 Args = args,
-                BaseInstall = pyBaseInstall
-            }
+                BaseInstall = pyBaseInstall,
+            },
         };
 
         var runner = new PackageModificationRunner
@@ -253,7 +255,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             ShowDialogOnStart = true,
             ModificationCompleteMessage = isDowngrade
                 ? $"Downgraded Python Package '{packageName}' to {version}"
-                : $"Upgraded Python Package '{packageName}' to {version}"
+                : $"Upgraded Python Package '{packageName}' to {version}",
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps(steps);
@@ -271,7 +273,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
         // Dialog
         var fields = new TextBoxField[]
         {
-            new() { Label = "Package Name", InnerLeftText = "pip install" }
+            new() { Label = "Package Name", InnerLeftText = "pip install" },
         };
 
         var dialog = DialogHelper.CreateTextEntryDialog("Install Package", "", fields);
@@ -290,14 +292,14 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
                 WorkingDirectory = VenvPath.Parent,
                 Args = new ProcessArgs(packageArgs).Prepend("install"),
                 BaseInstall = pyBaseInstall,
-                EnvironmentVariables = settingsManager.Settings.EnvironmentVariables
-            }
+                EnvironmentVariables = settingsManager.Settings.EnvironmentVariables,
+            },
         };
 
         var runner = new PackageModificationRunner
         {
             ShowDialogOnStart = true,
-            ModificationCompleteMessage = $"Installed Python Package '{packageArgs}'"
+            ModificationCompleteMessage = $"Installed Python Package '{packageArgs}'",
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps(steps);
@@ -334,14 +336,14 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
                 VenvDirectory = VenvPath,
                 WorkingDirectory = VenvPath.Parent,
                 Args = new[] { "uninstall", "--yes", package.Name },
-                BaseInstall = pyBaseInstall
-            }
+                BaseInstall = pyBaseInstall,
+            },
         };
 
         var runner = new PackageModificationRunner
         {
             ShowDialogOnStart = true,
-            ModificationCompleteMessage = $"Uninstalled Python Package '{package.Name}'"
+            ModificationCompleteMessage = $"Uninstalled Python Package '{package.Name}'",
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
         await runner.ExecuteSteps(steps);
@@ -362,7 +364,7 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
             Title = Resources.Label_PythonPackages,
             Content = new PythonPackagesDialog { DataContext = this },
             CloseButtonText = Resources.Action_Close,
-            DefaultButton = ContentDialogButton.Close
+            DefaultButton = ContentDialogButton.Close,
         };
     }
 }

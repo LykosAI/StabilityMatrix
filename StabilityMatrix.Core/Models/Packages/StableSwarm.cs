@@ -66,8 +66,8 @@ public class StableSwarm(
 
                     await RebuildDotnetProject(installedPackage.FullPath, csprojName, null)
                         .ConfigureAwait(false);
-                }
-            }
+                },
+            },
         ];
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
@@ -77,46 +77,46 @@ public class StableSwarm(
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "127.0.0.1",
-                Options = ["--host"]
+                Options = ["--host"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7801",
-                Options = ["--port"]
+                Options = ["--port"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Ngrok Path",
                 Type = LaunchOptionType.String,
-                Options = ["--ngrok-path"]
+                Options = ["--ngrok-path"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Ngrok Basic Auth",
                 Type = LaunchOptionType.String,
-                Options = ["--ngrok-basic-auth"]
+                Options = ["--ngrok-basic-auth"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Cloudflared Path",
                 Type = LaunchOptionType.String,
-                Options = ["--cloudflared-path"]
+                Options = ["--cloudflared-path"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Proxy Region",
                 Type = LaunchOptionType.String,
-                Options = ["--proxy-region"]
+                Options = ["--proxy-region"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Launch Mode",
                 Type = LaunchOptionType.Bool,
-                Options = ["--launch-mode web", "--launch-mode webinstall"]
+                Options = ["--launch-mode web", "--launch-mode webinstall"],
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override SharedFolderLayout SharedFolderLayout =>
@@ -126,44 +126,50 @@ public class StableSwarm(
             ConfigFileType = ConfigFileType.Fds,
             Rules =
             [
-                new SharedFolderLayoutRule { IsRoot = true, ConfigDocumentPaths = ["ModelRoot"], },
+                new SharedFolderLayoutRule { IsRoot = true, ConfigDocumentPaths = ["ModelRoot"] },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.StableDiffusion],
                     TargetRelativePaths = ["Models/Stable-Diffusion"],
-                    ConfigDocumentPaths = ["SDModelFolder"]
+                    ConfigDocumentPaths = ["SDModelFolder"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
                     TargetRelativePaths = ["Models/Lora"],
-                    ConfigDocumentPaths = ["SDLoraFolder"]
+                    ConfigDocumentPaths = ["SDLoraFolder"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.VAE],
                     TargetRelativePaths = ["Models/VAE"],
-                    ConfigDocumentPaths = ["SDVAEFolder"]
+                    ConfigDocumentPaths = ["SDVAEFolder"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Embeddings],
                     TargetRelativePaths = ["Models/Embeddings"],
-                    ConfigDocumentPaths = ["SDEmbeddingFolder"]
+                    ConfigDocumentPaths = ["SDEmbeddingFolder"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.ControlNet, SharedFolderType.T2IAdapter],
                     TargetRelativePaths = ["Models/controlnet"],
-                    ConfigDocumentPaths = ["SDControlNetsFolder"]
+                    ConfigDocumentPaths = ["SDControlNetsFolder"],
                 }, // Assuming Swarm maps T2I to ControlNet folder
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.ClipVision],
                     TargetRelativePaths = ["Models/clip_vision"],
-                    ConfigDocumentPaths = ["SDClipVisionFolder"]
+                    ConfigDocumentPaths = ["SDClipVisionFolder"],
                 },
-            ]
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.TextEncoders],
+                    TargetRelativePaths = ["Models/clip"],
+                    ConfigDocumentPaths = ["SDClipFolder"],
+                },
+            ],
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
@@ -178,7 +184,7 @@ public class StableSwarm(
             PackagePrerequisite.Git,
             PackagePrerequisite.Dotnet,
             PackagePrerequisite.Python310,
-            PackagePrerequisite.VcRedist
+            PackagePrerequisite.VcRedist,
         ];
 
     private FilePath GetSettingsPath(string installLocation) =>
@@ -198,8 +204,8 @@ public class StableSwarm(
     {
         progress?.Report(new ProgressReport(-1f, "Installing SwarmUI...", isIndeterminate: true));
 
-        var comfy = settingsManager.Settings.InstalledPackages.FirstOrDefault(
-            x => x.PackageName is nameof(ComfyUI) or "ComfyUI-Zluda"
+        var comfy = settingsManager.Settings.InstalledPackages.FirstOrDefault(x =>
+            x.PackageName is nameof(ComfyUI) or "ComfyUI-Zluda"
         );
 
         if (comfy == null)
@@ -217,7 +223,7 @@ public class StableSwarm(
                         "source",
                         "https://api.nuget.org/v3/index.json",
                         "--name",
-                        "\"NuGet official package source\""
+                        "\"NuGet official package source\"",
                     ],
                     workingDirectory: installLocation,
                     onProcessOutput: onConsoleOutput
@@ -277,7 +283,7 @@ public class StableSwarm(
                     SDClipVisionFolder = Path.Combine(
                         settingsManager.ModelsDirectory,
                         SharedFolderType.ClipVision.ToString()
-                    )
+                    ),
                 };
             }
 
@@ -315,9 +321,9 @@ public class StableSwarm(
                 // Create a wrapper batch file that runs zluda.exe
                 var wrapperScriptPath = Path.Combine(installLocation, "Data", "zluda_wrapper.bat");
                 var scriptContent = $"""
-                                     @echo off
-                                     "{zludaPath}" {args}
-                                     """;
+                    @echo off
+                    "{zludaPath}" {args}
+                    """;
 
                 // Ensure the Data directory exists
                 Directory.CreateDirectory(Path.Combine(installLocation, "Data"));
@@ -334,7 +340,7 @@ public class StableSwarm(
                         DisableInternalArgs = false,
                         AutoUpdate = false,
                         UpdateManagedNodes = "true",
-                        ExtraArgs = string.Empty // Arguments are already in the batch file
+                        ExtraArgs = string.Empty, // Arguments are already in the batch file
                     }.Save(true)
                 );
             }
@@ -348,7 +354,7 @@ public class StableSwarm(
                         DisableInternalArgs = false,
                         AutoUpdate = false,
                         UpdateManagedNodes = "true",
-                        ExtraArgs = comfyArgs
+                        ExtraArgs = comfyArgs,
                     }.Save(true)
                 );
             }
@@ -371,7 +377,7 @@ public class StableSwarm(
         {
             ["ASPNETCORE_ENVIRONMENT"] = "Production",
             ["ASPNETCORE_URLS"] = "http://*:7801",
-            ["GIT"] = portableGitBin.JoinFile("git.exe")
+            ["GIT"] = portableGitBin.JoinFile("git.exe"),
         };
         aspEnvVars.Update(settingsManager.Settings.EnvironmentVariables);
 
@@ -400,6 +406,30 @@ public class StableSwarm(
             }
         }
 
+        var sharedDiffusionModelsPath = new DirectoryPath(
+            settingsManager.ModelsDirectory,
+            nameof(SharedFolderType.DiffusionModels)
+        );
+        var swarmDiffusionModelsPath = new DirectoryPath(settingsManager.ModelsDirectory, "diffusion_models");
+
+        try
+        {
+            swarmDiffusionModelsPath.Create();
+            await Helper
+                .SharedFolders.CreateOrUpdateLink(sharedDiffusionModelsPath, swarmDiffusionModelsPath)
+                .ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            onConsoleOutput?.Invoke(
+                new ProcessOutput
+                {
+                    Text =
+                        $"Failed to create symlink for {nameof(SharedFolderType.DiffusionModels)}: {e.Message}.",
+                }
+            );
+        }
+
         var releaseFolder = Path.Combine(installLocation, "src", "bin", "live_release");
         var dllName = "StableSwarmUI.dll";
         if (File.Exists(Path.Combine(releaseFolder, "SwarmUI.dll")))
@@ -409,7 +439,7 @@ public class StableSwarm(
 
         dotnetProcess = await prerequisiteHelper
             .RunDotnet(
-                args: [Path.Combine(releaseFolder, dllName), ..options.Arguments],
+                args: [Path.Combine(releaseFolder, dllName), .. options.Arguments],
                 workingDirectory: installLocation,
                 envVars: aspEnvVars,
                 onProcessOutput: HandleConsoleOutput,
@@ -509,7 +539,7 @@ public class StableSwarm(
                     "--configuration",
                     "Release",
                     "-o",
-                    "src/bin/live_release"
+                    "src/bin/live_release",
                 ],
                 workingDirectory: installLocation,
                 onProcessOutput: onConsoleOutput
@@ -576,7 +606,7 @@ public class StableSwarm(
             SDClipVisionFolder = Path.Combine(
                 settingsManager.ModelsDirectory,
                 SharedFolderType.ClipVision.ToString()
-            )
+            ),
         };
 
         existingSettings.Save(true).SaveToFile(settingsPath);

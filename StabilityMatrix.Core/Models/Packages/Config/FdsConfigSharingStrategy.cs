@@ -99,12 +99,8 @@ public class FdsConfigSharingStrategy : IConfigSharingStrategy
 
             if (normalizedPaths.Count > 0)
             {
-                // FDS might store lists separated by newline or another char, or just the first path?
-                // Assuming SwarmUI expects a single path string per key, potentially the first one.
-                // If it supports lists (e.g., newline separated), adjust here.
-                // For now, let's assume it takes the first path if multiple are generated,
-                // or handles lists internally if the key implies it (needs SwarmUI knowledge).
-                pathsSection.Set(configPath, normalizedPaths.First());
+                // FDS lists are separated by semicolon
+                pathsSection.Set(configPath, string.Join(';', normalizedPaths));
 
                 // If FDS supports lists explicitly (e.g., via SetList), use that:
                 // pathsSection.SetList(configPath, normalizedPaths);

@@ -25,6 +25,7 @@ A massive thank you to our esteemed Visionary-tier Patrons: **Waterclouds**, **b
 - Fixed [#1266](https://github.com/LykosAI/StabilityMatrix/issues/1266) - crash when moving or deleting Lora models in the Checkpoint Manager
 - Fixed [#1268](https://github.com/LykosAI/StabilityMatrix/issues/1268) - wrong torch index used for Nvidia 1000-series GPUs and older
 - Fixed [#1269](https://github.com/LykosAI/StabilityMatrix/issues/1269), [#1257](https://github.com/LykosAI/StabilityMatrix/issues/1257), [#1234](https://github.com/LykosAI/StabilityMatrix/issues/1234) - "no such file or directory" errors when updating certain packages after folder migration
+- Fixed [#1274](https://github.com/LykosAI/StabilityMatrix/issues/1274), [#1276](https://github.com/LykosAI/StabilityMatrix/issues/1276) - incorrect torch installed when updating to InvokeAI v5.12+
 - Fixed missing shared folder links for SwarmUI's diffusion_models and clip folders
 ### Supporters
 #### 🌟 Visionaries

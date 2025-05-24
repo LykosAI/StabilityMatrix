@@ -11,17 +11,56 @@ public class MockModelIndexService : IModelIndexService
     public Dictionary<SharedFolderType, List<LocalModelFile>> ModelIndex { get; } =
         new()
         {
+            [SharedFolderType.StableDiffusion] =
+            [
+                new LocalModelFile
+                {
+                    SharedFolderType = SharedFolderType.StableDiffusion,
+                    RelativePath = "art_shaper_v8.safetensors",
+                    PreviewImageFullPath =
+                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/dd9b038c-bd15-43ab-86ab-66e145ad7ff2/width=512/img.jpeg",
+                    ConnectedModelInfo = new ConnectedModelInfo
+                    {
+                        ModelName = "Art Shaper (very long name example)",
+                        VersionName = "Style v8 (very long name)",
+                    },
+                },
+                new LocalModelFile
+                {
+                    SharedFolderType = SharedFolderType.StableDiffusion,
+                    RelativePath = "background_arts.safetensors",
+                    PreviewImageFullPath =
+                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/71c81ddf-d8c3-46b4-843d-9f8f20a9254a/width=512/img.jpeg",
+                    ConnectedModelInfo = new ConnectedModelInfo
+                    {
+                        ModelName = "Background Arts",
+                        VersionName = "Anime Style v10",
+                    },
+                },
+            ],
             [SharedFolderType.Lora] =
             [
                 new LocalModelFile
                 {
-                    RelativePath = "Lora/mock_model_1.safetensors",
                     SharedFolderType = SharedFolderType.Lora,
+                    RelativePath = "Lora/mock_model_1.safetensors",
                 },
                 new LocalModelFile
                 {
-                    RelativePath = "Lora/mock_model_2.safetensors",
                     SharedFolderType = SharedFolderType.Lora,
+                    RelativePath = "Lora/mock_model_2.safetensors",
+                },
+                new LocalModelFile
+                {
+                    SharedFolderType = SharedFolderType.Lora,
+                    RelativePath = "Lora/background_arts.safetensors",
+                    PreviewImageFullPath =
+                        "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/71c81ddf-d8c3-46b4-843d-9f8f20a9254a/width=512/img.png",
+                    ConnectedModelInfo = new ConnectedModelInfo
+                    {
+                        ModelName = "Background Arts",
+                        VersionName = "Anime Style v10",
+                    },
                 },
             ],
         };

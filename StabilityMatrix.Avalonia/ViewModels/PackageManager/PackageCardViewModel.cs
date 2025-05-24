@@ -111,7 +111,7 @@ public partial class PackageCardViewModel(
     private List<ExtraPackageCommand>? extraCommands;
 
     [ObservableProperty]
-    private IReadOnlyList<string> extraLaunchCommands = [];
+    private IReadOnlyDictionary<string, string> extraLaunchCommands = new Dictionary<string, string>();
 
     public bool ShowExtraCommands => ExtraCommands is { Count: > 0 };
 
@@ -166,7 +166,7 @@ public partial class PackageCardViewModel(
             CanUseExtensions = basePackage?.SupportsExtensions ?? false;
             DontCheckForUpdates = Package?.DontCheckForUpdates ?? false;
             UsesVenv = basePackage?.UsesVenv ?? true;
-            ExtraLaunchCommands = basePackage?.ExtraLaunchCommands ?? [];
+            ExtraLaunchCommands = basePackage?.ExtraLaunchCommands ?? new Dictionary<string, string>();
 
             // Set the extra commands if available from the package
             var packageExtraCommands = basePackage?.GetExtraCommands();

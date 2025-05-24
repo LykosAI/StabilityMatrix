@@ -28,7 +28,8 @@ public class DankDiffusion : BaseGitPackage
     public override string LaunchCommand => "test";
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Symlink;
 
-    public override IReadOnlyList<string> ExtraLaunchCommands => new[] { "test-config", };
+    public override IReadOnlyDictionary<string, string> ExtraLaunchCommands =>
+        new Dictionary<string, string> { ["test-config"] = "test-config" };
 
     public override Uri PreviewImageUri { get; }
 

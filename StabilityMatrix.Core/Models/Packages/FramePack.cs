@@ -80,7 +80,8 @@ public class FramePack(
     public override IReadOnlyList<string> ExtraLaunchArguments =>
         settingsManager.IsLibraryDirSet ? ["--gradio-allowed-paths", settingsManager.ImagesDirectory] : [];
 
-    public override IReadOnlyList<string> ExtraLaunchCommands => ["demo_gradio_f1.py"];
+    public override IReadOnlyDictionary<string, string> ExtraLaunchCommands =>
+        new Dictionary<string, string> { ["FramePack F1"] = "demo_gradio_f1.py" };
 
     public override async Task InstallPackage(
         string installLocation,

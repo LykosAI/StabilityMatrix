@@ -6,6 +6,8 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:designData="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+    xmlns:generic1="clr-namespace:System.Collections.Generic;assembly=System.Runtime"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
@@ -472,11 +474,14 @@
                                             <SplitButton.Flyout>
                                                 <ui:FAMenuFlyout ItemsSource="{Binding ExtraLaunchCommands}" Placement="BottomEdgeAlignedRight">
                                                     <ui:FAMenuFlyout.ItemTemplate>
-                                                        <DataTemplate x:DataType="{x:Type system:String}">
+                                                        <DataTemplate>
+                                                            <DataTemplate.DataType>
+                                                                <x:Type x:TypeArguments="x:String, x:String" TypeName="generic1:KeyValuePair" />
+                                                            </DataTemplate.DataType>
                                                             <ui:MenuFlyoutItem
                                                                 Command="{StaticResource LaunchCommand}"
-                                                                CommandParameter="{Binding}"
-                                                                Text="{Binding}" />
+                                                                CommandParameter="{Binding Value}"
+                                                                Text="{Binding Key, StringFormat={}Launch {0}}" />
                                                         </DataTemplate>
                                                     </ui:FAMenuFlyout.ItemTemplate>
                                                 </ui:FAMenuFlyout>

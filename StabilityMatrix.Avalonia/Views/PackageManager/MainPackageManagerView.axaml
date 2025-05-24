@@ -12,6 +12,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
     d:DataContext="{x:Static designData:DesignData.MainPackageManagerViewModel}"
@@ -48,6 +49,9 @@
                                     <DynamicResource ResourceKey="ButtonBackground" />
                                 </MultiBinding>
                             </controls:Card.Background>
+                            <controls:Card.Resources>
+                                <input:StandardUICommand x:Key="LaunchCommand" Command="{Binding Launch}" />
+                            </controls:Card.Resources>
                             <Grid ColumnDefinitions="Auto, *">
                                 <vendorLabs:BetterAsyncImage
                                     Grid.Column="0"
@@ -431,6 +435,7 @@
                                                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                                                     <Binding Path="!IsRunning" />
                                                     <Binding Path="!IsUnknownPackage" />
+                                                    <Binding Path="!ExtraLaunchCommands.Count" />
                                                 </MultiBinding>
                                             </Button.IsVisible>
                                             <StackPanel Margin="0,2,0,2" Orientation="Horizontal">
@@ -441,6 +446,42 @@
                                                 <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
                                             </StackPanel>
                                         </Button>
+                                        <SplitButton
+                                            Name="SplitLaunchButton"
+                                            HorizontalAlignment="Stretch"
+                                            VerticalAlignment="Bottom"
+                                            Classes="accent"
+                                            Command="{Binding Launch}">
+                                            <Button.IsVisible>
+                                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                    <Binding Path="!IsRunning" />
+                                                    <Binding Path="!IsUnknownPackage" />
+                                                    <Binding Path="!!ExtraLaunchCommands.Count" />
+                                                </MultiBinding>
+                                            </Button.IsVisible>
+                                            <StackPanel
+                                                Margin="0,2,0,2"
+                                                HorizontalAlignment="Center"
+                                                Orientation="Horizontal">
+                                                <icons:Icon
+                                                    Margin="0,0,8,0"
+                                                    FontSize="14"
+                                                    Value="fa-solid fa-rocket" />
+                                                <TextBlock Text="{x:Static lang:Resources.Action_Launch}" />
+                                            </StackPanel>
+                                            <SplitButton.Flyout>
+                                                <ui:FAMenuFlyout ItemsSource="{Binding ExtraLaunchCommands}" Placement="BottomEdgeAlignedRight">
+                                                    <ui:FAMenuFlyout.ItemTemplate>
+                                                        <DataTemplate x:DataType="{x:Type system:String}">
+                                                            <ui:MenuFlyoutItem
+                                                                Command="{StaticResource LaunchCommand}"
+                                                                CommandParameter="{Binding}"
+                                                                Text="{Binding}" />
+                                                        </DataTemplate>
+                                                    </ui:FAMenuFlyout.ItemTemplate>
+                                                </ui:FAMenuFlyout>
+                                            </SplitButton.Flyout>
+                                        </SplitButton>
                                         <Button
                                             HorizontalAlignment="Stretch"
                                             VerticalAlignment="Bottom"

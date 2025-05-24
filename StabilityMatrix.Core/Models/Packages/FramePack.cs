@@ -4,6 +4,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.PackageModification;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
@@ -26,6 +27,7 @@ public class FramePack(
 
     public override string Blurb =>
         "FramePack is a next-frame (next-frame-section) prediction neural network structure that generates videos progressively.";
+
     public override string LicenseType => "Apache-2.0";
     public override string LicenseUrl => "https://github.com/lllyasviel/FramePack/blob/main/LICENSE";
     public override string LaunchCommand => "demo_gradio.py";
@@ -67,6 +69,7 @@ public class FramePack(
                 InitialValue = true,
             },
         ];
+
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
         new() { [SharedOutputType.Img2Vid] = ["outputs"] };
 
@@ -76,6 +79,8 @@ public class FramePack(
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
     public override IReadOnlyList<string> ExtraLaunchArguments =>
         settingsManager.IsLibraryDirSet ? ["--gradio-allowed-paths", settingsManager.ImagesDirectory] : [];
+
+    public override IReadOnlyList<string> ExtraLaunchCommands => ["demo_gradio_f1.py"];
 
     public override async Task InstallPackage(
         string installLocation,
@@ -110,14 +115,10 @@ public class FramePack(
             .WithTorchExtraIndex(isLegacyNvidia ? "cu126" : "cu128");
 
         if (isNewerNvidia)
-        {
             pipArgs = pipArgs.AddArg("triton-windows");
-        }
 
         if (installedPackage.PipOverrides != null)
-        {
             pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
 
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
@@ -131,9 +132,7 @@ public class FramePack(
         );
 
         if (installedPackage.PipOverrides != null)
-        {
             pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
 
         await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
@@ -184,11 +183,31 @@ public class FramePack(
             var regex = new Regex(@"(https?:\/\/)([^:\s]+):(\d+)");
             var match = regex.Match(s.Text);
             if (match.Success)
-            {
                 WebUrl = match.Value;
-            }
             OnStartupComplete(WebUrl);
         }
+    }
+
+    public override List<ExtraPackageCommand> GetExtraCommands()
+    {
+        return Compat.IsWindows && SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() is true
+            ?
+            [
+                new ExtraPackageCommand
+                {
+                    CommandName = "Install Triton and SageAttention",
+                    Command = async installedPackage =>
+                    {
+                        if (installedPackage == null || string.IsNullOrEmpty(installedPackage.FullPath))
+                            throw new InvalidOperationException(
+                                "Package not found or not installed correctly"
+                            );
+
+                        await InstallTritonAndSageAttention(installedPackage).ConfigureAwait(false);
+                    },
+                },
+            ]
+            : [];
     }
 
     private static string AddGradioAllowedPathsSupport(string originalContent)
@@ -219,5 +238,32 @@ public class FramePack(
         );
 
         return modifiedContent;
+    }
+
+    private async Task InstallTritonAndSageAttention(InstalledPackage installedPackage)
+    {
+        if (installedPackage.FullPath is null)
+            return;
+
+        var installSageStep = new InstallSageAttentionStep(
+            DownloadService,
+            PrerequisiteHelper,
+            PyInstallationManager
+        )
+        {
+            InstalledPackage = installedPackage,
+            WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
+            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
+            IsBlackwellGpu =
+                SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu(),
+        };
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteMessage = "Triton and SageAttention installed successfully",
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps([installSageStep]).ConfigureAwait(false);
     }
 }

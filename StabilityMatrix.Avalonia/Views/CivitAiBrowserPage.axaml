@@ -82,6 +82,7 @@
     <UserControl.Resources>
         <system:Boolean x:Key="False">False</system:Boolean>
         <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter" />
+        <converters:CivitImageWidthConverter x:Key="CivitImageWidthConverter" />
         <DataTemplate x:Key="CivitModelTemplate" DataType="{x:Type checkpointBrowser:CheckpointBrowserCardViewModel}">
             <Border
                 Name="HoverBorder"
@@ -139,7 +140,7 @@
                                 Height="400"
                                 CornerRadius="8"
                                 IsCacheEnabled="True"
-                                Source="{Binding CardImage}"
+                                Source="{Binding CardImage, Converter={StaticResource CivitImageWidthConverter}, ConverterParameter=450}"
                                 Stretch="UniformToFill" />
                         </LayoutTransformControl>
 
@@ -216,7 +217,7 @@
                                         Effect="{StaticResource ImageDropShadowEffect}"
                                         IsCacheEnabled="True"
                                         IsVisible="{Binding CivitModel.Creator.Image, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                        Source="{Binding CivitModel.Creator.Image}" />
+                                        Source="{Binding CivitModel.Creator.Image, Converter={StaticResource CivitImageWidthConverter}, ConverterParameter=32}" />
                                     <TextBlock
                                         VerticalAlignment="Center"
                                         Effect="{StaticResource TextDropShadowEffect}"

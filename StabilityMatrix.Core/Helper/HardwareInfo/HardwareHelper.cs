@@ -70,7 +70,7 @@ public static partial class HardwareHelper
     [SupportedOSPlatform("linux")]
     private static IEnumerable<GpuInfo> IterGpuInfoLinux()
     {
-        var output = RunBashCommand("lspci | grep VGA");
+        var output = RunBashCommand("lspci | grep -E 'VGA|3D'");
         var gpuLines = output.Split("\n");
 
         var gpuIndex = 0;
@@ -87,10 +87,10 @@ public static partial class HardwareHelper
             string? name = null;
 
             // Parse output with regex
-            var match = Regex.Match(gpuOutput, @"VGA compatible controller: ([^\n]*)");
+            var match = Regex.Match(gpuOutput, @"(VGA compatible controller|3D controller): ([^\n]*)");
             if (match.Success)
             {
-                name = match.Groups[1].Value.Trim();
+                name = match.Groups[2].Value.Trim();
             }
 
             match = Regex.Match(gpuOutput, @"prefetchable\) \[size=(\\d+)M\]");

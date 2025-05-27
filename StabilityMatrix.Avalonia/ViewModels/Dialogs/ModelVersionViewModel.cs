@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Services;
@@ -12,13 +13,10 @@ public partial class ModelVersionViewModel : ObservableObject
     private readonly IModelIndexService modelIndexService;
 
     [ObservableProperty]
-    private CivitModelVersion modelVersion;
+    public partial CivitModelVersion ModelVersion { get; set; }
 
     [ObservableProperty]
-    private ObservableCollection<CivitFileViewModel> civitFileViewModels;
-
-    [ObservableProperty]
-    private bool isInstalled;
+    public partial bool IsInstalled { get; set; }
 
     public ModelVersionViewModel(IModelIndexService modelIndexService, CivitModelVersion modelVersion)
     {
@@ -31,12 +29,6 @@ public partial class ModelVersionViewModel : ObservableObject
                 file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
                 && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
             ) ?? false;
-
-        CivitFileViewModels = new ObservableCollection<CivitFileViewModel>(
-            (
-                ModelVersion.Files?.Select(file => new CivitFileViewModel(modelIndexService, file)) ?? []
-            ).OrderBy(a => a.CivitFile.Type == CivitFileType.TrainingData ? 1 : 0)
-        );
     }
 
     public void RefreshInstallStatus()

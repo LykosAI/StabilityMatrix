@@ -227,6 +227,8 @@ public class Settings
 
     public Dictionary<string, LastDownloadLocationInfo> ModelTypeDownloadPreferences { get; set; } = new();
 
+    public bool ShowTrainingDataInModelBrowser { get; set; }
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

@@ -60,7 +60,7 @@ public class NavigationService<T> : INavigationService<T>
             new FrameNavigationOptions
             {
                 IsNavigationStackEnabled = true,
-                TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo()
+                TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo(),
             }
         );
 
@@ -107,7 +107,7 @@ public class NavigationService<T> : INavigationService<T>
             new FrameNavigationOptions
             {
                 IsNavigationStackEnabled = true,
-                TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo()
+                TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo(),
             }
         );
 
@@ -143,7 +143,7 @@ public class NavigationService<T> : INavigationService<T>
             new FrameNavigationOptions
             {
                 IsNavigationStackEnabled = true,
-                TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo()
+                TransitionInfoOverride = transitionInfo ?? new SuppressNavigationTransitionInfo(),
             }
         );
 
@@ -172,11 +172,11 @@ public class NavigationService<T> : INavigationService<T>
             new TypedNavigationEventArgs
             {
                 ViewModelType = _frame.BackStack.Last().SourcePageType,
-                ViewModel = _frame.BackStack.Last().Context
+                ViewModel = _frame.BackStack.Last().Context,
             }
         );
 
-        _frame.GoBack();
+        _frame.GoBack(BetterSlideNavigationTransition.PageSlideFromLeft);
         return true;
     }
 

@@ -1,0 +1,443 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.CivitDetailsPage"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:api="clr-namespace:StabilityMatrix.Core.Models.Api;assembly=StabilityMatrix.Core"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:avalonia1="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
+    d:DataContext="{x:Static mocks:DesignData.CivitDetailsPageViewModel}"
+    d:DesignHeight="800"
+    d:DesignWidth="800"
+    x:DataType="checkpointBrowser:CivitDetailsPageViewModel"
+    mc:Ignorable="d">
+    <controls:UserControlBase.Resources>
+        <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter" />
+    </controls:UserControlBase.Resources>
+
+    <Grid
+        Margin="16"
+        ColumnDefinitions="2*, *"
+        RowDefinitions="Auto, Auto, Auto, Auto, 2*, 3*">
+        <StackPanel
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            VerticalAlignment="Center"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button
+                Padding="0"
+                Classes="transparent-full"
+                Command="{Binding GoBackCommand}">
+                <Button.Styles>
+                    <Style Selector="Button:pointerover /template/ ContentPresenter">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="BorderBrush" Value="Transparent" />
+                    </Style>
+                </Button.Styles>
+                <TextBlock
+                    VerticalAlignment="Center"
+                    FontSize="24"
+                    Text="{x:Static lang:Resources.Label_CivitAi}">
+                    <TextBlock.Styles>
+                        <Style Selector="TextBlock:pointerover">
+                            <Setter Property="Foreground" Value="{DynamicResource TextControlPlaceholderForegroundPointerOver}" />
+                        </Style>
+                        <Style Selector="Button:pressed &gt; TextBlock">
+                            <Setter Property="Foreground" Value="{DynamicResource TextControlForegroundDisabled}" />
+                        </Style>
+                    </TextBlock.Styles>
+                </TextBlock>
+            </Button>
+            <ui:SymbolIcon
+                Margin="0,4,0,0"
+                VerticalAlignment="Center"
+                FontSize="24"
+                Symbol="ChevronRight" />
+            <TextBlock
+                VerticalAlignment="Center"
+                FontSize="24"
+                Text="{Binding CivitModel.Name}" />
+            <avalonia:Icon
+                Margin="16,0,0,0"
+                VerticalAlignment="Center"
+                Value="fa-solid fa-thumbs-up" />
+            <TextBlock VerticalAlignment="Center" Text="{Binding CivitModel.Stats.ThumbsUpCount, Converter={StaticResource KiloFormatterConverter}}" />
+
+            <avalonia:Icon
+                Margin="8,0,0,0"
+                VerticalAlignment="Center"
+                Value="fa-solid fa-download" />
+            <TextBlock VerticalAlignment="Center" Text="{Binding CivitModel.Stats.DownloadCount, Converter={StaticResource KiloFormatterConverter}}" />
+        </StackPanel>
+
+        <ItemsRepeater
+            Grid.Row="1"
+            Grid.Column="0"
+            Margin="0,8,0,0"
+            ItemsSource="{Binding CivitModel.Tags}">
+            <ItemsRepeater.Layout>
+                <StackLayout Orientation="Horizontal" Spacing="4" />
+            </ItemsRepeater.Layout>
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate>
+                    <controls:Card Padding="8,2">
+                        <TextBlock
+                            FontSize="13"
+                            FontWeight="Light"
+                            Text="{Binding}"
+                            TextAlignment="Center" />
+                    </controls:Card>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+
+        <ui:CommandBar
+            Grid.Row="1"
+            Grid.Column="1"
+            Margin="0,8,0,0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            DefaultLabelPosition="Right">
+            <ui:CommandBar.Styles>
+                <Style Selector="ui|CommandBarButton:flyout">
+                    <Style Selector="^ ui|FontIcon">
+                        <Setter Property="Foreground" Value="Transparent" />
+                    </Style>
+                </Style>
+            </ui:CommandBar.Styles>
+            <ui:CommandBar.PrimaryCommands>
+                <ui:CommandBarButton IconSource="Zoom" Label="View">
+                    <ui:CommandBarButton.Flyout>
+                        <Flyout>
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Text="Show" />
+
+                                <Separator Margin="0,8" />
+
+                                <ToggleSwitch
+                                    Margin="8,-4"
+                                    HorizontalAlignment="Left"
+                                    HorizontalContentAlignment="Center"
+                                    IsChecked="{Binding !HideEarlyAccess}"
+                                    OffContent="Early Access Models"
+                                    OnContent="Early Access Models" />
+
+                                <ToggleSwitch
+                                    Margin="8,-4"
+                                    HorizontalAlignment="Left"
+                                    HorizontalContentAlignment="Center"
+                                    IsChecked="{Binding ShowNsfw}"
+                                    OffContent="NSFW Content"
+                                    OnContent="NSFW Content" />
+                            </StackPanel>
+                        </Flyout>
+                    </ui:CommandBarButton.Flyout>
+                </ui:CommandBarButton>
+            </ui:CommandBar.PrimaryCommands>
+            <ui:CommandBar.SecondaryCommands>
+                <ui:CommandBarButton IconSource="Download" Label="Download All Files (This Version)" />
+                <ui:CommandBarButton IconSource="Download" Label="Download All Files (All Versions)" />
+            </ui:CommandBar.SecondaryCommands>
+        </ui:CommandBar>
+
+        <scroll:BetterScrollViewer
+            Grid.Row="2"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            HorizontalScrollBarVisibility="Auto"
+            PointerWheelChanged="InputElement_OnPointerWheelChanged"
+            VerticalScrollBarVisibility="Disabled">
+            <ListBox
+                Padding="0,12"
+                ItemsSource="{Binding ModelVersions}"
+                SelectedItem="{Binding SelectedVersion}"
+                SelectionMode="AlwaysSelected">
+                <ListBox.Styles>
+                    <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
+                        <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
+                        <Setter Property="Foreground" Value="{DynamicResource AccentButtonForeground}" />
+                    </Style>
+                    <Style Selector="ListBoxItem">
+                        <Setter Property="Padding" Value="16,0" />
+                    </Style>
+                    <Style Selector="ListBoxItem:selected /template/ Rectangle#SelectionIndicator">
+                        <Setter Property="IsVisible" Value="False" />
+                    </Style>
+                </ListBox.Styles>
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel
+                            Margin="0"
+                            Orientation="Horizontal"
+                            Spacing="0" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type dialogs:ModelVersionViewModel}">
+                        <Grid HorizontalAlignment="Center" ColumnDefinitions="Auto, *, Auto">
+                            <avalonia:Icon
+                                Margin="0,2,8,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Foreground="Orange"
+                                IsVisible="{Binding ModelVersion.IsEarlyAccess}"
+                                ToolTip.Tip="Early Access"
+                                Value="fa-regular fa-credit-card" />
+                            <TextBlock
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                FontWeight="Light"
+                                Text="{Binding ModelVersion.Name}"
+                                TextAlignment="Center" />
+                            <avalonia:Icon
+                                Grid.Column="2"
+                                Margin="8,2,0,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding IsInstalled}"
+                                Value="fa-solid fa-check" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </scroll:BetterScrollViewer>
+
+        <scroll:BetterScrollViewer
+            Grid.Row="3"
+            Grid.RowSpan="2"
+            Grid.Column="0"
+            Margin="0,8,0,8"
+            AllowAutoHide="True"
+            HorizontalScrollBarVisibility="Auto"
+            PointerWheelChanged="InputElement_OnPointerWheelChanged"
+            VerticalScrollBarVisibility="Disabled">
+            <ItemsRepeater ItemsSource="{Binding ImageSources}">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout MinColumnSpacing="12" Orientation="Horizontal" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="{x:Type models:ImageSource}">
+                        <controls:BetterAdvancedImage CornerRadius="8" Source="{Binding}" />
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </scroll:BetterScrollViewer>
+
+        <controls:Card
+            Grid.Row="3"
+            Grid.Column="1"
+            MinWidth="200"
+            Margin="8,8,0,8"
+            Padding="12"
+            VerticalAlignment="Top">
+            <StackPanel Spacing="8">
+                <TextBlock
+                    FontSize="24"
+                    FontWeight="Light"
+                    Text="{x:Static lang:Resources.Label_Details}" />
+                <Separator Margin="0" />
+                <avalonia1:SpacedGrid ColumnDefinitions="*,*" RowDefinitions="*,Auto,*,Auto,*,Auto,*,Auto,*">
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="0"
+                        Text="Author" />
+
+                    <TextBlock
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Text="{Binding CivitModel.Creator.Username}" />
+
+                    <Separator
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Margin="0,4,0,4" />
+
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="0"
+                        Text="Type" />
+
+                    <TextBlock
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Text="{Binding CivitModel.Type}" />
+
+                    <Separator
+                        Grid.Row="3"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Margin="0,4,0,4" />
+
+                    <TextBlock
+                        Grid.Row="4"
+                        Grid.Column="0"
+                        Text="Base Model" />
+
+                    <TextBlock
+                        Grid.Row="4"
+                        Grid.Column="1"
+                        Text="{Binding CivitModel.BaseModelType}" />
+
+                    <Separator
+                        Grid.Row="5"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Margin="0,4,0,4" />
+
+                    <TextBlock
+                        Grid.Row="6"
+                        Grid.Column="0"
+                        Text="Hash" />
+
+                    <TextBlock
+                        Grid.Row="6"
+                        Grid.Column="1"
+                        Text="{Binding CivitFiles[0].CivitFile.Hashes.ShortSha256}" />
+
+                    <Separator
+                        Grid.Row="7"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Margin="0,4,0,4" />
+
+                    <TextBlock
+                        Grid.Row="8"
+                        Grid.Column="0"
+                        Text="Last Updated" />
+
+                    <TextBlock
+                        Grid.Row="8"
+                        Grid.Column="1"
+                        Text="{Binding LastUpdated}" />
+
+                </avalonia1:SpacedGrid>
+            </StackPanel>
+        </controls:Card>
+
+        <controls:Card
+            Grid.Row="4"
+            Grid.RowSpan="2"
+            Grid.Column="1"
+            Margin="8,0,0,8"
+            Padding="4"
+            VerticalAlignment="Stretch"
+            VerticalContentAlignment="Top">
+            <ItemsRepeater Margin="4" ItemsSource="{Binding CivitFiles}">
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="{x:Type dialogs:CivitFileViewModel}">
+                        <Grid
+                            Margin="0,4,0,4"
+                            ColumnDefinitions="*, Auto"
+                            RowDefinitions="Auto, Auto, Auto, Auto">
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                VerticalAlignment="Center"
+                                Text="{Binding CivitFile.DisplayName}"
+                                TextWrapping="Wrap" />
+
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.RowSpan="3"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource AccentButtonBackground}"
+                                Text="{x:Static lang:Resources.Label_Installed}"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="NoWrap" />
+
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Margin="0,8,0,4"
+                                FontSize="12"
+                                TextWrapping="Wrap">
+                                <Run Text="{Binding CivitFile.Metadata.Format}" />
+                                <Run Text="-" />
+                                <Run Text="{Binding CivitFile.Metadata.Size}" />
+                                <Run Text="-" />
+                                <Run Text="{Binding CivitFile.Metadata.Fp}" />
+                                <Run Text="-" />
+                                <Run Text="{Binding CivitFile.FullFilesSize, Mode=OneWay}" />
+                            </TextBlock>
+
+                            <TextBlock
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                Margin="0,4,0,4"
+                                FontSize="12"
+                                Foreground="{DynamicResource TextControlForegroundDisabled}"
+                                TextWrapping="Wrap">
+                                <Run Text="SHA256:" />
+                                <Run Text="{Binding CivitFile.Hashes.ShortSha256}" />
+                                <Run Text="-" />
+                                <Run Text="BLAKE3" />
+                                <Run Text="{Binding CivitFile.Hashes.ShortBlake3}" />
+                            </TextBlock>
+
+
+                            <SplitButton
+                                Grid.Row="3"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Margin="0,4,0,0"
+                                Padding="4"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                                HorizontalContentAlignment="Center"
+                                Classes="accent">
+                                <SplitButton.Content>
+                                    <StackPanel Margin="2,0,0,0" Orientation="Horizontal">
+                                        <avalonia:Icon
+                                            Margin="0,0,8,0"
+                                            VerticalAlignment="Center"
+                                            Value="fa-solid fa-download" />
+                                        <TextBlock Text="{x:Static lang:Resources.Action_Download}" />
+                                    </StackPanel>
+                                </SplitButton.Content>
+                                <SplitButton.Flyout>
+                                    <ui:FAMenuFlyout ItemsSource="{Binding InstallLocations}" Placement="BottomEdgeAlignedRight">
+                                        <ui:FAMenuFlyout.ItemTemplate>
+                                            <DataTemplate DataType="system:String">
+                                                <ui:MenuFlyoutItem Text="{Binding .}" />
+                                            </DataTemplate>
+                                        </ui:FAMenuFlyout.ItemTemplate>
+                                    </ui:FAMenuFlyout>
+                                </SplitButton.Flyout>
+                            </SplitButton>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </controls:Card>
+        <controls:Card
+            Grid.Row="5"
+            Grid.Column="0"
+            Margin="0,0,0,8"
+            VerticalAlignment="Stretch"
+            VerticalContentAlignment="Top">
+            <ScrollViewer>
+                <controls:MarkdownViewer Html="{Binding Description}" />
+            </ScrollViewer>
+        </controls:Card>
+    </Grid>
+</controls:UserControlBase>

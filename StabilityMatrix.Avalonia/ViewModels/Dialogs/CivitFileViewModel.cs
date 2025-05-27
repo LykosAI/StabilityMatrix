@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Services;
 
@@ -11,6 +12,9 @@ public partial class CivitFileViewModel : ObservableObject
 
     [ObservableProperty]
     private bool isInstalled;
+
+    [ObservableProperty]
+    public required partial ObservableCollection<string> InstallLocations { get; set; }
 
     public CivitFileViewModel(IModelIndexService modelIndexService, CivitFile civitFile)
     {

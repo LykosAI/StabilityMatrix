@@ -122,7 +122,7 @@ public partial class SelectModelVersionViewModel(
         Dispatcher.UIThread.Post(() =>
         {
             CanGoToPreviousImage = false;
-            SelectedFile = SelectedVersionViewModel?.CivitFileViewModels.FirstOrDefault();
+            // SelectedFile = SelectedVersionViewModel?.CivitFileViewModels.FirstOrDefault();
             ImageUrls = new ObservableCollection<ImageSource>(allImages);
             SelectedImageIndex = 0;
 

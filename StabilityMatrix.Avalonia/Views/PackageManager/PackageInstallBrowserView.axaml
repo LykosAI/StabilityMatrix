@@ -82,6 +82,7 @@
                                             Padding="4"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Top"
+                                            FontWeight="Light"
                                             Tag="{Binding}">
 
                                             <controls:Card.Styles>

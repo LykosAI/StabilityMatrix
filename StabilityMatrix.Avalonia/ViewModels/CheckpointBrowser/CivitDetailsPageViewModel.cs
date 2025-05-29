@@ -2,14 +2,18 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Reactive.Linq;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DynamicData;
 using DynamicData.Binding;
+using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
+using Refit;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -33,10 +37,13 @@ namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 public partial class CivitDetailsPageViewModel(
     ISettingsManager settingsManager,
     CivitCompatApiManager civitApi,
+    ICivitTRPCApi civitTrpcApi,
     ILogger<CivitDetailsPageViewModel> logger,
     INotificationService notificationService,
     INavigationService<MainWindowViewModel> navigationService,
-    IModelIndexService modelIndexService
+    IModelIndexService modelIndexService,
+    IServiceManager<ViewModelBase> vmFactory,
+    IModelImportService modelImportService
 ) : DisposableViewModelBase
 {
     public required CivitModel CivitModel { get; set; }
@@ -60,7 +67,7 @@ public partial class CivitDetailsPageViewModel(
     public partial ObservableCollection<CivitFileViewModel> SelectedFiles { get; set; } = [];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(LastUpdated))]
+    [NotifyPropertyChangedFor(nameof(LastUpdated), nameof(ShortSha256))]
     public partial ModelVersionViewModel? SelectedVersion { get; set; }
 
     [ObservableProperty]
@@ -76,6 +83,9 @@ public partial class CivitDetailsPageViewModel(
     public partial bool ShowTrainingData { get; set; }
 
     [ObservableProperty]
+    public partial bool HideInstalledModels { get; set; }
+
+    [ObservableProperty]
     public partial string SelectedInstallLocation { get; set; } = string.Empty;
 
     [ObservableProperty]
@@ -83,6 +93,11 @@ public partial class CivitDetailsPageViewModel(
 
     public string LastUpdated =>
         SelectedVersion?.ModelVersion.PublishedAt?.ToString("g", CultureInfo.CurrentCulture) ?? string.Empty;
+
+    public string ShortSha256 =>
+        SelectedVersion?.ModelVersion.Files?.FirstOrDefault()?.Hashes.ShortSha256 ?? string.Empty;
+
+    public string CivitUrl => $@"https://civitai.com/models/{CivitModel.Id}";
 
     protected override async Task OnInitialLoadedAsync()
     {
@@ -131,11 +146,19 @@ public partial class CivitDetailsPageViewModel(
                 true
             )
         );
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.HideInstalledModels,
+                settings => settings.HideInstalledModelsInModelBrowser,
+                true
+            )
+        );
 
         var earlyAccessPredicate = Observable
             .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
-            .Where(x => x.EventArgs.PropertyName is nameof(HideEarlyAccess))
-            .Select(_ => (Func<CivitModelVersion, bool>)ShouldIncludeVersion)
+            .Where(x => x.EventArgs.PropertyName is nameof(HideEarlyAccess) or nameof(HideInstalledModels))
+            .Select(_ => (Func<ModelVersionViewModel, bool>)ShouldIncludeVersion)
             .StartWith(ShouldIncludeVersion)
             .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
@@ -144,8 +167,9 @@ public partial class CivitDetailsPageViewModel(
             modelVersionCache
                 .Connect()
                 .DeferUntilLoaded()
-                .Filter(earlyAccessPredicate)
                 .Transform(modelVersion => new ModelVersionViewModel(modelIndexService, modelVersion))
+                .DisposeMany()
+                .Filter(earlyAccessPredicate)
                 .SortAndBind(
                     ModelVersions,
                     SortExpressionComparer<ModelVersionViewModel>.Descending(v => v.ModelVersion.PublishedAt)
@@ -205,6 +229,122 @@ public partial class CivitDetailsPageViewModel(
     [RelayCommand]
     private void GoBack() => navigationService.GoBack();
 
+    [RelayCommand]
+    private async Task ShowBulkDownloadDialogAsync()
+    {
+        var dialogVm = vmFactory.Get<ConfirmBulkDownloadDialogViewModel>(vm => vm.Model = CivitModel);
+        var dialog = dialogVm.GetDialog();
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary)
+            return;
+
+        foreach (var file in dialogVm.FilesToDownload)
+        {
+            var sharedFolderPath = GetSharedFolderPath(
+                new DirectoryPath(settingsManager.ModelsDirectory),
+                file.FileViewModel.CivitFile.Type,
+                CivitModel.Type,
+                CivitModel.BaseModelType
+            );
+
+            var folderName = Path.GetInvalidFileNameChars()
+                .Aggregate(CivitModel.Name, (current, c) => current.Replace(c, '_'));
+
+            var destinationDir = new DirectoryPath(sharedFolderPath, folderName);
+            destinationDir.Create();
+
+            await modelImportService.DoImport(
+                CivitModel,
+                destinationDir,
+                file.ModelVersion,
+                file.FileViewModel.CivitFile
+            );
+        }
+
+        notificationService.Show(
+            Resources.Label_BulkDownloadStarted,
+            string.Format(Resources.Label_BulkDownloadStartedMessage, dialogVm.FilesToDownload.Count),
+            NotificationType.Success
+        );
+    }
+
+    [RelayCommand]
+    private async Task ShowImageDialog(ImageSource? image)
+    {
+        if (image is null)
+            return;
+
+        var currentIndex = ImageSources.IndexOf(image);
+
+        // Preload
+        await image.GetBitmapAsync();
+
+        var vm = vmFactory.Get<ImageViewerViewModel>();
+        vm.ImageSource = image;
+
+        var url = image.RemoteUrl;
+        if (url is null)
+            return;
+
+        try
+        {
+            var imageId = Path.GetFileNameWithoutExtension(url.Segments.Last());
+            var imageData = await civitTrpcApi.GetImageGenerationData($$$"""{"json":{"id":{{{imageId}}}}}""");
+            vm.CivitImageMetadata = imageData.Result.Data.Json.Metadata;
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to load CivitImageMetadata for {Url}", url);
+        }
+
+        using var onNext = Observable
+            .FromEventPattern<DirectionalNavigationEventArgs>(
+                vm,
+                nameof(ImageViewerViewModel.NavigationRequested)
+            )
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe(ctx =>
+            {
+                Dispatcher
+                    .UIThread.InvokeAsync(async () =>
+                    {
+                        var sender = (ImageViewerViewModel)ctx.Sender!;
+                        var newIndex = currentIndex + (ctx.EventArgs.IsNext ? 1 : -1);
+
+                        if (newIndex >= 0 && newIndex < ImageSources.Count)
+                        {
+                            var newImageSource = ImageSources[newIndex];
+
+                            // Preload
+                            await newImageSource.GetBitmapAsync();
+                            sender.ImageSource = newImageSource;
+
+                            try
+                            {
+                                sender.CivitImageMetadata = null;
+                                if (newImageSource.RemoteUrl is not { } newUrl)
+                                    return;
+                                var imageId = Path.GetFileNameWithoutExtension(newUrl.Segments.Last());
+                                var imageData = await civitTrpcApi.GetImageGenerationData(
+                                    $$$"""{"json":{"id":{{{imageId}}}}}"""
+                                );
+                                sender.CivitImageMetadata = imageData.Result.Data.Json.Metadata;
+                            }
+                            catch (Exception e)
+                            {
+                                logger.LogError(e, "Failed to load CivitImageMetadata for {Url}", url);
+                            }
+
+                            currentIndex = newIndex;
+                        }
+                    })
+                    .SafeFireAndForget();
+            });
+
+        await vm.GetDialog().ShowAsync();
+    }
+
     private bool ShouldIncludeCivitFile(CivitFile file)
     {
         if (ShowTrainingData)
@@ -218,6 +358,14 @@ public partial class CivitDetailsPageViewModel(
         imageCache.EditDiff(value?.ModelVersion.Images ?? [], (a, b) => a.Url == b.Url);
         civitFileCache.EditDiff(value?.ModelVersion.Files ?? [], (a, b) => a.Id == b.Id);
         SelectedFiles = new ObservableCollection<CivitFileViewModel>([CivitFiles.FirstOrDefault()]);
+    }
+
+    public override void OnUnloaded()
+    {
+        ModelVersions.ForEach(x => x.Dispose());
+        CivitFiles.ForEach(x => x.Dispose());
+        Dispose(true);
+        base.OnUnloaded();
     }
 
     private bool ShouldShowNsfw(CivitImage? image)
@@ -235,12 +383,17 @@ public partial class CivitDetailsPageViewModel(
         };
     }
 
-    private bool ShouldIncludeVersion(CivitModelVersion? version)
+    private bool ShouldIncludeVersion(ModelVersionViewModel? versionVm)
     {
         if (Design.IsDesignMode)
             return true;
 
-        if (version == null)
+        if (versionVm == null)
+            return false;
+
+        var version = versionVm.ModelVersion;
+
+        if (HideInstalledModels && versionVm.IsInstalled)
             return false;
 
         return !version.IsEarlyAccess || !HideEarlyAccess;
@@ -312,15 +465,8 @@ public partial class CivitDetailsPageViewModel(
             && (
                 baseModelType == CivitBaseModelType.Flux1D.GetStringValue()
                 || baseModelType == CivitBaseModelType.Flux1S.GetStringValue()
+                || baseModelType == CivitBaseModelType.WanVideo.GetStringValue()
             )
-        )
-        {
-            return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
-        }
-
-        if (
-            modelType is CivitModelType.Checkpoint
-            && baseModelType == CivitBaseModelType.WanVideo.GetStringValue()
         )
         {
             return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());

@@ -17,6 +17,7 @@ using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models.Api.CivitTRPC;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Services;
@@ -37,8 +38,12 @@ public partial class ImageViewerViewModel(
     private ImageSource? imageSource;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasGenerationParameters))]
+    [NotifyPropertyChangedFor(nameof(HasLocalGenerationParameters))]
     private LocalImageFile? localImageFile;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasLocalGenerationParameters))]
+    public partial CivitImageMetadata? CivitImageMetadata { get; set; }
 
     [ObservableProperty]
     private bool isFooterEnabled;
@@ -55,7 +60,12 @@ public partial class ImageViewerViewModel(
     /// <summary>
     /// Whether local generation parameters are available.
     /// </summary>
-    public bool HasGenerationParameters => LocalImageFile?.GenerationParameters is not null;
+    public bool HasLocalGenerationParameters => LocalImageFile?.GenerationParameters is not null;
+
+    /// <summary>
+    /// Whether Civitai image metadata is available.
+    /// </summary>
+    public bool HasCivitImageMetadata => CivitImageMetadata is not null;
 
     public event EventHandler<DirectionalNavigationEventArgs>? NavigationRequested;
 
@@ -74,6 +84,14 @@ public partial class ImageViewerViewModel(
             FileNameText = localFile.Name;
             FileSizeText = Size.FormatBase10Bytes(localFile.GetSize(true));
         }
+    }
+
+    partial void OnCivitImageMetadataChanged(CivitImageMetadata? value)
+    {
+        if (value is null)
+            return;
+
+        ImageSizeText = value.Dimensions;
     }
 
     [RelayCommand]
@@ -129,6 +147,15 @@ public partial class ImageViewerViewModel(
         }
     }
 
+    [RelayCommand]
+    private async Task CopyThingToClipboard(object? thing)
+    {
+        if (thing is null)
+            return;
+
+        await App.Clipboard.SetTextAsync(thing.ToString());
+    }
+
     public override BetterContentDialog GetDialog()
     {
         var margins = new Thickness(64, 32);
@@ -152,8 +179,8 @@ public partial class ImageViewerViewModel(
             {
                 Width = dialogSize.Width,
                 Height = dialogSize.Height,
-                DataContext = this
-            }
+                DataContext = this,
+            },
         };
 
         return dialog;

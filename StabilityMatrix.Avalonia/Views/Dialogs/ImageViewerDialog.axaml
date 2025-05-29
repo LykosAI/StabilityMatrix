@@ -1,25 +1,28 @@
 ﻿<controls:UserControlBase
-    Focusable="True"
     x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ImageViewerDialog"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:gif="clr-namespace:Avalonia.Gif;assembly=Avalonia.Gif"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
+    xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:vmDialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-    xmlns:models="clr-namespace:StabilityMatrix.Avalonia.Models"
-    xmlns:gif="clr-namespace:Avalonia.Gif;assembly=Avalonia.Gif"
-    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     HorizontalContentAlignment="Stretch"
     VerticalContentAlignment="Stretch"
     d:DataContext="{x:Static mocks:DesignData.ImageViewerViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vmDialogs:ImageViewerViewModel"
+    Focusable="True"
     mc:Ignorable="d">
 
     <controls:UserControlBase.KeyBindings>
@@ -38,11 +41,11 @@
             </StackPanel>
         </controls:BetterFlyout>
     </controls:UserControlBase.ContextFlyout>-->
-    
+
     <controls:UserControlBase.Styles>
         <Style Selector="SelectableTextBlock">
-            <Setter Property="TextWrapping" Value="WrapWithOverflow"/>
-            <Setter Property="SelectionBrush" Value="{DynamicResource CompletionSelectionForegroundBrush}"/>
+            <Setter Property="TextWrapping" Value="WrapWithOverflow" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource CompletionSelectionForegroundBrush}" />
         </Style>
     </controls:UserControlBase.Styles>
 
@@ -51,32 +54,27 @@
         VerticalAlignment="Stretch"
         RowDefinitions="*,Auto">
         <Grid.Resources>
-            <input:StandardUICommand 
-                x:Key="CopyImageCommand" 
-                Command="{Binding CopyImageCommand}"/>
-            <input:StandardUICommand 
-                x:Key="CopyImageAsBitmapCommand" 
-                Command="{Binding CopyImageAsBitmapCommand}"/>
+            <input:StandardUICommand x:Key="CopyImageCommand" Command="{Binding CopyImageCommand}" />
+            <input:StandardUICommand x:Key="CopyImageAsBitmapCommand" Command="{Binding CopyImageAsBitmapCommand}" />
         </Grid.Resources>
 
-        <!-- Tag is not used but sets TemplateKey which is used to select the DataTemplate later -->
-        <ContentPresenter Grid.Row="0"
-                          Tag="{Binding TemplateKeyAsync^}"
-                          DataContext="{Binding ImageSource}"
-                          Content="{Binding }">
+        <!--  Tag is not used but sets TemplateKey which is used to select the DataTemplate later  -->
+        <ContentPresenter
+            Grid.Row="0"
+            Content="{Binding}"
+            DataContext="{Binding ImageSource}"
+            Tag="{Binding TemplateKeyAsync^}">
             <ContentPresenter.ContentTemplate>
                 <controls:DataTemplateSelector x:TypeArguments="models:ImageSourceTemplateType">
                     <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.WebpAnimation}" DataType="models:ImageSource">
-                        <gif:GifImage
-                            Stretch="Uniform"
-                            SourceUri="{Binding LocalFile.FullPath}"/>
+                        <gif:GifImage SourceUri="{Binding LocalFile.FullPath}" Stretch="Uniform" />
                     </DataTemplate>
-                    
+
                     <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.Image}" DataType="models:ImageSource">
                         <controls:AdvancedImageBox
                             Name="ImageBox"
-                            Focusable="False"
                             CornerRadius="4"
+                            Focusable="False"
                             Image="{Binding BitmapAsync^}"
                             SizeMode="Fit">
                             <controls:AdvancedImageBox.ContextFlyout>
@@ -93,18 +91,19 @@
                                         Command="{StaticResource CopyImageAsBitmapCommand}"
                                         CommandParameter="{Binding}"
                                         HotKey="Shift+Ctrl+C"
-                                        IsVisible="{OnPlatform Windows=True, Default=False}"
+                                        IsVisible="{OnPlatform Windows=True,
+                                                               Default=False}"
                                         Text="{x:Static lang:Resources.Action_CopyAsBitmap}" />
                                 </ui:FAMenuFlyout>
                             </controls:AdvancedImageBox.ContextFlyout>
                         </controls:AdvancedImageBox>
                     </DataTemplate>
-                    
+
                     <DataTemplate x:Key="{x:Static models:ImageSourceTemplateType.Default}" DataType="models:ImageSource">
-                        <TextBlock 
+                        <TextBlock
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Text="Unsupported Format"/>
+                            Text="Unsupported Format" />
                     </DataTemplate>
                 </controls:DataTemplateSelector>
             </ContentPresenter.ContentTemplate>
@@ -124,8 +123,14 @@
                 VerticalAlignment="Top"
                 icons:Attached.Icon="fa-solid fa-info"
                 Classes="transparent-full"
-                IsEnabled="{Binding HasGenerationParameters}"
-                Tapped="InfoButton_OnTapped" />
+                Tapped="InfoButton_OnTapped">
+                <Button.IsEnabled>
+                    <MultiBinding Converter="{x:Static BoolConverters.Or}">
+                        <Binding Path="HasLocalGenerationParameters" />
+                        <Binding Path="HasCivitImageMetadata" />
+                    </MultiBinding>
+                </Button.IsEnabled>
+            </Button>
         </Grid>
 
 
@@ -133,60 +138,160 @@
             Name="InfoTeachingTip"
             Grid.Row="0"
             MinWidth="100"
-            PreferredPlacement="LeftBottom"
             PlacementMargin="16,0,16,0"
+            PreferredPlacement="LeftBottom"
             TailVisibility="Collapsed"
             Target="{Binding #InfoButton}">
-            <StackPanel Spacing="8" Margin="4,0" DataContext="{Binding LocalImageFile.GenerationParameters}">
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="{x:Static lang:Resources.Label_Prompt}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                    <SelectableTextBlock
+            <Grid>
+                <Grid.Resources>
+                    <input:StandardUICommand x:Key="CopyThingToClipboardCommand" Command="{Binding CopyThingToClipboardCommand}" />
+                </Grid.Resources>
+                <avalonia:SpacedGrid
+                    ColumnSpacing="8"
+                    DataContext="{Binding CivitImageMetadata}"
+                    IsVisible="{Binding $parent[Grid].((vmDialogs:ImageViewerViewModel)DataContext).HasCivitImageMetadata}"
+                    RowDefinitions="Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto, Auto"
+                    RowSpacing="8">
+                    <TextBlock
+                        Grid.Row="0"
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="Light"
+                        Text="{x:Static lang:Resources.Label_Prompt}" />
+
+                    <TextBlock
                         Grid.Row="1"
-                        Text="{Binding PositivePrompt}" />
-                </Grid>
-                
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="{x:Static lang:Resources.Label_NegativePrompt}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                    <SelectableTextBlock
-                        Grid.Row="1"
-                        Text="{Binding NegativePrompt}" />
-                </Grid>
-                
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="{x:Static lang:Resources.Label_Model}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                    <SelectableTextBlock
-                        Grid.Row="1"
-                        Text="{Binding ModelName}" />
-                </Grid>
-                
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="{x:Static lang:Resources.Label_Sampler}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                    <SelectableTextBlock
-                        Grid.Row="1"
-                        Text="{Binding Sampler}" />
-                </Grid>
-                
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="{x:Static lang:Resources.Label_Steps}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                    <SelectableTextBlock
-                        Grid.Row="1"
-                        Text="{Binding Steps}" />
-                </Grid>
-                
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="{x:Static lang:Resources.Label_CFGScale}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                    <SelectableTextBlock
-                        Grid.Row="1"
-                        Text="{Binding CfgScale}" />
-                </Grid>
-                
-                <Grid RowDefinitions="Auto,*">
-                    <TextBlock Text="{x:Static lang:Resources.Label_Seed}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
-                    <SelectableTextBlock
-                        Grid.Row="1"
-                        Text="{Binding Seed}" />
-                </Grid>
-            </StackPanel>
+                        Text="{Binding Prompt}"
+                        TextWrapping="Wrap"
+                        ToolTip.Tip="Click to Copy">
+                        <Interaction.Behaviors>
+                            <EventTriggerBehavior EventName="PointerPressed">
+                                <InvokeCommandAction Command="{StaticResource CopyThingToClipboardCommand}" CommandParameter="{Binding Prompt}" />
+                            </EventTriggerBehavior>
+                        </Interaction.Behaviors>
+                        <TextBlock.Styles>
+                            <Style Selector="TextBlock:pointerover">
+                                <Setter Property="Foreground" Value="{DynamicResource TextControlButtonForegroundPointerOver}" />
+                                <Setter Property="Cursor" Value="Hand" />
+                            </Style>
+                        </TextBlock.Styles>
+                    </TextBlock>
+
+                    <TextBlock
+                        Grid.Row="2"
+                        VerticalAlignment="Center"
+                        FontSize="18"
+                        FontWeight="Light"
+                        Text="{x:Static lang:Resources.Label_NegativePrompt}" />
+
+                    <TextBlock
+                        Grid.Row="3"
+                        Text="{Binding NegativePrompt}"
+                        TextWrapping="Wrap"
+                        ToolTip.Tip="Click to Copy">
+                        <Interaction.Behaviors>
+                            <EventTriggerBehavior EventName="PointerPressed">
+                                <InvokeCommandAction Command="{StaticResource CopyThingToClipboardCommand}" CommandParameter="{Binding NegativePrompt}" />
+                            </EventTriggerBehavior>
+                        </Interaction.Behaviors>
+                        <TextBlock.Styles>
+                            <Style Selector="TextBlock:pointerover">
+                                <Setter Property="Foreground" Value="{DynamicResource TextControlButtonForegroundPointerOver}" />
+                                <Setter Property="Cursor" Value="Hand" />
+                            </Style>
+                        </TextBlock.Styles>
+                    </TextBlock>
+
+                    <avalonia:SpacedGrid
+                        Grid.Row="4"
+                        Margin="0,8"
+                        ColumnDefinitions="*,Auto,*"
+                        RowDefinitions="Auto, Auto">
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            FontWeight="Light"
+                            Text="{x:Static lang:Resources.Label_CFGScale}" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            HorizontalAlignment="Center"
+                            Text="{Binding CfgScale}" />
+
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="2"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            FontWeight="Light"
+                            Text="{x:Static lang:Resources.Label_Steps}" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            HorizontalAlignment="Center"
+                            Text="{Binding Steps}" />
+
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="16"
+                            FontWeight="Light"
+                            Text="{x:Static lang:Resources.Label_Seed}" />
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            HorizontalAlignment="Center"
+                            Text="{Binding Seed}" />
+                    </avalonia:SpacedGrid>
+                </avalonia:SpacedGrid>
+
+                <StackPanel
+                    Margin="4,0"
+                    DataContext="{Binding LocalImageFile.GenerationParameters}"
+                    IsVisible="{Binding $parent[Grid].((vmDialogs:ImageViewerViewModel)DataContext).HasLocalGenerationParameters}"
+                    Spacing="8">
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Text="{x:Static lang:Resources.Label_Prompt}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                        <SelectableTextBlock Grid.Row="1" Text="{Binding PositivePrompt}" />
+                    </Grid>
+
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Text="{x:Static lang:Resources.Label_NegativePrompt}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                        <SelectableTextBlock Grid.Row="1" Text="{Binding NegativePrompt}" />
+                    </Grid>
+
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Text="{x:Static lang:Resources.Label_Model}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                        <SelectableTextBlock Grid.Row="1" Text="{Binding ModelName}" />
+                    </Grid>
+
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Text="{x:Static lang:Resources.Label_Sampler}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                        <SelectableTextBlock Grid.Row="1" Text="{Binding Sampler}" />
+                    </Grid>
+
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Text="{x:Static lang:Resources.Label_Steps}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                        <SelectableTextBlock Grid.Row="1" Text="{Binding Steps}" />
+                    </Grid>
+
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Text="{x:Static lang:Resources.Label_CFGScale}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                        <SelectableTextBlock Grid.Row="1" Text="{Binding CfgScale}" />
+                    </Grid>
+
+                    <Grid RowDefinitions="Auto,*">
+                        <TextBlock Text="{x:Static lang:Resources.Label_Seed}" Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+                        <SelectableTextBlock Grid.Row="1" Text="{Binding Seed}" />
+                    </Grid>
+                </StackPanel>
+            </Grid>
 
         </ui:TeachingTip>
 

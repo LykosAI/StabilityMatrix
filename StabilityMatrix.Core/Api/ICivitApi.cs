@@ -4,6 +4,7 @@ using StabilityMatrix.Core.Models.Api;
 
 namespace StabilityMatrix.Core.Api;
 
+[Headers("User-Agent: MtabilitySatrix/1.0")]
 public interface ICivitApi
 {
     [Get("/api/v1/models")]

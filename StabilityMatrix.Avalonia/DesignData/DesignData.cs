@@ -29,6 +29,7 @@ using StabilityMatrix.Avalonia.ViewModels.OutputsPage;
 using StabilityMatrix.Avalonia.ViewModels.PackageManager;
 using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
+using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
 using StabilityMatrix.Core.Helper;
@@ -36,6 +37,7 @@ using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Api.CivitTRPC;
 using StabilityMatrix.Core.Models.Api.Comfy;
 using StabilityMatrix.Core.Models.Api.OpenArt;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
@@ -1284,6 +1286,21 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.FileNameText = "TextToImage_00041.png";
             vm.FileSizeText = "2.4 MB";
             vm.ImageSizeText = "1280 x 1792";
+
+            vm.CivitImageMetadata = new CivitImageMetadata
+            {
+                Prompt =
+                    "closeup photp of a red haired anthro wolf female,\n holding an apple, wearing medieval drees is eating a apple, wolf ears, wolf tail with white tip\n,anthro,furry",
+                NegativePrompt = "Bad quality , watermark",
+                CfgScale = 2.5d,
+                Steps = 30,
+                Sampler = "DPM++ SDE",
+                Seed = 255842256659122,
+                Model = "RatatoskrIllustriousV2.3",
+                Height = 1152,
+                Width = 768,
+                Scheduler = "normal",
+            };
         });
 
     public static DownloadResourceViewModel DownloadResourceViewModel =>
@@ -1335,6 +1352,42 @@ The gallery images are often inpainted, but you will get something very similar 
                 .Range(1, 64)
                 .Select(i => $"C:/Users/ExampleUser/Data/ExampleFile{i}.txt")
                 .ToArray();
+        });
+
+    public static ConfirmBulkDownloadDialogViewModel ConfirmBulkDownloadDialogViewModel =>
+        DialogFactory.Get<ConfirmBulkDownloadDialogViewModel>(vm =>
+        {
+            vm.Model = new CivitModel
+            {
+                Name = "Test Model",
+                ModelVersions = Enumerable
+                    .Range(1, 64)
+                    .Select(i => new CivitModelVersion
+                    {
+                        Name = $"Version {i}",
+                        Files =
+                        [
+                            new CivitFile
+                            {
+                                Name = $"test-file-{i}.safetensors",
+                                Type = CivitFileType.Model,
+                                Metadata = new CivitFileMetadata
+                                {
+                                    Format = CivitModelFormat.SafeTensor,
+                                    Fp = "fp16",
+                                    Size = "pruned",
+                                },
+                                SizeKb = new Random().Next(1, 10) * 1024 * 1024,
+                            },
+                        ],
+                    })
+                    .ToList(),
+            };
+
+            vm.FpTypePreference = CivitModelFpType.fp16;
+            vm.IncludeVae = true;
+
+            return vm;
         });
 
     public static SponsorshipPromptViewModel SponsorshipPromptViewModel =>

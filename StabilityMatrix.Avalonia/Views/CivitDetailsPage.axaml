@@ -2,7 +2,6 @@
     x:Class="StabilityMatrix.Avalonia.Views.CivitDetailsPage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:api="clr-namespace:StabilityMatrix.Core.Models.Api;assembly=StabilityMatrix.Core"
     xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
     xmlns:avalonia1="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
@@ -10,6 +9,7 @@
     xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -18,7 +18,6 @@
     xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
-    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
     d:DataContext="{x:Static mocks:DesignData.CivitDetailsPageViewModel}"
     d:DesignHeight="800"
     d:DesignWidth="800"
@@ -26,6 +25,7 @@
     mc:Ignorable="d">
     <controls:UserControlBase.Resources>
         <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter" />
+        <input:StandardUICommand x:Key="ShowImageDialogCommand" Command="{Binding ShowImageDialogCommand}" />
     </controls:UserControlBase.Resources>
 
     <Grid
@@ -147,14 +147,38 @@
                                     IsChecked="{Binding ShowNsfw}"
                                     OffContent="NSFW Content"
                                     OnContent="NSFW Content" />
+
+                                <ToggleSwitch
+                                    Margin="8,-4"
+                                    HorizontalAlignment="Left"
+                                    HorizontalContentAlignment="Center"
+                                    IsChecked="{Binding ShowTrainingData}"
+                                    OffContent="Non-Model Files"
+                                    OnContent="Non-Model Files" />
+
+                                <ToggleSwitch
+                                    Margin="8,-4"
+                                    HorizontalAlignment="Left"
+                                    HorizontalContentAlignment="Center"
+                                    IsChecked="{Binding !HideInstalledModels}"
+                                    OffContent="Installed Models"
+                                    OnContent="Installed Models" />
                             </StackPanel>
                         </Flyout>
                     </ui:CommandBarButton.Flyout>
                 </ui:CommandBarButton>
             </ui:CommandBar.PrimaryCommands>
             <ui:CommandBar.SecondaryCommands>
-                <ui:CommandBarButton IconSource="Download" Label="Download All Files (This Version)" />
-                <ui:CommandBarButton IconSource="Download" Label="Download All Files (All Versions)" />
+                <ui:CommandBarButton
+                    Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                    CommandParameter="{Binding CivitUrl}"
+                    IconSource="Open"
+                    Label="{x:Static lang:Resources.Action_OpenOnCivitAi}" />
+
+                <ui:CommandBarButton
+                    Command="{Binding ShowBulkDownloadDialogCommand}"
+                    IconSource="Download"
+                    Label="Download All Files (All Versions)" />
             </ui:CommandBar.SecondaryCommands>
         </ui:CommandBar>
 
@@ -235,7 +259,16 @@
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:ImageSource}">
-                        <controls:BetterAdvancedImage CornerRadius="8" Source="{Binding}" />
+                        <controls:BetterAdvancedImage
+                            CornerRadius="8"
+                            Cursor="Hand"
+                            Source="{Binding}">
+                            <Interaction.Behaviors>
+                                <EventTriggerBehavior EventName="PointerPressed">
+                                    <InvokeCommandAction Command="{StaticResource ShowImageDialogCommand}" CommandParameter="{Binding}" />
+                                </EventTriggerBehavior>
+                            </Interaction.Behaviors>
+                        </controls:BetterAdvancedImage>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>
             </ItemsRepeater>
@@ -311,7 +344,7 @@
                     <TextBlock
                         Grid.Row="6"
                         Grid.Column="1"
-                        Text="{Binding CivitFiles[0].CivitFile.Hashes.ShortSha256}" />
+                        Text="{Binding ShortSha256}" />
 
                     <Separator
                         Grid.Row="7"
@@ -361,6 +394,7 @@
                                 Grid.Column="1"
                                 VerticalAlignment="Center"
                                 Foreground="{DynamicResource AccentButtonBackground}"
+                                IsVisible="{Binding IsInstalled}"
                                 Text="{x:Static lang:Resources.Label_Installed}"
                                 TextTrimming="CharacterEllipsis"
                                 TextWrapping="NoWrap" />
@@ -376,6 +410,8 @@
                                 <Run Text="{Binding CivitFile.Metadata.Size}" />
                                 <Run Text="-" />
                                 <Run Text="{Binding CivitFile.Metadata.Fp}" />
+                                <Run Text="-" />
+                                <Run Text="{Binding CivitFile.Type}" />
                                 <Run Text="-" />
                                 <Run Text="{Binding CivitFile.FullFilesSize, Mode=OneWay}" />
                             </TextBlock>

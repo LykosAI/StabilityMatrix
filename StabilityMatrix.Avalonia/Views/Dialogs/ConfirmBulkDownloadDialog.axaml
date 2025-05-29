@@ -1,0 +1,130 @@
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.Dialogs.ConfirmBulkDownloadDialog"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    d:DataContext="{x:Static mocks:DesignData.ConfirmBulkDownloadDialogViewModel}"
+    d:DesignHeight="550"
+    d:DesignWidth="500"
+    x:DataType="dialogs:ConfirmBulkDownloadDialogViewModel"
+    mc:Ignorable="d">
+    <avalonia:SpacedGrid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto,*,Auto,Auto,Auto,Auto,Auto">
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="0,0,0,8"
+            Text="Confirm Bulk Download"
+            TextWrapping="Wrap"
+            Theme="{DynamicResource TitleTextBlockStyle}" />
+
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="4,0"
+            FontSize="16"
+            Text="{Binding DownloadFollowingFilesText}"
+            Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+
+        <controls:Card
+            Grid.Row="2"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="2"
+            Padding="4,6"
+            VerticalAlignment="Top">
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible">
+                <ItemsRepeater ItemsSource="{Binding FilesToDownload}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Orientation="Vertical" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate DataType="{x:Type dialogs:CivitFileDisplayViewModel}">
+                            <TextBlock Margin="8" FontSize="16">
+                                <Run Text="{Binding FileViewModel.CivitFile.Name}" />
+                                <Run Text="(" /><Run Text="{Binding FileViewModel.CivitFile.FullFilesSize}" /><Run Text=")" />
+                            </TextBlock>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </ScrollViewer>
+        </controls:Card>
+
+        <ToggleSwitch
+            Grid.Row="3"
+            Grid.RowSpan="2"
+            Grid.Column="0"
+            Margin="8,0"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsChecked="{Binding IncludeVae}"
+            OffContent="Include VAEs"
+            OnContent="Include VAEs" />
+
+        <ToggleSwitch
+            Grid.Row="3"
+            Grid.RowSpan="2"
+            Grid.Column="1"
+            Margin="8,0"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            IsChecked="{Binding PreferPruned}"
+            OffContent="Prefer Pruned"
+            OnContent="Prefer Pruned" />
+
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="2"
+            Margin="8"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Text="Preferred Precision:" />
+
+        <controls:BetterComboBox
+            Grid.Row="4"
+            Grid.Column="2"
+            MinWidth="100"
+            Margin="8,0"
+            HorizontalAlignment="Center"
+            ItemsSource="{Binding AvailableFpTypes}"
+            SelectedItem="{Binding FpTypePreference}" />
+
+        <TextBlock
+            Grid.Row="5"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="4,0,4,4"
+            VerticalAlignment="Bottom"
+            Text="{x:Static lang:Resources.Label_AreYouSure}"
+            Theme="{DynamicResource BodyStrongTextBlockStyle}" />
+
+        <UniformGrid
+            Grid.Row="6"
+            Grid.Column="0"
+            Grid.ColumnSpan="3"
+            Margin="0,4,0,-24"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Bottom">
+            <Button
+                Margin="0,0,8,0"
+                HorizontalAlignment="Stretch"
+                Command="{Binding OnCloseButtonClick}"
+                Content="{x:Static lang:Resources.Action_Cancel}" />
+
+            <Button
+                Margin="0,0,8,0"
+                HorizontalAlignment="Stretch"
+                Classes="accent"
+                Command="{Binding OnPrimaryButtonClick}"
+                Content="Confirm" />
+        </UniformGrid>
+    </avalonia:SpacedGrid>
+</controls:UserControlBase>

@@ -1307,7 +1307,7 @@ The gallery images are often inpainted, but you will get something very similar 
                 [
                     new CivitImageResource
                     {
-                        ModelName = "noobAINXL (NAI-XL)",
+                        ModelName = "noobAI XL (NAI-XL) really long name example with even more words",
                         ModelId = 1337,
                         VersionId = 1234,
                         VersionName = "Epsilon-pred 1.1-Version",

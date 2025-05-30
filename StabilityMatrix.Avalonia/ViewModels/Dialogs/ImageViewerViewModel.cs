@@ -68,6 +68,7 @@ public partial class ImageViewerViewModel(
     public bool HasCivitImageMetadata => CivitImageMetadata is not null;
 
     public event EventHandler<DirectionalNavigationEventArgs>? NavigationRequested;
+    public event EventHandler<int>? NavigateToModelRequested;
 
     partial void OnLocalImageFileChanged(LocalImageFile? value)
     {
@@ -104,6 +105,12 @@ public partial class ImageViewerViewModel(
     private void OnNavigatePrevious()
     {
         NavigationRequested?.Invoke(this, DirectionalNavigationEventArgs.Up);
+    }
+
+    [RelayCommand]
+    private void OnNavigateToModel(int modelId)
+    {
+        NavigateToModelRequested?.Invoke(this, modelId);
     }
 
     [RelayCommand]

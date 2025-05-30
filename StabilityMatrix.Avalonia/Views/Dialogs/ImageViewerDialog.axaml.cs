@@ -1,4 +1,6 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.Mixins;
 using Avalonia.Input;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
@@ -25,6 +27,7 @@ public partial class ImageViewerDialog : UserControlBase
     public ImageViewerDialog()
     {
         InitializeComponent();
+        PressedMixin.Attach<Label>();
     }
 
     private void InfoButton_OnTapped(object? sender, TappedEventArgs e)

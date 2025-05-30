@@ -59,6 +59,7 @@
         <Grid.Resources>
             <input:StandardUICommand x:Key="CopyImageCommand" Command="{Binding CopyImageCommand}" />
             <input:StandardUICommand x:Key="CopyImageAsBitmapCommand" Command="{Binding CopyImageAsBitmapCommand}" />
+            <input:StandardUICommand x:Key="NavigateToModelCommand" Command="{Binding NavigateToModelCommand}" />
         </Grid.Resources>
 
         <!--  Tag is not used but sets TemplateKey which is used to select the DataTemplate later  -->
@@ -141,7 +142,6 @@
             Name="InfoTeachingTip"
             Grid.Row="0"
             MinWidth="100"
-            IsOpen="True"
             PlacementMargin="16,0,16,0"
             PreferredPlacement="LeftBottom"
             TailVisibility="Collapsed"
@@ -168,6 +168,7 @@
                         Margin="0,-4,0,0"
                         Text="{Binding Metadata.Prompt}"
                         TextWrapping="Wrap"
+                        ToolTip.ShowDelay="1000"
                         ToolTip.Tip="Click to Copy">
                         <Interaction.Behaviors>
                             <EventTriggerBehavior EventName="PointerPressed">
@@ -188,13 +189,16 @@
                         VerticalAlignment="Center"
                         FontSize="20"
                         FontWeight="Light"
+                        IsVisible="{Binding Metadata.NegativePrompt, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                         Text="{x:Static lang:Resources.Label_NegativePrompt}" />
 
                     <TextBlock
                         Grid.Row="3"
                         Margin="0,-4,0,0"
+                        IsVisible="{Binding Metadata.NegativePrompt, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                         Text="{Binding Metadata.NegativePrompt}"
                         TextWrapping="Wrap"
+                        ToolTip.ShowDelay="1000"
                         ToolTip.Tip="Click to Copy">
                         <Interaction.Behaviors>
                             <EventTriggerBehavior EventName="PointerPressed">
@@ -232,20 +236,23 @@
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Stretch"
                                     Classes="transparent"
+                                    Command="{StaticResource NavigateToModelCommand}"
+                                    CommandParameter="{Binding ModelId}"
                                     CornerRadius="16">
-                                    <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto">
+                                    <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
                                         <TextBlock
                                             Grid.Row="0"
                                             Grid.Column="0"
                                             VerticalAlignment="Center"
                                             FontSize="16"
-                                            Text="{Binding ModelName}" />
+                                            Text="{Binding ModelName}"
+                                            TextWrapping="Wrap" />
 
                                         <Label
                                             Grid.Row="0"
                                             Grid.Column="1"
                                             HorizontalAlignment="Right"
-                                            VerticalAlignment="Center"
+                                            VerticalAlignment="Top"
                                             Classes="Circle LightBlue"
                                             Content="{Binding ModelType}"
                                             Theme="{StaticResource TagLabel}" />
@@ -287,7 +294,23 @@
                                     HorizontalAlignment="Left"
                                     VerticalAlignment="Center"
                                     Classes="Circle LightBlue"
-                                    Theme="{StaticResource TagLabel}">
+                                    Theme="{StaticResource TagLabel}"
+                                    ToolTip.ShowDelay="1000"
+                                    ToolTip.Tip="Click to Copy"
+                                    ToolTip.VerticalOffset="16">
+                                    <Interaction.Behaviors>
+                                        <EventTriggerBehavior EventName="PointerPressed">
+                                            <InvokeCommandAction Command="{StaticResource CopyThingToClipboardCommand}" CommandParameter="{Binding Value}" />
+                                        </EventTriggerBehavior>
+                                    </Interaction.Behaviors>
+                                    <Label.Styles>
+                                        <Style Selector="Label:pointerover">
+                                            <Setter Property="Foreground" Value="{DynamicResource LabelTagGhostCyanForeground}" />
+                                        </Style>
+                                        <Style Selector="Label:pressed">
+                                            <Setter Property="Foreground" Value="{DynamicResource LabelTagGhostIndigoForeground}" />
+                                        </Style>
+                                    </Label.Styles>
                                     <TextBlock FontSize="13">
                                         <Run Text="{Binding Key}" /><Run Text=":" />
                                         <Run Text="{Binding Value}" />

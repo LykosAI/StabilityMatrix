@@ -15,6 +15,7 @@ using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Refit;
+using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -49,7 +50,8 @@ public partial class CivitDetailsPageViewModel(
     IModelImportService modelImportService
 ) : DisposableViewModelBase
 {
-    public required CivitModel CivitModel { get; set; }
+    [ObservableProperty]
+    public required partial CivitModel CivitModel { get; set; }
 
     private SourceCache<CivitImage, string> imageCache = new(x => x.Url);
 
@@ -484,10 +486,10 @@ public partial class CivitDetailsPageViewModel(
                                 var imageData = await civitTrpcApi.GetImageGenerationData(
                                     $$$"""{"json":{"id":{{{imageId}}}}}"""
                                 );
-                                sender.CivitImageMetadata = imageData.Result.Data.Json;
-                                sender.CivitImageMetadata.OtherMetadata = GetOtherMetadata(
-                                    sender.CivitImageMetadata
+                                imageData.Result.Data.Json.OtherMetadata = GetOtherMetadata(
+                                    imageData.Result.Data.Json
                                 );
+                                sender.CivitImageMetadata = imageData.Result.Data.Json;
                             }
                             catch (Exception e)
                             {
@@ -500,7 +502,23 @@ public partial class CivitDetailsPageViewModel(
                     .SafeFireAndForget();
             });
 
+        vm.NavigateToModelRequested += VmOnNavigateToModelRequested;
+
         await vm.GetDialog().ShowAsync();
+    }
+
+    private void VmOnNavigateToModelRequested(object? sender, int modelId)
+    {
+        if (sender is not ImageViewerViewModel vm)
+            return;
+
+        var detailsPageVm = vmFactory.Get<CivitDetailsPageViewModel>(x =>
+            x.CivitModel = new CivitModel { Id = modelId }
+        );
+        navigationService.NavigateTo(detailsPageVm, BetterSlideNavigationTransition.PageSlideFromRight);
+
+        vm.NavigateToModelRequested -= VmOnNavigateToModelRequested;
+        vm.OnCloseButtonClick();
     }
 
     private bool ShouldIncludeCivitFile(CivitFile file)

@@ -1287,19 +1287,41 @@ The gallery images are often inpainted, but you will get something very similar 
             vm.FileSizeText = "2.4 MB";
             vm.ImageSizeText = "1280 x 1792";
 
-            vm.CivitImageMetadata = new CivitImageMetadata
+            vm.CivitImageMetadata = new CivitImageGenerationDataResponse
             {
-                Prompt =
-                    "closeup photp of a red haired anthro wolf female,\n holding an apple, wearing medieval drees is eating a apple, wolf ears, wolf tail with white tip\n,anthro,furry",
-                NegativePrompt = "Bad quality , watermark",
-                CfgScale = 2.5d,
-                Steps = 30,
-                Sampler = "DPM++ SDE",
-                Seed = 255842256659122,
-                Model = "RatatoskrIllustriousV2.3",
-                Height = 1152,
-                Width = 768,
-                Scheduler = "normal",
+                Metadata = new CivitImageMetadata
+                {
+                    Prompt =
+                        "closeup photp of a red haired anthro wolf female,\n holding an apple, wearing medieval drees is eating a apple, wolf ears, wolf tail with white tip\n,anthro,furry",
+                    NegativePrompt = "Bad quality , watermark",
+                    CfgScale = 2.5d,
+                    Steps = 30,
+                    Sampler = "DPM++ SDE",
+                    Seed = 255842256659122,
+                    Model = "RatatoskrIllustriousV2.3",
+                    Height = 1152,
+                    Width = 768,
+                    Scheduler = "normal",
+                },
+                Resources =
+                [
+                    new CivitImageResource
+                    {
+                        ModelName = "noobAINXL (NAI-XL)",
+                        ModelId = 1337,
+                        VersionId = 1234,
+                        VersionName = "Epsilon-pred 1.1-Version",
+                        ModelType = "Checkpoint",
+                    },
+                ],
+            };
+
+            vm.CivitImageMetadata.OtherMetadata = new Dictionary<string, string>
+            {
+                ["CFG"] = "2.5",
+                ["Steps"] = "30",
+                ["Sampler"] = "DPM++ SDE",
+                ["Seed"] = "255842256659122",
             };
         });
 

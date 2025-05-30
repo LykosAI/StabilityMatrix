@@ -403,7 +403,7 @@ public partial class SelectModelVersionViewModel(
 
     private void ApplySavedDownloadPreference()
     {
-        if (CivitModel?.Type == null || !settingsManager.IsLibraryDirSet)
+        if (CivitModel.Type == null || !settingsManager.IsLibraryDirSet)
             return;
 
         var modelTypeKey = CivitModel.Type.ToString();

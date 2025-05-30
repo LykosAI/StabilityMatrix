@@ -43,7 +43,7 @@ public partial class ImageViewerViewModel(
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasLocalGenerationParameters))]
-    public partial CivitImageMetadata? CivitImageMetadata { get; set; }
+    public partial CivitImageGenerationDataResponse? CivitImageMetadata { get; set; }
 
     [ObservableProperty]
     private bool isFooterEnabled;
@@ -86,12 +86,12 @@ public partial class ImageViewerViewModel(
         }
     }
 
-    partial void OnCivitImageMetadataChanged(CivitImageMetadata? value)
+    partial void OnCivitImageMetadataChanged(CivitImageGenerationDataResponse? value)
     {
         if (value is null)
             return;
 
-        ImageSizeText = value.Dimensions;
+        ImageSizeText = value.Metadata?.Dimensions ?? string.Empty;
     }
 
     [RelayCommand]

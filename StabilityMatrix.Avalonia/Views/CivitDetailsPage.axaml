@@ -255,14 +255,16 @@
             VerticalScrollBarVisibility="Disabled">
             <ItemsRepeater ItemsSource="{Binding ImageSources}">
                 <ItemsRepeater.Layout>
-                    <UniformGridLayout MinColumnSpacing="12" Orientation="Horizontal" />
+                    <StackLayout Orientation="Horizontal" Spacing="12" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate DataType="{x:Type models:ImageSource}">
                         <controls:BetterAdvancedImage
                             CornerRadius="8"
                             Cursor="Hand"
-                            Source="{Binding}">
+                            Source="{Binding}"
+                            Stretch="UniformToFill"
+                            StretchDirection="Both">
                             <Interaction.Behaviors>
                                 <EventTriggerBehavior EventName="PointerPressed">
                                     <InvokeCommandAction Command="{StaticResource ShowImageDialogCommand}" CommandParameter="{Binding}" />
@@ -440,7 +442,11 @@
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Center"
                                 HorizontalContentAlignment="Center"
-                                Classes="accent">
+                                Classes="accent"
+                                Command="{Binding DownloadToDefaultCommand}">
+                                <SplitButton.Resources>
+                                    <input:StandardUICommand x:Key="DownloadToSelectedLocationCommand" Command="{Binding DownloadToSelectedLocationCommand}" />
+                                </SplitButton.Resources>
                                 <SplitButton.Content>
                                     <StackPanel Margin="2,0,0,0" Orientation="Horizontal">
                                         <avalonia:Icon
@@ -454,7 +460,10 @@
                                     <ui:FAMenuFlyout ItemsSource="{Binding InstallLocations}" Placement="BottomEdgeAlignedRight">
                                         <ui:FAMenuFlyout.ItemTemplate>
                                             <DataTemplate DataType="system:String">
-                                                <ui:MenuFlyoutItem Text="{Binding .}" />
+                                                <ui:MenuFlyoutItem
+                                                    Command="{StaticResource DownloadToSelectedLocationCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    Text="{Binding .}" />
                                             </DataTemplate>
                                         </ui:FAMenuFlyout.ItemTemplate>
                                     </ui:FAMenuFlyout>

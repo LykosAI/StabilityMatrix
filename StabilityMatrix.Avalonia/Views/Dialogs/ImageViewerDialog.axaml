@@ -4,8 +4,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:avalonia="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
+    xmlns:civitTrpc="clr-namespace:StabilityMatrix.Core.Models.Api.CivitTRPC;assembly=StabilityMatrix.Core"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+    xmlns:generic1="clr-namespace:System.Collections.Generic;assembly=System.Runtime"
     xmlns:gif="clr-namespace:Avalonia.Gif;assembly=Avalonia.Gif"
     xmlns:icons="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
@@ -138,6 +141,7 @@
             Name="InfoTeachingTip"
             Grid.Row="0"
             MinWidth="100"
+            IsOpen="True"
             PlacementMargin="16,0,16,0"
             PreferredPlacement="LeftBottom"
             TailVisibility="Collapsed"
@@ -155,18 +159,19 @@
                     <TextBlock
                         Grid.Row="0"
                         VerticalAlignment="Center"
-                        FontSize="18"
+                        FontSize="20"
                         FontWeight="Light"
                         Text="{x:Static lang:Resources.Label_Prompt}" />
 
                     <TextBlock
                         Grid.Row="1"
-                        Text="{Binding Prompt}"
+                        Margin="0,-4,0,0"
+                        Text="{Binding Metadata.Prompt}"
                         TextWrapping="Wrap"
                         ToolTip.Tip="Click to Copy">
                         <Interaction.Behaviors>
                             <EventTriggerBehavior EventName="PointerPressed">
-                                <InvokeCommandAction Command="{StaticResource CopyThingToClipboardCommand}" CommandParameter="{Binding Prompt}" />
+                                <InvokeCommandAction Command="{StaticResource CopyThingToClipboardCommand}" CommandParameter="{Binding Metadata.Prompt}" />
                             </EventTriggerBehavior>
                         </Interaction.Behaviors>
                         <TextBlock.Styles>
@@ -179,19 +184,21 @@
 
                     <TextBlock
                         Grid.Row="2"
+                        Margin="0,8,0,0"
                         VerticalAlignment="Center"
-                        FontSize="18"
+                        FontSize="20"
                         FontWeight="Light"
                         Text="{x:Static lang:Resources.Label_NegativePrompt}" />
 
                     <TextBlock
                         Grid.Row="3"
-                        Text="{Binding NegativePrompt}"
+                        Margin="0,-4,0,0"
+                        Text="{Binding Metadata.NegativePrompt}"
                         TextWrapping="Wrap"
                         ToolTip.Tip="Click to Copy">
                         <Interaction.Behaviors>
                             <EventTriggerBehavior EventName="PointerPressed">
-                                <InvokeCommandAction Command="{StaticResource CopyThingToClipboardCommand}" CommandParameter="{Binding NegativePrompt}" />
+                                <InvokeCommandAction Command="{StaticResource CopyThingToClipboardCommand}" CommandParameter="{Binding Metadata.NegativePrompt}" />
                             </EventTriggerBehavior>
                         </Interaction.Behaviors>
                         <TextBlock.Styles>
@@ -202,53 +209,95 @@
                         </TextBlock.Styles>
                     </TextBlock>
 
-                    <avalonia:SpacedGrid
+                    <TextBlock
                         Grid.Row="4"
-                        Margin="0,8"
-                        ColumnDefinitions="*,Auto,*"
-                        RowDefinitions="Auto, Auto">
-                        <TextBlock
-                            Grid.Row="0"
-                            Grid.Column="0"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontSize="16"
-                            FontWeight="Light"
-                            Text="{x:Static lang:Resources.Label_CFGScale}" />
-                        <TextBlock
-                            Grid.Row="1"
-                            Grid.Column="0"
-                            HorizontalAlignment="Center"
-                            Text="{Binding CfgScale}" />
+                        Margin="0,8,0,0"
+                        FontSize="20"
+                        FontWeight="Light"
+                        IsVisible="{Binding Resources.Count}"
+                        Text="Resources Used" />
 
-                        <TextBlock
-                            Grid.Row="0"
-                            Grid.Column="2"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontSize="16"
-                            FontWeight="Light"
-                            Text="{x:Static lang:Resources.Label_Steps}" />
-                        <TextBlock
-                            Grid.Row="1"
-                            Grid.Column="2"
-                            HorizontalAlignment="Center"
-                            Text="{Binding Steps}" />
+                    <ItemsRepeater
+                        Grid.Row="5"
+                        HorizontalAlignment="Stretch"
+                        IsVisible="{Binding Resources.Count}"
+                        ItemsSource="{Binding Resources}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Orientation="Vertical" Spacing="8" />
+                        </ItemsRepeater.Layout>
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate DataType="{x:Type civitTrpc:CivitImageResource}">
+                                <Button
+                                    Padding="8"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    Classes="transparent"
+                                    CornerRadius="16">
+                                    <Grid ColumnDefinitions="Auto, *" RowDefinitions="Auto, Auto">
+                                        <TextBlock
+                                            Grid.Row="0"
+                                            Grid.Column="0"
+                                            VerticalAlignment="Center"
+                                            FontSize="16"
+                                            Text="{Binding ModelName}" />
 
-                        <TextBlock
-                            Grid.Row="0"
-                            Grid.Column="1"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontSize="16"
-                            FontWeight="Light"
-                            Text="{x:Static lang:Resources.Label_Seed}" />
-                        <TextBlock
-                            Grid.Row="1"
-                            Grid.Column="1"
-                            HorizontalAlignment="Center"
-                            Text="{Binding Seed}" />
-                    </avalonia:SpacedGrid>
+                                        <Label
+                                            Grid.Row="0"
+                                            Grid.Column="1"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center"
+                                            Classes="Circle LightBlue"
+                                            Content="{Binding ModelType}"
+                                            Theme="{StaticResource TagLabel}" />
+
+                                        <TextBlock
+                                            Grid.Row="1"
+                                            Grid.Column="0"
+                                            Margin="0,0,0,4"
+                                            VerticalAlignment="Center"
+                                            FontSize="13"
+                                            Foreground="{DynamicResource TextControlButtonForegroundPointerOver}"
+                                            Text="{Binding VersionName}" />
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+
+                    <TextBlock
+                        Grid.Row="6"
+                        Margin="0,8,0,0"
+                        FontSize="20"
+                        FontWeight="Light"
+                        Text="Other Metadata" />
+
+                    <ItemsRepeater
+                        Grid.Row="7"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{Binding OtherMetadata}">
+                        <ItemsRepeater.Layout>
+                            <WrapLayout HorizontalSpacing="4" VerticalSpacing="4" />
+                        </ItemsRepeater.Layout>
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate>
+                                <DataTemplate.DataType>
+                                    <x:Type x:TypeArguments="x:String, x:String" TypeName="generic1:KeyValuePair" />
+                                </DataTemplate.DataType>
+                                <Label
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Classes="Circle LightBlue"
+                                    Theme="{StaticResource TagLabel}">
+                                    <TextBlock FontSize="13">
+                                        <Run Text="{Binding Key}" /><Run Text=":" />
+                                        <Run Text="{Binding Value}" />
+                                    </TextBlock>
+                                </Label>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+
+
                 </avalonia:SpacedGrid>
 
                 <StackPanel

@@ -66,8 +66,11 @@ public partial class ConfirmBulkDownloadDialogViewModel(IModelIndexService model
                 v.Files?.Select(f => new CivitFileDisplayViewModel
                 {
                     ModelVersion = v,
-                    FileViewModel = new CivitFileViewModel(modelIndexService, f) { InstallLocations = [] },
-                }) ?? Enumerable.Empty<CivitFileDisplayViewModel>()
+                    FileViewModel = new CivitFileViewModel(modelIndexService, f, null)
+                    {
+                        InstallLocations = [],
+                    },
+                }) ?? []
             )
             .ToList();
 

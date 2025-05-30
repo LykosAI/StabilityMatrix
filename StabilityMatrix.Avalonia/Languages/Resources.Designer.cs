@@ -1560,6 +1560,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download Started.
+        /// </summary>
+        public static string Label_DownloadStarted {
+            get {
+                return ResourceManager.GetString("Label_DownloadStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} will be saved to {1}.
+        /// </summary>
+        public static string Label_DownloadWillBeSavedToLocation {
+            get {
+                return ResourceManager.GetString("Label_DownloadWillBeSavedToLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Drag &amp; Drop checkpoints here to import.
         /// </summary>
         public static string Label_DragAndDropCheckpointsHereToImport {

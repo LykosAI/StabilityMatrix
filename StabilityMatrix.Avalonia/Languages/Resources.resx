@@ -1449,4 +1449,10 @@ We prioritize your privacy ([Gen AI Terms](&lt;https://lykos.ai/gen-ai-terms&gt;
   <data name="Label_BulkDownloadStartedMessage" xml:space="preserve">
     <value>{0} files have started downloading. Check the Downloads tab for progress.</value>
   </data>
+  <data name="Label_DownloadStarted" xml:space="preserve">
+    <value>Download Started</value>
+  </data>
+  <data name="Label_DownloadWillBeSavedToLocation" xml:space="preserve">
+    <value>{0} will be saved to {1}</value>
+  </data>
 </root>

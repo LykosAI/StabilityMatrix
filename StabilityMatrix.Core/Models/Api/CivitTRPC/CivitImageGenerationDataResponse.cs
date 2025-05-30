@@ -9,6 +9,12 @@ public class CivitImageGenerationDataResponse
 
     [JsonPropertyName("meta")]
     public CivitImageMetadata? Metadata { get; set; }
+
+    [JsonPropertyName("resources")]
+    public List<CivitImageResource>? Resources { get; set; }
+
+    [JsonIgnore]
+    public IReadOnlyDictionary<string, string>? OtherMetadata { get; set; }
 }
 
 public class CivitImageMetadata
@@ -88,7 +94,12 @@ public class CivitImageMetadata
 
 public class CivitImageResource
 {
-    public string Hash { get; set; }
-    public string Name { get; set; }
-    public string Type { get; set; }
+    public string? Hash { get; set; }
+    public string? Name { get; set; }
+    public string? Type { get; set; }
+    public int ModelId { get; set; }
+    public string? ModelType { get; set; }
+    public string? ModelName { get; set; }
+    public int VersionId { get; set; }
+    public string? VersionName { get; set; }
 }

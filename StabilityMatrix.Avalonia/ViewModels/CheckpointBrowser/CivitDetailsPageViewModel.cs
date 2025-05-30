@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using AsyncAwaitBestPractices;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -26,7 +27,9 @@ using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
+using StabilityMatrix.Core.Models.Api.CivitTRPC;
 using StabilityMatrix.Core.Models.FileInterfaces;
+using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
@@ -210,7 +213,7 @@ public partial class CivitDetailsPageViewModel(
             civitFileCache
                 .Connect()
                 .Filter(includeTrainingDataPredicate)
-                .Transform(file => new CivitFileViewModel(modelIndexService, file)
+                .Transform(file => new CivitFileViewModel(modelIndexService, file, DownloadModelAsync)
                 {
                     InstallLocations = new ObservableCollection<string>(LoadInstallLocations(file)),
                 })
@@ -228,6 +231,156 @@ public partial class CivitDetailsPageViewModel(
 
     [RelayCommand]
     private void GoBack() => navigationService.GoBack();
+
+    public async Task DownloadModelAsync(CivitFileViewModel viewModel, string? locationKey = null)
+    {
+        DirectoryPath? finalDestinationDir = null;
+        var effectiveLocationKeyForPreference = string.Empty;
+
+        switch (locationKey)
+        {
+            case null:
+            {
+                var preferenceUsed = false;
+                if (
+                    settingsManager.Settings.ModelTypeDownloadPreferences.TryGetValue(
+                        CivitModel.Type.ToString(),
+                        out var preference
+                    )
+                )
+                {
+                    if (
+                        preference.SelectedInstallLocation == "Custom..."
+                        && !string.IsNullOrWhiteSpace(preference.CustomInstallLocation)
+                    )
+                    {
+                        finalDestinationDir = new DirectoryPath(preference.CustomInstallLocation);
+                        effectiveLocationKeyForPreference = "Custom...";
+                        preferenceUsed = true;
+                    }
+                    else if (
+                        !string.IsNullOrWhiteSpace(preference.SelectedInstallLocation)
+                        && viewModel.InstallLocations.Contains(preference.SelectedInstallLocation)
+                    )
+                    {
+                        var basePath = new DirectoryPath(settingsManager.ModelsDirectory);
+                        finalDestinationDir = new DirectoryPath(
+                            Path.Combine(
+                                basePath.ToString(),
+                                preference
+                                    .SelectedInstallLocation.Replace("Models\\", "")
+                                    .Replace("Models/", "")
+                            )
+                        );
+                        effectiveLocationKeyForPreference = preference.SelectedInstallLocation;
+                        preferenceUsed = true;
+                    }
+                }
+
+                if (!preferenceUsed)
+                {
+                    finalDestinationDir = GetSharedFolderPath(
+                        settingsManager.ModelsDirectory,
+                        viewModel.CivitFile.Type,
+                        CivitModel.Type,
+                        CivitModel.BaseModelType
+                    );
+                    effectiveLocationKeyForPreference =
+                        viewModel.InstallLocations.FirstOrDefault(loc =>
+                            loc != "Custom..."
+                            && finalDestinationDir
+                                .ToString()
+                                .Contains(loc.Replace("Models\\", "").Replace("Models/", ""))
+                        ) ?? viewModel.InstallLocations.First();
+                }
+
+                break;
+            }
+            case "Custom...":
+            {
+                effectiveLocationKeyForPreference = "Custom...";
+                var files = await App.StorageProvider.OpenFolderPickerAsync(
+                    new FolderPickerOpenOptions
+                    {
+                        Title = "Select Download Folder",
+                        AllowMultiple = false,
+                        SuggestedStartLocation = await App.StorageProvider.TryGetFolderFromPathAsync(
+                            Path.Combine(
+                                settingsManager.ModelsDirectory,
+                                CivitModel.Type.ConvertTo<SharedFolderType>().GetStringValue()
+                            )
+                        ),
+                    }
+                );
+
+                if (files.FirstOrDefault()?.TryGetLocalPath() is { } customPath)
+                {
+                    finalDestinationDir = new DirectoryPath(customPath);
+                }
+                else
+                {
+                    return;
+                }
+
+                break;
+            }
+            default:
+            {
+                effectiveLocationKeyForPreference = locationKey;
+                var basePath = new DirectoryPath(settingsManager.ModelsDirectory);
+                finalDestinationDir = new DirectoryPath(
+                    Path.Combine(
+                        basePath.ToString(),
+                        locationKey.Replace("Models\\", "").Replace("Models/", "")
+                    )
+                );
+                break;
+            }
+        }
+
+        if (finalDestinationDir is null)
+        {
+            notificationService.Show(
+                Resources.Label_UnexpectedErrorOccurred,
+                "Could not determine final destination directory.",
+                NotificationType.Error
+            );
+            return;
+        }
+
+        await modelImportService.DoImport(
+            CivitModel,
+            finalDestinationDir,
+            SelectedVersion?.ModelVersion,
+            viewModel.CivitFile
+        );
+
+        notificationService.Show(
+            Resources.Label_DownloadStarted,
+            string.Format(
+                Resources.Label_DownloadWillBeSavedToLocation,
+                viewModel.CivitFile.Name,
+                finalDestinationDir
+            )
+        );
+
+        if (CivitModel.Type != CivitModelType.Unknown)
+        {
+            var modelTypeKey = CivitModel.Type.ToString();
+            var newPreference = new LastDownloadLocationInfo
+            {
+                SelectedInstallLocation = effectiveLocationKeyForPreference,
+                CustomInstallLocation =
+                    (effectiveLocationKeyForPreference == "Custom...")
+                        ? finalDestinationDir.ToString()
+                        : null,
+            };
+            settingsManager.Transaction(s =>
+            {
+                s.ModelTypeDownloadPreferences[modelTypeKey] = newPreference;
+            });
+        }
+    }
 
     [RelayCommand]
     private async Task ShowBulkDownloadDialogAsync()
@@ -291,7 +444,8 @@ public partial class CivitDetailsPageViewModel(
         {
             var imageId = Path.GetFileNameWithoutExtension(url.Segments.Last());
             var imageData = await civitTrpcApi.GetImageGenerationData($$$"""{"json":{"id":{{{imageId}}}}}""");
-            vm.CivitImageMetadata = imageData.Result.Data.Json.Metadata;
+            vm.CivitImageMetadata = imageData.Result.Data.Json;
+            vm.CivitImageMetadata.OtherMetadata = GetOtherMetadata(vm.CivitImageMetadata);
         }
         catch (Exception e)
         {
@@ -318,6 +472,7 @@ public partial class CivitDetailsPageViewModel(
 
                             // Preload
                             await newImageSource.GetBitmapAsync();
+                            await newImageSource.GetOrRefreshTemplateKeyAsync();
                             sender.ImageSource = newImageSource;
 
                             try
@@ -329,7 +484,10 @@ public partial class CivitDetailsPageViewModel(
                                 var imageData = await civitTrpcApi.GetImageGenerationData(
                                     $$$"""{"json":{"id":{{{imageId}}}}}"""
                                 );
-                                sender.CivitImageMetadata = imageData.Result.Data.Json.Metadata;
+                                sender.CivitImageMetadata = imageData.Result.Data.Json;
+                                sender.CivitImageMetadata.OtherMetadata = GetOtherMetadata(
+                                    sender.CivitImageMetadata
+                                );
                             }
                             catch (Exception e)
                             {
@@ -404,7 +562,7 @@ public partial class CivitDetailsPageViewModel(
         if (Design.IsDesignMode)
             return ["Models/StableDiffusion", "Custom..."];
 
-        var installLocations = new ObservableCollection<string>();
+        var installLocations = new List<string>();
 
         var rootModelsDirectory = new DirectoryPath(settingsManager.ModelsDirectory);
 
@@ -445,7 +603,9 @@ public partial class CivitDetailsPageViewModel(
         }
 
         installLocations.Add("Custom...");
-        return installLocations;
+        return new ObservableCollection<string>(
+            installLocations.OrderBy(s => s.Replace(Path.DirectorySeparatorChar.ToString(), string.Empty))
+        );
     }
 
     private static DirectoryPath GetSharedFolderPath(
@@ -473,5 +633,32 @@ public partial class CivitDetailsPageViewModel(
         }
 
         return rootModelsDirectory.JoinDir(modelType.ConvertTo<SharedFolderType>().GetStringValue());
+    }
+
+    private IReadOnlyDictionary<string, string> GetOtherMetadata(CivitImageGenerationDataResponse value)
+    {
+        var metaDict = new Dictionary<string, string>();
+        if (value.Metadata?.CfgScale is not null)
+            metaDict["CFG"] = value.Metadata.CfgScale.ToString();
+
+        if (value.Metadata?.Steps is not null)
+            metaDict["Steps"] = value.Metadata.Steps.ToString();
+
+        if (value.Metadata?.Sampler is not null)
+            metaDict["Sampler"] = value.Metadata.Sampler;
+
+        if (value.Metadata?.Seed is not null)
+            metaDict["Seed"] = value.Metadata.Seed.ToString();
+
+        if (value.Metadata?.ScheduleType is not null)
+            metaDict["Scheduler"] = value.Metadata.ScheduleType;
+
+        if (value.Metadata?.Scheduler is not null)
+            metaDict["Scheduler"] = value.Metadata.Scheduler;
+
+        if (value.Metadata?.Rng is not null)
+            metaDict["RNG"] = value.Metadata.Rng;
+
+        return metaDict;
     }
 }

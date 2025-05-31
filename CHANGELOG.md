@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.15.0-dev.2
+### Added
+- Added new package - [FramePack](https://github.com/lllyasviel/FramePack)
 ### Changed
 - Civitai model browser image loading now uses dynamic resizing for better performance and a smoother scrolling experience.
 - Detailed notifications for Civitai model browser api errors.

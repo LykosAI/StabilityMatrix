@@ -47,6 +47,7 @@ public partial class PackageCardViewModel(
 ) : ProgressViewModel
 {
     private string webUiUrl = string.Empty;
+    private string? lastLaunchCommand = null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PackageDisplayName))]
@@ -109,6 +110,9 @@ public partial class PackageCardViewModel(
     [NotifyPropertyChangedFor(nameof(ShowExtraCommands))]
     private List<ExtraPackageCommand>? extraCommands;
 
+    [ObservableProperty]
+    private IReadOnlyDictionary<string, string> extraLaunchCommands = new Dictionary<string, string>();
+
     public bool ShowExtraCommands => ExtraCommands is { Count: > 0 };
 
     private void RunningPackagesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -162,6 +166,7 @@ public partial class PackageCardViewModel(
             CanUseExtensions = basePackage?.SupportsExtensions ?? false;
             DontCheckForUpdates = Package?.DontCheckForUpdates ?? false;
             UsesVenv = basePackage?.UsesVenv ?? true;
+            ExtraLaunchCommands = basePackage?.ExtraLaunchCommands ?? new Dictionary<string, string>();
 
             // Set the extra commands if available from the package
             var packageExtraCommands = basePackage?.GetExtraCommands();
@@ -172,13 +177,17 @@ public partial class PackageCardViewModel(
         }
     }
 
-    private void InstanceOnPackageRelaunchRequested(object? sender, InstalledPackage e)
+    private async Task InstanceOnPackageRelaunchRequested(
+        object? sender,
+        InstalledPackage e,
+        RunPackageOptions options
+    )
     {
         if (e.Id != Package?.Id)
             return;
 
         navigationService.GoBack();
-        Launch().SafeFireAndForget();
+        await Launch(options.Command);
     }
 
     public override async Task OnLoadedAsync()
@@ -258,16 +267,17 @@ public partial class PackageCardViewModel(
         }
     }
 
-    public async Task Launch()
+    public async Task Launch(string? command = null)
     {
         if (Package == null)
             return;
 
-        var packagePair = await runningPackageService.StartPackage(Package);
+        var packagePair = await runningPackageService.StartPackage(Package, command);
 
         if (packagePair != null)
         {
             IsRunning = true;
+            lastLaunchCommand = command;
 
             packagePair.BasePackage.Exited += BasePackageOnExited;
             packagePair.BasePackage.StartupComplete += RunningPackageOnStartupComplete;
@@ -780,7 +790,7 @@ public partial class PackageCardViewModel(
     private async Task Restart()
     {
         await Stop();
-        await Launch();
+        await Launch(lastLaunchCommand);
     }
 
     [RelayCommand]

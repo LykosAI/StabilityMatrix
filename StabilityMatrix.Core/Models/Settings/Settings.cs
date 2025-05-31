@@ -217,15 +217,8 @@ public class Settings
 
     public bool FilterExtraNetworksByBaseModel { get; set; } = true;
 
-<<<<<<< HEAD
-=======
-    public bool ShowAllAvailablePythonVersions { get; set; }
-
     public bool IsMainWindowSidebarOpen { get; set; }
-
-    public Dictionary<string, LastDownloadLocationInfo> ModelTypeDownloadPreferences { get; set; } = new();
-
->>>>>>> 81178983 (Merge pull request #1094 from ionite34/fix-dotnet-and-save-pane)
+    
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

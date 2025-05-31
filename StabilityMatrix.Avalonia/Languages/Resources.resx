@@ -1431,6 +1431,12 @@ We prioritize your privacy ([Gen AI Terms](&lt;https://lykos.ai/gen-ai-terms&gt;
   <data name="Label_PythonVersionWarningTitle" xml:space="preserve">
     <value>Unsupported Python Versions</value>
   </data>
+  <data name="Label_HuggingFaceLoginRequired" xml:space="preserve">
+    <value>You must be logged in to download this checkpoint. Please enter a Hugging Face Access Token in the settings.</value>
+  </data>
+  <data name="Label_LoginRequired" xml:space="preserve">
+    <value>Login required to download this model</value>
+  </data>
   <data name="Watermark_EnterPackageName" xml:space="preserve">
     <value>Enter package name</value>
   </data>

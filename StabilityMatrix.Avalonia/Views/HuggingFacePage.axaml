@@ -2,15 +2,16 @@
     x:Class="StabilityMatrix.Avalonia.Views.HuggingFacePage"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonia="https://github.com/projektanker/icons.avalonia"
+    xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+    xmlns:huggingFacePage="clr-namespace:StabilityMatrix.Avalonia.ViewModels.HuggingFacePage"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
-    xmlns:huggingFacePage="clr-namespace:StabilityMatrix.Avalonia.ViewModels.HuggingFacePage"
-    xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
-    xmlns:checkpointBrowser="clr-namespace:StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser"
     d:DataContext="{x:Static mocks:DesignData.HuggingFacePageViewModel}"
     d:DesignHeight="650"
     d:DesignWidth="800"
@@ -18,180 +19,194 @@
     x:DataType="checkpointBrowser:HuggingFacePageViewModel"
     Focusable="True"
     mc:Ignorable="d">
-        <Grid RowDefinitions="Auto,Auto,*" 
-              Margin="8"
-              HorizontalAlignment="Stretch">
-            <ui:CommandBar
-                Grid.Row="0"
-                Grid.Column="0"
-                Margin="0,-1,0,0"
-                VerticalAlignment="Center"
-                HorizontalAlignment="Left"
-                VerticalContentAlignment="Center"
-                DefaultLabelPosition="Right">
-                <ui:CommandBar.PrimaryCommands>
-                    <ui:CommandBarButton
-                        IsEnabled="{Binding !!NumSelected}"
-                        IconSource="Download"
-                        Foreground="{DynamicResource AccentButtonBackground}"
-                        Command="{Binding ImportSelectedCommand}"
-                        Label="{x:Static lang:Resources.Action_Import}" />
-                    <ui:CommandBarSeparator />
-                    <ui:CommandBarButton 
-                        IconSource="Refresh"
-                        Label="{x:Static lang:Resources.Action_Refresh}"
-                        Command="{Binding Refresh}"/>
-                    <ui:CommandBarButton
-                        Command="{Binding SelectAll}"
-                        IconSource="SelectAll"
-                        Label="{x:Static lang:Resources.Action_SelectAll}" />
-                    <ui:CommandBarButton
-                        IconSource="ClearSelection"
-                        Command="{Binding ClearSelection}"
-                        IsEnabled="{Binding !!NumSelected}"
-                        Label="{x:Static lang:Resources.Action_ClearSelection}" />
-                    <ui:CommandBarSeparator IsVisible="{Binding !!NumSelected}" />
-                </ui:CommandBar.PrimaryCommands>
-            </ui:CommandBar>
-            
-            <StackPanel Grid.Row="1" Grid.Column="0"
-                        Orientation="Vertical"
-                        Margin="0,8"
-                        VerticalAlignment="Bottom">
-                <TextBlock Text="{Binding DownloadPercentText}"
-                           TextAlignment="Center"
-                           IsVisible="{Binding !!TotalProgress.Total}"
-                           Margin="0,4"
-                           HorizontalAlignment="Stretch" />
-                <ProgressBar Value="{Binding TotalProgress.Current}"
-                             Maximum="{Binding TotalProgress.Total}"
-                             IsVisible="{Binding !!TotalProgress.Total}"
-                             IsIndeterminate="False" />
-            </StackPanel>
-            <ScrollViewer Grid.Row="2">
-                <ItemsRepeater ItemsSource="{Binding Categories}">
-                    <ItemsRepeater.Layout>
-                        <StackLayout Orientation="Vertical" />
-                    </ItemsRepeater.Layout>
-                    <ItemsRepeater.ItemTemplate>
-                        <DataTemplate DataType="{x:Type huggingFacePage:CategoryViewModel}">
-                            <Expander IsExpanded="True" Margin="0,0,0,8">
-                                <Expander.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <CheckBox IsChecked="{Binding IsChecked}"
-                                                  Content="{Binding Title}" />
-                                    </StackPanel>
-                                </Expander.Header>
-                                <ItemsRepeater ItemsSource="{Binding Items}"
-                                               Margin="8,0">
-                                    <ItemsRepeater.Layout>
-                                        <WrapLayout Orientation="Horizontal"
-                                                    HorizontalSpacing="8"
-                                                    VerticalSpacing="8"/>
-                                    </ItemsRepeater.Layout>
-                                    <ItemsRepeater.ItemTemplate>
-                                        <DataTemplate DataType="{x:Type huggingFacePage:HuggingfaceItemViewModel}">
-                                            <Button
-                                                IsEnabled="{Binding !Exists}"
-                                                HorizontalAlignment="Stretch"
-                                                HorizontalContentAlignment="Stretch"
-                                                MinWidth="300"
-                                                MaxWidth="300"
-                                                Command="{Binding ToggleSelectedCommand}"
-                                                CornerRadius="8">
-                                                <Button.ContextFlyout>
-                                                    <MenuFlyout>
-                                                        <MenuItem Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
-                                                                  CommandParameter="{Binding RepoUrl}"
-                                                                  Header="{x:Static lang:Resources.Action_OpenOnHuggingFace}">
-                                                            <MenuItem.Icon>
-                                                                <ui:SymbolIcon Symbol="Open" />
-                                                            </MenuItem.Icon>
-                                                        </MenuItem>
-                                                        <MenuItem Header="{x:Static lang:Resources.Label_License}"
-                                                                  Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
-                                                                  CommandParameter="{Binding LicenseUrl}">
-                                                            <MenuItem.Icon>
-                                                                <ui:SymbolIcon Symbol="Document" />
-                                                            </MenuItem.Icon>
-                                                        </MenuItem>
-                                                    </MenuFlyout>
-                                                </Button.ContextFlyout>
-                                                <Grid ColumnDefinitions="Auto, *">
-                                                    <CheckBox
-                                                        VerticalAlignment="Center"
-                                                        IsChecked="{Binding IsSelected}">
-                                                        <TextBlock Text="{Binding Item.ModelName}"
-                                                                   TextWrapping="NoWrap"
-                                                                   MaxWidth="225"
-                                                                   TextTrimming="CharacterEllipsis"
-                                                                   ToolTip.Tip="{Binding Item.ModelName}"/>
-                                                    </CheckBox>
-                                                    <Button
-                                                        Grid.Column="1"
-                                                        IsEnabled="{Binding !Exists}"
-                                                        Width="24"
-                                                        Margin="0,4,4,0"
-                                                        Padding="4"
-                                                        HorizontalAlignment="Right"
-                                                        VerticalAlignment="Top"
-                                                        HorizontalContentAlignment="Right"
-                                                        VerticalContentAlignment="Top"
-                                                        BorderThickness="0"
-                                                        Classes="transparent">
-                                                        <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
-                                                        <Button.Flyout>
-                                                            <MenuFlyout>
-                                                                <MenuItem Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
-                                                                          CommandParameter="{Binding RepoUrl}"
-                                                                          Header="{x:Static lang:Resources.Action_OpenOnHuggingFace}">
-                                                                    <MenuItem.Icon>
-                                                                        <ui:SymbolIcon Symbol="Open" />
-                                                                    </MenuItem.Icon>
-                                                                </MenuItem>
-                                                                <MenuItem Header="{x:Static lang:Resources.Label_License}"
-                                                                          Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
-                                                                          CommandParameter="{Binding LicenseUrl}">
-                                                                    <MenuItem.Icon>
-                                                                        <ui:SymbolIcon Symbol="List" />
-                                                                    </MenuItem.Icon>
-                                                                </MenuItem>
-                                                            </MenuFlyout>
-                                                        </Button.Flyout>
-                                                    </Button>
-                                                </Grid>
-                                            </Button>
-                                        </DataTemplate>
-                                    </ItemsRepeater.ItemTemplate>
-                                </ItemsRepeater>
-                            </Expander>
-                        </DataTemplate>
-                    </ItemsRepeater.ItemTemplate>
-                </ItemsRepeater>
-            </ScrollViewer>
-            
-            <ui:InfoBar Grid.Row="2"
-                        IsOpen="{Binding !!NumSelected}"
-                        HorizontalAlignment="Right"
-                        HorizontalContentAlignment="Right"
-                        VerticalAlignment="Bottom"
-                        Margin="0,0,8,8"
-                        IsIconVisible="False"
-                        Background="#AA000000"
-                        CornerRadius="8"
-                        CloseButtonCommand="{Binding ClearSelection}">
-                <ui:InfoBar.Title>
-                    <MultiBinding StringFormat="{}{0} Selected">
-                        <Binding Path="NumSelected" />
-                    </MultiBinding>
-                </ui:InfoBar.Title>
-                <ui:InfoBar.ActionButton>
-                    <Button
-                        Classes="accent"
-                        VerticalAlignment="Center"
-                        Command="{Binding ImportSelectedCommand}"
-                        Content="{x:Static lang:Resources.Action_Import}" />
-                </ui:InfoBar.ActionButton>
-            </ui:InfoBar>
-        </Grid>
+    <Grid
+        Margin="8"
+        HorizontalAlignment="Stretch"
+        RowDefinitions="Auto,Auto,*">
+        <ui:CommandBar
+            Grid.Row="0"
+            Grid.Column="0"
+            Margin="0,-1,0,0"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Center"
+            VerticalContentAlignment="Center"
+            DefaultLabelPosition="Right">
+            <ui:CommandBar.PrimaryCommands>
+                <ui:CommandBarButton
+                    Command="{Binding ImportSelectedCommand}"
+                    Foreground="{DynamicResource AccentButtonBackground}"
+                    IconSource="Download"
+                    IsEnabled="{Binding !!NumSelected}"
+                    Label="{x:Static lang:Resources.Action_Import}" />
+                <ui:CommandBarSeparator />
+                <ui:CommandBarButton
+                    Command="{Binding Refresh}"
+                    IconSource="Refresh"
+                    Label="{x:Static lang:Resources.Action_Refresh}" />
+                <ui:CommandBarButton
+                    Command="{Binding SelectAll}"
+                    IconSource="SelectAll"
+                    Label="{x:Static lang:Resources.Action_SelectAll}" />
+                <ui:CommandBarButton
+                    Command="{Binding ClearSelection}"
+                    IconSource="ClearSelection"
+                    IsEnabled="{Binding !!NumSelected}"
+                    Label="{x:Static lang:Resources.Action_ClearSelection}" />
+                <ui:CommandBarSeparator IsVisible="{Binding !!NumSelected}" />
+            </ui:CommandBar.PrimaryCommands>
+        </ui:CommandBar>
+
+        <StackPanel
+            Grid.Row="1"
+            Grid.Column="0"
+            Margin="0,8"
+            VerticalAlignment="Bottom"
+            Orientation="Vertical">
+            <TextBlock
+                Margin="0,4"
+                HorizontalAlignment="Stretch"
+                IsVisible="{Binding !!TotalProgress.Total}"
+                Text="{Binding DownloadPercentText}"
+                TextAlignment="Center" />
+            <ProgressBar
+                IsIndeterminate="False"
+                IsVisible="{Binding !!TotalProgress.Total}"
+                Maximum="{Binding TotalProgress.Total}"
+                Value="{Binding TotalProgress.Current}" />
+        </StackPanel>
+        <ScrollViewer Grid.Row="2">
+            <ItemsRepeater ItemsSource="{Binding Categories}">
+                <ItemsRepeater.Layout>
+                    <StackLayout Orientation="Vertical" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate DataType="{x:Type huggingFacePage:CategoryViewModel}">
+                        <Expander Margin="0,0,0,8" IsExpanded="True">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <CheckBox Content="{Binding Title}" IsChecked="{Binding IsChecked}" />
+                                </StackPanel>
+                            </Expander.Header>
+                            <ItemsRepeater Margin="8,0" ItemsSource="{Binding Items}">
+                                <ItemsRepeater.Layout>
+                                    <WrapLayout
+                                        HorizontalSpacing="8"
+                                        Orientation="Horizontal"
+                                        VerticalSpacing="8" />
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type huggingFacePage:HuggingfaceItemViewModel}">
+                                        <Button
+                                            MinWidth="300"
+                                            MaxWidth="300"
+                                            HorizontalAlignment="Stretch"
+                                            HorizontalContentAlignment="Stretch"
+                                            Command="{Binding ToggleSelectedCommand}"
+                                            CornerRadius="8"
+                                            IsEnabled="{Binding !Exists}">
+                                            <Button.ContextFlyout>
+                                                <MenuFlyout>
+                                                    <MenuItem
+                                                        Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                                                        CommandParameter="{Binding RepoUrl}"
+                                                        Header="{x:Static lang:Resources.Action_OpenOnHuggingFace}">
+                                                        <MenuItem.Icon>
+                                                            <ui:SymbolIcon Symbol="Open" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                    <MenuItem
+                                                        Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                                                        CommandParameter="{Binding LicenseUrl}"
+                                                        Header="{x:Static lang:Resources.Label_License}">
+                                                        <MenuItem.Icon>
+                                                            <ui:SymbolIcon Symbol="Document" />
+                                                        </MenuItem.Icon>
+                                                    </MenuItem>
+                                                </MenuFlyout>
+                                            </Button.ContextFlyout>
+                                            <Grid ColumnDefinitions="*, Auto, Auto">
+                                                <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsSelected}">
+                                                    <TextBlock
+                                                        MaxWidth="225"
+                                                        Text="{Binding Item.ModelName}"
+                                                        TextTrimming="CharacterEllipsis"
+                                                        TextWrapping="NoWrap"
+                                                        ToolTip.Tip="{Binding Item.ModelName}" />
+                                                </CheckBox>
+                                                <avalonia:Icon
+                                                    Grid.Column="1"
+                                                    Margin="0,0,4,0"
+                                                    IsVisible="{Binding Item.LoginRequired}"
+                                                    ToolTip.Tip="{x:Static lang:Resources.Label_LoginRequired}"
+                                                    Value="fa-solid fa-lock" />
+                                                <Button
+                                                    Grid.Column="2"
+                                                    Width="24"
+                                                    Margin="0,4,4,0"
+                                                    Padding="4"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Top"
+                                                    HorizontalContentAlignment="Right"
+                                                    VerticalContentAlignment="Top"
+                                                    BorderThickness="0"
+                                                    Classes="transparent"
+                                                    IsEnabled="{Binding !Exists}">
+                                                    <ui:SymbolIcon FontSize="18" Symbol="MoreVertical" />
+                                                    <Button.Flyout>
+                                                        <MenuFlyout>
+                                                            <MenuItem
+                                                                Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                                                                CommandParameter="{Binding RepoUrl}"
+                                                                Header="{x:Static lang:Resources.Action_OpenOnHuggingFace}">
+                                                                <MenuItem.Icon>
+                                                                    <ui:SymbolIcon Symbol="Open" />
+                                                                </MenuItem.Icon>
+                                                            </MenuItem>
+                                                            <MenuItem
+                                                                Command="{x:Static helpers:IOCommands.OpenUrlCommand}"
+                                                                CommandParameter="{Binding LicenseUrl}"
+                                                                Header="{x:Static lang:Resources.Label_License}">
+                                                                <MenuItem.Icon>
+                                                                    <ui:SymbolIcon Symbol="List" />
+                                                                </MenuItem.Icon>
+                                                            </MenuItem>
+                                                        </MenuFlyout>
+                                                    </Button.Flyout>
+                                                </Button>
+                                            </Grid>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </Expander>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollViewer>
+
+        <ui:InfoBar
+            Grid.Row="2"
+            Margin="0,0,8,8"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Bottom"
+            HorizontalContentAlignment="Right"
+            Background="#AA000000"
+            CloseButtonCommand="{Binding ClearSelection}"
+            CornerRadius="8"
+            IsIconVisible="False"
+            IsOpen="{Binding !!NumSelected}">
+            <ui:InfoBar.Title>
+                <MultiBinding StringFormat="{}{0} Selected">
+                    <Binding Path="NumSelected" />
+                </MultiBinding>
+            </ui:InfoBar.Title>
+            <ui:InfoBar.ActionButton>
+                <Button
+                    VerticalAlignment="Center"
+                    Classes="accent"
+                    Command="{Binding ImportSelectedCommand}"
+                    Content="{x:Static lang:Resources.Action_Import}" />
+            </ui:InfoBar.ActionButton>
+        </ui:InfoBar>
+    </Grid>
 </controls:UserControlBase>

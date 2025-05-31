@@ -1830,6 +1830,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must be logged in to download this checkpoint. Please enter a Hugging Face Access Token in the settings..
+        /// </summary>
+        public static string Label_HuggingFaceLoginRequired {
+            get {
+                return ResourceManager.GetString("Label_HuggingFaceLoginRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Image Hidden.
         /// </summary>
         public static string Label_ImageHidden {
@@ -2087,6 +2096,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_LocalModel {
             get {
                 return ResourceManager.GetString("Label_LocalModel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Login required to download this model.
+        /// </summary>
+        public static string Label_LoginRequired {
+            get {
+                return ResourceManager.GetString("Label_LoginRequired", resourceCulture);
             }
         }
         

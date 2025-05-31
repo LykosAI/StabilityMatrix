@@ -1146,7 +1146,8 @@
     "Files": [
       "ae.safetensors"
     ],
-    "LicenseType": "Apache 2.0"
+    "LicenseType": "Apache 2.0",
+    "LoginRequired": true
   },
   {
     "ModelCategory": "Vae",

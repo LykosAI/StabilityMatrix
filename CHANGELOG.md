@@ -5,6 +5,12 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.14.3
+### Changed
+- The main sidebar now remembers whether it was collapsed or expanded between restarts.
+### Fixed
+- Fixed missing .NET 8 dependency for SwarmUI installs in certain cases
+
 ## v2.14.2
 ### Changed
 - Changed Nvidia GPU detection to use compute capability level instead of the GPU name for certain feature gates / torch indexes

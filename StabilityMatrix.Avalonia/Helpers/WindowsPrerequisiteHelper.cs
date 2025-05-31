@@ -74,6 +74,8 @@ public class WindowsPrerequisiteHelper(
     private string Dotnet8DownloadPath => Path.Combine(AssetsDir, "dotnet-sdk-8.0.101-win-x64.zip");
     private string DotnetExtractPath => Path.Combine(AssetsDir, "dotnet");
     private string DotnetExistsPath => Path.Combine(DotnetExtractPath, "dotnet.exe");
+    private string Dotnet7SdkExistsPath => Path.Combine(DotnetExtractPath, "sdk", "7.0.405");
+    private string Dotnet8SdkExistsPath => Path.Combine(DotnetExtractPath, "sdk", "8.0.101");
     private string VcBuildToolsDownloadPath => Path.Combine(AssetsDir, "vs_BuildTools.exe");
 
     private string VcBuildToolsExistsPath =>
@@ -500,21 +502,25 @@ public class WindowsPrerequisiteHelper(
     [SupportedOSPlatform("windows")]
     public async Task InstallDotnetIfNecessary(IProgress<ProgressReport>? progress = null)
     {
-        if (File.Exists(DotnetExistsPath))
-            return;
+        if (!Directory.Exists(Dotnet7SdkExistsPath))
+        {
+            await DownloadAndExtractPrerequisite(
+                progress,
+                Dotnet7DownloadUrl,
+                Dotnet7DownloadPath,
+                DotnetExtractPath
+            );
+        }
 
-        await DownloadAndExtractPrerequisite(
-            progress,
-            Dotnet7DownloadUrl,
-            Dotnet7DownloadPath,
-            DotnetExtractPath
-        );
-        await DownloadAndExtractPrerequisite(
-            progress,
-            Dotnet8DownloadUrl,
-            Dotnet8DownloadPath,
-            DotnetExtractPath
-        );
+        if (!Directory.Exists(Dotnet8SdkExistsPath))
+        {
+            await DownloadAndExtractPrerequisite(
+                progress,
+                Dotnet8DownloadUrl,
+                Dotnet8DownloadPath,
+                DotnetExtractPath
+            );
+        }
     }
 
     [SupportedOSPlatform("windows")]

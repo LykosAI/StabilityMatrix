@@ -46,7 +46,8 @@ public class UnixPrerequisiteHelper(
 
     private DirectoryPath DotnetDir => AssetsDir.JoinDir("dotnet");
     private string DotnetPath => Path.Combine(DotnetDir, "dotnet");
-    private bool IsDotnetInstalled => File.Exists(DotnetPath);
+    private string Dotnet7SdkExistsPath => Path.Combine(DotnetDir, "sdk", "7.0.405");
+    private string Dotnet8SdkExistsPath => Path.Combine(DotnetDir, "sdk", "8.0.101");
     private string Dotnet7DownloadUrlMacOs =>
         "https://download.visualstudio.microsoft.com/download/pr/5bb0e0e4-2a8d-4aba-88ad-232e1f65c281/ee6d35f762d81965b4cf336edde1b318/dotnet-sdk-7.0.405-osx-arm64.tar.gz";
     private string Dotnet8DownloadUrlMacOs =>
@@ -103,19 +104,17 @@ public class UnixPrerequisiteHelper(
 
     public async Task InstallDotnetIfNecessary(IProgress<ProgressReport>? progress = null)
     {
-        if (IsDotnetInstalled)
-            return;
+        var downloadUrl = Compat.IsMacOS ? Dotnet8DownloadUrlMacOs : Dotnet8DownloadUrlLinux;
 
-        if (Compat.IsMacOS)
+        var dotnet8SdkExists = Directory.Exists(Dotnet8SdkExistsPath);
+
+        if (dotnet8SdkExists && Directory.Exists(DotnetDir))
         {
-            await DownloadAndExtractPrerequisite(progress, Dotnet7DownloadUrlMacOs, DotnetDir);
-            await DownloadAndExtractPrerequisite(progress, Dotnet8DownloadUrlMacOs, DotnetDir);
+            Logger.Info("Dotnet 8 SDK already installed at {DotnetDir}", DotnetDir);
+            return;
         }
-        else
-        {
-            await DownloadAndExtractPrerequisite(progress, Dotnet7DownloadUrlLinux, DotnetDir);
-            await DownloadAndExtractPrerequisite(progress, Dotnet8DownloadUrlLinux, DotnetDir);
-        }
+
+        await DownloadAndExtractPrerequisite(progress, downloadUrl, DotnetDir);
     }
 
     private async Task InstallVirtualenvIfNecessary(IProgress<ProgressReport>? progress = null)

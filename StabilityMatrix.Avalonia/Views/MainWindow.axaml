@@ -1,27 +1,30 @@
-<controls:AppWindowBase xmlns="https://github.com/avaloniaui"
-                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                        xmlns:vm="using:StabilityMatrix.Avalonia.ViewModels"
-                        xmlns:ui="using:FluentAvalonia.UI.Controls"
-                        xmlns:local="using:StabilityMatrix.Avalonia"
-                        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                        xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                        xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                        xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
-                        xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                        xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
-                        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
-                        d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
-                        x:DataType="vm:MainWindowViewModel"
-                        Icon="/Assets/Icon.ico"
-                        Width="1300"
-                        Height="950"
-                        BackRequested="TopLevel_OnBackRequested"
-                        Title="Stability Matrix"
-                        DockProperties.IsDragEnabled="True" 
-                        DockProperties.IsDropEnabled="True"
-                        x:Class="StabilityMatrix.Avalonia.Views.MainWindow">
-    
+﻿<controls:AppWindowBase
+    x:Class="StabilityMatrix.Avalonia.Views.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:local="using:StabilityMatrix.Avalonia"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    xmlns:vm="using:StabilityMatrix.Avalonia.ViewModels"
+    Title="Stability Matrix"
+    Width="1300"
+    Height="950"
+    d:DataContext="{x:Static mocks:DesignData.MainWindowViewModel}"
+    d:DesignHeight="550"
+    d:DesignWidth="800"
+    x:DataType="vm:MainWindowViewModel"
+    BackRequested="TopLevel_OnBackRequested"
+    DockProperties.IsDragEnabled="True"
+    DockProperties.IsDropEnabled="True"
+    Icon="/Assets/Icon.ico"
+    mc:Ignorable="d">
+
     <controls:AppWindowBase.Resources>
         <SolidColorBrush x:Key="BrushB0" Color="#FFFFFFFF" />
         <DrawingImage x:Key="BrandsPatreonSymbolWhite">
@@ -30,35 +33,37 @@
             </DrawingGroup>
         </DrawingImage>
     </controls:AppWindowBase.Resources>
-    
+
     <Grid RowDefinitions="Auto,Auto,*">
-        <Grid Name="TitleBarHost"
-              ColumnDefinitions="Auto,Auto,*,Auto"
-              Height="32"
-              Background="Transparent">
-            <Image Margin="12 4"
-                   IsHitTestVisible="False"
-                   Source="/Assets/Icon.ico"
-                   Width="18" Height="18"
-                   DockPanel.Dock="Left"
-                   Name="WindowIcon"
-                   RenderOptions.BitmapInterpolationMode="HighQuality">
+        <Grid
+            Name="TitleBarHost"
+            Height="32"
+            Background="Transparent"
+            ColumnDefinitions="Auto,Auto,*,Auto">
+            <Image
+                Name="WindowIcon"
+                Width="18"
+                Height="18"
+                Margin="12,4"
+                DockPanel.Dock="Left"
+                IsHitTestVisible="False"
+                RenderOptions.BitmapInterpolationMode="HighQuality"
+                Source="/Assets/Icon.ico">
                 <Image.IsVisible>
                     <OnPlatform Default="False">
-                        <On Options="Windows" Content="True" />
+                        <On Content="True" Options="Windows" />
                     </OnPlatform>
                 </Image.IsVisible>
             </Image>
             <TextBlock
-                Text="{Binding Title, 
-                RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}"
+                Grid.Column="1"
+                VerticalAlignment="Center"
                 FontSize="12"
                 IsHitTestVisible="False"
-                VerticalAlignment="Center"
-                Grid.Column="1">
+                Text="{Binding Title, RelativeSource={RelativeSource FindAncestor, AncestorType=Window}}">
                 <TextBlock.IsVisible>
                     <OnPlatform Default="False">
-                        <On Options="Windows" Content="True" />
+                        <On Content="True" Options="Windows" />
                     </OnPlatform>
                 </TextBlock.IsVisible>
             </TextBlock>
@@ -66,110 +71,114 @@
             <Border Grid.Column="2" Padding="6" />
         </Grid>
         <ui:NavigationView
+            Name="NavigationView"
             Grid.Row="1"
             Grid.RowSpan="2"
-            Name="NavigationView"
-            ItemInvoked="NavigationView_OnItemInvoked"
             BackRequested="NavigationView_OnBackRequested"
-            PaneDisplayMode="Left"
-            IsPaneOpen="False"
-            OpenPaneLength="{Binding PaneWidth}"
-            IsSettingsVisible="False"
-            IsBackEnabled="True"
-            IsBackButtonVisible="True"
-            MenuItemsSource="{Binding Pages, Mode=OneWay}"
             FooterMenuItemsSource="{Binding FooterPages, Mode=OneWay}"
+            IsBackButtonVisible="True"
+            IsBackEnabled="True"
+            IsPaneOpen="{Binding IsPaneOpen, Mode=TwoWay}"
+            IsSettingsVisible="False"
+            ItemInvoked="NavigationView_OnItemInvoked"
+            MenuItemsSource="{Binding Pages, Mode=OneWay}"
+            OpenPaneLength="{Binding PaneWidth}"
+            PaneDisplayMode="Left"
             SelectedItem="{Binding SelectedCategory}">
 
             <ui:NavigationView.MenuItemTemplate>
                 <DataTemplate DataType="{x:Type base:PageViewModelBase}">
                     <ui:NavigationViewItem
                         Margin="0,0,0,0"
-                        Tag="{Binding}"
+                        Content="{Binding Title}"
                         IconSource="{Binding IconSource}"
-                        Content="{Binding Title}"/>
+                        Tag="{Binding}" />
                 </DataTemplate>
             </ui:NavigationView.MenuItemTemplate>
 
             <ui:NavigationView.PaneFooter>
                 <StackPanel>
-                    <!-- Update button -->
-                    <ui:NavigationViewItem Name="FooterUpdateItem"
-                                           Content="{x:Static lang:Resources.Label_UpdateAvailable}"
-                                           IsVisible="{Binding IsUpdateAvailable}"
-                                           IsEnabled="{Binding IsUpdateAvailable}"
-                                           DataContext="{Binding UpdateViewModel}"
-                                           Tapped="FooterUpdateItem_OnTapped">
+                    <!--  Update button  -->
+                    <ui:NavigationViewItem
+                        Name="FooterUpdateItem"
+                        Content="{x:Static lang:Resources.Label_UpdateAvailable}"
+                        DataContext="{Binding UpdateViewModel}"
+                        IsEnabled="{Binding IsUpdateAvailable}"
+                        IsVisible="{Binding IsUpdateAvailable}"
+                        Tapped="FooterUpdateItem_OnTapped">
                         <ui:NavigationViewItem.IconSource>
                             <fluentIcons:SymbolIconSource
                                 FontSize="18"
-                                Symbol="ArrowDownload"
+                                Foreground="LimeGreen"
                                 IconVariant="Filled"
-                                Foreground="LimeGreen"/>
-                        </ui:NavigationViewItem.IconSource> 
+                                Symbol="ArrowDownload" />
+                        </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
-                    
-                    <!-- Patreon -->
-                    <ui:NavigationViewItem Name="PatreonPatreonItem"
-                                           Content="{x:Static lang:Resources.Label_BecomeAPatron}"
-                                           Tapped="PatreonPatreonItem_OnTapped">
+
+                    <!--  Patreon  -->
+                    <ui:NavigationViewItem
+                        Name="PatreonPatreonItem"
+                        Content="{x:Static lang:Resources.Label_BecomeAPatron}"
+                        Tapped="PatreonPatreonItem_OnTapped">
                         <ui:NavigationViewItem.IconSource>
                             <ui:ImageIconSource Source="{StaticResource BrandsPatreonSymbolWhite}" />
-                        </ui:NavigationViewItem.IconSource> 
+                        </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
-                    
-                    <!-- Discord -->
-                    <ui:NavigationViewItem Name="FooterDiscordItem"
-                                           Content="{x:Static lang:Resources.Label_JoinDiscord}"
-                                           Tapped="FooterDiscordItem_OnTapped">
+
+                    <!--  Discord  -->
+                    <ui:NavigationViewItem
+                        Name="FooterDiscordItem"
+                        Content="{x:Static lang:Resources.Label_JoinDiscord}"
+                        Tapped="FooterDiscordItem_OnTapped">
                         <ui:NavigationViewItem.IconSource>
-                            <controls:FASymbolIconSource Symbol="fa-brands fa-discord"/>
-                        </ui:NavigationViewItem.IconSource> 
+                            <controls:FASymbolIconSource Symbol="fa-brands fa-discord" />
+                        </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
-                    
-                    <!-- Download flyout -->
-                    <ui:NavigationViewItem Name="FooterDownloadItem"
-                                           Content="{x:Static lang:Resources.Label_Downloads}"
-                                           IconSource="{Binding IconSource}"
-                                           DataContext="{Binding ProgressManagerViewModel}"
-                                           IsVisible="{Binding !!ProgressItems.Count}"
-                                           Tapped="FooterDownloadItem_OnTapped">
+
+                    <!--  Download flyout  -->
+                    <ui:NavigationViewItem
+                        Name="FooterDownloadItem"
+                        Content="{x:Static lang:Resources.Label_Downloads}"
+                        DataContext="{Binding ProgressManagerViewModel}"
+                        IconSource="{Binding IconSource}"
+                        IsVisible="{Binding !!ProgressItems.Count}"
+                        Tapped="FooterDownloadItem_OnTapped">
                         <ui:NavigationViewItem.ContextFlyout>
-                            <controls:BetterFlyout Placement="RightEdgeAlignedBottom"
-                                                   HorizontalScrollBarVisibility="Hidden"
-                                                   VerticalScrollBarVisibility="Auto"
-                                                   Content="{Binding }"/>
+                            <controls:BetterFlyout
+                                Content="{Binding}"
+                                HorizontalScrollBarVisibility="Hidden"
+                                Placement="RightEdgeAlignedBottom"
+                                VerticalScrollBarVisibility="Auto" />
                         </ui:NavigationViewItem.ContextFlyout>
                         <ui:NavigationViewItem.InfoBadge>
-                            <ui:InfoBadge Value="{Binding ProgressItems.Count}"
-                                          IsVisible="{Binding !!ProgressItems.Count}"/>
+                            <ui:InfoBadge IsVisible="{Binding !!ProgressItems.Count}" Value="{Binding ProgressItems.Count}" />
                         </ui:NavigationViewItem.InfoBadge>
                     </ui:NavigationViewItem>
                 </StackPanel>
             </ui:NavigationView.PaneFooter>
 
-            <!-- Since the data context is set dynamically, cannot use compiled bindings -->
+            <!--  Since the data context is set dynamically, cannot use compiled bindings  -->
             <ui:Frame Name="FrameView">
                 <ui:Frame.NavigationPageFactory>
-                    <local:ViewLocator/>
+                    <local:ViewLocator />
                 </ui:Frame.NavigationPageFactory>
             </ui:Frame>
 
         </ui:NavigationView>
         <ui:TeachingTip
-            Grid.Row="1"
-            Grid.RowSpan="2"
             Name="UpdateAvailableTeachingTip"
-            Target="{Binding #FooterUpdateItem}"
             Title="{x:Static lang:Resources.Label_UpdateAvailable}"
-            PreferredPlacement="Right" />
-        
-        <ui:TeachingTip
             Grid.Row="1"
             Grid.RowSpan="2"
+            PreferredPlacement="Right"
+            Target="{Binding #FooterUpdateItem}" />
+
+        <ui:TeachingTip
             Name="DownloadsTeachingTip"
-            Target="{Binding #FooterDownloadItem}"
             Title="{x:Static lang:Resources.Label_Downloads}"
-            PreferredPlacement="Right" />
+            Grid.Row="1"
+            Grid.RowSpan="2"
+            PreferredPlacement="Right"
+            Target="{Binding #FooterDownloadItem}" />
     </Grid>
 </controls:AppWindowBase>

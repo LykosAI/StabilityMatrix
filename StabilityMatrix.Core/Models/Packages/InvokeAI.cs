@@ -145,13 +145,13 @@ public class InvokeAI(
         progress?.Report(new ProgressReport(-1f, "Installing Package", isIndeterminate: true));
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var isBlackwell =
-            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
+        var isLegacyNvidiaGpu =
+            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
         var index = torchVersion switch
         {
             TorchIndex.Cpu => "https://download.pytorch.org/whl/cpu",
-            TorchIndex.Cuda when isBlackwell => "https://download.pytorch.org/whl/cu128",
-            TorchIndex.Cuda => "https://download.pytorch.org/whl/cu126",
+            TorchIndex.Cuda when isLegacyNvidiaGpu => "https://download.pytorch.org/whl/cu126",
+            TorchIndex.Cuda => "https://download.pytorch.org/whl/cu128",
             TorchIndex.Rocm => "https://download.pytorch.org/whl/rocm6.2.4",
             TorchIndex.Mps => "https://download.pytorch.org/whl/cpu",
             _ => string.Empty,

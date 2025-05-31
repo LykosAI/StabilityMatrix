@@ -225,6 +225,8 @@ public class Settings
 
     public bool ShowAllAvailablePythonVersions { get; set; }
 
+    public bool IsMainWindowSidebarOpen { get; set; }
+
     public Dictionary<string, LastDownloadLocationInfo> ModelTypeDownloadPreferences { get; set; } = new();
 
     [JsonIgnore]

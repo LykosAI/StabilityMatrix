@@ -61,6 +61,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private object? selectedCategory;
 
     [ObservableProperty]
+    public partial bool IsPaneOpen { get; set; }
+
+    [ObservableProperty]
     private List<PageViewModelBase> pages = new();
 
     [ObservableProperty]
@@ -163,6 +166,13 @@ public partial class MainWindowViewModel : ViewModelBase
             App.Shutdown();
             return;
         }
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsPaneOpen,
+            settings => settings.IsMainWindowSidebarOpen,
+            true
+        );
 
         // Initialize Discord Rich Presence (this needs LibraryDir so is set here)
         discordRichPresenceService.UpdateState();

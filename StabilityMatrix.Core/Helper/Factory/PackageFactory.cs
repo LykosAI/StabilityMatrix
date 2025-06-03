@@ -100,6 +100,8 @@ public class PackageFactory : IPackageFactory
                 => new ForgeAmdGpu(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             "forge-classic"
                 => new ForgeClassic(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
+            "Fooocus-API"
+                => new FooocusAPI(githubApiCache, settingsManager, downloadService, prerequisiteHelper),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage))
         };
     }

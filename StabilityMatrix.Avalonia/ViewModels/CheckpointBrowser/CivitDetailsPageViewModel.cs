@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Reactive.Linq;
 using AsyncAwaitBestPractices;
@@ -18,6 +19,7 @@ using Refit;
 using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
+using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
@@ -52,6 +54,27 @@ public partial class CivitDetailsPageViewModel(
 {
     [ObservableProperty]
     public required partial CivitModel CivitModel { get; set; }
+
+    private List<string> ignoredFileNameFormatVars =
+    [
+        "seed",
+        "prompt",
+        "negative_prompt",
+        "model_hash",
+        "sampler",
+        "cfgscale",
+        "steps",
+        "width",
+        "height",
+        "project_type",
+        "project_name",
+    ];
+
+    public IEnumerable<FileNameFormatVar> ModelFileNameFormatVars =>
+        FileNameFormatProvider
+            .GetSampleForModelBrowser()
+            .Substitutions.Where(kv => !ignoredFileNameFormatVars.Contains(kv.Key))
+            .Select(kv => new FileNameFormatVar { Variable = $"{{{kv.Key}}}", Example = kv.Value.Invoke() });
 
     private SourceCache<CivitImage, string> imageCache = new(x => x.Url);
 
@@ -95,6 +118,13 @@ public partial class CivitDetailsPageViewModel(
 
     [ObservableProperty]
     public partial ObservableCollection<string> AvailableInstallLocations { get; set; } = [];
+
+    [ObservableProperty]
+    [CustomValidation(typeof(CivitDetailsPageViewModel), nameof(ValidateModelFileNameFormat))]
+    public partial string? ModelFileNameFormat { get; set; }
+
+    [ObservableProperty]
+    public partial string? ModelNameFormatSample { get; set; }
 
     public string LastUpdated =>
         SelectedVersion?.ModelVersion.PublishedAt?.ToString("g", CultureInfo.CurrentCulture) ?? string.Empty;
@@ -158,6 +188,50 @@ public partial class CivitDetailsPageViewModel(
                 settings => settings.HideInstalledModelsInModelBrowser,
                 true
             )
+        );
+
+        AddDisposable(
+            settingsManager.RelayPropertyFor(
+                this,
+                vm => vm.ModelFileNameFormat,
+                settings => settings.CivitModelBrowserFileNamePattern,
+                true
+            )
+        );
+
+        AddDisposable(
+            this.WhenPropertyChanged(vm => vm.ModelFileNameFormat)
+                .Throttle(TimeSpan.FromMilliseconds(50))
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe(formatProperty =>
+                {
+                    var provider = new FileNameFormatProvider
+                    {
+                        CivitModel = CivitModel,
+                        CivitModelVersion = SelectedVersion?.ModelVersion,
+                        CivitFile = SelectedVersion?.ModelVersion.Files?.FirstOrDefault(),
+                    };
+
+                    var template = formatProperty.Value ?? string.Empty;
+
+                    if (
+                        !string.IsNullOrEmpty(template)
+                        && provider.Validate(template) == ValidationResult.Success
+                    )
+                    {
+                        var format = FileNameFormat.Parse(template, provider);
+                        ModelNameFormatSample = format.GetFileName() + ".safetensors";
+                    }
+                    else
+                    {
+                        // Use default format if empty
+                        var defaultFormat = FileNameFormat.Parse(
+                            FileNameFormat.DefaultModelBrowserTemplate,
+                            provider
+                        );
+                        ModelNameFormatSample = defaultFormat.GetFileName() + ".safetensors";
+                    }
+                })
         );
 
         var earlyAccessPredicate = Observable
@@ -350,11 +424,34 @@ public partial class CivitDetailsPageViewModel(
             return;
         }
 
+        var formatProvider = new FileNameFormatProvider
+        {
+            CivitModel = CivitModel,
+            CivitModelVersion = SelectedVersion?.ModelVersion,
+            CivitFile = viewModel.CivitFile,
+        };
+
+        // Parse to format
+        if (
+            string.IsNullOrEmpty(ModelFileNameFormat)
+            || !FileNameFormat.TryParse(ModelFileNameFormat, formatProvider, out var format)
+        )
+        {
+            // Fallback to default
+            logger.LogWarning(
+                "Failed to parse format template: {ModelFileNameFormat}, using default",
+                ModelFileNameFormat
+            );
+
+            format = FileNameFormat.Parse(FileNameFormat.DefaultModelBrowserTemplate, formatProvider);
+        }
+
         await modelImportService.DoImport(
             CivitModel,
             finalDestinationDir,
             SelectedVersion?.ModelVersion,
-            viewModel.CivitFile
+            viewModel.CivitFile,
+            format.GetFileName()
         );
 
         notificationService.Show(
@@ -362,7 +459,7 @@ public partial class CivitDetailsPageViewModel(
             string.Format(
                 Resources.Label_DownloadWillBeSavedToLocation,
                 viewModel.CivitFile.Name,
-                finalDestinationDir
+                finalDestinationDir.JoinFile(format.GetFileName()).Directory
             )
         );
 
@@ -542,6 +639,11 @@ public partial class CivitDetailsPageViewModel(
         CivitFiles.ForEach(x => x.Dispose());
         Dispose(true);
         base.OnUnloaded();
+    }
+
+    public static ValidationResult ValidateModelFileNameFormat(string? format, ValidationContext context)
+    {
+        return FileNameFormatProvider.GetSampleForModelBrowser().Validate(format ?? string.Empty);
     }
 
     private bool ShouldShowNsfw(CivitImage? image)

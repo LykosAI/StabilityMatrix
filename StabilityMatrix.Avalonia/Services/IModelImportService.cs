@@ -24,6 +24,7 @@ public interface IModelImportService
         DirectoryPath downloadFolder,
         CivitModelVersion? selectedVersion = null,
         CivitFile? selectedFile = null,
+        string? fileNameOverride = null,
         IProgress<ProgressReport>? progress = null,
         Func<Task>? onImportComplete = null,
         Func<Task>? onImportCanceled = null,

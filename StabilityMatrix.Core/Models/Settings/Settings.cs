@@ -229,6 +229,8 @@ public class Settings
 
     public bool ShowTrainingDataInModelBrowser { get; set; }
 
+    public string? CivitModelBrowserFileNamePattern { get; set; }
+
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

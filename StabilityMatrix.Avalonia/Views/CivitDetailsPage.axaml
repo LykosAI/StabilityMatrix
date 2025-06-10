@@ -10,6 +10,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+    xmlns:inference="clr-namespace:StabilityMatrix.Avalonia.Models.Inference"
     xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -20,7 +21,7 @@
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     d:DataContext="{x:Static mocks:DesignData.CivitDetailsPageViewModel}"
     d:DesignHeight="800"
-    d:DesignWidth="800"
+    d:DesignWidth="1000"
     x:DataType="checkpointBrowser:CivitDetailsPageViewModel"
     mc:Ignorable="d">
     <controls:UserControlBase.Resources>
@@ -31,7 +32,7 @@
     <Grid
         Margin="16"
         ColumnDefinitions="2*, *"
-        RowDefinitions="Auto, Auto, Auto, Auto, 2*, 3*">
+        RowDefinitions="Auto, Auto, Auto, Auto, Auto, *, 2*">
         <StackPanel
             Grid.Row="0"
             Grid.Column="0"
@@ -246,7 +247,7 @@
 
         <scroll:BetterScrollViewer
             Grid.Row="3"
-            Grid.RowSpan="2"
+            Grid.RowSpan="3"
             Grid.Column="0"
             Margin="0,8,0,8"
             AllowAutoHide="True"
@@ -370,6 +371,32 @@
 
         <controls:Card
             Grid.Row="4"
+            Grid.Column="1"
+            Margin="8,0,0,8">
+            <Grid RowDefinitions="Auto, Auto, Auto" RowSpacing="8">
+                <TextBlock
+                    Grid.Row="0"
+                    FontSize="20"
+                    FontWeight="Light"
+                    Text="File Name Pattern" />
+                <TextBox
+                    Name="ModelFileNameFormatTextBox"
+                    Grid.Row="1"
+                    MinWidth="150"
+                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
+                    FontSize="13"
+                    Text="{Binding ModelFileNameFormat}"
+                    Watermark="{x:Static inference:FileNameFormat.DefaultModelBrowserTemplate}" />
+
+                <TextBlock
+                    Grid.Row="2"
+                    FontSize="12"
+                    Text="{Binding ModelNameFormatSample}" />
+            </Grid>
+        </controls:Card>
+
+        <controls:Card
+            Grid.Row="5"
             Grid.RowSpan="2"
             Grid.Column="1"
             Margin="8,0,0,8"
@@ -475,7 +502,7 @@
             </ItemsRepeater>
         </controls:Card>
         <controls:Card
-            Grid.Row="5"
+            Grid.Row="6"
             Grid.Column="0"
             Margin="0,0,0,8"
             VerticalAlignment="Stretch"
@@ -484,5 +511,13 @@
                 <controls:MarkdownViewer Html="{Binding Description}" />
             </ScrollViewer>
         </controls:Card>
+
+        <ui:TeachingTip
+            Title="Format Variables"
+            IsOpen="{Binding #ModelFileNameFormatTextBox.IsFocused}"
+            PreferredPlacement="Top"
+            Target="{Binding #ModelFileNameFormatTextBox, Mode=OneWay}">
+            <DataGrid AutoGenerateColumns="True" ItemsSource="{Binding ModelFileNameFormatVars}" />
+        </ui:TeachingTip>
     </Grid>
 </controls:UserControlBase>

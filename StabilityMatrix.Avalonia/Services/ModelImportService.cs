@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
+﻿using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Injectio.Attributes;
-using Python.Runtime;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
@@ -30,10 +22,11 @@ public class ModelImportService(
         CivitModel model,
         CivitModelVersion modelVersion,
         CivitFile modelFile,
-        DirectoryPath downloadDirectory
+        DirectoryPath downloadDirectory,
+        string? fileNameOverride = null
     )
     {
-        var modelFileName = Path.GetFileNameWithoutExtension(modelFile.Name);
+        var modelFileName = fileNameOverride ?? Path.GetFileNameWithoutExtension(modelFile.Name);
         var modelInfo = new ConnectedModelInfo(model, modelVersion, modelFile, DateTime.UtcNow);
 
         await modelInfo.SaveJsonToDirectory(downloadDirectory, modelFileName);
@@ -81,6 +74,7 @@ public class ModelImportService(
         DirectoryPath downloadFolder,
         CivitModelVersion? selectedVersion = null,
         CivitFile? selectedFile = null,
+        string? fileNameOverride = null,
         IProgress<ProgressReport>? progress = null,
         Func<Task>? onImportComplete = null,
         Func<Task>? onImportCanceled = null,
@@ -116,15 +110,34 @@ public class ModelImportService(
             return;
         }
 
+        if (fileNameOverride != null && (fileNameOverride.Contains("\\") || fileNameOverride.Contains("/")))
+        {
+            // figure out the folder path to add to downloadFolder
+            var lastIndex = fileNameOverride.LastIndexOfAny(['\\', '/']);
+            if (lastIndex >= 0)
+            {
+                // Extract folder path and file name
+                var folderPath = fileNameOverride.Substring(0, lastIndex);
+                fileNameOverride = fileNameOverride.Substring(lastIndex + 1);
+
+                // Join with download folder
+                downloadFolder = downloadFolder.JoinDir(folderPath);
+            }
+        }
+
         // Folders might be missing if user didn't install any packages yet
         downloadFolder.Create();
 
-        // Fix invalid chars in FileName
-        modelFile.Name = Path.GetInvalidFileNameChars()
-            .Aggregate(modelFile.Name, (current, c) => current.Replace(c, '_'));
+        var originalFileName =
+            fileNameOverride == null
+                ? modelFile.Name
+                : $@"{fileNameOverride}{Path.GetExtension(modelFile.Name)}";
 
-        // New code: Ensure unique file name
-        var originalFileName = modelFile.Name;
+        // Fix invalid chars in FileName
+        originalFileName = Path.GetInvalidFileNameChars()
+            .Aggregate(originalFileName, (current, c) => current.Replace(c, '_'));
+
+        // Generate unique file name if it already exists
         var uniqueFileName = GenerateUniqueFileName(downloadFolder.ToString(), originalFileName);
         if (!uniqueFileName.Equals(originalFileName, StringComparison.Ordinal))
         {
@@ -137,13 +150,12 @@ public class ModelImportService(
                     )
                 );
             });
-            modelFile.Name = uniqueFileName;
         }
 
-        var downloadPath = downloadFolder.JoinFile(modelFile.Name);
+        var downloadPath = downloadFolder.JoinFile(uniqueFileName);
 
         // Download model info and preview first
-        var cmInfoPath = await SaveCmInfo(model, modelVersion, modelFile, downloadFolder);
+        var cmInfoPath = await SaveCmInfo(model, modelVersion, modelFile, downloadFolder, uniqueFileName);
         var previewImagePath = await SavePreviewImage(modelVersion, downloadPath);
 
         // Create tracked download

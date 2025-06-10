@@ -331,7 +331,7 @@
                     <TextBlock
                         Grid.Row="4"
                         Grid.Column="1"
-                        Text="{Binding CivitModel.BaseModelType}" />
+                        Text="{Binding BaseModelType}" />
 
                     <Separator
                         Grid.Row="5"

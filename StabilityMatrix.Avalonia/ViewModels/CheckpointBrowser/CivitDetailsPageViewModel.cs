@@ -95,7 +95,7 @@ public partial class CivitDetailsPageViewModel(
     public partial ObservableCollection<CivitFileViewModel> SelectedFiles { get; set; } = [];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(LastUpdated), nameof(ShortSha256))]
+    [NotifyPropertyChangedFor(nameof(LastUpdated), nameof(ShortSha256), nameof(BaseModelType))]
     public partial ModelVersionViewModel? SelectedVersion { get; set; }
 
     [ObservableProperty]
@@ -131,6 +131,8 @@ public partial class CivitDetailsPageViewModel(
 
     public string ShortSha256 =>
         SelectedVersion?.ModelVersion.Files?.FirstOrDefault()?.Hashes.ShortSha256 ?? string.Empty;
+
+    public string BaseModelType => SelectedVersion?.ModelVersion.BaseModel?.Trim() ?? string.Empty;
 
     public string CivitUrl => $@"https://civitai.com/models/{CivitModel.Id}";
 
@@ -424,34 +426,18 @@ public partial class CivitDetailsPageViewModel(
             return;
         }
 
-        var formatProvider = new FileNameFormatProvider
-        {
-            CivitModel = CivitModel,
-            CivitModelVersion = SelectedVersion?.ModelVersion,
-            CivitFile = viewModel.CivitFile,
-        };
-
-        // Parse to format
-        if (
-            string.IsNullOrEmpty(ModelFileNameFormat)
-            || !FileNameFormat.TryParse(ModelFileNameFormat, formatProvider, out var format)
-        )
-        {
-            // Fallback to default
-            logger.LogWarning(
-                "Failed to parse format template: {ModelFileNameFormat}, using default",
-                ModelFileNameFormat
-            );
-
-            format = FileNameFormat.Parse(FileNameFormat.DefaultModelBrowserTemplate, formatProvider);
-        }
+        var fileNameOverride = ParseFileNameFormat(
+            CivitModel,
+            SelectedVersion?.ModelVersion,
+            viewModel.CivitFile
+        );
 
         await modelImportService.DoImport(
             CivitModel,
             finalDestinationDir,
             SelectedVersion?.ModelVersion,
             viewModel.CivitFile,
-            format.GetFileName()
+            fileNameOverride
         );
 
         notificationService.Show(
@@ -459,7 +445,7 @@ public partial class CivitDetailsPageViewModel(
             string.Format(
                 Resources.Label_DownloadWillBeSavedToLocation,
                 viewModel.CivitFile.Name,
-                finalDestinationDir.JoinFile(format.GetFileName()).Directory
+                finalDestinationDir.JoinFile(fileNameOverride).Directory
             )
         );
 
@@ -506,11 +492,18 @@ public partial class CivitDetailsPageViewModel(
             var destinationDir = new DirectoryPath(sharedFolderPath, folderName);
             destinationDir.Create();
 
+            var fileNameOverride = ParseFileNameFormat(
+                CivitModel,
+                file.ModelVersion,
+                file.FileViewModel.CivitFile
+            );
+
             await modelImportService.DoImport(
                 CivitModel,
                 destinationDir,
                 file.ModelVersion,
-                file.FileViewModel.CivitFile
+                file.FileViewModel.CivitFile,
+                fileNameOverride
             );
         }
 
@@ -780,5 +773,36 @@ public partial class CivitDetailsPageViewModel(
             metaDict["RNG"] = value.Metadata.Rng;
 
         return metaDict;
+    }
+
+    private string ParseFileNameFormat(
+        CivitModel? civitModel,
+        CivitModelVersion? modelVersion,
+        CivitFile? civitFile
+    )
+    {
+        var formatProvider = new FileNameFormatProvider
+        {
+            CivitModel = civitModel,
+            CivitModelVersion = modelVersion,
+            CivitFile = civitFile,
+        };
+
+        // Parse to format
+        if (
+            string.IsNullOrEmpty(ModelFileNameFormat)
+            || !FileNameFormat.TryParse(ModelFileNameFormat, formatProvider, out var format)
+        )
+        {
+            // Fallback to default
+            logger.LogWarning(
+                "Failed to parse format template: {ModelFileNameFormat}, using default",
+                ModelFileNameFormat
+            );
+
+            format = FileNameFormat.Parse(FileNameFormat.DefaultModelBrowserTemplate, formatProvider);
+        }
+
+        return format.GetFileName();
     }
 }

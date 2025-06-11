@@ -222,6 +222,13 @@ public class PackageFactory : IPackageFactory
                 prerequisiteHelper,
                 pyInstallationManager
             ),
+            "framepack-studio" => new FramePackStudio(
+                githubApiCache,
+                settingsManager,
+                downloadService,
+                prerequisiteHelper,
+                pyInstallationManager
+            ),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage)),
         };
     }

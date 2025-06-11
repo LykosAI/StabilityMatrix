@@ -95,7 +95,12 @@ public partial class CivitDetailsPageViewModel(
     public partial ObservableCollection<CivitFileViewModel> SelectedFiles { get; set; } = [];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(LastUpdated), nameof(ShortSha256), nameof(BaseModelType))]
+    [NotifyPropertyChangedFor(
+        nameof(LastUpdated),
+        nameof(ShortSha256),
+        nameof(BaseModelType),
+        nameof(ModelFileNameFormat)
+    )]
     public partial ModelVersionViewModel? SelectedVersion { get; set; }
 
     [ObservableProperty]
@@ -222,7 +227,7 @@ public partial class CivitDetailsPageViewModel(
                     )
                     {
                         var format = FileNameFormat.Parse(template, provider);
-                        ModelNameFormatSample = format.GetFileName() + ".safetensors";
+                        ModelNameFormatSample = "Example: " + format.GetFileName() + ".safetensors";
                     }
                     else
                     {
@@ -231,7 +236,7 @@ public partial class CivitDetailsPageViewModel(
                             FileNameFormat.DefaultModelBrowserTemplate,
                             provider
                         );
-                        ModelNameFormatSample = defaultFormat.GetFileName() + ".safetensors";
+                        ModelNameFormatSample = "Example: " + defaultFormat.GetFileName() + ".safetensors";
                     }
                 })
         );

@@ -86,7 +86,7 @@ public static class DesignData
                     {
                         Id = activePackageId,
                         DisplayName = "My Installed Package",
-                        PackageName = "stable-diffusion-webui",
+                        PackageName = "framepack",
                         Version = new InstalledPackageVersion { InstalledReleaseVersion = "v1.0.0" },
                         LibraryPath = $"Packages{Path.DirectorySeparatorChar}example-webui",
                         LastUpdateCheck = DateTimeOffset.Now,

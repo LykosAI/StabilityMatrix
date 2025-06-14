@@ -627,6 +627,9 @@ public sealed class TextBoxField : INotifyPropertyChanged
 
     public int? MinWidth { get; init; }
 
+    // Is this a password field?
+    public bool IsPassword { get; init; } = false;
+
     /// <summary>
     /// Validation action on text changes. Throw exception if invalid.
     /// </summary>

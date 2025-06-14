@@ -720,6 +720,15 @@ public sealed class App : Application
             })
             .AddPolicyHandler(retryPolicy);
 
+        services
+            .AddRefitClient<IHuggingFaceApi>(defaultRefitSettings) // Assuming defaultRefitSettings is suitable
+            .ConfigureHttpClient(c =>
+            {
+                c.BaseAddress = new Uri("https://huggingface.co");
+                c.Timeout = TimeSpan.FromHours(1); // Or a more appropriate timeout like 60 seconds, consistent with retry policy
+            })
+            .AddPolicyHandler(retryPolicy); // Assuming retryPolicy is suitable
+
         // Apizr clients
         services.AddApizrManagerFor<IOpenModelDbApi, OpenModelDbManager>(options =>
         {

@@ -9,4 +9,5 @@ public class HuggingfaceItem
     public required string LicenseType { get; set; }
     public string? LicensePath { get; set; }
     public string? Subfolder { get; set; }
+    public bool LoginRequired { get; set; }
 }

@@ -1,15 +1,19 @@
 ﻿using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.Lykos;
+// Ensure this using is present if HuggingFaceAccountStatusUpdateEventArgs is in StabilityMatrix.Core.Models.Api
+// using StabilityMatrix.Core.Models.Api; 
 
 namespace StabilityMatrix.Avalonia.Services;
 
 public interface IAccountsService
 {
     event EventHandler<LykosAccountStatusUpdateEventArgs>? LykosAccountStatusUpdate;
-
     event EventHandler<CivitAccountStatusUpdateEventArgs>? CivitAccountStatusUpdate;
+    event EventHandler<HuggingFaceAccountStatusUpdateEventArgs>? HuggingFaceAccountStatusUpdate;
 
     LykosAccountStatusUpdateEventArgs? LykosStatus { get; }
+    CivitAccountStatusUpdateEventArgs? CivitStatus { get; } // Assuming this was missed in the provided file content but is standard
+    HuggingFaceAccountStatusUpdateEventArgs? HuggingFaceStatus { get; }
 
     /// <summary>
     /// Returns whether SecretsManager has a stored Lykos V2 account.
@@ -42,4 +46,8 @@ public interface IAccountsService
     Task RefreshAsync();
 
     Task RefreshLykosAsync();
+
+    Task HuggingFaceLoginAsync(string token);
+    Task HuggingFaceLogoutAsync();
+    Task RefreshHuggingFaceAsync();
 }

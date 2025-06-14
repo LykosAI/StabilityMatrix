@@ -263,6 +263,12 @@ public static partial class HardwareHelper
             .Any(gpu => gpu is { IsNvidia: true, Name: not null, ComputeCapabilityValue: < 7.5m });
     }
 
+    public static bool HasAmpereOrNewerGpu()
+    {
+        return IterGpuInfo()
+            .Any(gpu => gpu is { IsNvidia: true, Name: not null, ComputeCapabilityValue: >= 8.6m });
+    }
+
     /// <summary>
     /// Return true if the system has at least one AMD GPU.
     /// </summary>

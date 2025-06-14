@@ -41,9 +41,6 @@ public class InvokeAI(
     public override string LaunchCommand => "invokeai-web";
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Nightmare;
 
-    public override IReadOnlyList<string> ExtraLaunchCommands =>
-        ["invokeai-db-maintenance", "invokeai-import-images"];
-
     public override Uri PreviewImageUri =>
         new("https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png");
 

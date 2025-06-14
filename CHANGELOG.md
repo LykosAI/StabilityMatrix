@@ -6,9 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
 ## v2.15.0-dev.2
+### Added
+- Added new package - [FramePack](https://github.com/lllyasviel/FramePack)
+- Added new package - [FramePack Studio](https://github.com/colinurbs/FramePack-Studio)
 ### Changed
 - Civitai model browser image loading now uses dynamic resizing for better performance and a smoother scrolling experience.
 - Detailed notifications for Civitai model browser api errors.
+- The main sidebar now remembers whether it was collapsed or expanded between restarts.
+### Fixed
+- Fixed missing .NET 8 dependency for SwarmUI installs in certain cases
 
 ## v2.15.0-dev.1
 ### Added

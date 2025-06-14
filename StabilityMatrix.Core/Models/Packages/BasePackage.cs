@@ -38,7 +38,8 @@ public abstract class BasePackage(ISettingsManager settingsManager)
     /// <summary>
     /// Optional commands (e.g. 'config') that are on the launch button split drop-down.
     /// </summary>
-    public virtual IReadOnlyList<string> ExtraLaunchCommands { get; } = Array.Empty<string>();
+    public virtual IReadOnlyDictionary<string, string> ExtraLaunchCommands { get; } =
+        new Dictionary<string, string>();
 
     public abstract Uri PreviewImageUri { get; }
     public virtual bool ShouldIgnoreReleases => false;

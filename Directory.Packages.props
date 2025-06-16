@@ -10,7 +10,7 @@
     <PackageVersion Include="Blake3" Version="1.1.0" />
     <PackageVersion Include="CompiledExpressions" Version="1.1.0" />
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
-    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageVersion Include="Crc32.NET" Version="1.2.0" />
     <PackageVersion Include="CSharpDiscriminatedUnion" Version="2.0.1" />
     <PackageVersion Include="DeviceId" Version="6.7.0" />

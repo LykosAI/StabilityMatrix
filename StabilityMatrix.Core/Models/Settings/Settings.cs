@@ -217,6 +217,8 @@ public class Settings
 
     public bool FilterExtraNetworksByBaseModel { get; set; } = true;
 
+    public bool IsMainWindowSidebarOpen { get; set; }
+    
     [JsonIgnore]
     public bool IsHolidayModeActive =>
         HolidayModeSetting == HolidayMode.Automatic

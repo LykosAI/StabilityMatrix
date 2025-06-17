@@ -78,7 +78,8 @@ public class ImageMetadata
         string? Parameters,
         string? ParametersJson,
         string? SMProject,
-        string? ComfyNodes
+        string? ComfyNodes,
+        string? CivitParameters
     ) GetAllFileMetadata(FilePath filePath)
     {
         if (filePath.Extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
@@ -86,7 +87,7 @@ public class ImageMetadata
             var paramsJson = ReadTextChunkFromWebp(filePath, ExifDirectoryBase.TagImageDescription);
             var smProj = ReadTextChunkFromWebp(filePath, ExifDirectoryBase.TagSoftware);
 
-            return (null, paramsJson, smProj, null);
+            return (null, paramsJson, smProj, null, null);
         }
 
         using var stream = filePath.Info.OpenRead();
@@ -96,12 +97,14 @@ public class ImageMetadata
         var parametersJson = ReadTextChunk(reader, "parameters-json");
         var smProject = ReadTextChunk(reader, "smproj");
         var comfyNodes = ReadTextChunk(reader, "prompt");
+        var civitParameters = ReadTextChunk(reader, "user_comment");
 
         return (
             string.IsNullOrEmpty(parameters) ? null : parameters,
             string.IsNullOrEmpty(parametersJson) ? null : parametersJson,
             string.IsNullOrEmpty(smProject) ? null : smProject,
-            string.IsNullOrEmpty(comfyNodes) ? null : comfyNodes
+            string.IsNullOrEmpty(comfyNodes) ? null : comfyNodes,
+            string.IsNullOrEmpty(civitParameters) ? null : civitParameters
         );
     }
 
@@ -124,8 +127,8 @@ public class ImageMetadata
 
         // Use "parameters-json" tag if exists
         if (
-            textualData.FirstOrDefault(
-                tag => tag.Description is { } desc && desc.StartsWith("parameters-json: ")
+            textualData.FirstOrDefault(tag =>
+                tag.Description is { } desc && desc.StartsWith("parameters-json: ")
             ) is
             { Description: { } description }
         )
@@ -137,8 +140,8 @@ public class ImageMetadata
 
         // Otherwise parse "parameters" tag
         if (
-            textualData.FirstOrDefault(
-                tag => tag.Description is { } desc && desc.StartsWith("parameters: ")
+            textualData.FirstOrDefault(tag =>
+                tag.Description is { } desc && desc.StartsWith("parameters: ")
             ) is
             { Description: { } parameters }
         )

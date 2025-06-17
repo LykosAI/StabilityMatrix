@@ -29,6 +29,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 #### 🌟 Visionaries
 A massive thank you to our esteemed Visionary-tier Patrons: **Waterclouds**, **bluepopsicle**, **Bob S**, **Ibixat**, and **Corey T**! Your exceptional commitment propels Stability Matrix to new heights and allows us to push the boundaries of innovation. We're incredibly grateful for your foundational support! 🚀
 
+## v2.14.3
+### Changed
+- Inference is now able to load image metadata from Civitai generated images via drag & drop
+- Updated process tracking for ComfyUI to help mitigate restart issues when using Comfy Manager
+### Fixed
+- Fixed ComfyUI-Zluda not being recognized as a valid Comfy install for the workflow browser
+
 ## v2.14.2
 ### Changed
 - Changed Nvidia GPU detection to use compute capability level instead of the GPU name for certain feature gates / torch indexes

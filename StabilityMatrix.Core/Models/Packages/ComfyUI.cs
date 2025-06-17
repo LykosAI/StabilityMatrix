@@ -414,6 +414,11 @@ public class ComfyUI(
             OnExit
         );
 
+        if (Compat.IsWindows)
+        {
+            ProcessTracker.AttachExitHandlerJobToProcess(VenvRunner.Process);
+        }
+
         return;
 
         void HandleConsoleOutput(ProcessOutput s)

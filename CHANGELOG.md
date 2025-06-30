@@ -9,12 +9,16 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added new package - [FramePack](https://github.com/lllyasviel/FramePack)
 - Added new package - [FramePack Studio](https://github.com/colinurbs/FramePack-Studio)
+- Added "Open in Explorer" button for models in the Checkpoint Manager
 ### Changed
+- Redesigned Civitai model details page
 - Civitai model browser image loading now uses dynamic resizing for better performance and a smoother scrolling experience.
 - Detailed notifications for Civitai model browser api errors.
 - The main sidebar now remembers whether it was collapsed or expanded between restarts.
+- (Internal) Updated Avalonia to v11.3.2
 ### Fixed
 - Fixed missing .NET 8 dependency for SwarmUI installs in certain cases
+- Fixed duplicate "diffusion_models" folder showing in the Checkpoint Manager
 
 ## v2.15.0-dev.1
 ### Added

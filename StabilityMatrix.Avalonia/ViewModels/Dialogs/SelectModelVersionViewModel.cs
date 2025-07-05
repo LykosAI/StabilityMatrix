@@ -314,7 +314,7 @@ public partial class SelectModelVersionViewModel(
 
         var downloadDirectory = GetSharedFolderPath(
             rootModelsDirectory,
-            SelectedFile?.CivitFile.Type,
+            SelectedFile?.CivitFile,
             CivitModel.Type,
             CivitModel.BaseModelType
         );
@@ -356,12 +356,12 @@ public partial class SelectModelVersionViewModel(
 
     private static DirectoryPath GetSharedFolderPath(
         DirectoryPath rootModelsDirectory,
-        CivitFileType? fileType,
+        CivitFile? civitFile,
         CivitModelType modelType,
         string? baseModelType
     )
     {
-        if (fileType is CivitFileType.VAE)
+        if (civitFile?.Type is CivitFileType.VAE)
         {
             return rootModelsDirectory.JoinDir(SharedFolderType.VAE.GetStringValue());
         }
@@ -371,13 +371,11 @@ public partial class SelectModelVersionViewModel(
             && (
                 baseModelType == CivitBaseModelType.Flux1D.GetStringValue()
                 || baseModelType == CivitBaseModelType.Flux1S.GetStringValue()
+                || baseModelType == CivitBaseModelType.WanVideo.GetStringValue()
+                || baseModelType == CivitBaseModelType.HunyuanVideo.GetStringValue()
+                || civitFile?.Metadata.Format == CivitModelFormat.GGUF
             )
         )
-        {
-            return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
-        }
-
-        if (modelType is CivitModelType.Checkpoint && baseModelType == "Wan Video")
         {
             return rootModelsDirectory.JoinDir(SharedFolderType.DiffusionModels.GetStringValue());
         }

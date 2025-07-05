@@ -40,6 +40,16 @@ public class InstallSageAttentionStep(
 
         var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
         var sageWheelUrl = string.Empty;
+<<<<<<< HEAD
+=======
+        var shortPythonVersionString = pyVersion.Minor switch
+        {
+            10 => "cp310",
+            11 => "cp311",
+            12 => "cp312",
+            _ => throw new ArgumentOutOfRangeException("Invalid Python version"),
+        };
+>>>>>>> 8a35e055 (Merge pull request #1101 from ionite34/moar-fixes-n-stuff)
 
         if (torchInfo == null)
         {
@@ -59,6 +69,16 @@ public class InstallSageAttentionStep(
         {
             sageWheelUrl =
                 "https://github.com/woct0rdho/SageAttention/releases/download/v2.1.1-windows/sageattention-2.1.1+cu128torch2.7.0-cp310-cp310-win_amd64.whl";
+        }
+        else if (torchInfo.Version.Contains("2.7.1") && torchInfo.Version.Contains("cu128"))
+        {
+            sageWheelUrl =
+                $"https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows/sageattention-2.2.0+cu128torch2.7.1-{shortPythonVersionString}-{shortPythonVersionString}-win_amd64.whl";
+        }
+        else if (torchInfo.Version.Contains("2.8.0") && torchInfo.Version.Contains("cu128"))
+        {
+            sageWheelUrl =
+                $"https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows/sageattention-2.2.0+cu128torch2.8.0-{shortPythonVersionString}-{shortPythonVersionString}-win_amd64.whl";
         }
 
         var pipArgs = new PipInstallArgs();

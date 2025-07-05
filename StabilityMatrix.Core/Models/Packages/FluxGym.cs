@@ -48,19 +48,19 @@ public class FluxGym(
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.TextEncoders],
-                    TargetRelativePaths = ["models/clip"]
+                    TargetRelativePaths = ["models/clip"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.DiffusionModels],
-                    TargetRelativePaths = ["models/unet"]
+                    TargetRelativePaths = ["models/unet"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.VAE],
                     TargetRelativePaths = ["models/vae"],
-                }
-            ]
+                },
+            ],
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders => null;
@@ -120,16 +120,20 @@ public class FluxGym(
         await venvRunner.PipInstall(sdsPipArgs, onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));
+
+        var isLegacyNvidiaGpu =
+            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
+
         var requirements = new FilePath(installLocation, "requirements.txt");
         var pipArgs = new PipInstallArgs()
-            .AddArg("--pre")
             .WithTorch()
             .WithTorchVision()
             .WithTorchAudio()
-            .WithTorchExtraIndex("cu121")
+            .WithTorchExtraIndex(isLegacyNvidiaGpu ? "cu126" : "cu128")
+            .AddArg("bitsandbytes>=0.46.0")
             .WithParsedFromRequirementsTxt(
                 await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                "torch"
+                "torch$|bitsandbytes"
             );
 
         if (installedPackage.PipOverrides != null)
@@ -169,7 +173,7 @@ public class FluxGym(
         }
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );

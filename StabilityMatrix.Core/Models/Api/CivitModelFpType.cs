@@ -10,5 +10,7 @@ public enum CivitModelFpType
     bf16,
     fp16,
     fp32,
-    tf32
+    tf32,
+    fp8,
+    nf4,
 }

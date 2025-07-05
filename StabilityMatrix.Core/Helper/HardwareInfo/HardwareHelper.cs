@@ -70,7 +70,7 @@ public static partial class HardwareHelper
     [SupportedOSPlatform("linux")]
     private static IEnumerable<GpuInfo> IterGpuInfoLinux()
     {
-        var output = RunBashCommand("lspci | grep VGA");
+        var output = RunBashCommand("lspci | grep -E \"(VGA|3D)\"");
         var gpuLines = output.Split("\n");
 
         var gpuIndex = 0;
@@ -153,15 +153,25 @@ public static partial class HardwareHelper
                 return cachedGpuInfos;
             }
 
-            if (Compat.IsWindows)
+            if (Compat.IsMacOS)
+            {
+                return cachedGpuInfos = IterGpuInfoMacos().ToList();
+            }
+
+            if (Compat.IsLinux || Compat.IsWindows)
             {
                 try
                 {
                     var smi = IterGpuInfoNvidiaSmi()?.ToList();
+                    var fallback = Compat.IsLinux
+                        ? IterGpuInfoLinux().ToList()
+                        : IterGpuInfoWindows().ToList();
                     if (smi is null)
-                        return cachedGpuInfos = IterGpuInfoWindows().ToList();
+                    {
+                        return cachedGpuInfos = fallback;
+                    }
 
-                    var newList = smi.Concat(IterGpuInfoWindows().Where(gpu => !gpu.IsNvidia))
+                    var newList = smi.Concat(fallback.Where(gpu => !gpu.IsNvidia))
                         .Select(
                             (gpu, index) =>
                                 new GpuInfo
@@ -181,18 +191,7 @@ public static partial class HardwareHelper
                 }
             }
 
-            if (Compat.IsLinux)
-            {
-                return cachedGpuInfos = IterGpuInfoLinux().ToList();
-            }
-
-            if (Compat.IsMacOS)
-            {
-                return cachedGpuInfos = IterGpuInfoMacos().ToList();
-            }
-
             Logger.Error("Unknown OS, returning empty GPU info list");
-
             return cachedGpuInfos = [];
         }
     }

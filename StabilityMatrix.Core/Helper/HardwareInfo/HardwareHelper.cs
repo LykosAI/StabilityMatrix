@@ -166,6 +166,7 @@ public static partial class HardwareHelper
                     var fallback = Compat.IsLinux
                         ? IterGpuInfoLinux().ToList()
                         : IterGpuInfoWindows().ToList();
+
                     if (smi is null)
                     {
                         return cachedGpuInfos = fallback;
@@ -187,7 +188,11 @@ public static partial class HardwareHelper
                 catch (Exception e)
                 {
                     Logger.Error(e, "Failed to get GPU info using nvidia-smi, falling back to registry");
-                    return cachedGpuInfos = IterGpuInfoWindows().ToList();
+
+                    var fallback = Compat.IsLinux
+                        ? IterGpuInfoLinux().ToList()
+                        : IterGpuInfoWindows().ToList();
+                    return cachedGpuInfos = fallback;
                 }
             }
 

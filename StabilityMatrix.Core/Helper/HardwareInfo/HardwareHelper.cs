@@ -70,7 +70,7 @@ public static partial class HardwareHelper
     [SupportedOSPlatform("linux")]
     private static IEnumerable<GpuInfo> IterGpuInfoLinux()
     {
-        var output = RunBashCommand("lspci | grep VGA");
+        var output = RunBashCommand("lspci | grep -E \"(VGA|3D)\"");
         var gpuLines = output.Split("\n");
 
         var gpuIndex = 0;
@@ -153,15 +153,26 @@ public static partial class HardwareHelper
                 return cachedGpuInfos;
             }
 
-            if (Compat.IsWindows)
+            if (Compat.IsMacOS)
+            {
+                return cachedGpuInfos = IterGpuInfoMacos().ToList();
+            }
+
+            if (Compat.IsLinux || Compat.IsWindows)
             {
                 try
                 {
                     var smi = IterGpuInfoNvidiaSmi()?.ToList();
-                    if (smi is null)
-                        return cachedGpuInfos = IterGpuInfoWindows().ToList();
+                    var fallback = Compat.IsLinux
+                        ? IterGpuInfoLinux().ToList()
+                        : IterGpuInfoWindows().ToList();
 
-                    var newList = smi.Concat(IterGpuInfoWindows().Where(gpu => !gpu.IsNvidia))
+                    if (smi is null)
+                    {
+                        return cachedGpuInfos = fallback;
+                    }
+
+                    var newList = smi.Concat(fallback.Where(gpu => !gpu.IsNvidia))
                         .Select(
                             (gpu, index) =>
                                 new GpuInfo
@@ -177,22 +188,15 @@ public static partial class HardwareHelper
                 catch (Exception e)
                 {
                     Logger.Error(e, "Failed to get GPU info using nvidia-smi, falling back to registry");
-                    return cachedGpuInfos = IterGpuInfoWindows().ToList();
+
+                    var fallback = Compat.IsLinux
+                        ? IterGpuInfoLinux().ToList()
+                        : IterGpuInfoWindows().ToList();
+                    return cachedGpuInfos = fallback;
                 }
             }
 
-            if (Compat.IsLinux)
-            {
-                return cachedGpuInfos = IterGpuInfoLinux().ToList();
-            }
-
-            if (Compat.IsMacOS)
-            {
-                return cachedGpuInfos = IterGpuInfoMacos().ToList();
-            }
-
             Logger.Error("Unknown OS, returning empty GPU info list");
-
             return cachedGpuInfos = [];
         }
     }

@@ -32,7 +32,7 @@ public class WindowsPrerequisiteHelper(
     private const string TkinterDownloadUrl =
         "https://cdn.lykos.ai/tkinter-cpython-embedded-3.10.11-win-x64.zip";
 
-    private const string NodeDownloadUrl = "https://nodejs.org/dist/v20.11.0/node-v20.11.0-win-x64.zip";
+    private const string NodeDownloadUrl = "https://nodejs.org/dist/v20.19.3/node-v20.19.3-win-x64.zip";
 
     private const string Dotnet7DownloadUrl =
         "https://download.visualstudio.microsoft.com/download/pr/2133b143-9c4f-4daa-99b0-34fa6035d67b/193ede446d922eb833f1bfe0239be3fc/dotnet-sdk-7.0.405-win-x64.zip";
@@ -69,6 +69,7 @@ public class WindowsPrerequisiteHelper(
     private string TkinterExtractPath => PythonDir;
     private string TkinterExistsPath => Path.Combine(PythonDir, "tkinter");
     private string NodeExistsPath => Path.Combine(AssetsDir, "nodejs", "npm.cmd");
+    private string NodeExePath => Path.Combine(AssetsDir, "nodejs", "node.exe");
     private string NodeDownloadPath => Path.Combine(AssetsDir, "nodejs.zip");
     private string Dotnet7DownloadPath => Path.Combine(AssetsDir, "dotnet-sdk-7.0.405-win-x64.zip");
     private string Dotnet8DownloadPath => Path.Combine(AssetsDir, "dotnet-sdk-8.0.101-win-x64.zip");
@@ -109,7 +110,7 @@ public class WindowsPrerequisiteHelper(
             onProcessOutput,
             environmentVariables: new Dictionary<string, string>
             {
-                { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) }
+                { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) },
             }
         );
         await process.WaitForExitAsync().ConfigureAwait(false);
@@ -127,7 +128,7 @@ public class WindowsPrerequisiteHelper(
             workingDirectory: workingDirectory,
             environmentVariables: new Dictionary<string, string>
             {
-                { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) }
+                { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) },
             }
         );
     }
@@ -146,6 +147,21 @@ public class WindowsPrerequisiteHelper(
         result.EnsureSuccessExitCode();
         onProcessOutput?.Invoke(ProcessOutput.FromStdOutLine(result.StandardOutput));
         onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
+    }
+
+    // NOTE TO FUTURE DEVS: if this is causing merge conflicts with dev, just nuke it we don't need anymore
+    private async Task<string> RunNode(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        IReadOnlyDictionary<string, string>? envVars = null
+    )
+    {
+        var result = await ProcessRunner
+            .GetProcessResultAsync(NodeExePath, args, workingDirectory, envVars)
+            .ConfigureAwait(false);
+
+        result.EnsureSuccessExitCode();
+        return result.StandardOutput ?? result.StandardError ?? string.Empty;
     }
 
     public Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null) =>
@@ -214,7 +230,7 @@ public class WindowsPrerequisiteHelper(
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         // Array of (asset_uri, extract_to)
-        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir), };
+        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir) };
 
         progress?.Report(new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true));
 
@@ -487,12 +503,31 @@ public class WindowsPrerequisiteHelper(
     [SupportedOSPlatform("windows")]
     public async Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null)
     {
-        if (File.Exists(NodeExistsPath))
-            return;
+        // NOTE TO FUTURE DEVS: if this is causing merge conflicts with dev, just nuke it we don't need anymore
+        var nodeFolder = new DirectoryPath(AssetsDir, "nodejs");
+        if (nodeFolder.Exists)
+        {
+            try
+            {
+                var result = await RunNode("-v");
+                if (result.Contains("20.19.3"))
+                {
+                    Logger.Debug("Node.js already installed at {NodeExistsPath}", NodeExistsPath);
+                    return;
+                }
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            Logger.Warn("Node.js version mismatch, reinstalling...");
+            await nodeFolder.DeleteAsync(true);
+        }
 
         await DownloadAndExtractPrerequisite(progress, NodeDownloadUrl, NodeDownloadPath, AssetsDir);
 
-        var extractedNodeDir = Path.Combine(AssetsDir, "node-v20.11.0-win-x64");
+        var extractedNodeDir = Path.Combine(AssetsDir, "node-v20.19.3-win-x64");
         if (Directory.Exists(extractedNodeDir))
         {
             Directory.Move(extractedNodeDir, Path.Combine(AssetsDir, "nodejs"));
@@ -591,7 +626,7 @@ public class WindowsPrerequisiteHelper(
             Arguments = "-install -log hip_install.log",
             UseShellExecute = true,
             CreateNoWindow = true,
-            Verb = "runas"
+            Verb = "runas",
         };
 
         if (Process.Start(info) is { } process)
@@ -755,14 +790,14 @@ public class WindowsPrerequisiteHelper(
         {
             _ when downloadUrl.Contains("gfx1201") => null,
             _ when downloadUrl.Contains("gfx1150") => "rocm gfx1150 for hip skd 6.2.4",
-            _ when downloadUrl.Contains("gfx1103.AMD")
-                => "rocm gfx1103 AMD 780M phoenix V5.0 for hip skd 6.2.4",
+            _ when downloadUrl.Contains("gfx1103.AMD") =>
+                "rocm gfx1103 AMD 780M phoenix V5.0 for hip skd 6.2.4",
             _ when downloadUrl.Contains("gfx1034") => "rocm gfx1034-gfx1035-gfx1036 for hip sdk 6.2.4",
             _ when downloadUrl.Contains("gfx1032") => "rocm gfx1032 for hip skd 6.2.4(navi21 logic)",
             _ when downloadUrl.Contains("gfx1031") => "rocm gfx1031 for hip skd 6.2.4 (littlewu's logic)",
-            _ when downloadUrl.Contains("gfx1010")
-                => "rocm gfx1010-xnack-gfx1011-xnack-gfx1012-xnack- for hip sdk 6.2.4",
-            _ => null
+            _ when downloadUrl.Contains("gfx1010") =>
+                "rocm gfx1010-xnack-gfx1011-xnack-gfx1012-xnack- for hip sdk 6.2.4",
+            _ => null,
         };
 
         var librarySourceDir = rocmLibsExtractPath;

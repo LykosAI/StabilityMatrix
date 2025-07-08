@@ -49,51 +49,51 @@ public class KohyaSs(
                 Name = "Listen Address",
                 Type = LaunchOptionType.String,
                 DefaultValue = "127.0.0.1",
-                Options = ["--listen"]
+                Options = ["--listen"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
-                Options = ["--port"]
+                Options = ["--port"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Username",
                 Type = LaunchOptionType.String,
-                Options = ["--username"]
+                Options = ["--username"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Password",
                 Type = LaunchOptionType.String,
-                Options = ["--password"]
+                Options = ["--password"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Auto-Launch Browser",
                 Type = LaunchOptionType.Bool,
-                Options = ["--inbrowser"]
+                Options = ["--inbrowser"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
-                Options = ["--share"]
+                Options = ["--share"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Headless",
                 Type = LaunchOptionType.Bool,
-                Options = ["--headless"]
+                Options = ["--headless"],
             },
             new LaunchOptionDefinition
             {
                 Name = "Language",
                 Type = LaunchOptionType.String,
-                Options = ["--language"]
+                Options = ["--language"],
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override async Task InstallPackage(
@@ -143,7 +143,7 @@ public class KohyaSs(
             .WithTorch()
             .WithTorchVision()
             .WithTorchAudio()
-            .WithXFormers()
+            .WithXFormers(">=0.0.30")
             .WithTorchExtraIndex(torchExtraIndex)
             .AddArg("--force-reinstall");
 
@@ -215,7 +215,7 @@ public class KohyaSs(
         }
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );

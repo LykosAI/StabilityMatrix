@@ -9,10 +9,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Added
 - Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser (when the Civitai API gets fixed)
 ### Changed
-- The main sidebar now remembers whether it was collapsed or expanded between restarts
+- The main sidebar now remembers whether it was collapsed or expanded between restarts.
+- Inference is now able to load image metadata from Civitai generated images via drag & drop
+- Updated process tracking for ComfyUI to help mitigate restart issues when using Comfy Manager
 - Updated pre-selected download locations for certain model types in the Civitai model browser
 ### Fixed
 - Fixed missing .NET 8 dependency for SwarmUI installs in certain cases
+- Fixed ComfyUI-Zluda not being recognized as a valid Comfy install for the workflow browser
 - Fixed [#1291](https://github.com/LykosAI/StabilityMatrix/issues/1291) - Certain GPUs not being detected on Linux
 - Fixed [#1284](https://github.com/LykosAI/StabilityMatrix/issues/1284) - Output browser not ignoring InvokeAI thumbnails folders
 - Fixed [#1305](https://github.com/LykosAI/StabilityMatrix/issues/1305) - FluxGym installing incorrect packages for Blackwell GPUs

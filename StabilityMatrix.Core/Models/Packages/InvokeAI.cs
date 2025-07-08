@@ -214,20 +214,21 @@ public class InvokeAI : BaseGitPackage
         string installLocation,
         IProgress<ProgressReport>? progress,
         Action<ProcessOutput>? onConsoleOutput,
-        IReadOnlyDictionary<string, string>? envVars = null
+        IReadOnlyDictionary<string, string>? envVars = null,
+        InstallPackageOptions? installOptions = null
     )
     {
         await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
+
+        var pnpmVersion = installOptions?.VersionOptions.VersionTag?.Contains("v5") == true ? "8" : "10";
+
         await PrerequisiteHelper
-            .RunNpm(["i", "pnpm@8"], installLocation, envVars: envVars)
+            .RunNpm(["i", $"pnpm@{pnpmVersion}"], installLocation, envVars: envVars)
             .ConfigureAwait(false);
 
-        if (Compat.IsMacOS || Compat.IsLinux)
-        {
-            await PrerequisiteHelper
-                .RunNpm(["i", "vite", "--ignore-scripts=true"], installLocation, envVars: envVars)
-                .ConfigureAwait(false);
-        }
+        await PrerequisiteHelper
+            .RunNpm(["i", "vite", "--ignore-scripts=true"], installLocation, envVars: envVars)
+            .ConfigureAwait(false);
 
         var pnpmPath = Path.Combine(
             installLocation,
@@ -257,7 +258,7 @@ public class InvokeAI : BaseGitPackage
 
         process = ProcessRunner.StartAnsiProcess(
             Compat.IsWindows ? pnpmPath : vitePath,
-            "build",
+            Compat.IsWindows ? "vite build" : "build",
             invokeFrontendPath,
             onConsoleOutput,
             envVars

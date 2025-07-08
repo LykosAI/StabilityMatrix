@@ -473,18 +473,40 @@ public abstract class BaseGitPackage : BasePackage
         {
             if (SharedFolders is not null)
             {
-                Helper.SharedFolders.RemoveLinksForPackage(
-                    SharedFolders,
-                    new DirectoryPath(installedPackage.FullPath!)
-                );
+                try
+                {
+                    Helper.SharedFolders.RemoveLinksForPackage(
+                        SharedFolders,
+                        new DirectoryPath(installedPackage.FullPath!)
+                    );
+                }
+                catch (Exception e)
+                {
+                    Logger.Warn(
+                        e,
+                        "Failed to remove symlinks for package {Package}",
+                        installedPackage.PackageName
+                    );
+                }
             }
 
             if (SharedOutputFolders is not null && installedPackage.UseSharedOutputFolder)
             {
-                Helper.SharedFolders.RemoveLinksForPackage(
-                    SharedOutputFolders,
-                    new DirectoryPath(installedPackage.FullPath!)
-                );
+                try
+                {
+                    Helper.SharedFolders.RemoveLinksForPackage(
+                        SharedOutputFolders,
+                        new DirectoryPath(installedPackage.FullPath!)
+                    );
+                }
+                catch (Exception e)
+                {
+                    Logger.Warn(
+                        e,
+                        "Failed to remove output symlinks for package {Package}",
+                        installedPackage.PackageName
+                    );
+                }
             }
         }
 

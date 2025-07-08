@@ -581,6 +581,42 @@ public partial class MainSettingsViewModel : PageViewModelBase
     }
 
     [RelayCommand]
+    private async Task ClearPipCache()
+    {
+        await prerequisiteHelper.UnpackResourcesIfNecessary();
+        await prerequisiteHelper.InstallPythonIfNecessary();
+
+        var processPath = new FilePath(PyRunner.PythonExePath);
+
+        var step = new ProcessStep
+        {
+            FileName = processPath,
+            Args = ["-m", "pip", "cache", "purge"],
+            WorkingDirectory = Compat.AppCurrentDir,
+            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary(),
+        };
+
+        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private async Task ClearUvCache()
+    {
+        await prerequisiteHelper.InstallUvIfNecessary();
+        var processPath = new FilePath(prerequisiteHelper.UvExePath);
+
+        var step = new ProcessStep
+        {
+            FileName = processPath,
+            Args = ["cache", "clean"],
+            WorkingDirectory = Compat.AppCurrentDir,
+            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary(),
+        };
+
+        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
+    }
+
+    [RelayCommand]
     private async Task RunGitProcess()
     {
         await prerequisiteHelper.InstallGitIfNecessary();

@@ -188,6 +188,8 @@
                                 <DropDownButton.Flyout>
                                     <MenuFlyout Placement="Bottom">
                                         <MenuItem Command="{Binding RunPythonProcessCommand}" Header="Command" />
+                                        <MenuItem Command="{Binding ClearPipCacheCommand}" Header="Clear Pip Cache" />
+                                        <MenuItem Command="{Binding ClearUvCacheCommand}" Header="Clear uv Cache" />
                                     </MenuFlyout>
                                 </DropDownButton.Flyout>
                             </DropDownButton>

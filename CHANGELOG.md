@@ -12,11 +12,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added support for authenticated model downloads in the HuggingFace model browser. Visit Settings → Accounts to add your HuggingFace token.
 - Added support for dragging-and-dropping Civitai-generated images into Inference to load metadata
 - Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser (when the Civitai API gets fixed)
+- Added "Clear Pip Cache" and "Clear uv Cache" commands to the Settings -> Embedded Python section
 ### Changed
 - Civitai model browser image loading now uses dynamic resizing for better performance and a smoother scrolling experience
 - Detailed notifications for Civitai model browser api errors
 - The main sidebar now remembers whether it was collapsed or expanded between restarts
 - Updated pre-selected download locations for certain model types in the Civitai model browser
+- Updated uv to 0.7.19
+- Changed InvokeAI update process to no longer clone the repo
 ### Fixed
 - Fixed missing .NET 8 dependency for SwarmUI installs in certain cases
 - Fixed [#1291](https://github.com/LykosAI/StabilityMatrix/issues/1291) - Certain GPUs not being detected on Linux

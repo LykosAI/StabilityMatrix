@@ -211,6 +211,9 @@ public class InvokeAI(
         // Split at ':' to get package and function
         var split = entryPoint?.Split(':');
 
+        // Console message because Invoke takes forever to start sometimes with no output of what its doing
+        onConsoleOutput?.Invoke(new ProcessOutput { Text = "Starting InvokeAI...\n" });
+
         if (split is not { Length: > 1 })
         {
             throw new Exception($"Could not find entry point for InvokeAI: {entryPoint.ToRepr()}");
@@ -281,6 +284,42 @@ public class InvokeAI(
             var result = await VenvRunner.Run($"-c \"{code}\" {arguments}".TrimEnd()).ConfigureAwait(false);
             onConsoleOutput?.Invoke(new ProcessOutput { Text = result.StandardOutput });
         }
+    }
+
+    public override async Task<InstalledPackageVersion> Update(
+        string installLocation,
+        InstalledPackage installedPackage,
+        UpdatePackageOptions options,
+        IProgress<ProgressReport>? progress = null,
+        Action<ProcessOutput>? onConsoleOutput = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await InstallPackage(
+                installLocation,
+                installedPackage,
+                options.AsInstallOptions(),
+                progress,
+                onConsoleOutput,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+        if (!string.IsNullOrWhiteSpace(options.VersionOptions.VersionTag))
+        {
+            return new InstalledPackageVersion
+            {
+                InstalledReleaseVersion = options.VersionOptions.VersionTag,
+                IsPrerelease = options.VersionOptions.IsPrerelease,
+            };
+        }
+
+        return new InstalledPackageVersion
+        {
+            InstalledBranch = options.VersionOptions.BranchName,
+            InstalledCommitSha = options.VersionOptions.CommitHash,
+            IsPrerelease = options.VersionOptions.IsPrerelease,
+        };
     }
 
     // Invoke doing shared folders on startup instead

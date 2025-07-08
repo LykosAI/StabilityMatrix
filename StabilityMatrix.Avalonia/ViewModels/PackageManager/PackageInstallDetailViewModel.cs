@@ -425,7 +425,8 @@ public partial class PackageInstallDetailViewModel(
     }
 
     private UvPythonInfo? GetRecommendedPyVersion() =>
-        AvailablePythonVersions.FirstOrDefault(x =>
-            x.Version.Equals(SelectedPackage.RecommendedPythonVersion)
+        AvailablePythonVersions.LastOrDefault(x =>
+            x.Version.Major.Equals(SelectedPackage.RecommendedPythonVersion.Major)
+            && x.Version.Minor.Equals(SelectedPackage.RecommendedPythonVersion.Minor)
         );
 }

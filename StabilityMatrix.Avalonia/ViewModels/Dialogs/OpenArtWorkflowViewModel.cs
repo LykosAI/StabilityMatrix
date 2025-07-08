@@ -47,7 +47,7 @@ public partial class OpenArtWorkflowViewModel(
 
     public List<InstalledPackage> AvailablePackages =>
         settingsManager
-            .Settings.InstalledPackages.Where(package => package.PackageName == "ComfyUI")
+            .Settings.InstalledPackages.Where(package => package.PackageName is "ComfyUI" or "ComfyUI-Zluda")
             .ToList();
 
     public List<PackageExtension> MissingNodes { get; } = [];
@@ -157,7 +157,7 @@ public partial class OpenArtWorkflowViewModel(
                 currentSection = new OpenArtCustomNode
                 {
                     Title = node,
-                    IsInstalled = installedNodesNames.Contains(node)
+                    IsInstalled = installedNodesNames.Contains(node),
                 };
 
                 // Add missing nodes to the list

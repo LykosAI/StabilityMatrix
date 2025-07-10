@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1305](https://github.com/LykosAI/StabilityMatrix/issues/1305) - FluxGym installing incorrect packages for Blackwell GPUs
 - Fixed [#1316](https://github.com/LykosAI/StabilityMatrix/issues/1316) - Errors when installing Triton & SageAttention
 - Fixed "directory is not empty" error when updating packages with symlinks
+- Fixed missing base model types in the Checkpoint Manager & Civitai Model Browser
 
 ## v2.14.2
 ### Changed

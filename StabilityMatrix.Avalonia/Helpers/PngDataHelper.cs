@@ -42,7 +42,7 @@ public static class PngDataHelper
         while (position < inputImage.Length)
         {
             var chunkLength = BitConverter.ToInt32(
-                inputImage[position..(position + 4)].Reverse().ToArray(),
+                inputImage[position..(position + 4)].AsEnumerable().Reverse().ToArray(),
                 0
             );
             var chunkType = Encoding.ASCII.GetString(inputImage[(position + 4)..(position + 8)]);
@@ -53,8 +53,10 @@ public static class PngDataHelper
                 {
                     var imageWidthBytes = inputImage[(position + 8)..(position + 12)];
                     var imageHeightBytes = inputImage[(position + 12)..(position + 16)];
-                    var imageWidth = BitConverter.ToInt32(imageWidthBytes.Reverse().ToArray());
-                    var imageHeight = BitConverter.ToInt32(imageHeightBytes.Reverse().ToArray());
+                    var imageWidth = BitConverter.ToInt32(imageWidthBytes.AsEnumerable().Reverse().ToArray());
+                    var imageHeight = BitConverter.ToInt32(
+                        imageHeightBytes.AsEnumerable().Reverse().ToArray()
+                    );
 
                     generationParameters.Width = imageWidth;
                     generationParameters.Height = imageHeight;
@@ -102,7 +104,7 @@ public static class PngDataHelper
         while (position < inputImage.Length)
         {
             var chunkLength = BitConverter.ToInt32(
-                inputImage[position..(position + 4)].Reverse().ToArray(),
+                inputImage[position..(position + 4)].AsEnumerable().Reverse().ToArray(),
                 0
             );
             var chunkType = Encoding.ASCII.GetString(inputImage[(position + 4)..(position + 8)]);
@@ -124,9 +126,13 @@ public static class PngDataHelper
     {
         var textData = $"{key}\0{value}";
         var dataBytes = Encoding.UTF8.GetBytes(textData);
-        var textDataLength = BitConverter.GetBytes(dataBytes.Length).Reverse();
+        var textDataLength = BitConverter.GetBytes(dataBytes.Length).AsEnumerable().Reverse().ToArray();
         var textDataBytes = Text.Concat(dataBytes).ToArray();
-        var crc = BitConverter.GetBytes(Crc32Algorithm.Compute(textDataBytes)).Reverse();
+        var crc = BitConverter
+            .GetBytes(Crc32Algorithm.Compute(textDataBytes))
+            .AsEnumerable()
+            .Reverse()
+            .ToArray();
 
         return textDataLength.Concat(textDataBytes).Concat(crc).ToArray();
     }

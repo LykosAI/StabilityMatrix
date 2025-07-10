@@ -23,33 +23,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1305](https://github.com/LykosAI/StabilityMatrix/issues/1305) - FluxGym installing incorrect packages for Blackwell GPUs
 - Fixed [#1316](https://github.com/LykosAI/StabilityMatrix/issues/1316) - Errors when installing Triton & SageAttention
 - Fixed "directory is not empty" error when updating packages with symlinks
-<<<<<<< HEAD
-=======
 - Fixed missing base model types in the Checkpoint Manager & Civitai Model Browser
-### Supporters
-#### 🌟 Visionaries
-A huge thank you to our amazing Visionary-tier Patrons: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, and our newest Visionary, **whudunit**! 🚀 Your generous support enables Stability Matrix to grow faster and tackle ambitious new ideas. You're truly making all the magic happen!
-
-## v2.15.0-dev.1
-### Added
-- Added Python Version selector for all new package installs
-- Added the ability to rename packages
-### Changed
-- Updated all Python version management, virtual environment creation, and pip installs to use `uv` for improved reliability, compatibility, and speed
-- The Civitai model browser Download Location selector will now remember the last location used based on the model type
-- New installs of ComfyUI, SD.Next, and InvokeAI will now use Python 3.12.10, unless otherwise specified in the Advanced Options during installation
-- New installs of all other packages will now use Python 3.10.17, unless otherwise specified in the Advanced Options during installation
-### Supporters
-#### 🌟 Visionaries
-A massive thank you to our esteemed Visionary-tier Patrons: **Waterclouds**, **bluepopsicle**, **Bob S**, **Ibixat**, and **Corey T**! Your exceptional commitment propels Stability Matrix to new heights and allows us to push the boundaries of innovation. We're incredibly grateful for your foundational support! 🚀
-
-## v2.14.3
-### Changed
-- Inference is now able to load image metadata from Civitai generated images via drag & drop
-- Updated process tracking for ComfyUI to help mitigate restart issues when using Comfy Manager
-### Fixed
-- Fixed ComfyUI-Zluda not being recognized as a valid Comfy install for the workflow browser
->>>>>>> a397926b (Merge pull request #1109 from ionite34/update-base-model-parsing)
 
 ## v2.14.2
 ### Changed

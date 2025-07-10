@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.Json;
 using ExifLibrary;
+using KGySoft.CoreLibraries;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.Png;
@@ -52,8 +53,8 @@ public class ImageMetadata
     {
         var imageWidthBytes = inputImage[0x10..0x14];
         var imageHeightBytes = inputImage[0x14..0x18];
-        var imageWidth = BitConverter.ToInt32(imageWidthBytes.Reverse().ToArray());
-        var imageHeight = BitConverter.ToInt32(imageHeightBytes.Reverse().ToArray());
+        var imageWidth = BitConverter.ToInt32(imageWidthBytes.AsEnumerable().Reverse().ToArray());
+        var imageHeight = BitConverter.ToInt32(imageHeightBytes.AsEnumerable().Reverse().ToArray());
 
         return new System.Drawing.Size(imageWidth, imageHeight);
     }
@@ -66,8 +67,8 @@ public class ImageMetadata
         var imageWidthBytes = reader.ReadBytes(4);
         var imageHeightBytes = reader.ReadBytes(4);
 
-        var imageWidth = BitConverter.ToInt32(imageWidthBytes.Reverse().ToArray());
-        var imageHeight = BitConverter.ToInt32(imageHeightBytes.Reverse().ToArray());
+        var imageWidth = BitConverter.ToInt32(imageWidthBytes.AsEnumerable().Reverse().ToArray());
+        var imageHeight = BitConverter.ToInt32(imageHeightBytes.AsEnumerable().Reverse().ToArray());
 
         reader.BaseStream.Position = oldPosition;
 
@@ -169,7 +170,7 @@ public class ImageMetadata
 
         while (byteStream.BaseStream.Position < byteStream.BaseStream.Length - 4)
         {
-            var chunkSize = BitConverter.ToInt32(byteStream.ReadBytes(4).Reverse().ToArray());
+            var chunkSize = BitConverter.ToInt32(byteStream.ReadBytes(4).AsEnumerable().Reverse().ToArray());
             var chunkType = Encoding.UTF8.GetString(byteStream.ReadBytes(4));
 
             if (chunkType == Encoding.UTF8.GetString(Idat))
@@ -220,7 +221,7 @@ public class ImageMetadata
         while (byteStream.BaseStream.Position < byteStream.BaseStream.Length - 4)
         {
             var chunkSizeBytes = byteStream.ReadBytes(4);
-            var chunkSize = BitConverter.ToInt32(chunkSizeBytes.Reverse().ToArray());
+            var chunkSize = BitConverter.ToInt32(chunkSizeBytes.AsEnumerable().Reverse().ToArray());
             var chunkTypeBytes = byteStream.ReadBytes(4);
             var chunkType = Encoding.UTF8.GetString(chunkTypeBytes);
 

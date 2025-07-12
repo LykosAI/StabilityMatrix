@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 
 ## v2.14.3
 ### Added
-- Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser (when the Civitai API gets fixed)
+- Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser
 ### Changed
 - The main sidebar now remembers whether it was collapsed or expanded between restarts.
 - Inference is now able to load image metadata from Civitai generated images via drag & drop
@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1316](https://github.com/LykosAI/StabilityMatrix/issues/1316) - Errors when installing Triton & SageAttention
 - Fixed "directory is not empty" error when updating packages with symlinks
 - Fixed missing base model types in the Checkpoint Manager & Civitai Model Browser
+### Supporters
+#### 🌟 Visionaries
+Big heartfelt thanks to our stellar Visionary-tier Patrons: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, and **whudunit**! 🌟 Your extraordinary generosity continues to fuel Stability Matrix’s journey toward innovation and excellence. We appreciate you immensely!
+#### 🚀 Pioneers
+Massive thanks to our fantastic Pioneer-tier Patrons: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, **Noah M**, **USATechDude**, **Thom**, and **SeraphOfSalem**! Your unwavering support keeps our community thriving and inspires us to push even further. You’re all awesome!
 
 ## v2.14.2
 ### Changed

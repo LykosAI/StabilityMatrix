@@ -47,7 +47,7 @@ A massive thank you to our esteemed Visionary-tier Patrons: **Waterclouds**, **b
 
 ## v2.14.3
 ### Added
-- Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser (when the Civitai API gets fixed)
+- Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser
 ### Changed
 - The main sidebar now remembers whether it was collapsed or expanded between restarts.
 - Inference is now able to load image metadata from Civitai generated images via drag & drop

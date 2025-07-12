@@ -46,11 +46,29 @@ A huge thank you to our amazing Visionary-tier Patrons: **Waterclouds**, **Corey
 A massive thank you to our esteemed Visionary-tier Patrons: **Waterclouds**, **bluepopsicle**, **Bob S**, **Ibixat**, and **Corey T**! Your exceptional commitment propels Stability Matrix to new heights and allows us to push the boundaries of innovation. We're incredibly grateful for your foundational support! 🚀
 
 ## v2.14.3
+### Added
+- Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser (when the Civitai API gets fixed)
 ### Changed
+- The main sidebar now remembers whether it was collapsed or expanded between restarts.
 - Inference is now able to load image metadata from Civitai generated images via drag & drop
 - Updated process tracking for ComfyUI to help mitigate restart issues when using Comfy Manager
+- Updated pre-selected download locations for certain model types in the Civitai model browser
+- Updated nodejs to v20.19.3 to support newer InvokeAI versions
 ### Fixed
+- Fixed missing .NET 8 dependency for SwarmUI installs in certain cases
 - Fixed ComfyUI-Zluda not being recognized as a valid Comfy install for the workflow browser
+- Fixed [#1291](https://github.com/LykosAI/StabilityMatrix/issues/1291) - Certain GPUs not being detected on Linux
+- Fixed [#1284](https://github.com/LykosAI/StabilityMatrix/issues/1284) - Output browser not ignoring InvokeAI thumbnails folders
+- Fixed [#1301](https://github.com/LykosAI/StabilityMatrix/issues/1301) - Error when installing kohya_ss
+- Fixed [#1305](https://github.com/LykosAI/StabilityMatrix/issues/1305) - FluxGym installing incorrect packages for Blackwell GPUs
+- Fixed [#1316](https://github.com/LykosAI/StabilityMatrix/issues/1316) - Errors when installing Triton & SageAttention
+- Fixed "directory is not empty" error when updating packages with symlinks
+- Fixed missing base model types in the Checkpoint Manager & Civitai Model Browser
+### Supporters
+#### 🌟 Visionaries
+Big heartfelt thanks to our stellar Visionary-tier Patrons: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, and **whudunit**! 🌟 Your extraordinary generosity continues to fuel Stability Matrix’s journey toward innovation and excellence. We appreciate you immensely!
+#### 🚀 Pioneers
+Massive thanks to our fantastic Pioneer-tier Patrons: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, **Noah M**, **USATechDude**, **Thom**, and **SeraphOfSalem**! Your unwavering support keeps our community thriving and inspires us to push even further. You’re all awesome!
 
 ## v2.14.2
 ### Changed

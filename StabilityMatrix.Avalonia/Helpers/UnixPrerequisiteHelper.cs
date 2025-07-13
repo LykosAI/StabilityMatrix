@@ -46,7 +46,8 @@ public class UnixPrerequisiteHelper(
 
     private DirectoryPath DotnetDir => AssetsDir.JoinDir("dotnet");
     private string DotnetPath => Path.Combine(DotnetDir, "dotnet");
-    private bool IsDotnetInstalled => File.Exists(DotnetPath);
+    private string Dotnet7SdkExistsPath => Path.Combine(DotnetDir, "sdk", "7.0.405");
+    private string Dotnet8SdkExistsPath => Path.Combine(DotnetDir, "sdk", "8.0.101");
     private string Dotnet7DownloadUrlMacOs =>
         "https://download.visualstudio.microsoft.com/download/pr/5bb0e0e4-2a8d-4aba-88ad-232e1f65c281/ee6d35f762d81965b4cf336edde1b318/dotnet-sdk-7.0.405-osx-arm64.tar.gz";
     private string Dotnet8DownloadUrlMacOs =>
@@ -103,19 +104,17 @@ public class UnixPrerequisiteHelper(
 
     public async Task InstallDotnetIfNecessary(IProgress<ProgressReport>? progress = null)
     {
-        if (IsDotnetInstalled)
-            return;
+        var downloadUrl = Compat.IsMacOS ? Dotnet8DownloadUrlMacOs : Dotnet8DownloadUrlLinux;
 
-        if (Compat.IsMacOS)
+        var dotnet8SdkExists = Directory.Exists(Dotnet8SdkExistsPath);
+
+        if (dotnet8SdkExists && Directory.Exists(DotnetDir))
         {
-            await DownloadAndExtractPrerequisite(progress, Dotnet7DownloadUrlMacOs, DotnetDir);
-            await DownloadAndExtractPrerequisite(progress, Dotnet8DownloadUrlMacOs, DotnetDir);
+            Logger.Info("Dotnet 8 SDK already installed at {DotnetDir}", DotnetDir);
+            return;
         }
-        else
-        {
-            await DownloadAndExtractPrerequisite(progress, Dotnet7DownloadUrlLinux, DotnetDir);
-            await DownloadAndExtractPrerequisite(progress, Dotnet8DownloadUrlLinux, DotnetDir);
-        }
+
+        await DownloadAndExtractPrerequisite(progress, downloadUrl, DotnetDir);
     }
 
     private async Task InstallVirtualenvIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -149,7 +148,7 @@ public class UnixPrerequisiteHelper(
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         // Array of (asset_uri, extract_to)
-        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir), };
+        var assets = new[] { (Assets.SevenZipExecutable, AssetsDir), (Assets.SevenZipLicense, AssetsDir) };
 
         progress?.Report(new ProgressReport(0, message: "Unpacking resources", isIndeterminate: true));
 
@@ -177,10 +176,10 @@ public class UnixPrerequisiteHelper(
                 {
                     new TextBlock
                     {
-                        Text = "The current operation requires Git. Please install it to continue."
+                        Text = "The current operation requires Git. Please install it to continue.",
                     },
                     new SelectableTextBlock { Text = "$ sudo apt install git" },
-                }
+                },
             },
             PrimaryButtonText = Resources.Action_Retry,
             CloseButtonText = Resources.Action_Close,
@@ -352,6 +351,22 @@ public class UnixPrerequisiteHelper(
         );
     }
 
+    // NOTE TO FUTURE DEVS: if this is causing merge conflicts with dev, just nuke it we don't need anymore
+    private async Task<string> RunNode(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        IReadOnlyDictionary<string, string>? envVars = null
+    )
+    {
+        var nodePath = Path.Combine(NodeDir, "bin", "node");
+        var result = await ProcessRunner
+            .GetProcessResultAsync(nodePath, args, workingDirectory, envVars)
+            .ConfigureAwait(false);
+
+        result.EnsureSuccessExitCode();
+        return result.StandardOutput ?? result.StandardError ?? string.Empty;
+    }
+
     [SupportedOSPlatform("Linux")]
     [SupportedOSPlatform("macOS")]
     public async Task<Process> RunDotnet(
@@ -396,17 +411,32 @@ public class UnixPrerequisiteHelper(
     [SupportedOSPlatform("macOS")]
     public async Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null)
     {
-        if (IsNodeInstalled)
+        // NOTE TO FUTURE DEVS: if this is causing merge conflicts with dev, just nuke it we don't need anymore
+        if (NodeDir.Exists)
         {
-            Logger.Info("node already installed");
-            return;
+            try
+            {
+                var result = await RunNode("-v");
+                if (result.Contains("20.19.3"))
+                {
+                    Logger.Debug("Node.js already installed at {NodeExistsPath}", NodeDir);
+                    return;
+                }
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            Logger.Warn("Node.js version mismatch, reinstalling...");
+            await NodeDir.DeleteAsync(true);
         }
 
         Logger.Info("Downloading node");
 
         var downloadUrl = Compat.IsMacOS
-            ? "https://nodejs.org/dist/v20.11.0/node-v20.11.0-darwin-arm64.tar.gz"
-            : "https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.gz";
+            ? "https://nodejs.org/dist/v20.19.3/node-v20.19.3-darwin-arm64.tar.gz"
+            : "https://nodejs.org/dist/v20.19.3/node-v20.19.3-linux-x64.tar.gz";
 
         var nodeDownloadPath = AssetsDir.JoinFile(Path.GetFileName(downloadUrl));
 
@@ -426,8 +456,8 @@ public class UnixPrerequisiteHelper(
         await ArchiveHelper.Extract7ZAuto(nodeDownloadPath, AssetsDir);
 
         var nodeDir = Compat.IsMacOS
-            ? AssetsDir.JoinDir("node-v20.11.0-darwin-arm64")
-            : AssetsDir.JoinDir("node-v20.11.0-linux-x64");
+            ? AssetsDir.JoinDir("node-v20.19.3-darwin-arm64")
+            : AssetsDir.JoinDir("node-v20.19.3-linux-x64");
         Directory.Move(nodeDir, NodeDir);
 
         progress?.Report(

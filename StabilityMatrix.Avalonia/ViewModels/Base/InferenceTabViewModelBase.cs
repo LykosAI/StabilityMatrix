@@ -204,7 +204,13 @@ public abstract partial class InferenceTabViewModelBase
     /// </summary>
     private void LoadImageMetadata(
         string imageFilePath,
-        (string? Parameters, string? ParametersJson, string? SMProject, string? ComfyNodes) metadata
+        (
+            string? Parameters,
+            string? ParametersJson,
+            string? SMProject,
+            string? ComfyNodes,
+            string? CivitParameters
+        ) metadata
     )
     {
         // Has SMProject metadata
@@ -236,8 +242,8 @@ public abstract partial class InferenceTabViewModelBase
                 // Load image
                 if (this is IImageGalleryComponent imageGalleryComponent)
                 {
-                    Dispatcher.UIThread.Invoke(
-                        () => imageGalleryComponent.LoadImagesToGallery(new ImageSource(imageFilePath))
+                    Dispatcher.UIThread.Invoke(() =>
+                        imageGalleryComponent.LoadImagesToGallery(new ImageSource(imageFilePath))
                     );
                 }
 
@@ -270,8 +276,41 @@ public abstract partial class InferenceTabViewModelBase
             // Load image
             if (this is IImageGalleryComponent imageGalleryComponent)
             {
-                Dispatcher.UIThread.Invoke(
-                    () => imageGalleryComponent.LoadImagesToGallery(new ImageSource(imageFilePath))
+                Dispatcher.UIThread.Invoke(() =>
+                    imageGalleryComponent.LoadImagesToGallery(new ImageSource(imageFilePath))
+                );
+            }
+
+            return;
+        }
+
+        // Civit generator metadata
+        if (metadata.CivitParameters is not null)
+        {
+            Logger.Info("Loading Parameters from metadata");
+
+            if (!GenerationParameters.TryParse(metadata.CivitParameters, out var parameters))
+            {
+                throw new ApplicationException("Failed to parse parameters");
+            }
+
+            if (this is IParametersLoadableState paramsLoadableVm)
+            {
+                Dispatcher.UIThread.Invoke(() => paramsLoadableVm.LoadStateFromParameters(parameters));
+            }
+            else
+            {
+                Logger.Warn(
+                    "Load parameters target {Type} does not implement IParametersLoadableState, skipping",
+                    GetType().Name
+                );
+            }
+
+            // Load image
+            if (this is IImageGalleryComponent imageGalleryComponent)
+            {
+                Dispatcher.UIThread.Invoke(() =>
+                    imageGalleryComponent.LoadImagesToGallery(new ImageSource(imageFilePath))
                 );
             }
 

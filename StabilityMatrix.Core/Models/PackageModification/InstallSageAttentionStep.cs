@@ -60,6 +60,16 @@ public class InstallSageAttentionStep(
             sageWheelUrl =
                 "https://github.com/woct0rdho/SageAttention/releases/download/v2.1.1-windows/sageattention-2.1.1+cu128torch2.7.0-cp310-cp310-win_amd64.whl";
         }
+        else if (torchInfo.Version.Contains("2.7.1") && torchInfo.Version.Contains("cu128"))
+        {
+            sageWheelUrl =
+                $"https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows/sageattention-2.2.0+cu128torch2.7.1-cp310-cp310-win_amd64.whl";
+        }
+        else if (torchInfo.Version.Contains("2.8.0") && torchInfo.Version.Contains("cu128"))
+        {
+            sageWheelUrl =
+                $"https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows/sageattention-2.2.0+cu128torch2.8.0-cp310-cp310-win_amd64.whl";
+        }
 
         var pipArgs = new PipInstallArgs();
         if (IsBlackwellGpu)

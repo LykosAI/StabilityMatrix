@@ -165,15 +165,15 @@ public partial class CheckpointsPageViewModel(
             BaseModelCache
                 .Connect()
                 .DeferUntilLoaded()
-                .Transform(
-                    baseModel =>
-                        new BaseModelOptionViewModel
-                        {
-                            ModelType = baseModel,
-                            IsSelected = settingsSelectedBaseModels.Contains(baseModel)
-                        }
+                .Transform(baseModel => new BaseModelOptionViewModel
+                {
+                    ModelType = baseModel,
+                    IsSelected = settingsSelectedBaseModels.Contains(baseModel),
+                })
+                .SortAndBind(
+                    BaseModelOptions,
+                    SortExpressionComparer<BaseModelOptionViewModel>.Ascending(vm => vm.ModelType)
                 )
-                .Bind(BaseModelOptions)
                 .WhenPropertyChanged(p => p.IsSelected)
                 .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(next =>
@@ -193,61 +193,50 @@ public partial class CheckpointsPageViewModel(
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe(_ =>
             {
-                settingsManager.Transaction(
-                    settings => settings.SelectedBaseModels = SelectedBaseModels.ToList()
+                settingsManager.Transaction(settings =>
+                    settings.SelectedBaseModels = SelectedBaseModels.ToList()
                 );
             });
 
         AddDisposable(settingsTransactionObservable);
 
-        var baseModelTypes = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
-        BaseModelCache.EditDiff(baseModelTypes);
-
         // Observable predicate from SearchQuery changes
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
             .Throttle(TimeSpan.FromMilliseconds(100))
-            .Select(
-                _ =>
-                    (Func<LocalModelFile, bool>)(
-                        file =>
-                            string.IsNullOrWhiteSpace(SearchQuery)
-                            || (
-                                SearchQuery.StartsWith("#")
-                                && (
-                                    file.ConnectedModelInfo?.Tags.Contains(
-                                        SearchQuery.Substring(1),
-                                        StringComparer.OrdinalIgnoreCase
-                                    ) ?? false
-                                )
-                            )
-                            || file.DisplayModelFileName.Contains(
-                                SearchQuery,
-                                StringComparison.OrdinalIgnoreCase
-                            )
-                            || file.DisplayModelName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
-                            || file.DisplayModelVersion.Contains(
-                                SearchQuery,
-                                StringComparison.OrdinalIgnoreCase
-                            )
-                            || (
-                                file.ConnectedModelInfo?.TrainedWordsString.Contains(
-                                    SearchQuery,
-                                    StringComparison.OrdinalIgnoreCase
+            .Select(_ =>
+                (Func<LocalModelFile, bool>)(
+                    file =>
+                        string.IsNullOrWhiteSpace(SearchQuery)
+                        || (
+                            SearchQuery.StartsWith("#")
+                            && (
+                                file.ConnectedModelInfo?.Tags.Contains(
+                                    SearchQuery.Substring(1),
+                                    StringComparer.OrdinalIgnoreCase
                                 ) ?? false
                             )
-                    )
+                        )
+                        || file.DisplayModelFileName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
+                        || file.DisplayModelName.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
+                        || file.DisplayModelVersion.Contains(SearchQuery, StringComparison.OrdinalIgnoreCase)
+                        || (
+                            file.ConnectedModelInfo?.TrainedWordsString.Contains(
+                                SearchQuery,
+                                StringComparison.OrdinalIgnoreCase
+                            ) ?? false
+                        )
+                )
             )
             .ObserveOn(SynchronizationContext.Current)
             .AsObservable();
 
         var filterPredicate = Observable
             .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
-            .Where(
-                x =>
-                    x.EventArgs.PropertyName
-                        is nameof(SelectedCategory)
-                            or nameof(ShowModelsInSubfolders)
-                            or nameof(SelectedBaseModels)
+            .Where(x =>
+                x.EventArgs.PropertyName
+                    is nameof(SelectedCategory)
+                        or nameof(ShowModelsInSubfolders)
+                        or nameof(SelectedBaseModels)
             )
             .Throttle(TimeSpan.FromMilliseconds(50))
             .Select(_ => (Func<LocalModelFile, bool>)FilterModels)
@@ -256,12 +245,11 @@ public partial class CheckpointsPageViewModel(
 
         var comparerObservable = Observable
             .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
-            .Where(
-                x =>
-                    x.EventArgs.PropertyName
-                        is nameof(SelectedSortOption)
-                            or nameof(SelectedSortDirection)
-                            or nameof(SortConnectedModelsFirst)
+            .Where(x =>
+                x.EventArgs.PropertyName
+                    is nameof(SelectedSortOption)
+                        or nameof(SelectedSortDirection)
+                        or nameof(SortConnectedModelsFirst)
             )
             .Select(_ =>
             {
@@ -286,11 +274,11 @@ public partial class CheckpointsPageViewModel(
                     case CheckpointSortMode.BaseModel:
                         comparer =
                             SelectedSortDirection == ListSortDirection.Ascending
-                                ? comparer.ThenByAscending(
-                                    vm => vm.CheckpointFile.ConnectedModelInfo?.BaseModel
+                                ? comparer.ThenByAscending(vm =>
+                                    vm.CheckpointFile.ConnectedModelInfo?.BaseModel
                                 )
-                                : comparer.ThenByDescending(
-                                    vm => vm.CheckpointFile.ConnectedModelInfo?.BaseModel
+                                : comparer.ThenByDescending(vm =>
+                                    vm.CheckpointFile.ConnectedModelInfo?.BaseModel
                                 );
 
                         comparer = comparer.ThenByAscending(vm => vm.CheckpointFile.DisplayModelName);
@@ -344,18 +332,15 @@ public partial class CheckpointsPageViewModel(
                 .DeferUntilLoaded()
                 .Filter(filterPredicate)
                 .Filter(searchPredicate)
-                .Transform(
-                    x =>
-                        new CheckpointFileViewModel(
-                            settingsManager,
-                            modelIndexService,
-                            notificationService,
-                            downloadService,
-                            dialogFactory,
-                            logger,
-                            x
-                        )
-                )
+                .Transform(x => new CheckpointFileViewModel(
+                    settingsManager,
+                    modelIndexService,
+                    notificationService,
+                    downloadService,
+                    dialogFactory,
+                    logger,
+                    x
+                ))
                 .DisposeMany()
                 .SortAndBind(Models, comparerObservable)
                 .WhenPropertyChanged(p => p.IsSelected)
@@ -492,6 +477,10 @@ public partial class CheckpointsPageViewModel(
         if (Design.IsDesignMode)
             return;
 
+        var baseModelTypes = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
+        baseModelTypes = baseModelTypes.Except(settingsManager.Settings.DisabledBaseModelTypes).ToList();
+        BaseModelCache.Edit(updater => updater.Load(baseModelTypes));
+
         await ShowFolderMapTipIfNecessaryAsync();
     }
 
@@ -578,7 +567,7 @@ public partial class CheckpointsPageViewModel(
         {
             ModificationCompleteMessage = "Metadata scan complete",
             HideCloseButton = false,
-            ShowDialogOnStart = true
+            ShowDialogOnStart = true,
         };
 
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
@@ -660,7 +649,7 @@ public partial class CheckpointsPageViewModel(
             IsFooterVisible = false,
             CloseOnClickOutside = true,
             MaxDialogWidth = 750,
-            MaxDialogHeight = 1000
+            MaxDialogHeight = 1000,
         };
 
         var htmlDescription = $"""<html><body class="markdown-body">{model.Description}</body></html>""";
@@ -766,8 +755,8 @@ public partial class CheckpointsPageViewModel(
                 Label = "Folder Name",
                 InnerLeftText =
                     $@"{parentFolder.Replace(settingsManager.ModelsDirectory, string.Empty).TrimStart(Path.DirectorySeparatorChar)}{Path.DirectorySeparatorChar}",
-                MinWidth = 400
-            }
+                MinWidth = 400,
+            },
         };
 
         var dialog = DialogHelper.CreateTextEntryDialog("Create Folder", string.Empty, fields);
@@ -855,8 +844,8 @@ public partial class CheckpointsPageViewModel(
 
         var fileList = files.ToList();
         if (
-            fileList.Any(
-                file => !LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(file))
+            fileList.Any(file =>
+                !LocalModelFile.SupportedCheckpointExtensions.Contains(Path.GetExtension(file))
             )
         )
         {
@@ -882,7 +871,7 @@ public partial class CheckpointsPageViewModel(
         {
             ModificationCompleteMessage = "Import Complete",
             HideCloseButton = false,
-            ShowDialogOnStart = true
+            ShowDialogOnStart = true,
         };
 
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
@@ -1068,7 +1057,7 @@ public partial class CheckpointsPageViewModel(
                         Path = d,
                         Name = folderName,
                         Tooltip = folderType.GetDescription() ?? folderType.GetStringValue(),
-                        SubDirectories = GetSubfolders(d)
+                        SubDirectories = GetSubfolders(d),
                     };
                 }
 
@@ -1076,7 +1065,7 @@ public partial class CheckpointsPageViewModel(
                 {
                     Path = d,
                     Name = folderName,
-                    SubDirectories = GetSubfolders(d)
+                    SubDirectories = GetSubfolders(d),
                 };
             })
             .ToList();
@@ -1095,12 +1084,12 @@ public partial class CheckpointsPageViewModel(
             Path = settingsManager.ModelsDirectory,
             Name = "All Models",
             Tooltip = "All Models",
-            Count = modelIndexService.ModelIndex.Values.SelectMany(x => x).Count()
+            Count = modelIndexService.ModelIndex.Values.SelectMany(x => x).Count(),
         };
 
         categoriesCache.Edit(updater =>
         {
-            updater.Load([rootCategory, ..modelCategories]);
+            updater.Load([rootCategory, .. modelCategories]);
         });
 
         SelectedCategory =
@@ -1162,7 +1151,7 @@ public partial class CheckpointsPageViewModel(
                 Path = dir,
                 Count = dirInfo
                     .Info.EnumerateFileSystemInfos("*", EnumerationOptionConstants.AllDirectories)
-                    .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(x.Extension))
+                    .Count(x => LocalModelFile.SupportedCheckpointExtensions.Contains(x.Extension)),
             };
 
             if (Directory.GetDirectories(dir, "*", EnumerationOptionConstants.TopLevelOnly).Length > 0)
@@ -1216,8 +1205,7 @@ public partial class CheckpointsPageViewModel(
 
         var folderPath = Path.GetDirectoryName(file.RelativePath);
         var categoryRelativePath = SelectedCategory
-            ?.Path
-            .Replace(settingsManager.ModelsDirectory, string.Empty)
+            ?.Path.Replace(settingsManager.ModelsDirectory, string.Empty)
             .TrimStart(Path.DirectorySeparatorChar);
 
         if (categoryRelativePath == null || folderPath == null)
@@ -1259,7 +1247,10 @@ public partial class CheckpointsPageViewModel(
 
     private async Task ShowFolderMapTipIfNecessaryAsync()
     {
-        if (settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.FolderMapTip))
+        if (
+            settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.FolderMapTip)
+            || settingsManager.Settings.InstalledPackages.Count == 0
+        )
             return;
 
         var folderReference = DialogHelper.CreateMarkdownDialog(MarkdownSnippets.SMFolderMap);

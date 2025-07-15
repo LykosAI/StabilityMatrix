@@ -31,6 +31,7 @@ using StabilityMatrix.Avalonia.ViewModels.Progress;
 using StabilityMatrix.Avalonia.ViewModels.Settings;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.Factory;
@@ -672,8 +673,23 @@ public static class DesignData
     public static InferenceSettingsViewModel InferenceSettingsViewModel =>
         Services.GetRequiredService<InferenceSettingsViewModel>();
 
-    public static MainSettingsViewModel MainSettingsViewModel =>
-        Services.GetRequiredService<MainSettingsViewModel>();
+    public static MainSettingsViewModel MainSettingsViewModel
+    {
+        get
+        {
+            var vm = Services.GetRequiredService<MainSettingsViewModel>();
+            vm.AllBaseModelTypes = new List<string>()
+            {
+                CivitBaseModelType.WanVideo.GetStringValue(),
+                CivitBaseModelType.Sdxl10.GetStringValue(),
+                CivitBaseModelType.Flux1D.GetStringValue(),
+                "Flux 1. Kontext",
+            }
+                .Select(s => new BaseModelOptionViewModel { ModelType = s, IsSelected = true })
+                .ToList();
+            return vm;
+        }
+    }
 
     public static AccountSettingsViewModel AccountSettingsViewModel =>
         Services.GetRequiredService<AccountSettingsViewModel>();

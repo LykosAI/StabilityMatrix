@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
+using Avalonia.Data;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -23,6 +19,7 @@ using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Settings;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Helper;
+using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
@@ -72,12 +69,20 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool filterExtraNetworksByBaseModel;
 
+    [ObservableProperty]
+    public partial int InferenceDimensionStepChange { get; set; }
+
+    [ObservableProperty]
+    public partial ObservableHashSet<string> FavoriteDimensions { get; set; } = [];
+
     public IEnumerable<FileNameFormatVar> OutputImageFileNameFormatVars =>
         FileNameFormatProvider
             .GetSample()
-            .Substitutions.Select(
-                kv => new FileNameFormatVar { Variable = $"{{{kv.Key}}}", Example = kv.Value.Invoke() }
-            );
+            .Substitutions.Select(kv => new FileNameFormatVar
+            {
+                Variable = $"{{{kv.Key}}}",
+                Example = kv.Value.Invoke(),
+            });
 
     [ObservableProperty]
     private bool isImageViewerPixelGridEnabled = true;
@@ -171,6 +176,28 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
             true
         );
 
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.InferenceDimensionStepChange,
+            settings => settings.InferenceDimensionStepChange,
+            true
+        );
+
+        FavoriteDimensions
+            .ToObservableChangeSet()
+            .Throttle(TimeSpan.FromMilliseconds(50))
+            .ObserveOn(SynchronizationContext.Current)
+            .Subscribe(_ =>
+            {
+                if (
+                    FavoriteDimensions is not { Count: > 0 }
+                    || FavoriteDimensions.Count == settingsManager.Settings.SavedInferenceDimensions.Count
+                )
+                    return;
+
+                settingsManager.Transaction(s => s.SavedInferenceDimensions = FavoriteDimensions.ToHashSet());
+            });
+
         ImportTagCsvCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
     }
 
@@ -189,6 +216,12 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     public override void OnLoaded()
     {
         base.OnLoaded();
+        FavoriteDimensions.Clear();
+        FavoriteDimensions.AddRange(
+            settingsManager.Settings.SavedInferenceDimensions.OrderDescending(
+                DimensionStringComparer.Instance
+            )
+        );
 
         UpdateAvailableTagCompletionCsvs();
     }
@@ -202,7 +235,7 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
         var files = await storage.OpenFilePickerAsync(
             new FilePickerOpenOptions
             {
-                FileTypeFilter = new List<FilePickerFileType> { new("CSV") { Patterns = ["*.csv"] } }
+                FileTypeFilter = new List<FilePickerFileType> { new("CSV") { Patterns = ["*.csv"] } },
             }
         );
 
@@ -230,6 +263,61 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
             NotificationType.Success
         );
     }
+
+    [RelayCommand]
+    private async Task AddRow()
+    {
+        // FavoriteDimensions.Add(string.Empty);
+        var textFields = new TextBoxField[]
+        {
+            new()
+            {
+                Label = "Width",
+                Validator = text =>
+                {
+                    if (string.IsNullOrWhiteSpace(text))
+                        throw new DataValidationException("Width is required");
+
+                    if (!int.TryParse(text, out var width) || width <= 0)
+                        throw new DataValidationException("Width must be a positive integer");
+                },
+                Watermark = "1024",
+            },
+            new()
+            {
+                Label = "Height",
+                Validator = text =>
+                {
+                    if (string.IsNullOrWhiteSpace(text))
+                        throw new DataValidationException("Height is required");
+
+                    if (!int.TryParse(text, out var height) || height <= 0)
+                        throw new DataValidationException("Height must be a positive integer");
+                },
+                Watermark = "1024",
+            },
+        };
+
+        var dialog = DialogHelper.CreateTextEntryDialog("Add Favorite Dimensions", "", textFields);
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            return;
+
+        var width = textFields[0].Text;
+        var height = textFields[1].Text;
+
+        if (string.IsNullOrWhiteSpace(width) || string.IsNullOrWhiteSpace(height))
+            return;
+
+        FavoriteDimensions.Add($"{width} x {height}");
+    }
+
+    [RelayCommand]
+    private void RemoveSelectedRow(string item)
+    {
+        FavoriteDimensions.Remove(item);
+    }
+
     #endregion
 
     private void UpdateAvailableTagCompletionCsvs()

@@ -54,6 +54,7 @@ public partial class PackageInstallDetailViewModel(
 
     public string FullInstallPath => Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
     public bool ShowReleaseMode => SelectedPackage.ShouldIgnoreReleases == false;
+    public bool ShowBranchMode => SelectedPackage.ShouldIgnoreBranches == false;
 
     public string? ReleaseTooltipText =>
         ShowReleaseMode ? null : Resources.Label_ReleasesUnavailableForThisPackage;

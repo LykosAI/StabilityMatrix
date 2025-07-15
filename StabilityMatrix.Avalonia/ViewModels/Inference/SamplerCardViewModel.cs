@@ -179,15 +179,13 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             if (key == "Portrait")
             {
                 GroupedResolutionsByAspectRatio[key] = GroupedResolutionsByAspectRatio[key]
-                    .OrderByDescending(res => Convert.ToInt32(res.Split('x')[1].Trim()))
-                    .ThenBy(res => Convert.ToInt32(res.Split('x')[0].Trim()))
+                    .Order(DimensionStringComparer.Instance)
                     .ToList();
             }
             else
             {
                 GroupedResolutionsByAspectRatio[key] = GroupedResolutionsByAspectRatio[key]
-                    .OrderByDescending(res => Convert.ToInt32(res.Split('x')[0].Trim()))
-                    .ThenBy(res => Convert.ToInt32(res.Split('x')[1].Trim()))
+                    .OrderDescending(DimensionStringComparer.Instance)
                     .ToList();
             }
         }

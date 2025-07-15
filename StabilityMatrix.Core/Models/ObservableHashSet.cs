@@ -145,7 +145,7 @@ public class ObservableHashSet<T> : ObservableCollection<T>, ISet<T>
 
     bool ISet<T>.Overlaps(IEnumerable<T> other) => set.Overlaps(other);
 
-    bool ISet<T>.SetEquals(IEnumerable<T> other) => set.SetEquals(other);
+    public bool SetEquals(IEnumerable<T> other) => set.SetEquals(other);
 
     #endregion
 

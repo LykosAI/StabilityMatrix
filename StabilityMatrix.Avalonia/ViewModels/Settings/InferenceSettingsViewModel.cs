@@ -191,7 +191,7 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
             {
                 if (
                     FavoriteDimensions is not { Count: > 0 }
-                    || FavoriteDimensions.Count == settingsManager.Settings.SavedInferenceDimensions.Count
+                    || FavoriteDimensions.SetEquals(settingsManager.Settings.SavedInferenceDimensions)
                 )
                     return;
 

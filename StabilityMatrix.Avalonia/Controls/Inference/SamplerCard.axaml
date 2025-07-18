@@ -252,70 +252,78 @@
                                     HorizontalAlignment="Stretch"
                                     VerticalAlignment="Stretch"
                                     VerticalContentAlignment="Center"
-                                    Command="{Binding SaveDimensionsToFavoritesCommand}"
-                                    ToolTip.Tip="Save Dimensions to Favorites">
+                                    ToolTip.Tip="Select from Favorite Dimensions">
                                     <avalonia:Icon
                                         Margin="2,0"
                                         FontSize="18"
-                                        Value="fa-solid fa-floppy-disk" />
-                                </Button>
-
-                                <Button
-                                    Grid.Row="2"
-                                    Grid.Column="0"
-                                    Grid.ColumnSpan="4"
-                                    Margin="0,12,0,0"
-                                    Padding="4"
-                                    HorizontalAlignment="Stretch"
-                                    VerticalAlignment="Stretch"
-                                    VerticalContentAlignment="Center"
-                                    ToolTip.Tip="Select from Favorite Dimensions">
-                                    <StackPanel Orientation="Horizontal">
-                                        <avalonia:Icon
-                                            Margin="2,0"
-                                            FontSize="18"
-                                            Value="fa-solid fa-table-cells-large" />
-                                        <TextBlock Margin="8,0,4,0" Text="Favorite Dimensions" />
-                                    </StackPanel>
+                                        Value="fa-solid fa-table-cells-large" />
                                     <Button.Flyout>
                                         <controls:BetterFlyout Placement="Bottom">
-                                            <ItemsRepeater MaxWidth="300" ItemsSource="{Binding GroupedResolutionsByAspectRatio}">
-                                                <ItemsRepeater.Layout>
-                                                    <StackLayout Orientation="Vertical" />
-                                                </ItemsRepeater.Layout>
-                                                <ItemsRepeater.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <DataTemplate.DataType>
-                                                            <x:Type x:TypeArguments="x:String, generic1:List(system:String)" TypeName="generic:KeyValuePair" />
-                                                        </DataTemplate.DataType>
-                                                        <Grid MaxWidth="300" RowDefinitions="Auto,*">
-                                                            <TextBlock
-                                                                Margin="0,8,0,4"
-                                                                FontSize="16"
-                                                                FontWeight="Light"
-                                                                Text="{Binding Key}" />
-                                                            <ItemsRepeater Grid.Row="1" ItemsSource="{Binding Value}">
-                                                                <ItemsRepeater.Layout>
-                                                                    <WrapLayout
-                                                                        HorizontalSpacing="8"
-                                                                        Orientation="Horizontal"
-                                                                        VerticalSpacing="8" />
-                                                                </ItemsRepeater.Layout>
-                                                                <ItemsRepeater.ItemTemplate>
-                                                                    <DataTemplate DataType="{x:Type system:String}">
-                                                                        <Button
-                                                                            HorizontalAlignment="Stretch"
-                                                                            Classes="transparent"
-                                                                            Command="{StaticResource SetResolutionCommand}"
-                                                                            CommandParameter="{Binding}"
-                                                                            Content="{Binding}" />
-                                                                    </DataTemplate>
-                                                                </ItemsRepeater.ItemTemplate>
-                                                            </ItemsRepeater>
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ItemsRepeater.ItemTemplate>
-                                            </ItemsRepeater>
+                                            <Grid RowDefinitions="*,Auto">
+                                                <Button
+                                                    Grid.Row="1"
+                                                    Margin="0,16,0,0"
+                                                    Padding="4"
+                                                    HorizontalAlignment="Stretch"
+                                                    VerticalAlignment="Stretch"
+                                                    VerticalContentAlignment="Center"
+                                                    Command="{Binding SaveDimensionsToFavoritesCommand}"
+                                                    ToolTip.Tip="Save Dimensions to Favorites">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <avalonia:Icon
+                                                            Margin="2,0"
+                                                            FontSize="18"
+                                                            Value="fa-solid fa-floppy-disk" />
+                                                        <TextBlock
+                                                            Margin="4,0,0,0"
+                                                            HorizontalAlignment="Center"
+                                                            FontSize="14"
+                                                            Text="Save Current Dimensions"
+                                                            TextAlignment="Center" />
+                                                    </StackPanel>
+                                                </Button>
+                                                <ItemsRepeater
+                                                    Grid.Row="0"
+                                                    MaxWidth="300"
+                                                    ItemsSource="{Binding GroupedResolutionsByAspectRatio}">
+                                                    <ItemsRepeater.Layout>
+                                                        <StackLayout Orientation="Vertical" />
+                                                    </ItemsRepeater.Layout>
+                                                    <ItemsRepeater.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <DataTemplate.DataType>
+                                                                <x:Type x:TypeArguments="x:String, generic1:List(system:String)" TypeName="generic:KeyValuePair" />
+                                                            </DataTemplate.DataType>
+                                                            <Grid MaxWidth="300" RowDefinitions="Auto,*">
+                                                                <TextBlock
+                                                                    Margin="0,8,0,4"
+                                                                    FontSize="16"
+                                                                    FontWeight="Light"
+                                                                    Text="{Binding Key}" />
+                                                                <ItemsRepeater Grid.Row="1" ItemsSource="{Binding Value}">
+                                                                    <ItemsRepeater.Layout>
+                                                                        <WrapLayout
+                                                                            HorizontalSpacing="8"
+                                                                            Orientation="Horizontal"
+                                                                            VerticalSpacing="8" />
+                                                                    </ItemsRepeater.Layout>
+                                                                    <ItemsRepeater.ItemTemplate>
+                                                                        <DataTemplate DataType="{x:Type system:String}">
+                                                                            <Button
+                                                                                HorizontalAlignment="Stretch"
+                                                                                Classes="transparent"
+                                                                                Command="{StaticResource SetResolutionCommand}"
+                                                                                CommandParameter="{Binding}"
+                                                                                Content="{Binding}" />
+                                                                        </DataTemplate>
+                                                                    </ItemsRepeater.ItemTemplate>
+                                                                </ItemsRepeater>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsRepeater.ItemTemplate>
+                                                </ItemsRepeater>
+                                            </Grid>
+
                                         </controls:BetterFlyout>
                                     </Button.Flyout>
                                 </Button>

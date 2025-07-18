@@ -30,6 +30,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 [RegisterTransient<SamplerCardViewModel>]
 public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
+    private ISettingsManager settingsManager;
+
     public const string ModuleKey = "Sampler";
 
     [ObservableProperty]
@@ -127,9 +129,6 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     [JsonIgnore]
     public IInferenceClientManager ClientManager { get; }
 
-    [JsonIgnore]
-    public ISettingsManager SettingsManager { get; }
-
     private int TotalSteps => Steps + RefinerSteps;
 
     public SamplerCardViewModel(
@@ -138,61 +137,8 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         ISettingsManager settingsManager
     )
     {
+        this.settingsManager = settingsManager;
         ClientManager = clientManager;
-        SettingsManager = settingsManager;
-        AvailableResolutions = settingsManager.Settings.SavedInferenceDimensions.ToList();
-
-        foreach (var res in AvailableResolutions)
-        {
-            // split on 'x' or 'X'
-            var parts = res.ToLowerInvariant()
-                .Split('x', StringSplitOptions.RemoveEmptyEntries)
-                .Select(p => p.Trim())
-                .ToArray();
-
-            if (parts.Length != 2 || !int.TryParse(parts[0], out var w) || !int.TryParse(parts[1], out var h))
-            {
-                continue;
-            }
-
-            var category = "Square";
-            if (w > h)
-            {
-                category = "Landscape";
-            }
-            else if (h > w)
-            {
-                category = "Portrait";
-            }
-
-            if (!GroupedResolutionsByAspectRatio.TryGetValue(category, out var list))
-            {
-                list = [];
-                GroupedResolutionsByAspectRatio[category] = list;
-            }
-            list.Add(res.Trim());
-        }
-
-        // Sort the resolutions by width and height
-        foreach (var key in GroupedResolutionsByAspectRatio.Keys.ToList())
-        {
-            if (key == "Portrait")
-            {
-                GroupedResolutionsByAspectRatio[key] = GroupedResolutionsByAspectRatio[key]
-                    .Order(DimensionStringComparer.Instance)
-                    .ToList();
-            }
-            else
-            {
-                GroupedResolutionsByAspectRatio[key] = GroupedResolutionsByAspectRatio[key]
-                    .OrderDescending(DimensionStringComparer.Instance)
-                    .ToList();
-            }
-        }
-
-        // fire that off just in case
-        OnPropertyChanged(nameof(GroupedResolutionsByAspectRatio));
-
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
         {
             modulesCard.Title = Resources.Label_Addons;
@@ -212,7 +158,9 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     public override void OnLoaded()
     {
         base.OnLoaded();
-        DimensionStepChange = SettingsManager.Settings.InferenceDimensionStepChange;
+        DimensionStepChange = settingsManager.Settings.InferenceDimensionStepChange;
+        AvailableResolutions = settingsManager.Settings.SavedInferenceDimensions.ToList();
+        LoadAvailableResolutions();
     }
 
     [RelayCommand]
@@ -250,7 +198,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         var dimensionWithSpace = $"{Width} x {Height}";
         // Check if already exists
         if (
-            SettingsManager.Settings.SavedInferenceDimensions.Any(d =>
+            settingsManager.Settings.SavedInferenceDimensions.Any(d =>
                 d == dimension || d == dimensionWithSpace
             )
         )
@@ -259,7 +207,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         }
 
         // Add to favorites
-        SettingsManager.Transaction(s => s.SavedInferenceDimensions.Add(dimensionWithSpace));
+        settingsManager.Transaction(s => s.SavedInferenceDimensions.Add(dimensionWithSpace));
 
         var orientation =
             Width > Height ? "Landscape"
@@ -736,5 +684,59 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
             CfgScale = CfgScale,
             Sampler = sampler,
         };
+    }
+
+    private void LoadAvailableResolutions()
+    {
+        foreach (var res in AvailableResolutions)
+        {
+            // split on 'x' or 'X'
+            var parts = res.ToLowerInvariant()
+                .Split('x', StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Trim())
+                .ToArray();
+
+            if (parts.Length != 2 || !int.TryParse(parts[0], out var w) || !int.TryParse(parts[1], out var h))
+            {
+                continue;
+            }
+
+            var category = "Square";
+            if (w > h)
+            {
+                category = "Landscape";
+            }
+            else if (h > w)
+            {
+                category = "Portrait";
+            }
+
+            if (!GroupedResolutionsByAspectRatio.TryGetValue(category, out var list))
+            {
+                list = [];
+                GroupedResolutionsByAspectRatio[category] = list;
+            }
+            list.Add(res.Trim());
+        }
+
+        // Sort the resolutions by width and height
+        foreach (var key in GroupedResolutionsByAspectRatio.Keys.ToList())
+        {
+            if (key == "Portrait")
+            {
+                GroupedResolutionsByAspectRatio[key] = GroupedResolutionsByAspectRatio[key]
+                    .Order(DimensionStringComparer.Instance)
+                    .ToList();
+            }
+            else
+            {
+                GroupedResolutionsByAspectRatio[key] = GroupedResolutionsByAspectRatio[key]
+                    .OrderDescending(DimensionStringComparer.Instance)
+                    .ToList();
+            }
+        }
+
+        // fire that off just in case
+        OnPropertyChanged(nameof(GroupedResolutionsByAspectRatio));
     }
 }

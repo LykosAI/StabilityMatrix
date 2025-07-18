@@ -2,12 +2,10 @@
 using System.Text;
 using System.Text.Json;
 using ExifLibrary;
-using KGySoft.CoreLibraries;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.Png;
 using MetadataExtractor.Formats.WebP;
-using Microsoft.VisualBasic;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -89,6 +87,19 @@ public class ImageMetadata
             var smProj = ReadTextChunkFromWebp(filePath, ExifDirectoryBase.TagSoftware);
 
             return (null, paramsJson, smProj, null, null);
+        }
+
+        if (
+            filePath.Extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase)
+            || filePath.Extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            var file = ImageFile.FromFile(filePath.Info.FullName);
+            var userComment = file.Properties.Get(ExifTag.UserComment);
+            var bytes = userComment.Interoperability.Data.Skip(8).ToArray();
+            var userCommentString = Encoding.BigEndianUnicode.GetString(bytes);
+
+            return (null, null, null, null, userCommentString);
         }
 
         using var stream = filePath.Info.OpenRead();

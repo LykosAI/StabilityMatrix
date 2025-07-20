@@ -293,7 +293,8 @@
             Grid.ColumnSpan="3"
             Margin="8,8"
             ExpandDirection="Down"
-            Header="{x:Static lang:Resources.Label_ModelVersionDescription}">
+            Header="{x:Static lang:Resources.Label_ModelVersionDescription}"
+            IsVisible="{Binding SelectedVersionViewModel.HasVersionDescription}">
             <ScrollViewer MaxHeight="300">
                 <controls:MarkdownViewer Html="{Binding SelectedVersionViewModel.VersionDescription}" />
             </ScrollViewer>

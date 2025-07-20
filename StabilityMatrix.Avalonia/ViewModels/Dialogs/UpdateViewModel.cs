@@ -1,17 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using DynamicData;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using Semver;
 using StabilityMatrix.Avalonia.Languages;
-using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -254,21 +247,18 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
 
         var results = pattern
             .Matches(markdown)
-            .Select(
-                m =>
-                    new
-                    {
-                        Block = m.Groups[1].Value.Trim(),
-                        Version = SemVersion.TryParse(
-                            m.Groups[2].Value.Trim(),
-                            SemVersionStyles.AllowV,
-                            out var version
-                        )
-                            ? version
-                            : null,
-                        Content = m.Groups[3].Value.Trim()
-                    }
-            )
+            .Select(m => new
+            {
+                Block = m.Groups[1].Value.Trim(),
+                Version = SemVersion.TryParse(
+                    m.Groups[2].Value.Trim(),
+                    SemVersionStyles.AllowV,
+                    out var version
+                )
+                    ? version
+                    : null,
+                Content = m.Groups[3].Value.Trim(),
+            })
             .Where(x => x.Version is not null)
             .ToList();
 
@@ -288,8 +278,8 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         // Support for previous pre-release without changelogs
         if (currentVersionBlock == -1)
         {
-            currentVersionBlock = results.FindIndex(
-                x => x.Version == currentVersion.WithoutPrereleaseOrMetadata()
+            currentVersionBlock = results.FindIndex(x =>
+                x.Version == currentVersion.WithoutPrereleaseOrMetadata()
             );
 
             // Add 1 if found to include the current release
@@ -308,15 +298,14 @@ public partial class UpdateViewModel : ContentDialogViewModelBase
         // Filter out pre-releases
         var blocks = results
             .Take(currentVersionBlock)
-            .Where(
-                x =>
-                    x.Version!.PrereleaseIdentifiers.Count == 0
-                    || x.Version.PrereleaseIdentifiers[0].Value switch
-                    {
-                        "pre" when maxChannel >= UpdateChannel.Preview => true,
-                        "dev" when maxChannel >= UpdateChannel.Development => true,
-                        _ => false
-                    }
+            .Where(x =>
+                x.Version!.PrereleaseIdentifiers.Count == 0
+                || x.Version.PrereleaseIdentifiers[0].Value switch
+                {
+                    "pre" when maxChannel >= UpdateChannel.Preview => true,
+                    "dev" when maxChannel >= UpdateChannel.Development => true,
+                    _ => false,
+                }
             )
             .Select(x => x.Block);
 

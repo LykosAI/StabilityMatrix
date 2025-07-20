@@ -51,7 +51,13 @@ public record LocalImageFile
     /// </summary>
     public string FileNameWithoutExtension => Path.GetFileNameWithoutExtension(AbsolutePath);
 
-    public (string? Parameters, string? ParametersJson, string? SMProject, string? ComfyNodes) ReadMetadata()
+    public (
+        string? Parameters,
+        string? ParametersJson,
+        string? SMProject,
+        string? ComfyNodes,
+        string? CivitParameters
+    ) ReadMetadata()
     {
         if (AbsolutePath.EndsWith("webp"))
         {
@@ -61,7 +67,7 @@ public record LocalImageFile
             );
             var smProj = ImageMetadata.ReadTextChunkFromWebp(AbsolutePath, ExifDirectoryBase.TagSoftware);
 
-            return (null, paramsJson, smProj, null);
+            return (null, paramsJson, smProj, null, null);
         }
 
         using var stream = new FileStream(AbsolutePath, FileMode.Open, FileAccess.Read, FileShare.Read);
@@ -71,12 +77,14 @@ public record LocalImageFile
         var parametersJson = ImageMetadata.ReadTextChunk(reader, "parameters-json");
         var smProject = ImageMetadata.ReadTextChunk(reader, "smproj");
         var comfyNodes = ImageMetadata.ReadTextChunk(reader, "prompt");
+        var civitParameters = ImageMetadata.ReadTextChunk(reader, "user_comment");
 
         return (
             string.IsNullOrEmpty(parameters) ? null : parameters,
             string.IsNullOrEmpty(parametersJson) ? null : parametersJson,
             string.IsNullOrEmpty(smProject) ? null : smProject,
-            string.IsNullOrEmpty(comfyNodes) ? null : comfyNodes
+            string.IsNullOrEmpty(comfyNodes) ? null : comfyNodes,
+            string.IsNullOrEmpty(civitParameters) ? null : civitParameters
         );
     }
 
@@ -113,7 +121,7 @@ public record LocalImageFile
                 CreatedAt = filePath.Info.CreationTimeUtc,
                 LastModifiedAt = filePath.Info.LastWriteTimeUtc,
                 GenerationParameters = parameters,
-                ImageSize = new Size(parameters?.Width ?? 0, parameters?.Height ?? 0)
+                ImageSize = new Size(parameters?.Width ?? 0, parameters?.Height ?? 0),
             };
         }
 
@@ -136,6 +144,10 @@ public record LocalImageFile
             else
             {
                 metadata = ImageMetadata.ReadTextChunk(reader, "parameters");
+                if (string.IsNullOrWhiteSpace(metadata)) // if still empty, try civitai metadata (user_comment)
+                {
+                    metadata = ImageMetadata.ReadTextChunk(reader, "user_comment");
+                }
                 GenerationParameters.TryParse(metadata, out genParams);
             }
 
@@ -148,7 +160,7 @@ public record LocalImageFile
                 CreatedAt = filePath.Info.CreationTimeUtc,
                 LastModifiedAt = filePath.Info.LastWriteTimeUtc,
                 GenerationParameters = genParams,
-                ImageSize = imageSize
+                ImageSize = imageSize,
             };
         }
 
@@ -162,7 +174,7 @@ public record LocalImageFile
             ImageType = imageType,
             CreatedAt = filePath.Info.CreationTimeUtc,
             LastModifiedAt = filePath.Info.LastWriteTimeUtc,
-            ImageSize = new Size { Height = codec.Info.Height, Width = codec.Info.Width }
+            ImageSize = new Size { Height = codec.Info.Height, Width = codec.Info.Width },
         };
     }
 
@@ -172,6 +184,6 @@ public record LocalImageFile
         ".jpg",
         ".jpeg",
         ".gif",
-        ".webp"
+        ".webp",
     ];
 }

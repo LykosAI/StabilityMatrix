@@ -147,30 +147,26 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
 
         var latestVersionInstalled =
             latestVersion.Files != null
-            && latestVersion.Files.Any(
-                file =>
-                    file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-                    && installedModels.Contains(file.Hashes.BLAKE3)
+            && latestVersion.Files.Any(file =>
+                file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                && installedModels.Contains(file.Hashes.BLAKE3)
             );
 
         // check if any of the ModelVersion.Files.Hashes.BLAKE3 hashes are in the installedModels list
         var anyVersionInstalled =
             latestVersionInstalled
-            || CivitModel.ModelVersions.Any(
-                version =>
-                    version.Files != null
-                    && version.Files.Any(
-                        file =>
-                            file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-                            && installedModels.Contains(file.Hashes.BLAKE3)
-                    )
+            || CivitModel.ModelVersions.Any(version =>
+                version.Files != null
+                && version.Files.Any(file =>
+                    file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                    && installedModels.Contains(file.Hashes.BLAKE3)
+                )
             );
 
-        UpdateCardText = latestVersionInstalled
-            ? "Installed"
-            : anyVersionInstalled
-                ? "Update Available"
-                : string.Empty;
+        UpdateCardText =
+            latestVersionInstalled ? "Installed"
+            : anyVersionInstalled ? "Update Available"
+            : string.Empty;
 
         ShowUpdateCard = anyVersionInstalled;
     }
@@ -179,15 +175,15 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     {
         var nsfwEnabled = settingsManager.Settings.ModelBrowserNsfwEnabled;
         var hideEarlyAccessModels = settingsManager.Settings.HideEarlyAccessModels;
-        var version = CivitModel.ModelVersions?.FirstOrDefault(
-            v => !hideEarlyAccessModels || !v.IsEarlyAccess
+        var version = CivitModel.ModelVersions?.FirstOrDefault(v =>
+            !hideEarlyAccessModels || !v.IsEarlyAccess
         );
         var images = version?.Images;
 
         // Try to find a valid image
         var image = images
-            ?.Where(
-                img => LocalModelFile.SupportedImageExtensions.Any(img.Url.Contains) && img.Type == "image"
+            ?.Where(img =>
+                LocalModelFile.SupportedImageExtensions.Any(img.Url.Contains) && img.Type == "image"
             )
             .FirstOrDefault(image => nsfwEnabled || image.NsfwLevel <= 1);
         if (image != null)
@@ -351,6 +347,9 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             if (
                 model.BaseModelType == CivitBaseModelType.Flux1D.GetStringValue()
                 || model.BaseModelType == CivitBaseModelType.Flux1S.GetStringValue()
+                || model.BaseModelType == CivitBaseModelType.WanVideo.GetStringValue()
+                || model.BaseModelType == CivitBaseModelType.HunyuanVideo.GetStringValue()
+                || selectedFile?.Metadata.Format is CivitModelFormat.GGUF
             )
             {
                 sharedFolder = SharedFolderType.DiffusionModels.GetStringValue();

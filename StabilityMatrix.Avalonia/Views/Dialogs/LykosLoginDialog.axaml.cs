@@ -1,10 +1,10 @@
-﻿using Avalonia.Controls;
-using Injectio.Attributes;
+﻿using Injectio.Attributes;
+using StabilityMatrix.Avalonia.Controls;
 
 namespace StabilityMatrix.Avalonia.Views.Dialogs;
 
 [RegisterTransient<LykosLoginDialog>]
-public partial class LykosLoginDialog : UserControl
+public partial class LykosLoginDialog : UserControlBase
 {
     public LykosLoginDialog()
     {

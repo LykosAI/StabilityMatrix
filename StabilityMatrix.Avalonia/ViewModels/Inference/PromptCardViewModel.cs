@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
@@ -222,43 +223,53 @@ public partial class PromptCardViewModel
         {
             IsPromptAmplifyTeachingTipOpen = true;
         }
+    }
 
-        _ = Task.Run(async () =>
-        {
-            try
+    protected override Task OnInitialLoadedAsync()
+    {
+        Task.Run(async () =>
             {
-                if (accountsService.LykosStatus == null)
+                try
                 {
-                    await accountsService.RefreshAsync();
+                    var isLoggedIn = await accountsService.HasStoredLykosAccountAsync();
+                    if (!isLoggedIn)
+                    {
+                        return;
+                    }
+
+                    SetTokenThreshold();
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error refreshing account data");
                 }
 
-                SetTokenThreshold();
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error refreshing account data");
-            }
-
-            try
-            {
-                var result = await promptGenApi.AccountMeTokens();
-                TokensRemaining = result.Available;
-            }
-            catch (ApiException e)
-            {
-                if (e.StatusCode != HttpStatusCode.Unauthorized && e.StatusCode != HttpStatusCode.NotFound)
+                try
                 {
-                    notificationService.Show(
-                        "Error retrieving prompt amplifier data",
-                        e.Message,
-                        NotificationType.Error
-                    );
-                    return;
+                    var result = await promptGenApi.AccountMeTokens();
+                    TokensRemaining = result.Available;
                 }
+                catch (ApiException e)
+                {
+                    if (
+                        e.StatusCode != HttpStatusCode.Unauthorized
+                        && e.StatusCode != HttpStatusCode.NotFound
+                    )
+                    {
+                        notificationService.Show(
+                            "Error retrieving prompt amplifier data",
+                            e.Message,
+                            NotificationType.Error
+                        );
+                        return;
+                    }
 
-                TokensRemaining = -1;
-            }
-        });
+                    TokensRemaining = -1;
+                }
+            })
+            .SafeFireAndForget(onException: ex => logger.LogError(ex, "Error getting prompt amplifier data"));
+
+        return Task.CompletedTask;
     }
 
     private void SetTokenThreshold()

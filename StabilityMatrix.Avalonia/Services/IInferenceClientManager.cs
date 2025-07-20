@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using DynamicData;
 using DynamicData.Binding;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Core.Inference;
@@ -51,6 +52,7 @@ public interface IInferenceClientManager : IDisposable, INotifyPropertyChanged, 
     IObservableCollection<HybridModelFile> UnetModels { get; }
     IObservableCollection<HybridModelFile> ClipModels { get; }
     IObservableCollection<HybridModelFile> ClipVisionModels { get; }
+    IObservable<IChangeSet<HybridModelFile, string>> LoraModelsChangeSet { get; }
 
     Task CopyImageToInputAsync(FilePath imageFile, CancellationToken cancellationToken = default);
 

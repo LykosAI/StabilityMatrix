@@ -344,33 +344,34 @@ public class ComfyUI(
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var isLegacyNvidia =
+            torchVersion == TorchIndex.Cuda
+            && (
+                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+                ?? HardwareHelper.HasLegacyNvidiaGpu()
+            );
 
         var pipArgs = new PipInstallArgs();
 
         pipArgs = torchVersion switch
         {
             TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
-            _
-                => pipArgs
-                    .AddArg("--upgrade")
-                    .WithTorch()
-                    .WithTorchVision()
-                    .WithTorchAudio()
-                    .WithTorchExtraIndex(
-                        torchVersion switch
-                        {
-                            TorchIndex.Cpu => "cpu",
-                            TorchIndex.Cuda => "cu128",
-                            TorchIndex.Rocm => "rocm6.2.4",
-                            TorchIndex.Mps => "cpu",
-                            _
-                                => throw new ArgumentOutOfRangeException(
-                                    nameof(torchVersion),
-                                    torchVersion,
-                                    null
-                                )
-                        }
-                    )
+            _ => pipArgs
+                .AddArg("--upgrade")
+                .WithTorch()
+                .WithTorchVision()
+                .WithTorchAudio()
+                .WithTorchExtraIndex(
+                    torchVersion switch
+                    {
+                        TorchIndex.Cpu => "cpu",
+                        TorchIndex.Cuda when isLegacyNvidia => "cu126",
+                        TorchIndex.Cuda => "cu128",
+                        TorchIndex.Rocm => "rocm6.2.4",
+                        TorchIndex.Mps => "cpu",
+                        _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null),
+                    }
+                ),
         };
 
         var requirements = new FilePath(installLocation, "requirements.txt");
@@ -412,6 +413,11 @@ public class ComfyUI(
             HandleConsoleOutput,
             OnExit
         );
+
+        if (Compat.IsWindows)
+        {
+            ProcessTracker.AttachExitHandlerJobToProcess(VenvRunner.Process);
+        }
 
         return;
 

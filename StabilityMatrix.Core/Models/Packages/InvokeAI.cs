@@ -8,6 +8,7 @@ using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.Api.Invoke;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
@@ -63,14 +64,14 @@ public class InvokeAI : BaseGitPackage
             [SharedFolderType.ControlNet] = [Path.Combine(RelativeRootPath, "autoimport", "controlnet")],
             [SharedFolderType.IpAdapters15] =
             [
-                Path.Combine(RelativeRootPath, "models", "sd-1", "ip_adapter")
+                Path.Combine(RelativeRootPath, "models", "sd-1", "ip_adapter"),
             ],
             [SharedFolderType.IpAdaptersXl] =
             [
-                Path.Combine(RelativeRootPath, "models", "sdxl", "ip_adapter")
+                Path.Combine(RelativeRootPath, "models", "sdxl", "ip_adapter"),
             ],
             [SharedFolderType.ClipVision] = [Path.Combine(RelativeRootPath, "models", "any", "clip_vision")],
-            [SharedFolderType.T2IAdapter] = [Path.Combine(RelativeRootPath, "autoimport", "t2i_adapter")]
+            [SharedFolderType.T2IAdapter] = [Path.Combine(RelativeRootPath, "autoimport", "t2i_adapter")],
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -85,15 +86,15 @@ public class InvokeAI : BaseGitPackage
             {
                 Name = "Root Directory",
                 Type = LaunchOptionType.String,
-                Options = ["--root"]
+                Options = ["--root"],
             },
             new()
             {
                 Name = "Config File",
                 Type = LaunchOptionType.String,
-                Options = ["--config"]
+                Options = ["--config"],
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
@@ -114,7 +115,7 @@ public class InvokeAI : BaseGitPackage
             PackagePrerequisite.Python310,
             PackagePrerequisite.VcRedist,
             PackagePrerequisite.Git,
-            PackagePrerequisite.Node
+            PackagePrerequisite.Node,
         ];
 
     public override async Task InstallPackage(
@@ -148,20 +149,29 @@ public class InvokeAI : BaseGitPackage
         var pipCommandArgs = "-e . --use-pep517 --extra-index-url https://download.pytorch.org/whl/cpu";
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var isLegacyNvidiaGpu =
+            torchVersion is TorchIndex.Cuda
+            && (
+                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+                ?? HardwareHelper.HasLegacyNvidiaGpu()
+            );
+
         var torchInstallArgs = new PipInstallArgs();
 
         switch (torchVersion)
         {
             case TorchIndex.Cuda:
+                var torchIndex = isLegacyNvidiaGpu ? "cu126" : "cu128";
                 torchInstallArgs = torchInstallArgs
-                    .WithTorch("==2.4.1")
-                    .WithTorchVision("==0.19.1")
-                    .WithXFormers("==0.0.28.post1")
-                    .WithTorchExtraIndex("cu124");
+                    .WithTorch("==2.7.0")
+                    .WithTorchVision("==0.22.0")
+                    .WithTorchAudio("==2.7.0")
+                    .WithXFormers("==0.0.30")
+                    .WithTorchExtraIndex(torchIndex);
 
                 Logger.Info("Starting InvokeAI install (CUDA)...");
                 pipCommandArgs =
-                    "-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/cu124";
+                    $"-e .[xformers] --use-pep517 --extra-index-url https://download.pytorch.org/whl/{torchIndex}";
                 break;
 
             case TorchIndex.Rocm:
@@ -204,20 +214,21 @@ public class InvokeAI : BaseGitPackage
         string installLocation,
         IProgress<ProgressReport>? progress,
         Action<ProcessOutput>? onConsoleOutput,
-        IReadOnlyDictionary<string, string>? envVars = null
+        IReadOnlyDictionary<string, string>? envVars = null,
+        InstallPackageOptions? installOptions = null
     )
     {
         await PrerequisiteHelper.InstallNodeIfNecessary(progress).ConfigureAwait(false);
+
+        var pnpmVersion = installOptions?.VersionOptions.VersionTag?.Contains("v5") == true ? "8" : "10";
+
         await PrerequisiteHelper
-            .RunNpm(["i", "pnpm@8"], installLocation, envVars: envVars)
+            .RunNpm(["i", $"pnpm@{pnpmVersion}"], installLocation, envVars: envVars)
             .ConfigureAwait(false);
 
-        if (Compat.IsMacOS || Compat.IsLinux)
-        {
-            await PrerequisiteHelper
-                .RunNpm(["i", "vite", "--ignore-scripts=true"], installLocation, envVars: envVars)
-                .ConfigureAwait(false);
-        }
+        await PrerequisiteHelper
+            .RunNpm(["i", "vite", "--ignore-scripts=true"], installLocation, envVars: envVars)
+            .ConfigureAwait(false);
 
         var pnpmPath = Path.Combine(
             installLocation,
@@ -247,7 +258,7 @@ public class InvokeAI : BaseGitPackage
 
         process = ProcessRunner.StartAnsiProcess(
             Compat.IsWindows ? pnpmPath : vitePath,
-            "build",
+            Compat.IsWindows ? "vite build" : "build",
             invokeFrontendPath,
             onConsoleOutput,
             envVars
@@ -321,10 +332,10 @@ public class InvokeAI : BaseGitPackage
         // above the minimum in invokeai.frontend.install.widgets
 
         var code = $"""
-                    import sys
-                    from {split[0]} import {split[1]}
-                    sys.exit({split[1]}())
-                    """;
+            import sys
+            from {split[0]} import {split[1]}
+            sys.exit({split[1]}())
+            """;
 
         if (runDetached)
         {
@@ -383,9 +394,15 @@ public class InvokeAI : BaseGitPackage
     }
 
     // Invoke doing shared folders on startup instead
-    public override Task SetupModelFolders(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) => Task.CompletedTask;
+    public override Task SetupModelFolders(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    ) => Task.CompletedTask;
 
-    public override Task RemoveModelFolderLinks(DirectoryPath installDirectory, SharedFolderMethod sharedFolderMethod) => Task.CompletedTask;
+    public override Task RemoveModelFolderLinks(
+        DirectoryPath installDirectory,
+        SharedFolderMethod sharedFolderMethod
+    ) => Task.CompletedTask;
 
     private async Task<bool> SetupInvokeModelSharingConfig(
         Action<ProcessOutput>? onConsoleOutput,
@@ -405,7 +422,7 @@ public class InvokeAI : BaseGitPackage
             {
                 ContentSerializer = new SystemTextJsonContentSerializer(
                     new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }
-                )
+                ),
             }
         );
 
@@ -422,7 +439,7 @@ public class InvokeAI : BaseGitPackage
                     new InstallModelRequest
                     {
                         Name = Path.GetFileNameWithoutExtension(model.Path),
-                        Description = Path.GetFileName(model.Path)
+                        Description = Path.GetFileName(model.Path),
                     },
                     source: model.Path,
                     inplace: true
@@ -435,10 +452,9 @@ public class InvokeAI : BaseGitPackage
         var installCheckCount = 0;
 
         while (
-            !installStatus.All(
-                x =>
-                    (x.Status != null && x.Status.Equals("completed", StringComparison.OrdinalIgnoreCase))
-                    || (x.Status != null && x.Status.Equals("error", StringComparison.OrdinalIgnoreCase))
+            !installStatus.All(x =>
+                (x.Status != null && x.Status.Equals("completed", StringComparison.OrdinalIgnoreCase))
+                || (x.Status != null && x.Status.Equals("error", StringComparison.OrdinalIgnoreCase))
             )
         )
         {
@@ -449,7 +465,7 @@ public class InvokeAI : BaseGitPackage
                     new ProcessOutput
                     {
                         Text =
-                            "This may take awhile, feel free to use the web interface while the rest of your models are imported.\n"
+                            "This may take awhile, feel free to use the web interface while the rest of your models are imported.\n",
                     }
                 );
 
@@ -466,7 +482,7 @@ public class InvokeAI : BaseGitPackage
                 {
                     Text =
                         $"\nWaiting for model import... ({installStatus.Count(x => (x.Status != null && !x.Status.Equals("completed",
-                        StringComparison.OrdinalIgnoreCase)) && !x.Status.Equals("error", StringComparison.OrdinalIgnoreCase))} remaining)\n"
+                        StringComparison.OrdinalIgnoreCase)) && !x.Status.Equals("error", StringComparison.OrdinalIgnoreCase))} remaining)\n",
                 }
             );
             await Task.Delay(5000).ConfigureAwait(false);

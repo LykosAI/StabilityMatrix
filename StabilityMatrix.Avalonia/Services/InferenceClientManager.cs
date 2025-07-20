@@ -47,7 +47,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     private ComfyClient? client;
 
     [MemberNotNullWhen(true, nameof(Client))]
-    public bool IsConnected => Client is not null;
+    public virtual bool IsConnected => Client is not null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanUserConnect))]
@@ -73,21 +73,25 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
     private readonly SourceCache<HybridModelFile, string> controlNetModelsSource = new(p => p.GetId());
 
-    private readonly SourceCache<HybridModelFile, string> downloadableControlNetModelsSource =
-        new(p => p.GetId());
+    private readonly SourceCache<HybridModelFile, string> downloadableControlNetModelsSource = new(p =>
+        p.GetId()
+    );
 
     public IObservableCollection<HybridModelFile> ControlNetModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
-    public readonly SourceCache<HybridModelFile, string> LoraModelsSource = new(p => p.GetId());
+    private readonly SourceCache<HybridModelFile, string> loraModelsSource = new(p => p.GetId());
+
+    public IObservable<IChangeSet<HybridModelFile, string>> LoraModelsChangeSet { get; }
 
     public IObservableCollection<HybridModelFile> LoraModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
 
     private readonly SourceCache<HybridModelFile, string> promptExpansionModelsSource = new(p => p.GetId());
 
-    private readonly SourceCache<HybridModelFile, string> downloadablePromptExpansionModelsSource =
-        new(p => p.GetId());
+    private readonly SourceCache<HybridModelFile, string> downloadablePromptExpansionModelsSource = new(p =>
+        p.GetId()
+    );
 
     public IObservableCollection<HybridModelFile> PromptExpansionModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
@@ -121,8 +125,9 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
     private readonly SourceCache<HybridModelFile, string> ultralyticsModelsSource = new(p => p.GetId());
 
-    private readonly SourceCache<HybridModelFile, string> downloadableUltralyticsModelsSource =
-        new(p => p.GetId());
+    private readonly SourceCache<HybridModelFile, string> downloadableUltralyticsModelsSource = new(p =>
+        p.GetId()
+    );
 
     public IObservableCollection<HybridModelFile> SamModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
@@ -143,8 +148,9 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         new ObservableCollectionExtended<HybridModelFile>();
 
     private readonly SourceCache<HybridModelFile, string> clipVisionModelsSource = new(p => p.GetId());
-    private readonly SourceCache<HybridModelFile, string> downloadableClipVisionModelsSource =
-        new(p => p.GetId());
+    private readonly SourceCache<HybridModelFile, string> downloadableClipVisionModelsSource = new(p =>
+        p.GetId()
+    );
 
     public IObservableCollection<HybridModelFile> ClipVisionModels { get; } =
         new ObservableCollectionExtended<HybridModelFile>();
@@ -188,9 +194,15 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
-        LoraModelsSource
+        LoraModelsChangeSet = loraModelsSource
             .Connect()
             .DeferUntilLoaded()
+            // Adding .RefCount() if multiple consumers might subscribe to this
+            // LoraModelsChangeSet property. It keeps the upstream connection active as long
+            // as there's at least one subscriber. This is usually a good idea when exposing streams.
+            .RefCount();
+
+        LoraModelsChangeSet
             .SortAndBind(
                 LoraModels,
                 SortExpressionComparer<HybridModelFile>.Ascending(f => f.Type).ThenByAscending(f => f.SortKey)
@@ -331,8 +343,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             if (IsConnected)
             {
                 LoadSharedPropertiesAsync()
-                    .SafeFireAndForget(
-                        onException: ex => logger.LogError(ex, "Error loading shared properties")
+                    .SafeFireAndForget(onException: ex =>
+                        logger.LogError(ex, "Error loading shared properties")
                     );
             }
         };
@@ -345,7 +357,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             throw new InvalidOperationException("Client is not connected");
     }
 
-    private async Task LoadSharedPropertiesAsync()
+    protected virtual async Task LoadSharedPropertiesAsync()
     {
         EnsureConnected();
 
@@ -370,7 +382,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Get Lora model names
         if (await Client.GetNodeOptionNamesAsync("LoraLoader", "lora_name") is { } loraModelNames)
         {
-            LoraModelsSource.EditDiff(
+            loraModelsSource.EditDiff(
                 loraModelNames.Select(HybridModelFile.FromRemote),
                 HybridModelFile.Comparer
             );
@@ -385,7 +397,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             IEnumerable<HybridModelFile> models =
             [
                 HybridModelFile.None,
-                ..ultralyticsModelNames.Select(HybridModelFile.FromRemote)
+                .. ultralyticsModelNames.Select(HybridModelFile.FromRemote),
             ];
             ultralyticsModelsSource.EditDiff(models, HybridModelFile.Comparer);
         }
@@ -396,7 +408,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             IEnumerable<HybridModelFile> models =
             [
                 HybridModelFile.None,
-                ..samModelNames.Select(HybridModelFile.FromRemote)
+                .. samModelNames.Select(HybridModelFile.FromRemote),
             ];
             samModelsSource.EditDiff(models, HybridModelFile.Comparer);
         }
@@ -484,7 +496,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             IEnumerable<HybridModelFile> models =
             [
                 HybridModelFile.None,
-                ..clipModelNames.Select(HybridModelFile.FromRemote)
+                .. clipModelNames.Select(HybridModelFile.FromRemote),
             ];
             clipModelsSource.EditDiff(models, HybridModelFile.Comparer);
         }
@@ -495,7 +507,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             IEnumerable<HybridModelFile> models =
             [
                 HybridModelFile.None,
-                ..clipVisionModelNames.Select(HybridModelFile.FromRemote)
+                .. clipVisionModelNames.Select(HybridModelFile.FromRemote),
             ];
             clipVisionModelsSource.EditDiff(models, HybridModelFile.Comparer);
         }
@@ -504,7 +516,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     /// <summary>
     /// Clears shared properties and sets them to local defaults
     /// </summary>
-    private void ResetSharedProperties()
+    protected void ResetSharedProperties()
     {
         // Load local models
         modelsSource.EditDiff(
@@ -521,13 +533,13 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         );
 
         // Downloadable ControlNet models
-        var downloadableControlNets = RemoteModels.ControlNetModels.Where(
-            u => !controlNetModelsSource.Lookup(u.GetId()).HasValue
+        var downloadableControlNets = RemoteModels.ControlNetModels.Where(u =>
+            !controlNetModelsSource.Lookup(u.GetId()).HasValue
         );
         downloadableControlNetModelsSource.EditDiff(downloadableControlNets, HybridModelFile.Comparer);
 
         // Load local Lora / LyCORIS models
-        LoraModelsSource.EditDiff(
+        loraModelsSource.EditDiff(
             modelIndexService
                 .FindByModelType(SharedFolderType.Lora | SharedFolderType.LyCORIS)
                 .Select(HybridModelFile.FromLocal),
@@ -544,8 +556,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         // Downloadable PromptExpansion models
         downloadablePromptExpansionModelsSource.EditDiff(
-            RemoteModels.PromptExpansionModels.Where(
-                u => !promptExpansionModelsSource.Lookup(u.GetId()).HasValue
+            RemoteModels.PromptExpansionModels.Where(u =>
+                !promptExpansionModelsSource.Lookup(u.GetId()).HasValue
             ),
             HybridModelFile.Comparer
         );
@@ -560,14 +572,14 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         IEnumerable<HybridModelFile> ultralyticsModels =
         [
             HybridModelFile.None,
-            ..modelIndexService
-            .FindByModelType(SharedFolderType.Ultralytics)
-            .Select(HybridModelFile.FromLocal)
+            .. modelIndexService
+                .FindByModelType(SharedFolderType.Ultralytics)
+                .Select(HybridModelFile.FromLocal),
         ];
         ultralyticsModelsSource.EditDiff(ultralyticsModels, HybridModelFile.Comparer);
 
-        var downloadableUltralyticsModels = RemoteModels.UltralyticsModelFiles.Where(
-            u => !ultralyticsModelsSource.Lookup(u.GetId()).HasValue
+        var downloadableUltralyticsModels = RemoteModels.UltralyticsModelFiles.Where(u =>
+            !ultralyticsModelsSource.Lookup(u.GetId()).HasValue
         );
         downloadableUltralyticsModelsSource.EditDiff(downloadableUltralyticsModels, HybridModelFile.Comparer);
 
@@ -575,14 +587,12 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         IEnumerable<HybridModelFile> samModels =
         [
             HybridModelFile.None,
-            ..modelIndexService
-                .FindByModelType(SharedFolderType.Sams)
-                .Select(HybridModelFile.FromLocal)
+            .. modelIndexService.FindByModelType(SharedFolderType.Sams).Select(HybridModelFile.FromLocal),
         ];
         samModelsSource.EditDiff(samModels, HybridModelFile.Comparer);
 
-        var downloadableSamModels = RemoteModels.SamModelFiles.Where(
-            u => !samModelsSource.Lookup(u.GetId()).HasValue
+        var downloadableSamModels = RemoteModels.SamModelFiles.Where(u =>
+            !samModelsSource.Lookup(u.GetId()).HasValue
         );
         downloadableSamModelsSource.EditDiff(downloadableSamModels, HybridModelFile.Comparer);
 
@@ -600,8 +610,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             HybridModelFile.Comparer
         );
 
-        var downloadableClipModels = RemoteModels.ClipModelFiles.Where(
-            u => !clipModelsSource.Lookup(u.GetId()).HasValue
+        var downloadableClipModels = RemoteModels.ClipModelFiles.Where(u =>
+            !clipModelsSource.Lookup(u.GetId()).HasValue
         );
         downloadableClipModelsSource.EditDiff(downloadableClipModels, HybridModelFile.Comparer);
 
@@ -610,8 +620,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
             HybridModelFile.Comparer
         );
 
-        var downloadableClipVisionModels = RemoteModels.ClipVisionModelFiles.Where(
-            u => !clipVisionModelsSource.Lookup(u.GetId()).HasValue
+        var downloadableClipVisionModels = RemoteModels.ClipVisionModelFiles.Where(u =>
+            !clipVisionModelsSource.Lookup(u.GetId()).HasValue
         );
         downloadableClipVisionModelsSource.EditDiff(downloadableClipVisionModels, HybridModelFile.Comparer);
 
@@ -632,8 +642,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         );
 
         // Remote upscalers
-        var remoteUpscalers = ComfyUpscaler.DefaultDownloadableModels.Where(
-            u => !modelUpscalersSource.Lookup(u.Name).HasValue
+        var remoteUpscalers = ComfyUpscaler.DefaultDownloadableModels.Where(u =>
+            !modelUpscalersSource.Lookup(u.Name).HasValue
         );
         downloadableUpscalersSource.EditDiff(remoteUpscalers, ComfyUpscaler.Comparer);
 
@@ -764,12 +774,6 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         }
     }
 
-    /// <inheritdoc />
-    public Task ConnectAsync(CancellationToken cancellationToken = default)
-    {
-        return ConnectAsyncImpl(new Uri("http://127.0.0.1:8188"), cancellationToken);
-    }
-
     private async Task MigrateLinksIfNeeded(PackagePair packagePair)
     {
         if (packagePair.InstalledPackage.FullPath is not { } packagePath)
@@ -807,7 +811,16 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
     }
 
     /// <inheritdoc />
-    public async Task ConnectAsync(PackagePair packagePair, CancellationToken cancellationToken = default)
+    public virtual Task ConnectAsync(CancellationToken cancellationToken = default)
+    {
+        return ConnectAsyncImpl(new Uri("http://127.0.0.1:8188"), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public virtual async Task ConnectAsync(
+        PackagePair packagePair,
+        CancellationToken cancellationToken = default
+    )
     {
         if (IsConnected)
             return;

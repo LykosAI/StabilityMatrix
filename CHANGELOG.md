@@ -5,6 +5,65 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.14.3
+### Added
+- Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser
+### Changed
+- The main sidebar now remembers whether it was collapsed or expanded between restarts.
+- Inference is now able to load image metadata from Civitai generated images via drag & drop
+- Updated process tracking for ComfyUI to help mitigate restart issues when using Comfy Manager
+- Updated pre-selected download locations for certain model types in the Civitai model browser
+- Updated nodejs to v20.19.3 to support newer InvokeAI versions
+### Fixed
+- Fixed missing .NET 8 dependency for SwarmUI installs in certain cases
+- Fixed ComfyUI-Zluda not being recognized as a valid Comfy install for the workflow browser
+- Fixed [#1291](https://github.com/LykosAI/StabilityMatrix/issues/1291) - Certain GPUs not being detected on Linux
+- Fixed [#1284](https://github.com/LykosAI/StabilityMatrix/issues/1284) - Output browser not ignoring InvokeAI thumbnails folders
+- Fixed [#1301](https://github.com/LykosAI/StabilityMatrix/issues/1301) - Error when installing kohya_ss
+- Fixed [#1305](https://github.com/LykosAI/StabilityMatrix/issues/1305) - FluxGym installing incorrect packages for Blackwell GPUs
+- Fixed [#1316](https://github.com/LykosAI/StabilityMatrix/issues/1316) - Errors when installing Triton & SageAttention
+- Fixed "directory is not empty" error when updating packages with symlinks
+- Fixed missing base model types in the Checkpoint Manager & Civitai Model Browser
+### Supporters
+#### 🌟 Visionaries
+Big heartfelt thanks to our stellar Visionary-tier Patrons: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, and **whudunit**! 🌟 Your extraordinary generosity continues to fuel Stability Matrix’s journey toward innovation and excellence. We appreciate you immensely!
+#### 🚀 Pioneers
+Massive thanks to our fantastic Pioneer-tier Patrons: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, **Noah M**, **USATechDude**, **Thom**, and **SeraphOfSalem**! Your unwavering support keeps our community thriving and inspires us to push even further. You’re all awesome!
+
+## v2.14.2
+### Changed
+- Changed Nvidia GPU detection to use compute capability level instead of the GPU name for certain feature gates / torch indexes
+### Fixed
+- Fixed [#1266](https://github.com/LykosAI/StabilityMatrix/issues/1266) - crash when moving or deleting Lora models in the Checkpoint Manager
+- Fixed [#1268](https://github.com/LykosAI/StabilityMatrix/issues/1268) - wrong torch index used for Nvidia 1000-series GPUs and older
+- Fixed [#1269](https://github.com/LykosAI/StabilityMatrix/issues/1269), [#1257](https://github.com/LykosAI/StabilityMatrix/issues/1257), [#1234](https://github.com/LykosAI/StabilityMatrix/issues/1234) - "no such file or directory" errors when updating certain packages after folder migration
+- Fixed [#1274](https://github.com/LykosAI/StabilityMatrix/issues/1274), [#1276](https://github.com/LykosAI/StabilityMatrix/issues/1276) - incorrect torch installed when updating to InvokeAI v5.12+
+- Fixed missing shared folder links for SwarmUI's diffusion_models and clip folders
+### Supporters
+#### 🌟 Visionaries
+Our deepest gratitude to the brilliant Visionary-tier Patrons: **Waterclouds**, **bluepopsicle**, **Bob S**, **Ibixat**, and **Corey T**! Your incredible backing is instrumental in shaping the future of Stability Matrix and empowering us to deliver cutting-edge features. Thank you for believing in our vision! 🙏
+#### 🚀 Pioneers
+A huge shout-out to our fantastic Pioneer-tier Patrons: **Mr. Unknown**, **tankfox**, **Szir777**, **Noah M**, **USATechDude**, **Thom**, **TheTekknician**, and **SeraphOfSalem**! Your consistent support and active engagement are vital to our community's growth and our ongoing development efforts. You truly make a difference! ✨
+
+## v2.14.1
+### Changed
+- Updated Inference Extra Networks (Lora / LyCORIS) base model filtering to consider SDXL variations (e.g., Noob AI / Illustrious) as compatible, unrecognized models or models with no base model will be considered compatible.
+- Changed hotkey for Inference prompt weight adjustment to (`⌘+Up`/`⌘+Down`) on macOS
+- Improved style consistency of Inference Prompt action buttons on top right
+- (Internal) Improved log console formatting & colorization for development
+### Fixed
+- Fixed Inference hotkey weight adjustment multi-line behavior, now works as expected like the first line.
+- Fixed updates to versions with commit hash version parts not being recognized when the current version has no commit hash part.
+- Fixed Inference Extra Networks card not updating with newly added model files.
+- Fixed incorrect ROCmLibs being installed for RX 6800/6800XT users of Comfy-Zluda or AMDGPU-Forge
+- Fixed missing text when missing localized versions for Italian and Chinese languages
+- Fixed Python Packages dialog errors and potentially other issues due to concurrent OnLoaded events
+### Supporters
+#### 🌟 Visionaries
+Big cheers to our incredible Visionary-tier Patrons: **bluepopsicle**, **Bob S**, **Ibixat**, **Waterclouds**, and **Corey T**! 🚀 Your amazing support lets us dream bigger and reach further every single month. Thanks for being the driving force behind Stability Matrix - we genuinely couldn't do it without you!
+#### 🚀 Pioneers
+Huge thanks to our fantastic Pioneer-tier Patrons: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, and **Noah M**! Special shoutout and welcome back to **TheTekknician**, and a warm welcome aboard to our newest Pioneers: **USATechDude**, **SeraphOfSalem**, and **Thom**! ✨ Your continued support keeps our community vibrant and pushes us to keep creating. You all rock!
+
 ## v2.14.0
 ### Added
 #### New Packages & Integrations

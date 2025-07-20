@@ -24,6 +24,7 @@ using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Analytics;
+using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api.Lykos.Analytics;
 using StabilityMatrix.Core.Models.Settings;
@@ -60,6 +61,9 @@ public partial class MainWindowViewModel : ViewModelBase
     private object? selectedCategory;
 
     [ObservableProperty]
+    public partial bool IsPaneOpen { get; set; }
+
+    [ObservableProperty]
     private List<PageViewModelBase> pages = new();
 
     [ObservableProperty]
@@ -80,7 +84,7 @@ public partial class MainWindowViewModel : ViewModelBase
             { Name: "pt-PT" } => 300,
             { Name: "pt-BR" } => 260,
             { Name: "ko-KR" } => 235,
-            _ => 200
+            _ => 200,
         };
 
     public MainWindowViewModel(
@@ -156,12 +160,19 @@ public partial class MainWindowViewModel : ViewModelBase
                 Content = Resources.Label_AnotherInstanceAlreadyRunning,
                 IsPrimaryButtonEnabled = true,
                 PrimaryButtonText = Resources.Action_Close,
-                DefaultButton = ContentDialogButton.Primary
+                DefaultButton = ContentDialogButton.Primary,
             };
             await dialog.ShowAsync();
             App.Shutdown();
             return;
         }
+
+        settingsManager.RelayPropertyFor(
+            this,
+            vm => vm.IsPaneOpen,
+            settings => settings.IsMainWindowSidebarOpen,
+            true
+        );
 
         // Initialize Discord Rich Presence (this needs LibraryDir so is set here)
         discordRichPresenceService.UpdateState();
@@ -262,6 +273,8 @@ public partial class MainWindowViewModel : ViewModelBase
                 .SafeFireAndForget();
         }
 
+        Task.Run(AddComputeCapabilityIfNecessary).SafeFireAndForget();
+
         // Show what's new for updates
         if (settingsManager.Settings.UpdatingFromVersion is { } updatingFromVersion)
         {
@@ -294,15 +307,15 @@ public partial class MainWindowViewModel : ViewModelBase
                     {
                         Version = Compat.AppVersion.ToString(),
                         RuntimeIdentifier = RuntimeInformation.RuntimeIdentifier,
-                        OsDescription = RuntimeInformation.OSDescription
+                        OsDescription = RuntimeInformation.OSDescription,
                     }
                 )
                 .ContinueWith(task =>
                 {
                     if (!task.IsFaulted)
                     {
-                        settingsManager.Transaction(
-                            s => s.Analytics.LaunchDataLastSentAt = DateTimeOffset.UtcNow
+                        settingsManager.Transaction(s =>
+                            s.Analytics.LaunchDataLastSentAt = DateTimeOffset.UtcNow
                         );
                     }
                 })
@@ -467,7 +480,7 @@ public partial class MainWindowViewModel : ViewModelBase
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
-            Content = new SelectDataDirectoryDialog { DataContext = viewModel }
+            Content = new SelectDataDirectoryDialog { DataContext = viewModel },
         };
 
         var result = await dialog.ShowAsync(App.TopLevel);
@@ -500,7 +513,7 @@ public partial class MainWindowViewModel : ViewModelBase
             IsPrimaryButtonEnabled = false,
             IsSecondaryButtonEnabled = false,
             IsFooterVisible = false,
-            Content = new UpdateDialog { DataContext = viewModel }
+            Content = new UpdateDialog { DataContext = viewModel },
         };
 
         await viewModel.Preload();
@@ -517,5 +530,31 @@ public partial class MainWindowViewModel : ViewModelBase
         await folderReference.ShowAsync();
 
         settingsManager.Transaction(s => s.SeenTeachingTips.Add(TeachingTip.SharedFolderMigrationTip));
+    }
+
+    private void AddComputeCapabilityIfNecessary()
+    {
+        try
+        {
+            if (settingsManager.Settings.PreferredGpu is not { IsNvidia: true, ComputeCapability: null })
+                return;
+
+            var newGpuInfos = HardwareHelper.IterGpuInfoNvidiaSmi();
+            var matchedGpuInfo = newGpuInfos?.FirstOrDefault(x =>
+                x.Name?.Equals(settingsManager.Settings.PreferredGpu.Name) ?? false
+            );
+
+            if (matchedGpuInfo is null)
+            {
+                return;
+            }
+
+            using var transaction = settingsManager.BeginTransaction();
+            transaction.Settings.PreferredGpu = matchedGpuInfo;
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
     }
 }

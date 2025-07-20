@@ -460,7 +460,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             {
                 Text = Resources.Label_ConsolidateExplanation,
                 TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(0, 8, 0, 16)
+                Margin = new Thickness(0, 8, 0, 16),
             }
         );
         foreach (var category in Categories)
@@ -476,7 +476,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
                     Content = $"{category.Name} ({category.Path})",
                     IsChecked = true,
                     Margin = new Thickness(0, 8, 0, 0),
-                    Tag = category.Path
+                    Tag = category.Path,
                 }
             );
         }
@@ -602,7 +602,14 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
             var files = Directory
                 .EnumerateFiles(directory, "*", EnumerationOptionConstants.AllDirectories)
-                .Where(file => allowedExtensions.Contains(new FilePath(file).Extension))
+                .Where(file =>
+                    allowedExtensions.Contains(new FilePath(file).Extension)
+                    && new FilePath(file).Info.DirectoryName?.EndsWith(
+                        "thumbnails",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                        is false
+                )
                 .Select(file => LocalImageFile.FromPath(file))
                 .ToList();
 
@@ -647,24 +654,17 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .Settings.InstalledPackages.Where(x => !x.UseSharedOutputFolder)
             .Select(packageFactory.GetPackagePair)
             .WhereNotNull()
-            .Where(
-                p =>
-                    p.BasePackage.SharedOutputFolders is { Count: > 0 } && p.InstalledPackage.FullPath != null
+            .Where(p =>
+                p.BasePackage.SharedOutputFolders is { Count: > 0 } && p.InstalledPackage.FullPath != null
             )
-            .Select(
-                pair =>
-                    new TreeViewDirectory
-                    {
-                        Path = Path.Combine(
-                            pair.InstalledPackage.FullPath!,
-                            pair.BasePackage.OutputFolderName
-                        ),
-                        Name = pair.InstalledPackage.DisplayName ?? "",
-                        SubDirectories = GetSubfolders(
-                            Path.Combine(pair.InstalledPackage.FullPath!, pair.BasePackage.OutputFolderName)
-                        )
-                    }
-            )
+            .Select(pair => new TreeViewDirectory
+            {
+                Path = Path.Combine(pair.InstalledPackage.FullPath!, pair.BasePackage.OutputFolderName),
+                Name = pair.InstalledPackage.DisplayName ?? "",
+                SubDirectories = GetSubfolders(
+                    Path.Combine(pair.InstalledPackage.FullPath!, pair.BasePackage.OutputFolderName)
+                ),
+            })
             .ToList();
 
         packageCategories.Insert(
@@ -673,7 +673,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
             {
                 Path = settingsManager.ImagesDirectory,
                 Name = "Shared Output Folder",
-                SubDirectories = GetSubfolders(settingsManager.ImagesDirectory)
+                SubDirectories = GetSubfolders(settingsManager.ImagesDirectory),
             }
         );
 

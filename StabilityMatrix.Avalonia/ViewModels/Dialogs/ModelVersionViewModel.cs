@@ -11,6 +11,10 @@ public partial class ModelVersionViewModel : ObservableObject
 {
     private readonly IModelIndexService modelIndexService;
 
+    public string VersionDescription { get; set; }
+
+    public bool HasVersionDescription { get; set; }
+
     [ObservableProperty]
     private CivitModelVersion modelVersion;
 
@@ -27,25 +31,27 @@ public partial class ModelVersionViewModel : ObservableObject
         ModelVersion = modelVersion;
 
         IsInstalled =
-            ModelVersion.Files?.Any(
-                file =>
-                    file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-                    && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
+            ModelVersion.Files?.Any(file =>
+                file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
             ) ?? false;
 
         CivitFileViewModels = new ObservableCollection<CivitFileViewModel>(
             ModelVersion.Files?.Select(file => new CivitFileViewModel(modelIndexService, file))
                 ?? new List<CivitFileViewModel>()
         );
+
+        HasVersionDescription = !string.IsNullOrWhiteSpace(modelVersion.Description);
+        VersionDescription =
+            $"""<html><body class="markdown-body">{modelVersion.Description}</body></html>""";
     }
 
     public void RefreshInstallStatus()
     {
         IsInstalled =
-            ModelVersion.Files?.Any(
-                file =>
-                    file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
-                    && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
+            ModelVersion.Files?.Any(file =>
+                file is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
+                && modelIndexService.ModelIndexBlake3Hashes.Contains(file.Hashes.BLAKE3)
             ) ?? false;
     }
 }

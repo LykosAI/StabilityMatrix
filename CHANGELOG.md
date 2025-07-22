@@ -5,6 +5,21 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.15.0-dev.3
+### Added
+- Added settings to disable base models from appearing in the Checkpoint Manager and Civitai Model Browser base model selectors
+- Added Inference "Favorite Dimensions" quick selector - editable in Settings → Inference, or click the 💾 button inside the dropdown
+- Added setting for Inference dimension step change - the value the dimensions increase or decrease by when using the step buttons or scroll wheel in Inference
+- Added "Install Nunchaku" option to the ComfyUI Package Commands menu
+- Added "Select All" button to the Installed Extensions page
+### Changed
+- You can now select release versions when installing ComfyUI
+- You can no longer select branches when installing InvokeAI
+- Updated InvokeAI install to use pinned torch index from release tag
+- Updated ComfyUI installs for AMD users on Linux to use the latest rocm6.3 torch index
+### Fixed
+- Fixed Civitai-generated image parsing in Inference
+
 ## v2.15.0-dev.2
 ### Added
 - Added new package - [FramePack](https://github.com/lllyasviel/FramePack)

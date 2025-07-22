@@ -182,6 +182,9 @@ public partial class PythonPackagesViewModel : ContentDialogViewModelBase
     /// <inheritdoc />
     public override async Task OnLoadedAsync()
     {
+        if (Design.IsDesignMode)
+            return;
+
         await prerequisiteHelper.InstallUvIfNecessary();
         await Refresh();
     }

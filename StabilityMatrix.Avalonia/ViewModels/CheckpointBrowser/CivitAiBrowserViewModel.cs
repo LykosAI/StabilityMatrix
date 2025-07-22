@@ -201,7 +201,10 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                     ModelType = baseModel,
                     IsSelected = settingsSelectedBaseModels.Contains(baseModel),
                 })
-                .Bind(AllBaseModels)
+                .SortAndBind(
+                    AllBaseModels,
+                    SortExpressionComparer<BaseModelOptionViewModel>.Ascending(m => m.ModelType)
+                )
                 .WhenPropertyChanged(p => p.IsSelected)
                 .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(next =>
@@ -345,15 +348,19 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         {
             await SearchModelsCommand.ExecuteAsync(false);
         }
+    }
 
+    public override async Task OnLoadedAsync()
+    {
         var baseModels = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
+        baseModels = baseModels.Except(settingsManager.Settings.DisabledBaseModelTypes).ToList();
         if (baseModels.Count == 0)
         {
             return;
         }
 
         dontSearch = true;
-        baseModelCache.AddOrUpdate(baseModels);
+        baseModelCache.Edit(updater => updater.Load(baseModels));
         dontSearch = false;
     }
 

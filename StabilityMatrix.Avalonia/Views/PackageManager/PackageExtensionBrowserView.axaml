@@ -484,6 +484,10 @@
                                     </Button.Flyout>
                                 </Button>
                                 <Button
+                                    Classes="accent"
+                                    Command="{Binding SelectAllInstalledExtensionsCommand}"
+                                    Content="{x:Static lang:Resources.Action_SelectAll}" />
+                                <Button
                                     Classes="danger"
                                     Command="{Binding UninstallSelectedExtensionsCommand}"
                                     Content="{x:Static lang:Resources.Action_Uninstall}" />

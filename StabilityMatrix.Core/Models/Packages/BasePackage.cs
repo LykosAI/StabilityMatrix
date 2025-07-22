@@ -43,6 +43,7 @@ public abstract class BasePackage(ISettingsManager settingsManager)
 
     public abstract Uri PreviewImageUri { get; }
     public virtual bool ShouldIgnoreReleases => false;
+    public virtual bool ShouldIgnoreBranches => false;
     public virtual bool UpdateAvailable { get; set; }
 
     public virtual bool IsInferenceCompatible => false;

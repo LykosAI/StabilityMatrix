@@ -1,5 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
 using NLog;
@@ -49,6 +50,7 @@ public class InvokeAI(
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
 
     public override string MainBranch => "main";
+    public override bool ShouldIgnoreBranches => true;
 
     public override Dictionary<SharedFolderType, IReadOnlyList<string>> SharedFolders =>
         new()
@@ -144,23 +146,43 @@ public class InvokeAI(
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         var isLegacyNvidiaGpu =
             SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
-        var index = torchVersion switch
+        var fallbackIndex = torchVersion switch
         {
-            TorchIndex.Cpu => "https://download.pytorch.org/whl/cpu",
+            TorchIndex.Cpu when Compat.IsLinux => "https://download.pytorch.org/whl/cpu",
             TorchIndex.Cuda when isLegacyNvidiaGpu => "https://download.pytorch.org/whl/cu126",
             TorchIndex.Cuda => "https://download.pytorch.org/whl/cu128",
             TorchIndex.Rocm => "https://download.pytorch.org/whl/rocm6.2.4",
-            TorchIndex.Mps => "https://download.pytorch.org/whl/cpu",
             _ => string.Empty,
         };
 
-        var invokeInstallArgs = new PipInstallArgs(
-            $"invokeai=={options.VersionOptions.VersionTag?.Replace("v", string.Empty)}"
-        );
+        var invokeInstallArgs = new PipInstallArgs($"invokeai=={options.VersionOptions.VersionTag}");
 
-        if (!string.IsNullOrWhiteSpace(index))
+        var contentStream = await DownloadService
+            .GetContentAsync(
+                $"https://raw.githubusercontent.com/invoke-ai/InvokeAI/refs/tags/{options.VersionOptions.VersionTag}/pins.json",
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+        // read to json, just deserialize as JObject or whtaever it is in System.Text>json
+        using var reader = new StreamReader(contentStream);
+        var json = await reader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+        var pins = JsonNode.Parse(json);
+        var platform =
+            Compat.IsWindows ? "win32"
+            : Compat.IsMacOS ? "darwin"
+            : "linux";
+        var index = pins?["torchIndexUrl"]?[platform]?[
+            torchVersion.ToString().ToLowerInvariant()
+        ]?.GetValue<string>();
+
+        if (!string.IsNullOrWhiteSpace(index) && !isLegacyNvidiaGpu)
         {
             invokeInstallArgs = invokeInstallArgs.AddArg("--index").AddArg(index);
+        }
+        else if (!string.IsNullOrWhiteSpace(fallbackIndex))
+        {
+            invokeInstallArgs = invokeInstallArgs.AddArg("--index").AddArg(fallbackIndex);
         }
 
         invokeInstallArgs = invokeInstallArgs.AddArg("--force-reinstall");

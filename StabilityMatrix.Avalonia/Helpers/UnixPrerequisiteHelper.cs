@@ -33,16 +33,18 @@ public class UnixPrerequisiteHelper(
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private const string UvMacDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.7.3/uv-aarch64-apple-darwin.tar.gz";
+        "https://github.com/astral-sh/uv/releases/download/0.7.19/uv-aarch64-apple-darwin.tar.gz";
     private const string UvLinuxDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.7.3/uv-x86_64-unknown-linux-gnu.tar.gz";
+        "https://github.com/astral-sh/uv/releases/download/0.7.19/uv-x86_64-unknown-linux-gnu.tar.gz";
 
     private DirectoryPath HomeDir => settingsManager.LibraryDir;
     private DirectoryPath AssetsDir => HomeDir.JoinDir("Assets");
 
     // Helper method to get Python directory for specific version
     private DirectoryPath GetPythonDir(PyVersion version) =>
-        AssetsDir.JoinDir($"Python{version.Major}{version.Minor}{version.Micro}");
+        version == PyInstallationManager.Python_3_10_11
+            ? AssetsDir.JoinDir("Python310")
+            : AssetsDir.JoinDir($"Python{version.Major}{version.Minor}{version.Micro}");
 
     // Helper method to check if specific Python version is installed
     private bool IsPythonVersionInstalled(PyVersion version) =>
@@ -79,6 +81,7 @@ public class UnixPrerequisiteHelper(
     private string UvExtractPath => Path.Combine(AssetsDir, "uv");
     public string UvExePath => Path.Combine(UvExtractPath, "uv");
     public bool IsUvInstalled => File.Exists(UvExePath);
+    private string ExpectedUvVersion => "0.7.19";
 
     // Helper method to get Python download URL for a specific version
     private RemoteResource GetPythonDownloadResource(PyVersion version)
@@ -528,8 +531,19 @@ public class UnixPrerequisiteHelper(
     {
         if (IsUvInstalled)
         {
-            Logger.Debug("UV already installed at {UvExePath}", UvExePath);
-            return;
+            var version = await GetInstalledUvVersionAsync();
+            if (version.Contains(ExpectedUvVersion))
+            {
+                Logger.Debug("UV already installed at {UvExePath}", UvExePath);
+                return;
+            }
+
+            Logger.Warn(
+                "UV version mismatch at {UvExePath}. Expected: {ExpectedVersion}, Found: {FoundVersion}",
+                UvExePath,
+                ExpectedUvVersion,
+                version
+            );
         }
 
         Logger.Info("UV not found at {UvExePath}, downloading...", UvExePath);
@@ -656,6 +670,20 @@ public class UnixPrerequisiteHelper(
         );
 
         File.Delete(downloadPath);
+    }
+
+    private async Task<string> GetInstalledUvVersionAsync()
+    {
+        try
+        {
+            var processResult = await ProcessRunner.GetProcessResultAsync(UvExePath, "--version");
+            return processResult.StandardOutput ?? processResult.StandardError ?? string.Empty;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to get UV version from {UvExePath}", UvExePath);
+            return string.Empty;
+        }
     }
 
     [UnsupportedOSPlatform("Linux")]

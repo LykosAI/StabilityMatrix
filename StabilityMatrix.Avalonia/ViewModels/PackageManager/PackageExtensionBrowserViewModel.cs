@@ -58,8 +58,9 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     [NotifyPropertyChangedFor(nameof(ShowNoExtensionsFoundMessage))]
     private bool isLoading;
 
-    private SourceCache<PackageExtension, string> availableExtensionsSource =
-        new(ext => ext.Author + ext.Title + ext.Reference);
+    private SourceCache<PackageExtension, string> availableExtensionsSource = new(ext =>
+        ext.Author + ext.Title + ext.Reference
+    );
 
     public IObservableCollection<SelectableItem<PackageExtension>> SelectedAvailableItems { get; } =
         new ObservableCollectionExtended<SelectableItem<PackageExtension>>();
@@ -70,11 +71,9 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         string
     > AvailableItemsSearchCollection { get; }
 
-    private SourceCache<InstalledPackageExtension, string> installedExtensionsSource =
-        new(
-            ext =>
-                ext.Paths.FirstOrDefault()?.ToString() ?? ext.GitRepositoryUrl ?? ext.GetHashCode().ToString()
-        );
+    private SourceCache<InstalledPackageExtension, string> installedExtensionsSource = new(ext =>
+        ext.Paths.FirstOrDefault()?.ToString() ?? ext.GitRepositoryUrl ?? ext.GetHashCode().ToString()
+    );
 
     public IObservableCollection<SelectableItem<InstalledPackageExtension>> SelectedInstalledItems { get; } =
         new ObservableCollectionExtended<SelectableItem<InstalledPackageExtension>>();
@@ -90,8 +89,9 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
     public IObservableCollection<ExtensionPack> ExtensionPacks { get; } =
         new ObservableCollectionExtended<ExtensionPack>();
 
-    private SourceCache<SavedPackageExtension, string> extensionPackExtensionsSource =
-        new(ext => ext.PackageExtension.Author + ext.PackageExtension.Title + ext.PackageExtension.Reference);
+    private SourceCache<SavedPackageExtension, string> extensionPackExtensionsSource = new(ext =>
+        ext.PackageExtension.Author + ext.PackageExtension.Title + ext.PackageExtension.Reference
+    );
 
     public IObservableCollection<
         SelectableItem<SavedPackageExtension>
@@ -253,14 +253,11 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             return;
 
         var steps = extensions
-            .Select(
-                ext =>
-                    new InstallExtensionStep(
-                        PackagePair!.BasePackage.ExtensionManager!,
-                        PackagePair.InstalledPackage,
-                        ext
-                    )
-            )
+            .Select(ext => new InstallExtensionStep(
+                PackagePair!.BasePackage.ExtensionManager!,
+                PackagePair.InstalledPackage,
+                ext
+            ))
             .Cast<IPackageStep>()
             .ToArray();
 
@@ -268,7 +265,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         {
             ShowDialogOnStart = true,
             ModificationCompleteTitle = "Installed Extensions",
-            ModificationCompleteMessage = "Finished installing extensions"
+            ModificationCompleteMessage = "Finished installing extensions",
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
@@ -288,14 +285,11 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             return;
 
         var steps = extensions
-            .Select(
-                ext =>
-                    new UpdateExtensionStep(
-                        PackagePair!.BasePackage.ExtensionManager!,
-                        PackagePair.InstalledPackage,
-                        ext
-                    )
-            )
+            .Select(ext => new UpdateExtensionStep(
+                PackagePair!.BasePackage.ExtensionManager!,
+                PackagePair.InstalledPackage,
+                ext
+            ))
             .Cast<IPackageStep>()
             .ToArray();
 
@@ -303,7 +297,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         {
             ShowDialogOnStart = true,
             ModificationCompleteTitle = "Updated Extensions",
-            ModificationCompleteMessage = "Finished updating extensions"
+            ModificationCompleteMessage = "Finished updating extensions",
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
@@ -323,14 +317,11 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             return;
 
         var steps = extensions
-            .Select(
-                ext =>
-                    new UninstallExtensionStep(
-                        PackagePair!.BasePackage.ExtensionManager!,
-                        PackagePair.InstalledPackage,
-                        ext
-                    )
-            )
+            .Select(ext => new UninstallExtensionStep(
+                PackagePair!.BasePackage.ExtensionManager!,
+                PackagePair.InstalledPackage,
+                ext
+            ))
             .Cast<IPackageStep>()
             .ToArray();
 
@@ -338,7 +329,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         {
             ShowDialogOnStart = true,
             ModificationCompleteTitle = "Uninstalled Extensions",
-            ModificationCompleteMessage = "Finished uninstalling extensions"
+            ModificationCompleteMessage = "Finished uninstalling extensions",
         };
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
 
@@ -359,7 +350,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         {
             ManifestUrls = new BindingList<string>(
                 PackagePair?.InstalledPackage.ExtraExtensionManifestUrls ?? []
-            )
+            ),
         };
 
         var dialog = vmFactory
@@ -392,10 +383,9 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
 
         foreach (var extension in SelectedExtensionPack.Extensions)
         {
-            var installedExtension = installedExtensionsSource.Items.FirstOrDefault(
-                x =>
-                    x.Definition?.Title == extension.PackageExtension.Title
-                    && x.Definition.Reference == extension.PackageExtension.Reference
+            var installedExtension = installedExtensionsSource.Items.FirstOrDefault(x =>
+                x.Definition?.Title == extension.PackageExtension.Title
+                && x.Definition.Reference == extension.PackageExtension.Reference
             );
 
             if (installedExtension != null)
@@ -426,7 +416,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         {
             ShowDialogOnStart = true,
             CloseWhenFinished = true,
-            ModificationCompleteMessage = $"Extension Pack {SelectedExtensionPack.Name} installed"
+            ModificationCompleteMessage = $"Extension Pack {SelectedExtensionPack.Name} installed",
         };
 
         EventManager.Instance.OnPackageInstallProgressAdded(runner);
@@ -451,15 +441,12 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
                 PackageType = PackagePair!.InstalledPackage.PackageName,
                 Extensions = SelectedInstalledItems
                     .Where(x => x.Item.Definition != null)
-                    .Select(
-                        x =>
-                            new SavedPackageExtension
-                            {
-                                PackageExtension = x.Item.Definition,
-                                Version = x.Item.Version
-                            }
-                    )
-                    .ToList()
+                    .Select(x => new SavedPackageExtension
+                    {
+                        PackageExtension = x.Item.Definition,
+                        Version = x.Item.Version,
+                    })
+                    .ToList(),
             };
 
             SaveExtensionPack(newExtensionPack, name);
@@ -485,7 +472,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
                 PackageType = PackagePair!.InstalledPackage.PackageName,
                 Extensions = SelectedAvailableItems
                     .Select(x => new SavedPackageExtension { PackageExtension = x.Item, Version = null })
-                    .ToList()
+                    .ToList(),
             };
 
             SaveExtensionPack(newExtensionPack, name);
@@ -500,11 +487,10 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         foreach (var extension in SelectedInstalledItems)
         {
             if (
-                pack.Extensions.Any(
-                    x =>
-                        x.PackageExtension.Title == extension.Item.Definition?.Title
-                        && x.PackageExtension.Author == extension.Item.Definition?.Author
-                        && x.PackageExtension.Reference == extension.Item.Definition?.Reference
+                pack.Extensions.Any(x =>
+                    x.PackageExtension.Title == extension.Item.Definition?.Title
+                    && x.PackageExtension.Author == extension.Item.Definition?.Author
+                    && x.PackageExtension.Reference == extension.Item.Definition?.Reference
                 )
             )
             {
@@ -515,7 +501,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
                 new SavedPackageExtension
                 {
                     PackageExtension = extension.Item.Definition!,
-                    Version = extension.Item.Version
+                    Version = extension.Item.Version,
                 }
             );
         }
@@ -535,11 +521,10 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         foreach (var extension in SelectedAvailableItems)
         {
             if (
-                pack.Extensions.Any(
-                    x =>
-                        x.PackageExtension.Title == extension.Item.Title
-                        && x.PackageExtension.Author == extension.Item.Author
-                        && x.PackageExtension.Reference == extension.Item.Reference
+                pack.Extensions.Any(x =>
+                    x.PackageExtension.Title == extension.Item.Title
+                    && x.PackageExtension.Author == extension.Item.Author
+                    && x.PackageExtension.Reference == extension.Item.Reference
                 )
             )
             {
@@ -639,7 +624,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             GitVersionProvider = new CachedCommandGitVersionProvider(
                 selectedExtension.PackageExtension.Reference.ToString(),
                 prerequisiteHelper
-            )
+            ),
         };
 
         var dialog = vm.GetDialog();
@@ -654,7 +639,7 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             {
                 Branch = vm.SelectedGitVersion.Branch,
                 CommitSha = vm.SelectedGitVersion.CommitSha,
-                Tag = vm.SelectedGitVersion.Tag
+                Tag = vm.SelectedGitVersion.Tag,
             };
             SaveExtensionPack(SelectedExtensionPack, SelectedExtensionPack.Name);
 
@@ -693,6 +678,15 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         {
             IsLoading = false;
             ShowNoExtensionsFoundMessage = AvailableItemsSearchCollection.FilteredItems.Count == 0;
+        }
+    }
+
+    [RelayCommand]
+    private void SelectAllInstalledExtensions()
+    {
+        foreach (var item in InstalledItemsSearchCollection.FilteredItems)
+        {
+            item.IsSelected = true;
         }
     }
 
@@ -767,8 +761,8 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
 
                     if (ExtensionPacks.Any(pack => pack.Name == text))
                         throw new DataValidationException("Pack already exists");
-                }
-            }
+                },
+            },
         };
 
         return (DialogHelper.CreateTextEntryDialog("Pack Name", "", textFields), textFields[0]);
@@ -786,23 +780,23 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
             {
                 Title = "Installing Extensions",
                 Content = """
-                          Extensions, the extension index, and their dependencies are community provided and not verified by the Stability Matrix team. 
+                    Extensions, the extension index, and their dependencies are community provided and not verified by the Stability Matrix team. 
 
-                          The install process may invoke external programs and scripts.
+                    The install process may invoke external programs and scripts.
 
-                          Please review the extension's source code and applicable licenses before installing.
-                          """,
+                    Please review the extension's source code and applicable licenses before installing.
+                    """,
                 PrimaryButtonText = Resources.Action_Continue,
                 CloseButtonText = Resources.Action_Cancel,
                 DefaultButton = ContentDialogButton.Primary,
-                MaxDialogWidth = 400
+                MaxDialogWidth = 400,
             };
 
             if (await dialog.ShowAsync() != ContentDialogResult.Primary)
                 return false;
 
-            settingsManager.Transaction(
-                s => s.SeenTeachingTips.Add(Core.Models.Settings.TeachingTip.PackageExtensionsInstallNotice)
+            settingsManager.Transaction(s =>
+                s.SeenTeachingTips.Add(Core.Models.Settings.TeachingTip.PackageExtensionsInstallNotice)
             );
         }
 

@@ -49,7 +49,7 @@ public class WindowsPrerequisiteHelper(
     private const string PythonLibsDownloadUrl = "https://cdn.lykos.ai/python_libs_for_sage.zip";
 
     private const string UvWindowsDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.7.3/uv-x86_64-pc-windows-msvc.zip";
+        "https://github.com/astral-sh/uv/releases/download/0.7.19/uv-x86_64-pc-windows-msvc.zip";
 
     private string HomeDir => settingsManager.LibraryDir;
 
@@ -67,7 +67,9 @@ public class WindowsPrerequisiteHelper(
         );
 
     private string GetPythonDir(PyVersion version) =>
-        Path.Combine(AssetsDir, $"Python{version.Major}{version.Minor}{version.Micro}");
+        version == PyInstallationManager.Python_3_10_11
+            ? Path.Combine(AssetsDir, "Python310")
+            : Path.Combine(AssetsDir, $"Python{version.Major}{version.Minor}{version.Micro}");
 
     private string GetPythonDllPath(PyVersion version) =>
         Path.Combine(GetPythonDir(version), $"python{version.Major}{version.Minor}.dll");
@@ -113,6 +115,7 @@ public class WindowsPrerequisiteHelper(
     private string UvExtractPath => Path.Combine(AssetsDir, "uv");
     public string UvExePath => Path.Combine(UvExtractPath, "uv.exe");
     public bool IsUvInstalled => File.Exists(UvExePath);
+    private string ExpectedUvVersion => "0.7.19";
 
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsVcBuildToolsInstalled => Directory.Exists(VcBuildToolsExistsPath);
@@ -195,8 +198,19 @@ public class WindowsPrerequisiteHelper(
     {
         if (IsUvInstalled)
         {
-            Logger.Debug("UV already installed at {UvExePath}", UvExePath);
-            return;
+            var version = await GetInstalledUvVersionAsync();
+            if (version.Contains(ExpectedUvVersion))
+            {
+                Logger.Debug("UV already installed at {UvExePath}", UvExePath);
+                return;
+            }
+
+            Logger.Warn(
+                "UV version mismatch at {UvExePath}. Expected: {ExpectedVersion}, Found: {FoundVersion}",
+                UvExePath,
+                ExpectedUvVersion,
+                version
+            );
         }
 
         Logger.Info("UV not found at {UvExePath}, downloading...", UvExePath);
@@ -1022,5 +1036,19 @@ public class WindowsPrerequisiteHelper(
         }
 
         return null;
+    }
+
+    private async Task<string> GetInstalledUvVersionAsync()
+    {
+        try
+        {
+            var processResult = await ProcessRunner.GetProcessResultAsync(UvExePath, "--version");
+            return processResult.StandardOutput ?? processResult.StandardError ?? string.Empty;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to get UV version from {UvExePath}", UvExePath);
+            return string.Empty;
+        }
     }
 }

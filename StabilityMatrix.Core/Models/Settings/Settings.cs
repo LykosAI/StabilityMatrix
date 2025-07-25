@@ -119,6 +119,25 @@ public class Settings
 
     public bool IsDiscordRichPresenceEnabled { get; set; }
 
+    public HashSet<string> DisabledBaseModelTypes { get; set; } = [];
+
+    public HashSet<string> SavedInferenceDimensions { get; set; } =
+        [
+            "1024 x 1024",
+            "1152 x 896",
+            "1216 x 832",
+            "1280 x 720",
+            "1344 x 768",
+            "1536 x 640",
+            "768 x 768",
+            "512 x 512",
+            "640 x 1536",
+            "768 x 1344",
+            "720 x 1280",
+            "832 x 1216",
+            "896 x 1152",
+        ];
+
     [JsonIgnore]
     public Dictionary<string, string> DefaultEnvironmentVariables { get; } =
         new()
@@ -232,6 +251,8 @@ public class Settings
     public bool ShowTrainingDataInModelBrowser { get; set; }
 
     public string? CivitModelBrowserFileNamePattern { get; set; }
+
+    public int InferenceDimensionStepChange { get; set; } = 128;
 
     [JsonIgnore]
     public bool IsHolidayModeActive =>

@@ -37,7 +37,6 @@ public class ComfyUI(
     public override string LaunchCommand => "main.py";
 
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/comfyui/preview.webp");
-    public override bool ShouldIgnoreReleases => true;
     public override bool IsInferenceCompatible => true;
     public override string OutputFolderName => "output";
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.InferenceCompatible;
@@ -301,27 +300,30 @@ public class ComfyUI(
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
 
-    public override List<ExtraPackageCommand> GetExtraCommands() =>
-        Compat.IsWindows && SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() is true
-            ?
-            [
+    public override List<ExtraPackageCommand> GetExtraCommands()
+    {
+        var commands = new List<ExtraPackageCommand>();
+
+        if (Compat.IsWindows && SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() is true)
+        {
+            commands.Add(
                 new ExtraPackageCommand
                 {
                     CommandName = "Install Triton and SageAttention",
-                    Command = async installedPackage =>
-                    {
-                        if (installedPackage == null || string.IsNullOrEmpty(installedPackage.FullPath))
-                        {
-                            throw new InvalidOperationException(
-                                "Package not found or not installed correctly"
-                            );
-                        }
+                    Command = InstallTritonAndSageAttention,
+                }
+            );
+        }
 
-                        await InstallTritonAndSageAttention(installedPackage).ConfigureAwait(false);
-                    },
-                },
-            ]
-            : [];
+        if (!Compat.IsMacOS && SettingsManager.Settings.PreferredGpu?.ComputeCapabilityValue is >= 7.5m)
+        {
+            commands.Add(
+                new ExtraPackageCommand { CommandName = "Install Nunchaku", Command = InstallNunchaku }
+            );
+        }
+
+        return commands;
+    }
 
     public override async Task InstallPackage(
         string installLocation,
@@ -365,7 +367,7 @@ public class ComfyUI(
                         TorchIndex.Cpu => "cpu",
                         TorchIndex.Cuda when isLegacyNvidia => "cu126",
                         TorchIndex.Cuda => "cu128",
-                        TorchIndex.Rocm => "rocm6.2.4",
+                        TorchIndex.Rocm => "rocm6.3",
                         TorchIndex.Mps => "cpu",
                         _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null),
                     }
@@ -413,6 +415,11 @@ public class ComfyUI(
             HandleConsoleOutput,
             OnExit
         );
+
+        if (Compat.IsWindows)
+        {
+            ProcessTracker.AttachExitHandlerJobToProcess(VenvRunner.Process);
+        }
 
         return;
 
@@ -664,7 +671,7 @@ public class ComfyUI(
         }
     }
 
-    private async Task InstallTritonAndSageAttention(InstalledPackage installedPackage)
+    private async Task InstallTritonAndSageAttention(InstalledPackage? installedPackage)
     {
         if (installedPackage?.FullPath is null)
             return;
@@ -727,5 +734,34 @@ public class ComfyUI(
                     }
                 );
         }
+    }
+
+    private async Task InstallNunchaku(InstalledPackage? installedPackage)
+    {
+        if (installedPackage?.FullPath is null)
+            return;
+
+        var installNunchaku = new InstallNunchakuStep(
+            DownloadService,
+            PrerequisiteHelper,
+            PyInstallationManager
+        )
+        {
+            InstalledPackage = installedPackage,
+            WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
+            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
+            PreferredGpu =
+                SettingsManager.Settings.PreferredGpu
+                ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia || x.IsAmd),
+            ComfyExtensionManager = ExtensionManager,
+        };
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteMessage = "Nunchaku installed successfully",
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps([installNunchaku]).ConfigureAwait(false);
     }
 }

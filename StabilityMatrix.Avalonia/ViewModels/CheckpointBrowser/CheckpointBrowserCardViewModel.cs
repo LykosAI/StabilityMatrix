@@ -360,6 +360,9 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             if (
                 model.BaseModelType == CivitBaseModelType.Flux1D.GetStringValue()
                 || model.BaseModelType == CivitBaseModelType.Flux1S.GetStringValue()
+                || model.BaseModelType == CivitBaseModelType.WanVideo.GetStringValue()
+                || model.BaseModelType == CivitBaseModelType.HunyuanVideo.GetStringValue()
+                || selectedFile?.Metadata.Format is CivitModelFormat.GGUF
             )
             {
                 sharedFolder = SharedFolderType.DiffusionModels.GetStringValue();

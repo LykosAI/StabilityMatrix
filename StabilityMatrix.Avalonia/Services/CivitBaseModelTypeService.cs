@@ -3,6 +3,7 @@ using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Database;
+using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 
@@ -42,18 +43,18 @@ public class CivitBaseModelTypeService(
                 var jsonContent = await baseModelsResponse.Content.ReadAsStringAsync();
                 var baseModels = JsonNode.Parse(jsonContent);
 
-                var jArray =
-                    baseModels?["error"]?["issues"]?[0]?["unionErrors"]?[0]?["issues"]?[0]?["options"]
-                    as JsonArray;
+                var innerJson = baseModels?["error"]?["message"]?.GetValue<string>();
+                var jArray = JsonNode.Parse(innerJson).AsArray();
+                var baseModelValues = jArray[0]?["errors"]?[0]?[0]?["values"]?.AsArray();
 
-                civitBaseModels = jArray?.GetValues<string>().ToList() ?? [];
+                civitBaseModels = baseModelValues?.GetValues<string>().ToList() ?? [];
 
                 // Cache the results
                 var cacheEntry = new CivitBaseModelTypeCacheEntry
                 {
                     Id = CacheId,
                     ModelTypes = civitBaseModels,
-                    CreatedAt = DateTimeOffset.UtcNow
+                    CreatedAt = DateTimeOffset.UtcNow,
                 };
 
                 await dbContext.UpsertCivitBaseModelTypeCacheEntry(cacheEntry);
@@ -78,7 +79,8 @@ public class CivitBaseModelTypeService(
 
             // Return cached results if available, even if expired
             var expiredCache = await dbContext.GetCivitBaseModelTypeCacheEntry(CacheId);
-            return expiredCache?.ModelTypes ?? [];
+            return expiredCache?.ModelTypes
+                ?? Enum.GetValues<CivitBaseModelType>().Select(b => b.GetStringValue()).ToList();
         }
     }
 

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Reflection;
 using System.Runtime.Versioning;
 using System.Text;
@@ -15,6 +16,7 @@ using System.Threading.Tasks;
 using AsyncAwaitBestPractices;
 using AsyncImageLoader;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media.Imaging;
@@ -23,9 +25,12 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DynamicData;
+using DynamicData.Binding;
 using FluentAvalonia.UI.Controls;
 using FluentIcons.Common;
 using Injectio.Attributes;
+using KGySoft.CoreLibraries;
 using Microsoft.Win32;
 using NLog;
 using SkiaSharp;
@@ -39,6 +44,7 @@ using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Models.TagCompletion;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Controls;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.ViewModels.Inference;
@@ -80,6 +86,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
     private readonly IModelIndexService modelIndexService;
     private readonly INavigationService<SettingsViewModel> settingsNavigationService;
     private readonly IAccountsService accountsService;
+    private readonly ICivitBaseModelTypeService baseModelTypeService;
 
     public SharedState SharedState { get; }
 
@@ -159,6 +166,11 @@ public partial class MainSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool showAllAvailablePythonVersions;
 
+    [ObservableProperty]
+    public partial List<BaseModelOptionViewModel> AllBaseModelTypes { get; set; } = [];
+
+    private SourceCache<string, string> BaseModelTypesCache { get; } = new(s => s);
+
     #region System Settings
 
     [ObservableProperty]
@@ -216,7 +228,8 @@ public partial class MainSettingsViewModel : PageViewModelBase
         ICompletionProvider completionProvider,
         IModelIndexService modelIndexService,
         INavigationService<SettingsViewModel> settingsNavigationService,
-        IAccountsService accountsService
+        IAccountsService accountsService,
+        ICivitBaseModelTypeService baseModelTypeService
     )
     {
         this.notificationService = notificationService;
@@ -229,6 +242,7 @@ public partial class MainSettingsViewModel : PageViewModelBase
         this.modelIndexService = modelIndexService;
         this.settingsNavigationService = settingsNavigationService;
         this.accountsService = accountsService;
+        this.baseModelTypeService = baseModelTypeService;
 
         SharedState = sharedState;
 
@@ -319,6 +333,38 @@ public partial class MainSettingsViewModel : PageViewModelBase
             true
         );
 
+        AddDisposable(
+            BaseModelTypesCache
+                .Connect()
+                .DeferUntilLoaded()
+                .Transform(x => new BaseModelOptionViewModel
+                {
+                    ModelType = x,
+                    IsSelected = !settingsManager.Settings.DisabledBaseModelTypes.Contains(x),
+                })
+                .SortAndBind(
+                    AllBaseModelTypes,
+                    SortExpressionComparer<BaseModelOptionViewModel>.Ascending(x => x.ModelType)
+                )
+                .WhenPropertyChanged(vm => vm.IsSelected)
+                .ObserveOn(SynchronizationContext.Current)
+                .Subscribe(next =>
+                {
+                    if (next.Sender.IsSelected)
+                    {
+                        settingsManager.Transaction(s =>
+                            s.DisabledBaseModelTypes.TryRemove(next.Sender.ModelType)
+                        );
+                    }
+                    else
+                    {
+                        settingsManager.Transaction(s =>
+                            s.DisabledBaseModelTypes.TryAdd(next.Sender.ModelType)
+                        );
+                    }
+                })
+        );
+
         DebugThrowAsyncExceptionCommand.WithNotificationErrorHandler(notificationService, LogLevel.Warn);
 
         hardwareInfoUpdateTimer.Tick += OnHardwareInfoUpdateTimerTick;
@@ -358,6 +404,12 @@ public partial class MainSettingsViewModel : PageViewModelBase
             GpuInfos.FirstOrDefault(gpu =>
                 gpu.Name?.Contains("nvidia", StringComparison.InvariantCultureIgnoreCase) ?? false
             ) ?? GpuInfos.FirstOrDefault();
+
+        if (Design.IsDesignMode)
+            return;
+
+        var baseModelTypes = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
+        BaseModelTypesCache.Edit(updater => updater.Load(baseModelTypes));
 
         // Start accounts update
         accountsService
@@ -573,6 +625,42 @@ public partial class MainSettingsViewModel : PageViewModelBase
         {
             FileName = processPath,
             Args = dialogResult.Value.Text,
+            WorkingDirectory = Compat.AppCurrentDir,
+            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary(),
+        };
+
+        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private async Task ClearPipCache()
+    {
+        await prerequisiteHelper.UnpackResourcesIfNecessary();
+        await prerequisiteHelper.InstallPythonIfNecessary();
+
+        var processPath = new FilePath(PyRunner.PythonExePath);
+
+        var step = new ProcessStep
+        {
+            FileName = processPath,
+            Args = ["-m", "pip", "cache", "purge"],
+            WorkingDirectory = Compat.AppCurrentDir,
+            EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary(),
+        };
+
+        ConsoleProcessRunner.RunProcessStepAsync(step).SafeFireAndForget();
+    }
+
+    [RelayCommand]
+    private async Task ClearUvCache()
+    {
+        await prerequisiteHelper.InstallUvIfNecessary();
+        var processPath = new FilePath(prerequisiteHelper.UvExePath);
+
+        var step = new ProcessStep
+        {
+            FileName = processPath,
+            Args = ["cache", "clean"],
             WorkingDirectory = Compat.AppCurrentDir,
             EnvironmentVariables = settingsManager.Settings.EnvironmentVariables.ToImmutableDictionary(),
         };

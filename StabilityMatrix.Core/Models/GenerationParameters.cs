@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using StabilityMatrix.Core.Models.Api.Comfy;
 
@@ -27,6 +28,13 @@ public record GenerationParameters
     public double MinCfg { get; set; }
     public double AugmentationLevel { get; set; }
     public string? VideoOutputMethod { get; set; }
+    public int? ModelVersionId { get; set; }
+    public List<int>? ExtraNetworkModelVersionIds { get; set; }
+
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
 
     public static bool TryParse(
         string? text,
@@ -101,6 +109,34 @@ public record GenerationParameters
             ModelName = lineFields.GetValueOrDefault("Model"),
         };
 
+        if (lineFields.ContainsKey("Civitai resources"))
+        {
+            // [{"type":"checkpoint","modelVersionId":290640,"modelName":"Pony Diffusion V6 XL","modelVersionName":"V6 (start with this one)"},{"type":"lora","weight":0.8,"modelVersionId":333590,"modelName":"Not Artists Styles for Pony Diffusion V6 XL","modelVersionName":"Anime 2"}]
+            var civitaiResources = lineFields["Civitai resources"];
+            if (!string.IsNullOrWhiteSpace(civitaiResources))
+            {
+                var resources = JsonSerializer.Deserialize<List<CivitaiResource>>(
+                    civitaiResources,
+                    JsonOptions
+                );
+                if (resources is not null)
+                {
+                    generationParameters.ModelName ??= resources
+                        .FirstOrDefault(x => x.Type == "checkpoint")
+                        ?.ModelName;
+                    generationParameters.ModelVersionId ??= resources
+                        .FirstOrDefault(x => x.Type == "checkpoint")
+                        ?.ModelVersionId;
+
+                    foreach (var lora in resources.Where(x => x.Type == "lora"))
+                    {
+                        generationParameters.ExtraNetworkModelVersionIds ??= [];
+                        generationParameters.ExtraNetworkModelVersionIds.Add(lora.ModelVersionId);
+                    }
+                }
+            }
+        }
+
         if (lineFields.GetValueOrDefault("Size") is { } size)
         {
             var split = size.Split('x', 2);
@@ -109,7 +145,7 @@ public record GenerationParameters
                 generationParameters = generationParameters with
                 {
                     Width = int.Parse(split[0]),
-                    Height = int.Parse(split[1])
+                    Height = int.Parse(split[1]),
                 };
             }
         }
@@ -289,7 +325,7 @@ public record GenerationParameters
             _ when source.StartsWith("DPM++ 3M") => ComfySampler.Dpmpp3M,
             _ when source.StartsWith("DPM++ SDE") => ComfySampler.DpmppSde,
             _ when source.StartsWith("DPM++ 2S a") => ComfySampler.Dpmpp2SAncestral,
-            _ => default
+            _ => default,
         };
 
         return (sampler, scheduler);
@@ -311,7 +347,7 @@ public record GenerationParameters
             Seed = 124825529,
             ModelName = "ExampleMix7",
             ModelHash = "b899d188a1ac7356bfb9399b2277d5b21712aa360f8f9514fba6fcce021baff7",
-            Sampler = "DPM++ 2M Karras"
+            Sampler = "DPM++ 2M Karras",
         };
     }
 }

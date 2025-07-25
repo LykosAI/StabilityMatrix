@@ -201,7 +201,10 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                     ModelType = baseModel,
                     IsSelected = settingsSelectedBaseModels.Contains(baseModel),
                 })
-                .Bind(AllBaseModels)
+                .SortAndBind(
+                    AllBaseModels,
+                    SortExpressionComparer<BaseModelOptionViewModel>.Ascending(m => m.ModelType)
+                )
                 .WhenPropertyChanged(p => p.IsSelected)
                 .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(next =>
@@ -345,15 +348,19 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         {
             await SearchModelsCommand.ExecuteAsync(false);
         }
+    }
 
+    public override async Task OnLoadedAsync()
+    {
         var baseModels = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
+        baseModels = baseModels.Except(settingsManager.Settings.DisabledBaseModelTypes).ToList();
         if (baseModels.Count == 0)
         {
             return;
         }
 
         dontSearch = true;
-        baseModelCache.AddOrUpdate(baseModels);
+        baseModelCache.Edit(updater => updater.Load(baseModels));
         dontSearch = false;
     }
 
@@ -657,6 +664,29 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             modelRequest.BaseModels = null;
             modelRequest.Types = null;
             modelRequest.CommaSeparatedModelIds = SearchQuery[2..];
+
+            if (modelRequest.Sort is CivitSortMode.Favorites or CivitSortMode.Installed)
+            {
+                SortMode = CivitSortMode.HighestRated;
+                modelRequest.Sort = CivitSortMode.HighestRated;
+            }
+        }
+        else if (SearchQuery.StartsWith("https://civitai.com/models/"))
+        {
+            /* extract model ID from URL, could be one of:
+                https://civitai.com/models/443821?modelVersionId=1957537
+                https://civitai.com/models/443821/cyberrealistic-pony
+                https://civitai.com/models/443821
+            */
+            var modelId = SearchQuery
+                .Replace("https://civitai.com/models/", string.Empty)
+                .Split(['?', '/'], StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault();
+
+            modelRequest.Period = CivitPeriod.AllTime;
+            modelRequest.BaseModels = null;
+            modelRequest.Types = null;
+            modelRequest.CommaSeparatedModelIds = modelId;
 
             if (modelRequest.Sort is CivitSortMode.Favorites or CivitSortMode.Installed)
             {

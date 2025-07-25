@@ -171,7 +171,10 @@ public partial class CheckpointsPageViewModel(
                     ModelType = baseModel,
                     IsSelected = settingsSelectedBaseModels.Contains(baseModel),
                 })
-                .Bind(BaseModelOptions)
+                .SortAndBind(
+                    BaseModelOptions,
+                    SortExpressionComparer<BaseModelOptionViewModel>.Ascending(vm => vm.ModelType)
+                )
                 .WhenPropertyChanged(p => p.IsSelected)
                 .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(next =>
@@ -197,9 +200,6 @@ public partial class CheckpointsPageViewModel(
             });
 
         AddDisposable(settingsTransactionObservable);
-
-        var baseModelTypes = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
-        BaseModelCache.EditDiff(baseModelTypes);
 
         // Observable predicate from SearchQuery changes
         var searchPredicate = this.WhenPropertyChanged(vm => vm.SearchQuery)
@@ -477,6 +477,10 @@ public partial class CheckpointsPageViewModel(
     {
         if (Design.IsDesignMode)
             return;
+
+        var baseModelTypes = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
+        baseModelTypes = baseModelTypes.Except(settingsManager.Settings.DisabledBaseModelTypes).ToList();
+        BaseModelCache.Edit(updater => updater.Load(baseModelTypes));
 
         await ShowFolderMapTipIfNecessaryAsync();
     }
@@ -1200,7 +1204,10 @@ public partial class CheckpointsPageViewModel(
 
     private async Task ShowFolderMapTipIfNecessaryAsync()
     {
-        if (settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.FolderMapTip))
+        if (
+            settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.FolderMapTip)
+            || settingsManager.Settings.InstalledPackages.Count == 0
+        )
             return;
 
         var folderReference = DialogHelper.CreateMarkdownDialog(MarkdownSnippets.SMFolderMap);

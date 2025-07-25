@@ -5,20 +5,48 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.15.0-dev.3
+### Added
+- Added settings to disable base models from appearing in the Checkpoint Manager and Civitai Model Browser base model selectors
+- Added Inference "Favorite Dimensions" quick selector - editable in Settings → Inference, or click the 💾 button inside the dropdown
+- Added setting for Inference dimension step change - the value the dimensions increase or decrease by when using the step buttons or scroll wheel in Inference
+- Added "Install Nunchaku" option to the ComfyUI Package Commands menu
+- Added "Select All" button to the Installed Extensions page
+### Changed
+- Redesigned Civitai model details page
+- You can now select release versions when installing ComfyUI
+- You can no longer select branches when installing InvokeAI
+- Updated InvokeAI install to use pinned torch index from release tag
+- Updated ComfyUI installs for AMD users on Linux to use the latest rocm6.3 torch index
+### Fixed
+- Fixed Civitai-generated image parsing in Inference
+
 ## v2.15.0-dev.2
 ### Added
 - Added new package - [FramePack](https://github.com/lllyasviel/FramePack)
 - Added new package - [FramePack Studio](https://github.com/colinurbs/FramePack-Studio)
-- Added "Open in Explorer" button for models in the Checkpoint Manager
+- Added support for authenticated model downloads in the HuggingFace model browser. Visit Settings → Accounts to add your HuggingFace token.
+- Added support for dragging-and-dropping Civitai-generated images into Inference to load metadata
+- Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser (when the Civitai API gets fixed)
+- Added "Clear Pip Cache" and "Clear uv Cache" commands to the Settings -> Embedded Python section
 ### Changed
-- Redesigned Civitai model details page
-- Civitai model browser image loading now uses dynamic resizing for better performance and a smoother scrolling experience.
-- Detailed notifications for Civitai model browser api errors.
-- The main sidebar now remembers whether it was collapsed or expanded between restarts.
-- (Internal) Updated Avalonia to v11.3.2
+- Civitai model browser image loading now uses dynamic resizing for better performance and a smoother scrolling experience
+- Detailed notifications for Civitai model browser api errors
+- The main sidebar now remembers whether it was collapsed or expanded between restarts
+- Updated pre-selected download locations for certain model types in the Civitai model browser
+- Updated uv to 0.7.19
+- Changed InvokeAI update process to no longer clone the repo
 ### Fixed
 - Fixed missing .NET 8 dependency for SwarmUI installs in certain cases
-- Fixed duplicate "diffusion_models" folder showing in the Checkpoint Manager
+- Fixed [#1291](https://github.com/LykosAI/StabilityMatrix/issues/1291) - Certain GPUs not being detected on Linux
+- Fixed [#1284](https://github.com/LykosAI/StabilityMatrix/issues/1284) - Output browser not ignoring InvokeAI thumbnails folders
+- Fixed [#1305](https://github.com/LykosAI/StabilityMatrix/issues/1305) - FluxGym installing incorrect packages for Blackwell GPUs
+- Fixed [#1316](https://github.com/LykosAI/StabilityMatrix/issues/1316) - Errors when installing Triton & SageAttention
+- Fixed "directory is not empty" error when updating packages with symlinks
+- Fixed missing base model types in the Checkpoint Manager & Civitai Model Browser
+### Supporters
+#### 🌟 Visionaries
+A huge thank you to our amazing Visionary-tier Patrons: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, and our newest Visionary, **whudunit**! 🚀 Your generous support enables Stability Matrix to grow faster and tackle ambitious new ideas. You're truly making all the magic happen!
 
 ## v2.15.0-dev.1
 ### Added
@@ -32,6 +60,31 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 ### Supporters
 #### 🌟 Visionaries
 A massive thank you to our esteemed Visionary-tier Patrons: **Waterclouds**, **bluepopsicle**, **Bob S**, **Ibixat**, and **Corey T**! Your exceptional commitment propels Stability Matrix to new heights and allows us to push the boundaries of innovation. We're incredibly grateful for your foundational support! 🚀
+
+## v2.14.3
+### Added
+- Added the ability to search by pasting an entire Civitai model URL into the search bar in the Civitai model browser
+### Changed
+- The main sidebar now remembers whether it was collapsed or expanded between restarts.
+- Inference is now able to load image metadata from Civitai generated images via drag & drop
+- Updated process tracking for ComfyUI to help mitigate restart issues when using Comfy Manager
+- Updated pre-selected download locations for certain model types in the Civitai model browser
+- Updated nodejs to v20.19.3 to support newer InvokeAI versions
+### Fixed
+- Fixed missing .NET 8 dependency for SwarmUI installs in certain cases
+- Fixed ComfyUI-Zluda not being recognized as a valid Comfy install for the workflow browser
+- Fixed [#1291](https://github.com/LykosAI/StabilityMatrix/issues/1291) - Certain GPUs not being detected on Linux
+- Fixed [#1284](https://github.com/LykosAI/StabilityMatrix/issues/1284) - Output browser not ignoring InvokeAI thumbnails folders
+- Fixed [#1301](https://github.com/LykosAI/StabilityMatrix/issues/1301) - Error when installing kohya_ss
+- Fixed [#1305](https://github.com/LykosAI/StabilityMatrix/issues/1305) - FluxGym installing incorrect packages for Blackwell GPUs
+- Fixed [#1316](https://github.com/LykosAI/StabilityMatrix/issues/1316) - Errors when installing Triton & SageAttention
+- Fixed "directory is not empty" error when updating packages with symlinks
+- Fixed missing base model types in the Checkpoint Manager & Civitai Model Browser
+### Supporters
+#### 🌟 Visionaries
+Big heartfelt thanks to our stellar Visionary-tier Patrons: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, and **whudunit**! 🌟 Your extraordinary generosity continues to fuel Stability Matrix’s journey toward innovation and excellence. We appreciate you immensely!
+#### 🚀 Pioneers
+Massive thanks to our fantastic Pioneer-tier Patrons: **tankfox**, **Mr. Unknown**, **Szir777**, **Tigon**, **Noah M**, **USATechDude**, **Thom**, and **SeraphOfSalem**! Your unwavering support keeps our community thriving and inspires us to push even further. You’re all awesome!
 
 ## v2.14.2
 ### Changed

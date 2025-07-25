@@ -463,7 +463,6 @@
                             <SplitButton
                                 Grid.Row="3"
                                 Grid.Column="0"
-                                Grid.ColumnSpan="2"
                                 Margin="0,4,0,0"
                                 Padding="4"
                                 HorizontalAlignment="Stretch"
@@ -496,6 +495,25 @@
                                     </ui:FAMenuFlyout>
                                 </SplitButton.Flyout>
                             </SplitButton>
+                            <Button
+                                Grid.Row="3"
+                                Grid.Column="1"
+                                Margin="8,4,0,0"
+                                Padding="4"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                                HorizontalContentAlignment="Stretch"
+                                Classes="danger"
+                                Command="{Binding DeleteCommand}"
+                                IsVisible="{Binding IsInstalled}">
+                                <StackPanel Margin="2,0,2,0" Orientation="Horizontal">
+                                    <avalonia:Icon
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center"
+                                        Value="fa-solid fa-trash" />
+                                    <TextBlock FontSize="14" Text="{x:Static lang:Resources.Action_Delete}" />
+                                </StackPanel>
+                            </Button>
                         </Grid>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>

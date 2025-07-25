@@ -296,7 +296,12 @@ public partial class CivitDetailsPageViewModel(
             civitFileCache
                 .Connect()
                 .Filter(includeTrainingDataPredicate)
-                .Transform(file => new CivitFileViewModel(modelIndexService, file, DownloadModelAsync)
+                .Transform(file => new CivitFileViewModel(
+                    modelIndexService,
+                    settingsManager,
+                    file,
+                    DownloadModelAsync
+                )
                 {
                     InstallLocations = new ObservableCollection<string>(LoadInstallLocations(file)),
                 })

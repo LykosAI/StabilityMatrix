@@ -408,6 +408,9 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         var timer = Stopwatch.StartNew();
         var queryText = request.Query;
         var models = new List<CivitModel>();
+        // Store original request for caching
+        var originalRequestStr = JsonSerializer.Serialize(request);
+
         CivitModelsResponse? modelsResponse = null;
         try
         {
@@ -421,6 +424,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                     foreach (var chunk in idChunks)
                     {
                         request.CommaSeparatedModelIds = string.Join(",", chunk);
+                        request.Limit = 100;
                         var chunkModelsResponse = await civitApi.GetModels(request);
 
                         if (chunkModelsResponse.Items != null)
@@ -478,10 +482,12 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                 // Add to database
                 await liteDbContext.UpsertCivitModelAsync(models);
                 // Add as cache entry
+
+                var originalRequest = JsonSerializer.Deserialize<CivitModelsRequest>(originalRequestStr);
                 cacheNew = await liteDbContext.UpsertCivitModelQueryCacheEntryAsync(
                     new CivitModelQueryCacheEntry
                     {
-                        Id = ObjectHash.GetMd5Guid(request),
+                        Id = ObjectHash.GetMd5Guid(originalRequest),
                         InsertedAt = DateTimeOffset.UtcNow,
                         Request = request,
                         Items = models,

@@ -19,8 +19,10 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [View(typeof(ConfirmBulkDownloadDialog))]
 [ManagedService]
 [RegisterTransient<ConfirmBulkDownloadDialogViewModel>]
-public partial class ConfirmBulkDownloadDialogViewModel(IModelIndexService modelIndexService)
-    : ContentDialogViewModelBase
+public partial class ConfirmBulkDownloadDialogViewModel(
+    IModelIndexService modelIndexService,
+    ISettingsManager settingsManager
+) : ContentDialogViewModelBase
 {
     public required CivitModel Model { get; set; }
 
@@ -66,7 +68,7 @@ public partial class ConfirmBulkDownloadDialogViewModel(IModelIndexService model
                 v.Files?.Select(f => new CivitFileDisplayViewModel
                 {
                     ModelVersion = v,
-                    FileViewModel = new CivitFileViewModel(modelIndexService, f, null)
+                    FileViewModel = new CivitFileViewModel(modelIndexService, settingsManager, f, null)
                     {
                         InstallLocations = [],
                     },

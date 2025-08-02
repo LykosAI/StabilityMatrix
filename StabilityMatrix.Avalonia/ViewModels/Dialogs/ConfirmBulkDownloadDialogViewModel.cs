@@ -6,6 +6,7 @@ using DynamicData;
 using DynamicData.Binding;
 using Injectio.Attributes;
 using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
@@ -21,7 +22,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [RegisterTransient<ConfirmBulkDownloadDialogViewModel>]
 public partial class ConfirmBulkDownloadDialogViewModel(
     IModelIndexService modelIndexService,
-    ISettingsManager settingsManager
+    ISettingsManager settingsManager,
+    IServiceManager<ViewModelBase> vmFactory
 ) : ContentDialogViewModelBase
 {
     public required CivitModel Model { get; set; }
@@ -68,7 +70,13 @@ public partial class ConfirmBulkDownloadDialogViewModel(
                 v.Files?.Select(f => new CivitFileDisplayViewModel
                 {
                     ModelVersion = v,
-                    FileViewModel = new CivitFileViewModel(modelIndexService, settingsManager, f, null)
+                    FileViewModel = new CivitFileViewModel(
+                        modelIndexService,
+                        settingsManager,
+                        f,
+                        vmFactory,
+                        null
+                    )
                     {
                         InstallLocations = [],
                     },

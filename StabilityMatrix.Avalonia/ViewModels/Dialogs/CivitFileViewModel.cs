@@ -4,8 +4,10 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
+using NLog;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Languages;
+using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.Api;
@@ -18,6 +20,7 @@ public partial class CivitFileViewModel : DisposableViewModelBase
 {
     private readonly IModelIndexService modelIndexService;
     private readonly ISettingsManager settingsManager;
+    private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly Func<CivitFileViewModel, string?, Task>? downloadAction;
 
     [ObservableProperty]
@@ -33,11 +36,13 @@ public partial class CivitFileViewModel : DisposableViewModelBase
         IModelIndexService modelIndexService,
         ISettingsManager settingsManager,
         CivitFile civitFile,
+        IServiceManager<ViewModelBase> vmFactory,
         Func<CivitFileViewModel, string?, Task>? downloadAction
     )
     {
         this.modelIndexService = modelIndexService;
         this.settingsManager = settingsManager;
+        this.vmFactory = vmFactory;
         this.downloadAction = downloadAction;
         CivitFile = civitFile;
         IsInstalled =
@@ -93,48 +98,55 @@ public partial class CivitFileViewModel : DisposableViewModelBase
             }
         }
 
-        var dialog = new BetterContentDialog
-        {
-            Title = Resources.Label_AreYouSure,
-            MaxDialogWidth = 750,
-            MaxDialogHeight = 850,
-            PrimaryButtonText = Resources.Action_Yes,
-            IsPrimaryButtonEnabled = true,
-            IsSecondaryButtonEnabled = false,
-            CloseButtonText = Resources.Action_Cancel,
-            DefaultButton = ContentDialogButton.Close,
-            Content =
-                $"The following files:\n{string.Join('\n', matchingModels.Select(x => $"- {x.FileName}"))}\n"
-                + "\nand all associated metadata files will be deleted. Are you sure?",
-        };
+        var confirmDeleteVm = vmFactory.Get<ConfirmDeleteDialogViewModel>();
+        var paths = new List<string>();
 
-        var result = await dialog.ShowAsync();
-        if (result == ContentDialogResult.Primary)
+        foreach (var localModel in matchingModels)
         {
-            foreach (var localModel in matchingModels)
+            var checkpointPath = new FilePath(localModel.GetFullPath(settingsManager.ModelsDirectory));
+            if (File.Exists(checkpointPath))
             {
-                var checkpointPath = new FilePath(localModel.GetFullPath(settingsManager.ModelsDirectory));
-                if (File.Exists(checkpointPath))
-                {
-                    File.Delete(checkpointPath);
-                }
+                paths.Add(checkpointPath);
+            }
 
-                var previewPath = localModel.GetPreviewImageFullPath(settingsManager.ModelsDirectory);
-                if (File.Exists(previewPath))
-                {
-                    File.Delete(previewPath);
-                }
+            var previewPath = localModel.GetPreviewImageFullPath(settingsManager.ModelsDirectory);
+            if (File.Exists(previewPath))
+            {
+                paths.Add(previewPath);
+            }
 
-                var cmInfoPath = checkpointPath.ToString().Replace(checkpointPath.Extension, ".cm-info.json");
-                if (File.Exists(cmInfoPath))
-                {
-                    File.Delete(cmInfoPath);
-                }
-
-                await modelIndexService.RemoveModelAsync(localModel);
-                IsInstalled = false;
+            var cmInfoPath = checkpointPath.ToString().Replace(checkpointPath.Extension, ".cm-info.json");
+            if (File.Exists(cmInfoPath))
+            {
+                paths.Add(cmInfoPath);
             }
         }
+
+        confirmDeleteVm.PathsToDelete = paths;
+
+        if (await confirmDeleteVm.GetDialog().ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        try
+        {
+            await confirmDeleteVm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            LogManager
+                .GetCurrentClassLogger()
+                .Error(e, "Failed to delete model files for {ModelName}", CivitFile.Name);
+            await modelIndexService.RefreshIndex();
+            return;
+        }
+        finally
+        {
+            IsInstalled = false;
+        }
+
+        await modelIndexService.RemoveModelsAsync(matchingModels);
     }
 
     private bool CanExecuteDownload()

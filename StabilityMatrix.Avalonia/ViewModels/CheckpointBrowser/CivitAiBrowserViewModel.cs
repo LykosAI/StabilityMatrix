@@ -632,7 +632,6 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             Nsfw = "true", // Handled by local view filter
             Sort = SortMode,
             Period = SelectedPeriod,
-            Limit = 30,
         };
 
         if (NextPageCursor != null)

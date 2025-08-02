@@ -27,10 +27,11 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(SamplerCard))]
 [ManagedService]
-[RegisterTransient<SamplerCardViewModel>]
+[RegisterScoped<SamplerCardViewModel>]
 public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLoadableState, IComfyStep
 {
     private ISettingsManager settingsManager;
+    private readonly TabContext tabContext;
 
     public const string ModuleKey = "Sampler";
 
@@ -134,10 +135,12 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
     public SamplerCardViewModel(
         IInferenceClientManager clientManager,
         IServiceManager<ViewModelBase> vmFactory,
-        ISettingsManager settingsManager
+        ISettingsManager settingsManager,
+        TabContext tabContext
     )
     {
         this.settingsManager = settingsManager;
+        this.tabContext = tabContext;
         ClientManager = clientManager;
         ModulesCardViewModel = vmFactory.Get<StackEditableCardViewModel>(modulesCard =>
         {
@@ -161,6 +164,30 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
         DimensionStepChange = settingsManager.Settings.InferenceDimensionStepChange;
         AvailableResolutions = settingsManager.Settings.SavedInferenceDimensions.ToList();
         LoadAvailableResolutions();
+
+        tabContext.StateChanged += TabContextOnStateChanged;
+    }
+
+    public override void OnUnloaded()
+    {
+        base.OnUnloaded();
+        tabContext.StateChanged -= TabContextOnStateChanged;
+    }
+
+    private void TabContextOnStateChanged(object? sender, TabContext.TabStateChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(tabContext.SelectedModel))
+            return;
+
+        if (tabContext.SelectedModel?.Local?.ConnectedModelInfo?.InferenceDefaults is not { } defaults)
+            return;
+
+        Width = defaults.Width;
+        Height = defaults.Height;
+        Steps = defaults.Steps;
+        CfgScale = defaults.CfgScale;
+        SelectedSampler = defaults.Sampler;
+        SelectedScheduler = defaults.Scheduler;
     }
 
     [RelayCommand]

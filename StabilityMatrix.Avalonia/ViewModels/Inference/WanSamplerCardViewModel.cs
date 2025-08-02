@@ -20,9 +20,10 @@ public class WanSamplerCardViewModel : SamplerCardViewModel
     public WanSamplerCardViewModel(
         IInferenceClientManager clientManager,
         IServiceManager<ViewModelBase> vmFactory,
-        ISettingsManager settingsManager
+        ISettingsManager settingsManager,
+        TabContext tabContext
     )
-        : base(clientManager, vmFactory, settingsManager)
+        : base(clientManager, vmFactory, settingsManager, tabContext)
     {
         EnableAddons = false;
         IsLengthEnabled = true;

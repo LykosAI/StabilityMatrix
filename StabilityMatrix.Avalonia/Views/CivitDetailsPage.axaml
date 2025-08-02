@@ -20,19 +20,20 @@
     xmlns:system="clr-namespace:System;assembly=System.Runtime"
     xmlns:ui="using:FluentAvalonia.UI.Controls"
     d:DataContext="{x:Static mocks:DesignData.CivitDetailsPageViewModel}"
-    d:DesignHeight="800"
+    d:DesignHeight="1000"
     d:DesignWidth="1000"
     x:DataType="checkpointBrowser:CivitDetailsPageViewModel"
     mc:Ignorable="d">
     <controls:UserControlBase.Resources>
         <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter" />
         <input:StandardUICommand x:Key="ShowImageDialogCommand" Command="{Binding ShowImageDialogCommand}" />
+        <input:StandardUICommand x:Key="DeleteModelVersionCommand" Command="{Binding DeleteModelVersionCommand}" />
     </controls:UserControlBase.Resources>
 
     <Grid
         Margin="16"
-        ColumnDefinitions="2*, *"
-        RowDefinitions="Auto, Auto, Auto, Auto, Auto, *, 2*">
+        ColumnDefinitions="*, Auto"
+        RowDefinitions="Auto, Auto, Auto, *">
         <StackPanel
             Grid.Row="0"
             Grid.Column="0"
@@ -92,7 +93,10 @@
             Margin="0,8,0,0"
             ItemsSource="{Binding CivitModel.Tags}">
             <ItemsRepeater.Layout>
-                <StackLayout Orientation="Horizontal" Spacing="4" />
+                <WrapLayout
+                    HorizontalSpacing="4"
+                    Orientation="Horizontal"
+                    VerticalSpacing="4" />
             </ItemsRepeater.Layout>
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate>
@@ -218,6 +222,16 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type dialogs:ModelVersionViewModel}">
                         <Grid HorizontalAlignment="Center" ColumnDefinitions="Auto, *, Auto">
+                            <Grid.ContextFlyout>
+                                <ui:FAMenuFlyout>
+                                    <ui:MenuFlyoutItem
+                                        Command="{StaticResource DeleteModelVersionCommand}"
+                                        CommandParameter="{Binding ModelVersion}"
+                                        IconSource="Delete"
+                                        IsVisible="{Binding IsInstalled}"
+                                        Text="Delete" />
+                                </ui:FAMenuFlyout>
+                            </Grid.ContextFlyout>
                             <avalonia:Icon
                                 Margin="0,2,8,0"
                                 HorizontalAlignment="Left"
@@ -245,293 +259,395 @@
             </ListBox>
         </scroll:BetterScrollViewer>
 
-        <scroll:BetterScrollViewer
+        <Grid
             Grid.Row="3"
-            Grid.RowSpan="3"
             Grid.Column="0"
-            Margin="0,8,0,8"
-            AllowAutoHide="True"
-            HorizontalScrollBarVisibility="Auto"
-            PointerWheelChanged="InputElement_OnPointerWheelChanged"
-            VerticalScrollBarVisibility="Disabled">
-            <ItemsRepeater ItemsSource="{Binding ImageSources}">
-                <ItemsRepeater.Layout>
-                    <StackLayout Orientation="Horizontal" Spacing="12" />
-                </ItemsRepeater.Layout>
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="{x:Type models:ImageSource}">
-                        <controls:BetterAdvancedImage
-                            CornerRadius="8"
-                            Cursor="Hand"
-                            Source="{Binding}"
-                            Stretch="UniformToFill"
-                            StretchDirection="Both">
-                            <Interaction.Behaviors>
-                                <EventTriggerBehavior EventName="PointerPressed">
-                                    <InvokeCommandAction Command="{StaticResource ShowImageDialogCommand}" CommandParameter="{Binding}" />
-                                </EventTriggerBehavior>
-                            </Interaction.Behaviors>
-                        </controls:BetterAdvancedImage>
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
-        </scroll:BetterScrollViewer>
+            Grid.ColumnSpan="2"
+            ColumnDefinitions="2*, *"
+            RowDefinitions="3*, *, *">
 
-        <controls:Card
-            Grid.Row="3"
-            Grid.Column="1"
-            MinWidth="200"
-            Margin="8,8,0,8"
-            Padding="12"
-            VerticalAlignment="Top">
-            <StackPanel Spacing="8">
-                <TextBlock
-                    FontSize="24"
-                    FontWeight="Light"
-                    Text="{x:Static lang:Resources.Label_Details}" />
-                <Separator Margin="0" />
-                <avalonia1:SpacedGrid ColumnDefinitions="*,*" RowDefinitions="*,Auto,*,Auto,*,Auto,*,Auto,*">
-                    <TextBlock
+            <!--  image carousel  -->
+            <scroll:BetterScrollViewer
+                Grid.Row="0"
+                Grid.Column="0"
+                Margin="0,8,0,8"
+                AllowAutoHide="True"
+                HorizontalScrollBarVisibility="Auto"
+                PointerWheelChanged="InputElement_OnPointerWheelChanged"
+                VerticalScrollBarVisibility="Disabled">
+                <ItemsRepeater ItemsSource="{Binding ImageSources}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Orientation="Horizontal" Spacing="12" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models:ImageSource}">
+                            <controls:BetterAdvancedImage
+                                CornerRadius="8"
+                                Cursor="Hand"
+                                Source="{Binding}"
+                                Stretch="UniformToFill"
+                                StretchDirection="Both">
+                                <Interaction.Behaviors>
+                                    <EventTriggerBehavior EventName="PointerPressed">
+                                        <InvokeCommandAction Command="{StaticResource ShowImageDialogCommand}" CommandParameter="{Binding}" />
+                                    </EventTriggerBehavior>
+                                </Interaction.Behaviors>
+                            </controls:BetterAdvancedImage>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </scroll:BetterScrollViewer>
+
+            <!--  Description Card  -->
+            <controls:Card
+                Grid.Row="1"
+                Grid.RowSpan="{Binding DescriptionRowSpan}"
+                Grid.Column="0"
+                Margin="0,0,0,8"
+                VerticalAlignment="Stretch"
+                VerticalContentAlignment="Top">
+                <ScrollViewer>
+                    <controls:MarkdownViewer Html="{Binding Description}" />
+                </ScrollViewer>
+            </controls:Card>
+
+            <!--  Model Version Description Card  -->
+            <controls:Card
+                Grid.Row="2"
+                Grid.Column="0"
+                Margin="0,0,0,8"
+                VerticalAlignment="Stretch"
+                VerticalContentAlignment="Top"
+                IsVisible="{Binding ModelVersionDescription, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <ScrollViewer>
+                    <controls:MarkdownViewer Html="{Binding ModelVersionDescription}" />
+                </ScrollViewer>
+            </controls:Card>
+
+            <!--  right column  -->
+            <ScrollViewer
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Grid.Column="1"
+                Margin="0,0,0,0">
+                <Grid RowDefinitions="Auto, Auto, Auto, Auto">
+                    <!--  Details Card  -->
+                    <controls:Card
                         Grid.Row="0"
-                        Grid.Column="0"
-                        Text="Author" />
+                        MinWidth="200"
+                        Margin="8,8,0,8"
+                        Padding="12"
+                        VerticalAlignment="Top">
+                        <StackPanel Spacing="8">
+                            <TextBlock
+                                FontSize="20"
+                                FontWeight="Light"
+                                Text="{x:Static lang:Resources.Label_Details}" />
+                            <Separator Margin="0" />
+                            <avalonia1:SpacedGrid ColumnDefinitions="*,*" RowDefinitions="*,Auto,*,Auto,*,Auto,*,Auto,*">
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="0"
+                                    Text="Author" />
 
-                    <TextBlock
-                        Grid.Row="0"
-                        Grid.Column="1"
-                        Text="{Binding CivitModel.Creator.Username}" />
+                                <TextBlock
+                                    Grid.Row="0"
+                                    Grid.Column="1"
+                                    Cursor="Hand"
+                                    Foreground="{DynamicResource AccentButtonBackground}"
+                                    Text="{Binding CivitModel.Creator.Username}"
+                                    TextDecorations="Underline">
+                                    <Interaction.Behaviors>
+                                        <EventTriggerBehavior EventName="PointerPressed">
+                                            <InvokeCommandAction Command="{Binding SearchByAuthorCommand}" />
+                                        </EventTriggerBehavior>
+                                    </Interaction.Behaviors>
+                                </TextBlock>
 
-                    <Separator
+                                <Separator
+                                    Grid.Row="1"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,4,0,4" />
+
+                                <TextBlock
+                                    Grid.Row="2"
+                                    Grid.Column="0"
+                                    Text="Type" />
+
+                                <TextBlock
+                                    Grid.Row="2"
+                                    Grid.Column="1"
+                                    Text="{Binding CivitModel.Type}" />
+
+                                <Separator
+                                    Grid.Row="3"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,4,0,4" />
+
+                                <TextBlock
+                                    Grid.Row="4"
+                                    Grid.Column="0"
+                                    Text="Base Model" />
+
+                                <TextBlock
+                                    Grid.Row="4"
+                                    Grid.Column="1"
+                                    Text="{Binding BaseModelType}" />
+
+                                <Separator
+                                    Grid.Row="5"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,4,0,4" />
+
+                                <TextBlock
+                                    Grid.Row="6"
+                                    Grid.Column="0"
+                                    Text="Hash" />
+
+                                <TextBlock
+                                    Grid.Row="6"
+                                    Grid.Column="1"
+                                    Text="{Binding ShortSha256}" />
+
+                                <Separator
+                                    Grid.Row="7"
+                                    Grid.Column="0"
+                                    Grid.ColumnSpan="2"
+                                    Margin="0,4,0,4" />
+
+                                <TextBlock
+                                    Grid.Row="8"
+                                    Grid.Column="0"
+                                    Text="Last Updated" />
+
+                                <TextBlock
+                                    Grid.Row="8"
+                                    Grid.Column="1"
+                                    Text="{Binding LastUpdated}" />
+
+                            </avalonia1:SpacedGrid>
+                        </StackPanel>
+                    </controls:Card>
+
+                    <!--  File Name Pattern Card  -->
+                    <controls:Card
                         Grid.Row="1"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="2"
-                        Margin="0,4,0,4" />
-
-                    <TextBlock
-                        Grid.Row="2"
-                        Grid.Column="0"
-                        Text="Type" />
-
-                    <TextBlock
-                        Grid.Row="2"
-                        Grid.Column="1"
-                        Text="{Binding CivitModel.Type}" />
-
-                    <Separator
-                        Grid.Row="3"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="2"
-                        Margin="0,4,0,4" />
-
-                    <TextBlock
-                        Grid.Row="4"
-                        Grid.Column="0"
-                        Text="Base Model" />
-
-                    <TextBlock
-                        Grid.Row="4"
-                        Grid.Column="1"
-                        Text="{Binding BaseModelType}" />
-
-                    <Separator
-                        Grid.Row="5"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="2"
-                        Margin="0,4,0,4" />
-
-                    <TextBlock
-                        Grid.Row="6"
-                        Grid.Column="0"
-                        Text="Hash" />
-
-                    <TextBlock
-                        Grid.Row="6"
-                        Grid.Column="1"
-                        Text="{Binding ShortSha256}" />
-
-                    <Separator
-                        Grid.Row="7"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="2"
-                        Margin="0,4,0,4" />
-
-                    <TextBlock
-                        Grid.Row="8"
-                        Grid.Column="0"
-                        Text="Last Updated" />
-
-                    <TextBlock
-                        Grid.Row="8"
-                        Grid.Column="1"
-                        Text="{Binding LastUpdated}" />
-
-                </avalonia1:SpacedGrid>
-            </StackPanel>
-        </controls:Card>
-
-        <controls:Card
-            Grid.Row="4"
-            Grid.Column="1"
-            Margin="8,0,0,8">
-            <Grid RowDefinitions="Auto, Auto, Auto" RowSpacing="8">
-                <TextBlock
-                    Grid.Row="0"
-                    FontSize="20"
-                    FontWeight="Light"
-                    Text="File Name Pattern" />
-                <TextBox
-                    Name="ModelFileNameFormatTextBox"
-                    Grid.Row="1"
-                    MinWidth="150"
-                    FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
-                    FontSize="13"
-                    Text="{Binding ModelFileNameFormat}"
-                    Watermark="{x:Static inference:FileNameFormat.DefaultModelBrowserTemplate}" />
-
-                <TextBlock
-                    Grid.Row="2"
-                    FontSize="12"
-                    Text="{Binding ModelNameFormatSample}" />
-            </Grid>
-        </controls:Card>
-
-        <controls:Card
-            Grid.Row="5"
-            Grid.RowSpan="2"
-            Grid.Column="1"
-            Margin="8,0,0,8"
-            Padding="4"
-            VerticalAlignment="Stretch"
-            VerticalContentAlignment="Top">
-            <ItemsRepeater Margin="4" ItemsSource="{Binding CivitFiles}">
-                <ItemsRepeater.ItemTemplate>
-                    <DataTemplate DataType="{x:Type dialogs:CivitFileViewModel}">
+                        Margin="8,0,0,8"
+                        VerticalAlignment="Top"
+                        VerticalContentAlignment="Top">
                         <Grid
-                            Margin="0,4,0,4"
-                            ColumnDefinitions="*, Auto"
-                            RowDefinitions="Auto, Auto, Auto, Auto">
+                            VerticalAlignment="Stretch"
+                            RowDefinitions="Auto, Auto, Auto"
+                            RowSpacing="8">
                             <TextBlock
                                 Grid.Row="0"
-                                Grid.Column="0"
-                                VerticalAlignment="Center"
-                                Text="{Binding CivitFile.DisplayName}"
-                                TextWrapping="Wrap" />
-
-                            <TextBlock
-                                Grid.Row="0"
-                                Grid.RowSpan="3"
-                                Grid.Column="1"
-                                VerticalAlignment="Center"
-                                Foreground="{DynamicResource AccentButtonBackground}"
-                                IsVisible="{Binding IsInstalled}"
-                                Text="{x:Static lang:Resources.Label_Installed}"
-                                TextTrimming="CharacterEllipsis"
-                                TextWrapping="NoWrap" />
-
-                            <TextBlock
+                                FontSize="20"
+                                FontWeight="Light"
+                                Text="File Name Pattern" />
+                            <TextBox
+                                Name="ModelFileNameFormatTextBox"
                                 Grid.Row="1"
-                                Grid.Column="0"
-                                Margin="0,8,0,4"
-                                FontSize="12"
-                                TextWrapping="Wrap">
-                                <Run Text="{Binding CivitFile.Metadata.Format}" />
-                                <Run Text="-" />
-                                <Run Text="{Binding CivitFile.Metadata.Size}" />
-                                <Run Text="-" />
-                                <Run Text="{Binding CivitFile.Metadata.Fp}" />
-                                <Run Text="-" />
-                                <Run Text="{Binding CivitFile.Type}" />
-                                <Run Text="-" />
-                                <Run Text="{Binding CivitFile.FullFilesSize, Mode=OneWay}" />
-                            </TextBlock>
+                                MinWidth="150"
+                                FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
+                                FontSize="13"
+                                Text="{Binding ModelFileNameFormat}"
+                                Watermark="{x:Static inference:FileNameFormat.DefaultModelBrowserTemplate}" />
 
                             <TextBlock
                                 Grid.Row="2"
-                                Grid.Column="0"
-                                Margin="0,4,0,4"
                                 FontSize="12"
-                                Foreground="{DynamicResource TextControlForegroundDisabled}"
-                                TextWrapping="Wrap">
-                                <Run Text="SHA256:" />
-                                <Run Text="{Binding CivitFile.Hashes.ShortSha256}" />
-                                <Run Text="-" />
-                                <Run Text="BLAKE3" />
-                                <Run Text="{Binding CivitFile.Hashes.ShortBlake3}" />
-                            </TextBlock>
-
-
-                            <SplitButton
-                                Grid.Row="3"
-                                Grid.Column="0"
-                                Margin="0,4,0,0"
-                                Padding="4"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Center"
-                                HorizontalContentAlignment="Center"
-                                Classes="accent"
-                                Command="{Binding DownloadToDefaultCommand}">
-                                <SplitButton.Resources>
-                                    <input:StandardUICommand x:Key="DownloadToSelectedLocationCommand" Command="{Binding DownloadToSelectedLocationCommand}" />
-                                </SplitButton.Resources>
-                                <SplitButton.Content>
-                                    <StackPanel Margin="2,0,0,0" Orientation="Horizontal">
-                                        <avalonia:Icon
-                                            Margin="0,0,8,0"
-                                            VerticalAlignment="Center"
-                                            Value="fa-solid fa-download" />
-                                        <TextBlock Text="{x:Static lang:Resources.Action_Download}" />
-                                    </StackPanel>
-                                </SplitButton.Content>
-                                <SplitButton.Flyout>
-                                    <ui:FAMenuFlyout ItemsSource="{Binding InstallLocations}" Placement="BottomEdgeAlignedRight">
-                                        <ui:FAMenuFlyout.ItemTemplate>
-                                            <DataTemplate DataType="system:String">
-                                                <ui:MenuFlyoutItem
-                                                    Command="{StaticResource DownloadToSelectedLocationCommand}"
-                                                    CommandParameter="{Binding .}"
-                                                    Text="{Binding .}" />
-                                            </DataTemplate>
-                                        </ui:FAMenuFlyout.ItemTemplate>
-                                    </ui:FAMenuFlyout>
-                                </SplitButton.Flyout>
-                            </SplitButton>
-                            <Button
-                                Grid.Row="3"
-                                Grid.Column="1"
-                                Margin="8,4,0,0"
-                                Padding="4"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Center"
-                                HorizontalContentAlignment="Stretch"
-                                Classes="danger"
-                                Command="{Binding DeleteCommand}"
-                                IsVisible="{Binding IsInstalled}">
-                                <StackPanel Margin="2,0,2,0" Orientation="Horizontal">
-                                    <avalonia:Icon
-                                        Margin="0,0,8,0"
-                                        VerticalAlignment="Center"
-                                        Value="fa-solid fa-trash" />
-                                    <TextBlock FontSize="14" Text="{x:Static lang:Resources.Action_Delete}" />
-                                </StackPanel>
-                            </Button>
+                                Text="{Binding ModelNameFormatSample}" />
                         </Grid>
-                    </DataTemplate>
-                </ItemsRepeater.ItemTemplate>
-            </ItemsRepeater>
-        </controls:Card>
-        <controls:Card
-            Grid.Row="6"
-            Grid.Column="0"
-            Margin="0,0,0,8"
-            VerticalAlignment="Stretch"
-            VerticalContentAlignment="Top">
-            <ScrollViewer>
-                <controls:MarkdownViewer Html="{Binding Description}" />
+                    </controls:Card>
+
+                    <!--  Civit Files Card  -->
+                    <controls:Card
+                        Grid.Row="2"
+                        Margin="8,0,0,8"
+                        Padding="4"
+                        VerticalAlignment="Center">
+                        <Grid RowDefinitions="Auto, *">
+                            <TextBlock
+                                Margin="8,8,0,0"
+                                FontSize="20"
+                                FontWeight="Light"
+                                Text="Files" />
+
+                            <ItemsRepeater
+                                Grid.Row="1"
+                                Margin="8,4,4,4"
+                                ItemsSource="{Binding CivitFiles}">
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type dialogs:CivitFileViewModel}">
+                                        <Grid
+                                            Margin="0,4,0,4"
+                                            ColumnDefinitions="*, Auto"
+                                            RowDefinitions="Auto, Auto, Auto, Auto">
+                                            <TextBlock
+                                                Grid.Row="0"
+                                                Grid.Column="0"
+                                                VerticalAlignment="Center"
+                                                Text="{Binding CivitFile.DisplayName}"
+                                                TextWrapping="Wrap" />
+
+                                            <TextBlock
+                                                Grid.Row="0"
+                                                Grid.RowSpan="3"
+                                                Grid.Column="1"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource AccentButtonBackground}"
+                                                IsVisible="{Binding IsInstalled}"
+                                                Text="{x:Static lang:Resources.Label_Installed}"
+                                                TextAlignment="Center"
+                                                TextTrimming="CharacterEllipsis"
+                                                TextWrapping="NoWrap" />
+
+                                            <TextBlock
+                                                Grid.Row="1"
+                                                Grid.Column="0"
+                                                Margin="0,8,0,4"
+                                                FontSize="12"
+                                                TextWrapping="Wrap">
+                                                <Run Text="{Binding CivitFile.Metadata.Format}" />
+                                                <Run Text="-" />
+                                                <Run Text="{Binding CivitFile.Metadata.Size}" />
+                                                <Run Text="-" />
+                                                <Run Text="{Binding CivitFile.Metadata.Fp}" />
+                                                <Run Text="-" />
+                                                <Run Text="{Binding CivitFile.Type}" />
+                                                <Run Text="-" />
+                                                <Run Text="{Binding CivitFile.FullFilesSize, Mode=OneWay}" />
+                                            </TextBlock>
+
+                                            <TextBlock
+                                                Grid.Row="2"
+                                                Grid.Column="0"
+                                                Margin="0,4,0,4"
+                                                FontSize="12"
+                                                Foreground="{DynamicResource TextControlForegroundDisabled}"
+                                                TextWrapping="Wrap">
+                                                <Run Text="SHA256:" />
+                                                <Run Text="{Binding CivitFile.Hashes.ShortSha256}" />
+                                                <Run Text="-" />
+                                                <Run Text="BLAKE3" />
+                                                <Run Text="{Binding CivitFile.Hashes.ShortBlake3}" />
+                                            </TextBlock>
+
+
+                                            <SplitButton
+                                                Grid.Row="3"
+                                                Grid.Column="0"
+                                                Margin="0,4,0,0"
+                                                Padding="4"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                HorizontalContentAlignment="Center"
+                                                Classes="accent"
+                                                Command="{Binding DownloadToDefaultCommand}">
+                                                <SplitButton.Resources>
+                                                    <input:StandardUICommand x:Key="DownloadToSelectedLocationCommand" Command="{Binding DownloadToSelectedLocationCommand}" />
+                                                </SplitButton.Resources>
+                                                <SplitButton.Content>
+                                                    <StackPanel Margin="2,0,0,0" Orientation="Horizontal">
+                                                        <avalonia:Icon
+                                                            Margin="0,0,8,0"
+                                                            VerticalAlignment="Center"
+                                                            Value="fa-solid fa-download" />
+                                                        <TextBlock Text="{x:Static lang:Resources.Action_Download}" />
+                                                    </StackPanel>
+                                                </SplitButton.Content>
+                                                <SplitButton.Flyout>
+                                                    <ui:FAMenuFlyout ItemsSource="{Binding InstallLocations}" Placement="BottomEdgeAlignedRight">
+                                                        <ui:FAMenuFlyout.ItemTemplate>
+                                                            <DataTemplate DataType="system:String">
+                                                                <ui:MenuFlyoutItem
+                                                                    Command="{StaticResource DownloadToSelectedLocationCommand}"
+                                                                    CommandParameter="{Binding .}"
+                                                                    Text="{Binding .}" />
+                                                            </DataTemplate>
+                                                        </ui:FAMenuFlyout.ItemTemplate>
+                                                    </ui:FAMenuFlyout>
+                                                </SplitButton.Flyout>
+                                            </SplitButton>
+                                            <Button
+                                                Grid.Row="3"
+                                                Grid.Column="1"
+                                                Margin="8,4,0,0"
+                                                Padding="4"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Center"
+                                                HorizontalContentAlignment="Stretch"
+                                                Classes="danger"
+                                                Command="{Binding DeleteCommand}"
+                                                IsVisible="{Binding IsInstalled}">
+                                                <StackPanel Margin="2,0,2,0" Orientation="Horizontal">
+                                                    <avalonia:Icon
+                                                        Margin="0,0,8,0"
+                                                        VerticalAlignment="Center"
+                                                        Value="fa-solid fa-trash" />
+                                                    <TextBlock FontSize="14" Text="{x:Static lang:Resources.Action_Delete}" />
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+                        </Grid>
+                    </controls:Card>
+
+                    <!--  Preferred Defaults Card  -->
+                    <controls:Card
+                        Grid.Row="3"
+                        Margin="8,0,0,8"
+                        Padding="4"
+                        VerticalAlignment="Stretch"
+                        IsVisible="{Binding ShowInferenceDefaultsSection}">
+                        <Grid
+                            HorizontalAlignment="Stretch"
+                            ColumnDefinitions="Auto, *, Auto"
+                            RowDefinitions="Auto, *">
+                            <TextBlock
+                                Margin="8,8,0,0"
+                                FontSize="20"
+                                FontWeight="Light"
+                                Text="Inference Defaults" />
+
+                            <ToggleSwitch
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Margin="0,-2,12,0" />
+
+                            <avalonia:Icon
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="12,2,0,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                ToolTip.Tip="When enabled, these settings will be applied automatically when this model is selected in Inference"
+                                Value="fa-solid fa-circle-info" />
+
+                            <controls:SamplerCard
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="3"
+                                Margin="8"
+                                HorizontalAlignment="Stretch"
+                                Background="Transparent"
+                                DataContext="{Binding SamplerCardViewModel}" />
+                        </Grid>
+                    </controls:Card>
+                </Grid>
             </ScrollViewer>
-        </controls:Card>
+        </Grid>
 
         <ui:TeachingTip
             Title="Format Variables"
+            Grid.Row="0"
+            Grid.Column="0"
             IsOpen="{Binding #ModelFileNameFormatTextBox.IsFocused}"
             PreferredPlacement="Top"
             Target="{Binding #ModelFileNameFormatTextBox, Mode=OneWay}">

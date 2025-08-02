@@ -412,6 +412,17 @@ public partial class CheckpointFileViewModel : SelectableViewModelBase
             cmInfo.ThumbnailImageUrl = vm.ThumbnailFilePath;
             cmInfo.ModelType = vm.ModelType;
             cmInfo.VersionName = vm.VersionName;
+            cmInfo.InferenceDefaults = vm.IsInferenceDefaultsEnabled
+                ? new InferenceDefaults
+                {
+                    Sampler = vm.SamplerCardViewModel.SelectedSampler,
+                    Scheduler = vm.SamplerCardViewModel.SelectedScheduler,
+                    Width = vm.SamplerCardViewModel.Width,
+                    Height = vm.SamplerCardViewModel.Height,
+                    CfgScale = vm.SamplerCardViewModel.CfgScale,
+                    Steps = vm.SamplerCardViewModel.Steps,
+                }
+                : null;
 
             var modelFilePath = new FilePath(
                 Path.Combine(settingsManager.ModelsDirectory, CheckpointFile.RelativePath)

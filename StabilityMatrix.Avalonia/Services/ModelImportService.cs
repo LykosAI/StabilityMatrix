@@ -1,6 +1,7 @@
 ﻿using AsyncAwaitBestPractices;
 using Avalonia.Controls.Notifications;
 using Injectio.Attributes;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.OpenModelsDb;
@@ -23,11 +24,32 @@ public class ModelImportService(
         CivitModelVersion modelVersion,
         CivitFile modelFile,
         DirectoryPath downloadDirectory,
-        string? fileNameOverride = null
+        string? fileNameOverride = null,
+        SamplerCardViewModel? samplerCardVm = null
     )
     {
         var modelFileName = fileNameOverride ?? Path.GetFileNameWithoutExtension(modelFile.Name);
-        var modelInfo = new ConnectedModelInfo(model, modelVersion, modelFile, DateTime.UtcNow);
+        InferenceDefaults? inferenceDefaults = null;
+        if (samplerCardVm != null)
+        {
+            inferenceDefaults = new InferenceDefaults
+            {
+                Sampler = samplerCardVm.SelectedSampler,
+                Scheduler = samplerCardVm.SelectedScheduler,
+                CfgScale = samplerCardVm.CfgScale,
+                Steps = samplerCardVm.Steps,
+                Width = samplerCardVm.Width,
+                Height = samplerCardVm.Height,
+            };
+        }
+
+        var modelInfo = new ConnectedModelInfo(
+            model,
+            modelVersion,
+            modelFile,
+            DateTime.UtcNow,
+            inferenceDefaults
+        );
 
         await modelInfo.SaveJsonToDirectory(downloadDirectory, modelFileName);
 
@@ -75,6 +97,7 @@ public class ModelImportService(
         CivitModelVersion? selectedVersion = null,
         CivitFile? selectedFile = null,
         string? fileNameOverride = null,
+        SamplerCardViewModel? inferenceDefaults = null,
         IProgress<ProgressReport>? progress = null,
         Func<Task>? onImportComplete = null,
         Func<Task>? onImportCanceled = null,
@@ -155,7 +178,14 @@ public class ModelImportService(
         var downloadPath = downloadFolder.JoinFile(uniqueFileName);
 
         // Download model info and preview first
-        var cmInfoPath = await SaveCmInfo(model, modelVersion, modelFile, downloadFolder, uniqueFileName);
+        var cmInfoPath = await SaveCmInfo(
+            model,
+            modelVersion,
+            modelFile,
+            downloadFolder,
+            Path.GetFileNameWithoutExtension(uniqueFileName),
+            inferenceDefaults
+        );
         var previewImagePath = await SavePreviewImage(modelVersion, downloadPath);
 
         // Create tracked download

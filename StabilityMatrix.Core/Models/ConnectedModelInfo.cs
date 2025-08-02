@@ -29,6 +29,7 @@ public class ConnectedModelInfo
     // User settings
     public string? UserTitle { get; set; }
     public string? ThumbnailImageUrl { get; set; }
+    public InferenceDefaults? InferenceDefaults { get; set; }
 
     public ConnectedModelSource? Source { get; set; } = ConnectedModelSource.Civitai;
 
@@ -57,6 +58,33 @@ public class ConnectedModelInfo
         TrainedWords = civitModelVersion.TrainedWords;
         Stats = civitModel.Stats;
         Source = ConnectedModelSource.Civitai;
+    }
+
+    public ConnectedModelInfo(
+        CivitModel civitModel,
+        CivitModelVersion civitModelVersion,
+        CivitFile civitFile,
+        DateTimeOffset importedAt,
+        InferenceDefaults? inferenceDefaults
+    )
+    {
+        ModelId = civitModel.Id;
+        ModelName = civitModel.Name;
+        ModelDescription = civitModel.Description ?? string.Empty;
+        Nsfw = civitModel.Nsfw;
+        Tags = civitModel.Tags;
+        ModelType = civitModel.Type;
+        VersionId = civitModelVersion.Id;
+        VersionName = civitModelVersion.Name;
+        VersionDescription = civitModelVersion.Description;
+        ImportedAt = importedAt;
+        BaseModel = civitModelVersion.BaseModel;
+        FileMetadata = civitFile.Metadata;
+        Hashes = civitFile.Hashes;
+        TrainedWords = civitModelVersion.TrainedWords;
+        Stats = civitModel.Stats;
+        Source = ConnectedModelSource.Civitai;
+        InferenceDefaults = inferenceDefaults;
     }
 
     public ConnectedModelInfo(

@@ -23,6 +23,7 @@ using StabilityMatrix.Avalonia.Models.Inference;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
@@ -31,6 +32,7 @@ using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Api.CivitTRPC;
+using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Settings;
 using StabilityMatrix.Core.Services;
@@ -53,6 +55,7 @@ public partial class CivitDetailsPageViewModel(
 ) : DisposableViewModelBase
 {
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowInferenceDefaultsSection))]
     public required partial CivitModel CivitModel { get; set; }
 
     private List<string> ignoredFileNameFormatVars =
@@ -107,6 +110,10 @@ public partial class CivitDetailsPageViewModel(
     public partial string Description { get; set; } = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DescriptionRowSpan))]
+    public partial string ModelVersionDescription { get; set; } = string.Empty;
+
+    [ObservableProperty]
     public partial bool ShowNsfw { get; set; }
 
     [ObservableProperty]
@@ -131,6 +138,22 @@ public partial class CivitDetailsPageViewModel(
     [ObservableProperty]
     public partial string? ModelNameFormatSample { get; set; }
 
+    [ObservableProperty]
+    public partial SamplerCardViewModel SamplerCardViewModel { get; set; } =
+        vmFactory.Get<SamplerCardViewModel>(samplerCard =>
+        {
+            samplerCard.IsDimensionsEnabled = true;
+            samplerCard.IsCfgScaleEnabled = true;
+            samplerCard.IsSamplerSelectionEnabled = true;
+            samplerCard.IsSchedulerSelectionEnabled = true;
+            samplerCard.DenoiseStrength = 1.0d;
+            samplerCard.EnableAddons = false;
+            samplerCard.IsDenoiseStrengthEnabled = false;
+        });
+
+    [ObservableProperty]
+    public partial bool IsInferenceDefaultsEnabled { get; set; } = false;
+
     public string LastUpdated =>
         SelectedVersion?.ModelVersion.PublishedAt?.ToString("g", CultureInfo.CurrentCulture) ?? string.Empty;
 
@@ -140,6 +163,10 @@ public partial class CivitDetailsPageViewModel(
     public string BaseModelType => SelectedVersion?.ModelVersion.BaseModel?.Trim() ?? string.Empty;
 
     public string CivitUrl => $@"https://civitai.com/models/{CivitModel.Id}";
+
+    public int DescriptionRowSpan => string.IsNullOrWhiteSpace(ModelVersionDescription) ? 2 : 1;
+
+    public bool ShowInferenceDefaultsSection => CivitModel.Type == CivitModelType.Checkpoint;
 
     protected override async Task OnInitialLoadedAsync()
     {
@@ -300,6 +327,7 @@ public partial class CivitDetailsPageViewModel(
                     modelIndexService,
                     settingsManager,
                     file,
+                    vmFactory,
                     DownloadModelAsync
                 )
                 {
@@ -447,7 +475,8 @@ public partial class CivitDetailsPageViewModel(
             finalDestinationDir,
             SelectedVersion?.ModelVersion,
             viewModel.CivitFile,
-            fileNameOverride
+            fileNameOverride,
+            inferenceDefaults: IsInferenceDefaultsEnabled ? SamplerCardViewModel : null
         );
 
         notificationService.Show(
@@ -607,6 +636,89 @@ public partial class CivitDetailsPageViewModel(
         await vm.GetDialog().ShowAsync();
     }
 
+    [RelayCommand]
+    private void SearchByAuthor()
+    {
+        navigationService.GoBack();
+        EventManager.Instance.OnNavigateAndFindCivitAuthorRequested(CivitModel.Creator.Username);
+    }
+
+    [RelayCommand]
+    private async Task DeleteModelVersion(CivitModelVersion modelVersion)
+    {
+        if (modelVersion.Files == null)
+            return;
+
+        var pathsToDelete = new List<string>();
+
+        foreach (var file in modelVersion.Files)
+        {
+            if (file is not { Type: CivitFileType.Model, Hashes.BLAKE3: not null })
+                continue;
+
+            var matchingModels = (await modelIndexService.FindByHashAsync(file.Hashes.BLAKE3)).ToList();
+
+            if (matchingModels.Count == 0)
+            {
+                await modelIndexService.RefreshIndex();
+                matchingModels = (await modelIndexService.FindByHashAsync(file.Hashes.BLAKE3)).ToList();
+            }
+
+            if (matchingModels.Count == 0)
+            {
+                logger.LogWarning(
+                    "No matching models found for file {FileName} with hash {Hash}",
+                    file.Name,
+                    file.Hashes.BLAKE3
+                );
+                continue;
+            }
+
+            foreach (var localModel in matchingModels)
+            {
+                var checkpointPath = new FilePath(localModel.GetFullPath(settingsManager.ModelsDirectory));
+                if (File.Exists(checkpointPath))
+                {
+                    pathsToDelete.Add(checkpointPath);
+                }
+
+                var previewPath = localModel.GetPreviewImageFullPath(settingsManager.ModelsDirectory);
+                if (File.Exists(previewPath))
+                {
+                    pathsToDelete.Add(previewPath);
+                }
+
+                var cmInfoPath = checkpointPath.ToString().Replace(checkpointPath.Extension, ".cm-info.json");
+                if (File.Exists(cmInfoPath))
+                {
+                    pathsToDelete.Add(cmInfoPath);
+                }
+            }
+        }
+
+        var confirmDeleteVm = vmFactory.Get<ConfirmDeleteDialogViewModel>();
+        confirmDeleteVm.PathsToDelete = pathsToDelete;
+
+        var dialog = confirmDeleteVm.GetDialog();
+        var result = await dialog.ShowAsync();
+
+        if (result != ContentDialogResult.Primary)
+            return;
+
+        try
+        {
+            await confirmDeleteVm.ExecuteCurrentDeleteOperationAsync(failFast: true);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to delete model files for {ModelName}", modelVersion.Name);
+        }
+        finally
+        {
+            await modelIndexService.RefreshIndex();
+        }
+    }
+
     private void VmOnNavigateToModelRequested(object? sender, int modelId)
     {
         if (sender is not ImageViewerViewModel vm)
@@ -634,6 +746,10 @@ public partial class CivitDetailsPageViewModel(
         imageCache.EditDiff(value?.ModelVersion.Images ?? [], (a, b) => a.Url == b.Url);
         civitFileCache.EditDiff(value?.ModelVersion.Files ?? [], (a, b) => a.Id == b.Id);
         SelectedFiles = new ObservableCollection<CivitFileViewModel>([CivitFiles.FirstOrDefault()]);
+
+        ModelVersionDescription = string.IsNullOrWhiteSpace(value?.ModelVersion.Description)
+            ? string.Empty
+            : $"""<html><body class="markdown-body">{value.ModelVersion.Description}</body></html>""";
     }
 
     public override void OnUnloaded()

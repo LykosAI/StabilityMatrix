@@ -264,7 +264,7 @@
             Grid.Column="0"
             Grid.ColumnSpan="2"
             ColumnDefinitions="2*, *"
-            RowDefinitions="3*, *, *">
+            RowDefinitions="3*, Auto, *, Auto, *">
 
             <!--  image carousel  -->
             <scroll:BetterScrollViewer
@@ -298,9 +298,20 @@
                 </ItemsRepeater>
             </scroll:BetterScrollViewer>
 
+            <GridSplitter
+                Grid.Row="1"
+                Grid.Column="0"
+                MaxWidth="100"
+                Margin="0,0,0,6"
+                VerticalAlignment="Center"
+                Background="White"
+                BorderThickness="1"
+                CornerRadius="4"
+                Opacity="0.5" />
+
             <!--  Description Card  -->
             <controls:Card
-                Grid.Row="1"
+                Grid.Row="2"
                 Grid.RowSpan="{Binding DescriptionRowSpan}"
                 Grid.Column="0"
                 Margin="0,0,0,8"
@@ -311,9 +322,22 @@
                 </ScrollViewer>
             </controls:Card>
 
+            <GridSplitter
+                Grid.Row="3"
+                Grid.Column="0"
+                MaxWidth="100"
+                Margin="0,0,0,6"
+                VerticalAlignment="Center"
+                Background="White"
+                BorderThickness="1"
+                CornerRadius="4"
+                IsVisible="{Binding ModelVersionDescription, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Opacity="0.5" />
+
+
             <!--  Model Version Description Card  -->
             <controls:Card
-                Grid.Row="2"
+                Grid.Row="4"
                 Grid.Column="0"
                 Margin="0,0,0,8"
                 VerticalAlignment="Stretch"
@@ -327,7 +351,7 @@
             <!--  right column  -->
             <ScrollViewer
                 Grid.Row="0"
-                Grid.RowSpan="3"
+                Grid.RowSpan="5"
                 Grid.Column="1"
                 Margin="0,0,0,0">
                 <Grid RowDefinitions="Auto, Auto, Auto, Auto">
@@ -619,7 +643,8 @@
                             <ToggleSwitch
                                 Grid.Row="0"
                                 Grid.Column="2"
-                                Margin="0,-2,12,0" />
+                                Margin="0,-2,12,0"
+                                IsChecked="{Binding IsInferenceDefaultsEnabled}" />
 
                             <avalonia:Icon
                                 Grid.Row="0"

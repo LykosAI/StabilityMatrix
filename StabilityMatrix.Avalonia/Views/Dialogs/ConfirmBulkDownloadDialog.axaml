@@ -29,8 +29,9 @@
             Grid.Row="1"
             Grid.Column="0"
             Grid.ColumnSpan="3"
-            Margin="4,0"
+            Margin="4,0,4,8"
             FontSize="16"
+            Foreground="{DynamicResource ThemeAmberColor}"
             Text="{Binding DownloadFollowingFilesText}"
             Theme="{DynamicResource BodyStrongTextBlockStyle}" />
 

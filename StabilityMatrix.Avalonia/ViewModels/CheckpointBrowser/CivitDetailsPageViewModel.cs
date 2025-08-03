@@ -164,7 +164,7 @@ public partial class CivitDetailsPageViewModel(
 
     public string CivitUrl => $@"https://civitai.com/models/{CivitModel.Id}";
 
-    public int DescriptionRowSpan => string.IsNullOrWhiteSpace(ModelVersionDescription) ? 2 : 1;
+    public int DescriptionRowSpan => string.IsNullOrWhiteSpace(ModelVersionDescription) ? 3 : 1;
 
     public bool ShowInferenceDefaultsSection => CivitModel.Type == CivitModelType.Checkpoint;
 

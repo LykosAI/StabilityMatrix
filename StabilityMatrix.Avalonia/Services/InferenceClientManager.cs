@@ -171,13 +171,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         modelsSource
             .Connect()
-            .SortBy(
-                f => f.ShortDisplayName,
-                SortDirection.Ascending,
-                SortOptimisations.ComparesImmutableValuesOnly
-            )
             .DeferUntilLoaded()
-            .Bind(Models)
+            .SortAndBind(Models, SortExpressionComparer<HybridModelFile>.Ascending(f => f.ShortDisplayName))
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -251,13 +246,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         unetModelsSource
             .Connect()
-            .SortBy(
-                f => f.ShortDisplayName,
-                SortDirection.Ascending,
-                SortOptimisations.ComparesImmutableValuesOnly
-            )
             .DeferUntilLoaded()
-            .Bind(UnetModels)
+            .SortAndBind(
+                UnetModels,
+                SortExpressionComparer<HybridModelFile>.Ascending(f => f.ShortDisplayName)
+            )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -498,6 +491,18 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 HybridModelFile.None,
                 .. clipModelNames.Select(HybridModelFile.FromRemote),
             ];
+
+            if (
+                await Client.GetRequiredNodeOptionNamesFromOptionalNodeAsync(
+                    "DualCLIPLoaderGGUF",
+                    "clip_name1"
+                ) is
+                { } ggufClipModelNames
+            )
+            {
+                models = models.Concat(ggufClipModelNames.Select(HybridModelFile.FromRemote));
+            }
+
             clipModelsSource.EditDiff(models, HybridModelFile.Comparer);
         }
 

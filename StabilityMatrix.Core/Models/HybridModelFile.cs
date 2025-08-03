@@ -152,11 +152,18 @@ public record HybridModelFile : ISearchText, IDownloadableResource
             // We want local and remote models to be considered equal if they have the same relative path
             // But 2 local models with the same path but different config paths should be considered different
 
-            return !(x.Type == y.Type && x.Local?.ConfigFullPath != y.Local?.ConfigFullPath);
+            return !(x.Type == y.Type && x.Local?.ConfigFullPath != y.Local?.ConfigFullPath)
+                && x.Local?.ConnectedModelInfo?.InferenceDefaults
+                    == y.Local?.ConnectedModelInfo?.InferenceDefaults;
         }
 
         public int GetHashCode(HybridModelFile obj)
         {
+            if (obj.Local?.ConnectedModelInfo?.InferenceDefaults is { } defaults)
+            {
+                return HashCode.Combine(obj.IsNone, obj.IsDefault, obj.RelativePath, defaults);
+            }
+
             return HashCode.Combine(obj.IsNone, obj.IsDefault, obj.RelativePath);
         }
     }

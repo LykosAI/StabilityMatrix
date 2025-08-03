@@ -715,6 +715,7 @@ public partial class SamplerCardViewModel : LoadableViewModelBase, IParametersLo
 
     private void LoadAvailableResolutions()
     {
+        GroupedResolutionsByAspectRatio.Clear();
         foreach (var res in AvailableResolutions)
         {
             // split on 'x' or 'X'

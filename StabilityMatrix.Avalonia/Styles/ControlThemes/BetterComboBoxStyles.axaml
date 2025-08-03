@@ -182,6 +182,15 @@
                                     IsVisible="{Binding Local.ConfigFullPath, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
                                     Symbol="BeakerSettings"
                                     ToolTip.Tip="{Binding Local.DisplayConfigFileName}" />
+                                <Label
+                                    MinHeight="0"
+                                    Margin="0,0,0,0"
+                                    Padding="6,0,6,0"
+                                    Classes="Circle LightBlue"
+                                    Content="{Binding Local.ConnectedModelInfo.BaseModel}"
+                                    FontSize="10"
+                                    FontWeight="SemiBold"
+                                    Theme="{StaticResource TagLabel}" />
                             </StackPanel>
                         </sg:SpacedGrid>
                     </sg:SpacedGrid>
@@ -268,7 +277,6 @@
                             <StackPanel
                                 Grid.Row="1"
                                 Grid.Column="1"
-                                Grid.ColumnSpan="1"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Bottom"
                                 Orientation="Horizontal">

@@ -17,6 +17,7 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
     // Default Python versions - these are TARGET versions SM knows about
     public static readonly PyVersion Python_3_10_11 = new(3, 10, 11);
     public static readonly PyVersion Python_3_10_17 = new(3, 10, 17);
+    public static readonly PyVersion Python_3_11_9 = new(3, 11, 9);
     public static readonly PyVersion Python_3_12_10 = new(3, 12, 10);
 
     /// <summary>
@@ -66,6 +67,9 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
                     .ConfigureAwait(false);
                 foreach (var uvPythonInfo in uvPythons)
                 {
+                    if (string.IsNullOrWhiteSpace(uvPythonInfo.InstallPath))
+                        continue;
+
                     if (discoveredInstallPaths.Add(uvPythonInfo.InstallPath)) // Check if we haven't already added this path (e.g., UV installed to a legacy spot)
                     {
                         var uvPyInstall = new PyInstallation(uvPythonInfo.Version, uvPythonInfo.InstallPath);

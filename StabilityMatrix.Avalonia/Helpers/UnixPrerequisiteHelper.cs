@@ -33,9 +33,9 @@ public class UnixPrerequisiteHelper(
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private const string UvMacDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.7.19/uv-aarch64-apple-darwin.tar.gz";
+        "https://github.com/astral-sh/uv/releases/download/0.8.4/uv-aarch64-apple-darwin.tar.gz";
     private const string UvLinuxDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.7.19/uv-x86_64-unknown-linux-gnu.tar.gz";
+        "https://github.com/astral-sh/uv/releases/download/0.8.4/uv-x86_64-unknown-linux-gnu.tar.gz";
 
     private DirectoryPath HomeDir => settingsManager.LibraryDir;
     private DirectoryPath AssetsDir => HomeDir.JoinDir("Assets");
@@ -81,7 +81,7 @@ public class UnixPrerequisiteHelper(
     private string UvExtractPath => Path.Combine(AssetsDir, "uv");
     public string UvExePath => Path.Combine(UvExtractPath, "uv");
     public bool IsUvInstalled => File.Exists(UvExePath);
-    private string ExpectedUvVersion => "0.7.19";
+    private string ExpectedUvVersion => "0.8.4";
 
     // Helper method to get Python download URL for a specific version
     private RemoteResource GetPythonDownloadResource(PyVersion version)

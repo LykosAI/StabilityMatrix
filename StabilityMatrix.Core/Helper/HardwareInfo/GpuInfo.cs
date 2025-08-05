@@ -60,8 +60,60 @@ public record GpuInfo
         return ComputeCapabilityValue < 7.5m;
     }
 
+    public bool IsWindowsRocmSupportedGpu()
+    {
+        var gfx = GetAmdGfxArch();
+        if (gfx is null)
+            return false;
+
+        return gfx.StartsWith("gfx110") || gfx.StartsWith("gfx120") || gfx.Equals("gfx1151");
+    }
+
     public bool IsAmd => Name?.Contains("amd", StringComparison.OrdinalIgnoreCase) ?? false;
     public bool IsIntel => Name?.Contains("arc", StringComparison.OrdinalIgnoreCase) ?? false;
+
+    public string? GetAmdGfxArch()
+    {
+        if (IsAmd || string.IsNullOrWhiteSpace(Name))
+            return null;
+
+        var name = Name.ToLowerInvariant();
+
+        if (name.Contains("9070") || name.Contains("R9700"))
+            return "gfx1201";
+
+        if (name.Contains("9060"))
+            return "gfx1200";
+
+        if (name.Contains("z2") || name.Contains("880m") || name.Contains("8050s") || name.Contains("8060s"))
+            return "gfx1151";
+
+        if (name.Contains("740m") || name.Contains("760m") || name.Contains("780m") || name.Contains("z1"))
+            return "gfx1103";
+
+        if (
+            name.Contains("w7400")
+            || name.Contains("w7500")
+            || name.Contains("w7600")
+            || name.Contains("7500 xt")
+            || name.Contains("7600")
+            || name.Contains("7650 gre")
+            || name.Contains("7700s")
+        )
+            return "gfx1102";
+
+        if (
+            name.Contains("v710")
+            || name.Contains("7700")
+            || (name.Contains("7800") && !name.Contains("w7800"))
+        )
+            return "gfx1101";
+
+        if (name.Contains("w7800") || name.Contains("7900") || name.Contains("7950") || name.Contains("7990"))
+            return "gfx1100";
+
+        return null;
+    }
 
     public virtual bool Equals(GpuInfo? other)
     {

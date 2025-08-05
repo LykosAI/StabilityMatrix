@@ -21,8 +21,8 @@ public partial class UvManager : IUvManager
         Converters = { new JsonStringEnumConverter() },
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
-    private readonly string uvExecutablePath;
-    private readonly DirectoryPath uvPythonInstallPath;
+    private string? uvExecutablePath;
+    private DirectoryPath? uvPythonInstallPath;
 
     // Regex to parse lines from 'uv python list'
     // Example lines:
@@ -90,8 +90,14 @@ public partial class UvManager : IUvManager
         CancellationToken cancellationToken = default
     )
     {
-        // Keep implementation from previous correct version (using UvPythonListOutputRegex)
-        // ... existing implementation ...
+        uvPythonInstallPath ??= new DirectoryPath(settingsManager.LibraryDir, "Assets", "Python");
+        uvExecutablePath ??= Path.Combine(
+            settingsManager.LibraryDir,
+            "Assets",
+            "uv",
+            Compat.IsWindows ? "uv.exe" : "uv"
+        );
+
         var args = new ProcessArgsBuilder("python", "list", "--output-format", "json");
         if (settingsManager.Settings.ShowAllAvailablePythonVersions)
         {
@@ -141,7 +147,7 @@ public partial class UvManager : IUvManager
             )
             .Select(e => new UvPythonInfo
             {
-                InstallPath = e.Path,
+                InstallPath = Path.GetDirectoryName(e.Path) ?? string.Empty,
                 Version = e.VersionParts,
                 Architecture = e.Arch,
                 IsInstalled = e.Path != null,

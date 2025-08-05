@@ -191,7 +191,7 @@ public class PyInstallation
     public enum VersionEqualityPrecision
     {
         MajorMinor,
-        MajorMinorPatch
+        MajorMinorPatch,
     }
 
     /// <summary>
@@ -200,7 +200,8 @@ public class PyInstallation
     /// </summary>
     public bool Exists()
     {
-        if (!Directory.Exists(InstallPath))
+        var attr = File.GetAttributes(InstallPath);
+        if (attr.HasFlag(FileAttributes.Directory) && !Directory.Exists(InstallPath))
             return false;
 
         // A more robust check might be needed. PythonExePath and PythonDllPath depend on OS.

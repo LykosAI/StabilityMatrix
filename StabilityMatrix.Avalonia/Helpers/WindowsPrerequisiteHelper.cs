@@ -49,7 +49,7 @@ public class WindowsPrerequisiteHelper(
     private const string PythonLibsDownloadUrl = "https://cdn.lykos.ai/python_libs_for_sage.zip";
 
     private const string UvWindowsDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.7.19/uv-x86_64-pc-windows-msvc.zip";
+        "https://github.com/astral-sh/uv/releases/download/0.8.4/uv-x86_64-pc-windows-msvc.zip";
 
     private string HomeDir => settingsManager.LibraryDir;
 
@@ -115,7 +115,7 @@ public class WindowsPrerequisiteHelper(
     private string UvExtractPath => Path.Combine(AssetsDir, "uv");
     public string UvExePath => Path.Combine(UvExtractPath, "uv.exe");
     public bool IsUvInstalled => File.Exists(UvExePath);
-    private string ExpectedUvVersion => "0.7.19";
+    private string ExpectedUvVersion => "0.8.4";
 
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsVcBuildToolsInstalled => Directory.Exists(VcBuildToolsExistsPath);
@@ -287,10 +287,10 @@ public class WindowsPrerequisiteHelper(
             await InstallTkinterIfNecessary(PyInstallationManager.Python_3_10_11, progress);
         }
 
-        if (prerequisites.Contains(PackagePrerequisite.VcBuildTools))
-        {
-            await InstallVcBuildToolsIfNecessary(progress);
-        }
+        // if (prerequisites.Contains(PackagePrerequisite.VcBuildTools))
+        // {
+        //     await InstallVcBuildToolsIfNecessary(progress);
+        // }
     }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)

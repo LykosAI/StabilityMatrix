@@ -115,15 +115,12 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
         OnPrimaryButtonClick();
 
         var installLocation = Path.Combine(settingsManager.LibraryDir, "Packages", selectedPackage.Name);
+        var recommendedPython = selectedPackage.RecommendedPythonVersion;
 
         var steps = new List<IPackageStep>
         {
             new SetPackageInstallingStep(settingsManager, selectedPackage.Name),
-            new SetupPrerequisitesStep(
-                prerequisiteHelper,
-                selectedPackage,
-                PyInstallationManager.Python_3_10_17
-            )
+            new SetupPrerequisitesStep(prerequisiteHelper, selectedPackage, recommendedPython),
         };
 
         // get latest version & download & install
@@ -160,7 +157,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
             LastUpdateCheck = DateTimeOffset.Now,
             PreferredTorchIndex = torchVersion,
             PreferredSharedFolderMethod = recommendedSharedFolderMethod,
-            PythonVersion = PyInstallationManager.Python_3_10_17.StringValue
+            PythonVersion = recommendedPython.StringValue,
         };
 
         var downloadStep = new DownloadPackageVersionStep(
@@ -181,7 +178,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
             {
                 SharedFolderMethod = recommendedSharedFolderMethod,
                 VersionOptions = downloadVersion,
-                PythonOptions = { TorchIndex = torchVersion }
+                PythonOptions = { TorchIndex = torchVersion, PythonVersion = recommendedPython },
             }
         );
         steps.Add(installStep);
@@ -203,7 +200,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
         {
             ShowDialogOnStart = false,
             HideCloseButton = false,
-            ModificationCompleteMessage = $"{selectedPackage.DisplayName} installed successfully"
+            ModificationCompleteMessage = $"{selectedPackage.DisplayName} installed successfully",
         };
 
         runner

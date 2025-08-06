@@ -200,8 +200,7 @@ public class PyInstallation
     /// </summary>
     public bool Exists()
     {
-        var attr = File.GetAttributes(InstallPath);
-        if (attr.HasFlag(FileAttributes.Directory) && !Directory.Exists(InstallPath))
+        if (!Directory.Exists(InstallPath))
             return false;
 
         // A more robust check might be needed. PythonExePath and PythonDllPath depend on OS.

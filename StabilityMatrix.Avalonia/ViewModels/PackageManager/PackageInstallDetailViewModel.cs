@@ -125,19 +125,9 @@ public partial class PackageInstallDetailViewModel(
         // Initialize Python versions
         await prerequisiteHelper.UnpackResourcesIfNecessary();
         await prerequisiteHelper.InstallUvIfNecessary();
-        try
-        {
-            var pythonVersions = await pyInstallationManager.GetAllAvailablePythonsAsync();
-            AvailablePythonVersions = new ObservableCollection<UvPythonInfo>(pythonVersions);
-            SelectedPythonVersion = GetRecommendedPyVersion() ?? AvailablePythonVersions.LastOrDefault();
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "wtf");
-            var pythonVersions = await pyInstallationManager.GetAllAvailablePythonsAsync();
-            AvailablePythonVersions = new ObservableCollection<UvPythonInfo>(pythonVersions);
-            SelectedPythonVersion = GetRecommendedPyVersion() ?? AvailablePythonVersions.LastOrDefault();
-        }
+        var pythonVersions = await pyInstallationManager.GetAllAvailablePythonsAsync();
+        AvailablePythonVersions = new ObservableCollection<UvPythonInfo>(pythonVersions);
+        SelectedPythonVersion = GetRecommendedPyVersion() ?? AvailablePythonVersions.LastOrDefault();
 
         allOptions = await SelectedPackage.GetAllVersionOptions();
         if (ShowReleaseMode)

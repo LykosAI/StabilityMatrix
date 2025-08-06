@@ -74,7 +74,7 @@ public record GpuInfo
 
     public string? GetAmdGfxArch()
     {
-        if (IsAmd || string.IsNullOrWhiteSpace(Name))
+        if (!IsAmd || string.IsNullOrWhiteSpace(Name))
             return null;
 
         var name = Name.ToLowerInvariant();

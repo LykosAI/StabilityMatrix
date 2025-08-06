@@ -2,7 +2,7 @@
 
 namespace StabilityMatrix.Core.Models;
 
-public class InferenceDefaults
+public record InferenceDefaults
 {
     public ComfySampler? Sampler { get; set; }
     public ComfyScheduler? Scheduler { get; set; }

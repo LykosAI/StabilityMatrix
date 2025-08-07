@@ -12,13 +12,19 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added setting for Inference dimension step change - the value the dimensions increase or decrease by when using the step buttons or scroll wheel in Inference
 - Added "Install Nunchaku" option to the ComfyUI Package Commands menu
 - Added "Select All" button to the Installed Extensions page
+- Added experimental ROCm pytorch install for ComfyUI (non-Zluda) on Windows - requires a compatible AMD GPU
 ### Changed
 - You can now select release versions when installing ComfyUI
 - You can no longer select branches when installing InvokeAI
 - Updated InvokeAI install to use pinned torch index from release tag
 - Updated ComfyUI installs for AMD users on Linux to use the latest rocm6.3 torch index
+- Updated ComfyUI-Zluda installs to use the newer install-n method (fixes [#1347](https://github.com/LykosAI/StabilityMatrix/issues/1347))
+- Updated uv to 0.8.4
+- Removed disclaimer from reForge since the author is now active again
 ### Fixed
 - Fixed Civitai-generated image parsing in Inference
+- Fixed some first-time setup crashes from missing prerequisites
+- Fixed one-click installer not using default preferred Python version
 
 ## v2.15.0-dev.2
 ### Added

@@ -522,8 +522,13 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private async Task ShowMigrationTipIfNecessaryAsync()
     {
-        if (settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.SharedFolderMigrationTip))
+        if (
+            settingsManager.Settings.SeenTeachingTips.Contains(TeachingTip.SharedFolderMigrationTip)
+            || settingsManager.Settings.InstalledPackages.Count == 0
+        )
+        {
             return;
+        }
 
         var folderReference = DialogHelper.CreateMarkdownDialog(MarkdownSnippets.SharedFolderMigration);
         folderReference.CloseButtonText = Resources.Action_OK;

@@ -191,7 +191,7 @@ public class PyInstallation
     public enum VersionEqualityPrecision
     {
         MajorMinor,
-        MajorMinorPatch
+        MajorMinorPatch,
     }
 
     /// <summary>

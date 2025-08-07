@@ -24,7 +24,10 @@ public class ComfyZluda(
 ) : ComfyUI(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     private const string ZludaPatchDownloadUrl =
-        "https://github.com/lshqqytiger/ZLUDA/releases/download/rel.dba64c0966df2c71e82255e942c96e2e1cea3a2d/ZLUDA-windows-rocm6-amd64.zip";
+        "https://github.com/lshqqytiger/ZLUDA/releases/download/rel.5e717459179dc272b7d7d23391f0fad66c7459cf/ZLUDA-nightly-windows-rocm6-amd64.zip";
+
+    private const string HipSdkExtensionDownloadUrl = "https://cdn.lykos.ai/HIP-SDK-extension.7z";
+
     private Process? zludaProcess;
 
     public override string Name => "ComfyUI-Zluda";
@@ -41,7 +44,11 @@ public class ComfyZluda(
 
     public override TorchIndex GetRecommendedTorchVersion() => TorchIndex.Zluda;
 
+    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_11_9;
+
     public override bool IsCompatible => HardwareHelper.PreferDirectMLOrZluda();
+
+    public override bool ShouldIgnoreReleases => true;
 
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         base.Prerequisites.Concat([PackagePrerequisite.HipSdk]);
@@ -62,7 +69,38 @@ public class ComfyZluda(
         if (!PrerequisiteHelper.IsHipSdkInstalled) // for updates
         {
             progress?.Report(new ProgressReport(-1, "Installing HIP SDK 6.2", isIndeterminate: true));
-            await PrerequisiteHelper.InstallPackageRequirements(this, progress).ConfigureAwait(false);
+            await PrerequisiteHelper
+                .InstallPackageRequirements(this, options.PythonOptions.PythonVersion, progress)
+                .ConfigureAwait(false);
+        }
+
+        // download & setup hip sdk extension if not already done
+        var hipPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            "AMD",
+            "ROCm",
+            "6.2"
+        );
+        var hipblasltPath = new DirectoryPath(hipPath, "hipblaslt");
+        var otherHipPath = new DirectoryPath(hipPath, "include", "hipblaslt");
+
+        if (!hipblasltPath.Exists || !otherHipPath.Exists)
+        {
+            var hipSdkExtensionPath = new FilePath(
+                SettingsManager.LibraryDir,
+                "Assets",
+                "hip-sdk-extension.7z"
+            );
+            await DownloadService
+                .DownloadToFileAsync(
+                    HipSdkExtensionDownloadUrl,
+                    hipSdkExtensionPath,
+                    progress,
+                    cancellationToken: cancellationToken
+                )
+                .ConfigureAwait(false);
+
+            await ArchiveHelper.Extract7Z(hipSdkExtensionPath, hipPath, progress).ConfigureAwait(false);
         }
 
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
@@ -74,9 +112,10 @@ public class ComfyZluda(
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
         var pipArgs = new PipInstallArgs()
-            .WithTorch("==2.3.0")
-            .WithTorchVision("==0.18.0")
-            .WithTorchAudio("==2.3.0")
+            .AddArg("--force-reinstall")
+            .WithTorch("==2.7.0")
+            .WithTorchVision("==0.22.0")
+            .WithTorchAudio("==2.7.0")
             .WithTorchExtraIndex("cu118");
 
         var requirements = new FilePath(installLocation, "requirements.txt");
@@ -103,6 +142,13 @@ public class ComfyZluda(
 
         // patch zluda
         var zludaPatchPath = new FilePath(installLocation, "zluda.zip");
+        var zludaExtractPath = new DirectoryPath(installLocation, "zluda");
+        if (zludaExtractPath.Exists)
+        {
+            await zludaExtractPath.DeleteAsync(true).ConfigureAwait(false);
+        }
+        zludaExtractPath.Create();
+
         await downloadService
             .DownloadToFileAsync(
                 ZludaPatchDownloadUrl,
@@ -112,12 +158,26 @@ public class ComfyZluda(
             )
             .ConfigureAwait(false);
 
-        await ArchiveHelper.Extract(zludaPatchPath, installLocation, progress).ConfigureAwait(false);
+        await ArchiveHelper.Extract(zludaPatchPath, zludaExtractPath, progress).ConfigureAwait(false);
+        await zludaPatchPath.DeleteAsync(cancellationToken).ConfigureAwait(false);
 
         // copy some stuff into the venv
         var cublasSourcePath = new FilePath(installLocation, "zluda", "cublas.dll");
         var cusparseSourcePath = new FilePath(installLocation, "zluda", "cusparse.dll");
+        var nvrtc112SourcePath = new FilePath(
+            venvRunner.RootPath,
+            "Lib",
+            "site-packages",
+            "torch",
+            "lib",
+            "nvrtc64_112_0.dll"
+        );
         var nvrtcSourcePath = new FilePath(installLocation, "zluda", "nvrtc.dll");
+        var cudnnSourcePath = new FilePath(installLocation, "zluda", "cudnn.dll");
+        var cufftSourcePath = new FilePath(installLocation, "zluda", "cufft.dll");
+        var cufftwSourcePath = new FilePath(installLocation, "zluda", "cufftw.dll");
+        var zludaPySourcePath = new FilePath(installLocation, "comfy", "customzluda", "zluda.py");
+
         var cublasDestPath = new FilePath(
             venvRunner.RootPath,
             "Lib",
@@ -134,6 +194,14 @@ public class ComfyZluda(
             "lib",
             "cusparse64_11.dll"
         );
+        var nvrtc112DestPath = new FilePath(
+            venvRunner.RootPath,
+            "Lib",
+            "site-packages",
+            "torch",
+            "lib",
+            "nvrtc_cuda.dll"
+        );
         var nvrtcDestPath = new FilePath(
             venvRunner.RootPath,
             "Lib",
@@ -142,10 +210,40 @@ public class ComfyZluda(
             "lib",
             "nvrtc64_112_0.dll"
         );
+        var cudnnDestPath = new FilePath(
+            venvRunner.RootPath,
+            "Lib",
+            "site-packages",
+            "torch",
+            "lib",
+            "cudnn64_9.dll"
+        );
+        var cufftDestPath = new FilePath(
+            venvRunner.RootPath,
+            "Lib",
+            "site-packages",
+            "torch",
+            "lib",
+            "cufft64_10.dll"
+        );
+        var cufftwDestPath = new FilePath(
+            venvRunner.RootPath,
+            "Lib",
+            "site-packages",
+            "torch",
+            "lib",
+            "cufftw64_10.dll"
+        );
+        var zludaPyDestPath = new FilePath(installLocation, "comfy", "zluda.py");
 
         await cublasSourcePath.CopyToAsync(cublasDestPath, true).ConfigureAwait(false);
         await cusparseSourcePath.CopyToAsync(cusparseDestPath, true).ConfigureAwait(false);
+        await nvrtc112SourcePath.CopyToAsync(nvrtc112DestPath, true).ConfigureAwait(false);
         await nvrtcSourcePath.CopyToAsync(nvrtcDestPath, true).ConfigureAwait(false);
+        await cudnnSourcePath.CopyToAsync(cudnnDestPath, true).ConfigureAwait(false);
+        await cufftSourcePath.CopyToAsync(cufftDestPath, true).ConfigureAwait(false);
+        await cufftwSourcePath.CopyToAsync(cufftwDestPath, true).ConfigureAwait(false);
+        await zludaPySourcePath.CopyToAsync(zludaPyDestPath, true).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1, "Installed ZLUDA", isIndeterminate: false));
     }
@@ -180,7 +278,7 @@ public class ComfyZluda(
             ["ZLUDA_COMGR_LOG_LEVEL"] = "1",
             ["HIP_PATH"] = hipPath,
             ["HIP_PATH_62"] = hipPath,
-            ["GIT"] = portableGitBin.JoinFile("git.exe")
+            ["GIT"] = portableGitBin.JoinFile("git.exe"),
         };
         envVars.Update(settingsManager.Settings.EnvironmentVariables);
 
@@ -194,7 +292,7 @@ public class ComfyZluda(
         }
 
         var zludaPath = Path.Combine(installLocation, LaunchCommand);
-        ProcessArgs args = ["--", VenvRunner.PythonPath.ToString(), "main.py", ..options.Arguments];
+        ProcessArgs args = ["--", VenvRunner.PythonPath.ToString(), "main.py", .. options.Arguments];
         zludaProcess = ProcessRunner.StartAnsiProcess(
             zludaPath,
             args,

@@ -153,8 +153,6 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
 
-        var settingsSelectedBaseModels = settingsManager.Settings.SelectedCivitBaseModels;
-
         var filterPredicate = Observable
             .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
             .Where(x =>
@@ -199,7 +197,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                 .Transform(baseModel => new BaseModelOptionViewModel
                 {
                     ModelType = baseModel,
-                    IsSelected = settingsSelectedBaseModels.Contains(baseModel),
+                    IsSelected = settingsManager.Settings.SelectedCivitBaseModels.Contains(baseModel),
                 })
                 .SortAndBind(
                     AllBaseModels,
@@ -225,6 +223,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
         var settingsTransactionObservable = this.WhenPropertyChanged(x => x.SelectedBaseModels)
             .Throttle(TimeSpan.FromMilliseconds(50))
+            .Skip(1)
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe(_ =>
             {
@@ -360,7 +359,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         }
 
         dontSearch = true;
-        baseModelCache.Edit(updater => updater.Load(baseModels));
+        baseModelCache.EditDiff(baseModels, static (a, b) => a.Equals(b, StringComparison.OrdinalIgnoreCase));
         dontSearch = false;
     }
 

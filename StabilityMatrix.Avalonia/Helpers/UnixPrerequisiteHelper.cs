@@ -27,15 +27,16 @@ namespace StabilityMatrix.Avalonia.Helpers;
 public class UnixPrerequisiteHelper(
     IDownloadService downloadService,
     ISettingsManager settingsManager,
-    IPyRunner pyRunner
+    IPyRunner pyRunner,
+    IPyInstallationManager pyInstallationManager
 ) : IPrerequisiteHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     private const string UvMacDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.7.19/uv-aarch64-apple-darwin.tar.gz";
+        "https://github.com/astral-sh/uv/releases/download/0.8.4/uv-aarch64-apple-darwin.tar.gz";
     private const string UvLinuxDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.7.19/uv-x86_64-unknown-linux-gnu.tar.gz";
+        "https://github.com/astral-sh/uv/releases/download/0.8.4/uv-x86_64-unknown-linux-gnu.tar.gz";
 
     private DirectoryPath HomeDir => settingsManager.LibraryDir;
     private DirectoryPath AssetsDir => HomeDir.JoinDir("Assets");
@@ -81,7 +82,7 @@ public class UnixPrerequisiteHelper(
     private string UvExtractPath => Path.Combine(AssetsDir, "uv");
     public string UvExePath => Path.Combine(UvExtractPath, "uv");
     public bool IsUvInstalled => File.Exists(UvExePath);
-    private string ExpectedUvVersion => "0.7.19";
+    private string ExpectedUvVersion => "0.8.4";
 
     // Helper method to get Python download URL for a specific version
     private RemoteResource GetPythonDownloadResource(PyVersion version)
@@ -105,15 +106,20 @@ public class UnixPrerequisiteHelper(
         return isGitInstalled == true;
     }
 
-    public Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null) =>
-        InstallPackageRequirements(package.Prerequisites.ToList(), progress);
+    public Task InstallPackageRequirements(
+        BasePackage package,
+        PyVersion? pyVersion = null,
+        IProgress<ProgressReport>? progress = null
+    ) => InstallPackageRequirements(package.Prerequisites.ToList(), pyVersion, progress);
 
     public async Task InstallPackageRequirements(
         List<PackagePrerequisite> prerequisites,
+        PyVersion? pyVersion = null,
         IProgress<ProgressReport>? progress = null
     )
     {
         await UnpackResourcesIfNecessary(progress);
+        await InstallUvIfNecessary(progress);
 
         if (prerequisites.Contains(PackagePrerequisite.Python310))
         {
@@ -121,13 +127,16 @@ public class UnixPrerequisiteHelper(
             await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_11, progress);
         }
 
-        if (prerequisites.Contains(PackagePrerequisite.Python31017))
+        if (pyVersion is not null)
         {
-            await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_17, progress);
-            await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_17, progress);
+            if (!await EnsurePythonVersion(pyVersion.Value))
+            {
+                throw new MissingPrerequisiteException(
+                    @"Python",
+                    @$"Python {pyVersion} was not found and/or failed to install. Please check the logs for more details."
+                );
+            }
         }
-
-        await InstallUvIfNecessary(progress);
 
         if (prerequisites.Contains(PackagePrerequisite.Git))
         {
@@ -186,7 +195,6 @@ public class UnixPrerequisiteHelper(
     {
         await UnpackResourcesIfNecessary(progress);
         await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
-        await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_17, progress);
         await InstallUvIfNecessary(progress);
     }
 
@@ -684,6 +692,12 @@ public class UnixPrerequisiteHelper(
             Logger.Warn(e, "Failed to get UV version from {UvExePath}", UvExePath);
             return string.Empty;
         }
+    }
+
+    private async Task<bool> EnsurePythonVersion(PyVersion pyVersion)
+    {
+        var result = await pyInstallationManager.GetInstallationAsync(pyVersion);
+        return result.Exists();
     }
 
     [UnsupportedOSPlatform("Linux")]

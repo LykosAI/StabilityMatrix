@@ -49,7 +49,7 @@ public class WindowsPrerequisiteHelper(
     private const string PythonLibsDownloadUrl = "https://cdn.lykos.ai/python_libs_for_sage.zip";
 
     private const string UvWindowsDownloadUrl =
-        "https://github.com/astral-sh/uv/releases/download/0.7.19/uv-x86_64-pc-windows-msvc.zip";
+        "https://github.com/astral-sh/uv/releases/download/0.8.4/uv-x86_64-pc-windows-msvc.zip";
 
     private string HomeDir => settingsManager.LibraryDir;
 
@@ -115,7 +115,7 @@ public class WindowsPrerequisiteHelper(
     private string UvExtractPath => Path.Combine(AssetsDir, "uv");
     public string UvExePath => Path.Combine(UvExtractPath, "uv.exe");
     public bool IsUvInstalled => File.Exists(UvExePath);
-    private string ExpectedUvVersion => "0.7.19";
+    private string ExpectedUvVersion => "0.8.4";
 
     public string GitBinPath => Path.Combine(PortableGitInstallDir, "bin");
     public bool IsVcBuildToolsInstalled => Directory.Exists(VcBuildToolsExistsPath);
@@ -191,8 +191,11 @@ public class WindowsPrerequisiteHelper(
         onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
     }
 
-    public Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null) =>
-        InstallPackageRequirements(package.Prerequisites.ToList(), progress);
+    public Task InstallPackageRequirements(
+        BasePackage package,
+        PyVersion? pyVersion = null,
+        IProgress<ProgressReport>? progress = null
+    ) => InstallPackageRequirements(package.Prerequisites.ToList(), pyVersion, progress);
 
     public async Task InstallUvIfNecessary(IProgress<ProgressReport>? progress = null)
     {
@@ -245,6 +248,7 @@ public class WindowsPrerequisiteHelper(
 
     public async Task InstallPackageRequirements(
         List<PackagePrerequisite> prerequisites,
+        PyVersion? pyVersion = null,
         IProgress<ProgressReport>? progress = null
     )
     {
@@ -260,6 +264,17 @@ public class WindowsPrerequisiteHelper(
         {
             await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
             await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_11, progress);
+        }
+
+        if (pyVersion is not null)
+        {
+            if (!await EnsurePythonVersion(pyVersion.Value))
+            {
+                throw new MissingPrerequisiteException(
+                    @"Python",
+                    @$"Python {pyVersion} was not found and/or failed to install. Please check the logs for more details."
+                );
+            }
         }
 
         if (prerequisites.Contains(PackagePrerequisite.Git))
@@ -287,10 +302,10 @@ public class WindowsPrerequisiteHelper(
             await InstallTkinterIfNecessary(PyInstallationManager.Python_3_10_11, progress);
         }
 
-        if (prerequisites.Contains(PackagePrerequisite.VcBuildTools))
-        {
-            await InstallVcBuildToolsIfNecessary(progress);
-        }
+        // if (prerequisites.Contains(PackagePrerequisite.VcBuildTools))
+        // {
+        //     await InstallVcBuildToolsIfNecessary(progress);
+        // }
     }
 
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -1050,5 +1065,11 @@ public class WindowsPrerequisiteHelper(
             Logger.Warn(e, "Failed to get UV version from {UvExePath}", UvExePath);
             return string.Empty;
         }
+    }
+
+    private async Task<bool> EnsurePythonVersion(PyVersion pyVersion)
+    {
+        var result = await pyInstallationManager.GetInstallationAsync(pyVersion);
+        return result.Exists();
     }
 }

@@ -123,6 +123,7 @@ public partial class PackageInstallDetailViewModel(
         SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
 
         // Initialize Python versions
+        await prerequisiteHelper.UnpackResourcesIfNecessary();
         await prerequisiteHelper.InstallUvIfNecessary();
         var pythonVersions = await pyInstallationManager.GetAllAvailablePythonsAsync();
         AvailablePythonVersions = new ObservableCollection<UvPythonInfo>(pythonVersions);

@@ -27,7 +27,8 @@ namespace StabilityMatrix.Avalonia.Helpers;
 public class UnixPrerequisiteHelper(
     IDownloadService downloadService,
     ISettingsManager settingsManager,
-    IPyRunner pyRunner
+    IPyRunner pyRunner,
+    IPyInstallationManager pyInstallationManager
 ) : IPrerequisiteHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -105,15 +106,20 @@ public class UnixPrerequisiteHelper(
         return isGitInstalled == true;
     }
 
-    public Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null) =>
-        InstallPackageRequirements(package.Prerequisites.ToList(), progress);
+    public Task InstallPackageRequirements(
+        BasePackage package,
+        PyVersion? pyVersion = null,
+        IProgress<ProgressReport>? progress = null
+    ) => InstallPackageRequirements(package.Prerequisites.ToList(), pyVersion, progress);
 
     public async Task InstallPackageRequirements(
         List<PackagePrerequisite> prerequisites,
+        PyVersion? pyVersion = null,
         IProgress<ProgressReport>? progress = null
     )
     {
         await UnpackResourcesIfNecessary(progress);
+        await InstallUvIfNecessary(progress);
 
         if (prerequisites.Contains(PackagePrerequisite.Python310))
         {
@@ -121,13 +127,16 @@ public class UnixPrerequisiteHelper(
             await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_11, progress);
         }
 
-        if (prerequisites.Contains(PackagePrerequisite.Python31017))
+        if (pyVersion is not null)
         {
-            await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_17, progress);
-            await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_17, progress);
+            if (!await EnsurePythonVersion(pyVersion.Value))
+            {
+                throw new MissingPrerequisiteException(
+                    @"Python",
+                    @$"Python {pyVersion} was not found and/or failed to install. Please check the logs for more details."
+                );
+            }
         }
-
-        await InstallUvIfNecessary(progress);
 
         if (prerequisites.Contains(PackagePrerequisite.Git))
         {
@@ -186,7 +195,6 @@ public class UnixPrerequisiteHelper(
     {
         await UnpackResourcesIfNecessary(progress);
         await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
-        await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_17, progress);
         await InstallUvIfNecessary(progress);
     }
 
@@ -684,6 +692,12 @@ public class UnixPrerequisiteHelper(
             Logger.Warn(e, "Failed to get UV version from {UvExePath}", UvExePath);
             return string.Empty;
         }
+    }
+
+    private async Task<bool> EnsurePythonVersion(PyVersion pyVersion)
+    {
+        var result = await pyInstallationManager.GetInstallationAsync(pyVersion);
+        return result.Exists();
     }
 
     [UnsupportedOSPlatform("Linux")]

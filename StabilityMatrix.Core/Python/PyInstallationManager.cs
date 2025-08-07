@@ -32,7 +32,7 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
     /// <summary>
     /// The default Python version to use if none is specified.
     /// </summary>
-    public static readonly PyVersion DefaultVersion = Python_3_10_11; // Or your preferred default
+    public static readonly PyVersion DefaultVersion = Python_3_10_11;
 
     /// <summary>
     /// Gets all discoverable Python installations (legacy and UV-managed).

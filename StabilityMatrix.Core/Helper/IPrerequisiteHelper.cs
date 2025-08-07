@@ -191,9 +191,14 @@ public interface IPrerequisiteHelper
         IReadOnlyDictionary<string, string>? envVars = null
     );
     Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null);
-    Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null);
+    Task InstallPackageRequirements(
+        BasePackage package,
+        PyVersion? pyVersion = null,
+        IProgress<ProgressReport>? progress = null
+    );
     Task InstallPackageRequirements(
         List<PackagePrerequisite> prerequisites,
+        PyVersion? pyVersion = null,
         IProgress<ProgressReport>? progress = null
     );
 

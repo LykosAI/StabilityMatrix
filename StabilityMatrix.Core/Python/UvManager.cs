@@ -58,6 +58,13 @@ public partial class UvManager : IUvManager
     {
         try
         {
+            uvExecutablePath ??= Path.Combine(
+                settingsManager.LibraryDir,
+                "Assets",
+                "uv",
+                Compat.IsWindows ? "uv.exe" : "uv"
+            );
+
             var result = await ProcessRunner
                 .GetAnsiProcessResultAsync(
                     uvExecutablePath,
@@ -200,6 +207,14 @@ public partial class UvManager : IUvManager
         CancellationToken cancellationToken = default
     )
     {
+        uvPythonInstallPath ??= new DirectoryPath(settingsManager.LibraryDir, "Assets", "Python");
+        uvExecutablePath ??= Path.Combine(
+            settingsManager.LibraryDir,
+            "Assets",
+            "uv",
+            Compat.IsWindows ? "uv.exe" : "uv"
+        );
+
         var versionString = $"{version.Major}.{version.Minor}.{version.Micro}";
         if (version.Micro == 0)
         {

@@ -157,6 +157,7 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
             LastUpdateCheck = DateTimeOffset.Now,
             PreferredTorchIndex = torchVersion,
             PreferredSharedFolderMethod = recommendedSharedFolderMethod,
+            UseSharedOutputFolder = selectedPackage.SharedOutputFolders is { Count: > 0 },
             PythonVersion = recommendedPython.StringValue,
         };
 

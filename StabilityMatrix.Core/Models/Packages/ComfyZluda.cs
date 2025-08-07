@@ -69,7 +69,9 @@ public class ComfyZluda(
         if (!PrerequisiteHelper.IsHipSdkInstalled) // for updates
         {
             progress?.Report(new ProgressReport(-1, "Installing HIP SDK 6.2", isIndeterminate: true));
-            await PrerequisiteHelper.InstallPackageRequirements(this, progress).ConfigureAwait(false);
+            await PrerequisiteHelper
+                .InstallPackageRequirements(this, options.PythonOptions.PythonVersion, progress)
+                .ConfigureAwait(false);
         }
 
         // download & setup hip sdk extension if not already done

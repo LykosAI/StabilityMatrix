@@ -13,7 +13,9 @@ public class SetupPrerequisitesStep(
 {
     public async Task ExecuteAsync(IProgress<ProgressReport>? progress = null)
     {
-        await prerequisiteHelper.InstallPackageRequirements(package, progress).ConfigureAwait(false);
+        await prerequisiteHelper
+            .InstallPackageRequirements(package, pythonVersion, progress)
+            .ConfigureAwait(false);
     }
 
     public string ProgressTitle => "Installing prerequisites...";

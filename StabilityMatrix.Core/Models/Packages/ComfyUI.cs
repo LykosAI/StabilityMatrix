@@ -236,7 +236,10 @@ public class ComfyUI(
             {
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectMLOrZluda() && this is not ComfyZluda,
+                InitialValue =
+                    !HardwareHelper.HasWindowsRocmSupportedGpu()
+                    && HardwareHelper.PreferDirectMLOrZluda()
+                    && this is not ComfyZluda,
                 Options = ["--directml"],
             },
             new()

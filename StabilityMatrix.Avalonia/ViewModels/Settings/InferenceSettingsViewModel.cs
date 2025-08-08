@@ -69,6 +69,18 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     [ObservableProperty]
     private bool filterExtraNetworksByBaseModel;
 
+    private List<string> ignoredFileNameFormatVars =
+    [
+        "author",
+        "model_version_name",
+        "base_model",
+        "file_name",
+        "model_type",
+        "model_id",
+        "model_version_id",
+        "file_id",
+    ];
+
     [ObservableProperty]
     public partial int InferenceDimensionStepChange { get; set; }
 
@@ -78,11 +90,8 @@ public partial class InferenceSettingsViewModel : PageViewModelBase
     public IEnumerable<FileNameFormatVar> OutputImageFileNameFormatVars =>
         FileNameFormatProvider
             .GetSample()
-            .Substitutions.Select(kv => new FileNameFormatVar
-            {
-                Variable = $"{{{kv.Key}}}",
-                Example = kv.Value.Invoke(),
-            });
+            .Substitutions.Where(kv => !ignoredFileNameFormatVars.Contains(kv.Key))
+            .Select(kv => new FileNameFormatVar { Variable = $"{{{kv.Key}}}", Example = kv.Value.Invoke() });
 
     [ObservableProperty]
     private bool isImageViewerPixelGridEnabled = true;

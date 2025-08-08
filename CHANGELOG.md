@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Select All" button to the Installed Extensions page
 - Added experimental ROCm pytorch install for ComfyUI (non-Zluda) on Windows - requires a compatible AMD GPU
 ### Changed
+- Redesigned Civitai model details page
 - You can now select release versions when installing ComfyUI
 - You can no longer select branches when installing InvokeAI
 - Updated InvokeAI install to use pinned torch index from release tag

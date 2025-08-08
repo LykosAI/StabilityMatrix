@@ -1101,6 +1101,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bulk Download Started.
+        /// </summary>
+        public static string Label_BulkDownloadStarted {
+            get {
+                return ResourceManager.GetString("Label_BulkDownloadStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} files have started downloading. Check the Downloads tab for progress..
+        /// </summary>
+        public static string Label_BulkDownloadStartedMessage {
+            get {
+                return ResourceManager.GetString("Label_BulkDownloadStartedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Callstack.
         /// </summary>
         public static string Label_Callstack {
@@ -1538,6 +1556,24 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_Downloads {
             get {
                 return ResourceManager.GetString("Label_Downloads", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Download Started.
+        /// </summary>
+        public static string Label_DownloadStarted {
+            get {
+                return ResourceManager.GetString("Label_DownloadStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} will be saved to {1}.
+        /// </summary>
+        public static string Label_DownloadWillBeSavedToLocation {
+            get {
+                return ResourceManager.GetString("Label_DownloadWillBeSavedToLocation", resourceCulture);
             }
         }
         

@@ -13,6 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using NLog;
+using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -46,6 +47,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     private readonly IModelImportService modelImportService;
     private readonly ILiteDbContext liteDbContext;
     private readonly CivitCompatApiManager civitApi;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
 
     public Action<CheckpointBrowserCardViewModel>? OnDownloadStart { get; set; }
 
@@ -96,7 +98,8 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         IModelIndexService modelIndexService,
         IModelImportService modelImportService,
         ILiteDbContext liteDbContext,
-        CivitCompatApiManager civitApi
+        CivitCompatApiManager civitApi,
+        INavigationService<MainWindowViewModel> navigationService
     )
     {
         this.downloadService = downloadService;
@@ -108,6 +111,7 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
         this.modelImportService = modelImportService;
         this.liteDbContext = liteDbContext;
         this.civitApi = civitApi;
+        this.navigationService = navigationService;
 
         // Update image when nsfw setting changes
         AddDisposable(
@@ -238,6 +242,15 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
             );
             return;
         }
+
+        var newVm = dialogFactory.Get<CivitDetailsPageViewModel>(vm =>
+        {
+            vm.CivitModel = model;
+            return vm;
+        });
+
+        navigationService.NavigateTo(newVm, BetterSlideNavigationTransition.PageSlideFromRight);
+        return;
 
         var dialog = new BetterContentDialog
         {

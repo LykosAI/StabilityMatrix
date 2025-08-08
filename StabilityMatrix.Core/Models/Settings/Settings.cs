@@ -248,6 +248,10 @@ public class Settings
 
     public Dictionary<string, LastDownloadLocationInfo> ModelTypeDownloadPreferences { get; set; } = new();
 
+    public bool ShowTrainingDataInModelBrowser { get; set; }
+
+    public string? CivitModelBrowserFileNamePattern { get; set; }
+
     public int InferenceDimensionStepChange { get; set; } = 128;
 
     [JsonIgnore]

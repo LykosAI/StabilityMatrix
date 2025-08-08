@@ -444,6 +444,8 @@ public partial class ModelCardViewModel(
         }
     }
 
+    partial void OnSelectedUnetModelChanged(HybridModelFile? value) => OnSelectedModelChanged(value);
+
     private void SetupStandaloneModelLoader(ModuleApplyStepEventArgs e)
     {
         if (SelectedModelLoader is ModelLoader.Unet && IsGguf)

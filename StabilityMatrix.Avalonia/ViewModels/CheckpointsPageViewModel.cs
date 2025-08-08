@@ -16,21 +16,22 @@ using FluentIcons.Common;
 using Fusillade;
 using Injectio.Attributes;
 using Microsoft.Extensions.Logging;
-using StabilityMatrix.Avalonia.Controls;
+using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Helpers;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
+using StabilityMatrix.Avalonia.ViewModels.CheckpointBrowser;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
 using StabilityMatrix.Avalonia.ViewModels.Dialogs;
 using StabilityMatrix.Avalonia.Views;
-using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.PackageModification;
@@ -38,7 +39,6 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Services;
 using CheckpointSortMode = StabilityMatrix.Core.Models.CheckpointSortMode;
-using Notification = Avalonia.Controls.Notifications.Notification;
 using Symbol = FluentIcons.Common.Symbol;
 using SymbolIconSource = FluentIcons.Avalonia.Fluent.SymbolIconSource;
 using TeachingTip = StabilityMatrix.Core.Models.Settings.TeachingTip;
@@ -58,7 +58,8 @@ public partial class CheckpointsPageViewModel(
     IModelImportService modelImportService,
     OpenModelDbManager openModelDbManager,
     IServiceManager<ViewModelBase> dialogFactory,
-    ICivitBaseModelTypeService baseModelTypeService
+    ICivitBaseModelTypeService baseModelTypeService,
+    INavigationService<MainWindowViewModel> navigationService
 ) : PageViewModelBase
 {
     public override string Title => Resources.Label_CheckpointManager;
@@ -616,86 +617,35 @@ public partial class CheckpointsPageViewModel(
     private async Task ShowCivitVersionDialog(CheckpointFileViewModel item)
     {
         var model = item.CheckpointFile.LatestModelInfo;
+        CivitDetailsPageViewModel newVm;
         if (model is null)
         {
-            notificationService.Show(
-                "Model not found",
-                "Model not found in index, please try again later.",
-                NotificationType.Error
-            );
-            return;
-        }
+            if (item.CheckpointFile.ConnectedModelInfo?.ModelId == null)
+            {
+                notificationService.Show(
+                    "Model not found",
+                    "Model not found in index, please try again later.",
+                    NotificationType.Error
+                );
+                return;
+            }
 
-        var versions = model.ModelVersions;
-        if (versions is null || versions.Count == 0)
-        {
-            notificationService.Show(
-                new Notification(
-                    "Model has no versions available",
-                    "This model has no versions available for download",
-                    NotificationType.Warning
-                )
-            );
-            return;
-        }
-
-        item.IsLoading = true;
-
-        var dialog = new BetterContentDialog
-        {
-            Title = model.Name,
-            IsPrimaryButtonEnabled = false,
-            IsSecondaryButtonEnabled = false,
-            IsFooterVisible = false,
-            CloseOnClickOutside = true,
-            MaxDialogWidth = 750,
-            MaxDialogHeight = 1000,
-        };
-
-        var htmlDescription = $"""<html><body class="markdown-body">{model.Description}</body></html>""";
-
-        var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
-        viewModel.Dialog = dialog;
-        viewModel.Title = model.Name;
-        viewModel.Description = htmlDescription;
-        viewModel.CivitModel = model;
-        viewModel.Versions = versions
-            .Select(version => new ModelVersionViewModel(modelIndexService, version))
-            .ToImmutableArray();
-        viewModel.SelectedVersionViewModel = viewModel.Versions.Any() ? viewModel.Versions[0] : null;
-
-        dialog.Content = new SelectModelVersionDialog { DataContext = viewModel };
-
-        var result = await dialog.ShowAsync();
-
-        if (result != ContentDialogResult.Primary)
-        {
-            DelayedClearViewModelProgress(item, TimeSpan.FromMilliseconds(100));
-            return;
-        }
-
-        var selectedVersion = viewModel?.SelectedVersionViewModel?.ModelVersion;
-        var selectedFile = viewModel?.SelectedFile?.CivitFile;
-
-        DirectoryPath downloadPath;
-        if (viewModel?.IsCustomSelected is true)
-        {
-            downloadPath = viewModel.CustomInstallLocation;
+            newVm = dialogFactory.Get<CivitDetailsPageViewModel>(vm =>
+            {
+                vm.CivitModel = new CivitModel { Id = item.CheckpointFile.ConnectedModelInfo.ModelId.Value };
+                return vm;
+            });
         }
         else
         {
-            var subFolder =
-                viewModel?.SelectedInstallLocation
-                ?? Path.Combine(@"Models", model.Type.ConvertTo<SharedFolderType>().GetStringValue());
-            subFolder = subFolder.StripStart(@$"Models{Path.DirectorySeparatorChar}");
-            downloadPath = Path.Combine(settingsManager.ModelsDirectory, subFolder);
+            newVm = dialogFactory.Get<CivitDetailsPageViewModel>(vm =>
+            {
+                vm.CivitModel = model;
+                return vm;
+            });
         }
 
-        await Task.Delay(100);
-        await modelImportService.DoImport(model, downloadPath, selectedVersion, selectedFile);
-
-        item.Progress = new ProgressReport(1f, "Import started. Check the downloads tab for progress.");
-        DelayedClearViewModelProgress(item, TimeSpan.FromMilliseconds(1000));
+        navigationService.NavigateTo(newVm, BetterSlideNavigationTransition.PageSlideFromRight);
     }
 
     private async Task ShowOpenModelDbDialog(CheckpointFileViewModel item)
@@ -1044,6 +994,8 @@ public partial class CheckpointsPageViewModel(
                 "*",
                 EnumerationOptionConstants.TopLevelOnly
             )
+            // Ignore hacky "diffusion_models" folder for Swarm
+            .Where(d => !Path.GetFileName(d).EndsWith("diffusion_models", StringComparison.OrdinalIgnoreCase))
             .Select(d =>
             {
                 var folderName = Path.GetFileName(d);
@@ -1197,13 +1149,18 @@ public partial class CheckpointsPageViewModel(
 
     private bool FilterModels(LocalModelFile file)
     {
+        var folderPath = Path.GetDirectoryName(file.RelativePath);
+
+        // Ignore hacky "diffusion_models" folder for Swarm
+        if (folderPath?.Contains("diffusion_models", StringComparison.OrdinalIgnoreCase) ?? false)
+            return false;
+
         if (SelectedCategory?.Path is null || SelectedCategory?.Path == settingsManager.ModelsDirectory)
             return file.HasConnectedModel
                 ? SelectedBaseModels.Count == 0
                     || SelectedBaseModels.Contains(file.ConnectedModelInfo.BaseModel ?? "Other")
                 : SelectedBaseModels.Count == 0 || SelectedBaseModels.Contains("Other");
 
-        var folderPath = Path.GetDirectoryName(file.RelativePath);
         var categoryRelativePath = SelectedCategory
             ?.Path.Replace(settingsManager.ModelsDirectory, string.Empty)
             .TrimStart(Path.DirectorySeparatorChar);

@@ -37,9 +37,7 @@ public record FileNameFormat
         return Prefix
             + string.Join(
                 "",
-                Parts.Select(
-                    part => part.Match(constant => constant, substitution => substitution.Invoke())
-                )
+                Parts.Select(part => part.Match(constant => constant, substitution => substitution.Invoke()))
             )
             + Postfix;
     }
@@ -69,4 +67,5 @@ public record FileNameFormat
     }
 
     public const string DefaultTemplate = "{date}_{time}-{model_name}-{seed}";
+    public const string DefaultModelBrowserTemplate = "{file_name}";
 }

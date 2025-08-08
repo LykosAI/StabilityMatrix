@@ -122,7 +122,7 @@ public partial class SelectModelVersionViewModel(
         Dispatcher.UIThread.Post(() =>
         {
             CanGoToPreviousImage = false;
-            SelectedFile = SelectedVersionViewModel?.CivitFileViewModels.FirstOrDefault();
+            // SelectedFile = SelectedVersionViewModel?.CivitFileViewModels.FirstOrDefault();
             ImageUrls = new ObservableCollection<ImageSource>(allImages);
             SelectedImageIndex = 0;
 
@@ -401,7 +401,7 @@ public partial class SelectModelVersionViewModel(
 
     private void ApplySavedDownloadPreference()
     {
-        if (CivitModel?.Type == null || !settingsManager.IsLibraryDirSet)
+        if (CivitModel.Type == null || !settingsManager.IsLibraryDirSet)
             return;
 
         var modelTypeKey = CivitModel.Type.ToString();

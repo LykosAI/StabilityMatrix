@@ -575,13 +575,13 @@
                     <Button.Content>
                         <Grid HorizontalAlignment="Stretch" ColumnDefinitions="1*, 32">
                             <TextBlock IsVisible="{Binding ShowFilterNumber}">
-                                <Run Text="Filter" />
+                                <Run Text="{x:Static lang:Resources.Label_Filter}" />
                                 <Run Text="(" /><Run Text="{Binding SelectedBaseModels.Count}" /><Run Text=")" />
                             </TextBlock>
                             <TextBlock
                                 Grid.Column="0"
                                 IsVisible="{Binding !ShowFilterNumber}"
-                                Text="Filter" />
+                                Text="{x:Static lang:Resources.Label_Filter}" />
                             <ui:SymbolIcon
                                 Grid.Column="1"
                                 HorizontalAlignment="Right"

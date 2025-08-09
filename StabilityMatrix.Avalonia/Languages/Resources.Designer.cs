@@ -984,6 +984,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Author.
+        /// </summary>
+        public static string Label_Author {
+            get {
+                return ResourceManager.GetString("Label_Author", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Auto Completion.
         /// </summary>
         public static string Label_AutoCompletion {
@@ -1542,6 +1551,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Download All Files (All Versions).
+        /// </summary>
+        public static string Label_DownloadAllFilesAllVersions {
+            get {
+                return ResourceManager.GetString("Label_DownloadAllFilesAllVersions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Download Failed.
         /// </summary>
         public static string Label_DownloadFailed {
@@ -1592,6 +1610,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_DropFileToImport {
             get {
                 return ResourceManager.GetString("Label_DropFileToImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Early Access Models.
+        /// </summary>
+        public static string Label_EarlyAccessModels {
+            get {
+                return ResourceManager.GetString("Label_EarlyAccessModels", resourceCulture);
             }
         }
         
@@ -1740,6 +1767,33 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File Name Pattern.
+        /// </summary>
+        public static string Label_FileNamePattern {
+            get {
+                return ResourceManager.GetString("Label_FileNamePattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Files.
+        /// </summary>
+        public static string Label_Files {
+            get {
+                return ResourceManager.GetString("Label_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter.
+        /// </summary>
+        public static string Label_Filter {
+            get {
+                return ResourceManager.GetString("Label_Filter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Find Connected Metadata.
         /// </summary>
         public static string Label_FindConnectedMetadata {
@@ -1808,6 +1862,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_General {
             get {
                 return ResourceManager.GetString("Label_General", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Hash.
+        /// </summary>
+        public static string Label_Hash {
+            get {
+                return ResourceManager.GetString("Label_Hash", resourceCulture);
             }
         }
         
@@ -1965,6 +2028,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Inference Defaults.
+        /// </summary>
+        public static string Label_InferenceDefaultsHeader {
+            get {
+                return ResourceManager.GetString("Label_InferenceDefaultsHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Infinite Scrolling.
         /// </summary>
         public static string Label_InfiniteScrolling {
@@ -2028,6 +2100,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Installed Models.
+        /// </summary>
+        public static string Label_InstalledModels {
+            get {
+                return ResourceManager.GetString("Label_InstalledModels", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Install Extension Pack.
         /// </summary>
         public static string Label_InstallExtensionPack {
@@ -2087,6 +2168,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_LastPage {
             get {
                 return ResourceManager.GetString("Label_LastPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Last Updated.
+        /// </summary>
+        public static string Label_LastUpdatedAt {
+            get {
+                return ResourceManager.GetString("Label_LastUpdatedAt", resourceCulture);
             }
         }
         
@@ -2361,6 +2451,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Non-Model Files.
+        /// </summary>
+        public static string Label_NonModelFiles {
+            get {
+                return ResourceManager.GetString("Label_NonModelFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to None.
         /// </summary>
         public static string Label_NotificationOption_None {
@@ -2384,6 +2483,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_NSFW {
             get {
                 return ResourceManager.GetString("Label_NSFW", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to NSFW Content.
+        /// </summary>
+        public static string Label_NsfwContent {
+            get {
+                return ResourceManager.GetString("Label_NsfwContent", resourceCulture);
             }
         }
         
@@ -2928,6 +3036,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show.
+        /// </summary>
+        public static string Label_Show {
+            get {
+                return ResourceManager.GetString("Label_Show", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Model Images.
         /// </summary>
         public static string Label_ShowModelImages {
@@ -3311,6 +3428,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string Label_VideoQuality {
             get {
                 return ResourceManager.GetString("Label_VideoQuality", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to View.
+        /// </summary>
+        public static string Label_View {
+            get {
+                return ResourceManager.GetString("Label_View", resourceCulture);
             }
         }
         
@@ -3964,6 +4090,15 @@ namespace StabilityMatrix.Avalonia.Languages {
         public static string TextTemplate_YouCanChangeThisBehavior {
             get {
                 return ResourceManager.GetString("TextTemplate_YouCanChangeThisBehavior", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to When enabled, these settings will be applied automatically when this model is selected in the Inference tab.
+        /// </summary>
+        public static string Tooltip_InferenceDefaults {
+            get {
+                return ResourceManager.GetString("Tooltip_InferenceDefaults", resourceCulture);
             }
         }
         

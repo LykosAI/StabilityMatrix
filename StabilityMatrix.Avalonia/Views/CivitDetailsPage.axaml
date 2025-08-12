@@ -126,14 +126,14 @@
                 </Style>
             </ui:CommandBar.Styles>
             <ui:CommandBar.PrimaryCommands>
-                <ui:CommandBarButton IconSource="Zoom" Label="View">
+                <ui:CommandBarButton IconSource="Zoom" Label="{x:Static lang:Resources.Label_View}">
                     <ui:CommandBarButton.Flyout>
                         <Flyout>
                             <StackPanel Orientation="Vertical">
                                 <TextBlock
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Text="Show" />
+                                    Text="{x:Static lang:Resources.Label_Show}" />
 
                                 <Separator Margin="0,8" />
 
@@ -142,32 +142,32 @@
                                     HorizontalAlignment="Left"
                                     HorizontalContentAlignment="Center"
                                     IsChecked="{Binding !HideEarlyAccess}"
-                                    OffContent="Early Access Models"
-                                    OnContent="Early Access Models" />
+                                    OffContent="{x:Static lang:Resources.Label_EarlyAccessModels}"
+                                    OnContent="{x:Static lang:Resources.Label_EarlyAccessModels}" />
 
                                 <ToggleSwitch
                                     Margin="8,-4"
                                     HorizontalAlignment="Left"
                                     HorizontalContentAlignment="Center"
                                     IsChecked="{Binding ShowNsfw}"
-                                    OffContent="NSFW Content"
-                                    OnContent="NSFW Content" />
+                                    OffContent="{x:Static lang:Resources.Label_NsfwContent}"
+                                    OnContent="{x:Static lang:Resources.Label_NsfwContent}" />
 
                                 <ToggleSwitch
                                     Margin="8,-4"
                                     HorizontalAlignment="Left"
                                     HorizontalContentAlignment="Center"
                                     IsChecked="{Binding ShowTrainingData}"
-                                    OffContent="Non-Model Files"
-                                    OnContent="Non-Model Files" />
+                                    OffContent="{x:Static lang:Resources.Label_NonModelFiles}"
+                                    OnContent="{x:Static lang:Resources.Label_NonModelFiles}" />
 
                                 <ToggleSwitch
                                     Margin="8,-4"
                                     HorizontalAlignment="Left"
                                     HorizontalContentAlignment="Center"
                                     IsChecked="{Binding !HideInstalledModels}"
-                                    OffContent="Installed Models"
-                                    OnContent="Installed Models" />
+                                    OffContent="{x:Static lang:Resources.Label_InstalledModels}"
+                                    OnContent="{x:Static lang:Resources.Label_InstalledModels}" />
                             </StackPanel>
                         </Flyout>
                     </ui:CommandBarButton.Flyout>
@@ -183,7 +183,7 @@
                 <ui:CommandBarButton
                     Command="{Binding ShowBulkDownloadDialogCommand}"
                     IconSource="Download"
-                    Label="Download All Files (All Versions)" />
+                    Label="{x:Static lang:Resources.Label_DownloadAllFilesAllVersions}" />
             </ui:CommandBar.SecondaryCommands>
         </ui:CommandBar>
 
@@ -229,7 +229,7 @@
                                         CommandParameter="{Binding ModelVersion}"
                                         IconSource="Delete"
                                         IsVisible="{Binding IsInstalled}"
-                                        Text="Delete" />
+                                        Text="{x:Static lang:Resources.Action_Delete}" />
                                 </ui:FAMenuFlyout>
                             </Grid.ContextFlyout>
                             <avalonia:Icon
@@ -372,7 +372,7 @@
                                 <TextBlock
                                     Grid.Row="0"
                                     Grid.Column="0"
-                                    Text="Author" />
+                                    Text="{x:Static lang:Resources.Label_Author}" />
 
                                 <TextBlock
                                     Grid.Row="0"
@@ -397,7 +397,7 @@
                                 <TextBlock
                                     Grid.Row="2"
                                     Grid.Column="0"
-                                    Text="Type" />
+                                    Text="{x:Static lang:Resources.Label_ModelType}" />
 
                                 <TextBlock
                                     Grid.Row="2"
@@ -413,7 +413,7 @@
                                 <TextBlock
                                     Grid.Row="4"
                                     Grid.Column="0"
-                                    Text="Base Model" />
+                                    Text="{x:Static lang:Resources.Label_BaseModel}" />
 
                                 <TextBlock
                                     Grid.Row="4"
@@ -429,7 +429,7 @@
                                 <TextBlock
                                     Grid.Row="6"
                                     Grid.Column="0"
-                                    Text="Hash" />
+                                    Text="{x:Static lang:Resources.Label_Hash}" />
 
                                 <TextBlock
                                     Grid.Row="6"
@@ -445,7 +445,7 @@
                                 <TextBlock
                                     Grid.Row="8"
                                     Grid.Column="0"
-                                    Text="Last Updated" />
+                                    Text="{x:Static lang:Resources.Label_LastUpdatedAt}" />
 
                                 <TextBlock
                                     Grid.Row="8"
@@ -470,7 +470,7 @@
                                 Grid.Row="0"
                                 FontSize="20"
                                 FontWeight="Light"
-                                Text="File Name Pattern" />
+                                Text="{x:Static lang:Resources.Label_FileNamePattern}" />
                             <TextBox
                                 Name="ModelFileNameFormatTextBox"
                                 Grid.Row="1"
@@ -498,7 +498,7 @@
                                 Margin="8,8,0,0"
                                 FontSize="20"
                                 FontWeight="Light"
-                                Text="Files" />
+                                Text="{x:Static lang:Resources.Label_Files}" />
 
                             <ItemsRepeater
                                 Grid.Row="1"
@@ -638,7 +638,7 @@
                                 Margin="8,8,0,0"
                                 FontSize="20"
                                 FontWeight="Light"
-                                Text="Inference Defaults" />
+                                Text="{x:Static lang:Resources.Label_InferenceDefaultsHeader}" />
 
                             <ToggleSwitch
                                 Grid.Row="0"
@@ -652,7 +652,7 @@
                                 Margin="12,2,0,0"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
-                                ToolTip.Tip="When enabled, these settings will be applied automatically when this model is selected in Inference"
+                                ToolTip.Tip="{x:Static lang:Resources.Tooltip_InferenceDefaults}"
                                 Value="fa-solid fa-circle-info" />
 
                             <controls:SamplerCard

@@ -1461,4 +1461,49 @@ We prioritize your privacy ([Gen AI Terms](&lt;https://lykos.ai/gen-ai-terms&gt;
   <data name="Label_DownloadWillBeSavedToLocation" xml:space="preserve">
     <value>{0} will be saved to {1}</value>
   </data>
+  <data name="Label_Author" xml:space="preserve">
+    <value>Author</value>
+  </data>
+  <data name="Label_Hash" xml:space="preserve">
+    <value>Hash</value>
+  </data>
+  <data name="Label_LastUpdatedAt" xml:space="preserve">
+    <value>Last Updated</value>
+  </data>
+  <data name="Label_FileNamePattern" xml:space="preserve">
+    <value>File Name Pattern</value>
+  </data>
+  <data name="Label_Files" xml:space="preserve">
+    <value>Files</value>
+  </data>
+  <data name="Label_InferenceDefaultsHeader" xml:space="preserve">
+    <value>Inference Defaults</value>
+  </data>
+  <data name="Tooltip_InferenceDefaults" xml:space="preserve">
+    <value>When enabled, these settings will be applied automatically when this model is selected in the Inference tab</value>
+  </data>
+  <data name="Label_Show" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="Label_EarlyAccessModels" xml:space="preserve">
+    <value>Early Access Models</value>
+  </data>
+  <data name="Label_NsfwContent" xml:space="preserve">
+    <value>NSFW Content</value>
+  </data>
+  <data name="Label_NonModelFiles" xml:space="preserve">
+    <value>Non-Model Files</value>
+  </data>
+  <data name="Label_InstalledModels" xml:space="preserve">
+    <value>Installed Models</value>
+  </data>
+  <data name="Label_DownloadAllFilesAllVersions" xml:space="preserve">
+    <value>Download All Files (All Versions)</value>
+  </data>
+  <data name="Label_View" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="Label_Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
 </root>

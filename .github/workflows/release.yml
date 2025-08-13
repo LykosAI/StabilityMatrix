@@ -87,7 +87,7 @@ jobs:
       - name: Install PupNet
         run: |
           sudo apt-get -y install libfuse2
-          dotnet tool install -g KuiperZone.PupNet
+          dotnet tool install -g KuiperZone.PupNet --version 1.8.0
       
       - name: PupNet Build
         env:

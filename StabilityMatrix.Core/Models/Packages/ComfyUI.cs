@@ -37,7 +37,6 @@ public class ComfyUI(
     public override string LaunchCommand => "main.py";
 
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/comfyui/preview.webp");
-    public override bool ShouldIgnoreReleases => true;
     public override bool IsInferenceCompatible => true;
     public override string OutputFolderName => "output";
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.InferenceCompatible;
@@ -237,7 +236,10 @@ public class ComfyUI(
             {
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectMLOrZluda() && this is not ComfyZluda,
+                InitialValue =
+                    !HardwareHelper.HasWindowsRocmSupportedGpu()
+                    && HardwareHelper.PreferDirectMLOrZluda()
+                    && this is not ComfyZluda,
                 Options = ["--directml"],
             },
             new()
@@ -301,27 +303,30 @@ public class ComfyUI(
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
 
-    public override List<ExtraPackageCommand> GetExtraCommands() =>
-        Compat.IsWindows && SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() is true
-            ?
-            [
+    public override List<ExtraPackageCommand> GetExtraCommands()
+    {
+        var commands = new List<ExtraPackageCommand>();
+
+        if (Compat.IsWindows && SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() is true)
+        {
+            commands.Add(
                 new ExtraPackageCommand
                 {
                     CommandName = "Install Triton and SageAttention",
-                    Command = async installedPackage =>
-                    {
-                        if (installedPackage == null || string.IsNullOrEmpty(installedPackage.FullPath))
-                        {
-                            throw new InvalidOperationException(
-                                "Package not found or not installed correctly"
-                            );
-                        }
+                    Command = InstallTritonAndSageAttention,
+                }
+            );
+        }
 
-                        await InstallTritonAndSageAttention(installedPackage).ConfigureAwait(false);
-                    },
-                },
-            ]
-            : [];
+        if (!Compat.IsMacOS && SettingsManager.Settings.PreferredGpu?.ComputeCapabilityValue is >= 7.5m)
+        {
+            commands.Add(
+                new ExtraPackageCommand { CommandName = "Install Nunchaku", Command = InstallNunchaku }
+            );
+        }
+
+        return commands;
+    }
 
     public override async Task InstallPackage(
         string installLocation,
@@ -350,27 +355,77 @@ public class ComfyUI(
             );
 
         var pipArgs = new PipInstallArgs();
+        var gfxArch =
+            SettingsManager.Settings.PreferredGpu?.GetAmdGfxArch()
+            ?? HardwareHelper.GetWindowsRocmSupportedGpu()?.GetAmdGfxArch();
 
-        pipArgs = torchVersion switch
+        if (
+            !string.IsNullOrWhiteSpace(gfxArch)
+            && torchVersion is TorchIndex.Rocm
+            && options.PythonOptions.PythonVersion >= PyVersion.Parse("3.11.0")
+        )
         {
-            TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
-            _ => pipArgs
-                .AddArg("--upgrade")
-                .WithTorch()
-                .WithTorchVision()
-                .WithTorchAudio()
-                .WithTorchExtraIndex(
-                    torchVersion switch
-                    {
-                        TorchIndex.Cpu => "cpu",
-                        TorchIndex.Cuda when isLegacyNvidia => "cu126",
-                        TorchIndex.Cuda => "cu128",
-                        TorchIndex.Rocm => "rocm6.2.4",
-                        TorchIndex.Mps => "cpu",
-                        _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null),
-                    }
-                ),
-        };
+            var minorPythonVersion = options.PythonOptions.PythonVersion.Value.Minor;
+
+            if (minorPythonVersion is 11)
+            {
+                pipArgs = pipArgs.AddArgs(
+                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torch-2.7.0a0+rocm_git3f903c3-cp311-cp311-win_amd64.whl",
+                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchaudio-2.7.0a0+52638ef-cp311-cp311-win_amd64.whl",
+                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchvision-0.22.0+9eb57cd-cp311-cp311-win_amd64.whl"
+                );
+            }
+            else if (minorPythonVersion is 12)
+            {
+                pipArgs = pipArgs.AddArgs(
+                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torch-2.7.0a0+git3f903c3-cp312-cp312-win_amd64.whl",
+                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchaudio-2.6.0a0+1a8f621-cp312-cp312-win_amd64.whl",
+                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchvision-0.22.0+9eb57cd-cp312-cp312-win_amd64.whl"
+                );
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(options.PythonOptions.PythonVersion),
+                    options.PythonOptions.PythonVersion,
+                    null
+                );
+            }
+
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
+            );
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+            pipArgs = new PipInstallArgs();
+        }
+        else
+        {
+            pipArgs = torchVersion switch
+            {
+                TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
+                _ => pipArgs
+                    .AddArg("--upgrade")
+                    .WithTorch()
+                    .WithTorchVision()
+                    .WithTorchAudio()
+                    .WithTorchExtraIndex(
+                        torchVersion switch
+                        {
+                            TorchIndex.Cpu => "cpu",
+                            TorchIndex.Cuda when isLegacyNvidia => "cu126",
+                            TorchIndex.Cuda => "cu128",
+                            TorchIndex.Rocm => "rocm6.3",
+                            TorchIndex.Mps => "cpu",
+                            _ => throw new ArgumentOutOfRangeException(
+                                nameof(torchVersion),
+                                torchVersion,
+                                null
+                            ),
+                        }
+                    ),
+            };
+        }
 
         var requirements = new FilePath(installLocation, "requirements.txt");
 
@@ -414,6 +469,11 @@ public class ComfyUI(
             OnExit
         );
 
+        if (Compat.IsWindows)
+        {
+            ProcessTracker.AttachExitHandlerJobToProcess(VenvRunner.Process);
+        }
+
         return;
 
         void HandleConsoleOutput(ProcessOutput s)
@@ -431,6 +491,26 @@ public class ComfyUI(
             }
             OnStartupComplete(WebUrl);
         }
+    }
+
+    public override TorchIndex GetRecommendedTorchVersion()
+    {
+        var preferRocm =
+            (Compat.IsLinux && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferRocm()))
+            || (
+                Compat.IsWindows
+                && (
+                    SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
+                    ?? HardwareHelper.HasWindowsRocmSupportedGpu()
+                )
+            );
+
+        if (AvailableTorchIndices.Contains(TorchIndex.Rocm) && preferRocm)
+        {
+            return TorchIndex.Rocm;
+        }
+
+        return base.GetRecommendedTorchVersion();
     }
 
     public override IPackageExtensionManager ExtensionManager =>
@@ -664,7 +744,7 @@ public class ComfyUI(
         }
     }
 
-    private async Task InstallTritonAndSageAttention(InstalledPackage installedPackage)
+    private async Task InstallTritonAndSageAttention(InstalledPackage? installedPackage)
     {
         if (installedPackage?.FullPath is null)
             return;
@@ -727,5 +807,34 @@ public class ComfyUI(
                     }
                 );
         }
+    }
+
+    private async Task InstallNunchaku(InstalledPackage? installedPackage)
+    {
+        if (installedPackage?.FullPath is null)
+            return;
+
+        var installNunchaku = new InstallNunchakuStep(
+            DownloadService,
+            PrerequisiteHelper,
+            PyInstallationManager
+        )
+        {
+            InstalledPackage = installedPackage,
+            WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
+            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
+            PreferredGpu =
+                SettingsManager.Settings.PreferredGpu
+                ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia || x.IsAmd),
+            ComfyExtensionManager = ExtensionManager,
+        };
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteMessage = "Nunchaku installed successfully",
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps([installNunchaku]).ConfigureAwait(false);
     }
 }

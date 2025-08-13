@@ -46,18 +46,19 @@ public class ForgeAmdGpu(
         base.Prerequisites.Concat([PackagePrerequisite.HipSdk]);
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
-        base.LaunchOptions.Concat(
-            [
-                new LaunchOptionDefinition
-                {
-                    Name = "Use ZLUDA",
-                    Description = "Use ZLUDA for CUDA acceleration on AMD GPUs",
-                    Type = LaunchOptionType.Bool,
-                    InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
-                    Options = ["--use-zluda"]
-                }
-            ]
-        )
+        base
+            .LaunchOptions.Concat(
+                [
+                    new LaunchOptionDefinition
+                    {
+                        Name = "Use ZLUDA",
+                        Description = "Use ZLUDA for CUDA acceleration on AMD GPUs",
+                        Type = LaunchOptionType.Bool,
+                        InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
+                        Options = ["--use-zluda"],
+                    },
+                ]
+            )
             .ToList();
 
     public override bool InstallRequiresAdmin => true;
@@ -78,7 +79,9 @@ public class ForgeAmdGpu(
         if (!PrerequisiteHelper.IsHipSdkInstalled) // for updates
         {
             progress?.Report(new ProgressReport(-1, "Installing HIP SDK 6.2", isIndeterminate: true));
-            await PrerequisiteHelper.InstallPackageRequirements(this, progress).ConfigureAwait(false);
+            await PrerequisiteHelper
+                .InstallPackageRequirements(this, options.PythonOptions.PythonVersion, progress)
+                .ConfigureAwait(false);
         }
 
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
@@ -121,7 +124,7 @@ public class ForgeAmdGpu(
             ["ZLUDA_COMGR_LOG_LEVEL"] = "1",
             ["HIP_PATH"] = hipPath,
             ["HIP_PATH_62"] = hipPath,
-            ["GIT"] = portableGitBin.JoinFile("git.exe")
+            ["GIT"] = portableGitBin.JoinFile("git.exe"),
         };
         envVars.Update(settingsManager.Settings.EnvironmentVariables);
 
@@ -139,8 +142,8 @@ public class ForgeAmdGpu(
         VenvRunner.RunDetached(
             [
                 Path.Combine(installLocation, options.Command ?? LaunchCommand),
-                ..options.Arguments,
-                ..ExtraLaunchArguments
+                .. options.Arguments,
+                .. ExtraLaunchArguments,
             ],
             HandleConsoleOutput,
             OnExit

@@ -61,7 +61,8 @@
                     Grid.Column="0"
                     Content="Branches"
                     CornerRadius="8,0,0,8"
-                    IsChecked="{Binding !IsReleaseMode, Mode=TwoWay}" />
+                    IsChecked="{Binding !IsReleaseMode, Mode=TwoWay}"
+                    IsEnabled="{Binding ShowBranchMode}" />
                 <ToggleButton
                     Grid.Column="1"
                     Content="Releases"

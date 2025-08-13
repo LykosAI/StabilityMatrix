@@ -106,6 +106,33 @@ public static partial class Utilities
         return pruned;
     }
 
+    /// <summary>
+    /// Returns the simplified aspect ratio as a tuple: (widthRatio, heightRatio).
+    /// e.g. GetAspectRatio(1920,1080) -> (16,9)
+    /// </summary>
+    public static (int widthRatio, int heightRatio) GetAspectRatio(int width, int height)
+    {
+        if (width <= 0 || height <= 0)
+            throw new ArgumentException("Width and height must be positive.");
+
+        var gcd = Gcd(width, height);
+        return (width / gcd, height / gcd);
+    }
+
+    // Euclidean GCD
+    private static int Gcd(int a, int b)
+    {
+        a = Math.Abs(a);
+        b = Math.Abs(b);
+        while (b != 0)
+        {
+            var rem = a % b;
+            a = b;
+            b = rem;
+        }
+        return a;
+    }
+
     [GeneratedRegex("<[^>]+>")]
     private static partial Regex HtmlRegex();
 }

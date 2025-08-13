@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -10,6 +11,7 @@ using StabilityMatrix.Avalonia.Extensions;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
 using StabilityMatrix.Avalonia.ViewModels.CheckpointManager;
+using StabilityMatrix.Avalonia.ViewModels.Inference;
 using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Models.Api;
@@ -24,7 +26,8 @@ namespace StabilityMatrix.Avalonia.ViewModels.Dialogs;
 [RegisterTransient<ModelMetadataEditorDialogViewModel>]
 public partial class ModelMetadataEditorDialogViewModel(
     ISettingsManager settingsManager,
-    ICivitBaseModelTypeService baseModelTypeService
+    ICivitBaseModelTypeService baseModelTypeService,
+    IServiceManager<ViewModelBase> vmFactory
 ) : ContentDialogViewModelBase, IDropTarget
 {
     [ObservableProperty]
@@ -60,6 +63,25 @@ public partial class ModelMetadataEditorDialogViewModel(
     [ObservableProperty]
     private string thumbnailFilePath = string.Empty;
 
+    [ObservableProperty]
+    public partial SamplerCardViewModel SamplerCardViewModel { get; set; } =
+        vmFactory.Get<SamplerCardViewModel>(samplerCard =>
+        {
+            samplerCard.IsDimensionsEnabled = true;
+            samplerCard.IsCfgScaleEnabled = true;
+            samplerCard.IsSamplerSelectionEnabled = true;
+            samplerCard.IsSchedulerSelectionEnabled = true;
+            samplerCard.DenoiseStrength = 1.0d;
+            samplerCard.EnableAddons = false;
+            samplerCard.IsDenoiseStrengthEnabled = false;
+        });
+
+    [ObservableProperty]
+    public partial bool IsInferenceDefaultsEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial bool ShowInferenceDefaults { get; set; }
+
     public bool IsEditingMultipleCheckpoints => CheckpointFiles.Count > 1;
 
     [RelayCommand]
@@ -69,7 +91,7 @@ public partial class ModelMetadataEditorDialogViewModel(
             new FilePickerOpenOptions
             {
                 Title = "Select an image",
-                FileTypeFilter = [FilePickerFileTypes.ImageAll]
+                FileTypeFilter = [FilePickerFileTypes.ImageAll],
             }
         );
 
@@ -83,7 +105,9 @@ public partial class ModelMetadataEditorDialogViewModel(
 
     public override async Task OnLoadedAsync()
     {
-        BaseModelTypes = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
+        if (!Design.IsDesignMode)
+            BaseModelTypes = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
+
         if (IsEditingMultipleCheckpoints)
             return;
 
@@ -100,6 +124,7 @@ public partial class ModelMetadataEditorDialogViewModel(
             return;
         }
 
+        ShowInferenceDefaults = firstCheckpoint.ModelType == CivitModelType.Checkpoint;
         BaseModelType = firstCheckpoint.CheckpointFile.ConnectedModelInfo.BaseModel ?? "Other";
         ModelName = firstCheckpoint.CheckpointFile.ConnectedModelInfo.ModelName;
         ModelDescription = firstCheckpoint.CheckpointFile.ConnectedModelInfo.ModelDescription;
@@ -112,6 +137,18 @@ public partial class ModelMetadataEditorDialogViewModel(
                 ? string.Empty
                 : string.Join(", ", firstCheckpoint.CheckpointFile.ConnectedModelInfo.TrainedWords);
         ThumbnailFilePath = GetImagePath(firstCheckpoint.CheckpointFile);
+        IsInferenceDefaultsEnabled = false;
+
+        if (firstCheckpoint.CheckpointFile.ConnectedModelInfo.InferenceDefaults is { } defaults)
+        {
+            IsInferenceDefaultsEnabled = true;
+            SamplerCardViewModel.Height = defaults.Height;
+            SamplerCardViewModel.Width = defaults.Width;
+            SamplerCardViewModel.CfgScale = defaults.CfgScale;
+            SamplerCardViewModel.Steps = defaults.Steps;
+            SamplerCardViewModel.SelectedSampler = defaults.Sampler;
+            SamplerCardViewModel.SelectedScheduler = defaults.Scheduler;
+        }
     }
 
     private string GetImagePath(LocalModelFile checkpointFile)

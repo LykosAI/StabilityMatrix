@@ -6,7 +6,6 @@ using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.Png;
 using MetadataExtractor.Formats.WebP;
-using Microsoft.VisualBasic;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -52,8 +51,8 @@ public class ImageMetadata
     {
         var imageWidthBytes = inputImage[0x10..0x14];
         var imageHeightBytes = inputImage[0x14..0x18];
-        var imageWidth = BitConverter.ToInt32(imageWidthBytes.Reverse().ToArray());
-        var imageHeight = BitConverter.ToInt32(imageHeightBytes.Reverse().ToArray());
+        var imageWidth = BitConverter.ToInt32(imageWidthBytes.AsEnumerable().Reverse().ToArray());
+        var imageHeight = BitConverter.ToInt32(imageHeightBytes.AsEnumerable().Reverse().ToArray());
 
         return new System.Drawing.Size(imageWidth, imageHeight);
     }
@@ -66,8 +65,8 @@ public class ImageMetadata
         var imageWidthBytes = reader.ReadBytes(4);
         var imageHeightBytes = reader.ReadBytes(4);
 
-        var imageWidth = BitConverter.ToInt32(imageWidthBytes.Reverse().ToArray());
-        var imageHeight = BitConverter.ToInt32(imageHeightBytes.Reverse().ToArray());
+        var imageWidth = BitConverter.ToInt32(imageWidthBytes.AsEnumerable().Reverse().ToArray());
+        var imageHeight = BitConverter.ToInt32(imageHeightBytes.AsEnumerable().Reverse().ToArray());
 
         reader.BaseStream.Position = oldPosition;
 
@@ -78,7 +77,8 @@ public class ImageMetadata
         string? Parameters,
         string? ParametersJson,
         string? SMProject,
-        string? ComfyNodes
+        string? ComfyNodes,
+        string? CivitParameters
     ) GetAllFileMetadata(FilePath filePath)
     {
         if (filePath.Extension.Equals(".webp", StringComparison.OrdinalIgnoreCase))
@@ -86,7 +86,20 @@ public class ImageMetadata
             var paramsJson = ReadTextChunkFromWebp(filePath, ExifDirectoryBase.TagImageDescription);
             var smProj = ReadTextChunkFromWebp(filePath, ExifDirectoryBase.TagSoftware);
 
-            return (null, paramsJson, smProj, null);
+            return (null, paramsJson, smProj, null, null);
+        }
+
+        if (
+            filePath.Extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase)
+            || filePath.Extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            var file = ImageFile.FromFile(filePath.Info.FullName);
+            var userComment = file.Properties.Get(ExifTag.UserComment);
+            var bytes = userComment.Interoperability.Data.Skip(8).ToArray();
+            var userCommentString = Encoding.BigEndianUnicode.GetString(bytes);
+
+            return (null, null, null, null, userCommentString);
         }
 
         using var stream = filePath.Info.OpenRead();
@@ -96,12 +109,14 @@ public class ImageMetadata
         var parametersJson = ReadTextChunk(reader, "parameters-json");
         var smProject = ReadTextChunk(reader, "smproj");
         var comfyNodes = ReadTextChunk(reader, "prompt");
+        var civitParameters = ReadTextChunk(reader, "user_comment");
 
         return (
             string.IsNullOrEmpty(parameters) ? null : parameters,
             string.IsNullOrEmpty(parametersJson) ? null : parametersJson,
             string.IsNullOrEmpty(smProject) ? null : smProject,
-            string.IsNullOrEmpty(comfyNodes) ? null : comfyNodes
+            string.IsNullOrEmpty(comfyNodes) ? null : comfyNodes,
+            string.IsNullOrEmpty(civitParameters) ? null : civitParameters
         );
     }
 
@@ -124,8 +139,8 @@ public class ImageMetadata
 
         // Use "parameters-json" tag if exists
         if (
-            textualData.FirstOrDefault(
-                tag => tag.Description is { } desc && desc.StartsWith("parameters-json: ")
+            textualData.FirstOrDefault(tag =>
+                tag.Description is { } desc && desc.StartsWith("parameters-json: ")
             ) is
             { Description: { } description }
         )
@@ -137,8 +152,8 @@ public class ImageMetadata
 
         // Otherwise parse "parameters" tag
         if (
-            textualData.FirstOrDefault(
-                tag => tag.Description is { } desc && desc.StartsWith("parameters: ")
+            textualData.FirstOrDefault(tag =>
+                tag.Description is { } desc && desc.StartsWith("parameters: ")
             ) is
             { Description: { } parameters }
         )
@@ -166,7 +181,7 @@ public class ImageMetadata
 
         while (byteStream.BaseStream.Position < byteStream.BaseStream.Length - 4)
         {
-            var chunkSize = BitConverter.ToInt32(byteStream.ReadBytes(4).Reverse().ToArray());
+            var chunkSize = BitConverter.ToInt32(byteStream.ReadBytes(4).AsEnumerable().Reverse().ToArray());
             var chunkType = Encoding.UTF8.GetString(byteStream.ReadBytes(4));
 
             if (chunkType == Encoding.UTF8.GetString(Idat))
@@ -217,7 +232,7 @@ public class ImageMetadata
         while (byteStream.BaseStream.Position < byteStream.BaseStream.Length - 4)
         {
             var chunkSizeBytes = byteStream.ReadBytes(4);
-            var chunkSize = BitConverter.ToInt32(chunkSizeBytes.Reverse().ToArray());
+            var chunkSize = BitConverter.ToInt32(chunkSizeBytes.AsEnumerable().Reverse().ToArray());
             var chunkTypeBytes = byteStream.ReadBytes(4);
             var chunkType = Encoding.UTF8.GetString(chunkTypeBytes);
 

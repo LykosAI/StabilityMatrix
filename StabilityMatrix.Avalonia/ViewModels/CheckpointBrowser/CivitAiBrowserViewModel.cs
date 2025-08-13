@@ -153,8 +153,6 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
 
-        var settingsSelectedBaseModels = settingsManager.Settings.SelectedCivitBaseModels;
-
         var filterPredicate = Observable
             .FromEventPattern<PropertyChangedEventArgs>(this, nameof(PropertyChanged))
             .Where(x =>
@@ -199,9 +197,12 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                 .Transform(baseModel => new BaseModelOptionViewModel
                 {
                     ModelType = baseModel,
-                    IsSelected = settingsSelectedBaseModels.Contains(baseModel),
+                    IsSelected = settingsManager.Settings.SelectedCivitBaseModels.Contains(baseModel),
                 })
-                .Bind(AllBaseModels)
+                .SortAndBind(
+                    AllBaseModels,
+                    SortExpressionComparer<BaseModelOptionViewModel>.Ascending(m => m.ModelType)
+                )
                 .WhenPropertyChanged(p => p.IsSelected)
                 .ObserveOn(SynchronizationContext.Current)
                 .Subscribe(next =>
@@ -222,6 +223,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
 
         var settingsTransactionObservable = this.WhenPropertyChanged(x => x.SelectedBaseModels)
             .Throttle(TimeSpan.FromMilliseconds(50))
+            .Skip(1)
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe(_ =>
             {
@@ -345,15 +347,19 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         {
             await SearchModelsCommand.ExecuteAsync(false);
         }
+    }
 
+    public override async Task OnLoadedAsync()
+    {
         var baseModels = await baseModelTypeService.GetBaseModelTypes(includeAllOption: false);
+        baseModels = baseModels.Except(settingsManager.Settings.DisabledBaseModelTypes).ToList();
         if (baseModels.Count == 0)
         {
             return;
         }
 
         dontSearch = true;
-        baseModelCache.AddOrUpdate(baseModels);
+        baseModelCache.EditDiff(baseModels, static (a, b) => a.Equals(b, StringComparison.OrdinalIgnoreCase));
         dontSearch = false;
     }
 
@@ -408,6 +414,9 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         var timer = Stopwatch.StartNew();
         var queryText = request.Query;
         var models = new List<CivitModel>();
+        // Store original request for caching
+        var originalRequestStr = JsonSerializer.Serialize(request);
+
         CivitModelsResponse? modelsResponse = null;
         try
         {
@@ -421,6 +430,7 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                     foreach (var chunk in idChunks)
                     {
                         request.CommaSeparatedModelIds = string.Join(",", chunk);
+                        request.Limit = 100;
                         var chunkModelsResponse = await civitApi.GetModels(request);
 
                         if (chunkModelsResponse.Items != null)
@@ -478,10 +488,12 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
                 // Add to database
                 await liteDbContext.UpsertCivitModelAsync(models);
                 // Add as cache entry
+
+                var originalRequest = JsonSerializer.Deserialize<CivitModelsRequest>(originalRequestStr);
                 cacheNew = await liteDbContext.UpsertCivitModelQueryCacheEntryAsync(
                     new CivitModelQueryCacheEntry
                     {
-                        Id = ObjectHash.GetMd5Guid(request),
+                        Id = ObjectHash.GetMd5Guid(originalRequest),
                         InsertedAt = DateTimeOffset.UtcNow,
                         Request = request,
                         Items = models,
@@ -619,7 +631,6 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             Nsfw = "true", // Handled by local view filter
             Sort = SortMode,
             Period = SelectedPeriod,
-            Limit = 30,
         };
 
         if (NextPageCursor != null)
@@ -651,6 +662,29 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             modelRequest.BaseModels = null;
             modelRequest.Types = null;
             modelRequest.CommaSeparatedModelIds = SearchQuery[2..];
+
+            if (modelRequest.Sort is CivitSortMode.Favorites or CivitSortMode.Installed)
+            {
+                SortMode = CivitSortMode.HighestRated;
+                modelRequest.Sort = CivitSortMode.HighestRated;
+            }
+        }
+        else if (SearchQuery.StartsWith("https://civitai.com/models/"))
+        {
+            /* extract model ID from URL, could be one of:
+                https://civitai.com/models/443821?modelVersionId=1957537
+                https://civitai.com/models/443821/cyberrealistic-pony
+                https://civitai.com/models/443821
+            */
+            var modelId = SearchQuery
+                .Replace("https://civitai.com/models/", string.Empty)
+                .Split(['?', '/'], StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault();
+
+            modelRequest.Period = CivitPeriod.AllTime;
+            modelRequest.BaseModels = null;
+            modelRequest.Types = null;
+            modelRequest.CommaSeparatedModelIds = modelId;
 
             if (modelRequest.Sort is CivitSortMode.Favorites or CivitSortMode.Installed)
             {

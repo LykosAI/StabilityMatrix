@@ -187,7 +187,7 @@ public partial class ModelCardViewModel(
                 Name = nodeName,
                 // Only the file name is needed
                 ConfigName = Path.GetFileName(uploadConfigPath),
-                CkptName = model.RelativePath
+                CkptName = model.RelativePath,
             };
         }
 
@@ -221,7 +221,7 @@ public partial class ModelCardViewModel(
                         Name = $"CLIP_Skip_{modelName}",
                         Clip = modelClip,
                         // Need to convert to negative indexing from (1 to 24) to (-1 to -24)
-                        StopAtClipLayer = -ClipSkip
+                        StopAtClipLayer = -ClipSkip,
                     }
                 );
 
@@ -261,7 +261,7 @@ public partial class ModelCardViewModel(
                 IsClipModelSelectionEnabled = IsClipModelSelectionEnabled,
                 ModelLoader = SelectedModelLoader,
                 ShowRefinerOption = ShowRefinerOption,
-                ExtraNetworks = ExtraNetworksStackCardViewModel.SaveStateToJsonObject()
+                ExtraNetworks = ExtraNetworksStackCardViewModel.SaveStateToJsonObject(),
             }
         );
     }
@@ -338,16 +338,22 @@ public partial class ModelCardViewModel(
             return;
 
         var currentModels = ClientManager.Models.Concat(ClientManager.UnetModels).ToList();
+        var currentExtraNetworks = ClientManager.LoraModels.ToList();
 
         HybridModelFile? model;
 
         // First try hash match
         if (parameters.ModelHash is not null)
         {
-            model = currentModels.FirstOrDefault(
-                m =>
-                    m.Local?.ConnectedModelInfo?.Hashes.SHA256 is { } sha256
-                    && sha256.StartsWith(parameters.ModelHash, StringComparison.InvariantCultureIgnoreCase)
+            model = currentModels.FirstOrDefault(m =>
+                m.Local?.ConnectedModelInfo?.Hashes.SHA256 is { } sha256
+                && sha256.StartsWith(parameters.ModelHash, StringComparison.InvariantCultureIgnoreCase)
+            );
+        }
+        else if (parameters.ModelVersionId is not null)
+        {
+            model = currentModels.FirstOrDefault(m =>
+                m.Local?.ConnectedModelInfo?.VersionId == parameters.ModelVersionId
             );
         }
         else
@@ -355,6 +361,23 @@ public partial class ModelCardViewModel(
             // Name matches
             model = currentModels.FirstOrDefault(m => m.RelativePath.EndsWith(paramsModelName));
             model ??= currentModels.FirstOrDefault(m => m.ShortDisplayName.StartsWith(paramsModelName));
+        }
+
+        ExtraNetworksStackCardViewModel.Clear();
+
+        if (parameters.ExtraNetworkModelVersionIds is not null)
+        {
+            IsExtraNetworksEnabled = true;
+
+            foreach (var versionId in parameters.ExtraNetworkModelVersionIds)
+            {
+                var module = ExtraNetworksStackCardViewModel.AddModule<LoraModule>();
+                module.GetCard<ExtraNetworkCardViewModel>().SelectedModel =
+                    currentExtraNetworks.FirstOrDefault(m =>
+                        m.Local?.ConnectedModelInfo?.VersionId == versionId
+                    );
+                module.IsEnabled = true;
+            }
         }
 
         if (model is null)
@@ -378,14 +401,14 @@ public partial class ModelCardViewModel(
             return parameters with
             {
                 ModelName = SelectedUnetModel?.FileName,
-                ModelHash = SelectedUnetModel?.Local?.ConnectedModelInfo?.Hashes.SHA256
+                ModelHash = SelectedUnetModel?.Local?.ConnectedModelInfo?.Hashes.SHA256,
             };
         }
 
         return parameters with
         {
             ModelName = SelectedModel?.FileName,
-            ModelHash = SelectedModel?.Local?.ConnectedModelInfo?.Hashes.SHA256
+            ModelHash = SelectedModel?.Local?.ConnectedModelInfo?.Hashes.SHA256,
         };
     }
 
@@ -421,6 +444,8 @@ public partial class ModelCardViewModel(
         }
     }
 
+    partial void OnSelectedUnetModelChanged(HybridModelFile? value) => OnSelectedModelChanged(value);
+
     private void SetupStandaloneModelLoader(ModuleApplyStepEventArgs e)
     {
         if (SelectedModelLoader is ModelLoader.Unet && IsGguf)
@@ -430,7 +455,8 @@ public partial class ModelCardViewModel(
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UNETLoader)),
                     UnetName =
-                        SelectedUnetModel?.RelativePath ?? throw new ValidationException("Model not selected")
+                        SelectedUnetModel?.RelativePath
+                        ?? throw new ValidationException("Model not selected"),
                 }
             );
             e.Builder.Connections.Base.Model = checkpointLoader.Output;
@@ -444,7 +470,7 @@ public partial class ModelCardViewModel(
                     UnetName =
                         SelectedUnetModel?.RelativePath
                         ?? throw new ValidationException("Model not selected"),
-                    WeightDtype = SelectedDType ?? "default"
+                    WeightDtype = SelectedDType ?? "default",
                 }
             );
             e.Builder.Connections.Base.Model = checkpointLoader.Output;
@@ -457,7 +483,7 @@ public partial class ModelCardViewModel(
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.ModelSamplingSD3)),
                     Model = e.Builder.Connections.Base.Model,
-                    Shift = Shift
+                    Shift = Shift,
                 }
             );
 
@@ -468,7 +494,7 @@ public partial class ModelCardViewModel(
             new ComfyNodeBuilder.VAELoader
             {
                 Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.VAELoader)),
-                VaeName = SelectedVae?.RelativePath ?? throw new ValidationException("No VAE Selected")
+                VaeName = SelectedVae?.RelativePath ?? throw new ValidationException("No VAE Selected"),
             }
         );
         e.Builder.Connections.Base.VAE = vaeLoader.Output;
@@ -484,7 +510,7 @@ public partial class ModelCardViewModel(
                         SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
                     ClipName2 =
                         SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
-                    Type = SelectedClipType ?? throw new ValidationException("No Clip Type Selected")
+                    Type = SelectedClipType ?? throw new ValidationException("No Clip Type Selected"),
                 }
             );
             e.Builder.Connections.Base.Clip = clipLoader.Output;
@@ -509,7 +535,7 @@ public partial class ModelCardViewModel(
                 {
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CheckpointLoaderNF4)),
                     CkptName =
-                        SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected")
+                        SelectedModel?.RelativePath ?? throw new ValidationException("Model not selected"),
                 };
 
         var baseLoader = e.Nodes.AddTypedNode(loaderNode);
@@ -551,7 +577,7 @@ public partial class ModelCardViewModel(
                     Name = "VAELoader",
                     VaeName =
                         SelectedVae?.RelativePath
-                        ?? throw new ValidationException("VAE enabled but not selected")
+                        ?? throw new ValidationException("VAE enabled but not selected"),
                 }
             );
 
@@ -579,7 +605,7 @@ public partial class ModelCardViewModel(
                     ClipName3 =
                         SelectedClip3?.RelativePath ?? throw new ValidationException("No Clip3 Selected"),
                     ClipName4 =
-                        SelectedClip4?.RelativePath ?? throw new ValidationException("No Clip4 Selected")
+                        SelectedClip4?.RelativePath ?? throw new ValidationException("No Clip4 Selected"),
                 }
             );
             e.Builder.Connections.Base.Clip = clipLoader.Output;
@@ -599,7 +625,7 @@ public partial class ModelCardViewModel(
                     ClipName2 =
                         SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
                     ClipName3 =
-                        SelectedClip3?.RelativePath ?? throw new ValidationException("No Clip3 Selected")
+                        SelectedClip3?.RelativePath ?? throw new ValidationException("No Clip3 Selected"),
                 }
             );
             e.Builder.Connections.Base.Clip = clipLoader.Output;
@@ -614,7 +640,7 @@ public partial class ModelCardViewModel(
                         SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
                     ClipName2 =
                         SelectedClip2?.RelativePath ?? throw new ValidationException("No Clip2 Selected"),
-                    Type = SelectedClipType ?? throw new ValidationException("No Clip Type Selected")
+                    Type = SelectedClipType ?? throw new ValidationException("No Clip Type Selected"),
                 }
             );
             e.Builder.Connections.Base.Clip = clipLoader.Output;
@@ -627,7 +653,7 @@ public partial class ModelCardViewModel(
                     Name = e.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPLoader)),
                     ClipName =
                         SelectedClip1?.RelativePath ?? throw new ValidationException("No Clip1 Selected"),
-                    Type = SelectedClipType ?? throw new ValidationException("No Clip Type Selected")
+                    Type = SelectedClipType ?? throw new ValidationException("No Clip Type Selected"),
                 }
             );
             e.Builder.Connections.Base.Clip = clipLoader.Output;

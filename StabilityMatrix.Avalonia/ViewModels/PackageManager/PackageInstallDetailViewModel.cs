@@ -54,6 +54,7 @@ public partial class PackageInstallDetailViewModel(
 
     public string FullInstallPath => Path.Combine(settingsManager.LibraryDir, "Packages", InstallName);
     public bool ShowReleaseMode => SelectedPackage.ShouldIgnoreReleases == false;
+    public bool ShowBranchMode => SelectedPackage.ShouldIgnoreBranches == false;
 
     public string? ReleaseTooltipText =>
         ShowReleaseMode ? null : Resources.Label_ReleasesUnavailableForThisPackage;
@@ -122,6 +123,7 @@ public partial class PackageInstallDetailViewModel(
         SelectedSharedFolderMethod = SelectedPackage.RecommendedSharedFolderMethod;
 
         // Initialize Python versions
+        await prerequisiteHelper.UnpackResourcesIfNecessary();
         await prerequisiteHelper.InstallUvIfNecessary();
         var pythonVersions = await pyInstallationManager.GetAllAvailablePythonsAsync();
         AvailablePythonVersions = new ObservableCollection<UvPythonInfo>(pythonVersions);
@@ -425,7 +427,8 @@ public partial class PackageInstallDetailViewModel(
     }
 
     private UvPythonInfo? GetRecommendedPyVersion() =>
-        AvailablePythonVersions.FirstOrDefault(x =>
-            x.Version.Equals(SelectedPackage.RecommendedPythonVersion)
+        AvailablePythonVersions.LastOrDefault(x =>
+            x.Version.Major.Equals(SelectedPackage.RecommendedPythonVersion.Major)
+            && x.Version.Minor.Equals(SelectedPackage.RecommendedPythonVersion.Minor)
         );
 }

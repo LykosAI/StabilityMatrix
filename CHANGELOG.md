@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Install Nunchaku" option to the ComfyUI Package Commands menu
 - Added "Select All" button to the Installed Extensions page
 - Added experimental ROCm pytorch install for ComfyUI (non-Zluda) on Windows - requires a compatible AMD GPU
+- Added base model type labels (SD1.5, SDXL, Flux, etc.) to Inference model selection boxes
 - Added Ukrainian translation thanks to @r0ddty!
 ### Changed
 - Redesigned Civitai model details page

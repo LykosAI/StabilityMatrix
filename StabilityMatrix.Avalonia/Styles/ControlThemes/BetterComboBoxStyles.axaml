@@ -2,20 +2,21 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters"
     xmlns:fluentIcons="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
+    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
     xmlns:mocks="using:StabilityMatrix.Avalonia.DesignData"
     xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
     xmlns:sg="clr-namespace:SpacedGridControl.Avalonia;assembly=SpacedGridControl.Avalonia"
     xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-    xmlns:labs="clr-namespace:Avalonia.Labs.Controls;assembly=Avalonia.Labs.Controls"
-    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs"
-    xmlns:converters="clr-namespace:StabilityMatrix.Avalonia.Converters">
+    xmlns:vendorLabs="clr-namespace:StabilityMatrix.Avalonia.Controls.VendorLabs">
 
     <Design.PreviewWith>
-        <Panel Width="450" Height="600">
+        <Panel Width="550" Height="600">
             <StackPanel
                 Width="250"
-                Margin="8"
+                Margin="64,24"
+                HorizontalAlignment="Left"
                 Spacing="4">
                 <controls:BetterComboBox
                     HorizontalAlignment="Stretch"
@@ -30,9 +31,9 @@
             </StackPanel>
         </Panel>
     </Design.PreviewWith>
-    
+
     <converters:FileUriConverter x:Key="FileUriConverter" />
-    
+
     <!--  ReSharper disable once Xaml.StaticResourceNotResolved  -->
     <ControlTheme
         x:Key="BetterComboBoxItemHybridModelTheme"
@@ -53,8 +54,9 @@
                         CornerRadius="6"
                         IsVisible="{Binding Local.PreviewImageFullPathGlobal, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=''}"
                         RenderOptions.BitmapInterpolationMode="HighQuality"
+                        RenderOptions.EdgeMode="Antialias"
                         Source="{Binding Local.PreviewImageFullPathGlobal, FallbackValue='', Converter={StaticResource FileUriConverter}}"
-                        Stretch="UniformToFill"/>
+                        Stretch="UniformToFill" />
                     <StackPanel
                         Grid.Column="1"
                         MaxWidth="300"
@@ -133,10 +135,11 @@
                             Grid.RowSpan="2"
                             Width="42"
                             Height="42"
+                            CornerRadius="20"
                             RenderOptions.BitmapInterpolationMode="HighQuality"
-                            CornerRadius="40"
+                            RenderOptions.EdgeMode="Antialias"
                             Source="{Binding Local.PreviewImageFullPathGlobal, Converter={StaticResource FileUriConverter}}"
-                            Stretch="UniformToFill"/>
+                            Stretch="UniformToFill" />
 
                         <!--  Text  -->
                         <sg:SpacedGrid
@@ -179,6 +182,15 @@
                                     IsVisible="{Binding Local.ConfigFullPath, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
                                     Symbol="BeakerSettings"
                                     ToolTip.Tip="{Binding Local.DisplayConfigFileName}" />
+                                <Label
+                                    MinHeight="0"
+                                    Margin="0,0,0,0"
+                                    Padding="6,0,6,0"
+                                    Classes="Circle LightBlue"
+                                    Content="{Binding Local.ConnectedModelInfo.BaseModel}"
+                                    FontSize="10"
+                                    FontWeight="SemiBold"
+                                    Theme="{StaticResource TagLabel}" />
                             </StackPanel>
                         </sg:SpacedGrid>
                     </sg:SpacedGrid>
@@ -221,27 +233,70 @@
                             Grid.RowSpan="2"
                             Width="36"
                             Height="36"
-                            CornerRadius="60"
+                            CornerRadius="36"
                             RenderOptions.BitmapInterpolationMode="HighQuality"
                             Source="{Binding Local.PreviewImageFullPathGlobal, Converter={StaticResource FileUriConverter}}"
-                            Stretch="UniformToFill">
-                        </vendorLabs:BetterAsyncImage>
+                            Stretch="UniformToFill" />
+
+                        <!--<Label
+                            Grid.RowSpan="2"
+                            Theme="{StaticResource TagLabel}"
+                            Classes="Circle Solid White"
+                            VerticalAlignment="Bottom"
+                            FontSize="10"
+                            FontWeight="SemiBold"
+                            Padding="4,1"
+                            Content="{Binding Local.ConnectedModelInfo.BaseModel}"/>-->
 
                         <!--  Text  -->
                         <sg:SpacedGrid
                             Grid.Row="1"
                             Grid.Column="1"
+                            ColumnDefinitions="*,Auto"
                             RowDefinitions="Auto,Auto"
                             RowSpacing="1">
 
-                            <TextBlock Text="{Binding Local.DisplayModelName}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="2"
+                                Text="{Binding Local.DisplayModelName}"
+                                TextTrimming="CharacterEllipsis" />
                             <TextBlock
                                 Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="1"
+                                Margin="0,2,0,0"
                                 FontSize="12"
                                 FontWeight="Regular"
                                 Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                 Text="{Binding Local.DisplayModelVersion}"
                                 TextTrimming="CharacterEllipsis" />
+
+                            <!--  Badges  -->
+                            <StackPanel
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Bottom"
+                                Orientation="Horizontal">
+                                <fluentIcons:SymbolIcon
+                                    Margin="4"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                    IsVisible="{Binding Local.ConfigFullPath, Converter={x:Static StringConverters.IsNotNullOrEmpty}, FallbackValue=False}"
+                                    Symbol="BeakerSettings"
+                                    ToolTip.Tip="{Binding Local.DisplayConfigFileName}" />
+                                <Label
+                                    MinHeight="0"
+                                    Margin="0,0,0,0"
+                                    Padding="6,0,6,0"
+                                    Classes="Circle LightBlue"
+                                    Content="{Binding Local.ConnectedModelInfo.BaseModel}"
+                                    FontSize="10"
+                                    FontWeight="SemiBold"
+                                    Theme="{StaticResource TagLabel}" />
+                            </StackPanel>
                         </sg:SpacedGrid>
                     </sg:SpacedGrid>
                 </DataTemplate>

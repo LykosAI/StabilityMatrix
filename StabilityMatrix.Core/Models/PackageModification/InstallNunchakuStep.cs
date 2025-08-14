@@ -2,19 +2,13 @@
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
-using StabilityMatrix.Core.Models.Packages;
 using StabilityMatrix.Core.Models.Packages.Extensions;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Python;
-using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.PackageModification;
 
-public class InstallNunchakuStep(
-    IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper,
-    IPyInstallationManager pyInstallationManager
-) : IPackageStep
+public class InstallNunchakuStep(IPyInstallationManager pyInstallationManager) : IPackageStep
 {
     public required InstalledPackage InstalledPackage { get; init; }
     public required DirectoryPath WorkingDirectory { get; init; }

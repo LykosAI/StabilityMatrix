@@ -44,73 +44,91 @@ public class SDWebForge(
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
-                Options = ["--server-name"]
+                Options = ["--server-name"],
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7860",
-                Options = ["--port"]
+                Options = ["--port"],
             },
             new()
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to share on Gradio",
-                Options = { "--share" }
+                Options = { "--share" },
             },
             new()
             {
                 Name = "Pin Shared Memory",
                 Type = LaunchOptionType.Bool,
-                Options = { "--pin-shared-memory" }
+                Options = { "--pin-shared-memory" },
+                InitialValue =
+                    HardwareHelper.HasNvidiaGpu()
+                    && (
+                        SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() is false
+                        || !HardwareHelper.HasLegacyNvidiaGpu()
+                    ),
             },
             new()
             {
                 Name = "CUDA Malloc",
                 Type = LaunchOptionType.Bool,
-                Options = { "--cuda-malloc" }
+                Options = { "--cuda-malloc" },
+                InitialValue =
+                    HardwareHelper.HasNvidiaGpu()
+                    && (
+                        SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() is false
+                        || !HardwareHelper.HasLegacyNvidiaGpu()
+                    ),
             },
             new()
             {
                 Name = "CUDA Stream",
                 Type = LaunchOptionType.Bool,
-                Options = { "--cuda-stream" }
+                Options = { "--cuda-stream" },
+                InitialValue =
+                    HardwareHelper.HasNvidiaGpu()
+                    && (
+                        SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() is false
+                        || !HardwareHelper.HasLegacyNvidiaGpu()
+                    ),
             },
             new()
             {
                 Name = "Always Offload from VRAM",
                 Type = LaunchOptionType.Bool,
-                Options = ["--always-offload-from-vram"]
+                Options = ["--always-offload-from-vram"],
             },
             new()
             {
                 Name = "Always GPU",
                 Type = LaunchOptionType.Bool,
-                Options = ["--always-gpu"]
+                Options = ["--always-gpu"],
             },
             new()
             {
                 Name = "Always CPU",
                 Type = LaunchOptionType.Bool,
-                Options = ["--always-cpu"]
+                Options = ["--always-cpu"],
             },
             new()
             {
                 Name = "Skip Torch CUDA Test",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS,
-                Options = ["--skip-torch-cuda-test"]
+                Options = ["--skip-torch-cuda-test"],
             },
             new()
             {
                 Name = "No half-precision VAE",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS,
-                Options = ["--no-half-vae"]
+                Options = ["--no-half-vae"],
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
@@ -159,7 +177,7 @@ public class SDWebForge(
                     TorchIndex.Cuda => "cu121",
                     TorchIndex.Rocm => "rocm5.7",
                     TorchIndex.Mps => "cpu",
-                    _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
+                    _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null),
                 }
             );
 

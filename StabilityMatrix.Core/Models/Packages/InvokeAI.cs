@@ -131,6 +131,70 @@ public class InvokeAI(
         CancellationToken cancellationToken = default
     )
     {
+        // Backup existing files/folders except for known directories
+        try
+        {
+            var excludedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "invokeai-root",
+                "invoke.old",
+                "venv",
+            };
+
+            if (Directory.Exists(installLocation))
+            {
+                var entriesToMove = Directory
+                    .EnumerateFileSystemEntries(installLocation)
+                    .Where(p => !excludedNames.Contains(Path.GetFileName(p)))
+                    .ToList();
+
+                if (entriesToMove.Count > 0)
+                {
+                    var backupFolderName = "invoke.old";
+                    var backupFolderPath = Path.Combine(installLocation, backupFolderName);
+
+                    if (Directory.Exists(backupFolderPath) || File.Exists(backupFolderPath))
+                    {
+                        backupFolderPath = Path.Combine(
+                            installLocation,
+                            $"invoke.old.{DateTime.Now:yyyyMMddHHmmss}"
+                        );
+                    }
+
+                    Directory.CreateDirectory(backupFolderPath);
+
+                    foreach (var entry in entriesToMove)
+                    {
+                        var destinationPath = Path.Combine(backupFolderPath, Path.GetFileName(entry));
+
+                        // Ensure we do not overwrite existing files if names collide
+                        if (File.Exists(destinationPath) || Directory.Exists(destinationPath))
+                        {
+                            var name = Path.GetFileNameWithoutExtension(entry);
+                            var ext = Path.GetExtension(entry);
+                            var uniqueName = $"{name}_{DateTime.Now:yyyyMMddHHmmss}{ext}";
+                            destinationPath = Path.Combine(backupFolderPath, uniqueName);
+                        }
+
+                        if (Directory.Exists(entry))
+                        {
+                            Directory.Move(entry, destinationPath);
+                        }
+                        else if (File.Exists(entry))
+                        {
+                            File.Move(entry, destinationPath);
+                        }
+                    }
+
+                    Logger.Info($"Moved {entriesToMove.Count} item(s) to '{backupFolderPath}'.");
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to move existing files to 'invoke.old'. Continuing with installation.");
+        }
+
         // Setup venv
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 

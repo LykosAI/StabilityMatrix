@@ -1,0 +1,1519 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Action_Launch" xml:space="preserve">
+    <value>Запустити</value>
+  </data>
+  <data name="Action_Quit" xml:space="preserve">
+    <value>Вийти</value>
+  </data>
+  <data name="Action_Save" xml:space="preserve">
+    <value>Зберегти</value>
+  </data>
+  <data name="Action_Cancel" xml:space="preserve">
+    <value>Скасувати</value>
+  </data>
+  <data name="Label_Language" xml:space="preserve">
+    <value>Мова</value>
+  </data>
+  <data name="Text_RelaunchRequiredToApplyLanguage" xml:space="preserve">
+    <value>Щобзастосувати нові налаштування мови потрібен перезапуск</value>
+  </data>
+  <data name="Action_Relaunch" xml:space="preserve">
+    <value>Перезапустити</value>
+  </data>
+  <data name="Action_RelaunchLater" xml:space="preserve">
+    <value>Перезапустити пізніше</value>
+  </data>
+  <data name="Label_RelaunchRequired" xml:space="preserve">
+    <value>Потрібен перезапуск</value>
+  </data>
+  <data name="Label_UnknownPackage" xml:space="preserve">
+    <value>Невідомий Пакунок</value>
+  </data>
+  <data name="Action_Import" xml:space="preserve">
+    <value>Імпортувати</value>
+  </data>
+  <data name="Label_PackageType" xml:space="preserve">
+    <value>Тип пакунку</value>
+  </data>
+  <data name="Label_Version" xml:space="preserve">
+    <value>Версія</value>
+  </data>
+  <data name="Label_VersionType" xml:space="preserve">
+    <value>Тип версії</value>
+  </data>
+  <data name="Label_Releases" xml:space="preserve">
+    <value>Релізи</value>
+  </data>
+  <data name="Label_Branches" xml:space="preserve">
+    <value>Вітки</value>
+  </data>
+  <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
+    <value>Щоб імпортувати чекпоїнти, перетягніть їх сюди</value>
+  </data>
+  <data name="Label_Emphasis" xml:space="preserve">
+    <value>Акцент</value>
+  </data>
+  <data name="Label_Deemphasis" xml:space="preserve">
+    <value>Зменшення акценту</value>
+  </data>
+  <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
+    <value>Ембедінґи / Текстова інверсія</value>
+  </data>
+  <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
+    <value>Мережі (LoRA / LyCORIS)</value>
+  </data>
+  <data name="Label_Comments" xml:space="preserve">
+    <value>Коментарі</value>
+  </data>
+  <data name="Label_ShowPixelGridAtHighZoomLevels" xml:space="preserve">
+    <value>Показувати сітку пікселів при наближенні</value>
+  </data>
+  <data name="Label_Steps" xml:space="preserve">
+    <value>Кроки</value>
+  </data>
+  <data name="Label_StepsBase" xml:space="preserve">
+    <value>Кроки - Основні</value>
+  </data>
+  <data name="Label_StepsRefiner" xml:space="preserve">
+    <value>Кроки - Уточнювач</value>
+  </data>
+  <data name="Label_CFGScale" xml:space="preserve">
+    <value>Масштаб CFG</value>
+  </data>
+  <data name="Label_DenoisingStrength" xml:space="preserve">
+    <value>Ступінь шумозаглушення</value>
+  </data>
+  <data name="Label_Width" xml:space="preserve">
+    <value>Ширина</value>
+  </data>
+  <data name="Label_Height" xml:space="preserve">
+    <value>Висота</value>
+  </data>
+  <data name="Label_Refiner" xml:space="preserve">
+    <value>Уточнювач</value>
+  </data>
+  <data name="Label_VAE" xml:space="preserve">
+    <value>ВАЕ</value>
+  </data>
+  <data name="Label_Model" xml:space="preserve">
+    <value>Модель</value>
+  </data>
+  <data name="Action_Connect" xml:space="preserve">
+    <value>Під&apos;єднатися</value>
+  </data>
+  <data name="Label_ConnectingEllipsis" xml:space="preserve">
+    <value>Під&apos;єднання...</value>
+  </data>
+  <data name="Action_Close" xml:space="preserve">
+    <value>Закрити</value>
+  </data>
+  <data name="Label_WaitingToConnectEllipsis" xml:space="preserve">
+    <value>Очікування підключення...</value>
+  </data>
+  <data name="Label_UpdateAvailable" xml:space="preserve">
+    <value>Доступне оновлення</value>
+  </data>
+  <data name="Label_BecomeAPatron" xml:space="preserve">
+    <value>Підтримати на Patreon</value>
+  </data>
+  <data name="Label_JoinDiscord" xml:space="preserve">
+    <value>Приєднатися до Discord-сервера</value>
+  </data>
+  <data name="Label_Downloads" xml:space="preserve">
+    <value>Завантаження</value>
+  </data>
+  <data name="Action_Install" xml:space="preserve">
+    <value>Встановити</value>
+  </data>
+  <data name="Label_SkipSetup" xml:space="preserve">
+    <value>Пропустити початкове налаштування</value>
+  </data>
+  <data name="Label_UnexpectedErrorOccurred" xml:space="preserve">
+    <value>Виникла неочікувана помилка</value>
+  </data>
+  <data name="Action_ExitApplication" xml:space="preserve">
+    <value>Закрити програму</value>
+  </data>
+  <data name="Label_DisplayName" xml:space="preserve">
+    <value>Відображуване ім’я</value>
+  </data>
+  <data name="Label_InstallationWithThisNameExists" xml:space="preserve">
+    <value>Інсталяція з цією назвою вже існує.</value>
+  </data>
+  <data name="Label_PleaseChooseDifferentName" xml:space="preserve">
+    <value>Будь ласка, оберіть іншу назву або локацію для встановлення.</value>
+  </data>
+  <data name="Label_AdvancedOptions" xml:space="preserve">
+    <value>Просунуті налаштування</value>
+  </data>
+  <data name="Label_Commit" xml:space="preserve">
+    <value>Коміт</value>
+  </data>
+  <data name="Label_SharedModelFolderStrategy" xml:space="preserve">
+    <value>Стратегія спільної папки моделей</value>
+  </data>
+  <data name="Label_PyTorchVersion" xml:space="preserve">
+    <value>Версія PyTorch</value>
+  </data>
+  <data name="Label_CloseDialogWhenFinished" xml:space="preserve">
+    <value>Закрити після завершення</value>
+  </data>
+  <data name="Label_DataDirectory" xml:space="preserve">
+    <value>Папка даних</value>
+  </data>
+  <data name="Label_DataDirectoryExplanation" xml:space="preserve">
+    <value>Тут буде розміщено дані програми (контрольні точки моделей, веб-інтерфейси тощо).</value>
+  </data>
+  <data name="Label_FatWarning" xml:space="preserve">
+    <value>При роботі з дисками FAT32 або exFAT можливі помилки. Рекомендуємо обрати інший диск для більш стабільної роботи.</value>
+  </data>
+  <data name="Label_PortableMode" xml:space="preserve">
+    <value>Портативний режим</value>
+  </data>
+  <data name="Label_PortableModeExplanation" xml:space="preserve">
+    <value>У портативному режимі всі дані та налаштування зберігатимуться у тій же папці, що й програма. Ви зможете переміщувати програму разом із папкою «Data» в інше місце або на інший комп’ютер.</value>
+  </data>
+  <data name="Action_Continue" xml:space="preserve">
+    <value>Продовжити</value>
+  </data>
+  <data name="Label_PreviousImage" xml:space="preserve">
+    <value>Попереднє зображення</value>
+  </data>
+  <data name="Label_NextImage" xml:space="preserve">
+    <value>Наступне зображення</value>
+  </data>
+  <data name="Label_ModelDescription" xml:space="preserve">
+    <value>Опис моделі</value>
+  </data>
+  <data name="Label_NewVersionAvailable" xml:space="preserve">
+    <value>Доступна нова версія Stability Matrix!</value>
+  </data>
+  <data name="Label_ImportLatest" xml:space="preserve">
+    <value>Імпортувати останнє -</value>
+  </data>
+  <data name="Label_AllVersions" xml:space="preserve">
+    <value>Всі версії</value>
+  </data>
+  <data name="Label_ModelSearchWatermark" xml:space="preserve">
+    <value>Шукати моделі, #теги чи @користувачів</value>
+  </data>
+  <data name="Action_Search" xml:space="preserve">
+    <value>Шукати</value>
+  </data>
+  <data name="Label_Sort" xml:space="preserve">
+    <value>Сортування</value>
+  </data>
+  <data name="Label_TimePeriod" xml:space="preserve">
+    <value>Період</value>
+  </data>
+  <data name="Label_ModelType" xml:space="preserve">
+    <value>Тип моделі</value>
+  </data>
+  <data name="Label_BaseModel" xml:space="preserve">
+    <value>Базова модель</value>
+  </data>
+  <data name="Label_ShowNsfwContent" xml:space="preserve">
+    <value>Показувати контент 18+</value>
+  </data>
+  <data name="Label_DataProvidedByCivitAi" xml:space="preserve">
+    <value>Дані передано від CivitAI</value>
+  </data>
+  <data name="Label_Page" xml:space="preserve">
+    <value>Сторінка</value>
+  </data>
+  <data name="Label_FirstPage" xml:space="preserve">
+    <value>Перша сторінка</value>
+  </data>
+  <data name="Label_PreviousPage" xml:space="preserve">
+    <value>Попередня сторінка</value>
+  </data>
+  <data name="Label_NextPage" xml:space="preserve">
+    <value>Наступна сторінка</value>
+  </data>
+  <data name="Label_LastPage" xml:space="preserve">
+    <value>Остання сторінка</value>
+  </data>
+  <data name="Action_Rename" xml:space="preserve">
+    <value>Перейменувати</value>
+  </data>
+  <data name="Action_Delete" xml:space="preserve">
+    <value>Видалити</value>
+  </data>
+  <data name="Action_OpenOnCivitAi" xml:space="preserve">
+    <value>Відкрити на CivitAI</value>
+  </data>
+  <data name="Label_ConnectedModel" xml:space="preserve">
+    <value>Підключена модель</value>
+  </data>
+  <data name="Label_LocalModel" xml:space="preserve">
+    <value>Локальна модель</value>
+  </data>
+  <data name="Action_ShowInExplorer" xml:space="preserve">
+    <value>Показати в файловому менеджері</value>
+  </data>
+  <data name="Action_New" xml:space="preserve">
+    <value>Новий</value>
+  </data>
+  <data name="Label_Folder" xml:space="preserve">
+    <value>Папка</value>
+  </data>
+  <data name="Label_DropFileToImport" xml:space="preserve">
+    <value>Перетягніть файл сюди для імпорту</value>
+  </data>
+  <data name="Label_ImportAsConnected" xml:space="preserve">
+    <value>Імпортувати з метаданими</value>
+  </data>
+  <data name="Label_ImportAsConnectedExplanation" xml:space="preserve">
+    <value>Шукати пов’язані метадані при новому локальному імпорті</value>
+  </data>
+  <data name="Label_Indexing" xml:space="preserve">
+    <value>Індексація...</value>
+  </data>
+  <data name="Label_ModelsFolder" xml:space="preserve">
+    <value>Папка з моделями</value>
+  </data>
+  <data name="Label_Categories" xml:space="preserve">
+    <value>Категорії</value>
+  </data>
+  <data name="Label_LetsGetStarted" xml:space="preserve">
+    <value>Почнімо</value>
+  </data>
+  <data name="Label_ReadAndAgree" xml:space="preserve">
+    <value>Я прочитав(-ла) та погоджуюся з</value>
+  </data>
+  <data name="Label_LicenseAgreement" xml:space="preserve">
+    <value>Ліцензійною Угодою.</value>
+  </data>
+  <data name="Label_FindConnectedMetadata" xml:space="preserve">
+    <value>Знайти пов&apos;язані метадані</value>
+  </data>
+  <data name="Label_ShowModelImages" xml:space="preserve">
+    <value>Показати зображення моделі</value>
+  </data>
+  <data name="Label_Appearance" xml:space="preserve">
+    <value>Зовнішній вигляд</value>
+  </data>
+  <data name="Label_Theme" xml:space="preserve">
+    <value>Тема</value>
+  </data>
+  <data name="Label_CheckpointManager" xml:space="preserve">
+    <value>Менеджер чекпоїнтів</value>
+  </data>
+  <data name="Label_RemoveSymlinksOnShutdown" xml:space="preserve">
+    <value>Видаляти символічні посилання на спільну папку контрольних точок при завершенні роботи</value>
+  </data>
+  <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
+    <value>Виберіть цю опцію, якщо у вас виникають проблеми з переміщенням Stability Matrix на інший диск</value>
+  </data>
+  <data name="Label_ResetCheckpointsCache" xml:space="preserve">
+    <value>Скинути кеш контрольних точок</value>
+  </data>
+  <data name="Label_ResetCheckpointsCache_Details" xml:space="preserve">
+    <value>Перебудовує кеш встановлених контрольних точок. Використовуйте, якщо контрольні точки некоректно позначені у переглядачі моделей</value>
+  </data>
+  <data name="Label_PackageEnvironment" xml:space="preserve">
+    <value>Середовище пакету</value>
+  </data>
+  <data name="Action_Edit" xml:space="preserve">
+    <value>Змінити</value>
+  </data>
+  <data name="Label_EnvironmentVariables" xml:space="preserve">
+    <value>Змінні середовища</value>
+  </data>
+  <data name="Label_EmbeddedPython" xml:space="preserve">
+    <value>Вбудований Python</value>
+  </data>
+  <data name="Action_CheckVersion" xml:space="preserve">
+    <value>Перевірити версію</value>
+  </data>
+  <data name="Label_Integrations" xml:space="preserve">
+    <value>Інтеграції</value>
+  </data>
+  <data name="Label_DiscordRichPresence" xml:space="preserve">
+    <value>Rich Presense з Discord</value>
+  </data>
+  <data name="Label_System" xml:space="preserve">
+    <value>Система</value>
+  </data>
+  <data name="Label_AddToStartMenu" xml:space="preserve">
+    <value>Додати Stability Matrix до меню запуску</value>
+  </data>
+  <data name="Label_AddToStartMenu_Details" xml:space="preserve">
+    <value>Використовує поточне розташування програми, ви можете запустити це знову, якщо перемістите програму</value>
+  </data>
+  <data name="Label_OnlyAvailableOnWindows" xml:space="preserve">
+    <value>Доступно тільки на Windows -_-</value>
+  </data>
+  <data name="Action_AddForCurrentUser" xml:space="preserve">
+    <value>Додати для поточного юзера</value>
+  </data>
+  <data name="Action_AddForAllUsers" xml:space="preserve">
+    <value>Додати для всіх юзерів</value>
+  </data>
+  <data name="Label_SelectNewDataDirectory" xml:space="preserve">
+    <value>Обрати новий каталог даних</value>
+  </data>
+  <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
+    <value>Не переміщує існуючі дані. Потребує перезапуску програми.</value>
+  </data>
+  <data name="Action_SelectDirectory" xml:space="preserve">
+    <value>Обрати каталог</value>
+  </data>
+  <data name="Label_About" xml:space="preserve">
+    <value>Про програму</value>
+  </data>
+  <data name="Label_StabilityMatrix" xml:space="preserve">
+    <value>Stability Matrix</value>
+  </data>
+  <data name="Label_LicenseAndOpenSourceNotices" xml:space="preserve">
+    <value>Ліцензія та відкритий код</value>
+  </data>
+  <data name="TeachingTip_ClickLaunchToGetStarted" xml:space="preserve">
+    <value>Натисніть Запустити щоб почати!</value>
+  </data>
+  <data name="Action_Stop" xml:space="preserve">
+    <value>Зупинити</value>
+  </data>
+  <data name="Action_SendInput" xml:space="preserve">
+    <value>Надіслати введення</value>
+  </data>
+  <data name="Label_Input" xml:space="preserve">
+    <value>Введення</value>
+  </data>
+  <data name="Action_Send" xml:space="preserve">
+    <value>Надіслати</value>
+  </data>
+  <data name="Label_InputRequired" xml:space="preserve">
+    <value>Необхідне введення</value>
+  </data>
+  <data name="Label_ConfirmQuestion" xml:space="preserve">
+    <value>Підтвердити?</value>
+  </data>
+  <data name="Action_Yes" xml:space="preserve">
+    <value>Так</value>
+  </data>
+  <data name="Label_No" xml:space="preserve">
+    <value>Ні</value>
+  </data>
+  <data name="Action_OpenWebUI" xml:space="preserve">
+    <value>Відкрити веб-інтерфейс</value>
+  </data>
+  <data name="Text_WelcomeToStabilityMatrix" xml:space="preserve">
+    <value>Вітаємо у Stability Matrix!</value>
+  </data>
+  <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
+    <value>Оберіть бажаний інтерфейс, щоб почати</value>
+  </data>
+  <data name="Label_Installing" xml:space="preserve">
+    <value>Йде інсталляція</value>
+  </data>
+  <data name="Text_ProceedingToLaunchPage" xml:space="preserve">
+    <value>Переходимо до сторінки запуску</value>
+  </data>
+  <data name="Progress_DownloadingPackage" xml:space="preserve">
+    <value>Завантаження пакунка...</value>
+  </data>
+  <data name="Progress_DownloadComplete" xml:space="preserve">
+    <value>Завантаження завершене</value>
+  </data>
+  <data name="Progress_InstallationComplete" xml:space="preserve">
+    <value>Встановлення завершене</value>
+  </data>
+  <data name="Progress_InstallingPrerequisites" xml:space="preserve">
+    <value>Інсталяція залежностей...</value>
+  </data>
+  <data name="Progress_InstallingPackageRequirements" xml:space="preserve">
+    <value>Встановлюємо залежності...</value>
+  </data>
+  <data name="Action_OpenInExplorer" xml:space="preserve">
+    <value>Відкрити в файловому провіднику</value>
+  </data>
+  <data name="Action_OpenInFinder" xml:space="preserve">
+    <value>Відкрити в Finder</value>
+  </data>
+  <data name="Action_Uninstall" xml:space="preserve">
+    <value>Видалити</value>
+  </data>
+  <data name="Action_CheckForUpdates" xml:space="preserve">
+    <value>Перевірити наявність оновлень</value>
+  </data>
+  <data name="Action_Update" xml:space="preserve">
+    <value>Оновити</value>
+  </data>
+  <data name="Action_AddPackage" xml:space="preserve">
+    <value>Додати пакунок</value>
+  </data>
+  <data name="TeachingTip_AddPackageToGetStarted" xml:space="preserve">
+    <value>Щоб почати, додайте пакунок!</value>
+  </data>
+  <data name="Label_EnvVarsTable_Name" xml:space="preserve">
+    <value>Назва</value>
+  </data>
+  <data name="Label_EnvVarsTable_Value" xml:space="preserve">
+    <value>Значення</value>
+  </data>
+  <data name="Action_Remove" xml:space="preserve">
+    <value>Прибрати</value>
+  </data>
+  <data name="Label_Details" xml:space="preserve">
+    <value>Деталі</value>
+  </data>
+  <data name="Label_Callstack" xml:space="preserve">
+    <value>Стек викликів</value>
+  </data>
+  <data name="Label_InnerException" xml:space="preserve">
+    <value>Внутрішня помилка</value>
+  </data>
+  <data name="Label_SearchEllipsis" xml:space="preserve">
+    <value>Пошук...</value>
+  </data>
+  <data name="Action_OK" xml:space="preserve">
+    <value>ОК</value>
+  </data>
+  <data name="Action_Retry" xml:space="preserve">
+    <value>Повторити</value>
+  </data>
+  <data name="Label_PythonVersionInfo" xml:space="preserve">
+    <value>Інформація про версію Python</value>
+  </data>
+  <data name="Action_Restart" xml:space="preserve">
+    <value>Перезапустити</value>
+  </data>
+  <data name="Label_ConfirmDelete" xml:space="preserve">
+    <value>Підтвердити видалення</value>
+  </data>
+  <data name="Text_PackageUninstall_Details" xml:space="preserve">
+    <value>Ця дія видалить папку пакунка разом із усіма файлами та зображеннями, які там є.</value>
+  </data>
+  <data name="Progress_UninstallingPackage" xml:space="preserve">
+    <value>Видаляємо пакунок...</value>
+  </data>
+  <data name="Label_PackageUninstalled" xml:space="preserve">
+    <value>Пакунок видалено</value>
+  </data>
+  <data name="Text_SomeFilesCouldNotBeDeleted" xml:space="preserve">
+    <value>Не вдалося видалити деякі файли. Переконайтеся, що всі файли у папці пакету закриті, і повторіть спробу.</value>
+  </data>
+  <data name="Label_InvalidPackageType" xml:space="preserve">
+    <value>Неправильний тип пакунка</value>
+  </data>
+  <data name="TextTemplate_UpdatingPackage" xml:space="preserve">
+    <value>Оновлюємо {0}</value>
+  </data>
+  <data name="Progress_UpdateComplete" xml:space="preserve">
+    <value>Оновлення завершене</value>
+  </data>
+  <data name="TextTemplate_PackageUpdatedToLatest" xml:space="preserve">
+    <value>{0} оновлено до останньої версії</value>
+  </data>
+  <data name="TextTemplate_ErrorUpdatingPackage" xml:space="preserve">
+    <value>Помилка під час оновлення {0}</value>
+  </data>
+  <data name="Progress_UpdateFailed" xml:space="preserve">
+    <value>Оновлення не вдалося</value>
+  </data>
+  <data name="Action_OpenInBrowser" xml:space="preserve">
+    <value>Відкрити в браузері</value>
+  </data>
+  <data name="Label_ErrorInstallingPackage" xml:space="preserve">
+    <value>Помилка встановлення пакету</value>
+  </data>
+  <data name="Label_Branch" xml:space="preserve">
+    <value>Гілка</value>
+  </data>
+  <data name="Label_AutoScrollToEnd" xml:space="preserve">
+    <value>Автоматично прокручувати до кінця консолі</value>
+  </data>
+  <data name="Label_License" xml:space="preserve">
+    <value>Ліцензія</value>
+  </data>
+  <data name="Label_SharedModelStrategyShort" xml:space="preserve">
+    <value>Обмін моделями</value>
+  </data>
+  <data name="Label_PleaseSelectDataDirectory" xml:space="preserve">
+    <value>Будь ласка, оберіть папку з даними</value>
+  </data>
+  <data name="Label_DataFolderName" xml:space="preserve">
+    <value>Назва каталогу даних</value>
+  </data>
+  <data name="Label_CurrentDirectory" xml:space="preserve">
+    <value>Поточна директорія:</value>
+  </data>
+  <data name="Text_AppWillRelaunchAfterUpdate" xml:space="preserve">
+    <value>Програма перезапуститься після оновлення</value>
+  </data>
+  <data name="Action_RemindMeLater" xml:space="preserve">
+    <value>Нагадати пізніше</value>
+  </data>
+  <data name="Action_InstallNow" xml:space="preserve">
+    <value>Встановити зараз</value>
+  </data>
+  <data name="Label_ReleaseNotes" xml:space="preserve">
+    <value>Примітки до випуску</value>
+  </data>
+  <data name="Action_OpenProjectEllipsis" xml:space="preserve">
+    <value>Відкрити проєкт...</value>
+  </data>
+  <data name="Action_SaveAsEllipsis" xml:space="preserve">
+    <value>Зберегти як...</value>
+  </data>
+  <data name="Action_RestoreDefaultLayout" xml:space="preserve">
+    <value>Відновити макет за замовчуванням</value>
+  </data>
+  <data name="Label_UseSharedOutputFolder" xml:space="preserve">
+    <value>Спільний вихідний каталог</value>
+  </data>
+  <data name="Label_BatchIndex" xml:space="preserve">
+    <value>Індекс партії</value>
+  </data>
+  <data name="Action_Copy" xml:space="preserve">
+    <value>Копіювати</value>
+  </data>
+  <data name="Action_OpenInViewer" xml:space="preserve">
+    <value>Відкрити у переглядачі зображень</value>
+  </data>
+  <data name="Label_NumImagesSelected" xml:space="preserve">
+    <value>Вибрано {0} зображень</value>
+  </data>
+  <data name="Label_OutputFolder" xml:space="preserve">
+    <value>Вихідний каталог</value>
+  </data>
+  <data name="Label_OutputType" xml:space="preserve">
+    <value>Вихідний тип</value>
+  </data>
+  <data name="Action_ClearSelection" xml:space="preserve">
+    <value>Очистити вибір</value>
+  </data>
+  <data name="Action_SelectAll" xml:space="preserve">
+    <value>Вибрати все</value>
+  </data>
+  <data name="Action_SendToInference" xml:space="preserve">
+    <value>Надіслати на обробку</value>
+  </data>
+  <data name="Label_TextToImage" xml:space="preserve">
+    <value>Текст в зображення</value>
+  </data>
+  <data name="Label_ImageToImage" xml:space="preserve">
+    <value>Зображення в зображення</value>
+  </data>
+  <data name="Label_Inpainting" xml:space="preserve">
+    <value>Інпейнтінг</value>
+  </data>
+  <data name="Label_Upscale" xml:space="preserve">
+    <value>Апскейл</value>
+  </data>
+  <data name="Label_OutputsPageTitle" xml:space="preserve">
+    <value>Результати</value>
+  </data>
+  <data name="Label_OneImageSelected" xml:space="preserve">
+    <value>Обрано 1 зображення</value>
+  </data>
+  <data name="Label_PythonPackages" xml:space="preserve">
+    <value>Пакунки Python</value>
+  </data>
+  <data name="Action_Consolidate" xml:space="preserve">
+    <value>Об&apos;єднати</value>
+  </data>
+  <data name="Label_AreYouSure" xml:space="preserve">
+    <value>Ви впевнені?</value>
+  </data>
+  <data name="Label_ConsolidateExplanation" xml:space="preserve">
+    <value>Ця дія перемістить усі згенеровані зображення з вибраних пакетів до папки “Consolidated” у спільному каталозі результатів. Цю операцію неможливо скасувати.</value>
+  </data>
+  <data name="Action_Refresh" xml:space="preserve">
+    <value>Оновити</value>
+  </data>
+  <data name="Action_Upgrade" xml:space="preserve">
+    <value>Оновити</value>
+  </data>
+  <data name="Action_Downgrade" xml:space="preserve">
+    <value>Повернути попередню версію</value>
+  </data>
+  <data name="Action_OpenGithub" xml:space="preserve">
+    <value>Відкрити на GitHub</value>
+  </data>
+  <data name="Label_Connected" xml:space="preserve">
+    <value>З&apos;єднано</value>
+  </data>
+  <data name="Action_Disconnect" xml:space="preserve">
+    <value>Від&apos;єднатися</value>
+  </data>
+  <data name="Label_Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Label_Username" xml:space="preserve">
+    <value>Юзернейм</value>
+  </data>
+  <data name="Label_Password" xml:space="preserve">
+    <value>Пароль</value>
+  </data>
+  <data name="Action_Login" xml:space="preserve">
+    <value>Увійти</value>
+  </data>
+  <data name="Action_Signup" xml:space="preserve">
+    <value>Створити аккаунт</value>
+  </data>
+  <data name="Label_ConfirmPassword" xml:space="preserve">
+    <value>Підтвердити пароль</value>
+  </data>
+  <data name="Label_ApiKey" xml:space="preserve">
+    <value>Ключ APi</value>
+  </data>
+  <data name="Label_Accounts" xml:space="preserve">
+    <value>Аккаунти</value>
+  </data>
+  <data name="Label_Preprocessor" xml:space="preserve">
+    <value>Препроцесор</value>
+  </data>
+  <data name="Label_Strength" xml:space="preserve">
+    <value>Потужність</value>
+  </data>
+  <data name="Label_ControlWeight" xml:space="preserve">
+    <value>Контрольна вага</value>
+  </data>
+  <data name="Label_ControlSteps" xml:space="preserve">
+    <value>Контрольні кроки</value>
+  </data>
+  <data name="Label_CivitAiLoginRequired" xml:space="preserve">
+    <value>Щоб завантажити цей чекпоінт, ви повинні увійти в систему. Будь ласка, введіть ключ API CivitAI в налаштуваннях.</value>
+  </data>
+  <data name="Label_DownloadFailed" xml:space="preserve">
+    <value>Завантаження невдале</value>
+  </data>
+  <data name="Label_AutoUpdates" xml:space="preserve">
+    <value>Автоматичні оновлення</value>
+  </data>
+  <data name="Label_UpdatesPreviewChannelDescription" xml:space="preserve">
+    <value>Для ранніх користувачів. Попередні збірки будуть надійнішими, ніж у каналі Dev, і виходитимуть ближче до стабільних релізів. Ваші відгуки допоможуть нам швидше знаходити помилки та вдосконалювати елементи дизайну.</value>
+  </data>
+  <data name="Label_UpdatesDevChannelDescription" xml:space="preserve">
+    <value>Для технічних користувачів. Отримуйте першими доступ до наших збірок для розробників з гілок функцій, щойно вони стануть доступними. У процесі експериментів з новими функціями можуть з&apos;явитися деякі шорсткості та помилки.</value>
+  </data>
+  <data name="Label_Updates" xml:space="preserve">
+    <value>Оновлення</value>
+  </data>
+  <data name="Label_YouAreUpToDate" xml:space="preserve">
+    <value>Все оновлено</value>
+  </data>
+  <data name="TextTemplate_LastChecked" xml:space="preserve">
+    <value>В останнє перевірено: {0}</value>
+  </data>
+  <data name="Action_CopyTriggerWords" xml:space="preserve">
+    <value>Копіювати тріґерні слова</value>
+  </data>
+  <data name="Label_TriggerWords" xml:space="preserve">
+    <value>Слова-тріґери:</value>
+  </data>
+  <data name="TeachingTip_MoreCheckpointCategories" xml:space="preserve">
+    <value>Додаткові папки, такі як IPAdapters та TextualInversions (вбудовування), можна ввімкнути тут</value>
+  </data>
+  <data name="Action_OpenOnHuggingFace" xml:space="preserve">
+    <value>Відкрити на Hugging Face</value>
+  </data>
+  <data name="Action_UpdateExistingMetadata" xml:space="preserve">
+    <value>Оновити існуючі метадані</value>
+  </data>
+  <data name="Label_General" xml:space="preserve">
+    <value>Загальні</value>
+    <comment>A general settings category</comment>
+  </data>
+  <data name="Label_Inference" xml:space="preserve">
+    <value>Генерація</value>
+    <comment>The Inference feature page</comment>
+  </data>
+  <data name="Label_Prompt" xml:space="preserve">
+    <value>Промпт</value>
+    <comment>A settings category for Inference generation prompts</comment>
+  </data>
+  <data name="Label_OutputImageFiles" xml:space="preserve">
+    <value>Вихідні файли зображень</value>
+  </data>
+  <data name="Label_ImageViewer" xml:space="preserve">
+    <value>Переглядач зображень</value>
+  </data>
+  <data name="Label_AutoCompletion" xml:space="preserve">
+    <value>Підказки при введенні</value>
+  </data>
+  <data name="Label_CompletionReplaceUnderscoresWithSpaces" xml:space="preserve">
+    <value>Замінюйте нижні підкреслення на пробіли під час автозаповнення</value>
+  </data>
+  <data name="Label_PromptTags" xml:space="preserve">
+    <value>Теги підказки</value>
+    <comment>Tags for image generation prompts</comment>
+  </data>
+  <data name="Label_PromptTagsImport" xml:space="preserve">
+    <value>Імпортувати теги підказки</value>
+  </data>
+  <data name="Label_PromptTagsDescription" xml:space="preserve">
+    <value>Помічає файл для підказок при автодоповненні промпта (підтримується формат a1111-sd-webui-tagcomplete .csv)</value>
+  </data>
+  <data name="Label_SystemInformation" xml:space="preserve">
+    <value>Інформація про систему</value>
+  </data>
+  <data name="Label_CivitAi" xml:space="preserve">
+    <value>CivitAI</value>
+  </data>
+  <data name="Label_HuggingFace" xml:space="preserve">
+    <value>Hugging Face</value>
+  </data>
+  <data name="Label_Addons" xml:space="preserve">
+    <value>Аддони</value>
+    <comment>Inference Sampler Addons</comment>
+  </data>
+  <data name="Label_SaveIntermediateImage" xml:space="preserve">
+    <value>Зберегти проміжне зображення</value>
+    <comment>Inference module step to save an intermediate image</comment>
+  </data>
+  <data name="Label_Settings" xml:space="preserve">
+    <value>Налаштування</value>
+  </data>
+  <data name="Action_SelectFile" xml:space="preserve">
+    <value>Обрати файл</value>
+  </data>
+  <data name="Action_ReplaceContents" xml:space="preserve">
+    <value>Замінити вміст</value>
+  </data>
+  <data name="Label_WipFeature" xml:space="preserve">
+    <value>Поки що недоступно</value>
+  </data>
+  <data name="Label_WipFeatureDescription" xml:space="preserve">
+    <value>Функція буде доступна в наступному оновленні</value>
+  </data>
+  <data name="Label_MissingImageFile" xml:space="preserve">
+    <value>Відсутній файл зображення</value>
+  </data>
+  <data name="Label_HolidayMode" xml:space="preserve">
+    <value>Різдвяний режим</value>
+  </data>
+  <data name="Label_CLIPSkip" xml:space="preserve">
+    <value>Пропуск CLIP</value>
+  </data>
+  <data name="Label_ImageToVideo" xml:space="preserve">
+    <value>Зображення в відео</value>
+  </data>
+  <data name="Label_Fps" xml:space="preserve">
+    <value>Кадри в секунду</value>
+  </data>
+  <data name="Label_MinCfg" xml:space="preserve">
+    <value>Min CFG</value>
+  </data>
+  <data name="Label_Lossless" xml:space="preserve">
+    <value>Без втрат</value>
+  </data>
+  <data name="Label_Frames" xml:space="preserve">
+    <value>Рамки</value>
+  </data>
+  <data name="Label_MotionBucketId" xml:space="preserve">
+    <value>Motion Bucket ID</value>
+  </data>
+  <data name="Label_AugmentationLevel" xml:space="preserve">
+    <value>Рівень аугментації</value>
+  </data>
+  <data name="Label_VideoOutputMethod" xml:space="preserve">
+    <value>Метод</value>
+  </data>
+  <data name="Label_VideoQuality" xml:space="preserve">
+    <value>Якість</value>
+  </data>
+  <data name="Label_FindInModelBrowser" xml:space="preserve">
+    <value>Знайти в браузері моделей</value>
+  </data>
+  <data name="Label_Installed" xml:space="preserve">
+    <value>Встановлено</value>
+  </data>
+  <data name="Label_NoExtensionsFound" xml:space="preserve">
+    <value>Розширень не знайдено.</value>
+  </data>
+  <data name="Action_Hide" xml:space="preserve">
+    <value>Приховати</value>
+  </data>
+  <data name="Action_CopyDetails" xml:space="preserve">
+    <value>Копіювати деталі</value>
+  </data>
+  <data name="Action_Download" xml:space="preserve">
+    <value>Завантажити</value>
+  </data>
+  <data name="TeachingTip_DownloadsExplanation" xml:space="preserve">
+    <value>Перевіряйте прогргес завантажень тут.</value>
+  </data>
+  <data name="Label_RecommendedModels" xml:space="preserve">
+    <value>Рекомендовані моделі</value>
+  </data>
+  <data name="Label_RecommendedModelsSubText" xml:space="preserve">
+    <value>Поки ваш пакунок встановлюється, ось деякі моделі, які ми рекомендуємо для початку.</value>
+  </data>
+  <data name="Label_Notifications" xml:space="preserve">
+    <value>Сповіщення</value>
+  </data>
+  <data name="Label_NotificationOption_None" xml:space="preserve">
+    <value>Жодних</value>
+  </data>
+  <data name="Label_ComfyRequiredTitle" xml:space="preserve">
+    <value>Потрібен ComfyUA</value>
+  </data>
+  <data name="Label_ComfyRequiredDetail" xml:space="preserve">
+    <value>Щоб встовити цей пакунок потрібен ComfyUI. Хочете встановити зараз?</value>
+  </data>
+  <data name="Error_PleaseSelectDownloadLocation" xml:space="preserve">
+    <value>Будь ласка, оберіть директорію для завантаження.</value>
+  </data>
+  <data name="Label_SelectDownloadLocation" xml:space="preserve">
+    <value>Оберіть директорію для завантаження:</value>
+  </data>
+  <data name="Label_Config" xml:space="preserve">
+    <value>Конфіґ</value>
+  </data>
+  <data name="Label_ToggleAutoScrolling" xml:space="preserve">
+    <value>Автоматично прокручувати до кінця</value>
+  </data>
+  <data name="Label_ConfirmExit" xml:space="preserve">
+    <value>Підтвердити вихід</value>
+  </data>
+  <data name="Label_ConfirmExitDetail" xml:space="preserve">
+    <value>Ви впевнені, що хочете вийти? Це також закриє всі запущені пакети.</value>
+  </data>
+  <data name="Label_Console" xml:space="preserve">
+    <value>Консоль</value>
+  </data>
+  <data name="Label_WebUi" xml:space="preserve">
+    <value>Веб-інтерфейс</value>
+  </data>
+  <data name="Label_Packages" xml:space="preserve">
+    <value>Пакунки</value>
+  </data>
+  <data name="Label_ActionCannotBeUndone" xml:space="preserve">
+    <value>Цю дію не можна скасувати.</value>
+  </data>
+  <data name="Label_AreYouSureDeleteImages" xml:space="preserve">
+    <value>Ви впевнені, що хочете видалити {0} зображень?</value>
+  </data>
+  <data name="Label_CheckingHardware" xml:space="preserve">
+    <value>Ми перевіряємо деякі специфікації обладнання, щоб визначити сумісність.</value>
+  </data>
+  <data name="Label_EverythingLooksGood" xml:space="preserve">
+    <value>Все виглядає чудово!</value>
+  </data>
+  <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
+    <value>Ми рекомендуємо використовувати відеокарту з підтримкою CUDA для найкращої роботи. Ви можете продовжувати без неї, але деякі пакети можуть не працювати, а генерація може бути повільнішим.</value>
+  </data>
+  <data name="Label_Checkpoints" xml:space="preserve">
+    <value>Чекпоїнти</value>
+  </data>
+  <data name="Label_ModelBrowser" xml:space="preserve">
+    <value>Браузер моделей</value>
+  </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>Воркфлоу</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>Нескінченна прокрутка</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>Браузер воркфлоу</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>Відкрити на OpenArt</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>Деталі вузла</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>Опис робочого процесу</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>OpenArt Browser</value>
+  </data>
+  <data name="Action_PreviewPreprocessor" xml:space="preserve">
+    <value>Попередній перегляд Препроцесор</value>
+  </data>
+  <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
+    <value>Кнопка &quot;Відкрити веб-інтерфейс&quot; перемістилася в командну панель</value>
+  </data>
+  <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
+    <value>Інший екземпляр Stability Matrix вже запущено. Будь ласка, закрийте його, перш ніж запускати новий.</value>
+  </data>
+  <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
+    <value>Матриця стабільності вже працює</value>
+  </data>
+  <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
+    <value>{0} видалено успішно</value>
+  </data>
+  <data name="Label_WorkflowDeleted" xml:space="preserve">
+    <value>Робочий процес Видалено</value>
+  </data>
+  <data name="Label_ErrorRetrievingWorkflows" xml:space="preserve">
+    <value>Виправлення помилок у робочих процесах</value>
+  </data>
+  <data name="TabLabel_InstalledWorkflows" xml:space="preserve">
+    <value>Встановлені робочі процеси</value>
+  </data>
+  <data name="Label_WorkflowImported" xml:space="preserve">
+    <value>Імпортований робочий процес</value>
+  </data>
+  <data name="Label_FinishedImportingWorkflow" xml:space="preserve">
+    <value>Завершено імпорт робочих процесів та користувацьких вузлів</value>
+  </data>
+  <data name="Label_WorkflowImportComplete" xml:space="preserve">
+    <value>Робочий процес і кастомні вузли були імпортовані.</value>
+  </data>
+  <data name="TeachingTip_InferencePromptHelpButton" xml:space="preserve">
+    <value>Натисніть тут, щоб переглянути синтаксис підказки і те, як включити Lora / Embeddings.</value>
+  </data>
+  <data name="Label_ExtraNetworks" xml:space="preserve">
+    <value>Додаткові мережі (Lora / LyCORIS)</value>
+  </data>
+  <data name="Label_CLIPStrength" xml:space="preserve">
+    <value>Сила CLIP</value>
+  </data>
+  <data name="Label_NumberFormat" xml:space="preserve">
+    <value>Формат чисел</value>
+  </data>
+  <data name="Text_DeleteFollowingItems" xml:space="preserve">
+    <value>Ви збираєтеся видалити наступні елементи:</value>
+  </data>
+  <data name="TextTemplate_DeleteFollowingCountItems" xml:space="preserve">
+    <value>Ви збираєтеся видалити наступні {0} елементів:</value>
+  </data>
+  <data name="Label_DeletePermanently" xml:space="preserve">
+    <value>Видалити назавжди</value>
+  </data>
+  <data name="Action_MoveToTrash" xml:space="preserve">
+    <value>Перемістити в кошик</value>
+  </data>
+  <data name="Label_AreYouSureDeleteModels" xml:space="preserve">
+    <value>Ви впевнені, що хочете видалити стільки моделей: {0}?</value>
+  </data>
+  <data name="Label_AutoSearchOnLoad" xml:space="preserve">
+    <value>Автоматичний пошук при завантаженні</value>
+  </data>
+  <data name="Label_AutoSearchOnLoad_Description" xml:space="preserve">
+    <value>Автоматично запускати пошук при завантаженні сторінки браузера моделі</value>
+  </data>
+  <data name="Action_ToggleVisibility" xml:space="preserve">
+    <value>Переключити видимість</value>
+  </data>
+  <data name="Label_ClippingMask" xml:space="preserve">
+    <value>Маска для обрізання</value>
+  </data>
+  <data name="Label_AppFolders" xml:space="preserve">
+    <value>Папки додатків</value>
+  </data>
+  <data name="Label_Logs" xml:space="preserve">
+    <value>Логи</value>
+  </data>
+  <data name="Label_AppData" xml:space="preserve">
+    <value>Дані програми</value>
+  </data>
+  <data name="TextTemplate_PackageUpdatedToSelected" xml:space="preserve">
+    <value>{0} оновлено до вибраної версії</value>
+  </data>
+  <data name="Action_CopyAsBitmap" xml:space="preserve">
+    <value>Копіювати як растрове зображення</value>
+  </data>
+  <data name="Label_DisableUpdateCheck" xml:space="preserve">
+    <value>Вимкнути перевірку оновлень</value>
+  </data>
+  <data name="Warning_PleaseExtractFirst" xml:space="preserve">
+    <value>Будь ласка, розпакуйте додаток з ZIP-архіву перед запуском Stability Matrix</value>
+  </data>
+  <data name="Label_HistorySize" xml:space="preserve">
+    <value>Розмір історії</value>
+  </data>
+  <data name="Label_HistorySize_Description" xml:space="preserve">
+    <value>Кількість рядків над тими, що відображаються в консолі, до яких можна прокрутити назад</value>
+  </data>
+  <data name="Label_ConnectAccountFailed" xml:space="preserve">
+    <value>У нас виникли проблеми з підключенням вашого облікового запису</value>
+  </data>
+  <data name="Label_EditModelMetadata" xml:space="preserve">
+    <value>Редагування метаданих моделі</value>
+  </data>
+  <data name="Label_NSFW" xml:space="preserve">
+    <value>NSFW</value>
+  </data>
+  <data name="Label_Tags" xml:space="preserve">
+    <value>Теги</value>
+  </data>
+  <data name="Label_VersionName" xml:space="preserve">
+    <value>Назва версії</value>
+  </data>
+  <data name="Label_TrainedWords" xml:space="preserve">
+    <value>Треновані слова</value>
+  </data>
+  <data name="Label_PreviewImage" xml:space="preserve">
+    <value>Попередній перегляд зображення</value>
+  </data>
+  <data name="Label_BatchSize" xml:space="preserve">
+    <value>Розмір партії</value>
+  </data>
+  <data name="Label_Batches" xml:space="preserve">
+    <value>Партії</value>
+  </data>
+  <data name="Label_Sampler" xml:space="preserve">
+    <value>Семплер</value>
+  </data>
+  <data name="Label_Scheduler" xml:space="preserve">
+    <value>Планувальник</value>
+  </data>
+  <data name="Label_MaxSize" xml:space="preserve">
+    <value>Максимальний розмір</value>
+  </data>
+  <data name="Label_UseSeparatePrompt" xml:space="preserve">
+    <value>Використовувати окремий промпт</value>
+  </data>
+  <data name="Label_Seed" xml:space="preserve">
+    <value>Зернятко</value>
+  </data>
+  <data name="Label_NegativePrompt" xml:space="preserve">
+    <value>Негативний промпт</value>
+  </data>
+  <data name="Label_NewFolder" xml:space="preserve">
+    <value>Нова папка</value>
+  </data>
+  <data name="Label_CopyLinkToClipboard" xml:space="preserve">
+    <value>Копіювати посилання в буфер обміну</value>
+  </data>
+  <data name="TextTemplate_OAuthLoginTitle" xml:space="preserve">
+    <value>Увійдіть через {0}</value>
+    <comment>e.g. &apos;Sign in with Google&apos;</comment>
+  </data>
+  <data name="Text_AllowBrowserOpenAppLink" xml:space="preserve">
+    <value>Будь ласка, дозвольте вашому браузеру відкрити цей додаток, коли з&apos;явиться запит на продовження.</value>
+  </data>
+  <data name="Text_OAuthLoginDescription" xml:space="preserve">
+    <value>Відкрийте посилання у вашому браузері та дотримуйтесь інструкцій, щоб підключити свій обліковий запис.</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Title" xml:space="preserve">
+    <value>Перевизначення залежностей Python</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Description" xml:space="preserve">
+    <value>Додавання, заміна або видалення залежностей для встановлення та оновлення</value>
+  </data>
+  <data name="Label_DependencySpecifiers" xml:space="preserve">
+    <value>Специфікатори залежностей</value>
+  </data>
+  <data name="AnalyticsExample_InstallData" xml:space="preserve">
+    <value>{
+  &quot;packageName&quot;: &quot;stable-diffusion-webui&quot;,
+  &quot;packageVersion&quot;: &quot;v1.10.0&quot;,
+  &quot;isSuccess&quot;: true,
+  &quot;type&quot;: &quot;install&quot;,
+  &quot;timestamp&quot;: &quot;2024-09-04T02:14:04.1967404+00:00&quot;
+}</value>
+  </data>
+  <data name="Label_Analytics" xml:space="preserve">
+    <value>Аналітика</value>
+  </data>
+  <data name="TextTemplate_YouCanChangeThisBehavior" xml:space="preserve">
+    <value>Ви завжди можете змінити цю поведінку в {0}.</value>
+    <comment>e.g. &apos;You can always change this behavior in Settings &gt; Category &gt; Item.&apos;</comment>
+  </data>
+  <data name="Text_AnalyticsDescription" xml:space="preserve">
+    <value>Допоможіть нам покращити Stability Matrix, надіславши анонімні дані про використовувані функції, версії операційної системи, типи встановлених пакунків тощо. Надіслані дані ніколи не будуть пов&apos;язані з вами або вашим обліковим записом і не міститимуть особистих даних або будь-якої конфіденційної інформації.</value>
+  </data>
+  <data name="Text_AnalyticsDescriptionShort" xml:space="preserve">
+    <value>Допоможіть нам покращити Stability Matrix, надіславши анонімні дані про використовувані функції, версії операційної системи, типи встановлених пакунків тощо.</value>
+  </data>
+  <data name="Text_AnalyticsDataPrivacyInfo" xml:space="preserve">
+    <value>Надіслані дані ніколи не будуть пов&apos;язані з вами або вашим обліковим записом і не будуть містити особистих даних або будь-якої конфіденційної інформації.</value>
+  </data>
+  <data name="Label_UsageData" xml:space="preserve">
+    <value>Дані про використання</value>
+  </data>
+  <data name="Label_PrivacyPolicy" xml:space="preserve">
+    <value>Політика конфіденційності</value>
+  </data>
+  <data name="Label_ImageHidden" xml:space="preserve">
+    <value>Приховане зображення</value>
+  </data>
+  <data name="Label_NoImageFound" xml:space="preserve">
+    <value>Зображення не знайдено</value>
+  </data>
+  <data name="Label_HideEmptyCategories" xml:space="preserve">
+    <value>Приховати порожні категорії</value>
+  </data>
+  <data name="Label_ShowNsfwImages" xml:space="preserve">
+    <value>Показати зображення NSFW</value>
+  </data>
+  <data name="Label_EnableLongPaths" xml:space="preserve">
+    <value>Увімкнути довгі шляхи</value>
+    <comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_EnableLongPathsDescription" xml:space="preserve">
+    <value>Видалити обмеження MAX_PATH зі звичайних функцій файлів і каталогів Win32</value>
+    <comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_SystemSettings" xml:space="preserve">
+    <value>Налаштування системи</value>
+  </data>
+  <data name="Label_ChangesApplied" xml:space="preserve">
+    <value>Застосовані зміни</value>
+  </data>
+  <data name="Text_RestartMayBeRequiredForSystemChanges" xml:space="preserve">
+    <value>Для того, щоб зміни в системі набули чинності, може знадобитися перезавантаження.</value>
+  </data>
+  <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
+    <value>Випуски для цього пакунка недоступні.</value>
+  </data>
+  <data name="Text_UnexpectedError_Description" xml:space="preserve">
+    <value>Будь ласка, повідомте нам про цю проблему, вказавши деталі нижче, і прикріпіть заархівовані файли журналів.</value>
+  </data>
+  <data name="Text_UnexpectedErrorRecoverable_Description" xml:space="preserve">
+    <value>Ви можете продовжити роботу, але повна функціональність буде доступна після перезапуску. Будь ласка, повідомте нам про цю проблему, вказавши деталі нижче, і прикріпіть заархівовані файли журналів.</value>
+  </data>
+  <data name="Action_ShowLogInExplorer" xml:space="preserve">
+    <value>Показати лог у файловому провіднику</value>
+  </data>
+  <data name="Action_ShowLogInFinder" xml:space="preserve">
+    <value>Показати лог у Finder</value>
+  </data>
+  <data name="Label_ExtensionPacks" xml:space="preserve">
+    <value>Пакети розширення</value>
+  </data>
+  <data name="Label_NoExtensionPacksFound" xml:space="preserve">
+    <value>Розширення не знайдено</value>
+  </data>
+  <data name="Label_OpenExtensionPacksFolder" xml:space="preserve">
+    <value>Відкрити папку з пакетами розширень</value>
+  </data>
+  <data name="Label_InstallExtensionPack" xml:space="preserve">
+    <value>Інсталяція пакета розширень</value>
+  </data>
+  <data name="Label_AddToExistingPack" xml:space="preserve">
+    <value>Додати до існуючого пакету</value>
+  </data>
+  <data name="Label_NewExtensionPack" xml:space="preserve">
+    <value>Новий пакет розширень</value>
+  </data>
+  <data name="Label_CreateExtensionPackExplanation" xml:space="preserve">
+    <value>вЩоб створити його, просто виберіть потрібні розширення у вкладці &quot;Доступні розширення&quot; або &quot;Встановлені розширення&quot; та натисніть &quot;Зберегти&quot;</value>
+  </data>
+  <data name="Label_ImportExtensionPacksExplanation" xml:space="preserve">
+    <value>Додайте файл пакету розширень .json до теки ExtensionPacks у вашому каталозі Data.</value>
+  </data>
+  <data name="Label_OrWithHyphensAround" xml:space="preserve">
+    <value>- або -</value>
+  </data>
+  <data name="Action_OpenOnOpenModelDb" xml:space="preserve">
+    <value>Відкрити на OpenModelDB</value>
+  </data>
+  <data name="Label_Wildcards" xml:space="preserve">
+    <value>Підстановочні знаки</value>
+  </data>
+  <data name="Text_OAuthDeviceAuthDescription" xml:space="preserve">
+    <value>Відкрийте посилання у вашому браузері та введіть наступний код для авторизації вашого облікового запису в Stability Matrix.</value>
+  </data>
+  <data name="Action_CopyAndOpen" xml:space="preserve">
+    <value>Скопіювати та відкрити</value>
+  </data>
+  <data name="Text_LykosAccountUpgradeNotice" xml:space="preserve">
+    <value>## Увага: вихід з облікового запису Lykos та оновлення системи безпеки
+
+Ми внесли деякі важливі покращення в те, як Stability Matrix працює з акаунтами Lykos, оновивши їх до більш безпечної та зручної системи входу **(OAuth 2.0 з OpenID Connect)**. У зв&apos;язку з цим ви вийшли зі свого облікового запису Lykos.
+
+### Чому відбулися зміни?
+
+Ваша безпека і конфіденційність важливі для нас. Це оновлення принесе:
+
+*   **Спрощений досвід:** Увійдіть один раз на [account.lykos.ai](https://account.lykos.ai), щоб підключитися до Stability Matrix та інших сервісів Lykos AI.
+*   **Більше способів входу:** Використовуйте свій існуючий обліковий запис [lykos.ai](https://lykos.ai) або увійдіть за допомогою **Apple**, **GitHub** або **Google**.
+*   **Покращена конфіденційність:** Stability Matrix запитує лише необхідні дозволи.
+*   **Безпека за галузевим стандартом:** Ми використовуємо OAuth 2.0, золотий стандарт для безпечних входів.
+*   **Готовність до майбутнього:** Це забезпечує безпечне з&apos;єднання з іншими програмами та службами.
+
+### Що мені потрібно зробити?
+
+Натисніть кнопку **&quot;Перейти до налаштувань &quot;**, потім натисніть **&quot;Підключитися &quot;** поруч з **&quot;Обліковим записом Lykos &quot;**.
+
+### Чи потрібен обліковий запис Lykos?
+
+Ні! Stability Matrix повноцінно функціонує і без нього. Але ваш обліковий запис Lykos дозволяє використовувати деякі додаткові підключені функції, такі як автоматичне оновлення збірок розробки для наших підписників Patreon (і багато іншого!).
+</value>
+  </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>Перейти до Налаштувань</value>
+  </data>
+  <data name="TeachingTip_PromptAmplifier" xml:space="preserve">
+    <value>Спробуйте новий підсилювач промпту! Покращуйте свої промпти для кращих результатів!</value>
+  </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>Увімкнути</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>Вимкнути</value>
+  </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Підключіть свій обліковий запис Lykos</value>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Увійдіть у свій обліковий запис Lykos, щоб користуватися функціями підключення.</value>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Будь ласка, увійдіть ще раз</value>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Ваш логін закінчився. Будь ласка, увійдіть знову, щоб продовжити.</value>
+  </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>Підтримка Stability Matrix</value>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>Дякуємо, що підтримуєте Stability Matrix!</value>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>Такі функції, як **{0}**, є однією з багатьох переваг, доступних для наших донатерів. Ваш внесок допомагає нам покривати витрати на сервер і підтримує розвиток Stability Matrix.</value>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>Такі функції, як **{0}**, доступні на рівні **{1}** (або вище). Ваш внесок допомагає нам покривати витрати на сервер для більш просунутих підключених функцій і дозволяє нам продовжувати покращувати Stability Matrix для всіх.</value>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>Якщо ви вже підтримуєте нас на Patreon, будь ласка, прив&apos;яжіть свій акаунт, щоб продовжити.</value>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>Налаштування облікового запису</value>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>Переглянути параметри підтримки</value>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>Може, пізніше</value>
+  </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>Статус</value>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>Активний</value>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>Неактивний (Використовує стандартне з&apos;єднання)</value>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Скористайтеся швидшими результатами пошуку, переглядаючи моделі з онлайн-репозиторіїв, таких як CivitAI.</value>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>Експериментальна оптимізація для сторонніх репозиторіїв. Офіційно не пов&apos;язана з нами; доступність може змінюватися.</value>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>Бета</value>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>Прискорене відкриття моделі</value>
+  </data>
+  <data name="PromptAmplifier_Disclaimer" xml:space="preserve">
+    <value>### Представляємо: Підсилювач реплік
+Наш помічник зі штучним інтелектом, заснований на експериментальній моделі Spark, генерує творчі варіанти ваших підказок.
+
+Prompt Amplifier працює в нашому захищеному хмарному середовищі корпоративного рівня - він не працює локально на вашому комп&apos;ютері.
+
+### ☁️️ Чому хмарне середовище?  
+Модель Spark працює в масштабі, порівнянному з фундаментальними моделями з трильйонами параметрів, що вимагає значних обчислювальних потужностей. Хоча ми прагнемо максимізувати можливості локального запуску, розширені можливості Spark доступні **тепер** через нашу хмарну інфраструктуру.
+
+### Конфіденційність понад усе
+Ми ставимо на перше місце вашу конфіденційність ([Умови Gen AI] (&lt;https://lykos.ai/gen-ai-terms&gt;)). **Ваші підказки/вихідні дані НІКОЛИ не використовуються для навчання ШІ компанією Lykos AI або нашими партнерами з хмарної інфраструктури.** Безпечна обробка відбувається виключно для генерації вашого посилення, після чого ми зберігаємо лише метадані (наприклад, часові мітки та кількість токенів), а не сам вміст підказок.** Ваші дані ніколи не продаються та не передаються іншим особам.</value>
+  </data>
+  <data name="Label_ShowUnsupportedPythonVersions" xml:space="preserve">
+    <value>Показати непідтримувані версії Python</value>
+  </data>
+  <data name="Label_UnsupportedPythonVersionDetails" xml:space="preserve">
+    <value>При використанні непідтримуваних версій Python можуть виникнути проблеми з деякими пакунками</value>
+  </data>
+  <data name="Label_UnsupportedPythonVersionWarningDescription" xml:space="preserve">
+    <value>Буде показано всі доступні версії Python, включно з тими, які не підтримуються Stability Matrix. Ви впевнені?</value>
+  </data>
+  <data name="Label_PythonVersionWarningTitle" xml:space="preserve">
+    <value>Непідтримувані версії Python</value>
+  </data>
+  <data name="Label_HuggingFaceLoginRequired" xml:space="preserve">
+    <value>Ви повинні увійти, щоб завантажити цей чекпоїнт. Будь ласка, додайте токен Hugging Face в налаштуваннях.</value>
+  </data>
+  <data name="Label_LoginRequired" xml:space="preserve">
+    <value>Для завантаження цієї моделі потрібен логін</value>
+  </data>
+  <data name="Watermark_EnterPackageName" xml:space="preserve">
+    <value>Введіть назву пакета</value>
+  </data>
+  <data name="Validation_PackageNameCannotBeEmpty" xml:space="preserve">
+    <value>Назва пакунка не може бути порожньою</value>
+  </data>
+  <data name="Description_RenamePackage" xml:space="preserve">
+    <value>Введіть нове ім&apos;я для &apos;{0}&apos;</value>
+  </data>
+  <data name="ValidationError_PackageExists" xml:space="preserve">
+    <value>Пакунок з назвою &apos;{0}&apos; вже існує</value>
+  </data>
+  <data name="Label_BulkDownloadStarted" xml:space="preserve">
+    <value>Розпочато масове завантаження</value>
+  </data>
+  <data name="Label_BulkDownloadStartedMessage" xml:space="preserve">
+    <value>{0} файли почали завантажуватися. Перевірте прогрес на вкладці Завантаження.</value>
+  </data>
+  <data name="Label_DownloadStarted" xml:space="preserve">
+    <value>Завантаження розпочато</value>
+  </data>
+  <data name="Label_DownloadWillBeSavedToLocation" xml:space="preserve">
+    <value>{0} буде збережено в {1}</value>
+  </data>
+  <data name="Label_Author" xml:space="preserve">
+    <value>Автор</value>
+  </data>
+  <data name="Label_Hash" xml:space="preserve">
+    <value>Хеш</value>
+  </data>
+  <data name="Label_LastUpdatedAt" xml:space="preserve">
+    <value>Останнє оновлення</value>
+  </data>
+  <data name="Label_FileNamePattern" xml:space="preserve">
+    <value>Шаблон імен файлів</value>
+  </data>
+  <data name="Label_Files" xml:space="preserve">
+    <value>Файли</value>
+  </data>
+  <data name="Label_InferenceDefaultsHeader" xml:space="preserve">
+    <value>Висновок за замовчуванням</value>
+  </data>
+  <data name="Tooltip_InferenceDefaults" xml:space="preserve">
+    <value>Якщо увімкнено, ці налаштування будуть застосовані автоматично, коли цю модель буде обрано на вкладці Висновки</value>
+  </data>
+  <data name="Label_Show" xml:space="preserve">
+    <value>Показати</value>
+  </data>
+  <data name="Label_EarlyAccessModels" xml:space="preserve">
+    <value>Моделі раннього доступу</value>
+  </data>
+  <data name="Label_NsfwContent" xml:space="preserve">
+    <value>Контент 18+</value>
+  </data>
+  <data name="Label_NonModelFiles" xml:space="preserve">
+    <value>Файли, що не є моделями</value>
+  </data>
+  <data name="Label_InstalledModels" xml:space="preserve">
+    <value>Встановлені моделі</value>
+  </data>
+  <data name="Label_DownloadAllFilesAllVersions" xml:space="preserve">
+    <value>Завантажити всі файли (всі версії)</value>
+  </data>
+  <data name="Label_View" xml:space="preserve">
+    <value>Вигляд</value>
+  </data>
+  <data name="Label_Filter" xml:space="preserve">
+    <value>Фільтр</value>
+  </data>
+</root>

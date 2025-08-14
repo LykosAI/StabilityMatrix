@@ -85,8 +85,7 @@ public interface IPrerequisiteHelper
         string rootDir,
         string repositoryUrl,
         GitVersion? version = null,
-        Action<ProcessOutput>? onProcessOutput = null,
-        string? destinationDir = null
+        Action<ProcessOutput>? onProcessOutput = null
     )
     {
         // Decide shallow clone only when not pinning to arbitrary commit post-clone
@@ -107,36 +106,21 @@ public interface IPrerequisiteHelper
             cloneArgs = cloneArgs.AddArgs("--branch", version.Branch!);
         }
 
-        cloneArgs = cloneArgs.AddArg(repositoryUrl);
-        if (!string.IsNullOrWhiteSpace(destinationDir))
-        {
-            cloneArgs = cloneArgs.AddArg(destinationDir);
-        }
+        cloneArgs = cloneArgs.AddArgs(repositoryUrl, rootDir);
 
         await RunGit(cloneArgs.ToProcessArgs(), onProcessOutput, rootDir).ConfigureAwait(false);
 
         // If pinning to a specific commit, we need a destination directory to continue
         if (!string.IsNullOrWhiteSpace(version?.CommitSha))
         {
-            if (string.IsNullOrWhiteSpace(destinationDir))
-            {
-                throw new InvalidOperationException(
-                    "Destination directory required when checking out a specific commit."
-                );
-            }
-
-            await RunGit(
-                    ["fetch", "--depth", "1", "origin", version.CommitSha!],
-                    onProcessOutput,
-                    destinationDir
-                )
+            await RunGit(["fetch", "--depth", "1", "origin", version.CommitSha!], onProcessOutput, rootDir)
                 .ConfigureAwait(false);
-            await RunGit(["checkout", "--force", version.CommitSha!], onProcessOutput, destinationDir)
+            await RunGit(["checkout", "--force", version.CommitSha!], onProcessOutput, rootDir)
                 .ConfigureAwait(false);
             await RunGit(
                     ["submodule", "update", "--init", "--recursive", "--depth", "1"],
                     onProcessOutput,
-                    destinationDir
+                    rootDir
                 )
                 .ConfigureAwait(false);
         }

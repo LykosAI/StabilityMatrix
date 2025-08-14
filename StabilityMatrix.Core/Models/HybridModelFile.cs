@@ -165,8 +165,6 @@ public record HybridModelFile : ISearchText, IDownloadableResource
         }
     }
 
-    private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
-
     /// <summary>
     /// Actual general purpose equality comparer.
     /// Use this for general equality checks :)
@@ -187,19 +185,10 @@ public record HybridModelFile : ISearchText, IDownloadableResource
             if (!Equals(x.RelativePath.NormalizePathSeparators(), y.RelativePath.NormalizePathSeparators()))
                 return false;
 
-            var result =
-                Equals(x.Type, y.Type)
+            return Equals(x.Type, y.Type)
                 && x.RemoteName == y.RemoteName
                 && x.Local?.ConfigFullPath == y.Local?.ConfigFullPath
                 && x.Local?.ConnectedModelInfo == y.Local?.ConnectedModelInfo;
-
-            if (!result)
-            {
-                Logger.Warn("HybridModelFile equality check failed:");
-                Logger.Warn($"  Path: {x.RelativePath} vs {y.RelativePath}");
-            }
-
-            return result;
         }
 
         public int GetHashCode(HybridModelFile obj)

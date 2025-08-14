@@ -26,7 +26,7 @@ public class CommandGitVersionProvider(string repositoryUri, IPrerequisiteHelper
             "ls-remote",
             "--tags",
             "--sort=-v:refname",
-            repositoryUri
+            repositoryUri,
         ];
 
         var result = await prerequisiteHelper
@@ -36,10 +36,16 @@ public class CommandGitVersionProvider(string repositoryUri, IPrerequisiteHelper
 
         if (result is { IsSuccessExitCode: true, StandardOutput: not null })
         {
-            var tagLines = result.StandardOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            var tagNames = tagLines
+            var tagNames = result
+                .StandardOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries)
                 .Select(line => line.Split('\t').LastOrDefault()?.Replace("refs/tags/", "").Trim())
-                .Where(line => !string.IsNullOrWhiteSpace(line))
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .Select(s =>
+                {
+                    const string peel = "^{}";
+                    return s!.EndsWith(peel, StringComparison.Ordinal) ? s[..^peel.Length] : s;
+                })
+                .Distinct()
                 .Take(limit > 0 ? limit : int.MaxValue);
 
             tags.AddRange(tagNames.Select(tag => new GitVersion { Tag = tag }));

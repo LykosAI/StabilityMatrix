@@ -2,7 +2,7 @@
 
 namespace StabilityMatrix.Core.Models.Api;
 
-public class CivitFileHashes
+public record CivitFileHashes
 {
     public string? SHA256 { get; set; }
 

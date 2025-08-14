@@ -814,11 +814,7 @@ public class ComfyUI(
         if (installedPackage?.FullPath is null)
             return;
 
-        var installNunchaku = new InstallNunchakuStep(
-            DownloadService,
-            PrerequisiteHelper,
-            PyInstallationManager
-        )
+        var installNunchaku = new InstallNunchakuStep(PyInstallationManager)
         {
             InstalledPackage = installedPackage,
             WorkingDirectory = new DirectoryPath(installedPackage.FullPath),

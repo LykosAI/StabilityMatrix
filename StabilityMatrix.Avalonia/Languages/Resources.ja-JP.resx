@@ -119,7 +119,6 @@
   </resheader>
   <data name="Action_Launch" xml:space="preserve">
     <value>Launch</value>
-    <comment>In Japanese, the literal translation of &quot;launch&quot; can be misinterpreted as &quot;turning on the PC&quot;. After much deliberation, I decided that it would be easier to understand if &quot;launch&quot; were not translated.</comment>
   </data>
   <data name="Action_Quit" xml:space="preserve">
     <value>終了</value>
@@ -146,8 +145,7 @@
     <value>再起動が必要です</value>
   </data>
   <data name="Label_UnknownPackage" xml:space="preserve">
-    <value>不明なパッケージ
-</value>
+    <value>不明なパッケージ</value>
   </data>
   <data name="Action_Import" xml:space="preserve">
     <value>インポート</value>
@@ -165,22 +163,19 @@
     <value>Releases</value>
   </data>
   <data name="Label_Branches" xml:space="preserve">
-    <value>ブランチ
-</value>
+    <value>ブランチ</value>
   </data>
   <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
-    <value>インポートしたいcheckpointをここにドラッグ＆ドロップ</value>
-    <comment>checkpoint / embedding / LoRA are often used in the same way as the above words on Japanese information websites, so it is easier to understand them without translation.</comment>
+    <value>インポートするCheckpointをここにドラッグ＆ドロップ</value>
   </data>
   <data name="Label_Emphasis" xml:space="preserve">
     <value>プロンプトの強調</value>
-    <comment>The word has not been translated because it is not possible to guess what part of the UI it is used in. It is a little difficult to translate the word into Japanese, so I want to be careful not to change the meaning of the word.</comment>
   </data>
   <data name="Label_Deemphasis" xml:space="preserve">
-    <value>プロンプトの縮小</value>
+    <value>プロンプトを弱める</value>
   </data>
   <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
-    <value>Emebeddings / Textual Inversion</value>
+    <value>Embeddings / Textual Inversion</value>
   </data>
   <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
     <value>Networks (Lora / LyCORIS)</value>
@@ -219,7 +214,7 @@
     <value>VAE</value>
   </data>
   <data name="Label_Model" xml:space="preserve">
-    <value>Model</value>
+    <value>モデル</value>
   </data>
   <data name="Action_Connect" xml:space="preserve">
     <value>接続</value>
@@ -238,7 +233,6 @@
   </data>
   <data name="Label_BecomeAPatron" xml:space="preserve">
     <value>Patreonになる</value>
-    <comment>fix platform name</comment>
   </data>
   <data name="Label_JoinDiscord" xml:space="preserve">
     <value>Discordに参加</value>
@@ -250,19 +244,19 @@
     <value>インストール</value>
   </data>
   <data name="Label_SkipSetup" xml:space="preserve">
-    <value>セットアップをスキップする</value>
+    <value>セットアップをスキップ</value>
   </data>
   <data name="Label_UnexpectedErrorOccurred" xml:space="preserve">
     <value>予期せぬエラーが発生しました</value>
   </data>
   <data name="Action_ExitApplication" xml:space="preserve">
-    <value>アプリケーションを終了する</value>
+    <value>アプリケーションを終了</value>
   </data>
   <data name="Label_DisplayName" xml:space="preserve">
     <value>表示名</value>
   </data>
   <data name="Label_InstallationWithThisNameExists" xml:space="preserve">
-    <value>同じ名前のものが既に存在します。</value>
+    <value>同じ名前が既に存在します。</value>
   </data>
   <data name="Label_PleaseChooseDifferentName" xml:space="preserve">
     <value>別の名前を選択するか、別のインストール場所を選択してください。</value>
@@ -284,10 +278,9 @@
   </data>
   <data name="Label_DataDirectory" xml:space="preserve">
     <value>データフォルダ</value>
-    <comment>I think there are many windows users, so I changed the word &quot;directory&quot; to &quot;folder&quot;.</comment>
   </data>
   <data name="Label_DataDirectoryExplanation" xml:space="preserve">
-    <value>ここにcheckpoint、LORA、Web UI、設定などがインストールされます。</value>
+    <value>ここにCheckpoint、LORA、Web UI、設定などがインストールされます。</value>
   </data>
   <data name="Label_FatWarning" xml:space="preserve">
     <value>フォーマット形式がFAT32またはexFATのドライブを使用するとエラーが発生する場合があります。他のドライブを選択することで、よりスムーズにご利用いただけます。</value>
@@ -296,7 +289,7 @@
     <value>Portableモード</value>
   </data>
   <data name="Label_PortableModeExplanation" xml:space="preserve">
-    <value>Portableモードでは、すべてのデータと設定はアプリケーションと同じフォルダに保存されます。アプリケーションと、その「Data」フォルダを一緒に移動させることで、別のフォルダや別のコンピュータに移すことができます。</value>
+    <value>Portableモードではすべてのデータと設定はアプリケーションと同じフォルダに保存されます。アプリケーションと「Data」フォルダを一緒に移動させることで、別のフォルダや別のコンピュータに移すことができます。</value>
   </data>
   <data name="Action_Continue" xml:space="preserve">
     <value>続ける</value>
@@ -308,10 +301,10 @@
     <value>次の画像</value>
   </data>
   <data name="Label_ModelDescription" xml:space="preserve">
-    <value>Modelの説明</value>
+    <value>モデルの説明</value>
   </data>
   <data name="Label_NewVersionAvailable" xml:space="preserve">
-    <value>Stability Matrixを最新版に更新中！</value>
+    <value>Stability Matrixの最新版がリリース！</value>
   </data>
   <data name="Label_ImportLatest" xml:space="preserve">
     <value>最新版DL</value>
@@ -341,7 +334,7 @@
     <value>NSFWコンテンツを表示</value>
   </data>
   <data name="Label_DataProvidedByCivitAi" xml:space="preserve">
-    <value>Data provided by CivitAI</value>
+    <value>CivitAIによる情報</value>
   </data>
   <data name="Label_Page" xml:space="preserve">
     <value>ページ</value>
@@ -369,7 +362,6 @@
   </data>
   <data name="Label_ConnectedModel" xml:space="preserve">
     <value>メタデータ取得済みモデル</value>
-    <comment>i rewrited &quot;model got metadata&quot;. The reason for this is that when translated into Japanese, it was difficult to understand what the connection was to if only &quot;connected&quot; was used.</comment>
   </data>
   <data name="Label_LocalModel" xml:space="preserve">
     <value>ローカルモデル</value>
@@ -388,7 +380,6 @@
   </data>
   <data name="Label_ImportAsConnected" xml:space="preserve">
     <value>インポート時にメタデータを自動検索</value>
-    <comment>&quot;metadata retrieval on import&quot;, This is also because it was difficult to understand what &quot;online&quot; means in Japanese.</comment>
   </data>
   <data name="Label_ImportAsConnectedExplanation" xml:space="preserve">
     <value>ローカルからのインポート時にオンラインでメタデータを検索して適用します</value>
@@ -424,24 +415,22 @@
     <value>テーマ</value>
   </data>
   <data name="Label_CheckpointManager" xml:space="preserve">
-    <value>Checkpoint Manager</value>
+    <value>Checkpointマネージャー</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown" xml:space="preserve">
-    <value>checkpointフォルダ内のシンボリックリンクをシャットダウンか再起動時に削除</value>
-    <comment>I had mistranslated and rewrite now. I thought it was &quot;when the software exits,&quot; but then I realized, given the .net source, that this was to be executed at OS shutdown.</comment>
+    <value>Checkpointフォルダ内のシンボリックリンクをシャットダウンか再起動時に削除</value>
   </data>
   <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
     <value>Stability Matrix を別のドライブに移動する際に問題が起きた場合、ここにチェック</value>
-    <comment>It may be better to use a variable like {0} for the app name</comment>
   </data>
   <data name="Label_ResetCheckpointsCache" xml:space="preserve">
     <value>Checkpointキャッシュのリセット</value>
   </data>
   <data name="Label_ResetCheckpointsCache_Details" xml:space="preserve">
-    <value>checkpointsキャッシュを再構築します。Model Browserでcheckpointsのラベルが正しくない場合に使用してください</value>
+    <value>Checkpointsキャッシュを再構築します。モデルブラウザでCheckpointsのラベルが正しくない場合に使用してください</value>
   </data>
   <data name="Label_PackageEnvironment" xml:space="preserve">
-    <value>パッケージの環境</value>
+    <value>パッケージ環境</value>
   </data>
   <data name="Action_Edit" xml:space="preserve">
     <value>編集</value>
@@ -459,7 +448,7 @@
     <value>統合</value>
   </data>
   <data name="Label_DiscordRichPresence" xml:space="preserve">
-    <value>Stability Matrix利用中、Discordステータス欄に表示</value>
+    <value>Stability Matrix利用中にDiscordステータス欄に表示</value>
   </data>
   <data name="Label_System" xml:space="preserve">
     <value>システム</value>
@@ -578,10 +567,10 @@
     <value>パッケージを追加して始めよう！</value>
   </data>
   <data name="Label_EnvVarsTable_Name" xml:space="preserve">
-    <value>名称</value>
+    <value>変数名</value>
   </data>
   <data name="Label_EnvVarsTable_Value" xml:space="preserve">
-    <value>Value</value>
+    <value>値</value>
   </data>
   <data name="Action_Remove" xml:space="preserve">
     <value>削除</value>
@@ -623,7 +612,7 @@
     <value>パッケージのアンインストール</value>
   </data>
   <data name="Text_SomeFilesCouldNotBeDeleted" xml:space="preserve">
-    <value>一部のファイルを削除できませんでした。該当のディレクトリ内にあるファイルで開いていたものを全て閉じて、もう一度試してください。</value>
+    <value>一部のファイルを削除できませんでした。該当のフォルダの開いているファイルを全て閉じて、もう一度試してください。</value>
   </data>
   <data name="Label_InvalidPackageType" xml:space="preserve">
     <value>無効なパッケージタイプ</value>
@@ -651,7 +640,6 @@
   </data>
   <data name="Label_Branch" xml:space="preserve">
     <value>Branch</value>
-    <comment>For Japanese engineers who use git on a daily basis, it is easier to understand terms used in git as they are in English.</comment>
   </data>
   <data name="Label_AutoScrollToEnd" xml:space="preserve">
     <value>コンソール画面の最後まで自動スクロールする</value>
@@ -678,7 +666,7 @@
     <value>また後で</value>
   </data>
   <data name="Action_InstallNow" xml:space="preserve">
-    <value>Install Now</value>
+    <value>インストールする</value>
   </data>
   <data name="Label_ReleaseNotes" xml:space="preserve">
     <value>リリースノート</value>
@@ -750,7 +738,7 @@
     <value>よろしいですか？</value>
   </data>
   <data name="Label_ConsolidateExplanation" xml:space="preserve">
-    <value>これにより、選択したパッケージから生成されたすべてのイメージが、共有出力フォルダの Consolidated ディレクトリに移動します。この操作は元に戻せません。</value>
+    <value>これにより、選択したパッケージから生成されたすべてのイメージが、共有出力フォルダの Consolidated フォルダに移動します。この操作は元に戻せません。</value>
   </data>
   <data name="Action_Refresh" xml:space="preserve">
     <value>更新</value>
@@ -889,7 +877,7 @@
     <value>Hugging Face</value>
   </data>
   <data name="Label_Addons" xml:space="preserve">
-    <value>Addons</value>
+    <value>アドオン</value>
     <comment>Inference Sampler Addons</comment>
   </data>
   <data name="Label_SaveIntermediateImage" xml:space="preserve">
@@ -925,7 +913,6 @@
   </data>
   <data name="Label_Fps" xml:space="preserve">
     <value>フレームレート(FPS)</value>
-    <comment>for jp, &quot;frame rate&quot; is easier to understand, and its better to append FPS. no one can mistake it for a genre of games except nerds</comment>
   </data>
   <data name="Label_MinCfg" xml:space="preserve">
     <value>Min CFG</value>
@@ -940,7 +927,7 @@
     <value>Motion Bucket ID</value>
   </data>
   <data name="Label_AugmentationLevel" xml:space="preserve">
-    <value>Augmentation Level</value>
+    <value>拡張レベル</value>
   </data>
   <data name="Label_VideoOutputMethod" xml:space="preserve">
     <value>Method</value>
@@ -1027,13 +1014,13 @@
     <value>いい感じ！</value>
   </data>
   <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
-    <value>快適な利用にはCUDA対応GPUを推奨します。それ以外だと一部のパッケージが動作しなかったり、動くけど遅い場合があります。</value>
+    <value>快適な利用にはCUDA対応GPUを推奨します。非対応の場合一部のパッケージが動作しない場合や、動作が遅くなる場合があります。</value>
   </data>
   <data name="Label_Checkpoints" xml:space="preserve">
     <value>Checkpoints</value>
   </data>
   <data name="Label_ModelBrowser" xml:space="preserve">
-    <value>Model Brouser</value>
+    <value>モデルブラウザ</value>
   </data>
   <data name="Label_Workflows" xml:space="preserve">
     <value>ワークフロー</value>
@@ -1063,10 +1050,10 @@
     <value>&apos;Web UIを開く&apos;ボタンがコマンドバーに移動しました</value>
   </data>
   <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
-    <value>Stability Matrixは既に立ち上がってます。それを終了させてから、もう一度起動してください。</value>
+    <value>Stability Matrixは既に起動中です。終了してから、もう一度起動してください。</value>
   </data>
   <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
-    <value>Stability Matrixは既に立ち上がってます</value>
+    <value>Stability Matrixは既に起動中です</value>
   </data>
   <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
     <value>{0} 個削除しました</value>
@@ -1117,10 +1104,10 @@
     <value>{0}個のモデルを削除しますか？</value>
   </data>
   <data name="Label_AutoSearchOnLoad" xml:space="preserve">
-    <value>Auto-Search on Load</value>
+    <value>ロード時に自動的に検索</value>
   </data>
   <data name="Label_AutoSearchOnLoad_Description" xml:space="preserve">
-    <value>model browserページが読み込まれたら、自動的に検索を開始する</value>
+    <value>モデルブラウザが読み込まれたら、自動的に検索を開始する</value>
   </data>
   <data name="Action_ToggleVisibility" xml:space="preserve">
     <value>表示の切り替え</value>
@@ -1149,6 +1136,9 @@
   <data name="Warning_PleaseExtractFirst" xml:space="preserve">
     <value>Stability Matrixを実行する前に、ZIPファイルからアプリを抽出してください</value>
   </data>
+  <data name="Label_HistorySize" xml:space="preserve">
+    <value>履歴数</value>
+  </data>
   <data name="Label_HistorySize_Description" xml:space="preserve">
     <value>コンソールに表示されている行より上にスクロールして戻ることができる行数</value>
   </data>
@@ -1158,8 +1148,47 @@
   <data name="Label_EditModelMetadata" xml:space="preserve">
     <value>モデルメタデータの編集</value>
   </data>
+  <data name="Label_NSFW" xml:space="preserve">
+    <value>NSFW</value>
+  </data>
+  <data name="Label_Tags" xml:space="preserve">
+    <value>タグ</value>
+  </data>
   <data name="Label_VersionName" xml:space="preserve">
     <value>バージョン名</value>
+  </data>
+  <data name="Label_TrainedWords" xml:space="preserve">
+    <value>言葉を学習する</value>
+  </data>
+  <data name="Label_PreviewImage" xml:space="preserve">
+    <value>前の画像</value>
+  </data>
+  <data name="Label_BatchSize" xml:space="preserve">
+    <value>Batch Size</value>
+  </data>
+  <data name="Label_Batches" xml:space="preserve">
+    <value>Batches</value>
+  </data>
+  <data name="Label_Sampler" xml:space="preserve">
+    <value>サンプラー</value>
+  </data>
+  <data name="Label_Scheduler" xml:space="preserve">
+    <value>スケジューラー</value>
+  </data>
+  <data name="Label_MaxSize" xml:space="preserve">
+    <value>最大数</value>
+  </data>
+  <data name="Label_UseSeparatePrompt" xml:space="preserve">
+    <value>分割プロンプトを使う</value>
+  </data>
+  <data name="Label_Seed" xml:space="preserve">
+    <value>シード</value>
+  </data>
+  <data name="Label_NegativePrompt" xml:space="preserve">
+    <value>Negative Prompt</value>
+  </data>
+  <data name="Label_NewFolder" xml:space="preserve">
+    <value>新しいフォルダ</value>
   </data>
   <data name="Label_CopyLinkToClipboard" xml:space="preserve">
     <value>リンクをクリップボードにコピー</value>
@@ -1167,6 +1196,9 @@
   <data name="TextTemplate_OAuthLoginTitle" xml:space="preserve">
     <value>{0} でサインイン</value>
     <comment>e.g. &apos;Sign in with Google&apos;</comment>
+  </data>
+  <data name="Text_AllowBrowserOpenAppLink" xml:space="preserve">
+    <value>ブラウザ上でこのアプリを開くように指示されますので、その通りにしてください。</value>
   </data>
   <data name="Text_OAuthLoginDescription" xml:space="preserve">
     <value>ブラウザのリンクを開き、指示に従ってアカウントを接続してください</value>
@@ -1189,6 +1221,9 @@
   &quot;timestamp&quot;: &quot;2024-09-04T02:14:04.1967404+00:00&quot;
 }</value>
   </data>
+  <data name="Label_Analytics" xml:space="preserve">
+    <value>アナリティクス</value>
+  </data>
   <data name="TextTemplate_YouCanChangeThisBehavior" xml:space="preserve">
     <value>この動作はいつでも {0} の手順で変更できます。</value>
     <comment>e.g. &apos;You can always change this behavior in Settings &gt; Category &gt; Item.&apos;</comment>
@@ -1207,6 +1242,9 @@
   </data>
   <data name="Label_PrivacyPolicy" xml:space="preserve">
     <value>プライバシーポリシー</value>
+  </data>
+  <data name="Label_ImageHidden" xml:space="preserve">
+    <value>画像を隠す</value>
   </data>
   <data name="Label_NoImageFound" xml:space="preserve">
     <value>画像が見つかりません</value>
@@ -1237,85 +1275,161 @@
   <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
     <value>このパッケージではこのリリースを利用できません。</value>
   </data>
+  <data name="Text_UnexpectedError_Description" xml:space="preserve">
+    <value>この問題の詳細を、圧縮したログファイルとともにお教えください。</value>
+  </data>
+  <data name="Text_UnexpectedErrorRecoverable_Description" xml:space="preserve">
+    <value>この後も続けて使えますが、再起動後にすべての機能を使えるようになります。この問題の詳細を、圧縮したログファイルとともにお教えください。</value>
+  </data>
+  <data name="Action_ShowLogInExplorer" xml:space="preserve">
+    <value>エクスプローラでログを開く</value>
+  </data>
+  <data name="Action_ShowLogInFinder" xml:space="preserve">
+    <value>Finderでログを開く</value>
+  </data>
+  <data name="Label_ExtensionPacks" xml:space="preserve">
+    <value>Extension Packs</value>
+  </data>
+  <data name="Label_NoExtensionPacksFound" xml:space="preserve">
+    <value>Extension Packsが見つかりません</value>
+  </data>
+  <data name="Label_OpenExtensionPacksFolder" xml:space="preserve">
+    <value>Extension Packフォルダを開く</value>
+  </data>
+  <data name="Label_InstallExtensionPack" xml:space="preserve">
+    <value>Extension Packをインストール</value>
+  </data>
+  <data name="Label_AddToExistingPack" xml:space="preserve">
+    <value>Extension Packを追加</value>
+  </data>
+  <data name="Label_NewExtensionPack" xml:space="preserve">
+    <value>新しいExtension Pack</value>
+  </data>
+  <data name="Label_CreateExtensionPackExplanation" xml:space="preserve">
+    <value>拡張機能を作成するには、&quot;利用可能な拡張機能&quot;または&quot;インストール済みの拡張機能&quot;タブから欲しい拡張機能を選んで保存をクリック</value>
+  </data>
+  <data name="Label_ImportExtensionPacksExplanation" xml:space="preserve">
+    <value>Dataディレクトリ内のExtensionPacksフォルダに.json拡張パックファイルを追加してください。</value>
+  </data>
+  <data name="Label_OrWithHyphensAround" xml:space="preserve">
+    <value>- または -</value>
+  </data>
+  <data name="Action_OpenOnOpenModelDb" xml:space="preserve">
+    <value>OpenModelDBを開く</value>
+  </data>
+  <data name="Label_Wildcards" xml:space="preserve">
+    <value>Wildcards</value>
+  </data>
+  <data name="Text_OAuthDeviceAuthDescription" xml:space="preserve">
+    <value>Stability Matrixのアカウント認証のため、ブラウザでリンクを開いて以下のコードを入力してください。</value>
+  </data>
+  <data name="Action_CopyAndOpen" xml:space="preserve">
+    <value>Copy and Open</value>
+  </data>
+  <data name="Text_LykosAccountUpgradeNotice" xml:space="preserve">
+    <value>## 【重要】 Lykosアカウントのログアウトとセキュリティ強化のお知らせ
+
+Stability MatrixとLykosアカウントの連携を、より安全で便利なシステム（OAuth 2.0 with OpenID Connect）へと変更しました。これに伴い、Lykosアカウントからログアウトされています。
+
+### アップグレードの理由は？
+
+あなたのセキュリティとプライバシーを最重視するため、今回のアップグレードで以下の改善を行いました：
+
+* **よりスムーズなログイン環境:** [account.lykos.ai](https://account.lykos.ai) に一度ログインするだけで、Stability Matrixや他のLykos AIサービスに簡単にアクセスできます。
+* **より柔軟なログイン方法:** 既存の[lykos.ai](https://lykos.ai)アカウント、または**Apple**、**GitHub**、**Google**でのサインインが可能になりました。
+* **プライバシー保護の強化:** Stability Matrixは必要な権限のみ要求します。
+* **業界標準のセキュリティ:** 安全なログインの金標準であるOAuth 2.0を採用しています。
+* **将来を見据えた準備:** これにより今後も他のアプリやサービスと安全に連携できます。
+
+### 何をすればいいの？
+
+改めて&quot;Settings&quot;から、&quot;Lykos account&quot;の横にある&quot;Connect&quot;をクリックしてください。
+
+### 今後、&quot;Lykos account&quot; の登録が必須ということ？
+
+必須ではないです！ Stability Matrixは&quot;Lykos account&quot;がなくてもお使い頂けます。&quot;Lykos account&quot;に登録連携することで追加機能を利用できます。現在はPatreonサポーター向けの開発ビルドの自動アップデートなどです。（今後も追加予定！）
+
+</value>
+  </data>
   <data name="Action_GoToSettings" xml:space="preserve">
-    <value>設定に移動</value>
+    <value>設定に行く</value>
+  </data>
+  <data name="TeachingTip_PromptAmplifier" xml:space="preserve">
+    <value>Prompt Amplifierを試そう！ あなたのプロンプトを簡単にクオリティアップ！</value>
   </data>
   <data name="Action_Enable" xml:space="preserve">
-    <value>有効</value>
+    <value>Enable</value>
   </data>
   <data name="Action_Disable" xml:space="preserve">
-    <value>無効</value>
+    <value>Disable</value>
   </data>
   <data name="Text_Login_ConnectTitle" xml:space="preserve">
-    <value>Lykosアカウントを接続</value>
+    <value>Lykos accountに接続</value>
   </data>
   <data name="Text_Login_ConnectDescription" xml:space="preserve">
-    <value>接続機能を使用するには、Lykosアカウントでサインインしてください。</value>
+    <value>この機能を使うには、Lykos accountにサインインしてください。</value>
   </data>
   <data name="Text_Login_ExpiredTitle" xml:space="preserve">
     <value>もう一度サインインしてください</value>
   </data>
   <data name="Text_Login_ExpiredDescription" xml:space="preserve">
-    <value>ログインの有効期限が切れました。続けるには、もう一度サインインしてください。</value>
+    <value>ログイン期限が切れました。もう一度サインインしてください。</value>
   </data>
   <data name="Sponsorship_Title" xml:space="preserve">
-    <value>Stability Matrixへのご支援</value>
+    <value>Stability Matrixをサポートする</value>
   </data>
   <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
-    <value>いつもStability Matrixをご支援いただき、誠にありがとうございます。</value>
+    <value>Stability Matrixをサポートしてくれてありがとう！</value>
   </data>
   <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
-    <value>**{0}** のような機能は、サポーターの皆様への特典としてご提供しています。皆様のご支援のおかげで、サーバー費用を賄い、Stability Matrixの開発を継続できております。</value>
+    <value>**{0}**のような機能は、サポーターの皆様が利用できる特典です。Stability Matrixの開発とサーバー費用は、皆様のご支援により支えられております。</value>
   </data>
   <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
-    <value>**{0}** のような機能は、**{1}** サポーターレベル（またはそれ以上）からご利用いただけます。皆様のご支援のおかげで、高度な接続機能のサーバー費用を賄い、Stability Matrixの改善を続けることが可能となっております。</value>
+    <value>**{0}**のような機能は、サポーターレベル**{1}**以上の方が利用できる特典です。皆様のご厚情により、サーバー費用と、より高度な接続機能を維持しながら、Stability Matrixの改良を続けられております。</value>
   </data>
   <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
-    <value>すでにPatreonでご支援いただいている場合は、引き続き機能をご利用いただくためにアカウント連携をお願いいたします。</value>
+    <value>もしも既にPatreonで私たちをサポートしている場合は、アカウントをリンクしてください。</value>
   </data>
   <data name="Label_AccountSettings" xml:space="preserve">
     <value>アカウント設定</value>
   </data>
   <data name="Action_ViewSupportOptions" xml:space="preserve">
-    <value>支援オプションを表示</value>
+    <value>サポートオプションを見る</value>
   </data>
   <data name="Action_MaybeLater" xml:space="preserve">
-    <value>後で確認する</value>
+    <value>Maybe Later</value>
   </data>
   <data name="Label_Status" xml:space="preserve">
-    <value>状態</value>
+    <value>Status</value>
   </data>
   <data name="ModelDiscovery_Active" xml:space="preserve">
-    <value>有効</value>
+    <value>Active</value>
   </data>
   <data name="ModelDiscovery_Inactive" xml:space="preserve">
-    <value>無効（標準接続を使用中）</value>
+    <value>Inactive (標準接続を使用)</value>
   </data>
   <data name="ModelDiscovery_Description" xml:space="preserve">
-    <value>Civitaiなどのオンラインリポジトリからモデルを閲覧する際に、より高速な検索結果を体験できます。</value>
+    <value>CivitAIなどのオンラインリポジトリからモデルを検索する際、より高速に取得できます。</value>
   </data>
   <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
-    <value>第三者リポジトリ向けの実験的な最適化です。公式に提携しているものではありません。利用可能性は変動する場合があります。</value>
+    <value>実験的なサードパーティリポジトリ用の最適化です。公式な提携はなく、利用可否は変動する可能性があります。</value>
   </data>
   <data name="Label_Beta" xml:space="preserve">
-    <value>ベータ版</value>
+    <value>Beta</value>
   </data>
   <data name="ModelDiscovery_Title" xml:space="preserve">
-    <value>加速モデル探索</value>
+    <value>モデル検索の高速化</value>
   </data>
   <data name="PromptAmplifier_Disclaimer" xml:space="preserve">
-    <value>### ✨ 新機能：Prompt Amplifier 登場
+    <value>### 【🪄紹介】 Prompt Amplifier  
+私達が開発している実験中のプロンプト専用AIモデル&quot;Spark&quot;が、あなたのプロンプトを増強します。
 
-実験的なSparkモデルを搭載した Lykos AI のアシスタントが、お客様のプロンプトを創造的に拡張したものを生成します。
+Prompt Amplifierはあなたのローカル環境を**使わず**、セキュアなエンタープライズグレードのクラウドサーバで稼働しています。
 
-Prompt Amplifier は、安全なエンタープライズ級クラウド環境で実行されます — お客様のマシン上でローカルに実行されることは**ありません**。
+### ☁️ クラウドを使う理由は？
+Sparkは兆レベルのパラメータを持つ基盤モデルで、膨大なパワーが必要です。ローカル環境で動作可能な機能の最大化に努めていますが、&quot;今のところ&quot;Sparkの高度な機能はクラウドを通じて利用可能です。
 
-### ☁️ クラウドを選ぶ理由
-
-Spark モデルは、数兆パラメータの基盤モデルに匹敵する規模で動作し、相当な計算能力を必要とします。私たちはローカルで実行可能な機能を最大限に活用することに尽力していますが、Spark の高度な機能は**今すぐ**当社のクラウドインフラストラクチャを通じて利用可能です。
-
-### 🔒 プライバシー第一
-
-私たちはプライバシーを最優先します（[Gen AI 利用規約](https://lykos.ai/gen-ai-terms)）。お客様のプロンプトや出力は、Lykos AI または必要なクラウドインフラストラクチャパートナーによって、AI トレーニングに**決して**使用されることはありません。安全な処理は、お客様の拡張生成のためだけに行われます。**その後、プロンプトの内容自体ではなく、メタデータ（タイムスタンプやトークン数など）のみを保持します**。お客様のデータが販売されたり共有されたりすることは決してありません。</value>
+### 🔒 プライバシーファースト
+私たちはプライバシーを最優先に考えています。([生成AI利用規約](https://lykos.ai/gen-ai-terms)) **あなたのプロンプトや出力内容は、Lykos AIや必要なクラウドインフラパートナーによるAI学習には一切使用されません。** 処理はお客様の質問に対する返答を生成するためだけに安全を重視して使われ、**その後はプロンプト内容そのものではなく、メタデータ(タイムスタンプやトークン数など)のみを保存します。** あなたのデータが販売や共有されることは決してありません。</value>
   </data>
 </root>

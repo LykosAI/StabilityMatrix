@@ -447,6 +447,22 @@ public partial class ModelIndexService : IModelIndexService
                             ConnectedModelInfoSerializerContext.Default.ConnectedModelInfo
                         );
 
+                        // Seems there is a limitation of LiteDB datetime resolution, so drop nanoseconds on load
+                        // Otherwise new loaded models with ns will cause mismatching equality with models loaded from db with no ns
+                        if (connectedModelInfo?.ImportedAt is { } importedAt && importedAt.Nanosecond != 0)
+                        {
+                            connectedModelInfo.ImportedAt = new DateTimeOffset(
+                                importedAt.Year,
+                                importedAt.Month,
+                                importedAt.Day,
+                                importedAt.Hour,
+                                importedAt.Minute,
+                                importedAt.Second,
+                                importedAt.Millisecond,
+                                importedAt.Offset
+                            );
+                        }
+
                         localModel.ConnectedModelInfo = connectedModelInfo;
                     }
                     catch (Exception e)

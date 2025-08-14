@@ -5,7 +5,7 @@ using StabilityMatrix.Core.Models.Api.OpenModelsDb;
 
 namespace StabilityMatrix.Core.Models;
 
-public class ConnectedModelInfo
+public class ConnectedModelInfo : IEquatable<ConnectedModelInfo>
 {
     [JsonIgnore]
     public const string FileExtension = ".cm-info.json";
@@ -127,6 +127,104 @@ public class ConnectedModelInfo
 
     [JsonIgnore]
     public string TrainedWordsString => TrainedWords != null ? string.Join(", ", TrainedWords) : string.Empty;
+
+    public bool Equals(ConnectedModelInfo? other)
+    {
+        if (other is null)
+            return false;
+        if (ReferenceEquals(this, other))
+            return true;
+        return Comparer.Equals(this, other);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null)
+            return false;
+        if (ReferenceEquals(this, obj))
+            return true;
+        if (obj.GetType() != GetType())
+            return false;
+        return Equals((ConnectedModelInfo)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return Comparer.GetHashCode(this);
+    }
+
+    public static bool operator ==(ConnectedModelInfo? left, ConnectedModelInfo? right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(ConnectedModelInfo? left, ConnectedModelInfo? right)
+    {
+        return !Equals(left, right);
+    }
+
+    private sealed class ConnectedModelInfoEqualityComparer : IEqualityComparer<ConnectedModelInfo>
+    {
+        public bool Equals(ConnectedModelInfo? x, ConnectedModelInfo? y)
+        {
+            if (ReferenceEquals(x, y))
+                return true;
+            if (x is null)
+                return false;
+            if (y is null)
+                return false;
+            if (x.GetType() != y.GetType())
+                return false;
+
+            return x.ModelId == y.ModelId
+                && x.ModelName == y.ModelName
+                && x.ModelDescription == y.ModelDescription
+                && x.Nsfw == y.Nsfw
+                && x.Tags?.SequenceEqual(y.Tags ?? []) is null or true
+                && x.ModelType == y.ModelType
+                && x.VersionId == y.VersionId
+                && x.VersionName == y.VersionName
+                && x.VersionDescription == y.VersionDescription
+                && x.BaseModel == y.BaseModel
+                && x.FileMetadata == y.FileMetadata
+                && x.ImportedAt.Equals(y.ImportedAt)
+                && x.Hashes == y.Hashes
+                && x.TrainedWords?.SequenceEqual(y.TrainedWords ?? []) is null or true
+                && x.Stats == y.Stats
+                && x.UserTitle == y.UserTitle
+                && x.ThumbnailImageUrl == y.ThumbnailImageUrl
+                && x.InferenceDefaults == y.InferenceDefaults
+                && x.Source == y.Source;
+        }
+
+        public int GetHashCode(ConnectedModelInfo obj)
+        {
+            var hashCode = new HashCode();
+            hashCode.Add(obj.ModelId);
+            hashCode.Add(obj.ModelName);
+            hashCode.Add(obj.ModelDescription);
+            hashCode.Add(obj.Nsfw);
+            hashCode.Add(obj.Tags);
+            hashCode.Add((int)obj.ModelType);
+            hashCode.Add(obj.VersionId);
+            hashCode.Add(obj.VersionName);
+            hashCode.Add(obj.VersionDescription);
+            hashCode.Add(obj.BaseModel);
+            hashCode.Add(obj.FileMetadata);
+            hashCode.Add(obj.ImportedAt);
+            hashCode.Add(obj.Hashes);
+            hashCode.Add(obj.TrainedWords);
+            hashCode.Add(obj.Stats);
+            hashCode.Add(obj.UserTitle);
+            hashCode.Add(obj.ThumbnailImageUrl);
+            hashCode.Add(obj.InferenceDefaults);
+            hashCode.Add(obj.Source);
+            return hashCode.ToHashCode();
+        }
+    }
+
+    public static IEqualityComparer<ConnectedModelInfo> Comparer { get; } =
+        new ConnectedModelInfoEqualityComparer();
 }
 
 [JsonSourceGenerationOptions(

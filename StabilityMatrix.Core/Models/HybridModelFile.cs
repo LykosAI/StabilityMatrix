@@ -132,6 +132,11 @@ public record HybridModelFile : ISearchText, IDownloadableResource
         return $"{RelativePath.NormalizePathSeparators()};{IsNone};{IsDefault}";
     }
 
+    /// <summary>
+    /// Special Comparer that compares Remote Name and Local RelativePath,
+    /// used for letting remote models not override local models with more metadata.
+    /// Pls do not use for other stuff.
+    /// </summary>
     private sealed class RemoteNameLocalEqualityComparer : IEqualityComparer<HybridModelFile>
     {
         public bool Equals(HybridModelFile? x, HybridModelFile? y)
@@ -151,20 +156,51 @@ public record HybridModelFile : ISearchText, IDownloadableResource
             // This equality affects replacements of remote over local models
             // We want local and remote models to be considered equal if they have the same relative path
             // But 2 local models with the same path but different config paths should be considered different
-
-            return !(x.Type == y.Type && x.Local?.ConfigFullPath != y.Local?.ConfigFullPath)
-                && x.Local?.ConnectedModelInfo?.InferenceDefaults
-                    == y.Local?.ConnectedModelInfo?.InferenceDefaults;
+            return !(x.Type == y.Type && x.Local?.ConfigFullPath != y.Local?.ConfigFullPath);
         }
 
         public int GetHashCode(HybridModelFile obj)
         {
-            if (obj.Local?.ConnectedModelInfo?.InferenceDefaults is { } defaults)
-            {
-                return HashCode.Combine(obj.IsNone, obj.IsDefault, obj.RelativePath, defaults);
-            }
-
             return HashCode.Combine(obj.IsNone, obj.IsDefault, obj.RelativePath);
+        }
+    }
+
+    /// <summary>
+    /// Actual general purpose equality comparer.
+    /// Use this for general equality checks :)
+    /// </summary>
+    private sealed class EqualityComparer : IEqualityComparer<HybridModelFile>
+    {
+        public bool Equals(HybridModelFile? x, HybridModelFile? y)
+        {
+            if (ReferenceEquals(x, y))
+                return true;
+            if (ReferenceEquals(x, null))
+                return false;
+            if (ReferenceEquals(y, null))
+                return false;
+            if (x.GetType() != y.GetType())
+                return false;
+
+            if (!Equals(x.RelativePath.NormalizePathSeparators(), y.RelativePath.NormalizePathSeparators()))
+                return false;
+
+            return Equals(x.Type, y.Type)
+                && x.RemoteName == y.RemoteName
+                && x.Local?.ConfigFullPath == y.Local?.ConfigFullPath
+                && x.Local?.ConnectedModelInfo == y.Local?.ConnectedModelInfo;
+        }
+
+        public int GetHashCode(HybridModelFile obj)
+        {
+            return HashCode.Combine(
+                obj.IsNone,
+                obj.IsDefault,
+                obj.RelativePath,
+                obj.RemoteName,
+                obj.Local?.ConfigFullPath,
+                obj.Local?.ConnectedModelInfo
+            );
         }
     }
 
@@ -178,7 +214,18 @@ public record HybridModelFile : ISearchText, IDownloadableResource
     /// </summary>
     public bool IsNone => ReferenceEquals(this, None);
 
-    public static IEqualityComparer<HybridModelFile> Comparer { get; } =
+    /// <summary>
+    /// Actual general purpose equality comparer.
+    /// Use this for general equality checks :)
+    /// </summary>
+    public static IEqualityComparer<HybridModelFile> Comparer { get; } = new EqualityComparer();
+
+    /// <summary>
+    /// Special Comparer that compares Remote Name and Local RelativePath,
+    /// used for letting remote models not override local models with more metadata.
+    /// Pls do not use for other stuff.
+    /// </summary>
+    public static IEqualityComparer<HybridModelFile> RemoteLocalComparer { get; } =
         new RemoteNameLocalEqualityComparer();
 
     [JsonIgnore]

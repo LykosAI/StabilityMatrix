@@ -573,13 +573,31 @@ public abstract class BaseGitPackage : BasePackage
 
             // pull
             progress?.Report(new ProgressReport(-1f, "Pulling changes...", isIndeterminate: true));
-            await PrerequisiteHelper
-                .RunGit(
-                    new[] { "pull", "--autostash", "origin", installedPackage.Version.InstalledBranch! },
-                    onConsoleOutput,
+            // Try fast-forward-only first
+            var ffOnly = await PrerequisiteHelper
+                .GetGitOutput(
+                    ["pull", "--ff-only", "--autostash", "origin", installedPackage.Version.InstalledBranch!],
                     installedPackage.FullPath!
                 )
                 .ConfigureAwait(false);
+
+            if (ffOnly.ExitCode != 0)
+            {
+                // Fallback to rebase to preserve local changes if any
+                var rebaseRes = await PrerequisiteHelper
+                    .GetGitOutput(
+                        [
+                            "pull",
+                            "--rebase",
+                            "--autostash",
+                            "origin",
+                            installedPackage.Version.InstalledBranch!,
+                        ],
+                        installedPackage.FullPath!
+                    )
+                    .ConfigureAwait(false);
+                rebaseRes.EnsureSuccessExitCode();
+            }
         }
         else
         {

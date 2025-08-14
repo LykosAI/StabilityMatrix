@@ -316,27 +316,27 @@ public class VladAutomatic(
             // Run initial install
             case TorchIndex.Cuda:
                 await venvRunner
-                    .CustomInstall("launch.py --use-cuda --optional --test --uv", onConsoleOutput)
+                    .CustomInstall("launch.py --use-cuda --debug --test --uv", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchIndex.Rocm:
                 await venvRunner
-                    .CustomInstall("launch.py --use-rocm --optional --test --uv", onConsoleOutput)
+                    .CustomInstall("launch.py --use-rocm --debug --test --uv", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchIndex.DirectMl:
                 await venvRunner
-                    .CustomInstall("launch.py --use-directml --optional --test --uv", onConsoleOutput)
+                    .CustomInstall("launch.py --use-directml --debug --test --uv", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchIndex.Zluda:
                 await venvRunner
-                    .CustomInstall("launch.py --use-zluda --optional --test --uv", onConsoleOutput)
+                    .CustomInstall("launch.py --use-zluda --debug --test --uv", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             case TorchIndex.Ipex:
                 await venvRunner
-                    .CustomInstall("launch.py --use-ipex --optional --test --uv", onConsoleOutput)
+                    .CustomInstall("launch.py --use-ipex --debug --test --uv", onConsoleOutput)
                     .ConfigureAwait(false);
                 break;
             default:
@@ -348,58 +348,6 @@ public class VladAutomatic(
         }
 
         progress?.Report(new ProgressReport(1f, isIndeterminate: false));
-    }
-
-    public override async Task DownloadPackage(
-        string installLocation,
-        DownloadPackageOptions options,
-        IProgress<ProgressReport>? progress = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        progress?.Report(
-            new ProgressReport(
-                -1f,
-                message: "Downloading package...",
-                isIndeterminate: true,
-                type: ProgressType.Download
-            )
-        );
-
-        var installDir = new DirectoryPath(installLocation);
-        installDir.Create();
-
-        var versionOptions = options.VersionOptions;
-
-        if (string.IsNullOrWhiteSpace(versionOptions.BranchName))
-        {
-            throw new InvalidOperationException("Branch name is required for VladAutomatic");
-        }
-
-        await PrerequisiteHelper
-            .RunGit(
-                new[]
-                {
-                    "clone",
-                    "-b",
-                    versionOptions.BranchName,
-                    "https://github.com/vladmandic/automatic",
-                    installDir.Name,
-                },
-                progress?.AsProcessOutputHandler(),
-                installDir.Parent?.FullPath ?? ""
-            )
-            .ConfigureAwait(false);
-        if (!string.IsNullOrWhiteSpace(versionOptions.CommitHash) && !versionOptions.IsLatest)
-        {
-            await PrerequisiteHelper
-                .RunGit(
-                    new[] { "checkout", versionOptions.CommitHash },
-                    progress?.AsProcessOutputHandler(),
-                    installLocation
-                )
-                .ConfigureAwait(false);
-        }
     }
 
     public override async Task RunPackage(

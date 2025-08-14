@@ -153,6 +153,7 @@ public class WindowsPrerequisiteHelper(
             environmentVariables: new Dictionary<string, string>
             {
                 { "PATH", Compat.GetEnvPathWithExtensions(GitBinPath) },
+                { "GIT_TERMINAL_PROMPT", "0" },
             }
         );
         await process.WaitForExitAsync().ConfigureAwait(false);

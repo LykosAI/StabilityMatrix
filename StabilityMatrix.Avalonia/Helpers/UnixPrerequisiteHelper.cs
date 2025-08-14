@@ -268,7 +268,11 @@ public class UnixPrerequisiteHelper(
     {
         var command = args.Prepend("git");
 
-        var result = await ProcessRunner.RunBashCommand(command, workingDirectory ?? "");
+        var result = await ProcessRunner.RunBashCommand(
+            command,
+            workingDirectory ?? string.Empty,
+            new Dictionary<string, string> { { "GIT_TERMINAL_PROMPT", "0" } }
+        );
         if (result.ExitCode != 0)
         {
             Logger.Error(

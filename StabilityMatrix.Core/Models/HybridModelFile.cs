@@ -152,19 +152,43 @@ public record HybridModelFile : ISearchText, IDownloadableResource
             // We want local and remote models to be considered equal if they have the same relative path
             // But 2 local models with the same path but different config paths should be considered different
 
-            return !(x.Type == y.Type && x.Local?.ConfigFullPath != y.Local?.ConfigFullPath)
-                && x.Local?.ConnectedModelInfo?.InferenceDefaults
-                    == y.Local?.ConnectedModelInfo?.InferenceDefaults;
+            // If both have ConnectedModelInfo with InferenceDefaults, they must match to be considered equal
+            var xHasDefaults = x.Local?.ConnectedModelInfo?.InferenceDefaults != null;
+            var yHasDefaults = y.Local?.ConnectedModelInfo?.InferenceDefaults != null;
+
+            if (
+                xHasDefaults
+                && yHasDefaults
+                && !Equals(
+                    x.Local!.ConnectedModelInfo!.InferenceDefaults,
+                    y.Local!.ConnectedModelInfo!.InferenceDefaults
+                )
+            )
+            {
+                return false;
+            }
+
+            return !(x.Type == y.Type && x.Local?.ConfigFullPath != y.Local?.ConfigFullPath);
         }
 
         public int GetHashCode(HybridModelFile obj)
         {
-            if (obj.Local?.ConnectedModelInfo?.InferenceDefaults is { } defaults)
+            // We need to include the presence of InferenceDefaults in the hash code
+            // This ensures the hash code is consistent with our equality comparison
+            var hasDefaults = obj.Local?.ConnectedModelInfo?.InferenceDefaults != null;
+
+            if (hasDefaults)
             {
-                return HashCode.Combine(obj.IsNone, obj.IsDefault, obj.RelativePath, defaults);
+                return HashCode.Combine(
+                    obj.IsNone,
+                    obj.IsDefault,
+                    obj.RelativePath,
+                    true,
+                    obj.Local!.ConnectedModelInfo!.InferenceDefaults
+                );
             }
 
-            return HashCode.Combine(obj.IsNone, obj.IsDefault, obj.RelativePath);
+            return HashCode.Combine(obj.IsNone, obj.IsDefault, obj.RelativePath, false);
         }
     }
 

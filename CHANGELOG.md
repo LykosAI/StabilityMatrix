@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Install Nunchaku" option to the ComfyUI Package Commands menu
 - Added "Select All" button to the Installed Extensions page
 - Added experimental ROCm pytorch install for ComfyUI (non-Zluda) on Windows - requires a compatible AMD GPU
+- Added Ukrainian translation thanks to @r0ddty!
 ### Changed
 - Redesigned Civitai model details page
 - You can now select release versions when installing ComfyUI
@@ -22,10 +23,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Updated ComfyUI-Zluda installs to use the newer install-n method (fixes [#1347](https://github.com/LykosAI/StabilityMatrix/issues/1347))
 - Updated uv to 0.8.4
 - Removed disclaimer from reForge since the author is now active again
+- Updated git operations to better avoid conflicts
+- Updated Japanese translation
 ### Fixed
 - Fixed Civitai-generated image parsing in Inference
 - Fixed some first-time setup crashes from missing prerequisites
 - Fixed one-click installer not using default preferred Python version
+- Fixed updating from old installs of InvokeAI using old frontend
 
 ## v2.15.0-dev.2
 ### Added

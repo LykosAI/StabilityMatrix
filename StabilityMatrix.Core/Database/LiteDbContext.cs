@@ -89,10 +89,10 @@ public class LiteDbContext : ILiteDbContext
 
                     var options = new RebuildOptions
                     {
-                        Collation = new Collation(CultureInfo.CurrentCulture.LCID, CompareOptions.Ordinal),
+                        Collation = new Collation(CultureInfo.InvariantCulture.LCID, CompareOptions.Ordinal),
                     };
 
-                    db.RebuildAsync(options).SafeFireAndForget();
+                    db.RebuildAsync(options).GetAwaiter().GetResult();
                 }
             }
             catch (IOException e)

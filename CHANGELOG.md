@@ -43,8 +43,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed updating from old installs of InvokeAI using old frontend
 - Fixed [#1357](https://github.com/LykosAI/StabilityMatrix/issues/1357) - Case insensitivity causing duplicate key exceptions on non-Windows systems
 ### Supporters
-#### Visionaries
-🌟 Visionaries
+#### 🌟 Visionaries
 To our brilliant Visionary-tier Patrons: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, and **whudunit** — your support is the spark that keeps Stability Matrix blazing forward. Thanks to you, we can explore bolder features, tackle complex challenges, and keep making the impossible feel effortless. Thank you all so very much! 🚀
 
 ## v2.15.0-dev.2

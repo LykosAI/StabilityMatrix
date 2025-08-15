@@ -5,7 +5,7 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
-## v2.15.0-dev.3
+## v2.15.0-pre.1
 ### Added
 - Added settings to disable base models from appearing in the Checkpoint Manager and Civitai Model Browser base model selectors
 - Added Inference "Favorite Dimensions" quick selector - editable in Settings → Inference, or click the 💾 button inside the dropdown
@@ -14,9 +14,17 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added "Select All" button to the Installed Extensions page
 - Added experimental ROCm pytorch install for ComfyUI (non-Zluda) on Windows - requires a compatible AMD GPU
 - Added base model type labels (SD1.5, SDXL, Flux, etc.) to Inference model selection boxes
+- Added UNET shared folder link for SD.Next
 - Added Ukrainian translation thanks to @r0ddty!
 ### Changed
-- Redesigned Civitai model details page
+🌟 Civitai Model Details: A Grand Reimagining! 🌟
+  - No more peering through a tiny window! Introducing a massive overhaul of the Civitai Model Details page, transforming it from a cramped dialog into a spacious, feature-rich hub for all your model exploration needs.
+  - We've listened to your howls for more, and now you can dive deep into every aspect of your favorite models with unprecedented clarity and control:
+    - Expansive View: The new full-page layout means all essential information, descriptions, and previews are laid out beautifully, banishing the old, restrictive dialog forever.
+    - Rich Details at a Glance: Author, base model, last updated, SHA hashes, file name overrides/patterns – everything you need, perfectly organized and always accessible.
+    - Overhauled Image Viewer: Enjoy a sleek, modern image viewer that includes Civitai metadata and supports zooming, panning, and full-screen viewing. No more squinting at tiny thumbnails!
+    - Integrated Inference Options: For supported models, adjust sampler, scheduler, steps, CFG Scale, width, and height directly from the details page, streamlining your workflow like never before!
+----
 - You can now select release versions when installing ComfyUI
 - You can no longer select branches when installing InvokeAI
 - Updated InvokeAI install to use pinned torch index from release tag
@@ -26,11 +34,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Removed disclaimer from reForge since the author is now active again
 - Updated git operations to better avoid conflicts
 - Updated Japanese translation
+- Undo ComfyUI process tracking changes for now due to causing more issues than it solved
+- Updated GPU parsing fallback on Linux systems to use the method provided by @irql-notlessorequal
 ### Fixed
 - Fixed Civitai-generated image parsing in Inference
 - Fixed some first-time setup crashes from missing prerequisites
 - Fixed one-click installer not using default preferred Python version
 - Fixed updating from old installs of InvokeAI using old frontend
+- Fixed [#1357](https://github.com/LykosAI/StabilityMatrix/issues/1357) - Case insensitivity causing duplicate key exceptions on non-Windows systems
 
 ## v2.15.0-dev.2
 ### Added

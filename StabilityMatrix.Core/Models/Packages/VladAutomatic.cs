@@ -164,6 +164,12 @@ public class VladAutomatic(
                     TargetRelativePaths = ["models/ControlNet"],
                     ConfigDocumentPaths = ["control_net_models_path"],
                 }, // Combined ControlNet/T2I
+                new SharedFolderLayoutRule
+                {
+                    SourceTypes = [SharedFolderType.DiffusionModels],
+                    TargetRelativePaths = ["models/UNET"],
+                    ConfigDocumentPaths = ["unet_dir"],
+                },
             ],
         };
 
@@ -304,11 +310,15 @@ public class VladAutomatic(
             );
         }
 
+        var requirementsContent = await new FilePath(installLocation, "requirements.txt")
+            .ReadAllTextAsync(cancellationToken)
+            .ConfigureAwait(false);
+        var pipArgs = new PipInstallArgs("--upgrade").WithParsedFromRequirementsTxt(requirementsContent);
         if (installedPackage.PipOverrides != null)
         {
-            var pipArgs = new PipInstallArgs().WithUserOverrides(installedPackage.PipOverrides);
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
         }
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         switch (torchVersion)

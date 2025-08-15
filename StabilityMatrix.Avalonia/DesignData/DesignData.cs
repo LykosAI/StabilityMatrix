@@ -1268,6 +1268,12 @@ The gallery images are often inpainted, but you will get something very similar 
                     {
                         ModelName = "Art Shaper (very long name example)",
                         VersionName = "Style v8 (very long name)",
+                        ModelId = 0,
+                        VersionId = 0,
+                        ModelDescription =
+                            "This is a very long description for the Art Shaper model, which is used to demonstrate how long descriptions can be handled in the UI. It should be able to display multiple lines and still look good.",
+                        ModelType = CivitModelType.Checkpoint,
+                        BaseModel = "SD 1.5",
                     },
                 }
             ),
@@ -1282,6 +1288,12 @@ The gallery images are often inpainted, but you will get something very similar 
                     {
                         ModelName = "Background Arts",
                         VersionName = "Anime Style v10",
+                        ModelId = 0,
+                        VersionId = 0,
+                        ModelDescription =
+                            "This is a very long description for the Art Shaper model, which is used to demonstrate how long descriptions can be handled in the UI. It should be able to display multiple lines and still look good.",
+                        ModelType = CivitModelType.Checkpoint,
+                        BaseModel = "SDXL 1.0",
                     },
                 }
             ),

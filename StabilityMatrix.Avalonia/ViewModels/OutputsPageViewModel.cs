@@ -294,6 +294,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
                             // Preload
                             await newImageSource.GetBitmapAsync();
+                            await newImageSource.GetOrRefreshTemplateKeyAsync();
 
                             sender.ImageSource = newImageSource;
                             sender.LocalImageFile = newImage.ImageFile;

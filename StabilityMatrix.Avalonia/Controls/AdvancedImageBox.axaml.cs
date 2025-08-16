@@ -163,7 +163,7 @@ public class AdvancedImageBox : TemplatedControlBase
                     5800,
                     6800,
                     7800,
-                    8800
+                    8800,
                 }
             );
 
@@ -426,7 +426,7 @@ public class AdvancedImageBox : TemplatedControlBase
         /// <summary>
         /// The image is stretched to fill as much of the client area of the control as possible, whilst retaining the same aspect ratio for the width and height.
         /// </summary>
-        Fit
+        Fit,
     }
 
     [Flags]
@@ -435,7 +435,7 @@ public class AdvancedImageBox : TemplatedControlBase
         None = 0,
         LeftButton = 1,
         MiddleButton = 2,
-        RightButton = 4
+        RightButton = 4,
     }
 
     /// <summary>
@@ -462,7 +462,7 @@ public class AdvancedImageBox : TemplatedControlBase
         /// <summary>
         /// The control zoom was reset.
         /// </summary>
-        ActualSize = 4
+        ActualSize = 4,
     }
 
     public enum SelectionModes
@@ -480,7 +480,7 @@ public class AdvancedImageBox : TemplatedControlBase
         /// <summary>
         ///   Zoom selection.
         /// </summary>
-        Zoom
+        Zoom,
     }
 
     #endregion
@@ -511,7 +511,7 @@ public class AdvancedImageBox : TemplatedControlBase
         }
     }
 
-    public Size ViewPortSize => ViewPort.Bounds.Size;
+    public Size ViewPortSize => ViewPort?.Bounds.Size ?? new Size(50, 50);
     #endregion
 
     #region Private Members
@@ -1355,13 +1355,13 @@ public class AdvancedImageBox : TemplatedControlBase
         var square1Drawing = new GeometryDrawing
         {
             Brush = GridColorAlternate,
-            Geometry = new RectangleGeometry(new Rect(0.0, 0.0, size, size))
+            Geometry = new RectangleGeometry(new Rect(0.0, 0.0, size, size)),
         };
 
         var square2Drawing = new GeometryDrawing
         {
             Brush = GridColorAlternate,
-            Geometry = new RectangleGeometry(new Rect(size, size, size, size))
+            Geometry = new RectangleGeometry(new Rect(size, size, size, size)),
         };
 
         var drawingGroup = new DrawingGroup { Children = { square1Drawing, square2Drawing } };

@@ -304,6 +304,7 @@ public partial class CivitDetailsPageViewModel(
             imageCache
                 .Connect()
                 .Filter(showNsfwPredicate)
+                .Filter(img => img.Type == "image")
                 .Transform(x => new ImageSource(new Uri(x.Url)))
                 .Bind(ImageSources)
                 .ObserveOn(SynchronizationContext.Current!)

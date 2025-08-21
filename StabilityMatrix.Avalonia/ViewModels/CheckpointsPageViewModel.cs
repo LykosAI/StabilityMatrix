@@ -609,9 +609,13 @@ public partial class CheckpointsPageViewModel(
         }
 
         if (item.CheckpointFile.HasCivitMetadata)
+        {
             ShowCivitVersionDialog(item);
+        }
         else if (item.CheckpointFile.HasOpenModelDbMetadata)
+        {
             await ShowOpenModelDbDialog(item);
+        }
     }
 
     private void ShowCivitVersionDialog(CheckpointFileViewModel item)

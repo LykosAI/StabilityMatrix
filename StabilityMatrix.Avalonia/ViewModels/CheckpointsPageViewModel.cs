@@ -632,7 +632,17 @@ public partial class CheckpointsPageViewModel(
 
             newVm = dialogFactory.Get<CivitDetailsPageViewModel>(vm =>
             {
+                var allModelIds = Models
+                    .Where(x => x.CheckpointFile.ConnectedModelInfo?.ModelId != null)
+                    .Select(x => x.CheckpointFile.ConnectedModelInfo!.ModelId!.Value)
+                    .Distinct()
+                    .ToList();
+                var index = Models.IndexOf(item);
+
+                vm.ModelIdList = allModelIds;
+                vm.CurrentIndex = index;
                 vm.CivitModel = new CivitModel { Id = item.CheckpointFile.ConnectedModelInfo.ModelId.Value };
+
                 return vm;
             });
         }
@@ -640,7 +650,17 @@ public partial class CheckpointsPageViewModel(
         {
             newVm = dialogFactory.Get<CivitDetailsPageViewModel>(vm =>
             {
+                var allModelIds = Models
+                    .Where(x => x.CheckpointFile.ConnectedModelInfo?.ModelId != null)
+                    .Select(x => x.CheckpointFile.ConnectedModelInfo!.ModelId!.Value)
+                    .Distinct()
+                    .ToList();
+                var index = Models.IndexOf(item);
+
+                vm.ModelIdList = allModelIds;
+                vm.CurrentIndex = index;
                 vm.CivitModel = model;
+
                 return vm;
             });
         }

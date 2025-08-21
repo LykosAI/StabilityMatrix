@@ -1,30 +1,18 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using AsyncAwaitBestPractices;
+﻿using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FluentAvalonia.UI.Controls;
 using Injectio.Attributes;
 using NLog;
 using StabilityMatrix.Avalonia.Animations;
-using StabilityMatrix.Avalonia.Controls;
 using StabilityMatrix.Avalonia.Services;
 using StabilityMatrix.Avalonia.ViewModels.Base;
-using StabilityMatrix.Avalonia.ViewModels.Dialogs;
-using StabilityMatrix.Avalonia.Views.Dialogs;
 using StabilityMatrix.Core.Api;
 using StabilityMatrix.Core.Attributes;
 using StabilityMatrix.Core.Database;
-using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
-using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Database;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -225,162 +213,6 @@ public partial class CheckpointBrowserCardViewModel : ProgressViewModel
     public void SearchAuthor()
     {
         EventManager.Instance.OnNavigateAndFindCivitAuthorRequested(CivitModel.Creator.Username);
-    }
-
-    [RelayCommand]
-    private async Task ShowVersionDialog(CivitModel model)
-    {
-        var versions = model.ModelVersions;
-        if (versions is null || versions.Count == 0)
-        {
-            notificationService.Show(
-                new Notification(
-                    "Model has no versions available",
-                    "This model has no versions available for download",
-                    NotificationType.Warning
-                )
-            );
-            return;
-        }
-
-        var newVm = dialogFactory.Get<CivitDetailsPageViewModel>(vm =>
-        {
-            vm.CivitModel = model;
-            return vm;
-        });
-
-        navigationService.NavigateTo(newVm, BetterSlideNavigationTransition.PageSlideFromRight);
-        return;
-
-        var dialog = new BetterContentDialog
-        {
-            Title = model.Name,
-            IsPrimaryButtonEnabled = false,
-            IsSecondaryButtonEnabled = false,
-            IsFooterVisible = false,
-            CloseOnClickOutside = true,
-            MaxDialogWidth = 750,
-            MaxDialogHeight = 1000,
-        };
-
-        var htmlDescription = $"""<html><body class="markdown-body">{model.Description}</body></html>""";
-
-        var viewModel = dialogFactory.Get<SelectModelVersionViewModel>();
-        viewModel.Dialog = dialog;
-        viewModel.Title = model.Name;
-
-        viewModel.Description = htmlDescription;
-        viewModel.CivitModel = model;
-        viewModel.Versions = versions
-            .Where(v => !settingsManager.Settings.HideEarlyAccessModels || !v.IsEarlyAccess)
-            .Select(version => new ModelVersionViewModel(modelIndexService, version))
-            .ToImmutableArray();
-        viewModel.SelectedVersionViewModel = viewModel.Versions.Any() ? viewModel.Versions[0] : null;
-
-        // Update with latest version (including files) if we have no files
-        if (model.ModelVersions?.FirstOrDefault()?.Files is not { Count: > 0 })
-        {
-            Task.Run(async () =>
-                {
-                    Logger.Debug("No files found for model {ModelId}. Updating versions...", model.Id);
-
-                    var latestModel = await civitApi.GetModelById(model.Id);
-                    var latestVersions = latestModel.ModelVersions ?? [];
-
-                    // Update our model
-                    civitModel.Description = latestModel.Description;
-                    civitModel = latestModel;
-                    foreach (var version in latestVersions)
-                    {
-                        if (version.Files is not { Count: > 0 })
-                            continue;
-
-                        var targetVersion = model.ModelVersions?.FirstOrDefault(v => v.Id == version.Id);
-                        if (targetVersion is null)
-                            continue;
-
-                        targetVersion.Files = version.Files;
-                        targetVersion.Description = version.Description;
-                        targetVersion.DownloadUrl = version.DownloadUrl;
-                    }
-
-                    // Reinitialize
-                    Logger.Debug("Updating Versions dialog");
-                    Dispatcher.UIThread.Post(() =>
-                    {
-                        var newHtmlDescription =
-                            $"""<html><body class="markdown-body">{model.Description}</body></html>""";
-
-                        viewModel.Dialog = dialog;
-                        viewModel.Title = latestModel.Name;
-
-                        viewModel.Description = newHtmlDescription;
-                        viewModel.CivitModel = latestModel;
-                        viewModel.Versions = (latestModel.ModelVersions ?? [])
-                            .Where(v => !settingsManager.Settings.HideEarlyAccessModels || !v.IsEarlyAccess)
-                            .Select(version => new ModelVersionViewModel(modelIndexService, version))
-                            .ToImmutableArray();
-                        viewModel.SelectedVersionViewModel = viewModel.Versions.Any()
-                            ? viewModel.Versions[0]
-                            : null;
-                    });
-
-                    // Save to db
-                    var upsertResult = await liteDbContext.UpsertCivitModelAsync(latestModel);
-                    Logger.Debug(
-                        "Update model {ModelId} with latest version: {Result}",
-                        model.Id,
-                        upsertResult
-                    );
-                })
-                .SafeFireAndForget(e => Logger.Error(e, "Failed to update model {ModelId}", model.Id));
-        }
-
-        dialog.Content = new SelectModelVersionDialog { DataContext = viewModel };
-
-        var result = await dialog.ShowAsync();
-
-        if (result != ContentDialogResult.Primary)
-        {
-            return;
-        }
-
-        var selectedVersion = viewModel?.SelectedVersionViewModel?.ModelVersion;
-        var selectedFile = viewModel?.SelectedFile?.CivitFile;
-
-        DirectoryPath downloadPath;
-        if (viewModel?.IsCustomSelected is true)
-        {
-            downloadPath = viewModel.CustomInstallLocation;
-        }
-        else
-        {
-            var sharedFolder = model.Type.ConvertTo<SharedFolderType>().GetStringValue();
-
-            if (
-                model.BaseModelType == CivitBaseModelType.Flux1D.GetStringValue()
-                || model.BaseModelType == CivitBaseModelType.Flux1S.GetStringValue()
-                || model.BaseModelType == CivitBaseModelType.WanVideo.GetStringValue()
-                || model.BaseModelType == CivitBaseModelType.HunyuanVideo.GetStringValue()
-                || selectedFile?.Metadata.Format is CivitModelFormat.GGUF
-            )
-            {
-                sharedFolder = SharedFolderType.DiffusionModels.GetStringValue();
-            }
-
-            var defaultPath = Path.Combine(@"Models", sharedFolder);
-
-            var subFolder = viewModel?.SelectedInstallLocation ?? defaultPath;
-            subFolder = subFolder.StripStart(@$"Models{Path.DirectorySeparatorChar}");
-            downloadPath = Path.Combine(settingsManager.ModelsDirectory, subFolder);
-        }
-
-        await Task.Delay(100);
-        await DoImport(model, downloadPath, selectedVersion, selectedFile);
-
-        Text = "Import started. Check the downloads tab for progress.";
-        Value = 100;
-        DelayedClearProgress(TimeSpan.FromMilliseconds(1000));
     }
 
     private async Task DoImport(

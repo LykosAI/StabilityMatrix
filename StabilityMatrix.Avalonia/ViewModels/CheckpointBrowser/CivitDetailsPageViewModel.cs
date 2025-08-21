@@ -58,6 +58,13 @@ public partial class CivitDetailsPageViewModel(
     [NotifyPropertyChangedFor(nameof(ShowInferenceDefaultsSection))]
     public required partial CivitModel CivitModel { get; set; }
 
+    [ObservableProperty]
+    public required partial List<int> ModelIdList { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanGoNext), nameof(CanGoPrevious))]
+    public required partial int CurrentIndex { get; set; }
+
     private List<string> ignoredFileNameFormatVars =
     [
         "seed",
@@ -167,6 +174,9 @@ public partial class CivitDetailsPageViewModel(
     public int DescriptionRowSpan => string.IsNullOrWhiteSpace(ModelVersionDescription) ? 3 : 1;
 
     public bool ShowInferenceDefaultsSection => CivitModel.Type == CivitModelType.Checkpoint;
+
+    public bool CanGoNext => CurrentIndex < ModelIdList.Count - 1;
+    public bool CanGoPrevious => CurrentIndex > 0;
 
     protected override async Task OnInitialLoadedAsync()
     {
@@ -718,6 +728,66 @@ public partial class CivitDetailsPageViewModel(
         {
             await modelIndexService.RefreshIndex();
         }
+    }
+
+    [RelayCommand]
+    public async Task NextModel()
+    {
+        if (!CanGoNext)
+            return;
+
+        try
+        {
+            var modelId = ModelIdList[++CurrentIndex];
+            CivitModel = await civitApi.GetModelById(modelId);
+            ReloadCachesForNewModel();
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to load CivitModel {Id}", CivitModel.Id);
+            notificationService.Show(
+                Resources.Label_UnexpectedErrorOccurred,
+                e.Message,
+                NotificationType.Error
+            );
+        }
+    }
+
+    [RelayCommand]
+    public async Task PreviousModel()
+    {
+        if (!CanGoPrevious)
+            return;
+
+        try
+        {
+            var modelId = ModelIdList[--CurrentIndex];
+            CivitModel = await civitApi.GetModelById(modelId);
+            ReloadCachesForNewModel();
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Failed to load CivitModel {Id}", CivitModel.Id);
+            notificationService.Show(
+                Resources.Label_UnexpectedErrorOccurred,
+                e.Message,
+                NotificationType.Error
+            );
+        }
+    }
+
+    private void ReloadCachesForNewModel()
+    {
+        modelVersionCache.EditDiff(CivitModel.ModelVersions ?? [], (a, b) => a.Id == b.Id);
+        SelectedVersion = ModelVersions.FirstOrDefault();
+
+        imageCache.EditDiff(SelectedVersion?.ModelVersion.Images ?? [], (a, b) => a.Url == b.Url);
+        civitFileCache.EditDiff(SelectedVersion?.ModelVersion.Files ?? [], (a, b) => a.Id == b.Id);
+
+        Description = $"""<html><body class="markdown-body">{CivitModel.Description}</body></html>""";
+        ModelVersionDescription = string.IsNullOrWhiteSpace(SelectedVersion?.ModelVersion.Description)
+            ? string.Empty
+            : $"""<html><body class="markdown-body">{SelectedVersion.ModelVersion.Description}</body></html>""";
     }
 
     private void VmOnNavigateToModelRequested(object? sender, int modelId)

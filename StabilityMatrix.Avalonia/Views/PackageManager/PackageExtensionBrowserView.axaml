@@ -282,7 +282,7 @@
                     Margin="8"
                     RowDefinitions="Auto,*,Auto"
                     RowSpacing="12">
-                    <sg:SpacedGrid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                    <sg:SpacedGrid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
                         <TextBox
                             Margin="4,0,0,0"
                             HorizontalAlignment="Stretch"
@@ -302,10 +302,21 @@
                             <ui:SymbolIcon FontSize="16" Symbol="Refresh" />
                         </Button>
 
-                        <!--  Settings / Edit Manifests Button  -->
+                        <!--  Manual Install Button  -->
                         <Button
                             Grid.Row="0"
                             Grid.Column="2"
+                            Padding="16,6"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Stretch"
+                            Command="{Binding InstallExtensionManualCommand}">
+                            <ui:SymbolIcon FontSize="16" Symbol="Add" />
+                        </Button>
+
+                        <!--  Settings / Edit Manifests Button  -->
+                        <Button
+                            Grid.Row="0"
+                            Grid.Column="3"
                             Padding="16,6"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Stretch"

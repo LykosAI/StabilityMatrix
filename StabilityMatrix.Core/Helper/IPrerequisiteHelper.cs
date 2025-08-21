@@ -106,7 +106,7 @@ public interface IPrerequisiteHelper
             cloneArgs = cloneArgs.AddArgs("--branch", version.Branch!);
         }
 
-        cloneArgs = cloneArgs.AddArgs(repositoryUrl, rootDir);
+        cloneArgs = cloneArgs.AddArgs(repositoryUrl);
 
         await RunGit(cloneArgs.ToProcessArgs(), onProcessOutput, rootDir).ConfigureAwait(false);
 

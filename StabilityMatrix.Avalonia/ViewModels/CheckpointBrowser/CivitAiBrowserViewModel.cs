@@ -14,6 +14,7 @@ using DynamicData.Binding;
 using Injectio.Attributes;
 using NLog;
 using Refit;
+using StabilityMatrix.Avalonia.Animations;
 using StabilityMatrix.Avalonia.Languages;
 using StabilityMatrix.Avalonia.Models;
 using StabilityMatrix.Avalonia.Services;
@@ -41,10 +42,12 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly CivitCompatApiManager civitApi;
     private readonly ISettingsManager settingsManager;
+    private readonly IServiceManager<ViewModelBase> dialogFactory;
     private readonly ILiteDbContext liteDbContext;
     private readonly IConnectedServiceManager connectedServiceManager;
     private readonly INotificationService notificationService;
     private readonly ICivitBaseModelTypeService baseModelTypeService;
+    private readonly INavigationService<MainWindowViewModel> navigationService;
     private bool dontSearch = false;
 
     private readonly SourceCache<OrderedValue<CivitModel>, int> modelCache = new(static ov => ov.Value.Id);
@@ -141,15 +144,18 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
         ILiteDbContext liteDbContext,
         IConnectedServiceManager connectedServiceManager,
         INotificationService notificationService,
-        ICivitBaseModelTypeService baseModelTypeService
+        ICivitBaseModelTypeService baseModelTypeService,
+        INavigationService<MainWindowViewModel> navigationService
     )
     {
         this.civitApi = civitApi;
         this.settingsManager = settingsManager;
+        this.dialogFactory = dialogFactory;
         this.liteDbContext = liteDbContext;
         this.connectedServiceManager = connectedServiceManager;
         this.notificationService = notificationService;
         this.baseModelTypeService = baseModelTypeService;
+        this.navigationService = navigationService;
 
         EventManager.Instance.NavigateAndFindCivitModelRequested += OnNavigateAndFindCivitModelRequested;
 
@@ -790,6 +796,39 @@ public sealed partial class CivitAiBrowserViewModel : TabViewModelBase, IInfinit
             AllBaseModels.ForEach(x => x.IsSelected = false);
         else
             AllBaseModels.ForEach(x => x.IsSelected = true);
+    }
+
+    [RelayCommand]
+    private void ShowVersionDialog(CivitModel model)
+    {
+        var versions = model.ModelVersions;
+        if (versions is null || versions.Count == 0)
+        {
+            notificationService.Show(
+                new Notification(
+                    "Model has no versions available",
+                    "This model has no versions available for download",
+                    NotificationType.Warning
+                )
+            );
+            return;
+        }
+
+        var newVm = dialogFactory.Get<CivitDetailsPageViewModel>(vm =>
+        {
+            var allModelIds = ModelCards.Select(x => x.CivitModel.Id).Distinct().ToList();
+            var index = ModelCards
+                .Select((x, i) => (x.CivitModel.Id, Index: i))
+                .FirstOrDefault(x => x.Id == model.Id)
+                .Index;
+
+            vm.ModelIdList = allModelIds;
+            vm.CurrentIndex = index;
+            vm.CivitModel = model;
+            return vm;
+        });
+
+        navigationService.NavigateTo(newVm, BetterSlideNavigationTransition.PageSlideFromRight);
     }
 
     public void ClearSearchQuery()

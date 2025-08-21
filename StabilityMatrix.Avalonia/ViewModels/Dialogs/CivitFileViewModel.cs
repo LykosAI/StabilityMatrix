@@ -22,6 +22,7 @@ public partial class CivitFileViewModel : DisposableViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly Func<CivitFileViewModel, string?, Task>? downloadAction;
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     [ObservableProperty]
     private CivitFile civitFile;
@@ -31,6 +32,12 @@ public partial class CivitFileViewModel : DisposableViewModelBase
 
     [ObservableProperty]
     public required partial ObservableCollection<string> InstallLocations { get; set; }
+
+    [ObservableProperty]
+    public partial string DownloadTooltip { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool CanImport { get; set; } = true;
 
     public CivitFileViewModel(
         IModelIndexService modelIndexService,
@@ -49,6 +56,36 @@ public partial class CivitFileViewModel : DisposableViewModelBase
             CivitFile is { Type: CivitFileType.Model, Hashes.BLAKE3: not null }
             && modelIndexService.ModelIndexBlake3Hashes.Contains(CivitFile.Hashes.BLAKE3);
         EventManager.Instance.ModelIndexChanged += ModelIndexChanged;
+
+        try
+        {
+            if (settingsManager.IsLibraryDirSet)
+            {
+                var fileSizeBytes = CivitFile.SizeKb * 1024;
+                var freeSizeBytes =
+                    SystemInfo.GetDiskFreeSpaceBytes(settingsManager.ModelsDirectory) ?? long.MaxValue;
+                CanImport = fileSizeBytes < freeSizeBytes;
+                DownloadTooltip = CanImport
+                    ? "Free space after download: "
+                        + (
+                            freeSizeBytes < long.MaxValue
+                                ? Size.FormatBytes(Convert.ToUInt64(freeSizeBytes - fileSizeBytes))
+                                : "Unknown"
+                        )
+                    : $"Not enough space on disk. Need {Size.FormatBytes(Convert.ToUInt64(fileSizeBytes))} but only have {Size.FormatBytes(Convert.ToUInt64(freeSizeBytes))}";
+            }
+            else
+            {
+                DownloadTooltip = "Please set the library directory in settings";
+            }
+        }
+        catch (Exception e)
+        {
+            LogManager
+                .GetCurrentClassLogger()
+                .Error(e, "Failed to check disk space for {FileName}", civitFile.Name);
+            DownloadTooltip = "Failed to check disk space";
+        }
     }
 
     private void ModelIndexChanged(object? sender, EventArgs e)
@@ -135,9 +172,7 @@ public partial class CivitFileViewModel : DisposableViewModelBase
         }
         catch (Exception e)
         {
-            LogManager
-                .GetCurrentClassLogger()
-                .Error(e, "Failed to delete model files for {ModelName}", CivitFile.Name);
+            Logger.Error(e, "Failed to delete model files for {ModelName}", CivitFile.Name);
             await modelIndexService.RefreshIndex();
             return;
         }

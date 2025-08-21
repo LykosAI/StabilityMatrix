@@ -415,7 +415,7 @@ public class ComfyUI(
                             TorchIndex.Cpu => "cpu",
                             TorchIndex.Cuda when isLegacyNvidia => "cu126",
                             TorchIndex.Cuda => "cu128",
-                            TorchIndex.Rocm => "rocm6.3",
+                            TorchIndex.Rocm => "rocm6.4",
                             TorchIndex.Mps => "cpu",
                             _ => throw new ArgumentOutOfRangeException(
                                 nameof(torchVersion),

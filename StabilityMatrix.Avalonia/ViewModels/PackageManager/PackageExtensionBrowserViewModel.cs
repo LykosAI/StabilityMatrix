@@ -690,6 +690,87 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         }
     }
 
+    [RelayCommand]
+    private async Task InstallExtensionManualAsync()
+    {
+        var textField = new TextBoxField
+        {
+            Label = "Extension URL",
+            Validator = text =>
+            {
+                if (string.IsNullOrWhiteSpace(text))
+                    throw new DataValidationException("URL is required");
+
+                if (!Uri.TryCreate(text, UriKind.Absolute, out _))
+                    throw new DataValidationException("Invalid URL format");
+            },
+        };
+        var dialog = DialogHelper.CreateTextEntryDialog("Manual Extension Install", "", [textField]);
+
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            return;
+
+        var url = textField.Text.Trim();
+        if (string.IsNullOrWhiteSpace(url))
+            return;
+
+        if (
+            !Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            || !uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            notificationService.Show("Invalid URL", "Please provide a valid GitHub repository URL.");
+            return;
+        }
+
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length < 2)
+        {
+            notificationService.Show(
+                "Invalid URL",
+                "The URL does not appear to be a valid GitHub repository."
+            );
+            return;
+        }
+
+        var author = segments[0];
+        var title = segments[1].Replace(".git", "");
+
+        // create a new PackageExtension
+        var packageExtension = new PackageExtension
+        {
+            Author = author,
+            Title = title,
+            Reference = new Uri(url),
+            IsInstalled = false,
+            InstallType = "git-clone",
+            Files = [new Uri(url)],
+        };
+
+        var steps = new List<IPackageStep>
+        {
+            new InstallExtensionStep(
+                PackagePair!.BasePackage.ExtensionManager!,
+                PackagePair.InstalledPackage,
+                packageExtension
+            ),
+        };
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteTitle = "Installed Extensions",
+            ModificationCompleteMessage = "Finished installing extensions",
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+
+        await runner.ExecuteSteps(steps);
+
+        ClearSelection();
+
+        RefreshBackground();
+    }
+
     public void RefreshBackground()
     {
         RefreshCore()

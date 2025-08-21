@@ -99,6 +99,7 @@
         <StyleInclude Source="Controls/MarkdownViewer.axaml" />
         <StyleInclude Source="Controls/Inference/WanModelCard.axaml" />
         <StyleInclude Source="Controls/Inference/PlasmaNoiseCard.axaml" />
+        <StyleInclude Source="Controls/Inference/NrsCard.axaml" />
         <labs:ControlThemes />
 
         <Style Selector="DockControl">

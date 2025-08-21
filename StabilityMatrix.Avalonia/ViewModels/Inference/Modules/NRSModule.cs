@@ -20,7 +20,7 @@ public class NRSModule : ModuleBase
     }
 
     /// <summary>
-    /// Applies FreeU to the Model property
+    /// Applies NRS to the Model property
     /// </summary>
     protected override void OnApplyStep(ModuleApplyStepEventArgs e)
     {

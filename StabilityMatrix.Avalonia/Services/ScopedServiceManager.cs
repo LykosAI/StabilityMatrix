@@ -1,4 +1,6 @@
-﻿namespace StabilityMatrix.Avalonia.Services;
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace StabilityMatrix.Avalonia.Services;
 
 internal class ScopedServiceManager<T> : IServiceManager<T>
 {
@@ -78,6 +80,13 @@ internal class ScopedServiceManager<T> : IServiceManager<T>
 
         // 3. If not scoped, delegate to the parent manager to resolve Singleton or Transient
         //    (Parent's Get will throw if the type isn't registered there either)
-        return parentManager.Get(serviceType);
+        // return parentManager.Get(serviceType);
+
+        // We don't use parent manager for scoped contexts anymore,
+        // since we'll lose the scope through transients,
+        // then we have to make Inference Cards scoped as well,
+        // which cases samplers to be shared with Civit page and other issues.
+        // 3. Just use the scoped service provider, since we might need to keep the scope through transients as well
+        return (T)scopedServiceProvider.GetRequiredService(serviceType);
     }
 }

@@ -20,7 +20,7 @@ namespace StabilityMatrix.Avalonia.ViewModels.Inference;
 
 [View(typeof(ModelCard))]
 [ManagedService]
-[RegisterScoped<ModelCardViewModel>]
+[RegisterTransient<ModelCardViewModel>]
 public partial class ModelCardViewModel(
     IInferenceClientManager clientManager,
     IServiceManager<ViewModelBase> vmFactory,

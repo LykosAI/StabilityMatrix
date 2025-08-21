@@ -5,6 +5,10 @@ All notable changes to Stability Matrix will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2.0.0.html).
 
+## v2.15.0-pre.2
+### Fixed
+- Fixed Inference custom step (e.g. HiresFix) Samplers potentially sharing state with other card UIs like model browser.
+
 ## v2.15.0-pre.1
 ### Added
 - Added settings to disable base models from appearing in the Checkpoint Manager and Civitai Model Browser base model selectors

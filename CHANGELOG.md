@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added Next and Previous buttons to the Civitai details page to navigate between results
 ### Changed
 - Brought back the "size remaining after download" tooltip in the new Civitai details page
+- Updated ComfyUI installs for AMD users on Linux to use the latest rocm6.4 torch index
 ### Fixed
 - Fixed Inference custom step (e.g. HiresFix) Samplers potentially sharing state with other card UIs like model browser.
 - Fixed extension manager failing to install extensions due to incorrect clone directory

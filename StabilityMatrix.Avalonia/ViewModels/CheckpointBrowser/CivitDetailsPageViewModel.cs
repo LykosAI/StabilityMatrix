@@ -731,63 +731,43 @@ public partial class CivitDetailsPageViewModel(
     }
 
     [RelayCommand]
-    public async Task NextModel()
-    {
-        if (!CanGoNext)
-            return;
-
-        try
-        {
-            var modelId = ModelIdList[++CurrentIndex];
-            CivitModel = await civitApi.GetModelById(modelId);
-            ReloadCachesForNewModel();
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "Failed to load CivitModel {Id}", CivitModel.Id);
-            notificationService.Show(
-                Resources.Label_UnexpectedErrorOccurred,
-                e.Message,
-                NotificationType.Error
-            );
-        }
-    }
+    public Task NextModel() => CanGoNext ? NavigateToModelByIndexOffset(1) : Task.CompletedTask;
 
     [RelayCommand]
-    public async Task PreviousModel()
+    public Task PreviousModel() => CanGoPrevious ? NavigateToModelByIndexOffset(-1) : Task.CompletedTask;
+
+    private async Task NavigateToModelByIndexOffset(int offset)
     {
-        if (!CanGoPrevious)
-            return;
+        var newIndex = CurrentIndex + offset;
+        var modelId = ModelIdList[newIndex];
 
         try
         {
-            var modelId = ModelIdList[--CurrentIndex];
-            CivitModel = await civitApi.GetModelById(modelId);
-            ReloadCachesForNewModel();
+            var newModel = await civitApi.GetModelById(modelId);
+            CivitModel = newModel;
+            CurrentIndex = newIndex;
+
+            // reload caches for new model
+            modelVersionCache.EditDiff(CivitModel.ModelVersions ?? [], (a, b) => a.Id == b.Id);
+            SelectedVersion = ModelVersions.FirstOrDefault();
+
+            imageCache.EditDiff(SelectedVersion?.ModelVersion.Images ?? [], (a, b) => a.Url == b.Url);
+            civitFileCache.EditDiff(SelectedVersion?.ModelVersion.Files ?? [], (a, b) => a.Id == b.Id);
+
+            Description = $"""<html><body class="markdown-body">{CivitModel.Description}</body></html>""";
+            ModelVersionDescription = string.IsNullOrWhiteSpace(SelectedVersion?.ModelVersion.Description)
+                ? string.Empty
+                : $"""<html><body class="markdown-body">{SelectedVersion.ModelVersion.Description}</body></html>""";
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Failed to load CivitModel {Id}", CivitModel.Id);
+            logger.LogError(e, "Failed to load CivitModel {Id}", modelId);
             notificationService.Show(
                 Resources.Label_UnexpectedErrorOccurred,
                 e.Message,
                 NotificationType.Error
             );
         }
-    }
-
-    private void ReloadCachesForNewModel()
-    {
-        modelVersionCache.EditDiff(CivitModel.ModelVersions ?? [], (a, b) => a.Id == b.Id);
-        SelectedVersion = ModelVersions.FirstOrDefault();
-
-        imageCache.EditDiff(SelectedVersion?.ModelVersion.Images ?? [], (a, b) => a.Url == b.Url);
-        civitFileCache.EditDiff(SelectedVersion?.ModelVersion.Files ?? [], (a, b) => a.Id == b.Id);
-
-        Description = $"""<html><body class="markdown-body">{CivitModel.Description}</body></html>""";
-        ModelVersionDescription = string.IsNullOrWhiteSpace(SelectedVersion?.ModelVersion.Description)
-            ? string.Empty
-            : $"""<html><body class="markdown-body">{SelectedVersion.ModelVersion.Description}</body></html>""";
     }
 
     private void VmOnNavigateToModelRequested(object? sender, int modelId)

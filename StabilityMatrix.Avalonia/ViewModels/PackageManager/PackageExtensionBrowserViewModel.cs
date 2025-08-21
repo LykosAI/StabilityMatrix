@@ -714,17 +714,28 @@ public partial class PackageExtensionBrowserViewModel : ViewModelBase, IDisposab
         if (string.IsNullOrWhiteSpace(url))
             return;
 
-        // check if have enough parts
-        if (url.Split('/').Length < 5)
+        if (
+            !Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            || !uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
+        )
         {
-            notificationService.Show("Invalid URL", "The provided URL does not contain enough information.");
+            notificationService.Show("Invalid URL", "Please provide a valid GitHub repository URL.");
             return;
         }
 
-        // get the author from github url
-        var author = url.Split('/')[3];
-        // get the title from the url
-        var title = url.Split('/')[4].Replace(".git", "");
+        var segments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length < 2)
+        {
+            notificationService.Show(
+                "Invalid URL",
+                "The URL does not appear to be a valid GitHub repository."
+            );
+            return;
+        }
+
+        var author = segments[0];
+        var title = segments[1].Replace(".git", "");
+
         // create a new PackageExtension
         var packageExtension = new PackageExtension
         {

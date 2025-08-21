@@ -22,6 +22,7 @@ public partial class CivitFileViewModel : DisposableViewModelBase
     private readonly ISettingsManager settingsManager;
     private readonly IServiceManager<ViewModelBase> vmFactory;
     private readonly Func<CivitFileViewModel, string?, Task>? downloadAction;
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     [ObservableProperty]
     private CivitFile civitFile;
@@ -171,9 +172,7 @@ public partial class CivitFileViewModel : DisposableViewModelBase
         }
         catch (Exception e)
         {
-            LogManager
-                .GetCurrentClassLogger()
-                .Error(e, "Failed to delete model files for {ModelName}", CivitFile.Name);
+            Logger.Error(e, "Failed to delete model files for {ModelName}", CivitFile.Name);
             await modelIndexService.RefreshIndex();
             return;
         }

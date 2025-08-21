@@ -609,61 +609,39 @@ public partial class CheckpointsPageViewModel(
         }
 
         if (item.CheckpointFile.HasCivitMetadata)
-            await ShowCivitVersionDialog(item);
+            ShowCivitVersionDialog(item);
         else if (item.CheckpointFile.HasOpenModelDbMetadata)
             await ShowOpenModelDbDialog(item);
     }
 
-    private async Task ShowCivitVersionDialog(CheckpointFileViewModel item)
+    private void ShowCivitVersionDialog(CheckpointFileViewModel item)
     {
         var model = item.CheckpointFile.LatestModelInfo;
-        CivitDetailsPageViewModel newVm;
-        if (model is null)
+        if (item.CheckpointFile.ConnectedModelInfo?.ModelId == null)
         {
-            if (item.CheckpointFile.ConnectedModelInfo?.ModelId == null)
-            {
-                notificationService.Show(
-                    "Model not found",
-                    "Model not found in index, please try again later.",
-                    NotificationType.Error
-                );
-                return;
-            }
-
-            newVm = dialogFactory.Get<CivitDetailsPageViewModel>(vm =>
-            {
-                var allModelIds = Models
-                    .Where(x => x.CheckpointFile.ConnectedModelInfo?.ModelId != null)
-                    .Select(x => x.CheckpointFile.ConnectedModelInfo!.ModelId!.Value)
-                    .Distinct()
-                    .ToList();
-                var index = Models.IndexOf(item);
-
-                vm.ModelIdList = allModelIds;
-                vm.CurrentIndex = index;
-                vm.CivitModel = new CivitModel { Id = item.CheckpointFile.ConnectedModelInfo.ModelId.Value };
-
-                return vm;
-            });
+            notificationService.Show(
+                "Model not found",
+                "Model not found in index, please try again later.",
+                NotificationType.Error
+            );
+            return;
         }
-        else
+
+        var allModelIds = Models
+            .Where(x => x.CheckpointFile.ConnectedModelInfo?.ModelId != null)
+            .Select(x => x.CheckpointFile.ConnectedModelInfo!.ModelId!.Value)
+            .Distinct()
+            .ToList();
+        var index = Models.IndexOf(item);
+
+        var newVm = dialogFactory.Get<CivitDetailsPageViewModel>(vm =>
         {
-            newVm = dialogFactory.Get<CivitDetailsPageViewModel>(vm =>
-            {
-                var allModelIds = Models
-                    .Where(x => x.CheckpointFile.ConnectedModelInfo?.ModelId != null)
-                    .Select(x => x.CheckpointFile.ConnectedModelInfo!.ModelId!.Value)
-                    .Distinct()
-                    .ToList();
-                var index = Models.IndexOf(item);
-
-                vm.ModelIdList = allModelIds;
-                vm.CurrentIndex = index;
-                vm.CivitModel = model;
-
-                return vm;
-            });
-        }
+            vm.CivitModel =
+                model ?? new CivitModel { Id = item.CheckpointFile.ConnectedModelInfo.ModelId.Value };
+            vm.ModelIdList = allModelIds;
+            vm.CurrentIndex = index;
+            return vm;
+        });
 
         navigationService.NavigateTo(newVm, BetterSlideNavigationTransition.PageSlideFromRight);
     }

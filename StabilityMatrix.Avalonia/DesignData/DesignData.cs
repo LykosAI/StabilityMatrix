@@ -1068,6 +1068,8 @@ The gallery images are often inpainted, but you will get something very similar 
 
     public static FreeUCardViewModel FreeUCardViewModel => DialogFactory.Get<FreeUCardViewModel>();
 
+    public static NrsCardViewModel NrsCardViewModel => DialogFactory.Get<NrsCardViewModel>();
+
     public static PromptCardViewModel PromptCardViewModel =>
         DialogFactory.Get<PromptCardViewModel>(vm =>
         {

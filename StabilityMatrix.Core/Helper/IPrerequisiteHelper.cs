@@ -258,6 +258,13 @@ public interface IPrerequisiteHelper
         Action<ProcessOutput>? onProcessOutput = null,
         IReadOnlyDictionary<string, string>? envVars = null
     );
+
+    AnsiProcess RunNpmDetached(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null
+    );
     Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null);
     Task InstallPackageRequirements(
         BasePackage package,

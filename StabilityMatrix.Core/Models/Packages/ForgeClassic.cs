@@ -160,6 +160,22 @@ public class ForgeClassic(
             .ReadAllTextAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        var extensionsBuiltinDir = new DirectoryPath(installLocation, "extensions-builtin");
+        if (extensionsBuiltinDir.Exists)
+        {
+            var requirementsFiles = extensionsBuiltinDir.EnumerateFiles(
+                "requirements.txt",
+                EnumerationOptionConstants.AllDirectories
+            );
+
+            foreach (var requirementsFile in requirementsFiles)
+            {
+                requirementsContent += await requirementsFile
+                    .ReadAllTextAsync(cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
+
         var isLegacyNvidia =
             SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
         var torchExtraIndex = isLegacyNvidia ? "cu126" : "cu128";

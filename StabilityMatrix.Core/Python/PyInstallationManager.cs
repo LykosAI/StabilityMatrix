@@ -109,7 +109,12 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
             ? p => p is { Source: "cpython", Version.Minor: >= 10 }
             : p => p is { Source: "cpython", Version.Minor: >= 10 and <= 12 };
 
-        var filteredPythons = allPythons.Where(isSupportedVersion).OrderBy(p => p.Version).ToList();
+        var filteredPythons = allPythons
+            .Where(isSupportedVersion)
+            .GroupBy(p => p.Key)
+            .Select(g => g.OrderByDescending(p => p.IsInstalled).First())
+            .OrderBy(p => p.Version)
+            .ToList();
         var legacyPythonPath = Path.Combine(settingsManager.LibraryDir, "Assets", "Python310");
 
         if (

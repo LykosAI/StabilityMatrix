@@ -416,6 +416,22 @@ public class UnixPrerequisiteHelper(
         );
     }
 
+    public AnsiProcess RunNpmDetached(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null
+    )
+    {
+        return ProcessRunner.StartAnsiProcess(
+            NpmPath,
+            args,
+            workingDirectory,
+            onProcessOutput,
+            envVars ?? new Dictionary<string, string>()
+        );
+    }
+
     [SupportedOSPlatform("Linux")]
     [SupportedOSPlatform("macOS")]
     public async Task<Process> RunDotnet(

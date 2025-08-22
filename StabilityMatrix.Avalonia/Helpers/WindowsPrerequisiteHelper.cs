@@ -192,6 +192,22 @@ public class WindowsPrerequisiteHelper(
         onProcessOutput?.Invoke(ProcessOutput.FromStdErrLine(result.StandardError));
     }
 
+    public AnsiProcess RunNpmDetached(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null
+    )
+    {
+        return ProcessRunner.StartAnsiProcess(
+            NodeExistsPath,
+            args,
+            workingDirectory,
+            onProcessOutput,
+            envVars ?? new Dictionary<string, string>()
+        );
+    }
+
     public Task InstallPackageRequirements(
         BasePackage package,
         PyVersion? pyVersion = null,

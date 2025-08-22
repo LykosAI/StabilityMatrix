@@ -98,6 +98,13 @@ public class SDWebForge(
             },
             new()
             {
+                Name = "Skip Install",
+                Type = LaunchOptionType.Bool,
+                InitialValue = true,
+                Options = ["--skip-install"],
+            },
+            new()
+            {
                 Name = "Always Offload from VRAM",
                 Type = LaunchOptionType.Bool,
                 Options = ["--always-offload-from-vram"],
@@ -151,7 +158,7 @@ public class SDWebForge(
             )
             .ConfigureAwait(false);
 
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall("--upgrade pip wheel joblib", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
@@ -159,6 +166,23 @@ public class SDWebForge(
         var requirementsContent = await requirements
             .ReadAllTextAsync(cancellationToken)
             .ConfigureAwait(false);
+
+        // Collect all requirements.txt files from extensions-builtin subfolders
+        var extensionsBuiltinDir = new DirectoryPath(installLocation, "extensions-builtin");
+        if (extensionsBuiltinDir.Exists)
+        {
+            var requirementsFiles = extensionsBuiltinDir.EnumerateFiles(
+                "requirements.txt",
+                EnumerationOptionConstants.AllDirectories
+            );
+
+            foreach (var requirementsFile in requirementsFiles)
+            {
+                requirementsContent += await requirementsFile
+                    .ReadAllTextAsync(cancellationToken)
+                    .ConfigureAwait(false);
+            }
+        }
 
         var pipArgs = new PipInstallArgs();
 

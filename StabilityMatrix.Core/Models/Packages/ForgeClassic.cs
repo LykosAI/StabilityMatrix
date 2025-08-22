@@ -1,4 +1,5 @@
-﻿using Injectio.Attributes;
+﻿using System.Text;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -156,10 +157,11 @@ public class ForgeClassic(
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
         var requirements = new FilePath(installLocation, "requirements.txt");
-        var requirementsContent = await requirements
-            .ReadAllTextAsync(cancellationToken)
-            .ConfigureAwait(false);
+        var requirementsContentBuilder = new StringBuilder(
+            await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)
+        );
 
+        // Collect all requirements.txt files from extensions-builtin subfolders
         var extensionsBuiltinDir = new DirectoryPath(installLocation, "extensions-builtin");
         if (extensionsBuiltinDir.Exists)
         {
@@ -170,11 +172,14 @@ public class ForgeClassic(
 
             foreach (var requirementsFile in requirementsFiles)
             {
-                requirementsContent += await requirementsFile
+                var fileContent = await requirementsFile
                     .ReadAllTextAsync(cancellationToken)
                     .ConfigureAwait(false);
+                requirementsContentBuilder.AppendLine(fileContent);
             }
         }
+
+        var requirementsContent = requirementsContentBuilder.ToString();
 
         var isLegacyNvidia =
             SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();

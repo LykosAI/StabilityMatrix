@@ -38,7 +38,7 @@
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding IsSamplerSelectionEnabled}"
                                 Text="{x:Static lang:Resources.Label_Sampler}" />
-                            <ui:FAComboBox
+                            <controls:BetterComboBox
                                 Grid.Row="0"
                                 Grid.Column="2"
                                 Margin="8,0,0,8"

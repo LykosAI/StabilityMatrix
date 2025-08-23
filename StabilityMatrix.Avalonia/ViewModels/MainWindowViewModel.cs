@@ -84,6 +84,7 @@ public partial class MainWindowViewModel : ViewModelBase
             { Name: "pt-PT" } => 300,
             { Name: "pt-BR" } => 260,
             { Name: "ko-KR" } => 235,
+            { Name: "cs-CZ" } => 250,
             _ => 200,
         };
 

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.Versioning;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
@@ -113,16 +114,38 @@ public interface IPrerequisiteHelper
         // If pinning to a specific commit, we need a destination directory to continue
         if (!string.IsNullOrWhiteSpace(version?.CommitSha))
         {
-            await RunGit(["fetch", "--depth", "1", "origin", version.CommitSha!], onProcessOutput, rootDir)
-                .ConfigureAwait(false);
-            await RunGit(["checkout", "--force", version.CommitSha!], onProcessOutput, rootDir)
-                .ConfigureAwait(false);
-            await RunGit(
-                    ["submodule", "update", "--init", "--recursive", "--depth", "1"],
-                    onProcessOutput,
-                    rootDir
-                )
-                .ConfigureAwait(false);
+            try
+            {
+                await RunGit(
+                        ["fetch", "--depth", "1", "origin", version.CommitSha!],
+                        onProcessOutput,
+                        rootDir
+                    )
+                    .ConfigureAwait(false);
+                await RunGit(["checkout", "--force", version.CommitSha!], onProcessOutput, rootDir)
+                    .ConfigureAwait(false);
+                await RunGit(
+                        ["submodule", "update", "--init", "--recursive", "--depth", "1"],
+                        onProcessOutput,
+                        rootDir
+                    )
+                    .ConfigureAwait(false);
+            }
+            catch (ProcessException ex)
+            {
+                if (ex.Message.Contains("Git exited with code 128"))
+                {
+                    onProcessOutput?.Invoke(
+                        ProcessOutput.FromStdErrLine(
+                            $"Unable to check out commit {version.CommitSha} - continuing with latest commit from {version.Branch}\n\n{ex.ProcessResult?.StandardError}\n"
+                        )
+                    );
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
     }
 

@@ -160,7 +160,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         categoriesCache
             .Connect()
             .DeferUntilLoaded()
-            .Bind(Categories)
+            .SortAndBind(Categories, SortExpressionComparer<TreeViewDirectory>.Ascending(d => d.Name))
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 

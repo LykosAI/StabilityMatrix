@@ -190,7 +190,7 @@ public partial class MainWindow : AppWindowBase
                         }
                         else
                         {
-                            // idk where these 30 pixels come from. need to see if is actually just windows thing
+                            // idk where these 30 pixels come from, probably title bar height? seems to be windows specific
                             var newHeight = Compat.IsWindows
                                 ? Math.Max(0, newSize.Height - 30)
                                 : newSize.Height;

@@ -51,7 +51,7 @@ public class AiToolkit(
     public override PackageType PackageType => PackageType.SdTraining;
     public override bool OfferInOneClickInstaller => false;
     public override bool ShouldIgnoreReleases => true;
-    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_12_10;
+    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_11_13;
 
     public override IEnumerable<PackagePrerequisite> Prerequisites =>
         base.Prerequisites.Concat([PackagePrerequisite.Node]);

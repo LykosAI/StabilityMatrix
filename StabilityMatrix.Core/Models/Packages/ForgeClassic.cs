@@ -35,7 +35,7 @@ public class ForgeClassic(
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Recommended;
     public override IEnumerable<TorchIndex> AvailableTorchIndices => [TorchIndex.Cuda];
     public override bool IsCompatible => HardwareHelper.HasNvidiaGpu();
-    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_11_9;
+    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_11_13;
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
         [

@@ -25,7 +25,10 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed [#1317](https://github.com/LykosAI/StabilityMatrix/issues/1317) - Inference missing GGUF text encoders
 - Fixed [#1324](https://github.com/LykosAI/StabilityMatrix/issues/1324) - Window height slightly increasing every launch
 - Fixed [#1360](https://github.com/LykosAI/StabilityMatrix/issues/1360) - A1111 install not using correct torch for 5000-series GPUs
-- Fixed [#1361](https://github.com/LykosAI/StabilityMatrix/issues/1361) - numpy and other Forge startup errors
+- Fixed [#1361](https://github.com/LykosAI/StabilityMatrix/issues/1361) - numpy and other Forge startup 
+### Supporters
+#### 🌟 Visionaries
+A huge thank-you to our incredible Visionary-tier supporters: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, **whudunit**, and **Akiro_Senkai**! Your continued support lights the way for Stability Matrix and helps us keep building features like these. We couldn’t do it without you.
 
 ## v2.15.0-pre.1
 ### Added

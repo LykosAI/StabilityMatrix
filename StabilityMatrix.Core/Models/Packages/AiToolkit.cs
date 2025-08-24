@@ -98,9 +98,10 @@ public class AiToolkit(
         pipArgs = new PipInstallArgs("--upgrade")
             .WithParsedFromRequirementsTxt(
                 await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                excludePattern: "torch$|numpy"
+                excludePattern: "torch"
             )
-            .AddArg(Compat.IsWindows ? "triton-windows" : "triton");
+            .AddArg(Compat.IsWindows ? "triton-windows" : "triton")
+            .WithTorchExtraIndex(isBlackwell ? "cu128" : "cu126");
 
         if (installedPackage.PipOverrides != null)
         {

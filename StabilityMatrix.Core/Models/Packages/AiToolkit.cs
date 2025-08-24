@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 using Injectio.Attributes;
+using NLog;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
@@ -10,6 +11,7 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -23,6 +25,7 @@ public class AiToolkit(
 ) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     private AnsiProcess? npmProcess;
+    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public override string Name => "ai-toolkit";
     public override string DisplayName { get; set; } = "AI-Toolkit";
@@ -186,12 +189,11 @@ public class AiToolkit(
             }
             catch (OperationCanceledException e)
             {
-                Console.WriteLine(e);
+                Logger.Warn(e, "Timed out waiting for npm to exit");
+                npmProcess.CancelStreamReaders();
             }
         }
-
         npmProcess = null;
-        GC.SuppressFinalize(this);
     }
 
     private ImmutableDictionary<string, string> GetEnvVars(ImmutableDictionary<string, string> env)

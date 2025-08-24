@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.Versioning;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Models;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Packages;
@@ -253,6 +254,13 @@ public interface IPrerequisiteHelper
 
     Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null);
     Task RunNpm(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
+        IReadOnlyDictionary<string, string>? envVars = null
+    );
+
+    AnsiProcess RunNpmDetached(
         ProcessArgs args,
         string? workingDirectory = null,
         Action<ProcessOutput>? onProcessOutput = null,

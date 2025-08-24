@@ -70,7 +70,7 @@ public static partial class HardwareHelper
     [SupportedOSPlatform("linux")]
     private static IEnumerable<GpuInfo> IterGpuInfoLinux()
     {
-        var output = RunBashCommand("lspci | grep -E \"(VGA|3D)\"");
+        var output = RunBashCommand("lspci | grep -E '(VGA|3D)'");
         var gpuLines = output.Split("\n");
 
         var gpuIndex = 0;

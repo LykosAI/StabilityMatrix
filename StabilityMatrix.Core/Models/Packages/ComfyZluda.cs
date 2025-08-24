@@ -44,7 +44,7 @@ public class ComfyZluda(
 
     public override TorchIndex GetRecommendedTorchVersion() => TorchIndex.Zluda;
 
-    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_11_9;
+    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_11_13;
 
     public override bool IsCompatible => HardwareHelper.PreferDirectMLOrZluda();
 

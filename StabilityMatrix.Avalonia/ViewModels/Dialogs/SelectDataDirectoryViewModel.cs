@@ -46,7 +46,7 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
     private string dataDirectory = DefaultInstallLocation;
 
     [ObservableProperty]
-    private bool isPortableMode = Compat.IsLinux;
+    private bool isPortableMode;
 
     [ObservableProperty]
     private string directoryStatusText = string.Empty;
@@ -73,7 +73,7 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
         {
             State = ProgressState.Inactive,
             SuccessToolTipText = ValidExistingDirectoryText,
-            FailToolTipText = InvalidDirectoryText
+            FailToolTipText = InvalidDirectoryText,
         };
 
     public SelectDataDirectoryViewModel(ISettingsManager settingsManager)
@@ -85,6 +85,7 @@ public partial class SelectDataDirectoryViewModel : ContentDialogViewModelBase
     public override void OnLoaded()
     {
         ValidatorRefreshBadge.RefreshCommand.ExecuteAsync(null).SafeFireAndForget();
+        IsPortableMode = true;
     }
 
     // Revalidate on data directory change

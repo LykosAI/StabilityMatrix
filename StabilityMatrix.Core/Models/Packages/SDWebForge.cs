@@ -1,4 +1,5 @@
-﻿using Injectio.Attributes;
+﻿using System.Text;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -98,6 +99,13 @@ public class SDWebForge(
             },
             new()
             {
+                Name = "Skip Install",
+                Type = LaunchOptionType.Bool,
+                InitialValue = true,
+                Options = ["--skip-install"],
+            },
+            new()
+            {
                 Name = "Always Offload from VRAM",
                 Type = LaunchOptionType.Bool,
                 Options = ["--always-offload-from-vram"],
@@ -151,14 +159,34 @@ public class SDWebForge(
             )
             .ConfigureAwait(false);
 
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
+        await venvRunner.PipInstall("--upgrade pip wheel joblib", onConsoleOutput).ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        var requirementsContent = await requirements
-            .ReadAllTextAsync(cancellationToken)
-            .ConfigureAwait(false);
+        var requirementsContentBuilder = new StringBuilder(
+            await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)
+        );
+
+        // Collect all requirements.txt files from extensions-builtin subfolders
+        var extensionsBuiltinDir = new DirectoryPath(installLocation, "extensions-builtin");
+        if (extensionsBuiltinDir.Exists)
+        {
+            var requirementsFiles = extensionsBuiltinDir.EnumerateFiles(
+                "requirements.txt",
+                EnumerationOptionConstants.AllDirectories
+            );
+
+            foreach (var requirementsFile in requirementsFiles)
+            {
+                var fileContent = await requirementsFile
+                    .ReadAllTextAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                requirementsContentBuilder.AppendLine(fileContent);
+            }
+        }
+
+        var requirementsContent = requirementsContentBuilder.ToString();
 
         var pipArgs = new PipInstallArgs();
 

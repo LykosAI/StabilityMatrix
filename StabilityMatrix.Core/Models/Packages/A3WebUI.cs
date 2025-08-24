@@ -216,18 +216,22 @@ public class A3WebUI(
         progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
 
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var isBlackwell =
+            torchVersion is TorchIndex.Cuda
+            && (SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu());
 
         var requirements = new FilePath(installLocation, "requirements_versions.txt");
         var pipArgs = torchVersion switch
         {
             TorchIndex.Mps => new PipInstallArgs().WithTorch("==2.3.1").WithTorchVision("==0.18.1"),
             _ => new PipInstallArgs()
-                .WithTorch("==2.1.2")
-                .WithTorchVision("==0.16.2")
+                .WithTorch(isBlackwell ? string.Empty : "==2.1.2")
+                .WithTorchVision(isBlackwell ? string.Empty : "==0.16.2")
                 .WithTorchExtraIndex(
                     torchVersion switch
                     {
                         TorchIndex.Cpu => "cpu",
+                        TorchIndex.Cuda when isBlackwell => "cu128",
                         TorchIndex.Cuda => "cu121",
                         TorchIndex.Rocm => "rocm5.6",
                         TorchIndex.Mps => "cpu",

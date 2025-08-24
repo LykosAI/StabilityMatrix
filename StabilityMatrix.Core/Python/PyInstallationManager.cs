@@ -17,7 +17,7 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
     // Default Python versions - these are TARGET versions SM knows about
     public static readonly PyVersion Python_3_10_11 = new(3, 10, 11);
     public static readonly PyVersion Python_3_10_17 = new(3, 10, 17);
-    public static readonly PyVersion Python_3_11_9 = new(3, 11, 9);
+    public static readonly PyVersion Python_3_11_13 = new(3, 11, 13);
     public static readonly PyVersion Python_3_12_10 = new(3, 12, 10);
 
     /// <summary>
@@ -109,7 +109,12 @@ public class PyInstallationManager(IUvManager uvManager, ISettingsManager settin
             ? p => p is { Source: "cpython", Version.Minor: >= 10 }
             : p => p is { Source: "cpython", Version.Minor: >= 10 and <= 12 };
 
-        var filteredPythons = allPythons.Where(isSupportedVersion).OrderBy(p => p.Version).ToList();
+        var filteredPythons = allPythons
+            .Where(isSupportedVersion)
+            .GroupBy(p => p.Key)
+            .Select(g => g.OrderByDescending(p => p.IsInstalled).First())
+            .OrderBy(p => p.Version)
+            .ToList();
         var legacyPythonPath = Path.Combine(settingsManager.LibraryDir, "Assets", "Python310");
 
         if (

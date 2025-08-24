@@ -229,6 +229,13 @@ public class PackageFactory : IPackageFactory
                 prerequisiteHelper,
                 pyInstallationManager
             ),
+            "ai-toolkit" => new AiToolkit(
+                githubApiCache,
+                settingsManager,
+                downloadService,
+                prerequisiteHelper,
+                pyInstallationManager
+            ),
             _ => throw new ArgumentOutOfRangeException(nameof(installedPackage)),
         };
     }

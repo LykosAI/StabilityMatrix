@@ -73,7 +73,8 @@ public partial class MainWindowViewModel : ViewModelBase
     public UpdateViewModel UpdateViewModel { get; init; }
 
     public double PaneWidth =>
-        Cultures.Current switch
+        (Compat.IsWindows ? 0 : 20)
+        + Cultures.Current switch
         {
             { Name: "it-IT" } => 250,
             { Name: "fr-FR" } => 250,

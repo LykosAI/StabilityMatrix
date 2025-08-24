@@ -55,7 +55,7 @@
                                 VerticalAlignment="Center"
                                 IsVisible="{Binding IsSchedulerSelectionEnabled}"
                                 Text="{x:Static lang:Resources.Label_Scheduler}" />
-                            <ui:FAComboBox
+                            <controls:BetterComboBox
                                 Grid.Row="1"
                                 Grid.Column="2"
                                 Margin="8,0,0,8"

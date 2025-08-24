@@ -98,6 +98,15 @@ public partial class NewOneClickInstallViewModel : ContentDialogViewModelBase
         AllPackagesCache.AddOrUpdate(packageFactory.GetAllAvailablePackages());
     }
 
+    public override void OnLoaded()
+    {
+        base.OnLoaded();
+        if (ShownPackages.Count > 0)
+            return;
+
+        ShowIncompatiblePackages = true;
+    }
+
     [RelayCommand]
     private async Task InstallComfyForInference()
     {

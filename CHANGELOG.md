@@ -19,12 +19,13 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Inference custom step (e.g. HiresFix) Samplers potentially sharing state with other card UIs like model browser.
 - Fixed extension manager failing to install extensions due to incorrect clone directory
 - Fixed duplicate Python versions appearing in the Advanced Options when installing a package
+- Fixed [#1254](https://github.com/LykosAI/StabilityMatrix/issues/1254) - Unable to scroll samplers in Inference
+- Fixed [#1294](https://github.com/LykosAI/StabilityMatrix/issues/1294) - Improper sorting of output folders in Output Browser
+- Fixed [#1300](https://github.com/LykosAI/StabilityMatrix/issues/1300) - Git errors when installing Extension Packs
+- Fixed [#1317](https://github.com/LykosAI/StabilityMatrix/issues/1317) - Inference missing GGUF text encoders
+- Fixed [#1324](https://github.com/LykosAI/StabilityMatrix/issues/1324) - Window height slightly increasing every launch
 - Fixed [#1360](https://github.com/LykosAI/StabilityMatrix/issues/1360) - A1111 install not using correct torch for 5000-series GPUs
 - Fixed [#1361](https://github.com/LykosAI/StabilityMatrix/issues/1361) - numpy and other Forge startup errors
-- Fixed [#1317](https://github.com/LykosAI/StabilityMatrix/issues/1317) - Inference missing GGUF text encoders
-- Fixed [#1300](https://github.com/LykosAI/StabilityMatrix/issues/1300) - Git errors when installing Extension Packs
-- Fixed [#1294](https://github.com/LykosAI/StabilityMatrix/issues/1294) - Improper sorting of output folders in Output Browser
-- Fixed [#1324](https://github.com/LykosAI/StabilityMatrix/issues/1324) - Window height slightly increasing every launch
 
 ## v2.15.0-pre.1
 ### Added

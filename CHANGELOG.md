@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed Inference custom step (e.g. HiresFix) Samplers potentially sharing state with other card UIs like model browser.
 - Fixed extension manager failing to install extensions due to incorrect clone directory
 - Fixed duplicate Python versions appearing in the Advanced Options when installing a package
+- Fixed an error when packages and other processes exit before process tracking on windows can initialize
 - Fixed [#1254](https://github.com/LykosAI/StabilityMatrix/issues/1254) - Unable to scroll samplers in Inference
 - Fixed [#1294](https://github.com/LykosAI/StabilityMatrix/issues/1294) - Improper sorting of output folders in Output Browser
 - Fixed [#1300](https://github.com/LykosAI/StabilityMatrix/issues/1300) - Git errors when installing Extension Packs

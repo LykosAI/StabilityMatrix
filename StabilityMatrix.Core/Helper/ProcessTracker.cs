@@ -20,31 +20,30 @@ public static partial class ProcessTracker
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-    private static readonly Lazy<JobObject?> ProcessTrackerJobLazy =
-        new(() =>
+    private static readonly Lazy<JobObject?> ProcessTrackerJobLazy = new(() =>
+    {
+        if (!JobObject.IsAvailableOnCurrentPlatform)
         {
-            if (!JobObject.IsAvailableOnCurrentPlatform)
-            {
-                return null;
-            }
+            return null;
+        }
 
-            // The job name is optional (and can be null) but it helps with diagnostics.
-            //  If it's not null, it has to be unique. Use SysInternals' Handle command-line
-            //  utility: handle -a ChildProcessTracker
-            var jobName = $"SM_ProcessTracker_{Environment.ProcessId}";
+        // The job name is optional (and can be null) but it helps with diagnostics.
+        //  If it's not null, it has to be unique. Use SysInternals' Handle command-line
+        //  utility: handle -a ChildProcessTracker
+        var jobName = $"SM_ProcessTracker_{Environment.ProcessId}";
 
-            Logger.Debug("Creating Job Object {Job}", jobName);
+        Logger.Debug("Creating Job Object {Job}", jobName);
 
-            try
-            {
-                return new JobObject(jobName);
-            }
-            catch (Exception e)
-            {
-                Logger.Error(e, "Failed to create Job Object, ProcessTracker will be unavailable");
-                return null;
-            }
-        });
+        try
+        {
+            return new JobObject(jobName);
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Failed to create Job Object, ProcessTracker will be unavailable");
+            return null;
+        }
+    });
 
     private static JobObject? ProcessTrackerJob => ProcessTrackerJobLazy.Value;
 
@@ -76,15 +75,15 @@ public static partial class ProcessTracker
             return;
         }
 
-        Logger.Debug(
-            "Adding Process {Process} [{Id}] to Job Object {Job}",
-            process.ProcessName,
-            process.Id,
-            job.Name
-        );
-
         try
         {
+            Logger.Debug(
+                "Adding Process {Process} [{Id}] to Job Object {Job}",
+                process.ProcessName,
+                process.Id,
+                job.Name
+            );
+
             job.AssignProcess(process);
         }
         catch (Exception)
@@ -207,7 +206,7 @@ public static partial class ProcessTracker
                 // This is the key flag. When our process is killed, Windows will automatically
                 //  close the job handle, and when that happens, we want the child processes to
                 //  be killed, too.
-                LimitFlags = JOBOBJECTLIMIT.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+                LimitFlags = JOBOBJECTLIMIT.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
             };
 
             var length = Marshal.SizeOf(typeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
@@ -304,7 +303,7 @@ public static partial class ProcessTracker
         EndOfJobTimeInformation = 6,
         ExtendedLimitInformation = 9,
         SecurityLimitInformation = 5,
-        GroupInformation = 11
+        GroupInformation = 11,
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -326,7 +325,7 @@ public static partial class ProcessTracker
     // ReSharper disable once IdentifierTypo
     internal enum JOBOBJECTLIMIT : uint
     {
-        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x2000
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x2000,
     }
 
     [StructLayout(LayoutKind.Sequential)]

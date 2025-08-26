@@ -1134,6 +1134,16 @@ The gallery images are often inpainted, but you will get something very similar 
     public static ExtraNetworkCardViewModel ExtraNetworkCardViewModel =>
         DialogFactory.Get<ExtraNetworkCardViewModel>();
 
+    public static ConfirmPackageDeleteDialogViewModel ConfirmPackageDeleteDialogViewModel =>
+        DialogFactory.Get<ConfirmPackageDeleteDialogViewModel>(vm =>
+            vm.Package = new InstalledPackage
+            {
+                PackageName = "a1111",
+                DisplayName = "Automatic1111 WebUI",
+                LibraryPath = "packages\\a1111",
+            }
+        );
+
     public static InstalledWorkflowsViewModel InstalledWorkflowsViewModel
     {
         get

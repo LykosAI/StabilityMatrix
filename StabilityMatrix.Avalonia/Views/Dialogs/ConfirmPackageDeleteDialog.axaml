@@ -47,7 +47,7 @@
             TextAlignment="Center" />
 
         <controls1:InfoBar
-            Title="Unexpected bad things will happen if you don't read this!"
+            Title="{x:Static lang:Resources.Label_ActionCannotBeUndone}"
             Grid.Row="3"
             Margin="0,16,0,0"
             IsClosable="False"

@@ -160,7 +160,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
         categoriesCache
             .Connect()
             .DeferUntilLoaded()
-            .SortAndBind(Categories, SortExpressionComparer<TreeViewDirectory>.Ascending(d => d.Name))
+            .Bind(Categories)
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -666,6 +666,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
                     Path.Combine(pair.InstalledPackage.FullPath!, pair.BasePackage.OutputFolderName)
                 ),
             })
+            .OrderBy(d => d.Name)
             .ToList();
 
         packageCategories.Insert(
@@ -707,6 +708,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
             subfolders.Add(category);
         }
+
+        subfolders = new ObservableCollection<TreeViewDirectory>(subfolders.OrderBy(d => d.Name));
 
         return subfolders;
     }

@@ -1087,6 +1087,87 @@
   },
   {
     "ModelCategory": "Unet",
+    "ModelName": "Wan 2.2 TI2V 5B fp16",
+    "RepositoryPath": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.2_ti2v_5B_fp16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.2 I2V High Noise 14B fp16",
+    "RepositoryPath": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.2_i2v_high_noise_14B_fp16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.2 I2V High Noise 14B fp8",
+    "RepositoryPath": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.2 I2V Low Noise 14B fp16",
+    "RepositoryPath": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.2_i2v_low_noise_14B_fp16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.2 I2V Low Noise 14B fp8",
+    "RepositoryPath": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.2 T2V High Noise 14B fp16",
+    "RepositoryPath": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.2_t2v_high_noise_14B_fp16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.2 T2V High Noise 14B fp8",
+    "RepositoryPath": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.2 T2V Low Noise 14B fp16",
+    "RepositoryPath": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.2_t2v_low_noise_14B_fp16.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
+    "ModelName": "Wan 2.2 T2V Low Noise 14B fp8",
+    "RepositoryPath": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+    "Files": [
+      "split_files/diffusion_models/wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Unet",
     "ModelName": "HiDream I1 Dev bf16",
     "RepositoryPath": "Comfy-Org/HiDream-I1_ComfyUI",
     "Files": [
@@ -1155,6 +1236,15 @@
     "RepositoryPath": "Comfy-Org/Wan_2.1_ComfyUI_repackaged",
     "Files": [
       "split_files/vae/wan_2.1_vae.safetensors"
+    ],
+    "LicenseType": "Apache 2.0"
+  },
+  {
+    "ModelCategory": "Vae",
+    "ModelName": "Wan 2.2 VAE",
+    "RepositoryPath": "Comfy-Org/Wan_2.2_ComfyUI_Repackaged",
+    "Files": [
+      "split_files/vae/wan2.2_vae.safetensors"
     ],
     "LicenseType": "Apache 2.0"
   },

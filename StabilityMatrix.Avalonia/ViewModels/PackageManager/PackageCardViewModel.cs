@@ -372,7 +372,7 @@ public partial class PackageCardViewModel(
 
         var dialogViewModel = vmFactory.Get<ConfirmPackageDeleteDialogViewModel>(vm =>
         {
-            vm.ExpectedPackageName = Package?.DisplayName;
+            vm.Package = Package;
         });
 
         var dialog = new BetterContentDialog

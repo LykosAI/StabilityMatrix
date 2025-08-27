@@ -15,10 +15,6 @@ using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
 using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
-using YamlDotNet.Core;
-using YamlDotNet.RepresentationModel;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace StabilityMatrix.Core.Models.Packages;
 
@@ -27,8 +23,9 @@ public class ComfyUI(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     public override string Name => "ComfyUI";
@@ -40,12 +37,12 @@ public class ComfyUI(
     public override string LaunchCommand => "main.py";
 
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/comfyui/preview.webp");
-    public override bool ShouldIgnoreReleases => true;
     public override bool IsInferenceCompatible => true;
     public override string OutputFolderName => "output";
     public override PackageDifficulty InstallerSortOrder => PackageDifficulty.InferenceCompatible;
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
+    public override PyVersion RecommendedPythonVersion => Python.PyInstallationManager.Python_3_12_10;
 
     // https://github.com/comfyanonymous/ComfyUI/blob/master/folder_paths.py#L11
     public override SharedFolderLayout SharedFolderLayout =>
@@ -56,7 +53,7 @@ public class ComfyUI(
             ConfigSharingOptions =
             {
                 RootKey = "stability_matrix",
-                ConfigDefaultType = ConfigDefaultType.ClearRoot
+                ConfigDefaultType = ConfigDefaultType.ClearRoot,
             },
             Rules =
             [
@@ -64,61 +61,61 @@ public class ComfyUI(
                 {
                     SourceTypes = [SharedFolderType.StableDiffusion],
                     TargetRelativePaths = ["models/checkpoints"],
-                    ConfigDocumentPaths = ["checkpoints"]
+                    ConfigDocumentPaths = ["checkpoints"],
                 },
                 new SharedFolderLayoutRule // Diffusers
                 {
                     SourceTypes = [SharedFolderType.Diffusers],
                     TargetRelativePaths = ["models/diffusers"],
-                    ConfigDocumentPaths = ["diffusers"]
+                    ConfigDocumentPaths = ["diffusers"],
                 },
                 new SharedFolderLayoutRule // Loras
                 {
                     SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
                     TargetRelativePaths = ["models/loras"],
-                    ConfigDocumentPaths = ["loras"]
+                    ConfigDocumentPaths = ["loras"],
                 },
                 new SharedFolderLayoutRule // CLIP (Text Encoders)
                 {
                     SourceTypes = [SharedFolderType.TextEncoders],
                     TargetRelativePaths = ["models/clip"],
-                    ConfigDocumentPaths = ["clip"]
+                    ConfigDocumentPaths = ["clip"],
                 },
                 new SharedFolderLayoutRule // CLIP Vision
                 {
                     SourceTypes = [SharedFolderType.ClipVision],
                     TargetRelativePaths = ["models/clip_vision"],
-                    ConfigDocumentPaths = ["clip_vision"]
+                    ConfigDocumentPaths = ["clip_vision"],
                 },
                 new SharedFolderLayoutRule // Embeddings / Textual Inversion
                 {
                     SourceTypes = [SharedFolderType.Embeddings],
                     TargetRelativePaths = ["models/embeddings"],
-                    ConfigDocumentPaths = ["embeddings"]
+                    ConfigDocumentPaths = ["embeddings"],
                 },
                 new SharedFolderLayoutRule // VAE
                 {
                     SourceTypes = [SharedFolderType.VAE],
                     TargetRelativePaths = ["models/vae"],
-                    ConfigDocumentPaths = ["vae"]
+                    ConfigDocumentPaths = ["vae"],
                 },
                 new SharedFolderLayoutRule // VAE Approx
                 {
                     SourceTypes = [SharedFolderType.ApproxVAE],
                     TargetRelativePaths = ["models/vae_approx"],
-                    ConfigDocumentPaths = ["vae_approx"]
+                    ConfigDocumentPaths = ["vae_approx"],
                 },
                 new SharedFolderLayoutRule // ControlNet / T2IAdapter
                 {
                     SourceTypes = [SharedFolderType.ControlNet, SharedFolderType.T2IAdapter],
                     TargetRelativePaths = ["models/controlnet"],
-                    ConfigDocumentPaths = ["controlnet"]
+                    ConfigDocumentPaths = ["controlnet"],
                 },
                 new SharedFolderLayoutRule // GLIGEN
                 {
                     SourceTypes = [SharedFolderType.GLIGEN],
                     TargetRelativePaths = ["models/gligen"],
-                    ConfigDocumentPaths = ["gligen"]
+                    ConfigDocumentPaths = ["gligen"],
                 },
                 new SharedFolderLayoutRule // Upscalers
                 {
@@ -126,16 +123,16 @@ public class ComfyUI(
                     [
                         SharedFolderType.ESRGAN,
                         SharedFolderType.RealESRGAN,
-                        SharedFolderType.SwinIR
+                        SharedFolderType.SwinIR,
                     ],
                     TargetRelativePaths = ["models/upscale_models"],
-                    ConfigDocumentPaths = ["upscale_models"]
+                    ConfigDocumentPaths = ["upscale_models"],
                 },
                 new SharedFolderLayoutRule // Hypernetworks
                 {
                     SourceTypes = [SharedFolderType.Hypernetwork],
                     TargetRelativePaths = ["models/hypernetworks"],
-                    ConfigDocumentPaths = ["hypernetworks"]
+                    ConfigDocumentPaths = ["hypernetworks"],
                 },
                 new SharedFolderLayoutRule // IP-Adapter Base, SD1.5, SDXL
                 {
@@ -143,49 +140,49 @@ public class ComfyUI(
                     [
                         SharedFolderType.IpAdapter,
                         SharedFolderType.IpAdapters15,
-                        SharedFolderType.IpAdaptersXl
+                        SharedFolderType.IpAdaptersXl,
                     ],
                     TargetRelativePaths = ["models/ipadapter"], // Single target path
-                    ConfigDocumentPaths = ["ipadapter"]
+                    ConfigDocumentPaths = ["ipadapter"],
                 },
                 new SharedFolderLayoutRule // Prompt Expansion
                 {
                     SourceTypes = [SharedFolderType.PromptExpansion],
                     TargetRelativePaths = ["models/prompt_expansion"],
-                    ConfigDocumentPaths = ["prompt_expansion"]
+                    ConfigDocumentPaths = ["prompt_expansion"],
                 },
                 new SharedFolderLayoutRule // Ultralytics
                 {
                     SourceTypes = [SharedFolderType.Ultralytics], // Might need specific UltralyticsBbox/Segm if symlinks differ
                     TargetRelativePaths = ["models/ultralytics"],
-                    ConfigDocumentPaths = ["ultralytics"]
+                    ConfigDocumentPaths = ["ultralytics"],
                 },
                 // Config only rules for Ultralytics bbox/segm
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Ultralytics],
                     SourceSubPath = "bbox",
-                    ConfigDocumentPaths = ["ultralytics_bbox"]
+                    ConfigDocumentPaths = ["ultralytics_bbox"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Ultralytics],
                     SourceSubPath = "segm",
-                    ConfigDocumentPaths = ["ultralytics_segm"]
+                    ConfigDocumentPaths = ["ultralytics_segm"],
                 },
                 new SharedFolderLayoutRule // SAMs
                 {
                     SourceTypes = [SharedFolderType.Sams],
                     TargetRelativePaths = ["models/sams"],
-                    ConfigDocumentPaths = ["sams"]
+                    ConfigDocumentPaths = ["sams"],
                 },
                 new SharedFolderLayoutRule // Diffusion Models / Unet
                 {
                     SourceTypes = [SharedFolderType.DiffusionModels],
                     TargetRelativePaths = ["models/diffusion_models"],
-                    ConfigDocumentPaths = ["diffusion_models"]
+                    ConfigDocumentPaths = ["diffusion_models"],
                 },
-            ]
+            ],
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>>? SharedOutputFolders =>
@@ -198,14 +195,14 @@ public class ComfyUI(
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "127.0.0.1",
-                Options = ["--listen"]
+                Options = ["--listen"],
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "8188",
-                Options = ["--port"]
+                Options = ["--port"],
             },
             new()
             {
@@ -215,9 +212,9 @@ public class ComfyUI(
                 {
                     MemoryLevel.Low => "--lowvram",
                     MemoryLevel.Medium => "--normalvram",
-                    _ => null
+                    _ => null,
                 },
-                Options = ["--highvram", "--normalvram", "--lowvram", "--novram"]
+                Options = ["--highvram", "--normalvram", "--lowvram", "--novram"],
             },
             new()
             {
@@ -226,21 +223,24 @@ public class ComfyUI(
                 InitialValue = Compat.IsWindows && HardwareHelper.HasAmdGpu() ? "0.9" : null,
                 Description =
                     "Sets the amount of VRAM (in GB) you want to reserve for use by your OS/other software",
-                Options = ["--reserve-vram"]
+                Options = ["--reserve-vram"],
             },
             new()
             {
                 Name = "Preview Method",
                 Type = LaunchOptionType.Bool,
                 InitialValue = "--preview-method auto",
-                Options = ["--preview-method auto", "--preview-method latent2rgb", "--preview-method taesd"]
+                Options = ["--preview-method auto", "--preview-method latent2rgb", "--preview-method taesd"],
             },
             new()
             {
                 Name = "Enable DirectML",
                 Type = LaunchOptionType.Bool,
-                InitialValue = HardwareHelper.PreferDirectMLOrZluda() && this is not ComfyZluda,
-                Options = ["--directml"]
+                InitialValue =
+                    !HardwareHelper.HasWindowsRocmSupportedGpu()
+                    && HardwareHelper.PreferDirectMLOrZluda()
+                    && this is not ComfyZluda,
+                Options = ["--directml"],
             },
             new()
             {
@@ -248,58 +248,54 @@ public class ComfyUI(
                 Type = LaunchOptionType.Bool,
                 InitialValue =
                     !Compat.IsMacOS && !HardwareHelper.HasNvidiaGpu() && !HardwareHelper.HasAmdGpu(),
-                Options = ["--cpu"]
+                Options = ["--cpu"],
             },
             new()
             {
                 Name = "Cross Attention Method",
                 Type = LaunchOptionType.Bool,
-                InitialValue = Compat.IsMacOS
-                    ? "--use-pytorch-cross-attention"
-                    : (Compat.IsWindows && HardwareHelper.HasAmdGpu())
-                        ? "--use-quad-cross-attention"
-                        : null,
+                InitialValue = "--use-pytorch-cross-attention",
                 Options =
                 [
                     "--use-split-cross-attention",
                     "--use-quad-cross-attention",
                     "--use-pytorch-cross-attention",
-                    "--use-sage-attention"
-                ]
+                    "--use-sage-attention",
+                ],
             },
             new()
             {
                 Name = "Force Floating Point Precision",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS ? "--force-fp16" : null,
-                Options = ["--force-fp32", "--force-fp16"]
+                Options = ["--force-fp32", "--force-fp16"],
             },
             new()
             {
                 Name = "VAE Precision",
                 Type = LaunchOptionType.Bool,
-                Options = ["--fp16-vae", "--fp32-vae", "--bf16-vae"]
+                Options = ["--fp16-vae", "--fp32-vae", "--bf16-vae"],
             },
             new()
             {
                 Name = "Disable Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
-                Options = ["--disable-xformers"]
+                Options = ["--disable-xformers"],
             },
             new()
             {
                 Name = "Disable upcasting of attention",
                 Type = LaunchOptionType.Bool,
-                Options = ["--dont-upcast-attention"]
+                Options = ["--dont-upcast-attention"],
             },
             new()
             {
                 Name = "Auto-Launch",
                 Type = LaunchOptionType.Bool,
-                Options = ["--auto-launch"]
+                Options = ["--auto-launch"],
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override string MainBranch => "master";
@@ -307,27 +303,30 @@ public class ComfyUI(
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
 
-    public override List<ExtraPackageCommand> GetExtraCommands() =>
-        Compat.IsWindows && SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() is true
-            ?
-            [
+    public override List<ExtraPackageCommand> GetExtraCommands()
+    {
+        var commands = new List<ExtraPackageCommand>();
+
+        if (Compat.IsWindows && SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu() is true)
+        {
+            commands.Add(
                 new ExtraPackageCommand
                 {
                     CommandName = "Install Triton and SageAttention",
-                    Command = async installedPackage =>
-                    {
-                        if (installedPackage == null || string.IsNullOrEmpty(installedPackage.FullPath))
-                        {
-                            throw new InvalidOperationException(
-                                "Package not found or not installed correctly"
-                            );
-                        }
-
-                        await InstallTritonAndSageAttention(installedPackage).ConfigureAwait(false);
-                    }
+                    Command = InstallTritonAndSageAttention,
                 }
-            ]
-            : [];
+            );
+        }
+
+        if (!Compat.IsMacOS && SettingsManager.Settings.PreferredGpu?.ComputeCapabilityValue is >= 7.5m)
+        {
+            commands.Add(
+                new ExtraPackageCommand { CommandName = "Install Nunchaku", Command = InstallNunchaku }
+            );
+        }
+
+        return commands;
+    }
 
     public override async Task InstallPackage(
         string installLocation,
@@ -339,7 +338,11 @@ public class ComfyUI(
     )
     {
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
@@ -352,27 +355,77 @@ public class ComfyUI(
             );
 
         var pipArgs = new PipInstallArgs();
+        var gfxArch =
+            SettingsManager.Settings.PreferredGpu?.GetAmdGfxArch()
+            ?? HardwareHelper.GetWindowsRocmSupportedGpu()?.GetAmdGfxArch();
 
-        pipArgs = torchVersion switch
+        if (
+            !string.IsNullOrWhiteSpace(gfxArch)
+            && torchVersion is TorchIndex.Rocm
+            && options.PythonOptions.PythonVersion >= PyVersion.Parse("3.11.0")
+        )
         {
-            TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
-            _ => pipArgs
-                .AddArg("--upgrade")
-                .WithTorch()
-                .WithTorchVision()
-                .WithTorchAudio()
-                .WithTorchExtraIndex(
-                    torchVersion switch
-                    {
-                        TorchIndex.Cpu => "cpu",
-                        TorchIndex.Cuda when isLegacyNvidia => "cu126",
-                        TorchIndex.Cuda => "cu128",
-                        TorchIndex.Rocm => "rocm6.2.4",
-                        TorchIndex.Mps => "cpu",
-                        _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null),
-                    }
-                ),
-        };
+            var minorPythonVersion = options.PythonOptions.PythonVersion.Value.Minor;
+
+            if (minorPythonVersion is 11)
+            {
+                pipArgs = pipArgs.AddArgs(
+                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torch-2.7.0a0+rocm_git3f903c3-cp311-cp311-win_amd64.whl",
+                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchaudio-2.7.0a0+52638ef-cp311-cp311-win_amd64.whl",
+                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchvision-0.22.0+9eb57cd-cp311-cp311-win_amd64.whl"
+                );
+            }
+            else if (minorPythonVersion is 12)
+            {
+                pipArgs = pipArgs.AddArgs(
+                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torch-2.7.0a0+git3f903c3-cp312-cp312-win_amd64.whl",
+                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchaudio-2.6.0a0+1a8f621-cp312-cp312-win_amd64.whl",
+                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchvision-0.22.0+9eb57cd-cp312-cp312-win_amd64.whl"
+                );
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(options.PythonOptions.PythonVersion),
+                    options.PythonOptions.PythonVersion,
+                    null
+                );
+            }
+
+            progress?.Report(
+                new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
+            );
+            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+
+            pipArgs = new PipInstallArgs();
+        }
+        else
+        {
+            pipArgs = torchVersion switch
+            {
+                TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
+                _ => pipArgs
+                    .AddArg("--upgrade")
+                    .WithTorch()
+                    .WithTorchVision()
+                    .WithTorchAudio()
+                    .WithTorchExtraIndex(
+                        torchVersion switch
+                        {
+                            TorchIndex.Cpu => "cpu",
+                            TorchIndex.Cuda when isLegacyNvidia => "cu126",
+                            TorchIndex.Cuda => "cu128",
+                            TorchIndex.Rocm => "rocm6.4",
+                            TorchIndex.Mps => "cpu",
+                            _ => throw new ArgumentOutOfRangeException(
+                                nameof(torchVersion),
+                                torchVersion,
+                                null
+                            ),
+                        }
+                    ),
+            };
+        }
 
         var requirements = new FilePath(installLocation, "requirements.txt");
 
@@ -406,10 +459,12 @@ public class ComfyUI(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        // Use the same Python version that was used for installation
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );
@@ -438,6 +493,26 @@ public class ComfyUI(
         }
     }
 
+    public override TorchIndex GetRecommendedTorchVersion()
+    {
+        var preferRocm =
+            (Compat.IsLinux && (SettingsManager.Settings.PreferredGpu?.IsAmd ?? HardwareHelper.PreferRocm()))
+            || (
+                Compat.IsWindows
+                && (
+                    SettingsManager.Settings.PreferredGpu?.IsWindowsRocmSupportedGpu()
+                    ?? HardwareHelper.HasWindowsRocmSupportedGpu()
+                )
+            );
+
+        if (AvailableTorchIndices.Contains(TorchIndex.Rocm) && preferRocm)
+        {
+            return TorchIndex.Rocm;
+        }
+
+        return base.GetRecommendedTorchVersion();
+    }
+
     public override IPackageExtensionManager ExtensionManager =>
         new ComfyExtensionManager(this, settingsManager);
 
@@ -449,7 +524,7 @@ public class ComfyUI(
         public override IEnumerable<ExtensionManifest> DefaultManifests =>
             [
                 "https://cdn.jsdelivr.net/gh/ltdrdata/ComfyUI-Manager/custom-node-list.json",
-                "https://cdn.jsdelivr.net/gh/LykosAI/ComfyUI-Extensions-Index/custom-node-list.json"
+                "https://cdn.jsdelivr.net/gh/LykosAI/ComfyUI-Extensions-Index/custom-node-list.json",
             ];
 
         public override async Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(
@@ -493,12 +568,12 @@ public class ComfyUI(
         )
         {
             await base.UpdateExtensionAsync(
-                installedExtension,
-                installedPackage,
-                version,
-                progress,
-                cancellationToken
-            )
+                    installedExtension,
+                    installedPackage,
+                    version,
+                    progress,
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -525,12 +600,12 @@ public class ComfyUI(
         )
         {
             await base.InstallExtensionAsync(
-                extension,
-                installedPackage,
-                version,
-                progress,
-                cancellationToken
-            )
+                    extension,
+                    installedPackage,
+                    version,
+                    progress,
+                    cancellationToken
+                )
                 .ConfigureAwait(false);
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -562,7 +637,10 @@ public class ComfyUI(
             if (extension.Pip != null)
             {
                 await using var venvRunner = await package
-                    .SetupVenvPure(installedPackage.FullPath!)
+                    .SetupVenvPure(
+                        installedPackage.FullPath!,
+                        pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                    )
                     .ConfigureAwait(false);
 
                 var pipArgs = new PipInstallArgs();
@@ -595,7 +673,10 @@ public class ComfyUI(
                         );
 
                         await using var venvRunner = await package
-                            .SetupVenvPure(installedPackage.FullPath!)
+                            .SetupVenvPure(
+                                installedPackage.FullPath!,
+                                pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                            )
                             .ConfigureAwait(false);
 
                         var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(requirementsContent);
@@ -624,7 +705,10 @@ public class ComfyUI(
                     );
 
                     await using var venvRunner = await package
-                        .SetupVenvPure(installedPackage.FullPath!)
+                        .SetupVenvPure(
+                            installedPackage.FullPath!,
+                            pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+                        )
                         .ConfigureAwait(false);
 
                     venvRunner.WorkingDirectory = installScript.Directory;
@@ -660,18 +744,22 @@ public class ComfyUI(
         }
     }
 
-    private async Task InstallTritonAndSageAttention(InstalledPackage installedPackage)
+    private async Task InstallTritonAndSageAttention(InstalledPackage? installedPackage)
     {
         if (installedPackage?.FullPath is null)
             return;
 
-        var installSageStep = new InstallSageAttentionStep(DownloadService, PrerequisiteHelper)
+        var installSageStep = new InstallSageAttentionStep(
+            DownloadService,
+            PrerequisiteHelper,
+            PyInstallationManager
+        )
         {
             InstalledPackage = installedPackage,
             WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
             EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
             IsBlackwellGpu =
-                SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu()
+                SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu(),
         };
 
         var runner = new PackageModificationRunner
@@ -715,9 +803,34 @@ public class ComfyUI(
                     {
                         Name = "--use-sage-attention",
                         Type = LaunchOptionType.Bool,
-                        OptionValue = true
+                        OptionValue = true,
                     }
                 );
         }
+    }
+
+    private async Task InstallNunchaku(InstalledPackage? installedPackage)
+    {
+        if (installedPackage?.FullPath is null)
+            return;
+
+        var installNunchaku = new InstallNunchakuStep(PyInstallationManager)
+        {
+            InstalledPackage = installedPackage,
+            WorkingDirectory = new DirectoryPath(installedPackage.FullPath),
+            EnvironmentVariables = SettingsManager.Settings.EnvironmentVariables,
+            PreferredGpu =
+                SettingsManager.Settings.PreferredGpu
+                ?? HardwareHelper.IterGpuInfo().FirstOrDefault(x => x.IsNvidia || x.IsAmd),
+            ComfyExtensionManager = ExtensionManager,
+        };
+
+        var runner = new PackageModificationRunner
+        {
+            ShowDialogOnStart = true,
+            ModificationCompleteMessage = "Nunchaku installed successfully",
+        };
+        EventManager.Instance.OnPackageInstallProgressAdded(runner);
+        await runner.ExecuteSteps([installNunchaku]).ConfigureAwait(false);
     }
 }

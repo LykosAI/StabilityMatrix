@@ -17,8 +17,9 @@ public class KohyaSs(
     ISettingsManager settingsManager,
     IDownloadService downloadService,
     IPrerequisiteHelper prerequisiteHelper,
-    IPyRunner runner
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPyRunner runner,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "kohya_ss";
     public override string DisplayName { get; set; } = "kohya_ss";
@@ -56,6 +57,13 @@ public class KohyaSs(
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 Options = ["--port"],
+            },
+            new LaunchOptionDefinition
+            {
+                Name = "Skip Requirements Verification",
+                Type = LaunchOptionType.Bool,
+                Options = ["--noverify"],
+                InitialValue = true,
             },
             new LaunchOptionDefinition
             {
@@ -123,7 +131,11 @@ public class KohyaSs(
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
 
         // Setup venv
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         // Extra dep needed before running setup since v23.0.x
         var pipArgs = new PipInstallArgs("rich", "packaging", "setuptools", "uv");
@@ -143,7 +155,7 @@ public class KohyaSs(
             .WithTorch()
             .WithTorchVision()
             .WithTorchAudio()
-            .WithXFormers(">=0.0.30")
+            .WithXFormers()
             .WithTorchExtraIndex(torchExtraIndex)
             .AddArg("--force-reinstall");
 
@@ -196,7 +208,8 @@ public class KohyaSs(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {

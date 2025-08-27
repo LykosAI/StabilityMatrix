@@ -1,6 +1,9 @@
 ﻿using System.Collections.Immutable;
+using System.Globalization;
+using AsyncAwaitBestPractices;
 using LiteDB;
 using LiteDB.Async;
+using LiteDB.Engine;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using StabilityMatrix.Core.Extensions;
@@ -73,8 +76,24 @@ public class LiteDbContext : ILiteDbContext
             {
                 var dbPath = Path.Combine(settingsManager.LibraryDir, "StabilityMatrix.db");
                 db = new LiteDatabaseAsync(
-                    new ConnectionString() { Filename = dbPath, Connection = ConnectionType.Shared, }
+                    new ConnectionString { Filename = dbPath, Connection = ConnectionType.Shared }
                 );
+
+                var sortOption = db.Collation.SortOptions;
+                if (sortOption is not CompareOptions.Ordinal)
+                {
+                    logger.LogDebug(
+                        "Database collation is not Ordinal ({SortOption}), rebuilding...",
+                        sortOption
+                    );
+
+                    var options = new RebuildOptions
+                    {
+                        Collation = new Collation(CultureInfo.InvariantCulture.LCID, CompareOptions.Ordinal),
+                    };
+
+                    db.RebuildAsync(options).GetAwaiter().GetResult();
+                }
             }
             catch (IOException e)
             {
@@ -100,11 +119,10 @@ public class LiteDbContext : ILiteDbContext
     {
         var version = await CivitModelVersions
             .Query()
-            .Where(
-                mv =>
-                    mv.Files!.Select(f => f.Hashes)
-                        .Select(hashes => hashes.BLAKE3)
-                        .Any(hash => hash == hashBlake3)
+            .Where(mv =>
+                mv.Files!.Select(f => f.Hashes)
+                    .Select(hashes => hashes.BLAKE3)
+                    .Any(hash => hash == hashBlake3)
             )
             .FirstOrDefaultAsync()
             .ConfigureAwait(false);
@@ -201,7 +219,7 @@ public class LiteDbContext : ILiteDbContext
             nameof(CivitModelQueryCache),
             nameof(GithubCache),
             nameof(LocalModelFiles),
-            nameof(LocalImageFiles)
+            nameof(LocalImageFiles),
         };
 
         logger.LogInformation("Clearing all cache collections: [{@Names}]", collectionNames);

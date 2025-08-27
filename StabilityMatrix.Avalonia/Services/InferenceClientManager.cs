@@ -171,13 +171,8 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         modelsSource
             .Connect()
-            .SortBy(
-                f => f.ShortDisplayName,
-                SortDirection.Ascending,
-                SortOptimisations.ComparesImmutableValuesOnly
-            )
             .DeferUntilLoaded()
-            .Bind(Models)
+            .SortAndBind(Models, SortExpressionComparer<HybridModelFile>.Ascending(f => f.ShortDisplayName))
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -251,13 +246,11 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
 
         unetModelsSource
             .Connect()
-            .SortBy(
-                f => f.ShortDisplayName,
-                SortDirection.Ascending,
-                SortOptimisations.ComparesImmutableValuesOnly
-            )
             .DeferUntilLoaded()
-            .Bind(UnetModels)
+            .SortAndBind(
+                UnetModels,
+                SortExpressionComparer<HybridModelFile>.Ascending(f => f.ShortDisplayName)
+            )
             .ObserveOn(SynchronizationContext.Current)
             .Subscribe();
 
@@ -364,7 +357,10 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         // Get model names
         if (await Client.GetModelNamesAsync() is { } modelNames)
         {
-            modelsSource.EditDiff(modelNames.Select(HybridModelFile.FromRemote), HybridModelFile.Comparer);
+            modelsSource.EditDiff(
+                modelNames.Select(HybridModelFile.FromRemote),
+                HybridModelFile.RemoteLocalComparer
+            );
         }
 
         // Get control net model names
@@ -375,7 +371,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         {
             controlNetModelsSource.EditDiff(
                 controlNetModelNames.Select(HybridModelFile.FromRemote),
-                HybridModelFile.Comparer
+                HybridModelFile.RemoteLocalComparer
             );
         }
 
@@ -384,7 +380,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
         {
             loraModelsSource.EditDiff(
                 loraModelNames.Select(HybridModelFile.FromRemote),
-                HybridModelFile.Comparer
+                HybridModelFile.RemoteLocalComparer
             );
         }
 
@@ -399,7 +395,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 HybridModelFile.None,
                 .. ultralyticsModelNames.Select(HybridModelFile.FromRemote),
             ];
-            ultralyticsModelsSource.EditDiff(models, HybridModelFile.Comparer);
+            ultralyticsModelsSource.EditDiff(models, HybridModelFile.RemoteLocalComparer);
         }
 
         // Get SAM model names
@@ -410,7 +406,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 HybridModelFile.None,
                 .. samModelNames.Select(HybridModelFile.FromRemote),
             ];
-            samModelsSource.EditDiff(models, HybridModelFile.Comparer);
+            samModelsSource.EditDiff(models, HybridModelFile.RemoteLocalComparer);
         }
 
         // Prompt Expansion indexing is local only
@@ -487,7 +483,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 unetModels = unetModels.Concat(ggufModelNames.Select(HybridModelFile.FromRemote));
             }
 
-            unetModelsSource.AddOrUpdate(unetModels, HybridModelFile.Comparer);
+            unetModelsSource.AddOrUpdate(unetModels, HybridModelFile.RemoteLocalComparer);
         }
 
         // Get CLIP model names from DualCLIPLoader node
@@ -498,7 +494,19 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 HybridModelFile.None,
                 .. clipModelNames.Select(HybridModelFile.FromRemote),
             ];
-            clipModelsSource.EditDiff(models, HybridModelFile.Comparer);
+
+            if (
+                await Client.GetRequiredNodeOptionNamesFromOptionalNodeAsync(
+                    "DualCLIPLoaderGGUF",
+                    "clip_name1"
+                ) is
+                { } ggufClipModelNames
+            )
+            {
+                models = models.Concat(ggufClipModelNames.Select(HybridModelFile.FromRemote));
+            }
+
+            clipModelsSource.EditDiff(models, HybridModelFile.RemoteLocalComparer);
         }
 
         // Get CLIP Vision model names from CLIPVisionLoader node
@@ -509,7 +517,7 @@ public partial class InferenceClientManager : ObservableObject, IInferenceClient
                 HybridModelFile.None,
                 .. clipVisionModelNames.Select(HybridModelFile.FromRemote),
             ];
-            clipVisionModelsSource.EditDiff(models, HybridModelFile.Comparer);
+            clipVisionModelsSource.EditDiff(models, HybridModelFile.RemoteLocalComparer);
         }
     }
 

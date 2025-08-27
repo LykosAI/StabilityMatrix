@@ -27,16 +27,32 @@ namespace StabilityMatrix.Avalonia.Helpers;
 public class UnixPrerequisiteHelper(
     IDownloadService downloadService,
     ISettingsManager settingsManager,
-    IPyRunner pyRunner
+    IPyRunner pyRunner,
+    IPyInstallationManager pyInstallationManager
 ) : IPrerequisiteHelper
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+    private const string UvMacDownloadUrl =
+        "https://github.com/astral-sh/uv/releases/download/0.8.4/uv-aarch64-apple-darwin.tar.gz";
+    private const string UvLinuxDownloadUrl =
+        "https://github.com/astral-sh/uv/releases/download/0.8.4/uv-x86_64-unknown-linux-gnu.tar.gz";
+
     private DirectoryPath HomeDir => settingsManager.LibraryDir;
     private DirectoryPath AssetsDir => HomeDir.JoinDir("Assets");
 
-    private DirectoryPath PythonDir => AssetsDir.JoinDir("Python310");
-    public bool IsPythonInstalled => PythonDir.JoinFile(PyRunner.RelativePythonDllPath).Exists;
+    // Helper method to get Python directory for specific version
+    private DirectoryPath GetPythonDir(PyVersion version) =>
+        version == PyInstallationManager.Python_3_10_11
+            ? AssetsDir.JoinDir("Python310")
+            : AssetsDir.JoinDir($"Python{version.Major}{version.Minor}{version.Micro}");
+
+    // Helper method to check if specific Python version is installed
+    private bool IsPythonVersionInstalled(PyVersion version) =>
+        GetPythonDir(version).JoinFile(PyRunner.RelativePythonDllPath).Exists;
+
+    // Legacy property for compatibility
+    public bool IsPythonInstalled => IsPythonVersionInstalled(PyInstallationManager.DefaultVersion);
     private DirectoryPath PortableGitInstallDir => HomeDir + "PortableGit";
     public string GitBinPath => PortableGitInstallDir + "bin";
 
@@ -62,6 +78,26 @@ public class UnixPrerequisiteHelper(
 
     public bool IsVcBuildToolsInstalled => false;
     public bool IsHipSdkInstalled => false;
+    private string UvDownloadPath => Path.Combine(AssetsDir, "uv.tar.gz");
+    private string UvExtractPath => Path.Combine(AssetsDir, "uv");
+    public string UvExePath => Path.Combine(UvExtractPath, "uv");
+    public bool IsUvInstalled => File.Exists(UvExePath);
+    private string ExpectedUvVersion => "0.8.4";
+
+    // Helper method to get Python download URL for a specific version
+    private RemoteResource GetPythonDownloadResource(PyVersion version)
+    {
+        if (version == PyInstallationManager.Python_3_10_11)
+        {
+            return Assets.PythonDownloadUrl;
+        }
+
+        throw new ArgumentException($"Unsupported Python version: {version}", nameof(version));
+    }
+
+    // Helper method to get download path for a specific Python version
+    private string GetPythonDownloadPath(PyVersion version) =>
+        Path.Combine(AssetsDir, $"python-{version}-amd64.tar.gz");
 
     private async Task<bool> CheckIsGitInstalled()
     {
@@ -70,20 +106,36 @@ public class UnixPrerequisiteHelper(
         return isGitInstalled == true;
     }
 
-    public Task InstallPackageRequirements(BasePackage package, IProgress<ProgressReport>? progress = null) =>
-        InstallPackageRequirements(package.Prerequisites.ToList(), progress);
+    public Task InstallPackageRequirements(
+        BasePackage package,
+        PyVersion? pyVersion = null,
+        IProgress<ProgressReport>? progress = null
+    ) => InstallPackageRequirements(package.Prerequisites.ToList(), pyVersion, progress);
 
     public async Task InstallPackageRequirements(
         List<PackagePrerequisite> prerequisites,
+        PyVersion? pyVersion = null,
         IProgress<ProgressReport>? progress = null
     )
     {
         await UnpackResourcesIfNecessary(progress);
+        await InstallUvIfNecessary(progress);
 
         if (prerequisites.Contains(PackagePrerequisite.Python310))
         {
-            await InstallPythonIfNecessary(progress);
-            await InstallVirtualenvIfNecessary(progress);
+            await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
+            await InstallVirtualenvIfNecessary(PyInstallationManager.Python_3_10_11, progress);
+        }
+
+        if (pyVersion is not null)
+        {
+            if (!await EnsurePythonVersion(pyVersion.Value))
+            {
+                throw new MissingPrerequisiteException(
+                    @"Python",
+                    @$"Python {pyVersion} was not found and/or failed to install. Please check the logs for more details."
+                );
+            }
         }
 
         if (prerequisites.Contains(PackagePrerequisite.Git))
@@ -142,7 +194,8 @@ public class UnixPrerequisiteHelper(
     public async Task InstallAllIfNecessary(IProgress<ProgressReport>? progress = null)
     {
         await UnpackResourcesIfNecessary(progress);
-        await InstallPythonIfNecessary(progress);
+        await InstallPythonIfNecessary(PyInstallationManager.Python_3_10_11, progress);
+        await InstallUvIfNecessary(progress);
     }
 
     public async Task UnpackResourcesIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -215,7 +268,11 @@ public class UnixPrerequisiteHelper(
     {
         var command = args.Prepend("git");
 
-        var result = await ProcessRunner.RunBashCommand(command, workingDirectory ?? "");
+        var result = await ProcessRunner.RunBashCommand(
+            command,
+            workingDirectory ?? string.Empty,
+            new Dictionary<string, string> { { "GIT_TERMINAL_PROMPT", "0" } }
+        );
         if (result.ExitCode != 0)
         {
             Logger.Error(
@@ -235,57 +292,64 @@ public class UnixPrerequisiteHelper(
 
     public async Task InstallPythonIfNecessary(IProgress<ProgressReport>? progress = null)
     {
-        if (IsPythonInstalled)
+        await InstallPythonIfNecessary(PyInstallationManager.DefaultVersion, progress);
+    }
+
+    public async Task InstallPythonIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null)
+    {
+        var pythonDir = GetPythonDir(version);
+
+        if (IsPythonVersionInstalled(version))
             return;
 
         Directory.CreateDirectory(AssetsDir);
 
         // Download
-        var remote = Assets.PythonDownloadUrl;
+        var remote = GetPythonDownloadResource(version);
         var url = remote.Url;
         var hashSha256 = remote.HashSha256;
 
         var fileName = Path.GetFileName(url.LocalPath);
         var downloadPath = Path.Combine(AssetsDir, fileName);
-        Logger.Info($"Downloading Python from {url} to {downloadPath}");
+        Logger.Info($"Downloading Python {version} from {url} to {downloadPath}");
         try
         {
             await downloadService.DownloadToFileAsync(url.ToString(), downloadPath, progress);
 
             // Verify hash
             var actualHash = await FileHash.GetSha256Async(downloadPath);
-            Logger.Info($"Verifying Python hash: (expected: {hashSha256}, actual: {actualHash})");
+            Logger.Info($"Verifying Python {version} hash: (expected: {hashSha256}, actual: {actualHash})");
             if (actualHash != hashSha256)
             {
                 throw new Exception(
-                    $"Python download hash mismatch: expected {hashSha256}, actual {actualHash}"
+                    $"Python {version} download hash mismatch: expected {hashSha256}, actual {actualHash}"
                 );
             }
 
             // Extract
-            Logger.Info($"Extracting Python Zip: {downloadPath} to {PythonDir}");
-            if (PythonDir.Exists)
+            Logger.Info($"Extracting Python {version} Zip: {downloadPath} to {pythonDir}");
+            if (pythonDir.Exists)
             {
-                await PythonDir.DeleteAsync(true);
+                await pythonDir.DeleteAsync(true);
             }
-            progress?.Report(new ProgressReport(0, "Installing Python", isIndeterminate: true));
-            await ArchiveHelper.Extract7ZAuto(downloadPath, PythonDir);
+            progress?.Report(new ProgressReport(0, $"Installing Python {version}", isIndeterminate: true));
+            await ArchiveHelper.Extract7ZAuto(downloadPath, pythonDir);
 
             // For Unix, move the inner 'python' folder up to the root PythonDir
             if (Compat.IsUnix)
             {
-                var innerPythonDir = PythonDir.JoinDir("python");
+                var innerPythonDir = pythonDir.JoinDir("python");
                 if (!innerPythonDir.Exists)
                 {
                     throw new Exception(
-                        $"Python download did not contain expected inner 'python' folder: {innerPythonDir}"
+                        $"Python {version} download did not contain expected inner 'python' folder: {innerPythonDir}"
                     );
                 }
 
                 foreach (var folder in Directory.EnumerateDirectories(innerPythonDir))
                 {
                     var folderName = Path.GetFileName(folder);
-                    var dest = Path.Combine(PythonDir, folderName);
+                    var dest = Path.Combine(pythonDir, folderName);
                     Directory.Move(folder, dest);
                 }
                 Directory.Delete(innerPythonDir);
@@ -302,9 +366,10 @@ public class UnixPrerequisiteHelper(
 
         // Initialize pyrunner and install virtualenv
         await pyRunner.Initialize();
-        await pyRunner.InstallPackage("virtualenv");
+        await pyRunner.SwitchToInstallation(version);
+        await pyRunner.InstallPackage("virtualenv", version);
 
-        progress?.Report(new ProgressReport(1, "Installing Python", isIndeterminate: false));
+        progress?.Report(new ProgressReport(1, $"Installing Python {version}", isIndeterminate: false));
     }
 
     public Task<ProcessResult> GetGitOutput(ProcessArgs args, string? workingDirectory = null)
@@ -351,20 +416,20 @@ public class UnixPrerequisiteHelper(
         );
     }
 
-    // NOTE TO FUTURE DEVS: if this is causing merge conflicts with dev, just nuke it we don't need anymore
-    private async Task<string> RunNode(
+    public AnsiProcess RunNpmDetached(
         ProcessArgs args,
         string? workingDirectory = null,
+        Action<ProcessOutput>? onProcessOutput = null,
         IReadOnlyDictionary<string, string>? envVars = null
     )
     {
-        var nodePath = Path.Combine(NodeDir, "bin", "node");
-        var result = await ProcessRunner
-            .GetProcessResultAsync(nodePath, args, workingDirectory, envVars)
-            .ConfigureAwait(false);
-
-        result.EnsureSuccessExitCode();
-        return result.StandardOutput ?? result.StandardError ?? string.Empty;
+        return ProcessRunner.StartAnsiProcess(
+            NpmPath,
+            args,
+            workingDirectory,
+            onProcessOutput,
+            envVars ?? new Dictionary<string, string>()
+        );
     }
 
     [SupportedOSPlatform("Linux")]
@@ -467,6 +532,155 @@ public class UnixPrerequisiteHelper(
         File.Delete(nodeDownloadPath);
     }
 
+    [SupportedOSPlatform("Linux")]
+    [SupportedOSPlatform("macOS")]
+    public async Task InstallVirtualenvIfNecessary(
+        PyVersion version,
+        IProgress<ProgressReport>? progress = null
+    )
+    {
+        // Check if pip and venv are installed for this version
+        var pipInstalled = File.Exists(Path.Combine(GetPythonDir(version), "bin", "pip3"));
+        var venvInstalled = Directory.Exists(
+            Path.Combine(GetPythonDir(version), "Scripts", "virtualenv" + Compat.ExeExtension)
+        );
+
+        if (!pipInstalled || !venvInstalled)
+        {
+            progress?.Report(
+                new ProgressReport(
+                    -1f,
+                    $"Installing Python {version} prerequisites...",
+                    isIndeterminate: true
+                )
+            );
+
+            await pyRunner.Initialize();
+            await pyRunner.SwitchToInstallation(version);
+
+            if (!pipInstalled)
+            {
+                await pyRunner.SetupPip(version).ConfigureAwait(false);
+            }
+
+            if (!venvInstalled)
+            {
+                await pyRunner.InstallPackage("virtualenv", version).ConfigureAwait(false);
+            }
+        }
+    }
+
+    public async Task InstallUvIfNecessary(IProgress<ProgressReport>? progress = null)
+    {
+        if (IsUvInstalled)
+        {
+            var version = await GetInstalledUvVersionAsync();
+            if (version.Contains(ExpectedUvVersion))
+            {
+                Logger.Debug("UV already installed at {UvExePath}", UvExePath);
+                return;
+            }
+
+            Logger.Warn(
+                "UV version mismatch at {UvExePath}. Expected: {ExpectedVersion}, Found: {FoundVersion}",
+                UvExePath,
+                ExpectedUvVersion,
+                version
+            );
+        }
+
+        Logger.Info("UV not found at {UvExePath}, downloading...", UvExePath);
+
+        Directory.CreateDirectory(AssetsDir);
+
+        var downloadUrl = Compat.IsMacOS ? UvMacDownloadUrl : UvLinuxDownloadUrl;
+
+        // Download UV archive
+        await downloadService.DownloadToFileAsync(downloadUrl, UvDownloadPath, progress: progress);
+
+        progress?.Report(
+            new ProgressReport(
+                progress: 0.5f,
+                isIndeterminate: true,
+                type: ProgressType.Generic,
+                message: "Installing UV package manager..."
+            )
+        );
+
+        // Create extraction directory
+        Directory.CreateDirectory(UvExtractPath);
+
+        // Extract UV
+        await ArchiveHelper.Extract7ZTar(UvDownloadPath, UvExtractPath);
+
+        // On Mac/Linux, the extraction might create a platform-specific folder
+        // (e.g., uv-aarch64-apple-darwin or uv-x86_64-unknown-linux-gnu)
+        // We need to move both the uv and uvx executables from that folder to the expected location
+
+        // Find platform-specific directory
+        var platformSpecificDir = Directory
+            .GetDirectories(UvExtractPath)
+            .FirstOrDefault(dir => Path.GetFileName(dir).StartsWith("uv-"));
+
+        if (platformSpecificDir != null)
+        {
+            Logger.Debug("Found platform-specific UV directory: {PlatformDir}", platformSpecificDir);
+
+            // List of files to move: uv and uvx
+            var filesToMove = new Dictionary<string, string>
+            {
+                { Path.Combine(platformSpecificDir, "uv"), Path.Combine(UvExtractPath, "uv") },
+                { Path.Combine(platformSpecificDir, "uvx"), Path.Combine(UvExtractPath, "uvx") },
+            };
+
+            var anyFilesMoved = false;
+
+            // Move each file if it exists
+            foreach (var entry in filesToMove)
+            {
+                var sourcePath = entry.Key;
+                var destPath = entry.Value;
+
+                if (File.Exists(sourcePath))
+                {
+                    Logger.Debug("Moving file from {Source} to {Destination}", sourcePath, destPath);
+
+                    // Ensure the destination doesn't exist before moving
+                    if (File.Exists(destPath))
+                    {
+                        File.Delete(destPath);
+                    }
+
+                    File.Move(sourcePath, destPath);
+                    anyFilesMoved = true;
+
+                    // Make the executable file executable
+                    var process = ProcessRunner.StartAnsiProcess("chmod", ["+x", destPath]);
+                    await process.WaitForExitAsync();
+                }
+            }
+
+            // Delete the now-empty platform directory after moving all files
+            if (anyFilesMoved)
+            {
+                Directory.Delete(platformSpecificDir, true);
+            }
+        }
+        else if (File.Exists(UvExePath))
+        {
+            // For Windows or if we already have the file in the right place, just make it executable
+            var process = ProcessRunner.StartAnsiProcess("chmod", ["+x", UvExePath]);
+            await process.WaitForExitAsync();
+        }
+
+        progress?.Report(
+            new ProgressReport(progress: 1f, message: "UV installation complete", type: ProgressType.Generic)
+        );
+
+        // Clean up download
+        File.Delete(UvDownloadPath);
+    }
+
     private async Task DownloadAndExtractPrerequisite(
         IProgress<ProgressReport>? progress,
         string downloadUrl,
@@ -501,6 +715,26 @@ public class UnixPrerequisiteHelper(
         File.Delete(downloadPath);
     }
 
+    private async Task<string> GetInstalledUvVersionAsync()
+    {
+        try
+        {
+            var processResult = await ProcessRunner.GetProcessResultAsync(UvExePath, "--version");
+            return processResult.StandardOutput ?? processResult.StandardError ?? string.Empty;
+        }
+        catch (Exception e)
+        {
+            Logger.Warn(e, "Failed to get UV version from {UvExePath}", UvExePath);
+            return string.Empty;
+        }
+    }
+
+    private async Task<bool> EnsurePythonVersion(PyVersion pyVersion)
+    {
+        var result = await pyInstallationManager.GetInstallationAsync(pyVersion);
+        return result.Exists();
+    }
+
     [UnsupportedOSPlatform("Linux")]
     [UnsupportedOSPlatform("macOS")]
     public Task InstallTkinterIfNecessary(IProgress<ProgressReport>? progress = null)
@@ -526,8 +760,16 @@ public class UnixPrerequisiteHelper(
     [UnsupportedOSPlatform("macOS")]
     public Task AddMissingLibsToVenv(
         DirectoryPath installedPackagePath,
+        PyBaseInstall baseInstall,
         IProgress<ProgressReport>? progress = null
     )
+    {
+        throw new PlatformNotSupportedException();
+    }
+
+    [UnsupportedOSPlatform("Linux")]
+    [UnsupportedOSPlatform("macOS")]
+    public Task InstallTkinterIfNecessary(PyVersion version, IProgress<ProgressReport>? progress = null)
     {
         throw new PlatformNotSupportedException();
     }

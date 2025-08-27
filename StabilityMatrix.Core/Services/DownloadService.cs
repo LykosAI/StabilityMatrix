@@ -195,6 +195,25 @@ public class DownloadService : IDownloadService
             }
             else if (noRedirectResponse.StatusCode == HttpStatusCode.Unauthorized)
             {
+                if (
+                    noRedirectRequest.RequestUri?.Host.Equals(
+                        "huggingface.co",
+                        StringComparison.OrdinalIgnoreCase
+                    ) == true
+                )
+                {
+                    throw new HuggingFaceLoginRequiredException();
+                }
+                if (
+                    noRedirectRequest.RequestUri?.Host.Equals(
+                        "civitai.com",
+                        StringComparison.OrdinalIgnoreCase
+                    ) == true
+                )
+                {
+                    throw new CivitLoginRequiredException();
+                }
+
                 throw new UnauthorizedAccessException();
             }
             else if (noRedirectResponse.StatusCode == HttpStatusCode.Forbidden)
@@ -358,6 +377,19 @@ public class DownloadService : IDownloadService
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                     "Bearer",
                     civitApi.ApiToken
+                );
+            }
+        }
+        // Check if Hugging Face download
+        else if (url.Host.Equals("huggingface.co", StringComparison.OrdinalIgnoreCase))
+        {
+            var secrets = await secretsManager.SafeLoadAsync().ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(secrets.HuggingFaceToken))
+            {
+                logger.LogTrace("Adding Hugging Face auth header for download {Url}", url);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+                    "Bearer",
+                    secrets.HuggingFaceToken
                 );
             }
         }

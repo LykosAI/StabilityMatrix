@@ -11,7 +11,8 @@ namespace StabilityMatrix.Core.Models.PackageModification;
 
 public class InstallSageAttentionStep(
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
 ) : IPackageStep
 {
     private const string PythonLibsDownloadUrl = "https://cdn.lykos.ai/python_libs_for_sage.zip";
@@ -31,8 +32,19 @@ public class InstallSageAttentionStep(
         }
 
         var venvDir = WorkingDirectory.JoinDir("venv");
+        var pyVersion = PyVersion.Parse(InstalledPackage.PythonVersion);
+        if (pyVersion.StringValue == "0.0.0")
+        {
+            pyVersion = PyInstallationManager.Python_3_10_11;
+        }
 
-        await using var venvRunner = PyBaseInstall.Default.CreateVenvRunner(
+        var baseInstall = !string.IsNullOrWhiteSpace(InstalledPackage.PythonVersion)
+            ? new PyBaseInstall(
+                await pyInstallationManager.GetInstallationAsync(pyVersion).ConfigureAwait(false)
+            )
+            : PyBaseInstall.Default;
+
+        await using var venvRunner = baseInstall.CreateVenvRunner(
             venvDir,
             workingDirectory: WorkingDirectory,
             environmentVariables: EnvironmentVariables
@@ -40,6 +52,13 @@ public class InstallSageAttentionStep(
 
         var torchInfo = await venvRunner.PipShow("torch").ConfigureAwait(false);
         var sageWheelUrl = string.Empty;
+        var shortPythonVersionString = pyVersion.Minor switch
+        {
+            10 => "cp310",
+            11 => "cp311",
+            12 => "cp312",
+            _ => throw new ArgumentOutOfRangeException("Invalid Python version"),
+        };
 
         if (torchInfo == null)
         {
@@ -48,17 +67,27 @@ public class InstallSageAttentionStep(
         else if (torchInfo.Version.Contains("2.5.1") && torchInfo.Version.Contains("cu124"))
         {
             sageWheelUrl =
-                "https://github.com/woct0rdho/SageAttention/releases/download/v2.1.1-windows/sageattention-2.1.1+cu124torch2.5.1-cp310-cp310-win_amd64.whl";
+                "https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post2/sageattention-2.2.0+cu124torch2.5.1.post2-cp39-abi3-win_amd64.whl";
         }
         else if (torchInfo.Version.Contains("2.6.0") && torchInfo.Version.Contains("cu126"))
         {
             sageWheelUrl =
-                "https://github.com/woct0rdho/SageAttention/releases/download/v2.1.1-windows/sageattention-2.1.1+cu126torch2.6.0-cp310-cp310-win_amd64.whl";
+                $"https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post2/sageattention-2.2.0+cu126torch2.6.0.post2-cp39-abi3-win_amd64.whl";
         }
         else if (torchInfo.Version.Contains("2.7.0") && torchInfo.Version.Contains("cu128"))
         {
             sageWheelUrl =
-                "https://github.com/woct0rdho/SageAttention/releases/download/v2.1.1-windows/sageattention-2.1.1+cu128torch2.7.0-cp310-cp310-win_amd64.whl";
+                $"https://github.com/woct0rdho/SageAttention/releases/download/v2.1.1-windows/sageattention-2.1.1+cu128torch2.7.0-{shortPythonVersionString}-{shortPythonVersionString}-win_amd64.whl";
+        }
+        else if (torchInfo.Version.Contains("2.7.1") && torchInfo.Version.Contains("cu128"))
+        {
+            sageWheelUrl =
+                $"https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post2/sageattention-2.2.0+cu128torch2.7.1.post2-cp39-abi3-win_amd64.whl";
+        }
+        else if (torchInfo.Version.Contains("2.8.0") && torchInfo.Version.Contains("cu128"))
+        {
+            sageWheelUrl =
+                $"https://github.com/woct0rdho/SageAttention/releases/download/v2.2.0-windows.post2/sageattention-2.2.0+cu128torch2.8.0.post2-cp39-abi3-win_amd64.whl";
         }
         else if (torchInfo.Version.Contains("2.7.1") && torchInfo.Version.Contains("cu128"))
         {
@@ -85,7 +114,9 @@ public class InstallSageAttentionStep(
             progress?.Report(
                 new ProgressReport(-1f, message: "Installing Triton & SageAttention", isIndeterminate: true)
             );
+
             await venvRunner.PipInstall(pipArgs, progress.AsProcessOutputHandler()).ConfigureAwait(false);
+
             return;
         }
 

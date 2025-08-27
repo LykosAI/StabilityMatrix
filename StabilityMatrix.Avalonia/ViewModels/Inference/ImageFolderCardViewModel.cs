@@ -211,6 +211,7 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
 
                             // Preload
                             await newImageSource.GetBitmapAsync();
+                            await newImageSource.GetOrRefreshTemplateKeyAsync();
 
                             // var oldImageSource = sender.ImageSource;
 
@@ -325,9 +326,9 @@ public partial class ImageFolderCardViewModel : DisposableViewModelBase
                     new(formatName)
                     {
                         Patterns = new[] { $"*.{formatName.ToLowerInvariant()}" },
-                        MimeTypes = new[] { $"image/{formatName.ToLowerInvariant()}" }
-                    }
-                }
+                        MimeTypes = new[] { $"image/{formatName.ToLowerInvariant()}" },
+                    },
+                },
             }
         );
 

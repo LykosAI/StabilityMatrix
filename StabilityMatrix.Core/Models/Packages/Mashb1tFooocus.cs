@@ -1,6 +1,7 @@
 ﻿using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -10,8 +11,9 @@ public class Mashb1tFooocus(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : Fooocus(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : Fooocus(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "mashb1t-fooocus";
     public override string Author => "mashb1t";

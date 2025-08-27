@@ -28,7 +28,8 @@ public abstract class BaseGitPackage : BasePackage
     protected readonly IGithubApiCache GithubApi;
     protected readonly IDownloadService DownloadService;
     protected readonly IPrerequisiteHelper PrerequisiteHelper;
-    public PyVenvRunner? VenvRunner;
+    protected readonly IPyInstallationManager PyInstallationManager;
+    public IPyVenvRunner? VenvRunner;
 
     public virtual string RepositoryName => Name;
     public virtual string RepositoryAuthor => Author;
@@ -66,13 +67,15 @@ public abstract class BaseGitPackage : BasePackage
         IGithubApiCache githubApi,
         ISettingsManager settingsManager,
         IDownloadService downloadService,
-        IPrerequisiteHelper prerequisiteHelper
+        IPrerequisiteHelper prerequisiteHelper,
+        IPyInstallationManager pyInstallationManager
     )
         : base(settingsManager)
     {
         GithubApi = githubApi;
         DownloadService = downloadService;
         PrerequisiteHelper = prerequisiteHelper;
+        PyInstallationManager = pyInstallationManager;
     }
 
     public override async Task<DownloadPackageVersionOptions?> GetLatestVersion(
@@ -89,7 +92,7 @@ public abstract class BaseGitPackage : BasePackage
                 IsLatest = true,
                 IsPrerelease = false,
                 BranchName = MainBranch,
-                CommitHash = commits?.FirstOrDefault()?.Sha
+                CommitHash = commits?.FirstOrDefault()?.Sha,
             };
         }
 
@@ -101,7 +104,7 @@ public abstract class BaseGitPackage : BasePackage
             {
                 IsLatest = true,
                 IsPrerelease = false,
-                BranchName = MainBranch
+                BranchName = MainBranch,
             };
         }
 
@@ -111,7 +114,7 @@ public abstract class BaseGitPackage : BasePackage
         {
             IsLatest = true,
             IsPrerelease = latestRelease.Prerelease,
-            VersionTag = latestRelease.TagName!
+            VersionTag = latestRelease.TagName!,
         };
     }
 
@@ -132,15 +135,12 @@ public abstract class BaseGitPackage : BasePackage
             var releasesList = allReleases.ToList();
             if (releasesList.Any())
             {
-                packageVersionOptions.AvailableVersions = releasesList.Select(
-                    r =>
-                        new PackageVersion
-                        {
-                            TagName = r.TagName!,
-                            ReleaseNotesMarkdown = r.Body,
-                            IsPrerelease = r.Prerelease
-                        }
-                );
+                packageVersionOptions.AvailableVersions = releasesList.Select(r => new PackageVersion
+                {
+                    TagName = r.TagName!,
+                    ReleaseNotesMarkdown = r.Body,
+                    IsPrerelease = r.Prerelease,
+                });
             }
         }
 
@@ -148,9 +148,11 @@ public abstract class BaseGitPackage : BasePackage
         var allBranches = await GithubApi
             .GetAllBranches(RepositoryAuthor, RepositoryName)
             .ConfigureAwait(false);
-        packageVersionOptions.AvailableBranches = allBranches.Select(
-            b => new PackageVersion { TagName = $"{b.Name}", ReleaseNotesMarkdown = string.Empty }
-        );
+        packageVersionOptions.AvailableBranches = allBranches.Select(b => new PackageVersion
+        {
+            TagName = $"{b.Name}",
+            ReleaseNotesMarkdown = string.Empty,
+        });
 
         return packageVersionOptions;
     }
@@ -159,11 +161,12 @@ public abstract class BaseGitPackage : BasePackage
     /// Setup the virtual environment for the package.
     /// </summary>
     [MemberNotNull(nameof(VenvRunner))]
-    public async Task<PyVenvRunner> SetupVenv(
+    public async Task<IPyVenvRunner> SetupVenv(
         string installedPackagePath,
         string venvName = "venv",
         bool forceRecreate = false,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        PyVersion? pythonVersion = null
     )
     {
         if (Interlocked.Exchange(ref VenvRunner, null) is { } oldRunner)
@@ -171,7 +174,13 @@ public abstract class BaseGitPackage : BasePackage
             await oldRunner.DisposeAsync().ConfigureAwait(false);
         }
 
-        var venvRunner = await SetupVenvPure(installedPackagePath, venvName, forceRecreate, onConsoleOutput)
+        var venvRunner = await SetupVenvPure(
+                installedPackagePath,
+                venvName,
+                forceRecreate,
+                onConsoleOutput,
+                pythonVersion
+            )
             .ConfigureAwait(false);
 
         if (Interlocked.Exchange(ref VenvRunner, venvRunner) is { } oldRunner2)
@@ -188,15 +197,28 @@ public abstract class BaseGitPackage : BasePackage
     /// Like <see cref="SetupVenv"/>, but does not set the <see cref="VenvRunner"/> property.
     /// Returns a new <see cref="PyVenvRunner"/> instance.
     /// </summary>
-    public async Task<PyVenvRunner> SetupVenvPure(
+    public async Task<IPyVenvRunner> SetupVenvPure(
         string installedPackagePath,
         string venvName = "venv",
         bool forceRecreate = false,
-        Action<ProcessOutput>? onConsoleOutput = null
+        Action<ProcessOutput>? onConsoleOutput = null,
+        PyVersion? pythonVersion = null
     )
     {
-        var venvRunner = await PyBaseInstall
-            .Default.CreateVenvRunnerAsync(
+        // Use either the specific version or the default one
+        var baseInstall = pythonVersion.HasValue
+            ? new PyBaseInstall(
+                await PyInstallationManager.GetInstallationAsync(pythonVersion.Value).ConfigureAwait(false)
+            )
+            : PyBaseInstall.Default;
+
+        if (!PrerequisiteHelper.IsUvInstalled)
+        {
+            await PrerequisiteHelper.InstallUvIfNecessary().ConfigureAwait(false);
+        }
+
+        var venvRunner = await baseInstall
+            .CreateVenvRunnerAsync(
                 Path.Combine(installedPackagePath, venvName),
                 workingDirectory: installedPackagePath,
                 environmentVariables: SettingsManager.Settings.EnvironmentVariables,
@@ -210,12 +232,17 @@ public abstract class BaseGitPackage : BasePackage
             await venvRunner.Setup(true, onConsoleOutput).ConfigureAwait(false);
         }
 
+        // ensure pip is installed
+        await venvRunner.PipInstall("pip", onConsoleOutput).ConfigureAwait(false);
+
         if (!Compat.IsWindows)
             return venvRunner;
 
         try
         {
-            await PrerequisiteHelper.AddMissingLibsToVenv(installedPackagePath).ConfigureAwait(false);
+            await PrerequisiteHelper
+                .AddMissingLibsToVenv(installedPackagePath, baseInstall)
+                .ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -261,7 +288,7 @@ public abstract class BaseGitPackage : BasePackage
                         ? versionOptions.VersionTag
                         : versionOptions.BranchName ?? MainBranch,
                     GithubUrl,
-                    installLocation
+                    installLocation,
                 },
                 progress?.AsProcessOutputHandler()
             )
@@ -516,7 +543,7 @@ public abstract class BaseGitPackage : BasePackage
             return new InstalledPackageVersion
             {
                 InstalledReleaseVersion = versionOptions.VersionTag,
-                IsPrerelease = versionOptions.IsPrerelease
+                IsPrerelease = versionOptions.IsPrerelease,
             };
         }
 
@@ -546,13 +573,31 @@ public abstract class BaseGitPackage : BasePackage
 
             // pull
             progress?.Report(new ProgressReport(-1f, "Pulling changes...", isIndeterminate: true));
-            await PrerequisiteHelper
-                .RunGit(
-                    new[] { "pull", "--autostash", "origin", installedPackage.Version.InstalledBranch! },
-                    onConsoleOutput,
+            // Try fast-forward-only first
+            var ffOnly = await PrerequisiteHelper
+                .GetGitOutput(
+                    ["pull", "--ff-only", "--autostash", "origin", installedPackage.Version.InstalledBranch!],
                     installedPackage.FullPath!
                 )
                 .ConfigureAwait(false);
+
+            if (ffOnly.ExitCode != 0)
+            {
+                // Fallback to rebase to preserve local changes if any
+                var rebaseRes = await PrerequisiteHelper
+                    .GetGitOutput(
+                        [
+                            "pull",
+                            "--rebase",
+                            "--autostash",
+                            "origin",
+                            installedPackage.Version.InstalledBranch!,
+                        ],
+                        installedPackage.FullPath!
+                    )
+                    .ConfigureAwait(false);
+                rebaseRes.EnsureSuccessExitCode();
+            }
         }
         else
         {
@@ -587,7 +632,7 @@ public abstract class BaseGitPackage : BasePackage
         {
             InstalledBranch = versionOptions.BranchName,
             InstalledCommitSha = versionOptions.CommitHash,
-            IsPrerelease = versionOptions.IsPrerelease
+            IsPrerelease = versionOptions.IsPrerelease,
         };
     }
 
@@ -703,7 +748,7 @@ public abstract class BaseGitPackage : BasePackage
                 Path.Combine("ControlNet", "ControlNet"),
                 Path.Combine("IPAdapter", "base"),
                 Path.Combine("IPAdapter", "sd15"),
-                Path.Combine("IPAdapter", "sdxl")
+                Path.Combine("IPAdapter", "sdxl"),
             ];
 
             foreach (var duplicatePath in duplicatePaths)

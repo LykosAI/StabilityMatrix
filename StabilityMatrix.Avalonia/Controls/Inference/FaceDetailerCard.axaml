@@ -133,6 +133,33 @@
                         DataContext="{Binding SeedCardViewModel}"
                         IsVisible="{Binding !$parent[StackPanel].((vmInference:FaceDetailerViewModel)DataContext).InheritSeed, TargetNullValue=False, FallbackValue=False}" />
 
+                    <avalonia:SpacedGrid
+                        Margin="0,8,0,0"
+                        ColumnDefinitions="*, *"
+                        RowDefinitions="Auto, Auto">
+                        <!--  Tiled Encode  -->
+                        <TextBlock Margin="4,0,4,0" Text="Tiled Encode" />
+                        <ToggleSwitch
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Margin="8,-8,4,0"
+                            IsChecked="{Binding UseTiledEncode}" />
+
+                        <!--  Tiled Decode  -->
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="4,0,4,0"
+                            VerticalAlignment="Center"
+                            Text="Tiled Decode" />
+                        <ToggleSwitch
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="8,-8,4,0"
+                            HorizontalAlignment="Stretch"
+                            IsChecked="{Binding UseTiledDecode}" />
+                    </avalonia:SpacedGrid>
+
                     <Separator Margin="8,16" Background="#DDDDDD" />
 
                     <avalonia:SpacedGrid
@@ -144,7 +171,7 @@
                         <ToggleSwitch
                             Grid.Row="1"
                             Grid.Column="0"
-                            Margin="8,0,4,8"
+                            Margin="8,-8,4,0"
                             IsChecked="{Binding GuideSizeFor}"
                             OffContent="Crop Region"
                             OnContent="BBox" />
@@ -159,7 +186,7 @@
                         <ToggleSwitch
                             Grid.Row="1"
                             Grid.Column="1"
-                            Margin="8,0,4,0"
+                            Margin="8,-8,4,0"
                             HorizontalAlignment="Stretch"
                             IsChecked="{Binding ForceInpaint}" />
                     </avalonia:SpacedGrid>
@@ -440,6 +467,9 @@
 
                     <!--  Positive Prompt  -->
                     <controls:PromptCard DataContext="{Binding PromptCardViewModel}" IsVisible="{Binding $parent[StackPanel].((vmInference:FaceDetailerViewModel)DataContext).UseSeparatePrompt, TargetNullValue=False, FallbackValue=False}" />
+
+                    <TextBlock Margin="4,8,4,4" Text="{x:Static lang:Resources.Label_Wildcards}" />
+                    <controls:PromptCard Margin="0,8,0,0" DataContext="{Binding WildcardViewModel}" />
                 </StackPanel>
             </ControlTemplate>
         </Setter>

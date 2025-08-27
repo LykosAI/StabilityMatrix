@@ -70,7 +70,7 @@ public static partial class HardwareHelper
     [SupportedOSPlatform("linux")]
     private static IEnumerable<GpuInfo> IterGpuInfoLinux()
     {
-        var output = RunBashCommand("lspci | grep -E \"(VGA|3D)\"");
+        var output = RunBashCommand("lspci | grep -E '(VGA|3D)'");
         var gpuLines = output.Split("\n");
 
         var gpuIndex = 0;
@@ -87,10 +87,10 @@ public static partial class HardwareHelper
             string? name = null;
 
             // Parse output with regex
-            var match = Regex.Match(gpuOutput, @"VGA compatible controller: ([^\n]*)");
+            var match = Regex.Match(gpuOutput, @"(VGA compatible controller|3D controller): ([^\n]*)");
             if (match.Success)
             {
-                name = match.Groups[1].Value.Trim();
+                name = match.Groups[2].Value.Trim();
             }
 
             match = Regex.Match(gpuOutput, @"prefetchable\) \[size=(\\d+)M\]");
@@ -267,6 +267,12 @@ public static partial class HardwareHelper
             .Any(gpu => gpu is { IsNvidia: true, Name: not null, ComputeCapabilityValue: < 7.5m });
     }
 
+    public static bool HasAmpereOrNewerGpu()
+    {
+        return IterGpuInfo()
+            .Any(gpu => gpu is { IsNvidia: true, Name: not null, ComputeCapabilityValue: >= 8.6m });
+    }
+
     /// <summary>
     /// Return true if the system has at least one AMD GPU.
     /// </summary>
@@ -275,13 +281,22 @@ public static partial class HardwareHelper
         return IterGpuInfo().Any(gpu => gpu.IsAmd);
     }
 
+    public static bool HasWindowsRocmSupportedGpu() =>
+        IterGpuInfo().Any(gpu => gpu is { IsAmd: true, Name: not null } && gpu.IsWindowsRocmSupportedGpu());
+
+    public static GpuInfo? GetWindowsRocmSupportedGpu()
+    {
+        return IterGpuInfo().FirstOrDefault(gpu => gpu.IsWindowsRocmSupportedGpu());
+    }
+
     public static bool HasIntelGpu() => IterGpuInfo().Any(gpu => gpu.IsIntel);
 
     // Set ROCm for default if AMD and Linux
     public static bool PreferRocm() => !HasNvidiaGpu() && HasAmdGpu() && Compat.IsLinux;
 
     // Set DirectML for default if AMD and Windows
-    public static bool PreferDirectMLOrZluda() => !HasNvidiaGpu() && HasAmdGpu() && Compat.IsWindows;
+    public static bool PreferDirectMLOrZluda() =>
+        !HasNvidiaGpu() && HasAmdGpu() && Compat.IsWindows && !HasWindowsRocmSupportedGpu();
 
     private static readonly Lazy<bool> IsMemoryInfoAvailableLazy = new(() => TryGetMemoryInfo(out _));
     public static bool IsMemoryInfoAvailable => IsMemoryInfoAvailableLazy.Value;

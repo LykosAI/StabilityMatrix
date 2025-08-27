@@ -11,6 +11,8 @@ public readonly record struct Secrets
     public CivitApiTokens? CivitApi { get; init; }
 
     public LykosAccountV2Tokens? LykosAccountV2 { get; init; }
+
+    public string? HuggingFaceToken { get; init; }
 }
 
 public static class SecretsExtensions

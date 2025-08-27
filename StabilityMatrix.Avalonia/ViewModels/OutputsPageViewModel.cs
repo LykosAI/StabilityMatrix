@@ -294,6 +294,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
                             // Preload
                             await newImageSource.GetBitmapAsync();
+                            await newImageSource.GetOrRefreshTemplateKeyAsync();
 
                             sender.ImageSource = newImageSource;
                             sender.LocalImageFile = newImage.ImageFile;
@@ -665,6 +666,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
                     Path.Combine(pair.InstalledPackage.FullPath!, pair.BasePackage.OutputFolderName)
                 ),
             })
+            .OrderBy(d => d.Name)
             .ToList();
 
         packageCategories.Insert(
@@ -706,6 +708,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
             subfolders.Add(category);
         }
+
+        subfolders = new ObservableCollection<TreeViewDirectory>(subfolders.OrderBy(d => d.Name));
 
         return subfolders;
     }

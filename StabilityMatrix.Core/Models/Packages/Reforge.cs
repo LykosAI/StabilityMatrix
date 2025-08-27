@@ -1,6 +1,7 @@
 ﻿using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -10,8 +11,9 @@ public class Reforge(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : SDWebForge(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : SDWebForge(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "reforge";
     public override string Author => "Panchovix";
@@ -22,9 +24,6 @@ public class Reforge(
     public override string LicenseUrl =>
         "https://github.com/Panchovix/stable-diffusion-webui-reForge/blob/main/LICENSE.txt";
     public override Uri PreviewImageUri => new("https://cdn.lykos.ai/sm/packages/reforge/preview.webp");
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Impossible;
-    public override bool OfferInOneClickInstaller => false;
-
-    public override string Disclaimer =>
-        "Development of this package has stopped. It may be removed from Stability Matrix in the future.";
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Simple;
+    public override bool OfferInOneClickInstaller => true;
 }

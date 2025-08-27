@@ -1,0 +1,1519 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Action_AddForAllUsers" xml:space="preserve">
+    <value>Přidat pro všechny uživatele</value>
+  </data>
+  <data name="Action_AddForCurrentUser" xml:space="preserve">
+    <value>Přidat pro aktuálního uživatele</value>
+  </data>
+  <data name="Action_AddPackage" xml:space="preserve">
+    <value>Přidat balíček</value>
+  </data>
+  <data name="Action_Cancel" xml:space="preserve">
+    <value>Zrušit</value>
+  </data>
+  <data name="Action_CheckForUpdates" xml:space="preserve">
+    <value>Zkontrolovat aktualizace</value>
+  </data>
+  <data name="Action_CheckVersion" xml:space="preserve">
+    <value>Zkontrolovat verzi</value>
+  </data>
+  <data name="Action_ClearSelection" xml:space="preserve">
+    <value>Zrušit výběr</value>
+  </data>
+  <data name="Action_Close" xml:space="preserve">
+    <value>Zavřít</value>
+  </data>
+  <data name="Action_Connect" xml:space="preserve">
+    <value>Připojit</value>
+  </data>
+  <data name="Action_Consolidate" xml:space="preserve">
+    <value>Konsolidovat</value>
+  </data>
+  <data name="Action_Continue" xml:space="preserve">
+    <value>Pokračovat</value>
+  </data>
+  <data name="Action_Copy" xml:space="preserve">
+    <value>Kopírovat</value>
+  </data>
+  <data name="Action_CopyAndOpen" xml:space="preserve">
+    <value>Kopírovat a otevřít</value>
+  </data>
+  <data name="Action_CopyAsBitmap" xml:space="preserve">
+    <value>Kopírovat jako bitmapu</value>
+  </data>
+  <data name="Action_CopyDetails" xml:space="preserve">
+    <value>Kopírovat detaily</value>
+  </data>
+  <data name="Action_CopyTriggerWords" xml:space="preserve">
+    <value>Kopírovat spouštěcí slova</value>
+  </data>
+  <data name="Action_Delete" xml:space="preserve">
+    <value>Smazat</value>
+  </data>
+  <data name="Action_Disable" xml:space="preserve">
+    <value>Zakázat</value>
+  </data>
+  <data name="Action_Disconnect" xml:space="preserve">
+    <value>Odpojit</value>
+  </data>
+  <data name="Action_Downgrade" xml:space="preserve">
+    <value>Downgradovat</value>
+  </data>
+  <data name="Action_Download" xml:space="preserve">
+    <value>Stáhnout</value>
+  </data>
+  <data name="Action_Edit" xml:space="preserve">
+    <value>Upravit</value>
+  </data>
+  <data name="Action_Enable" xml:space="preserve">
+    <value>Povolit</value>
+  </data>
+  <data name="Action_ExitApplication" xml:space="preserve">
+    <value>Ukončit aplikaci</value>
+  </data>
+  <data name="Action_GoToSettings" xml:space="preserve">
+    <value>Přejít do Nastavení</value>
+  </data>
+  <data name="Action_Hide" xml:space="preserve">
+    <value>Skrýt</value>
+  </data>
+  <data name="Action_Import" xml:space="preserve">
+    <value>Importovat</value>
+  </data>
+  <data name="Action_Install" xml:space="preserve">
+    <value>Instalovat</value>
+  </data>
+  <data name="Action_InstallNow" xml:space="preserve">
+    <value>Instalovat nyní</value>
+  </data>
+  <data name="Action_Launch" xml:space="preserve">
+    <value>Spustit</value>
+  </data>
+  <data name="Action_Login" xml:space="preserve">
+    <value>Přihlásit se</value>
+  </data>
+  <data name="Action_MaybeLater" xml:space="preserve">
+    <value>Možná později</value>
+  </data>
+  <data name="Action_MoveToTrash" xml:space="preserve">
+    <value>Přesunout do koše</value>
+  </data>
+  <data name="Action_New" xml:space="preserve">
+    <value>Nový</value>
+  </data>
+  <data name="Action_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Action_OpenGithub" xml:space="preserve">
+    <value>Otevřít na GitHubu</value>
+  </data>
+  <data name="Action_OpenInBrowser" xml:space="preserve">
+    <value>Otevřít v prohlížeči</value>
+  </data>
+  <data name="Action_OpenInExplorer" xml:space="preserve">
+    <value>Otevřít v Průzkumníkovi</value>
+  </data>
+  <data name="Action_OpenInFinder" xml:space="preserve">
+    <value>Otevřít ve Finderu</value>
+  </data>
+  <data name="Action_OpenInViewer" xml:space="preserve">
+    <value>Otevřít v prohlížeči obrázků</value>
+  </data>
+  <data name="Action_OpenOnCivitAi" xml:space="preserve">
+    <value>Otevřít na CivitAI</value>
+  </data>
+  <data name="Action_OpenOnHuggingFace" xml:space="preserve">
+    <value>Otevřít na Hugging Face</value>
+  </data>
+  <data name="Action_OpenOnOpenArt" xml:space="preserve">
+    <value>Otevřít na OpenArt</value>
+  </data>
+  <data name="Action_OpenOnOpenModelDb" xml:space="preserve">
+    <value>Otevřít na OpenModelDB</value>
+  </data>
+  <data name="Action_OpenProjectEllipsis" xml:space="preserve">
+    <value>Otevřít projekt...</value>
+  </data>
+  <data name="Action_OpenWebUI" xml:space="preserve">
+    <value>Otevřít webové UI</value>
+  </data>
+  <data name="Action_PreviewPreprocessor" xml:space="preserve">
+    <value>Náhled preprocesoru</value>
+  </data>
+  <data name="Action_Quit" xml:space="preserve">
+    <value>Ukončit</value>
+  </data>
+  <data name="Action_Refresh" xml:space="preserve">
+    <value>Obnovit</value>
+  </data>
+  <data name="Action_Relaunch" xml:space="preserve">
+    <value>Restartovat</value>
+  </data>
+  <data name="Action_RelaunchLater" xml:space="preserve">
+    <value>Restartovat později</value>
+  </data>
+  <data name="Action_RemindMeLater" xml:space="preserve">
+    <value>Připomenout později</value>
+  </data>
+  <data name="Action_Remove" xml:space="preserve">
+    <value>Odebrat</value>
+  </data>
+  <data name="Action_Rename" xml:space="preserve">
+    <value>Přejmenovat</value>
+  </data>
+  <data name="Action_ReplaceContents" xml:space="preserve">
+    <value>Nahradit obsah</value>
+  </data>
+  <data name="Action_Restart" xml:space="preserve">
+    <value>Restartovat</value>
+  </data>
+  <data name="Action_RestoreDefaultLayout" xml:space="preserve">
+    <value>Obnovit výchozí rozložení</value>
+  </data>
+  <data name="Action_Retry" xml:space="preserve">
+    <value>Zkusit znovu</value>
+  </data>
+  <data name="Action_Save" xml:space="preserve">
+    <value>Uložit</value>
+  </data>
+  <data name="Action_SaveAsEllipsis" xml:space="preserve">
+    <value>Uložit jako...</value>
+  </data>
+  <data name="Action_Search" xml:space="preserve">
+    <value>Hledat</value>
+  </data>
+  <data name="Action_SelectAll" xml:space="preserve">
+    <value>Vybrat vše</value>
+  </data>
+  <data name="Action_SelectDirectory" xml:space="preserve">
+    <value>Vybrat adresář</value>
+  </data>
+  <data name="Action_SelectFile" xml:space="preserve">
+    <value>Vybrat soubor</value>
+  </data>
+  <data name="Action_Send" xml:space="preserve">
+    <value>Odeslat</value>
+  </data>
+  <data name="Action_SendInput" xml:space="preserve">
+    <value>Odeslat vstup</value>
+  </data>
+  <data name="Action_SendToInference" xml:space="preserve">
+    <value>Odeslat do Inference</value>
+  </data>
+  <data name="Action_ShowInExplorer" xml:space="preserve">
+    <value>Zobrazit v Průzkumníkovi</value>
+  </data>
+  <data name="Action_ShowLogInExplorer" xml:space="preserve">
+    <value>Zobrazit záznam v Průzkumníkovi</value>
+  </data>
+  <data name="Action_ShowLogInFinder" xml:space="preserve">
+    <value>Zobrazit záznam ve Finderu</value>
+  </data>
+  <data name="Action_Signup" xml:space="preserve">
+    <value>Zaregistrovat se</value>
+  </data>
+  <data name="Action_Stop" xml:space="preserve">
+    <value>Zastavit</value>
+  </data>
+  <data name="Action_ToggleVisibility" xml:space="preserve">
+    <value>Přepnout viditelnost</value>
+  </data>
+  <data name="Action_Uninstall" xml:space="preserve">
+    <value>Odinstalovat</value>
+  </data>
+  <data name="Action_Update" xml:space="preserve">
+    <value>Aktualizovat</value>
+  </data>
+  <data name="Action_UpdateExistingMetadata" xml:space="preserve">
+    <value>Aktualizovat stávající metadata</value>
+  </data>
+  <data name="Action_Upgrade" xml:space="preserve">
+    <value>Upgradovat</value>
+  </data>
+  <data name="Action_ViewSupportOptions" xml:space="preserve">
+    <value>Zobrazit možnosti podpory</value>
+  </data>
+  <data name="Action_Yes" xml:space="preserve">
+    <value>Ano</value>
+  </data>
+  <data name="AnalyticsExample_InstallData" xml:space="preserve">
+    <value>{
+  &quot;packageName&quot;: &quot;stable-diffusion-webui&quot;,
+  &quot;packageVersion&quot;: &quot;v1.10.0&quot;,
+  &quot;isSuccess&quot;: true,
+  &quot;type&quot;: &quot;install&quot;,
+  &quot;timestamp&quot;: &quot;2024-09-04T02:14:04.1967404+00:00&quot;
+}</value>
+  </data>
+  <data name="Description_RenamePackage" xml:space="preserve">
+    <value>Zadejte nový název pro &apos;{0}&apos;</value>
+  </data>
+  <data name="Error_PleaseSelectDownloadLocation" xml:space="preserve">
+    <value>Vyberte prosím umístění pro stažení.</value>
+  </data>
+  <data name="Label_About" xml:space="preserve">
+    <value>O aplikaci</value>
+  </data>
+  <data name="Label_Accounts" xml:space="preserve">
+    <value>Účty</value>
+  </data>
+  <data name="Label_AccountSettings" xml:space="preserve">
+    <value>Nastavení účtu</value>
+  </data>
+  <data name="Label_ActionCannotBeUndone" xml:space="preserve">
+    <value>Tuto akci nelze vrátit zpět.</value>
+  </data>
+  <data name="Label_Addons" xml:space="preserve">
+    <value>Doplňky</value>
+    <comment>Inference Sampler Addons</comment>
+  </data>
+  <data name="Label_AddToExistingPack" xml:space="preserve">
+    <value>Přidat do existující sady</value>
+  </data>
+  <data name="Label_AddToStartMenu" xml:space="preserve">
+    <value>Přidat Stability Matrix do nabídky Start</value>
+  </data>
+  <data name="Label_AddToStartMenu_Details" xml:space="preserve">
+    <value>Použije aktuální umístění aplikace, můžete spustit znovu, pokud aplikaci přesunete</value>
+  </data>
+  <data name="Label_AdvancedOptions" xml:space="preserve">
+    <value>Pokročilé možnosti</value>
+  </data>
+  <data name="Label_AllVersions" xml:space="preserve">
+    <value>Všechny verze</value>
+  </data>
+  <data name="Label_Analytics" xml:space="preserve">
+    <value>Analytika</value>
+  </data>
+  <data name="Label_AnotherInstanceAlreadyRunning" xml:space="preserve">
+    <value>Jiná instance Stability Matrix je již spuštěna. Před spuštěním nové ji prosím zavřete.</value>
+  </data>
+  <data name="Label_ApiKey" xml:space="preserve">
+    <value>API klíč</value>
+  </data>
+  <data name="Label_AppData" xml:space="preserve">
+    <value>Data aplikace</value>
+  </data>
+  <data name="Label_Appearance" xml:space="preserve">
+    <value>Vzhled</value>
+  </data>
+  <data name="Label_AppFolders" xml:space="preserve">
+    <value>Adresáře aplikace</value>
+  </data>
+  <data name="Label_AreYouSure" xml:space="preserve">
+    <value>Jste si jisti?</value>
+  </data>
+  <data name="Label_AreYouSureDeleteImages" xml:space="preserve">
+    <value>Jste si jisti, že chcete smazat {0} obrázků?</value>
+  </data>
+  <data name="Label_AreYouSureDeleteModels" xml:space="preserve">
+    <value>Jste si jisti, že chcete smazat {0} modelů?</value>
+  </data>
+  <data name="Label_AugmentationLevel" xml:space="preserve">
+    <value>Úroveň augmentace</value>
+  </data>
+  <data name="Label_Author" xml:space="preserve">
+    <value>Autor</value>
+  </data>
+  <data name="Label_AutoCompletion" xml:space="preserve">
+    <value>Automatické doplňování</value>
+  </data>
+  <data name="Label_AutoScrollToEnd" xml:space="preserve">
+    <value>Automaticky rolovat na konec výstupu konzole</value>
+  </data>
+  <data name="Label_AutoSearchOnLoad" xml:space="preserve">
+    <value>Automatické hledání při načtení</value>
+  </data>
+  <data name="Label_AutoSearchOnLoad_Description" xml:space="preserve">
+    <value>Automaticky zahájit hledání při načtení stránky prohlížeče modelů</value>
+  </data>
+  <data name="Label_AutoUpdates" xml:space="preserve">
+    <value>Automatické aktualizace</value>
+  </data>
+  <data name="Label_BaseModel" xml:space="preserve">
+    <value>Základní model</value>
+  </data>
+  <data name="Label_Batches" xml:space="preserve">
+    <value>Dávky</value>
+  </data>
+  <data name="Label_BatchIndex" xml:space="preserve">
+    <value>Index dávky</value>
+  </data>
+  <data name="Label_BatchSize" xml:space="preserve">
+    <value>Velikost dávky</value>
+  </data>
+  <data name="Label_BecomeAPatron" xml:space="preserve">
+    <value>Staňte se patronem</value>
+  </data>
+  <data name="Label_Beta" xml:space="preserve">
+    <value>Beta</value>
+  </data>
+  <data name="Label_Branch" xml:space="preserve">
+    <value>Větev</value>
+  </data>
+  <data name="Label_Branches" xml:space="preserve">
+    <value>Větve</value>
+  </data>
+  <data name="Label_BulkDownloadStarted" xml:space="preserve">
+    <value>Hromadné stahování zahájeno</value>
+  </data>
+  <data name="Label_BulkDownloadStartedMessage" xml:space="preserve">
+    <value>{0} souborů se začalo stahovat. Průběh sledujte v záložce Stahování.</value>
+  </data>
+  <data name="Label_Callstack" xml:space="preserve">
+    <value>Zásobník volání</value>
+  </data>
+  <data name="Label_Categories" xml:space="preserve">
+    <value>Kategorie</value>
+  </data>
+  <data name="Label_CFGScale" xml:space="preserve">
+    <value>CFG Scale</value>
+  </data>
+  <data name="Label_ChangesApplied" xml:space="preserve">
+    <value>Změny byly aplikovány</value>
+  </data>
+  <data name="Label_CheckingHardware" xml:space="preserve">
+    <value>Kontrolujeme některé hardwarové specifikace pro určení kompatibility.</value>
+  </data>
+  <data name="Label_CheckpointManager" xml:space="preserve">
+    <value>Správce Checkpointů</value>
+  </data>
+  <data name="Label_Checkpoints" xml:space="preserve">
+    <value>Checkpointy</value>
+  </data>
+  <data name="Label_CivitAi" xml:space="preserve">
+    <value>CivitAI</value>
+  </data>
+  <data name="Label_CivitAiLoginRequired" xml:space="preserve">
+    <value>Pro stažení tohoto Checkpointu musíte být přihlášeni. Zadejte prosím API klíč pro CivitAI v nastavení.</value>
+  </data>
+  <data name="Label_ClippingMask" xml:space="preserve">
+    <value>Ořezová maska</value>
+  </data>
+  <data name="Label_CLIPSkip" xml:space="preserve">
+    <value>CLIP Skip</value>
+  </data>
+  <data name="Label_CLIPStrength" xml:space="preserve">
+    <value>Síla CLIP</value>
+  </data>
+  <data name="Label_CloseDialogWhenFinished" xml:space="preserve">
+    <value>Po dokončení zavřít dialogové okno</value>
+  </data>
+  <data name="Label_ComfyRequiredDetail" xml:space="preserve">
+    <value>Pro instalaci tohoto balíčku je vyžadováno ComfyUI. Chcete jej nyní nainstalovat?</value>
+  </data>
+  <data name="Label_ComfyRequiredTitle" xml:space="preserve">
+    <value>Vyžadováno ComfyUI</value>
+  </data>
+  <data name="Label_Comments" xml:space="preserve">
+    <value>Komentáře</value>
+  </data>
+  <data name="Label_Commit" xml:space="preserve">
+    <value>Revize</value>
+  </data>
+  <data name="Label_CompletionReplaceUnderscoresWithSpaces" xml:space="preserve">
+    <value>Při vkládání doplňků nahradit podtržítka mezerami</value>
+  </data>
+  <data name="Label_Config" xml:space="preserve">
+    <value>Konfigurace</value>
+  </data>
+  <data name="Label_ConfirmDelete" xml:space="preserve">
+    <value>Potvrdit smazání</value>
+  </data>
+  <data name="Label_ConfirmExit" xml:space="preserve">
+    <value>Potvrdit ukončení</value>
+  </data>
+  <data name="Label_ConfirmExitDetail" xml:space="preserve">
+    <value>Opravdu si přejete aplikaci ukončit? Tím se také uzavřou všechny aktuálně spuštěné balíčky.</value>
+  </data>
+  <data name="Label_ConfirmPassword" xml:space="preserve">
+    <value>Potvrdit heslo</value>
+  </data>
+  <data name="Label_ConfirmQuestion" xml:space="preserve">
+    <value>Potvrdit?</value>
+  </data>
+  <data name="Label_ConnectAccountFailed" xml:space="preserve">
+    <value>Nepodařilo se nám připojit váš účet</value>
+  </data>
+  <data name="Label_Connected" xml:space="preserve">
+    <value>Připojeno</value>
+  </data>
+  <data name="Label_ConnectedModel" xml:space="preserve">
+    <value>Připojený model</value>
+  </data>
+  <data name="Label_ConnectingEllipsis" xml:space="preserve">
+    <value>Připojování...</value>
+  </data>
+  <data name="Label_Console" xml:space="preserve">
+    <value>Konzole</value>
+  </data>
+  <data name="Label_ConsolidateExplanation" xml:space="preserve">
+    <value>Tímto přesunete všechny vygenerované obrázky z vybraných balíčků do konsolidovaného adresáře ve sdíleném výstupním adresáři. Tuto akci nelze vrátit zpět.</value>
+  </data>
+  <data name="Label_ControlSteps" xml:space="preserve">
+    <value>Kroky ControlNetu</value>
+  </data>
+  <data name="Label_ControlWeight" xml:space="preserve">
+    <value>Váha ControlNetu</value>
+  </data>
+  <data name="Label_CopyLinkToClipboard" xml:space="preserve">
+    <value>Kopírovat odkaz do schránky</value>
+  </data>
+  <data name="Label_CreateExtensionPackExplanation" xml:space="preserve">
+    <value>Pro vytvoření sady jednoduše vyberte požadovaná rozšíření z karty &apos;Dostupná rozšíření&apos; nebo &apos;Nainstalovaná rozšíření&apos; a klikněte na &apos;Uložit&apos;</value>
+  </data>
+  <data name="Label_CurrentDirectory" xml:space="preserve">
+    <value>Aktuální adresář:</value>
+  </data>
+  <data name="Label_DataDirectory" xml:space="preserve">
+    <value>Adresář s daty</value>
+  </data>
+  <data name="Label_DataDirectoryExplanation" xml:space="preserve">
+    <value>Zde budou instalována data aplikace (modelové Checkpointy, webová UI atd.).</value>
+  </data>
+  <data name="Label_DataFolderName" xml:space="preserve">
+    <value>Název adresáře s daty</value>
+  </data>
+  <data name="Label_DataProvidedByCivitAi" xml:space="preserve">
+    <value>Data poskytuje CivitAI</value>
+  </data>
+  <data name="Label_Deemphasis" xml:space="preserve">
+    <value>Potlačení</value>
+  </data>
+  <data name="Label_DeletePermanently" xml:space="preserve">
+    <value>Smazat trvale</value>
+  </data>
+  <data name="Label_DenoisingStrength" xml:space="preserve">
+    <value>Síla odšumění</value>
+  </data>
+  <data name="Label_DependencySpecifiers" xml:space="preserve">
+    <value>Specifikátory závislostí</value>
+  </data>
+  <data name="Label_Details" xml:space="preserve">
+    <value>Detaily</value>
+  </data>
+  <data name="Label_DisableUpdateCheck" xml:space="preserve">
+    <value>Vypnout kontrolu aktualizace</value>
+  </data>
+  <data name="Label_DiscordRichPresence" xml:space="preserve">
+    <value>Discord Rich Presence</value>
+  </data>
+  <data name="Label_DisplayName" xml:space="preserve">
+    <value>Zobrazovaný název</value>
+  </data>
+  <data name="Label_DownloadAllFilesAllVersions" xml:space="preserve">
+    <value>Stáhnout všechny soubory (všechny verze)</value>
+  </data>
+  <data name="Label_DownloadFailed" xml:space="preserve">
+    <value>Stažení se nezdařilo</value>
+  </data>
+  <data name="Label_Downloads" xml:space="preserve">
+    <value>Stahování</value>
+  </data>
+  <data name="Label_DownloadStarted" xml:space="preserve">
+    <value>Stahování zahájeno</value>
+  </data>
+  <data name="Label_DownloadWillBeSavedToLocation" xml:space="preserve">
+    <value>{0} bude uložen do {1}</value>
+  </data>
+  <data name="Label_DragAndDropCheckpointsHereToImport" xml:space="preserve">
+    <value>Přetáhněte Checkpointy sem pro import</value>
+  </data>
+  <data name="Label_DropFileToImport" xml:space="preserve">
+    <value>Přetáhněte soubor sem pro import</value>
+  </data>
+  <data name="Label_EarlyAccessModels" xml:space="preserve">
+    <value>Modely s předběžným přístupem</value>
+  </data>
+  <data name="Label_EditModelMetadata" xml:space="preserve">
+    <value>Upravit metadata modelu</value>
+  </data>
+  <data name="Label_Email" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Label_EmbeddedPython" xml:space="preserve">
+    <value>Integrovaný Python</value>
+  </data>
+  <data name="Label_EmbeddingsOrTextualInversion" xml:space="preserve">
+    <value>Embeddings / Textual Inversion</value>
+  </data>
+  <data name="Label_Emphasis" xml:space="preserve">
+    <value>Zvýraznění</value>
+  </data>
+  <data name="Label_EnableLongPaths" xml:space="preserve">
+    <value>Povolit dlouhé cesty</value>
+    <comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_EnableLongPathsDescription" xml:space="preserve">
+    <value>Odstranit omezení MAX_PATH z běžných funkcí Win32 pro soubory a adresáře</value>
+    <comment>(Setting to enable long file paths on windows)</comment>
+  </data>
+  <data name="Label_EnvironmentVariables" xml:space="preserve">
+    <value>Proměnné prostředí</value>
+  </data>
+  <data name="Label_EnvVarsTable_Name" xml:space="preserve">
+    <value>Název</value>
+  </data>
+  <data name="Label_EnvVarsTable_Value" xml:space="preserve">
+    <value>Hodnota</value>
+  </data>
+  <data name="Label_ErrorInstallingPackage" xml:space="preserve">
+    <value>Chyba při instalaci balíčku</value>
+  </data>
+  <data name="Label_ErrorRetrievingWorkflows" xml:space="preserve">
+    <value>Chyba při načítání Workflows</value>
+  </data>
+  <data name="Label_EverythingLooksGood" xml:space="preserve">
+    <value>Všechno vypadá v pořádku!</value>
+  </data>
+  <data name="Label_ExtensionPacks" xml:space="preserve">
+    <value>Sady rozšíření</value>
+  </data>
+  <data name="Label_ExtraNetworks" xml:space="preserve">
+    <value>Extra sítě (Lora / LyCORIS)</value>
+  </data>
+  <data name="Label_FatWarning" xml:space="preserve">
+    <value>Při použití disku s formátem FAT32 nebo exFAT může docházet k chybám. Pro bezproblémový chod zvolte jiný disk.</value>
+  </data>
+  <data name="Label_FileNamePattern" xml:space="preserve">
+    <value>Vzor názvu souboru</value>
+  </data>
+  <data name="Label_Files" xml:space="preserve">
+    <value>Soubory</value>
+  </data>
+  <data name="Label_Filter" xml:space="preserve">
+    <value>Filtr</value>
+  </data>
+  <data name="Label_FindConnectedMetadata" xml:space="preserve">
+    <value>Najít připojená metadata</value>
+  </data>
+  <data name="Label_FindInModelBrowser" xml:space="preserve">
+    <value>Najít v Prohlížeči modelů</value>
+  </data>
+  <data name="Label_FinishedImportingWorkflow" xml:space="preserve">
+    <value>Dokončen import Workflow a vlastních uzlů</value>
+  </data>
+  <data name="Label_FirstPage" xml:space="preserve">
+    <value>První stránka</value>
+  </data>
+  <data name="Label_Folder" xml:space="preserve">
+    <value>Adresář</value>
+  </data>
+  <data name="Label_Fps" xml:space="preserve">
+    <value>Snímků za sekundu</value>
+  </data>
+  <data name="Label_Frames" xml:space="preserve">
+    <value>Snímky</value>
+  </data>
+  <data name="Label_General" xml:space="preserve">
+    <value>Obecné</value>
+    <comment>A general settings category</comment>
+  </data>
+  <data name="Label_Hash" xml:space="preserve">
+    <value>Hash</value>
+  </data>
+  <data name="Label_Height" xml:space="preserve">
+    <value>Výška</value>
+  </data>
+  <data name="Label_HideEmptyCategories" xml:space="preserve">
+    <value>Skrýt prázdné kategorie</value>
+  </data>
+  <data name="Label_HistorySize" xml:space="preserve">
+    <value>Velikost historie</value>
+  </data>
+  <data name="Label_HistorySize_Description" xml:space="preserve">
+    <value>Počet řádků nad těmi zobrazenými v konzoli, ke kterým se můžete vrátit</value>
+  </data>
+  <data name="Label_HolidayMode" xml:space="preserve">
+    <value>Prázdninový režim</value>
+  </data>
+  <data name="Label_HuggingFace" xml:space="preserve">
+    <value>Hugging Face</value>
+  </data>
+  <data name="Label_HuggingFaceLoginRequired" xml:space="preserve">
+    <value>Pro stažení tohoto Checkpointu musíte být přihlášeni. Zadejte prosím přístupový token pro Hugging Face v nastavení.</value>
+  </data>
+  <data name="Label_ImageHidden" xml:space="preserve">
+    <value>Obrázek skryt</value>
+  </data>
+  <data name="Label_ImageToImage" xml:space="preserve">
+    <value>Obrázek na obrázek</value>
+  </data>
+  <data name="Label_ImageToVideo" xml:space="preserve">
+    <value>Obrázek na video</value>
+  </data>
+  <data name="Label_ImageViewer" xml:space="preserve">
+    <value>Prohlížeč obrázků</value>
+  </data>
+  <data name="Label_ImportAsConnected" xml:space="preserve">
+    <value>Importovat s metadaty</value>
+  </data>
+  <data name="Label_ImportAsConnectedExplanation" xml:space="preserve">
+    <value>Hledat připojená metadata u nových lokálních importů</value>
+  </data>
+  <data name="Label_ImportExtensionPacksExplanation" xml:space="preserve">
+    <value>Přidejte soubor sady rozšíření .json do adresáře ExtensionPacks ve vašem adresáři s daty.</value>
+  </data>
+  <data name="Label_ImportLatest" xml:space="preserve">
+    <value>Importovat nejnovější -</value>
+  </data>
+  <data name="Label_Indexing" xml:space="preserve">
+    <value>Indexování...</value>
+  </data>
+  <data name="Label_Inference" xml:space="preserve">
+    <value>Inference</value>
+    <comment>The Inference feature page</comment>
+  </data>
+  <data name="Label_InferenceDefaultsHeader" xml:space="preserve">
+    <value>Výchozí nastavení Inference</value>
+  </data>
+  <data name="Label_InfiniteScrolling" xml:space="preserve">
+    <value>Nekonečné posouvání</value>
+  </data>
+  <data name="Label_InnerException" xml:space="preserve">
+    <value>Vnitřní výjimka</value>
+  </data>
+  <data name="Label_Inpainting" xml:space="preserve">
+    <value>Inpainting</value>
+  </data>
+  <data name="Label_Input" xml:space="preserve">
+    <value>Vstup</value>
+  </data>
+  <data name="Label_InputRequired" xml:space="preserve">
+    <value>Vyžadován vstup</value>
+  </data>
+  <data name="Label_InstallationWithThisNameExists" xml:space="preserve">
+    <value>Instalace s tímto názvem již existuje.</value>
+  </data>
+  <data name="Label_Installed" xml:space="preserve">
+    <value>Nainstalováno</value>
+  </data>
+  <data name="Label_InstalledModels" xml:space="preserve">
+    <value>Nainstalované modely</value>
+  </data>
+  <data name="Label_InstallExtensionPack" xml:space="preserve">
+    <value>Instalovat sadu rozšíření</value>
+  </data>
+  <data name="Label_Installing" xml:space="preserve">
+    <value>Instaluje se</value>
+  </data>
+  <data name="Label_Integrations" xml:space="preserve">
+    <value>Integrace</value>
+  </data>
+  <data name="Label_InvalidPackageType" xml:space="preserve">
+    <value>Neplatný typ balíčku</value>
+  </data>
+  <data name="Label_JoinDiscord" xml:space="preserve">
+    <value>Připojit se na Discord server</value>
+  </data>
+  <data name="Label_Language" xml:space="preserve">
+    <value>Jazyk</value>
+  </data>
+  <data name="Label_LastPage" xml:space="preserve">
+    <value>Poslední stránka</value>
+  </data>
+  <data name="Label_LastUpdatedAt" xml:space="preserve">
+    <value>Poslední aktualizace</value>
+  </data>
+  <data name="Label_LetsGetStarted" xml:space="preserve">
+    <value>Začněme</value>
+  </data>
+  <data name="Label_License" xml:space="preserve">
+    <value>Licence</value>
+  </data>
+  <data name="Label_LicenseAgreement" xml:space="preserve">
+    <value>licenčním ujednáním.</value>
+  </data>
+  <data name="Label_LicenseAndOpenSourceNotices" xml:space="preserve">
+    <value>Licence a upozornění na open source</value>
+  </data>
+  <data name="Label_LocalModel" xml:space="preserve">
+    <value>Lokální model</value>
+  </data>
+  <data name="Label_LoginRequired" xml:space="preserve">
+    <value>Pro stažení tohoto modelu je vyžadováno přihlášení</value>
+  </data>
+  <data name="Label_Logs" xml:space="preserve">
+    <value>Záznamy (logy)</value>
+  </data>
+  <data name="Label_Lossless" xml:space="preserve">
+    <value>Bezztrátové</value>
+  </data>
+  <data name="Label_MaxSize" xml:space="preserve">
+    <value>Maximální velikost</value>
+  </data>
+  <data name="Label_MinCfg" xml:space="preserve">
+    <value>Min CFG</value>
+  </data>
+  <data name="Label_MissingImageFile" xml:space="preserve">
+    <value>Chybějící soubor obrázku</value>
+  </data>
+  <data name="Label_Model" xml:space="preserve">
+    <value>Model</value>
+  </data>
+  <data name="Label_ModelBrowser" xml:space="preserve">
+    <value>Prohlížeč modelů</value>
+  </data>
+  <data name="Label_ModelDescription" xml:space="preserve">
+    <value>Popis modelu</value>
+  </data>
+  <data name="Label_ModelSearchWatermark" xml:space="preserve">
+    <value>Hledat modely,</value>
+  </data>
+  <data name="Label_ModelsFolder" xml:space="preserve">
+    <value>Adresář modelů</value>
+  </data>
+  <data name="Label_ModelType" xml:space="preserve">
+    <value>Typ modelu</value>
+  </data>
+  <data name="Label_MotionBucketId" xml:space="preserve">
+    <value>Motion Bucket ID</value>
+  </data>
+  <data name="Label_NegativePrompt" xml:space="preserve">
+    <value>Negativní prompt</value>
+  </data>
+  <data name="Label_NetworksLoraOrLycoris" xml:space="preserve">
+    <value>Sítě (Lora / LyCORIS)</value>
+  </data>
+  <data name="Label_NewExtensionPack" xml:space="preserve">
+    <value>Nová sada rozšíření</value>
+  </data>
+  <data name="Label_NewFolder" xml:space="preserve">
+    <value>Nový adresář</value>
+  </data>
+  <data name="Label_NewVersionAvailable" xml:space="preserve">
+    <value>Je dostupná nová verze Stability Matrix!</value>
+  </data>
+  <data name="Label_NextImage" xml:space="preserve">
+    <value>Další obrázek</value>
+  </data>
+  <data name="Label_NextPage" xml:space="preserve">
+    <value>Další stránka</value>
+  </data>
+  <data name="Label_No" xml:space="preserve">
+    <value>Ne</value>
+  </data>
+  <data name="Label_NodeDetails" xml:space="preserve">
+    <value>Detaily uzlu</value>
+  </data>
+  <data name="Label_NoExtensionPacksFound" xml:space="preserve">
+    <value>Nebyly nalezeny žádné sady rozšíření</value>
+  </data>
+  <data name="Label_NoExtensionsFound" xml:space="preserve">
+    <value>Nebyla nalezena žádná rozšíření.</value>
+  </data>
+  <data name="Label_NoImageFound" xml:space="preserve">
+    <value>Nebyl nalezen žádný obrázek</value>
+  </data>
+  <data name="Label_NonModelFiles" xml:space="preserve">
+    <value>Soubory, které nejsou modely</value>
+  </data>
+  <data name="Label_NotificationOption_None" xml:space="preserve">
+    <value>Žádné</value>
+  </data>
+  <data name="Label_Notifications" xml:space="preserve">
+    <value>Upozornění</value>
+  </data>
+  <data name="Label_NSFW" xml:space="preserve">
+    <value>NSFW</value>
+  </data>
+  <data name="Label_NsfwContent" xml:space="preserve">
+    <value>NSFW obsah</value>
+  </data>
+  <data name="Label_NumberFormat" xml:space="preserve">
+    <value>Formát čísla</value>
+  </data>
+  <data name="Label_NumImagesSelected" xml:space="preserve">
+    <value>{0} obrázků vybráno</value>
+  </data>
+  <data name="Label_NvidiaGpuRecommended" xml:space="preserve">
+    <value>Pro nejlepší zážitek doporučujeme GPU s podporou CUDA. Můžete pokračovat i bez ní, ale některé balíčky nemusí fungovat a inference může být pomalejší.</value>
+  </data>
+  <data name="Label_OneImageSelected" xml:space="preserve">
+    <value>1 obrázek vybrán</value>
+  </data>
+  <data name="Label_OnlyAvailableOnWindows" xml:space="preserve">
+    <value>Dostupné pouze ve Windows</value>
+  </data>
+  <data name="Label_OpenArtBrowser" xml:space="preserve">
+    <value>Prohlížeč OpenArt</value>
+  </data>
+  <data name="Label_OpenExtensionPacksFolder" xml:space="preserve">
+    <value>Otevřít adresář sad rozšíření</value>
+  </data>
+  <data name="Label_OrWithHyphensAround" xml:space="preserve">
+    <value>- nebo -</value>
+  </data>
+  <data name="Label_OutputFolder" xml:space="preserve">
+    <value>Výstupní adresář</value>
+  </data>
+  <data name="Label_OutputImageFiles" xml:space="preserve">
+    <value>Výstupní soubory obrázků</value>
+  </data>
+  <data name="Label_OutputsPageTitle" xml:space="preserve">
+    <value>Prohlížeč výstupů</value>
+  </data>
+  <data name="Label_OutputType" xml:space="preserve">
+    <value>Typ výstupu</value>
+  </data>
+  <data name="Label_PackageEnvironment" xml:space="preserve">
+    <value>Prostředí balíčku</value>
+  </data>
+  <data name="Label_Packages" xml:space="preserve">
+    <value>Balíčky</value>
+  </data>
+  <data name="Label_PackageType" xml:space="preserve">
+    <value>Typ balíčku</value>
+  </data>
+  <data name="Label_PackageUninstalled" xml:space="preserve">
+    <value>Balíček odinstalován</value>
+  </data>
+  <data name="Label_Page" xml:space="preserve">
+    <value>Stránka</value>
+  </data>
+  <data name="Label_Password" xml:space="preserve">
+    <value>Heslo</value>
+  </data>
+  <data name="Label_PleaseChooseDifferentName" xml:space="preserve">
+    <value>Zvolte prosím jiný název nebo vyberte jiné umístění instalace.</value>
+  </data>
+  <data name="Label_PleaseSelectDataDirectory" xml:space="preserve">
+    <value>Vyberte prosím adresář s daty</value>
+  </data>
+  <data name="Label_PortableMode" xml:space="preserve">
+    <value>Přenosný režim</value>
+  </data>
+  <data name="Label_PortableModeExplanation" xml:space="preserve">
+    <value>V přenosném režimu budou všechna data a nastavení uložena ve stejném adresáři jako aplikace. Aplikaci budete moci přesunout i s jejím adresářem &apos;Data&apos; na jiné místo nebo počítač.</value>
+  </data>
+  <data name="Label_Preprocessor" xml:space="preserve">
+    <value>Preprocesor</value>
+  </data>
+  <data name="Label_PreviewImage" xml:space="preserve">
+    <value>Náhledový obrázek</value>
+  </data>
+  <data name="Label_PreviousImage" xml:space="preserve">
+    <value>Předchozí obrázek</value>
+  </data>
+  <data name="Label_PreviousPage" xml:space="preserve">
+    <value>Předchozí stránka</value>
+  </data>
+  <data name="Label_PrivacyPolicy" xml:space="preserve">
+    <value>Zásady ochrany osobních údajů</value>
+  </data>
+  <data name="Label_Prompt" xml:space="preserve">
+    <value>Prompt</value>
+    <comment>A settings category for Inference generation prompts</comment>
+  </data>
+  <data name="Label_PromptTags" xml:space="preserve">
+    <value>Tagy pro prompt</value>
+    <comment>Tags for image generation prompts</comment>
+  </data>
+  <data name="Label_PromptTagsDescription" xml:space="preserve">
+    <value>Soubor s tagy pro navrhování doplňků (podporuje formát .csv z a1111-sd-webui-tagcomplete)</value>
+  </data>
+  <data name="Label_PromptTagsImport" xml:space="preserve">
+    <value>Importovat tagy pro prompt</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Description" xml:space="preserve">
+    <value>Přidat, nahradit nebo odebrat závislosti pro instalaci a aktualizaci</value>
+  </data>
+  <data name="Label_PythonDependenciesOverride_Title" xml:space="preserve">
+    <value>Přepsání závislostí Pythonu</value>
+  </data>
+  <data name="Label_PythonPackages" xml:space="preserve">
+    <value>Balíčky Pythonu</value>
+  </data>
+  <data name="Label_PythonVersionInfo" xml:space="preserve">
+    <value>Informace o verzi Pythonu</value>
+  </data>
+  <data name="Label_PythonVersionWarningTitle" xml:space="preserve">
+    <value>Nepodporované verze Pythonu</value>
+  </data>
+  <data name="Label_PyTorchVersion" xml:space="preserve">
+    <value>Verze PyTorch</value>
+  </data>
+  <data name="Label_ReadAndAgree" xml:space="preserve">
+    <value>Přečetl/a jsem si a souhlasím s</value>
+  </data>
+  <data name="Label_RecommendedModels" xml:space="preserve">
+    <value>Doporučené modely</value>
+  </data>
+  <data name="Label_RecommendedModelsSubText" xml:space="preserve">
+    <value>Zatímco se váš balíček instaluje, zde je několik modelů, které doporučujeme pro začátek.</value>
+  </data>
+  <data name="Label_Refiner" xml:space="preserve">
+    <value>Refiner</value>
+  </data>
+  <data name="Label_RelaunchRequired" xml:space="preserve">
+    <value>Vyžadován restart</value>
+  </data>
+  <data name="Label_ReleaseNotes" xml:space="preserve">
+    <value>Poznámky k vydání</value>
+  </data>
+  <data name="Label_Releases" xml:space="preserve">
+    <value>Vydání</value>
+  </data>
+  <data name="Label_ReleasesUnavailableForThisPackage" xml:space="preserve">
+    <value>Pro tento balíček nejsou dostupná žádná vydání.</value>
+  </data>
+  <data name="Label_RemoveSymlinksOnShutdown" xml:space="preserve">
+    <value>Při vypnutí odstranit symbolické odkazy sdíleného adresáře Checkpointů</value>
+  </data>
+  <data name="Label_RemoveSymlinksOnShutdown_Details" xml:space="preserve">
+    <value>Tuto možnost vyberte, pokud máte problémy s přesunem Stability Matrix na jiný disk</value>
+  </data>
+  <data name="Label_ResetCheckpointsCache" xml:space="preserve">
+    <value>Resetovat mezipaměť Checkpointů</value>
+  </data>
+  <data name="Label_ResetCheckpointsCache_Details" xml:space="preserve">
+    <value>Znovu sestaví mezipaměť nainstalovaných Checkpointů. Použijte, pokud jsou Checkpointy nesprávně označeny v Prohlížeči modelů</value>
+  </data>
+  <data name="Label_Sampler" xml:space="preserve">
+    <value>Sampler</value>
+  </data>
+  <data name="Label_SaveIntermediateImage" xml:space="preserve">
+    <value>Uložit mezilehlý obrázek</value>
+    <comment>Inference module step to save an intermediate image</comment>
+  </data>
+  <data name="Label_Scheduler" xml:space="preserve">
+    <value>Scheduler</value>
+  </data>
+  <data name="Label_SearchEllipsis" xml:space="preserve">
+    <value>Hledat...</value>
+  </data>
+  <data name="Label_Seed" xml:space="preserve">
+    <value>Seed</value>
+  </data>
+  <data name="Label_SelectDownloadLocation" xml:space="preserve">
+    <value>Vyberte umístění pro stažení:</value>
+  </data>
+  <data name="Label_SelectNewDataDirectory" xml:space="preserve">
+    <value>Vybrat nový adresář s daty</value>
+  </data>
+  <data name="Label_SelectNewDataDirectory_Details" xml:space="preserve">
+    <value>Nepřesouvá existující data. Vyžaduje restart aplikace.</value>
+  </data>
+  <data name="Label_Settings" xml:space="preserve">
+    <value>Nastavení</value>
+  </data>
+  <data name="Label_SharedModelFolderStrategy" xml:space="preserve">
+    <value>Strategie sdíleného adresáře modelů</value>
+  </data>
+  <data name="Label_SharedModelStrategyShort" xml:space="preserve">
+    <value>Sdílení modelů</value>
+  </data>
+  <data name="Label_Show" xml:space="preserve">
+    <value>Zobrazit</value>
+  </data>
+  <data name="Label_ShowModelImages" xml:space="preserve">
+    <value>Zobrazit obrázky modelů</value>
+  </data>
+  <data name="Label_ShowNsfwContent" xml:space="preserve">
+    <value>Zobrazit NSFW obsah</value>
+  </data>
+  <data name="Label_ShowNsfwImages" xml:space="preserve">
+    <value>Zobrazit NSFW obrázky</value>
+  </data>
+  <data name="Label_ShowPixelGridAtHighZoomLevels" xml:space="preserve">
+    <value>Zobrazit mřížku pixelů při vysokém přiblížení</value>
+  </data>
+  <data name="Label_ShowUnsupportedPythonVersions" xml:space="preserve">
+    <value>Zobrazit nepodporované verze Pythonu</value>
+  </data>
+  <data name="Label_SkipSetup" xml:space="preserve">
+    <value>Přeskočit úvodní nastavení</value>
+  </data>
+  <data name="Label_Sort" xml:space="preserve">
+    <value>Seřadit</value>
+  </data>
+  <data name="Label_StabilityMatrix" xml:space="preserve">
+    <value>Stability Matrix</value>
+  </data>
+  <data name="Label_StabilityMatrixAlreadyRunning" xml:space="preserve">
+    <value>Stability Matrix je již spuštěna</value>
+  </data>
+  <data name="Label_Status" xml:space="preserve">
+    <value>Stav</value>
+  </data>
+  <data name="Label_Steps" xml:space="preserve">
+    <value>Kroky</value>
+  </data>
+  <data name="Label_StepsBase" xml:space="preserve">
+    <value>Kroky - Základ</value>
+  </data>
+  <data name="Label_StepsRefiner" xml:space="preserve">
+    <value>Kroky - Refiner</value>
+  </data>
+  <data name="Label_Strength" xml:space="preserve">
+    <value>Síla</value>
+  </data>
+  <data name="Label_System" xml:space="preserve">
+    <value>Systém</value>
+  </data>
+  <data name="Label_SystemInformation" xml:space="preserve">
+    <value>Systémové informace</value>
+  </data>
+  <data name="Label_SystemSettings" xml:space="preserve">
+    <value>Nastavení systému</value>
+  </data>
+  <data name="Label_Tags" xml:space="preserve">
+    <value>Tagy</value>
+  </data>
+  <data name="Label_TextToImage" xml:space="preserve">
+    <value>Text na obrázek</value>
+  </data>
+  <data name="Label_Theme" xml:space="preserve">
+    <value>Motiv</value>
+  </data>
+  <data name="Label_TimePeriod" xml:space="preserve">
+    <value>Časové období</value>
+  </data>
+  <data name="Label_ToggleAutoScrolling" xml:space="preserve">
+    <value>Automatické rolování na konec</value>
+  </data>
+  <data name="Label_TrainedWords" xml:space="preserve">
+    <value>Trénovaná slova</value>
+  </data>
+  <data name="Label_TriggerWords" xml:space="preserve">
+    <value>Spouštěcí slova:</value>
+  </data>
+  <data name="Label_UnexpectedErrorOccurred" xml:space="preserve">
+    <value>Došlo k neočekávané chybě</value>
+  </data>
+  <data name="Label_UnknownPackage" xml:space="preserve">
+    <value>Neznámý balíček</value>
+  </data>
+  <data name="Label_UnsupportedPythonVersionDetails" xml:space="preserve">
+    <value>Při použití nepodporovaných verzí Pythonu se můžete setkat s problémy u některých balíčků</value>
+  </data>
+  <data name="Label_UnsupportedPythonVersionWarningDescription" xml:space="preserve">
+    <value>Tímto se zobrazí všechny dostupné verze Pythonu, včetně těch, které nejsou podporovány Stability Matrix. Jste si jisti?</value>
+  </data>
+  <data name="Label_UpdateAvailable" xml:space="preserve">
+    <value>Dostupná aktualizace</value>
+  </data>
+  <data name="Label_Updates" xml:space="preserve">
+    <value>Aktualizace</value>
+  </data>
+  <data name="Label_UpdatesDevChannelDescription" xml:space="preserve">
+    <value>Pro technické uživatele. Získejte jako první přístup k našim vývojovým verzím z funkčních větví, jakmile budou dostupné. Mohou se vyskytnout nedokonalosti a chyby, protože experimentujeme s novými funkcemi.</value>
+  </data>
+  <data name="Label_UpdatesPreviewChannelDescription" xml:space="preserve">
+    <value>Pro první uživatele. Preview verze budou spolehlivější než ty z Dev kanálu a budou dostupné blíže ke stabilním vydáním. Vaše zpětná vazba nám výrazně pomůže při odhalování problémů a ladění designových prvků.</value>
+  </data>
+  <data name="Label_Upscale" xml:space="preserve">
+    <value>Upscale</value>
+  </data>
+  <data name="Label_UsageData" xml:space="preserve">
+    <value>Data o používání</value>
+  </data>
+  <data name="Label_Username" xml:space="preserve">
+    <value>Uživatelské jméno</value>
+  </data>
+  <data name="Label_UseSeparatePrompt" xml:space="preserve">
+    <value>Použít oddělený prompt</value>
+  </data>
+  <data name="Label_UseSharedOutputFolder" xml:space="preserve">
+    <value>Sdílení výstupního adresáře</value>
+  </data>
+  <data name="Label_VAE" xml:space="preserve">
+    <value>VAE</value>
+  </data>
+  <data name="Label_Version" xml:space="preserve">
+    <value>Verze</value>
+  </data>
+  <data name="Label_VersionName" xml:space="preserve">
+    <value>Název verze</value>
+  </data>
+  <data name="Label_VersionType" xml:space="preserve">
+    <value>Typ verze</value>
+  </data>
+  <data name="Label_VideoOutputMethod" xml:space="preserve">
+    <value>Metoda</value>
+  </data>
+  <data name="Label_VideoQuality" xml:space="preserve">
+    <value>Kvalita</value>
+  </data>
+  <data name="Label_View" xml:space="preserve">
+    <value>Zobrazení</value>
+  </data>
+  <data name="Label_WaitingToConnectEllipsis" xml:space="preserve">
+    <value>Čekání na připojení...</value>
+  </data>
+  <data name="Label_WebUi" xml:space="preserve">
+    <value>Webové UI</value>
+  </data>
+  <data name="Label_Width" xml:space="preserve">
+    <value>Šířka</value>
+  </data>
+  <data name="Label_Wildcards" xml:space="preserve">
+    <value>Žolíky (Wildcards)</value>
+  </data>
+  <data name="Label_WipFeature" xml:space="preserve">
+    <value>Zatím nedostupné</value>
+  </data>
+  <data name="Label_WipFeatureDescription" xml:space="preserve">
+    <value>Funkce bude dostupná v budoucí aktualizaci</value>
+  </data>
+  <data name="Label_WorkflowBrowser" xml:space="preserve">
+    <value>Prohlížeč Workflow</value>
+  </data>
+  <data name="Label_WorkflowDeleted" xml:space="preserve">
+    <value>Workflow smazán</value>
+  </data>
+  <data name="Label_WorkflowDeletedSuccessfully" xml:space="preserve">
+    <value>{0} úspěšně smazán</value>
+  </data>
+  <data name="Label_WorkflowDescription" xml:space="preserve">
+    <value>Popis Workflow</value>
+  </data>
+  <data name="Label_WorkflowImportComplete" xml:space="preserve">
+    <value>Workflow a vlastní uzly byly importovány.</value>
+  </data>
+  <data name="Label_WorkflowImported" xml:space="preserve">
+    <value>Workflow importován</value>
+  </data>
+  <data name="Label_Workflows" xml:space="preserve">
+    <value>Workflows</value>
+  </data>
+  <data name="Label_YouAreUpToDate" xml:space="preserve">
+    <value>Máte aktuální verzi</value>
+  </data>
+  <data name="ModelDiscovery_Active" xml:space="preserve">
+    <value>Aktivní</value>
+  </data>
+  <data name="ModelDiscovery_Description" xml:space="preserve">
+    <value>Zažijte rychlejší výsledky vyhledávání při procházení modelů z online repozitářů, jako je Civitai.</value>
+  </data>
+  <data name="ModelDiscovery_Disclaimer" xml:space="preserve">
+    <value>Experimentální optimalizace pro repozitáře třetích stran. Není oficiálně přidruženo; dostupnost se může lišit.</value>
+  </data>
+  <data name="ModelDiscovery_Inactive" xml:space="preserve">
+    <value>Neaktivní (používá se standardní připojení)</value>
+  </data>
+  <data name="ModelDiscovery_Title" xml:space="preserve">
+    <value>Zrychlené objevování modelů</value>
+  </data>
+  <data name="Progress_DownloadComplete" xml:space="preserve">
+    <value>Stahování dokončeno</value>
+  </data>
+  <data name="Progress_DownloadingPackage" xml:space="preserve">
+    <value>Stahování balíčku...</value>
+  </data>
+  <data name="Progress_InstallationComplete" xml:space="preserve">
+    <value>Instalace dokončena</value>
+  </data>
+  <data name="Progress_InstallingPackageRequirements" xml:space="preserve">
+    <value>Instalace požadavků balíčku...</value>
+  </data>
+  <data name="Progress_InstallingPrerequisites" xml:space="preserve">
+    <value>Instalace předpokladů...</value>
+  </data>
+  <data name="Progress_UninstallingPackage" xml:space="preserve">
+    <value>Odinstalovávání balíčku...</value>
+  </data>
+  <data name="Progress_UpdateComplete" xml:space="preserve">
+    <value>Aktualizace dokončena</value>
+  </data>
+  <data name="Progress_UpdateFailed" xml:space="preserve">
+    <value>Aktualizace se nezdařila</value>
+  </data>
+  <data name="PromptAmplifier_Disclaimer" xml:space="preserve">
+    <value>### 🪄 Představujeme: Zesilovač promptů
+Náš AI asistent, poháněný naším experimentálním modelem Spark, bude generovat kreativní rozšíření vašeho promptu.
+
+Zesilovač promptů běží v našem zabezpečeném, podnikovém cloudovém prostředí – **neběží** lokálně na vašem počítači.
+
+### ☁️️ Proč cloud?
+Model Spark pracuje v měřítku srovnatelném se základními modely s biliony parametrů, což vyžaduje značný výpočetní výkon. I když jsme odhodláni maximalizovat lokálně spustitelné funkce, pokročilé schopnosti Sparku jsou dostupné **nyní** prostřednictvím naší cloudové infrastruktury.
+
+### 🔒 Soukromí na prvním místě
+Upřednostňujeme vaše soukromí ([Podmínky Gen AI](&lt;https://lykos.ai/gen-ai-terms&gt;)). **Vaše prompty/výstupy NEJSOU NIKDY používány pro trénování AI společností Lykos AI ani našimi nezbytnými partnery pro cloudovou infrastrukturu.** Bezpečné zpracování probíhá pouze za účelem generování vašeho zesílení, **poté si ponecháváme pouze metadata (jako jsou časová razítka a počty tokenů), nikoli samotný obsah promptu.** Vaše data se nikdy neprodávají ani nesdílejí.</value>
+  </data>
+  <data name="Sponsorship_ConnectPatreonPrompt" xml:space="preserve">
+    <value>Pokud nás již podporujete na Patreonu, propojte prosím svůj účet pro pokračování.</value>
+  </data>
+  <data name="Sponsorship_ExistingSupporterPreamble" xml:space="preserve">
+    <value>Děkujeme, že podporujete Stability Matrix!</value>
+  </data>
+  <data name="Sponsorship_ReqAnyTier" xml:space="preserve">
+    <value>Funkce jako **{0}** jsou jednou z mnoha výhod dostupných našim podporovatelům. Váš příspěvek nám pomáhá pokrýt náklady na servery a podporuje vývoj Stability Matrix.</value>
+  </data>
+  <data name="Sponsorship_ReqSpecificTier" xml:space="preserve">
+    <value>Funkce jako **{0}** jsou dostupné na úrovni podpory **{1}** (nebo vyšší). Váš příspěvek nám pomáhá pokrýt náklady na servery pro pokročilejší propojené funkce a umožňuje nám neustále vylepšovat Stability Matrix pro všechny.</value>
+  </data>
+  <data name="Sponsorship_Title" xml:space="preserve">
+    <value>Podpořte Stability Matrix</value>
+  </data>
+  <data name="TabLabel_InstalledWorkflows" xml:space="preserve">
+    <value>Nainstalované Workflows</value>
+  </data>
+  <data name="TeachingTip_AddPackageToGetStarted" xml:space="preserve">
+    <value>Pro začátek přidejte balíček!</value>
+  </data>
+  <data name="TeachingTip_ClickLaunchToGetStarted" xml:space="preserve">
+    <value>Pro zahájení klikněte na Spustit!</value>
+  </data>
+  <data name="TeachingTip_DownloadsExplanation" xml:space="preserve">
+    <value>Zde sledujte postup instalací balíčků a stahování modelů.</value>
+  </data>
+  <data name="TeachingTip_InferencePromptHelpButton" xml:space="preserve">
+    <value>Klikněte zde pro přehled syntaxe promptu a jak zahrnout Lora / Embeddings.</value>
+  </data>
+  <data name="TeachingTip_MoreCheckpointCategories" xml:space="preserve">
+    <value>Zde lze povolit další adresáře, jako jsou IPAdapters a TextualInversions (embeddings)</value>
+  </data>
+  <data name="TeachingTip_PromptAmplifier" xml:space="preserve">
+    <value>Vyzkoušejte nový Zesilovač promptů! Vylepšete své prompty pro lepší výsledky!</value>
+  </data>
+  <data name="TeachingTip_WebUiButtonMoved" xml:space="preserve">
+    <value>Tlačítko &apos;Otevřít webové UI&apos; bylo přesunuto do příkazové lišty</value>
+  </data>
+  <data name="Text_AllowBrowserOpenAppLink" xml:space="preserve">
+    <value>Povolte prosím svému prohlížeči otevřít tuto aplikaci, když budete vyzváni k pokračování.</value>
+  </data>
+  <data name="Text_AnalyticsDataPrivacyInfo" xml:space="preserve">
+    <value>Odeslaná data nejsou nikdy spojena s vámi nebo vaším účtem a nebudou obsahovat osobní údaje ani žádné citlivé informace.</value>
+  </data>
+  <data name="Text_AnalyticsDescription" xml:space="preserve">
+    <value>Pomozte nám vylepšit Stability Matrix zasíláním anonymních dat o používaných funkcích, verzích operačního systému, typech instalovaných balíčků atd. Odeslaná data nejsou nikdy spojena s vámi nebo vaším účtem a nebudou obsahovat osobní údaje ani žádné citlivé informace.</value>
+  </data>
+  <data name="Text_AnalyticsDescriptionShort" xml:space="preserve">
+    <value>Pomozte nám vylepšit Stability Matrix zasíláním anonymních dat o používaných funkcích, verzích operačního systému, typech instalovaných balíčků atd.</value>
+  </data>
+  <data name="Text_AppWillRelaunchAfterUpdate" xml:space="preserve">
+    <value>Aplikace se po aktualizaci restartuje</value>
+  </data>
+  <data name="Text_DeleteFollowingItems" xml:space="preserve">
+    <value>Chystáte se smazat následující položky:</value>
+  </data>
+  <data name="Text_Login_ConnectDescription" xml:space="preserve">
+    <value>Přihlaste se svým účtem Lykos pro použití propojených funkcí.</value>
+  </data>
+  <data name="Text_Login_ConnectTitle" xml:space="preserve">
+    <value>Připojte svůj účet Lykos</value>
+  </data>
+  <data name="Text_Login_ExpiredDescription" xml:space="preserve">
+    <value>Vaše přihlášení vypršelo. Pro pokračování se prosím znovu přihlaste.</value>
+  </data>
+  <data name="Text_Login_ExpiredTitle" xml:space="preserve">
+    <value>Přihlaste se prosím znovu</value>
+  </data>
+  <data name="Text_LykosAccountUpgradeNotice" xml:space="preserve">
+    <value>## Upozornění: Odhlášení z účtu Lykos a vylepšení zabezpečení
+
+Provedli jsme několik důležitých vylepšení v zákulisí, jak Stability Matrix nakládá s účty Lykos, a přešli jsme na bezpečnější a pohodlnější systém přihlašování **(OAuth 2.0 s OpenID Connect)**. Z tohoto důvodu jste byli odhlášeni ze svého účtu Lykos.
+
+### Proč tato změna?
+
+Vaše bezpečnost a soukromí jsou pro nás důležité. Toto vylepšení přináší:
+
+* **Zjednodušené prostředí:** Přihlaste se jednou na [account.lykos.ai](https://account.lykos.ai) pro spojení se Stability Matrix a dalšími službami Lykos AI.
+* **Více způsobů přihlášení:** Použijte svůj stávající účet [lykos.ai](https://lykos.ai) nebo se přihlaste pomocí **Apple**, **GitHub** nebo **Google**.
+* **Zvýšené soukromí:** Stability Matrix požaduje pouze oprávnění, která potřebuje.
+* **Bezpečnostní standard:** Používáme OAuth 2.0, zlatý standard pro bezpečné přihlašování.
+* **Připraveno na budoucnost:** To umožňuje bezpečné spojení s dalšími aplikacemi a službami.
+
+### Co mám dělat?
+
+Klikněte na tlačítko **&quot;Přejít do Nastavení&quot;** a poté klikněte na **&quot;Připojit&quot;** vedle **&quot;Účet Lykos&quot;**.
+
+### Je účet Lykos vyžadován?
+
+Ne! Stability Matrix je stále plně funkční i bez něj. Váš účet Lykos ale umožňuje některé extra propojené funkce, jako jsou automatické aktualizace vývojových verzí pro naše podporovatele na Patreonu (a další přijdou!).
+</value>
+  </data>
+  <data name="Text_OAuthDeviceAuthDescription" xml:space="preserve">
+    <value>Otevřete odkaz ve svém prohlížeči a zadejte následující kód pro autorizaci vašeho účtu se Stability Matrix.</value>
+  </data>
+  <data name="Text_OAuthLoginDescription" xml:space="preserve">
+    <value>Otevřete odkaz ve svém prohlížeči a postupujte podle pokynů pro připojení vašeho účtu.</value>
+  </data>
+  <data name="Text_OneClickInstaller_SubHeader" xml:space="preserve">
+    <value>Vyberte si preferované rozhraní a začněte</value>
+  </data>
+  <data name="Text_PackageUninstall_Details" xml:space="preserve">
+    <value>Tímto smažete adresář balíčku a veškerý jeho obsah, včetně všech vygenerovaných obrázků a souborů, které jste mohli přidat.</value>
+  </data>
+  <data name="Text_ProceedingToLaunchPage" xml:space="preserve">
+    <value>Přechod na stránku Spuštění</value>
+  </data>
+  <data name="Text_RelaunchRequiredToApplyLanguage" xml:space="preserve">
+    <value>Pro aplikování nového jazyka je vyžadován restart aplikace.</value>
+  </data>
+  <data name="Text_RestartMayBeRequiredForSystemChanges" xml:space="preserve">
+    <value>Pro projevení systémových změn může být vyžadován restart.</value>
+  </data>
+  <data name="Text_SomeFilesCouldNotBeDeleted" xml:space="preserve">
+    <value>Některé soubory se nepodařilo smazat. Zavřete prosím všechny otevřené soubory v adresáři balíčku a zkuste to znovu.</value>
+  </data>
+  <data name="Text_UnexpectedError_Description" xml:space="preserve">
+    <value>Informujte nás prosím o tomto problému s níže uvedenými detaily a přiložte zazipované soubory se záznamy (logy).</value>
+  </data>
+  <data name="Text_UnexpectedErrorRecoverable_Description" xml:space="preserve">
+    <value>Můžete pokračovat, ale plná funkčnost bude dostupná až po restartu. Informujte nás prosím o tomto problému s níže uvedenými detaily a přiložte zazipované soubory se záznamy (logy).</value>
+  </data>
+  <data name="Text_WelcomeToStabilityMatrix" xml:space="preserve">
+    <value>Vítejte ve Stability Matrix!</value>
+  </data>
+  <data name="TextTemplate_DeleteFollowingCountItems" xml:space="preserve">
+    <value>Chystáte se smazat následujících {0} položek:</value>
+  </data>
+  <data name="TextTemplate_ErrorUpdatingPackage" xml:space="preserve">
+    <value>Chyba při aktualizaci {0}</value>
+  </data>
+  <data name="TextTemplate_LastChecked" xml:space="preserve">
+    <value>Poslední kontrola: {0}</value>
+  </data>
+  <data name="TextTemplate_OAuthLoginTitle" xml:space="preserve">
+    <value>Přihlásit se pomocí {0}</value>
+    <comment>e.g. &apos;Sign in with Google&apos;</comment>
+  </data>
+  <data name="TextTemplate_PackageUpdatedToLatest" xml:space="preserve">
+    <value>{0} byl aktualizován na nejnovější verzi</value>
+  </data>
+  <data name="TextTemplate_PackageUpdatedToSelected" xml:space="preserve">
+    <value>{0} byl aktualizován na vybranou verzi</value>
+  </data>
+  <data name="TextTemplate_UpdatingPackage" xml:space="preserve">
+    <value>Aktualizace {0}</value>
+  </data>
+  <data name="TextTemplate_YouCanChangeThisBehavior" xml:space="preserve">
+    <value>Toto chování můžete kdykoli změnit v {0}.</value>
+    <comment>e.g. &apos;You can always change this behavior in Settings &gt; Category &gt; Item.&apos;</comment>
+  </data>
+  <data name="Tooltip_InferenceDefaults" xml:space="preserve">
+    <value>Pokud je povoleno, tato nastavení se automaticky použijí, když je tento model vybrán v záložce Inference</value>
+  </data>
+  <data name="Validation_PackageNameCannotBeEmpty" xml:space="preserve">
+    <value>Název balíčku nemůže být prázdný</value>
+  </data>
+  <data name="ValidationError_PackageExists" xml:space="preserve">
+    <value>Balíček s názvem &apos;{0}&apos; již existuje</value>
+  </data>
+  <data name="Warning_PleaseExtractFirst" xml:space="preserve">
+    <value>PŘED SPUŠTĚNÍM STABILITY MATRIX PROSÍM ROZBALTE APLIKACI ZE ZIP SOUBORU</value>
+  </data>
+  <data name="Watermark_EnterPackageName" xml:space="preserve">
+    <value>Zadejte název balíčku</value>
+  </data>
+</root>

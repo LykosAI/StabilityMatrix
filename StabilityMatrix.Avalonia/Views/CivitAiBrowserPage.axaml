@@ -13,6 +13,7 @@
     xmlns:fa="clr-namespace:Projektanker.Icons.Avalonia;assembly=Projektanker.Icons.Avalonia"
     xmlns:fluent="clr-namespace:FluentIcons.Avalonia.Fluent;assembly=FluentIcons.Avalonia.Fluent"
     xmlns:helpers="clr-namespace:StabilityMatrix.Avalonia.Helpers"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:scroll="clr-namespace:StabilityMatrix.Avalonia.Controls.Scroll"
@@ -82,6 +83,8 @@
     <UserControl.Resources>
         <system:Boolean x:Key="False">False</system:Boolean>
         <converters:KiloFormatterStringConverter x:Key="KiloFormatterConverter" />
+        <converters:CivitImageWidthConverter x:Key="CivitImageWidthConverter" />
+        <input:StandardUICommand x:Key="ShowDetailsPageCommand" Command="{Binding ShowVersionDialogCommand}" />
         <DataTemplate x:Key="CivitModelTemplate" DataType="{x:Type checkpointBrowser:CheckpointBrowserCardViewModel}">
             <Border
                 Name="HoverBorder"
@@ -110,7 +113,7 @@
                     VerticalContentAlignment="Top"
                     BorderThickness="0"
                     Classes="transparent-full"
-                    Command="{Binding ShowVersionDialogCommand}"
+                    Command="{StaticResource ShowDetailsPageCommand}"
                     CommandParameter="{Binding CivitModel}"
                     CornerRadius="8"
                     IsEnabled="{Binding !IsLoading}">
@@ -139,7 +142,7 @@
                                 Height="400"
                                 CornerRadius="8"
                                 IsCacheEnabled="True"
-                                Source="{Binding CardImage}"
+                                Source="{Binding CardImage, Converter={StaticResource CivitImageWidthConverter}, ConverterParameter=450}"
                                 Stretch="UniformToFill" />
                         </LayoutTransformControl>
 
@@ -216,7 +219,7 @@
                                         Effect="{StaticResource ImageDropShadowEffect}"
                                         IsCacheEnabled="True"
                                         IsVisible="{Binding CivitModel.Creator.Image, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                        Source="{Binding CivitModel.Creator.Image}" />
+                                        Source="{Binding CivitModel.Creator.Image, Converter={StaticResource CivitImageWidthConverter}, ConverterParameter=32}" />
                                     <TextBlock
                                         VerticalAlignment="Center"
                                         Effect="{StaticResource TextDropShadowEffect}"
@@ -574,13 +577,13 @@
                     <Button.Content>
                         <Grid HorizontalAlignment="Stretch" ColumnDefinitions="1*, 32">
                             <TextBlock IsVisible="{Binding ShowFilterNumber}">
-                                <Run Text="Filter" />
+                                <Run Text="{x:Static lang:Resources.Label_Filter}" />
                                 <Run Text="(" /><Run Text="{Binding SelectedBaseModels.Count}" /><Run Text=")" />
                             </TextBlock>
                             <TextBlock
                                 Grid.Column="0"
                                 IsVisible="{Binding !ShowFilterNumber}"
-                                Text="Filter" />
+                                Text="{x:Static lang:Resources.Label_Filter}" />
                             <ui:SymbolIcon
                                 Grid.Column="1"
                                 HorizontalAlignment="Right"

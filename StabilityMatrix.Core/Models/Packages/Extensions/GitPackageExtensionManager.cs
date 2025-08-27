@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using KGySoft.CoreLibraries;
 using Microsoft.Extensions.Caching.Memory;
 using NLog;
+using StabilityMatrix.Core.Exceptions;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Models.FileInterfaces;
@@ -80,9 +81,10 @@ public abstract partial class GitPackageExtensionManager(IPrerequisiteHelper pre
 
         // Search for installed extensions in the package's index directories.
         foreach (
-            var indexDirectory in IndexRelativeDirectories.Select(
-                path => new DirectoryPath(packagePath, path)
-            )
+            var indexDirectory in IndexRelativeDirectories.Select(path => new DirectoryPath(
+                packagePath,
+                path
+            ))
         )
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -120,11 +122,11 @@ public abstract partial class GitPackageExtensionManager(IPrerequisiteHelper pre
                         {
                             Tag = version.Tag,
                             Branch = version.Branch,
-                            CommitSha = version.CommitSha
+                            CommitSha = version.CommitSha,
                         },
                         GitRepositoryUrl = remoteUrlResult.IsSuccessExitCode
                             ? remoteUrlResult.StandardOutput?.Trim()
-                            : null
+                            : null,
                     }
                 );
             }
@@ -150,9 +152,10 @@ public abstract partial class GitPackageExtensionManager(IPrerequisiteHelper pre
 
         // Search for installed extensions in the package's index directories.
         foreach (
-            var indexDirectory in IndexRelativeDirectories.Select(
-                path => new DirectoryPath(packagePath, path)
-            )
+            var indexDirectory in IndexRelativeDirectories.Select(path => new DirectoryPath(
+                packagePath,
+                path
+            ))
         )
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -221,8 +224,8 @@ public abstract partial class GitPackageExtensionManager(IPrerequisiteHelper pre
             {
                 Tag = version.Tag,
                 Branch = version.Branch,
-                CommitSha = version.CommitSha
-            }
+                CommitSha = version.CommitSha,
+            },
         };
     }
 
@@ -257,14 +260,34 @@ public abstract partial class GitPackageExtensionManager(IPrerequisiteHelper pre
                 new ProgressReport(0f, message: $"Cloning {repositoryUri}", isIndeterminate: true)
             );
 
-            await prerequisiteHelper
-                .CloneGitRepository(
-                    cloneRoot,
-                    repositoryUri.ToString(),
-                    version,
-                    progress.AsProcessOutputHandler()
-                )
-                .ConfigureAwait(false);
+            try
+            {
+                await prerequisiteHelper
+                    .CloneGitRepository(
+                        cloneRoot,
+                        repositoryUri.ToString(),
+                        version,
+                        progress.AsProcessOutputHandler()
+                    )
+                    .ConfigureAwait(false);
+            }
+            catch (ProcessException ex)
+            {
+                if (ex.Message.Contains("Git exited with code 128"))
+                {
+                    progress?.Report(
+                        new ProgressReport(
+                            -1f,
+                            $"Unable to check out commit {version?.CommitSha} - continuing with latest commit from {version?.Branch}\n\n{ex.ProcessResult?.StandardError}\n",
+                            isIndeterminate: true
+                        )
+                    );
+                }
+                else
+                {
+                    throw;
+                }
+            }
 
             progress?.Report(new ProgressReport(1f, message: $"Cloned {repositoryUri}"));
         }

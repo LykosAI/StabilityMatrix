@@ -9,6 +9,7 @@ using StabilityMatrix.Core.Helper.HardwareInfo;
 using StabilityMatrix.Core.Models.FileInterfaces;
 using StabilityMatrix.Core.Models.Progress;
 using StabilityMatrix.Core.Processes;
+using StabilityMatrix.Core.Python;
 using StabilityMatrix.Core.Services;
 
 namespace StabilityMatrix.Core.Models.Packages;
@@ -18,8 +19,9 @@ public class ForgeAmdGpu(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : SDWebForge(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : SDWebForge(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "stable-diffusion-webui-amdgpu-forge";
     public override string DisplayName => "Stable Diffusion WebUI AMDGPU Forge";
@@ -44,18 +46,19 @@ public class ForgeAmdGpu(
         base.Prerequisites.Concat([PackagePrerequisite.HipSdk]);
 
     public override List<LaunchOptionDefinition> LaunchOptions =>
-        base.LaunchOptions.Concat(
-            [
-                new LaunchOptionDefinition
-                {
-                    Name = "Use ZLUDA",
-                    Description = "Use ZLUDA for CUDA acceleration on AMD GPUs",
-                    Type = LaunchOptionType.Bool,
-                    InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
-                    Options = ["--use-zluda"]
-                }
-            ]
-        )
+        base
+            .LaunchOptions.Concat(
+                [
+                    new LaunchOptionDefinition
+                    {
+                        Name = "Use ZLUDA",
+                        Description = "Use ZLUDA for CUDA acceleration on AMD GPUs",
+                        Type = LaunchOptionType.Bool,
+                        InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
+                        Options = ["--use-zluda"],
+                    },
+                ]
+            )
             .ToList();
 
     public override bool InstallRequiresAdmin => true;
@@ -76,11 +79,17 @@ public class ForgeAmdGpu(
         if (!PrerequisiteHelper.IsHipSdkInstalled) // for updates
         {
             progress?.Report(new ProgressReport(-1, "Installing HIP SDK 6.2", isIndeterminate: true));
-            await PrerequisiteHelper.InstallPackageRequirements(this, progress).ConfigureAwait(false);
+            await PrerequisiteHelper
+                .InstallPackageRequirements(this, options.PythonOptions.PythonVersion, progress)
+                .ConfigureAwait(false);
         }
 
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
         await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
         progress?.Report(new ProgressReport(1, "Install finished", isIndeterminate: false));
     }
@@ -100,8 +109,8 @@ public class ForgeAmdGpu(
                 "Your package has not yet been upgraded to use HIP SDK 6.2. To continue, please update this package or select \"Change Version\" from the 3-dots menu to have it upgraded automatically for you"
             );
         }
-
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
         var portableGitBin = new DirectoryPath(PrerequisiteHelper.GitBinPath);
         var hipPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
@@ -115,7 +124,7 @@ public class ForgeAmdGpu(
             ["ZLUDA_COMGR_LOG_LEVEL"] = "1",
             ["HIP_PATH"] = hipPath,
             ["HIP_PATH_62"] = hipPath,
-            ["GIT"] = portableGitBin.JoinFile("git.exe")
+            ["GIT"] = portableGitBin.JoinFile("git.exe"),
         };
         envVars.Update(settingsManager.Settings.EnvironmentVariables);
 
@@ -133,8 +142,8 @@ public class ForgeAmdGpu(
         VenvRunner.RunDetached(
             [
                 Path.Combine(installLocation, options.Command ?? LaunchCommand),
-                ..options.Arguments,
-                ..ExtraLaunchArguments
+                .. options.Arguments,
+                .. ExtraLaunchArguments,
             ],
             HandleConsoleOutput,
             OnExit

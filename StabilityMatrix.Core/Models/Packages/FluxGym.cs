@@ -16,8 +16,9 @@ public class FluxGym(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "FluxGym";
     public override string DisplayName { get; set; } = "FluxGym";
@@ -100,7 +101,11 @@ public class FluxGym(
         }
 
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         progress?.Report(
             new ProgressReport(-1f, "Installing sd-scripts requirements", isIndeterminate: true)
@@ -147,7 +152,8 @@ public class FluxGym(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {

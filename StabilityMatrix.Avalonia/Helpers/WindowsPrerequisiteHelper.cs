@@ -177,6 +177,20 @@ public class WindowsPrerequisiteHelper(
         );
     }
 
+    private async Task<string> RunNode(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        IReadOnlyDictionary<string, string>? envVars = null
+    )
+    {
+        var result = await ProcessRunner
+            .GetProcessResultAsync(NodeExePath, args, workingDirectory, envVars)
+            .ConfigureAwait(false);
+
+        result.EnsureSuccessExitCode();
+        return result.StandardOutput ?? result.StandardError ?? string.Empty;
+    }    
+
     public async Task RunNpm(
         ProcessArgs args,
         string? workingDirectory = null,

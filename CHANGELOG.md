@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Added Negative Rejection Steering (NRS) by @reithan to Inference
 - Added Czech translation thanks to @PEKArt!
 - Added Wan 2.2 models to the HuggingFace tab of the model browser
+- Added Tiled Encode/Decode options to FaceDetailer in Inference
 ### Changed
 - Brought back the "size remaining after download" tooltip in the new Civitai details page
 - Updated ComfyUI installs for AMD users on Linux to use the latest rocm6.4 torch index
@@ -22,13 +23,14 @@ and this project adheres to [Semantic Versioning 2.0](https://semver.org/spec/v2
 - Fixed extension manager failing to install extensions due to incorrect clone directory
 - Fixed duplicate Python versions appearing in the Advanced Options when installing a package
 - Fixed an error when packages and other processes exit before process tracking on windows can initialize
+- Fixed "none" appearing in wildcard field when using Face Detailer in Inference
 - Fixed [#1254](https://github.com/LykosAI/StabilityMatrix/issues/1254) - Unable to scroll samplers in Inference
 - Fixed [#1294](https://github.com/LykosAI/StabilityMatrix/issues/1294) - Improper sorting of output folders in Output Browser
 - Fixed [#1300](https://github.com/LykosAI/StabilityMatrix/issues/1300) - Git errors when installing Extension Packs
 - Fixed [#1317](https://github.com/LykosAI/StabilityMatrix/issues/1317) - Inference missing GGUF text encoders
 - Fixed [#1324](https://github.com/LykosAI/StabilityMatrix/issues/1324) - Window height slightly increasing every launch
 - Fixed [#1360](https://github.com/LykosAI/StabilityMatrix/issues/1360) - A1111 install not using correct torch for 5000-series GPUs
-- Fixed [#1361](https://github.com/LykosAI/StabilityMatrix/issues/1361) - numpy and other Forge startup 
+- Fixed [#1361](https://github.com/LykosAI/StabilityMatrix/issues/1361) - numpy and other Forge startup
 ### Supporters
 #### 🌟 Visionaries
 A huge thank-you to our incredible Visionary-tier supporters: **Waterclouds**, **Corey T**, **bluepopsicle**, **Bob S**, **Ibixat**, **whudunit**, and **Akiro_Senkai**! Your continued support lights the way for Stability Matrix and helps us keep building features like these. We couldn’t do it without you.

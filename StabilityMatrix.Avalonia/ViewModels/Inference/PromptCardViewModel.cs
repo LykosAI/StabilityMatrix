@@ -109,6 +109,9 @@ public partial class PromptCardViewModel
     [NotifyPropertyChangedFor(nameof(ShowLowTokenWarning))]
     private int lowTokenThreshold = 25;
 
+    [ObservableProperty]
+    public partial bool IsStackCardEnabled { get; set; } = true;
+
     public bool ShowLowTokenWarning => TokensRemaining <= LowTokenThreshold && TokensRemaining >= 0;
 
     public string LowTokenWarningText =>

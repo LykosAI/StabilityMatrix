@@ -131,7 +131,9 @@ public partial class FaceDetailerModule : ModuleBase, IValidatableModule
             Positive = GetPositiveConditioning(faceDetailerCard, e),
             Negative = GetNegativeConditioning(faceDetailerCard, e),
             BboxDetector = e.Nodes.AddTypedNode(bboxLoader).Output1,
-            Wildcard = new StringNodeConnection() // TODO put <lora:stuff:here>
+            Wildcard = faceDetailerCard.WildcardViewModel.GetPrompt().ProcessedText ?? string.Empty,
+            TiledDecode = faceDetailerCard.UseTiledDecode,
+            TiledEncode = faceDetailerCard.UseTiledEncode,
         };
 
         var segmModelName = GetModelName(faceDetailerCard.SegmModel);
@@ -140,7 +142,7 @@ public partial class FaceDetailerModule : ModuleBase, IValidatableModule
             var segmLoader = new ComfyNodeBuilder.UltralyticsDetectorProvider
             {
                 Name = e.Builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.UltralyticsDetectorProvider)),
-                ModelName = segmModelName
+                ModelName = segmModelName,
             };
             faceDetailer.SegmDetectorOpt = e.Nodes.AddTypedNode(segmLoader).Output2;
         }
@@ -168,7 +170,7 @@ public partial class FaceDetailerModule : ModuleBase, IValidatableModule
             { RemoteName: "@none" } => null,
             { Local: not null } => model.RelativePath.NormalizePathSeparators(),
             { RemoteName: not null } => model.RemoteName,
-            _ => null
+            _ => null,
         };
 
     private ConditioningNodeConnection GetPositiveConditioning(
@@ -188,7 +190,7 @@ public partial class FaceDetailerModule : ModuleBase, IValidatableModule
             {
                 Name = e.Builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPTextEncode)),
                 Clip = e.Builder.Connections.Base.Clip!,
-                Text = prompt.ProcessedText
+                Text = prompt.ProcessedText,
             }
         );
 
@@ -212,7 +214,7 @@ public partial class FaceDetailerModule : ModuleBase, IValidatableModule
             {
                 Name = e.Builder.Nodes.GetUniqueName(nameof(ComfyNodeBuilder.CLIPTextEncode)),
                 Clip = e.Builder.Connections.Base.Clip!,
-                Text = prompt.ProcessedText
+                Text = prompt.ProcessedText,
             }
         );
 

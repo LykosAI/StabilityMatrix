@@ -765,7 +765,7 @@ public class ComfyNodeBuilder
         /// </summary>
         public required string SamMaskHintUseNegative { get; init; } = "False";
 
-        public required StringNodeConnection Wildcard { get; init; }
+        public required string Wildcard { get; init; }
 
         [Range(1, 32768)]
         public required int DropSize { get; init; } = 10;
@@ -775,6 +775,8 @@ public class ComfyNodeBuilder
 
         public SamModelNodeConnection? SamModelOpt { get; set; }
         public SegmDetectorNodeConnection? SegmDetectorOpt { get; set; }
+        public bool TiledEncode { get; init; }
+        public bool TiledDecode { get; init; }
     }
 
     /// <summary>

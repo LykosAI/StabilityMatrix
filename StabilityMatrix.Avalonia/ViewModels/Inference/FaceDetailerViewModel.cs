@@ -128,6 +128,15 @@ public partial class FaceDetailerViewModel : LoadableViewModelBase
     [property: Category("Settings"), DisplayName("Inherit Seed")]
     private bool inheritSeed = true;
 
+    [ObservableProperty]
+    public partial bool UseTiledEncode { get; set; }
+
+    [ObservableProperty]
+    public partial bool UseTiledDecode { get; set; }
+
+    [ObservableProperty]
+    public partial string Wildcard { get; set; }
+
     public IReadOnlyList<ComfyScheduler> AvailableSchedulers => ComfyScheduler.FaceDetailerDefaults;
 
     /// <inheritdoc/>
@@ -141,6 +150,11 @@ public partial class FaceDetailerViewModel : LoadableViewModelBase
         SeedCardViewModel = vmFactory.Get<SeedCardViewModel>();
         SeedCardViewModel.GenerateNewSeed();
         PromptCardViewModel = vmFactory.Get<PromptCardViewModel>();
+        WildcardViewModel = vmFactory.Get<PromptCardViewModel>(vm =>
+        {
+            vm.IsNegativePromptEnabled = false;
+            vm.IsStackCardEnabled = false;
+        });
     }
 
     [JsonPropertyName("DetailerSeed")]
@@ -148,6 +162,9 @@ public partial class FaceDetailerViewModel : LoadableViewModelBase
 
     [JsonPropertyName("DetailerPrompt")]
     public PromptCardViewModel PromptCardViewModel { get; }
+
+    [JsonPropertyName("DetailerWildcard")]
+    public PromptCardViewModel WildcardViewModel { get; }
 
     public ObservableCollection<string> SamDetectionHints { get; set; } =
         [
@@ -159,7 +176,7 @@ public partial class FaceDetailerViewModel : LoadableViewModelBase
             "mask-area",
             "mask-points",
             "mask-point-bbox",
-            "none"
+            "none",
         ];
 
     public ObservableCollection<string> SamMaskHintUseNegatives { get; set; } = ["False", "Small", "Outter"];

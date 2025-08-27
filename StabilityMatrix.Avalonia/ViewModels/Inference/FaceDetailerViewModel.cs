@@ -134,9 +134,6 @@ public partial class FaceDetailerViewModel : LoadableViewModelBase
     [ObservableProperty]
     public partial bool UseTiledDecode { get; set; }
 
-    [ObservableProperty]
-    public partial string Wildcard { get; set; }
-
     public IReadOnlyList<ComfyScheduler> AvailableSchedulers => ComfyScheduler.FaceDetailerDefaults;
 
     /// <inheritdoc/>

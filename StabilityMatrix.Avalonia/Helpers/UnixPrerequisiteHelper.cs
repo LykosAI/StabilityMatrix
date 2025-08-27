@@ -377,6 +377,21 @@ public class UnixPrerequisiteHelper(
         return ProcessRunner.RunBashCommand(args.Prepend("git"), workingDirectory ?? "");
     }
 
+    private async Task<string> RunNode(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        IReadOnlyDictionary<string, string>? envVars = null
+    )
+    {
+        var nodePath = Path.Combine(NodeDir, "bin", "node");
+        var result = await ProcessRunner
+            .GetProcessResultAsync(nodePath, args, workingDirectory, envVars)
+            .ConfigureAwait(false);
+
+        result.EnsureSuccessExitCode();
+        return result.StandardOutput ?? result.StandardError ?? string.Empty;
+    }
+
     [Localizable(false)]
     [SupportedOSPlatform("Linux")]
     [SupportedOSPlatform("macOS")]

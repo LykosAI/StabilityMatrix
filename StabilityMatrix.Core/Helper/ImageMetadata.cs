@@ -2,6 +2,7 @@
 using System.Text;
 using System.Text.Json;
 using ExifLibrary;
+using KGySoft.CoreLibraries;
 using MetadataExtractor;
 using MetadataExtractor.Formats.Exif;
 using MetadataExtractor.Formats.Png;

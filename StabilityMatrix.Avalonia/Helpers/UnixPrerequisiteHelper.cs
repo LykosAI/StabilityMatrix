@@ -377,6 +377,21 @@ public class UnixPrerequisiteHelper(
         return ProcessRunner.RunBashCommand(args.Prepend("git"), workingDirectory ?? "");
     }
 
+    private async Task<string> RunNode(
+        ProcessArgs args,
+        string? workingDirectory = null,
+        IReadOnlyDictionary<string, string>? envVars = null
+    )
+    {
+        var nodePath = Path.Combine(NodeDir, "bin", "node");
+        var result = await ProcessRunner
+            .GetProcessResultAsync(nodePath, args, workingDirectory, envVars)
+            .ConfigureAwait(false);
+
+        result.EnsureSuccessExitCode();
+        return result.StandardOutput ?? result.StandardError ?? string.Empty;
+    }
+
     [Localizable(false)]
     [SupportedOSPlatform("Linux")]
     [SupportedOSPlatform("macOS")]
@@ -476,17 +491,32 @@ public class UnixPrerequisiteHelper(
     [SupportedOSPlatform("macOS")]
     public async Task InstallNodeIfNecessary(IProgress<ProgressReport>? progress = null)
     {
-        if (IsNodeInstalled)
+        // NOTE TO FUTURE DEVS: if this is causing merge conflicts with dev, just nuke it we don't need anymore
+        if (NodeDir.Exists)
         {
-            Logger.Info("node already installed");
-            return;
+            try
+            {
+                var result = await RunNode("-v");
+                if (result.Contains("20.19.3"))
+                {
+                    Logger.Debug("Node.js already installed at {NodeExistsPath}", NodeDir);
+                    return;
+                }
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            Logger.Warn("Node.js version mismatch, reinstalling...");
+            await NodeDir.DeleteAsync(true);
         }
 
         Logger.Info("Downloading node");
 
         var downloadUrl = Compat.IsMacOS
-            ? "https://nodejs.org/dist/v20.11.0/node-v20.11.0-darwin-arm64.tar.gz"
-            : "https://nodejs.org/dist/v20.11.0/node-v20.11.0-linux-x64.tar.gz";
+            ? "https://nodejs.org/dist/v20.19.3/node-v20.19.3-darwin-arm64.tar.gz"
+            : "https://nodejs.org/dist/v20.19.3/node-v20.19.3-linux-x64.tar.gz";
 
         var nodeDownloadPath = AssetsDir.JoinFile(Path.GetFileName(downloadUrl));
 
@@ -506,8 +536,8 @@ public class UnixPrerequisiteHelper(
         await ArchiveHelper.Extract7ZAuto(nodeDownloadPath, AssetsDir);
 
         var nodeDir = Compat.IsMacOS
-            ? AssetsDir.JoinDir("node-v20.11.0-darwin-arm64")
-            : AssetsDir.JoinDir("node-v20.11.0-linux-x64");
+            ? AssetsDir.JoinDir("node-v20.19.3-darwin-arm64")
+            : AssetsDir.JoinDir("node-v20.19.3-linux-x64");
         Directory.Move(nodeDir, NodeDir);
 
         progress?.Report(

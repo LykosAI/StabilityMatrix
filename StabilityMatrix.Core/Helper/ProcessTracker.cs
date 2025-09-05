@@ -199,7 +199,7 @@ public static partial class ProcessTracker
 
             Name = name;
 
-            handle = CreateJobObjectA(IntPtr.Zero, name);
+            handle = CreateJobObject(IntPtr.Zero, name);
 
             var info = new JOBOBJECT_BASIC_LIMIT_INFORMATION
             {
@@ -271,10 +271,15 @@ public static partial class ProcessTracker
         }
     }
 
-    [LibraryImport("kernel32.dll", StringMarshalling = StringMarshalling.Utf16)]
-    private static partial IntPtr CreateJobObjectA(IntPtr lpJobAttributes, string name);
+    [LibraryImport(
+        "kernel32.dll",
+        EntryPoint = "CreateJobObjectW",
+        SetLastError = true,
+        StringMarshalling = StringMarshalling.Utf16
+    )]
+    private static partial IntPtr CreateJobObject(IntPtr lpJobAttributes, string name);
 
-    [LibraryImport("kernel32.dll")]
+    [LibraryImport("kernel32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool SetInformationJobObject(
         IntPtr job,

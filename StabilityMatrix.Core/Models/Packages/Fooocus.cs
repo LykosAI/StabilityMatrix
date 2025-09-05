@@ -42,66 +42,66 @@ public class Fooocus(
             {
                 Name = "Preset",
                 Type = LaunchOptionType.Bool,
-                Options = { "--preset anime", "--preset realistic" }
+                Options = { "--preset anime", "--preset realistic" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 Description = "Sets the listen port",
-                Options = { "--port" }
+                Options = { "--port" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to share on Gradio",
-                Options = { "--share" }
+                Options = { "--share" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Listen",
                 Type = LaunchOptionType.String,
                 Description = "Set the listen interface",
-                Options = { "--listen" }
+                Options = { "--listen" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Output Directory",
                 Type = LaunchOptionType.String,
                 Description = "Override the output directory",
-                Options = { "--output-path" }
+                Options = { "--output-path" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Language",
                 Type = LaunchOptionType.String,
                 Description = "Change the language of the UI",
-                Options = { "--language" }
+                Options = { "--language" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Disable Image Log",
                 Type = LaunchOptionType.Bool,
-                Options = { "--disable-image-log" }
+                Options = { "--disable-image-log" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Disable Analytics",
                 Type = LaunchOptionType.Bool,
-                Options = { "--disable-analytics" }
+                Options = { "--disable-analytics" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Disable Preset Model Downloads",
                 Type = LaunchOptionType.Bool,
-                Options = { "--disable-preset-download" }
+                Options = { "--disable-preset-download" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Always Download Newer Models",
                 Type = LaunchOptionType.Bool,
-                Options = { "--always-download-new-model" }
+                Options = { "--always-download-new-model" },
             },
             new()
             {
@@ -111,15 +111,15 @@ public class Fooocus(
                 {
                     MemoryLevel.Low => "--always-low-vram",
                     MemoryLevel.Medium => "--always-normal-vram",
-                    _ => null
+                    _ => null,
                 },
                 Options =
                 {
                     "--always-high-vram",
                     "--always-normal-vram",
                     "--always-low-vram",
-                    "--always-no-vram"
-                }
+                    "--always-no-vram",
+                },
             },
             new LaunchOptionDefinition
             {
@@ -127,23 +127,23 @@ public class Fooocus(
                 Type = LaunchOptionType.Bool,
                 Description = "Use pytorch with DirectML support",
                 InitialValue = HardwareHelper.PreferDirectMLOrZluda(),
-                Options = { "--directml" }
+                Options = { "--directml" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Disable Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
-                Options = { "--disable-xformers" }
+                Options = { "--disable-xformers" },
             },
             new LaunchOptionDefinition
             {
                 Name = "Disable Offload from VRAM",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS,
-                Options = { "--disable-offload-from-vram" }
+                Options = { "--disable-offload-from-vram" },
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         };
 
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
@@ -162,85 +162,85 @@ public class Fooocus(
                 {
                     SourceTypes = [SharedFolderType.StableDiffusion],
                     TargetRelativePaths = ["models/checkpoints"],
-                    ConfigDocumentPaths = ["path_checkpoints"]
+                    ConfigDocumentPaths = ["path_checkpoints"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Diffusers],
-                    TargetRelativePaths = ["models/diffusers"]
+                    TargetRelativePaths = ["models/diffusers"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.TextEncoders],
-                    TargetRelativePaths = ["models/clip"]
+                    TargetRelativePaths = ["models/clip"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.GLIGEN],
-                    TargetRelativePaths = ["models/gligen"]
+                    TargetRelativePaths = ["models/gligen"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.ESRGAN],
-                    TargetRelativePaths = ["models/upscale_models"]
+                    TargetRelativePaths = ["models/upscale_models"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Hypernetwork],
-                    TargetRelativePaths = ["models/hypernetworks"]
+                    TargetRelativePaths = ["models/hypernetworks"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Embeddings],
                     TargetRelativePaths = ["models/embeddings"],
-                    ConfigDocumentPaths = ["path_embeddings"]
+                    ConfigDocumentPaths = ["path_embeddings"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.VAE],
                     TargetRelativePaths = ["models/vae"],
-                    ConfigDocumentPaths = ["path_vae"]
+                    ConfigDocumentPaths = ["path_vae"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.ApproxVAE],
                     TargetRelativePaths = ["models/vae_approx"],
-                    ConfigDocumentPaths = ["path_vae_approx"]
+                    ConfigDocumentPaths = ["path_vae_approx"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
                     TargetRelativePaths = ["models/loras"],
-                    ConfigDocumentPaths = ["path_loras"]
+                    ConfigDocumentPaths = ["path_loras"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.ClipVision],
                     TargetRelativePaths = ["models/clip_vision"],
-                    ConfigDocumentPaths = ["path_clip_vision"]
+                    ConfigDocumentPaths = ["path_clip_vision"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.ControlNet],
                     TargetRelativePaths = ["models/controlnet"],
-                    ConfigDocumentPaths = ["path_controlnet"]
+                    ConfigDocumentPaths = ["path_controlnet"],
                 },
                 new SharedFolderLayoutRule
                 {
                     TargetRelativePaths = ["models/inpaint"],
-                    ConfigDocumentPaths = ["path_inpaint"]
+                    ConfigDocumentPaths = ["path_inpaint"],
                 },
                 new SharedFolderLayoutRule
                 {
                     TargetRelativePaths = ["models/prompt_expansion/fooocus_expansion"],
-                    ConfigDocumentPaths = ["path_fooocus_expansion"]
+                    ConfigDocumentPaths = ["path_fooocus_expansion"],
                 },
                 new SharedFolderLayoutRule
                 {
                     TargetRelativePaths = [OutputFolderName],
-                    ConfigDocumentPaths = ["path_outputs"]
-                }
-            ]
+                    ConfigDocumentPaths = ["path_outputs"],
+                },
+            ],
         };
 
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
@@ -272,52 +272,32 @@ public class Fooocus(
             )
             .ConfigureAwait(false);
 
-        progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
-
-        // Pip version 24.1 deprecated numpy requirement spec used by torchsde 0.2.5
-        await venvRunner.PipInstall(["pip==23.3.2"], onConsoleOutput).ConfigureAwait(false);
-
+        var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         var isBlackwell =
-            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
-        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+            torchIndex is TorchIndex.Cuda
+            && (SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu());
 
-        var pipArgs = new PipInstallArgs();
-
-        if (torchVersion == TorchIndex.DirectMl)
+        var config = new PipInstallConfig
         {
-            pipArgs = pipArgs.WithTorchDirectML();
-        }
-        else
-        {
-            pipArgs = pipArgs
-                .WithTorch(isBlackwell ? string.Empty : "==2.1.0")
-                .WithTorchVision(isBlackwell ? string.Empty : "==0.16.0")
-                .WithTorchExtraIndex(
-                    torchVersion switch
-                    {
-                        TorchIndex.Cpu => "cpu",
-                        TorchIndex.Cuda when isBlackwell => "cu128",
-                        TorchIndex.Cuda => "cu121",
-                        TorchIndex.Rocm => "rocm5.6",
-                        TorchIndex.Mps => "cpu",
-                        _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
-                    }
-                );
-        }
+            // Pip version 24.1 deprecated numpy requirement spec used by torchsde 0.2.5
+            PrePipInstallArgs = ["pip==23.3.2"],
+            RequirementsFilePaths = ["requirements_versions.txt"],
+            TorchVersion = isBlackwell ? "" : "==2.1.0",
+            TorchvisionVersion = isBlackwell ? "" : "==0.16.0",
+            CudaIndex = isBlackwell ? "cu128" : "cu121",
+            RocmIndex = "rocm5.6",
+        };
 
-        var requirements = new FilePath(installLocation, "requirements_versions.txt");
-
-        pipArgs = pipArgs.WithParsedFromRequirementsTxt(
-            await requirements.ReadAllTextAsync().ConfigureAwait(false),
-            excludePattern: "torch"
-        );
-
-        if (installedPackage.PipOverrides != null)
-        {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
-
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        await StandardPipInstallProcessAsync(
+                venvRunner,
+                options,
+                installedPackage,
+                config,
+                onConsoleOutput,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
     }
 
     public override async Task RunPackage(
@@ -348,7 +328,7 @@ public class Fooocus(
         }
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );

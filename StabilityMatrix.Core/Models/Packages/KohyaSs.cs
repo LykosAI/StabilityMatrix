@@ -122,52 +122,25 @@ public class KohyaSs(
             )
             .ConfigureAwait(false);
 
-        // make sure long paths are enabled
         if (Compat.IsWindows)
         {
             await PrerequisiteHelper.FixGitLongPaths().ConfigureAwait(false);
         }
 
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-
-        // Setup venv
         await using var venvRunner = await SetupVenvPure(
                 installLocation,
                 pythonVersion: options.PythonOptions.PythonVersion
             )
             .ConfigureAwait(false);
 
-        // Extra dep needed before running setup since v23.0.x
-        var pipArgs = new PipInstallArgs("rich", "packaging", "setuptools", "uv");
-        if (installedPackage.PipOverrides != null)
-        {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
-
-        await venvRunner.PipInstall(pipArgs).ConfigureAwait(false);
-
-        var isLegacyNvidia =
-            SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
-        var torchExtraIndex = isLegacyNvidia ? "cu126" : "cu128";
-
-        // install torch
-        pipArgs = new PipInstallArgs()
-            .WithTorch()
-            .WithTorchVision()
-            .WithTorchAudio()
-            .WithXFormers()
-            .WithTorchExtraIndex(torchExtraIndex)
-            .AddArg("--force-reinstall");
-
-        if (installedPackage.PipOverrides != null)
-        {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
-
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-
+        // --- Platform-Specific Installation ---
         if (Compat.IsLinux)
         {
+            // Linux path is too custom for the orchestrator, so it remains as is.
+            await venvRunner
+                .PipInstall("rich packaging setuptools uv", onConsoleOutput)
+                .ConfigureAwait(false);
             await venvRunner
                 .CustomInstall(
                     [
@@ -178,26 +151,39 @@ public class KohyaSs(
                     onConsoleOutput
                 )
                 .ConfigureAwait(false);
-            pipArgs = new PipInstallArgs();
         }
         else if (Compat.IsWindows)
         {
-            var requirements = new FilePath(installLocation, "requirements_windows.txt");
-            pipArgs = new PipInstallArgs()
-                .WithParsedFromRequirementsTxt(
-                    await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                    "bitsandbytes==0\\.44\\.0"
+            // Windows path is a perfect fit for the orchestrator.
+            var isLegacyNvidia =
+                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+                ?? HardwareHelper.HasLegacyNvidiaGpu();
+
+            var config = new PipInstallConfig
+            {
+                PrePipInstallArgs = ["rich", "packaging", "setuptools", "uv"],
+                RequirementsFilePaths = ["requirements_windows.txt"],
+                // Exclude torch ecosystem (default) AND the specific bitsandbytes version
+                RequirementsExcludePattern =
+                    "(torch|torchvision|torchaudio|xformers|bitsandbytes==0\\.44\\.0)",
+                TorchaudioVersion = " ",
+                XformersVersion = " ",
+                CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
+                // Add back the generic bitsandbytes and the specific numpy version
+                ExtraPipArgs = ["bitsandbytes", "numpy==1.26.4"],
+            };
+
+            await StandardPipInstallProcessAsync(
+                    venvRunner,
+                    options,
+                    installedPackage,
+                    config,
+                    onConsoleOutput,
+                    progress,
+                    cancellationToken
                 )
-                .AddArg("bitsandbytes");
+                .ConfigureAwait(false);
         }
-
-        if (installedPackage.PipOverrides != null)
-        {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
-
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-        await venvRunner.PipInstall("numpy==1.26.4", onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(

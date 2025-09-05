@@ -99,45 +99,40 @@ public class FramePack(
             )
             .ConfigureAwait(false);
 
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
         var isLegacyNvidia =
             SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
         var isNewerNvidia =
             SettingsManager.Settings.PreferredGpu?.IsAmpereOrNewerGpu()
             ?? HardwareHelper.HasAmpereOrNewerGpu();
 
-        var pipArgs = new PipInstallArgs()
-            .AddArg("--upgrade")
-            .WithTorch()
-            .WithTorchVision()
-            .WithTorchAudio()
-            .WithXFormers()
-            .WithTorchExtraIndex(isLegacyNvidia ? "cu126" : "cu128");
-
+        var extraArgs = new List<string>();
         if (isNewerNvidia)
-            pipArgs = pipArgs.AddArg("triton-windows");
+        {
+            extraArgs.Add("triton-windows");
+        }
 
-        if (installedPackage.PipOverrides != null)
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+        var config = new PipInstallConfig
+        {
+            RequirementsFilePaths = ["requirements.txt"],
+            TorchaudioVersion = " ", // Request torchaudio install
+            XformersVersion = " ", // Request xformers install
+            CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
+            UpgradePackages = true,
+            ExtraPipArgs = extraArgs,
+        };
 
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        await StandardPipInstallProcessAsync(
+                venvRunner,
+                options,
+                installedPackage,
+                config,
+                onConsoleOutput,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
 
-        progress?.Report(
-            new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
-        );
-
-        var requirementsFile = new FilePath(installLocation, "requirements.txt");
-        pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(
-            await requirementsFile.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)
-        );
-
-        if (installedPackage.PipOverrides != null)
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(1, "Installed Package Requirements", isIndeterminate: false));
+        progress?.Report(new ProgressReport(1, "Install complete", isIndeterminate: false));
     }
 
     public override async Task RunPackage(

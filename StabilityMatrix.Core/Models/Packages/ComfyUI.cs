@@ -344,111 +344,91 @@ public class ComfyUI(
             )
             .ConfigureAwait(false);
 
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
-        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-        var isLegacyNvidia =
-            torchVersion == TorchIndex.Cuda
-            && (
-                SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
-                ?? HardwareHelper.HasLegacyNvidiaGpu()
-            );
-
-        var pipArgs = new PipInstallArgs();
+        var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         var gfxArch =
             SettingsManager.Settings.PreferredGpu?.GetAmdGfxArch()
             ?? HardwareHelper.GetWindowsRocmSupportedGpu()?.GetAmdGfxArch();
 
+        // Special case for Windows ROCm Nightly builds
         if (
-            !string.IsNullOrWhiteSpace(gfxArch)
-            && torchVersion is TorchIndex.Rocm
+            Compat.IsWindows
+            && !string.IsNullOrWhiteSpace(gfxArch)
+            && torchIndex is TorchIndex.Rocm
             && options.PythonOptions.PythonVersion >= PyVersion.Parse("3.11.0")
         )
         {
-            var minorPythonVersion = options.PythonOptions.PythonVersion.Value.Minor;
-
-            if (minorPythonVersion is 11)
+            var config = new PipInstallConfig
             {
-                pipArgs = pipArgs.AddArgs(
-                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torch-2.7.0a0+rocm_git3f903c3-cp311-cp311-win_amd64.whl",
-                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchaudio-2.7.0a0+52638ef-cp311-cp311-win_amd64.whl",
-                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchvision-0.22.0+9eb57cd-cp311-cp311-win_amd64.whl"
-                );
-            }
-            else if (minorPythonVersion is 12)
-            {
-                pipArgs = pipArgs.AddArgs(
-                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torch-2.7.0a0+git3f903c3-cp312-cp312-win_amd64.whl",
-                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchaudio-2.6.0a0+1a8f621-cp312-cp312-win_amd64.whl",
-                    "https://github.com/scottt/rocm-TheRock/releases/download/v6.5.0rc-pytorch-gfx110x/torchvision-0.22.0+9eb57cd-cp312-cp312-win_amd64.whl"
-                );
-            }
-            else
-            {
-                throw new ArgumentOutOfRangeException(
-                    nameof(options.PythonOptions.PythonVersion),
-                    options.PythonOptions.PythonVersion,
-                    null
-                );
-            }
+                RequirementsFilePaths = ["requirements.txt"],
+                ExtraPipArgs = ["numpy<2"],
+                SkipTorchInstall = true,
+            };
+            await StandardPipInstallProcessAsync(
+                    venvRunner,
+                    options,
+                    installedPackage,
+                    config,
+                    onConsoleOutput,
+                    progress,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
 
             progress?.Report(
-                new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
+                new ProgressReport(-1f, "Installing ROCm nightly torch...", isIndeterminate: true)
             );
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-
-            pipArgs = new PipInstallArgs();
-        }
-        else
-        {
-            pipArgs = torchVersion switch
+            var indexUrl = gfxArch switch
             {
-                TorchIndex.DirectMl => pipArgs.WithTorchDirectML(),
-                _ => pipArgs
-                    .AddArg("--upgrade")
-                    .WithTorch()
-                    .WithTorchVision()
-                    .WithTorchAudio()
-                    .WithTorchExtraIndex(
-                        torchVersion switch
-                        {
-                            TorchIndex.Cpu => "cpu",
-                            TorchIndex.Cuda when isLegacyNvidia => "cu126",
-                            TorchIndex.Cuda => "cu128",
-                            TorchIndex.Rocm => "rocm6.4",
-                            TorchIndex.Mps => "cpu",
-                            _ => throw new ArgumentOutOfRangeException(
-                                nameof(torchVersion),
-                                torchVersion,
-                                null
-                            ),
-                        }
-                    ),
+                "gfx1151" => "https://rocm.nightlies.amd.com/v2/gfx1151",
+                _ when gfxArch.StartsWith("gfx110") => "https://rocm.nightlies.amd.com/v2/gfx110X-dgpu",
+                _ when gfxArch.StartsWith("gfx120") => "https://rocm.nightlies.amd.com/v2/gfx120X-all",
+                _ => throw new ArgumentOutOfRangeException(
+                    nameof(gfxArch),
+                    $"Unsupported GFX Arch: {gfxArch}"
+                ),
             };
+
+            var torchPipArgs = new PipInstallArgs()
+                .AddArgs("--pre", "--upgrade")
+                .WithTorch()
+                .WithTorchVision()
+                .WithTorchAudio()
+                .AddArgs("--index-url", indexUrl);
+
+            await venvRunner.PipInstall(torchPipArgs, onConsoleOutput).ConfigureAwait(false);
         }
-
-        var requirements = new FilePath(installLocation, "requirements.txt");
-
-        pipArgs = pipArgs.WithParsedFromRequirementsTxt(
-            await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-            excludePattern: "torch$|numpy"
-        );
-
-        // https://github.com/comfyanonymous/ComfyUI/pull/4121
-        // https://github.com/comfyanonymous/ComfyUI/commit/e6829e7ac5bef5db8099005b5b038c49e173e87c
-        pipArgs = pipArgs.AddArg("numpy<2");
-
-        if (installedPackage.PipOverrides != null)
+        else // Standard installation path for all other cases
         {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            var isLegacyNvidia =
+                torchIndex == TorchIndex.Cuda
+                && (
+                    SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu()
+                    ?? HardwareHelper.HasLegacyNvidiaGpu()
+                );
+
+            var config = new PipInstallConfig
+            {
+                RequirementsFilePaths = ["requirements.txt"],
+                ExtraPipArgs = ["numpy<2"],
+                TorchaudioVersion = " ", // Request torchaudio without a specific version
+                CudaIndex = isLegacyNvidia ? "cu126" : "cu129",
+                RocmIndex = "rocm6.4",
+                UpgradePackages = true,
+            };
+
+            await StandardPipInstallProcessAsync(
+                    venvRunner,
+                    options,
+                    installedPackage,
+                    config,
+                    onConsoleOutput,
+                    progress,
+                    cancellationToken
+                )
+                .ConfigureAwait(false);
         }
 
-        progress?.Report(
-            new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
-        );
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(1, "Installed Package Requirements", isIndeterminate: false));
+        progress?.Report(new ProgressReport(1, "Install complete", isIndeterminate: false));
     }
 
     public override async Task RunPackage(

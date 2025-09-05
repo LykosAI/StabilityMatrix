@@ -204,77 +204,51 @@ public class A3WebUI(
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-
         await using var venvRunner = await SetupVenvPure(
                 installLocation,
                 pythonVersion: options.PythonOptions.PythonVersion
             )
             .ConfigureAwait(false);
 
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
-
-        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
         var isBlackwell =
-            torchVersion is TorchIndex.Cuda
+            torchIndex is TorchIndex.Cuda
             && (SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu());
 
-        var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        var pipArgs = torchVersion switch
+        // 1. Configure the entire install process declaratively.
+        var config = new PipInstallConfig
         {
-            TorchIndex.Mps => new PipInstallArgs().WithTorch("==2.3.1").WithTorchVision("==0.18.1"),
-            _ => new PipInstallArgs()
-                .WithTorch(isBlackwell ? string.Empty : "==2.1.2")
-                .WithTorchVision(isBlackwell ? string.Empty : "==0.16.2")
-                .WithTorchExtraIndex(
-                    torchVersion switch
-                    {
-                        TorchIndex.Cpu => "cpu",
-                        TorchIndex.Cuda when isBlackwell => "cu128",
-                        TorchIndex.Cuda => "cu121",
-                        TorchIndex.Rocm => "rocm5.6",
-                        TorchIndex.Mps => "cpu",
-                        _ => throw new NotSupportedException($"Unsupported torch version: {torchVersion}"),
-                    }
-                ),
+            RequirementsFilePaths = ["requirements_versions.txt"],
+            TorchVersion = torchIndex == TorchIndex.Mps ? "==2.3.1" : (isBlackwell ? "" : "==2.1.2"),
+            TorchvisionVersion = torchIndex == TorchIndex.Mps ? "==0.18.1" : (isBlackwell ? "" : "==0.16.2"),
+            XformersVersion = isBlackwell ? " " : "==0.0.23.post1",
+            CudaIndex = isBlackwell ? "cu128" : "cu121",
+            RocmIndex = "rocm5.6",
+            ExtraPipArgs =
+            [
+                "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
+            ],
         };
 
-        if (torchVersion == TorchIndex.Cuda)
-        {
-            pipArgs = pipArgs.WithXFormers("==0.0.23.post1");
-        }
+        // 2. Execute the standardized installation process.
+        await StandardPipInstallProcessAsync(
+                venvRunner,
+                options,
+                installedPackage,
+                config,
+                onConsoleOutput,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
 
-        if (installedPackage.PipOverrides != null)
-        {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
-
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-
-        pipArgs = new PipInstallArgs(
-            "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip"
-        ).WithParsedFromRequirementsTxt(
-            await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-            excludePattern: "torch"
-        );
-
-        if (installedPackage.PipOverrides != null)
-        {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
-
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-
+        // 3. Perform any final, package-specific tasks.
         progress?.Report(new ProgressReport(-1f, "Updating configuration", isIndeterminate: true));
-
-        // Create and add {"show_progress_type": "TAESD"} to config.json
-        // Only add if the file doesn't exist
         var configPath = Path.Combine(installLocation, "config.json");
         if (!File.Exists(configPath))
         {
-            var config = new JsonObject { { "show_progress_type", "TAESD" } };
-            await File.WriteAllTextAsync(configPath, config.ToString(), cancellationToken)
+            var configJson = new JsonObject { { "show_progress_type", "TAESD" } };
+            await File.WriteAllTextAsync(configPath, configJson.ToString(), cancellationToken)
                 .ConfigureAwait(false);
         }
 

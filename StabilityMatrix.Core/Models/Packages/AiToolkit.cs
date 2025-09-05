@@ -76,45 +76,30 @@ public class AiToolkit(
             .ConfigureAwait(false);
         venvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
         var isBlackwell =
             SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
-        var pipArgs = new PipInstallArgs()
-            .AddArg("--upgrade")
-            .WithTorch("==2.7.0")
-            .WithTorchVision("==0.22.0")
-            .WithTorchAudio("==2.7.0")
-            .WithTorchExtraIndex(isBlackwell ? "cu128" : "cu126");
 
-        if (installedPackage.PipOverrides != null)
+        var config = new PipInstallConfig
         {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
+            RequirementsFilePaths = ["requirements.txt"],
+            TorchVersion = "==2.7.0",
+            TorchvisionVersion = "==0.22.0",
+            TorchaudioVersion = "==2.7.0",
+            CudaIndex = isBlackwell ? "cu128" : "cu126",
+            ExtraPipArgs = [Compat.IsWindows ? "triton-windows" : "triton"],
+            UpgradePackages = true,
+        };
 
-        progress?.Report(new ProgressReport(-1f, "Installing torch...", isIndeterminate: true));
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-
-        // install requirements.txt
-        var requirements = new FilePath(installLocation, "requirements.txt");
-
-        pipArgs = new PipInstallArgs("--upgrade")
-            .WithParsedFromRequirementsTxt(
-                await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                excludePattern: "torch"
+        await StandardPipInstallProcessAsync(
+                venvRunner,
+                options,
+                installedPackage,
+                config,
+                onConsoleOutput,
+                progress,
+                cancellationToken
             )
-            .AddArg(Compat.IsWindows ? "triton-windows" : "triton")
-            .WithTorchExtraIndex(isBlackwell ? "cu128" : "cu126");
-
-        if (installedPackage.PipOverrides != null)
-        {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
-
-        progress?.Report(
-            new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
-        );
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+            .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing AI Toolkit UI...", isIndeterminate: true));
 

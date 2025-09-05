@@ -145,70 +145,50 @@ public class ForgeClassic(
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-
         await using var venvRunner = await SetupVenvPure(
                 installLocation,
                 pythonVersion: options.PythonOptions.PythonVersion
             )
             .ConfigureAwait(false);
 
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
-
-        var requirements = new FilePath(installLocation, "requirements.txt");
-        var requirementsContentBuilder = new StringBuilder(
-            await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)
-        );
-
-        // Collect all requirements.txt files from extensions-builtin subfolders
+        // Dynamically discover all requirements files
+        var requirementsPaths = new List<string> { "requirements.txt" };
         var extensionsBuiltinDir = new DirectoryPath(installLocation, "extensions-builtin");
         if (extensionsBuiltinDir.Exists)
         {
-            var requirementsFiles = extensionsBuiltinDir.EnumerateFiles(
-                "requirements.txt",
-                EnumerationOptionConstants.AllDirectories
+            requirementsPaths.AddRange(
+                extensionsBuiltinDir
+                    .EnumerateFiles("requirements.txt", EnumerationOptionConstants.AllDirectories)
+                    .Select(f => Path.GetRelativePath(installLocation, f.ToString()))
             );
-
-            foreach (var requirementsFile in requirementsFiles)
-            {
-                var fileContent = await requirementsFile
-                    .ReadAllTextAsync(cancellationToken)
-                    .ConfigureAwait(false);
-                requirementsContentBuilder.AppendLine(fileContent);
-            }
         }
-
-        var requirementsContent = requirementsContentBuilder.ToString();
 
         var isLegacyNvidia =
             SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
-        var torchExtraIndex = isLegacyNvidia ? "cu126" : "cu128";
 
-        var pipArgs = new PipInstallArgs()
-            .AddArg("--upgrade")
-            .WithTorch()
-            .WithTorchVision()
-            .WithTorchAudio()
-            .WithTorchExtraIndex(torchExtraIndex);
-
-        if (installedPackage.PipOverrides != null)
+        var config = new PipInstallConfig
         {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
+            RequirementsFilePaths = requirementsPaths,
+            TorchaudioVersion = " ", // Request torchaudio installation
+            CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
+            UpgradePackages = true,
+            ExtraPipArgs =
+            [
+                "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
+            ],
+        };
 
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        await StandardPipInstallProcessAsync(
+                venvRunner,
+                options,
+                installedPackage,
+                config,
+                onConsoleOutput,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
 
-        pipArgs = new PipInstallArgs(
-            "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip"
-        ).WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
-
-        if (installedPackage.PipOverrides != null)
-        {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
-
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }
 }

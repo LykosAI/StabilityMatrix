@@ -113,10 +113,12 @@ public class FluxGym(
         var config = new PipInstallConfig
         {
             RequirementsFilePaths = ["sd-scripts/requirements.txt", "requirements.txt"],
-            RequirementsExcludePattern = "(torch|torchvision|torchaudio|xformers|bitsandbytes)",
+            RequirementsExcludePattern =
+                "(diffusers\\[torch\\]==0.32.1|torch|torchvision|torchaudio|xformers|bitsandbytes|-e\\s\\.)",
             TorchaudioVersion = " ",
             CudaIndex = isLegacyNvidiaGpu ? "cu126" : "cu128",
             ExtraPipArgs = ["bitsandbytes>=0.46.0"],
+            PostInstallPipArgs = ["diffusers[torch]==0.32.1"],
         };
 
         await StandardPipInstallProcessAsync(
@@ -129,6 +131,8 @@ public class FluxGym(
                 cancellationToken
             )
             .ConfigureAwait(false);
+
+        await venvRunner.PipInstall(["-e", "./sd-scripts"], onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(

@@ -170,7 +170,8 @@ public class KohyaSs(
                 XformersVersion = " ",
                 CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
                 // Add back the generic bitsandbytes and the specific numpy version
-                ExtraPipArgs = ["bitsandbytes", "numpy==1.26.4"],
+                ExtraPipArgs = ["bitsandbytes"],
+                PostInstallPipArgs = ["numpy==1.26.4"],
             };
 
             await StandardPipInstallProcessAsync(

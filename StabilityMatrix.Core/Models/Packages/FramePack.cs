@@ -119,6 +119,7 @@ public class FramePack(
             CudaIndex = isLegacyNvidia ? "cu126" : "cu128",
             UpgradePackages = true,
             ExtraPipArgs = extraArgs,
+            PostInstallPipArgs = ["numpy==1.26.4"],
         };
 
         await StandardPipInstallProcessAsync(

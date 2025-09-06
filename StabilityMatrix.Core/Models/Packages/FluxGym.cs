@@ -107,41 +107,32 @@ public class FluxGym(
             )
             .ConfigureAwait(false);
 
-        progress?.Report(
-            new ProgressReport(-1f, "Installing sd-scripts requirements", isIndeterminate: true)
-        );
-        var sdsRequirements = new FilePath(installLocation, "sd-scripts", "requirements.txt");
-        var sdsPipArgs = new PipInstallArgs()
-            .WithParsedFromRequirementsTxt(
-                await sdsRequirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                "torch"
-            )
-            .RemovePipArgKey("-e .");
-        await venvRunner.PipInstall(sdsPipArgs, onConsoleOutput).ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));
-
         var isLegacyNvidiaGpu =
             SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
 
-        var requirements = new FilePath(installLocation, "requirements.txt");
-        var pipArgs = new PipInstallArgs()
-            .WithTorch()
-            .WithTorchVision()
-            .WithTorchAudio()
-            .WithTorchExtraIndex(isLegacyNvidiaGpu ? "cu126" : "cu128")
-            .AddArg("bitsandbytes>=0.46.0")
-            .WithParsedFromRequirementsTxt(
-                await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                "torch$|bitsandbytes"
-            );
-
-        if (installedPackage.PipOverrides != null)
+        var config = new PipInstallConfig
         {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
+            RequirementsFilePaths = ["sd-scripts/requirements.txt", "requirements.txt"],
+            RequirementsExcludePattern =
+                "(diffusers\\[torch\\]==0.32.1|torch|torchvision|torchaudio|xformers|bitsandbytes|-e\\s\\.)",
+            TorchaudioVersion = " ",
+            CudaIndex = isLegacyNvidiaGpu ? "cu126" : "cu128",
+            ExtraPipArgs = ["bitsandbytes>=0.46.0"],
+            PostInstallPipArgs = ["diffusers[torch]==0.32.1"],
+        };
 
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        await StandardPipInstallProcessAsync(
+                venvRunner,
+                options,
+                installedPackage,
+                config,
+                onConsoleOutput,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+        await venvRunner.PipInstall(["-e", "./sd-scripts"], onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(

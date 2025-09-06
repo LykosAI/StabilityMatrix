@@ -40,7 +40,7 @@ public class InvokeAI(
 
     public override string Blurb => "Professional Creative Tools for Stable Diffusion";
     public override string LaunchCommand => "invokeai-web";
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Nightmare;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Advanced;
 
     public override Uri PreviewImageUri =>
         new("https://raw.githubusercontent.com/invoke-ai/InvokeAI/main/docs/assets/canvas_preview.png");

@@ -916,6 +916,9 @@ public partial class CivitDetailsPageViewModel(
                 baseModelType == CivitBaseModelType.Flux1D.GetStringValue()
                 || baseModelType == CivitBaseModelType.Flux1S.GetStringValue()
                 || baseModelType == CivitBaseModelType.WanVideo.GetStringValue()
+                || baseModelType?.StartsWith("Wan", StringComparison.OrdinalIgnoreCase) is true
+                || baseModelType?.StartsWith("Flux", StringComparison.OrdinalIgnoreCase) is true
+                || baseModelType?.StartsWith("Hunyuan", StringComparison.OrdinalIgnoreCase) is true
             )
         )
         {

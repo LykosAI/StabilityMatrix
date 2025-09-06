@@ -109,32 +109,29 @@ public class ComfyZluda(
                 pythonVersion: options.PythonOptions.PythonVersion
             )
             .ConfigureAwait(false);
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
 
-        var pipArgs = new PipInstallArgs()
-            .AddArg("--force-reinstall")
-            .WithTorch("==2.7.0")
-            .WithTorchVision("==0.22.0")
-            .WithTorchAudio("==2.7.0")
-            .WithTorchExtraIndex("cu118");
-
-        var requirements = new FilePath(installLocation, "requirements.txt");
-        pipArgs = pipArgs.WithParsedFromRequirementsTxt(
-            await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-            excludePattern: "torch$|numpy"
-        );
-
-        pipArgs = pipArgs.AddArg("numpy==1.26.0");
-
-        if (installedPackage.PipOverrides != null)
+        var config = new PipInstallConfig
         {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
+            RequirementsFilePaths = ["requirements.txt"],
+            RequirementsExcludePattern = "(torch|numpy)", // Keep numpy excluded for specific install below
+            TorchVersion = "==2.7.0",
+            TorchvisionVersion = "==0.22.0",
+            TorchaudioVersion = "==2.7.0",
+            CudaIndex = "cu118",
+            ForceReinstallTorch = true,
+            ExtraPipArgs = ["numpy==1.26.0"],
+        };
 
-        progress?.Report(
-            new ProgressReport(-1f, "Installing Package Requirements...", isIndeterminate: true)
-        );
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        await StandardPipInstallProcessAsync(
+                venvRunner,
+                options,
+                installedPackage,
+                config,
+                onConsoleOutput,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(1, "Installed Package Requirements", isIndeterminate: false));
 

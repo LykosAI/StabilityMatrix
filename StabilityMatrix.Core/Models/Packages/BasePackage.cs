@@ -305,51 +305,6 @@ public abstract class BasePackage(ISettingsManager settingsManager)
             PackagePrerequisite.VcBuildTools,
         ];
 
-    protected async Task InstallCudaTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true));
-
-        await venvRunner
-            .PipInstall(
-                new PipInstallArgs()
-                    .WithTorch("==2.1.2")
-                    .WithTorchVision("==0.16.2")
-                    .WithXFormers("==0.0.23post1")
-                    .WithTorchExtraIndex("cu121"),
-                onConsoleOutput
-            )
-            .ConfigureAwait(false);
-    }
-
-    protected Task InstallDirectMlTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for DirectML", isIndeterminate: true));
-
-        return venvRunner.PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput);
-    }
-
-    protected Task InstallCpuTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true));
-
-        return venvRunner.PipInstall(
-            new PipInstallArgs().WithTorch("==2.1.2").WithTorchVision(),
-            onConsoleOutput
-        );
-    }
-
     public abstract Task<DownloadPackageVersionOptions?> GetUpdate(InstalledPackage installedPackage);
 
     /// <summary>

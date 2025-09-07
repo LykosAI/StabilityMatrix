@@ -6,107 +6,124 @@
     xmlns:avaloniaEdit="https://github.com/avaloniaui/avaloniaedit"
     xmlns:base="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Base"
     xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
     xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    d:DataContext="{x:Static mocks:DesignData.PackageInstallProgressItemViewModel}"
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="base:ContentDialogProgressViewModelBase"
     mc:Ignorable="d">
     <Grid Margin="8" RowDefinitions="Auto, Auto, Auto, *, Auto, Auto">
+
+        <Button
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            avalonia:Attached.Icon="fa-solid fa-xmark"
+            Classes="transparent-full"
+            Command="{Binding OnCloseButtonClick}"
+            FontSize="20"
+            IsVisible="{Binding !HideCloseButton}"
+            ToolTip.Tip="{x:Static lang:Resources.Action_Close}" />
+
         <TextBlock
             Grid.Row="0"
             Margin="4"
             HorizontalAlignment="Stretch"
             FontSize="24"
             FontWeight="Light"
-            Text="{Binding Text}"
-            TextAlignment="Center"
-            TextWrapping="WrapWithOverflow" />
-
-        <TextBlock
-            Grid.Row="1"
-            Margin="4"
-            IsVisible="{Binding !#Expander.IsExpanded}"
-            Text="{Binding Description}"
+            Text="{Binding Text, FallbackValue='Package Modification'}"
             TextAlignment="Center"
             TextWrapping="WrapWithOverflow" />
 
         <ProgressBar
-            Grid.Row="2"
-            Margin="8"
-            IsIndeterminate="{Binding IsIndeterminate}"
+            Grid.Row="1"
+            Margin="32,8,32,8"
+            IsIndeterminate="{Binding IsIndeterminate, FallbackValue=True}"
             Value="{Binding Value}" />
 
-        <Expander
-            x:Name="Expander"
+        <controls1:CommandBar
+            Grid.Row="2"
+            Margin="8,0,0,0"
+            HorizontalAlignment="Left"
+            DefaultLabelPosition="Right">
+            <controls1:CommandBar.PrimaryCommands>
+                <controls1:CommandBarToggleButton
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding AutoScrollToBottom}"
+                    IsVisible="{Binding !HideCloseButton}"
+                    Label="{x:Static lang:Resources.Label_ToggleAutoScrolling}"
+                    ToolTip.Tip="{x:Static lang:Resources.Label_AutoScrollToEnd}">
+                    <controls1:CommandBarToggleButton.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-arrow-down-wide-short" />
+                    </controls1:CommandBarToggleButton.IconSource>
+                </controls1:CommandBarToggleButton>
+
+                <controls1:CommandBarToggleButton
+                    Margin="8,0,0,0"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding CloseWhenFinished}"
+                    Label="{x:Static lang:Resources.Label_CloseDialogWhenFinished}"
+                    ToolTip.Tip="{x:Static lang:Resources.Label_CloseDialogWhenFinished}">
+                    <controls1:CommandBarToggleButton.IconSource>
+                        <controls:FASymbolIconSource Symbol="fa-solid fa-square-xmark" />
+                    </controls1:CommandBarToggleButton.IconSource>
+                </controls1:CommandBarToggleButton>
+
+            </controls1:CommandBar.PrimaryCommands>
+        </controls1:CommandBar>
+
+        <avaloniaEdit:TextEditor
+            x:Name="Console"
             Grid.Row="3"
+            MaxHeight="400"
             Margin="8"
-            Header="More Details">
-            <avaloniaEdit:TextEditor
-                x:Name="Console"
-                MaxHeight="400"
-                Margin="8"
-                DataContext="{Binding Console}"
-                Document="{Binding Document}"
-                FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
-                IsReadOnly="True"
-                LineNumbersForeground="DarkSlateGray"
-                ShowLineNumbers="True"
-                VerticalScrollBarVisibility="Auto"
-                WordWrap="True">
-                <avaloniaEdit:TextEditor.ContextFlyout>
-                    <MenuFlyout>
-                        <MenuItem
-                            Command="{Binding CopySelectionCommand}"
-                            CommandParameter="{Binding ., ElementName=Console}"
-                            Header="{x:Static lang:Resources.Action_Copy}">
-                            <MenuItem.Icon>
-                                <avalonia:Icon Value="fa-solid fa-copy" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem
-                            Command="{Binding SelectAllCommand}"
-                            CommandParameter="{Binding ., ElementName=Console}"
-                            Header="{x:Static lang:Resources.Action_SelectAll}"
-                            IsEnabled="{Binding CanSelectAll, ElementName=Console}">
-                            <MenuItem.Icon>
-                                <avalonia:Icon Value="fa-solid fa-table-cells" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem
-                            Command="{Binding SearchWithGoogleCommand}"
-                            CommandParameter="{Binding ., ElementName=Console}"
-                            Header="Search with Google">
-                            <MenuItem.Icon>
-                                <avalonia:Icon Value="fa-brands fa-google" />
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem
-                            Command="{Binding SearchWithChatGptCommand}"
-                            CommandParameter="{Binding ., ElementName=Console}"
-                            Header="Search with ChatGPT"
-                            Icon="{StaticResource OpenAiIcon}" />
-                    </MenuFlyout>
-                </avaloniaEdit:TextEditor.ContextFlyout>
-            </avaloniaEdit:TextEditor>
-        </Expander>
-
-        <CheckBox
-            Grid.Row="4"
-            Margin="4"
-            HorizontalAlignment="Center"
-            Content="{x:Static lang:Resources.Label_CloseDialogWhenFinished}"
-            IsChecked="{Binding CloseWhenFinished}"
-            IsVisible="{Binding !HideCloseButton}" />
-
-        <Button
-            Grid.Row="5"
-            HorizontalAlignment="Center"
-            Command="{Binding OnCloseButtonClick}"
-            Content="{x:Static lang:Resources.Action_Hide}"
-            FontSize="20"
-            IsVisible="{Binding !HideCloseButton}" />
+            DataContext="{Binding Console}"
+            Document="{Binding Document}"
+            FontFamily="Cascadia Code,Consolas,Menlo,Monospace,DejaVu Sans Mono,monospace"
+            IsReadOnly="True"
+            LineNumbersForeground="DarkSlateGray"
+            ShowLineNumbers="True"
+            VerticalScrollBarVisibility="Auto"
+            WordWrap="True">
+            <avaloniaEdit:TextEditor.ContextFlyout>
+                <MenuFlyout>
+                    <MenuItem
+                        Command="{Binding CopySelectionCommand}"
+                        CommandParameter="{Binding ., ElementName=Console}"
+                        Header="{x:Static lang:Resources.Action_Copy}">
+                        <MenuItem.Icon>
+                            <avalonia:Icon Value="fa-solid fa-copy" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding SelectAllCommand}"
+                        CommandParameter="{Binding ., ElementName=Console}"
+                        Header="{x:Static lang:Resources.Action_SelectAll}"
+                        IsEnabled="{Binding CanSelectAll, ElementName=Console}">
+                        <MenuItem.Icon>
+                            <avalonia:Icon Value="fa-solid fa-table-cells" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding SearchWithGoogleCommand}"
+                        CommandParameter="{Binding ., ElementName=Console}"
+                        Header="Search with Google">
+                        <MenuItem.Icon>
+                            <avalonia:Icon Value="fa-brands fa-google" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem
+                        Command="{Binding SearchWithChatGptCommand}"
+                        CommandParameter="{Binding ., ElementName=Console}"
+                        Header="Search with ChatGPT"
+                        Icon="{StaticResource OpenAiIcon}" />
+                </MenuFlyout>
+            </avaloniaEdit:TextEditor.ContextFlyout>
+        </avaloniaEdit:TextEditor>
     </Grid>
 </controls:UserControlBase>

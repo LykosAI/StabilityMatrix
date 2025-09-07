@@ -1,0 +1,67 @@
+﻿<Styles
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:StabilityMatrix.Avalonia.Controls"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:ui="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:vmInference="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Inference"
+    x:DataType="vmInference:NrsCardViewModel">
+    <Design.PreviewWith>
+        <controls:NrsCard DataContext="{x:Static mocks:DesignData.NrsCardViewModel}" />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|NrsCard">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <controls:Card x:Name="PART_Card">
+                    <controls:Card.Styles>
+                        <Style Selector="ui|NumberBox">
+                            <Setter Property="Margin" Value="12,4,0,4" />
+                            <Setter Property="MinWidth" Value="70" />
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter Property="ValidationMode" Value="InvalidInputOverwritten" />
+                            <Setter Property="SimpleNumberFormat" Value="F2" />
+                            <Setter Property="SpinButtonPlacementMode" Value="Inline" />
+                        </Style>
+                    </controls:Card.Styles>
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="*,*,*,*">
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Text="Skew" />
+                        <ui:NumberBox
+                            Grid.Row="0"
+                            Grid.Column="1"
+                            Margin="12,0,0,4"
+                            SmallChange="0.25"
+                            Value="{Binding Skew}" />
+
+                        <TextBlock
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Text="Stretch" />
+                        <ui:NumberBox
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            SmallChange="0.25"
+                            Value="{Binding Stretch}" />
+
+                        <TextBlock
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            Text="Squash" />
+                        <ui:NumberBox
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            SmallChange="0.01"
+                            Value="{Binding Squash}" />
+
+                    </Grid>
+                </controls:Card>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

@@ -16,8 +16,9 @@ public class OneTrainer(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "OneTrainer";
     public override string DisplayName { get; set; } = "OneTrainer";
@@ -53,7 +54,11 @@ public class OneTrainer(
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
         progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));
         var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
@@ -61,17 +66,26 @@ public class OneTrainer(
         {
             TorchIndex.Cuda => "requirements-cuda.txt",
             TorchIndex.Rocm => "requirements-rocm.txt",
-            _ => "requirements-default.txt"
+            _ => "requirements-default.txt",
         };
 
         await venvRunner.PipInstall(["-r", requirementsFileName], onConsoleOutput).ConfigureAwait(false);
-        await venvRunner.PipInstall(["-r", "requirements-global.txt"], onConsoleOutput).ConfigureAwait(false);
+
+        var requirementsGlobal = new FilePath(installLocation, "requirements-global.txt");
+        var pipArgs = new PipInstallArgs().WithParsedFromRequirementsTxt(
+            (await requirementsGlobal.ReadAllTextAsync(cancellationToken).ConfigureAwait(false)).Replace(
+                "-e ",
+                ""
+            ),
+            "scipy==1.15.1; sys_platform != 'win32'"
+        );
 
         if (installedPackage.PipOverrides != null)
         {
-            var pipArgs = new PipInstallArgs().WithUserOverrides(installedPackage.PipOverrides);
-            await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
         }
+
+        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(
@@ -82,10 +96,11 @@ public class OneTrainer(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         VenvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), ..options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), .. options.Arguments],
             onConsoleOutput,
             OnExit
         );

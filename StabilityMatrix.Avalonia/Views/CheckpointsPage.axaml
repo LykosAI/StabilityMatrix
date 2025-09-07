@@ -486,6 +486,11 @@
                                         </ui:MenuFlyoutItem.IsVisible>
                                     </ui:MenuFlyoutItem>
                                     <ui:MenuFlyoutItem
+                                        Command="{Binding OpenInExplorerCommand}"
+                                        IconSource="Folder"
+                                        Text="{OnPlatform Default={x:Static lang:Resources.Action_OpenInExplorer},
+                                                          macOS={x:Static lang:Resources.Action_OpenInFinder}}" />
+                                    <ui:MenuFlyoutItem
                                         Command="{Binding CopyModelUrlCommand}"
                                         IconSource="Clipboard"
                                         IsVisible="{Binding CheckpointFile.HasConnectedModel}"

@@ -43,7 +43,7 @@ public record LocalModelFile
         if (ReferenceEquals(this, other))
             return true;
         return RelativePath == other.RelativePath
-            && Equals(ConnectedModelInfo, other.ConnectedModelInfo)
+            && ConnectedModelInfo == other.ConnectedModelInfo
             && HasUpdate == other.HasUpdate;
     }
 
@@ -223,7 +223,7 @@ public record LocalModelFile
         ".pth",
         ".bin",
         ".sft",
-        ".gguf"
+        ".gguf",
     ];
     public static readonly HashSet<string> SupportedImageExtensions = [".png", ".jpg", ".jpeg", ".webp"];
     public static readonly HashSet<string> SupportedMetadataExtensions = [".json"];

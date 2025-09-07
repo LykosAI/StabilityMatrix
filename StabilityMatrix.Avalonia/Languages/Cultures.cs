@@ -18,23 +18,24 @@ public static class Cultures
 
     public static NumberFormatInfo CurrentNumberFormat => Thread.CurrentThread.CurrentCulture.NumberFormat;
 
-    public static readonly Dictionary<string, CultureInfo> SupportedCulturesByCode =
-        new()
-        {
-            ["en-US"] = Default,
-            ["ja-JP"] = new CultureInfo("ja-JP"),
-            ["zh-Hans"] = new CultureInfo("zh-Hans"),
-            ["zh-Hant"] = new CultureInfo("zh-Hant"),
-            ["it-IT"] = new CultureInfo("it-IT"),
-            ["fr-FR"] = new CultureInfo("fr-FR"),
-            ["es"] = new CultureInfo("es"),
-            ["ru-RU"] = new CultureInfo("ru-RU"),
-            ["tr-TR"] = new CultureInfo("tr-TR"),
-            ["de"] = new CultureInfo("de"),
-            ["pt-PT"] = new CultureInfo("pt-PT"),
-            ["pt-BR"] = new CultureInfo("pt-BR"),
-            ["ko-KR"] = new CultureInfo("ko-KR")
-        };
+    public static readonly Dictionary<string, CultureInfo> SupportedCulturesByCode = new()
+    {
+        ["en-US"] = Default,
+        ["ja-JP"] = new CultureInfo("ja-JP"),
+        ["zh-Hans"] = new CultureInfo("zh-Hans"),
+        ["zh-Hant"] = new CultureInfo("zh-Hant"),
+        ["it-IT"] = new CultureInfo("it-IT"),
+        ["fr-FR"] = new CultureInfo("fr-FR"),
+        ["es"] = new CultureInfo("es"),
+        ["ru-RU"] = new CultureInfo("ru-RU"),
+        ["tr-TR"] = new CultureInfo("tr-TR"),
+        ["de"] = new CultureInfo("de"),
+        ["pt-PT"] = new CultureInfo("pt-PT"),
+        ["pt-BR"] = new CultureInfo("pt-BR"),
+        ["ko-KR"] = new CultureInfo("ko-KR"),
+        ["uk-UA"] = new CultureInfo("uk-UA"),
+        ["cs-CZ"] = new CultureInfo("cs-CZ"),
+    };
 
     public static IReadOnlyList<CultureInfo> SupportedCultures =>
         SupportedCulturesByCode.Values.ToImmutableList();

@@ -2,7 +2,7 @@
 
 namespace StabilityMatrix.Core.Models.Api;
 
-public class CivitModelStats : CivitStats
+public record CivitModelStats : CivitStats
 {
     [JsonPropertyName("favoriteCount")]
     public int FavoriteCount { get; set; }

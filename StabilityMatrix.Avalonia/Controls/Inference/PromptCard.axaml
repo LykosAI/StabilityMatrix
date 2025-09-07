@@ -486,7 +486,8 @@
                         <controls:StackEditableCard
                             Grid.Row="4"
                             Margin="2,0,0,0"
-                            DataContext="{Binding ModulesCardViewModel}" />
+                            DataContext="{Binding ModulesCardViewModel}"
+                            IsVisible="{Binding $parent[Grid].((vmInference:PromptCardViewModel)DataContext).IsStackCardEnabled}" />
 
                         <!--  Styles and Prompt Expansions  -->
                         <!--<Grid Grid.Row="4" RowDefinitions="Auto,*">

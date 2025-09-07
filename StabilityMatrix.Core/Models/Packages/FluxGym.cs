@@ -16,8 +16,9 @@ public class FluxGym(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "FluxGym";
     public override string DisplayName { get; set; } = "FluxGym";
@@ -100,43 +101,38 @@ public class FluxGym(
         }
 
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
-
-        progress?.Report(
-            new ProgressReport(-1f, "Installing sd-scripts requirements", isIndeterminate: true)
-        );
-        var sdsRequirements = new FilePath(installLocation, "sd-scripts", "requirements.txt");
-        var sdsPipArgs = new PipInstallArgs()
-            .WithParsedFromRequirementsTxt(
-                await sdsRequirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                "torch"
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
             )
-            .RemovePipArgKey("-e .");
-        await venvRunner.PipInstall(sdsPipArgs, onConsoleOutput).ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(-1f, "Installing requirements", isIndeterminate: true));
+            .ConfigureAwait(false);
 
         var isLegacyNvidiaGpu =
             SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() ?? HardwareHelper.HasLegacyNvidiaGpu();
 
-        var requirements = new FilePath(installLocation, "requirements.txt");
-        var pipArgs = new PipInstallArgs()
-            .WithTorch()
-            .WithTorchVision()
-            .WithTorchAudio()
-            .WithTorchExtraIndex(isLegacyNvidiaGpu ? "cu126" : "cu128")
-            .AddArg("bitsandbytes>=0.46.0")
-            .WithParsedFromRequirementsTxt(
-                await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                "torch$|bitsandbytes"
-            );
-
-        if (installedPackage.PipOverrides != null)
+        var config = new PipInstallConfig
         {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
+            RequirementsFilePaths = ["sd-scripts/requirements.txt", "requirements.txt"],
+            RequirementsExcludePattern =
+                "(diffusers\\[torch\\]==0.32.1|torch|torchvision|torchaudio|xformers|bitsandbytes|-e\\s\\.)",
+            TorchaudioVersion = " ",
+            CudaIndex = isLegacyNvidiaGpu ? "cu126" : "cu128",
+            ExtraPipArgs = ["bitsandbytes>=0.46.0"],
+            PostInstallPipArgs = ["diffusers[torch]==0.32.1"],
+        };
 
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        await StandardPipInstallProcessAsync(
+                venvRunner,
+                options,
+                installedPackage,
+                config,
+                onConsoleOutput,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
+        await venvRunner.PipInstall(["-e", "./sd-scripts"], onConsoleOutput).ConfigureAwait(false);
     }
 
     public override async Task RunPackage(
@@ -147,7 +143,8 @@ public class FluxGym(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {

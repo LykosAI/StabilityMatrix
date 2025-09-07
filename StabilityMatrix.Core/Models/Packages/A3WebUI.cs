@@ -22,8 +22,9 @@ public class A3WebUI(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
@@ -82,7 +83,7 @@ public class A3WebUI(
             [SharedOutputType.Text2Img] = ["outputs/txt2img-images"],
             [SharedOutputType.Img2ImgGrids] = ["outputs/img2img-grids"],
             [SharedOutputType.Text2ImgGrids] = ["outputs/txt2img-grids"],
-            [SharedOutputType.SVD] = ["outputs/svd"]
+            [SharedOutputType.SVD] = ["outputs/svd"],
         };
 
     [SuppressMessage("ReSharper", "ArrangeObjectCreationWhenTypeNotEvident")]
@@ -93,21 +94,21 @@ public class A3WebUI(
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
-                Options = ["--server-name"]
+                Options = ["--server-name"],
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7860",
-                Options = ["--port"]
+                Options = ["--port"],
             },
             new()
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to share on Gradio",
-                Options = { "--share" }
+                Options = { "--share" },
             },
             new()
             {
@@ -117,44 +118,44 @@ public class A3WebUI(
                 {
                     MemoryLevel.Low => "--lowvram",
                     MemoryLevel.Medium => "--medvram",
-                    _ => null
+                    _ => null,
                 },
-                Options = ["--lowvram", "--medvram", "--medvram-sdxl"]
+                Options = ["--lowvram", "--medvram", "--medvram-sdxl"],
             },
             new()
             {
                 Name = "Xformers",
                 Type = LaunchOptionType.Bool,
                 InitialValue = HardwareHelper.HasNvidiaGpu(),
-                Options = ["--xformers"]
+                Options = ["--xformers"],
             },
             new()
             {
                 Name = "API",
                 Type = LaunchOptionType.Bool,
                 InitialValue = true,
-                Options = ["--api"]
+                Options = ["--api"],
             },
             new()
             {
                 Name = "Auto Launch Web UI",
                 Type = LaunchOptionType.Bool,
                 InitialValue = false,
-                Options = ["--autolaunch"]
+                Options = ["--autolaunch"],
             },
             new()
             {
                 Name = "Skip Torch CUDA Check",
                 Type = LaunchOptionType.Bool,
                 InitialValue = !HardwareHelper.HasNvidiaGpu(),
-                Options = ["--skip-torch-cuda-test"]
+                Options = ["--skip-torch-cuda-test"],
             },
             new()
             {
                 Name = "Skip Python Version Check",
                 Type = LaunchOptionType.Bool,
                 InitialValue = true,
-                Options = ["--skip-python-version-check"]
+                Options = ["--skip-python-version-check"],
             },
             new()
             {
@@ -163,22 +164,22 @@ public class A3WebUI(
                 Description = "Do not switch the model to 16-bit floats",
                 InitialValue =
                     HardwareHelper.PreferRocm() || HardwareHelper.PreferDirectMLOrZluda() || Compat.IsMacOS,
-                Options = ["--no-half"]
+                Options = ["--no-half"],
             },
             new()
             {
                 Name = "Skip SD Model Download",
                 Type = LaunchOptionType.Bool,
                 InitialValue = false,
-                Options = ["--no-download-sd-model"]
+                Options = ["--no-download-sd-model"],
             },
             new()
             {
                 Name = "Skip Install",
                 Type = LaunchOptionType.Bool,
-                Options = ["--skip-install"]
+                Options = ["--skip-install"],
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override IEnumerable<SharedFolderMethod> AvailableSharedFolderMethods =>
@@ -203,66 +204,51 @@ public class A3WebUI(
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
 
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
+        var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var isBlackwell =
+            torchIndex is TorchIndex.Cuda
+            && (SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu());
 
-        progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
-
-        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-
-        var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        var pipArgs = torchVersion switch
+        // 1. Configure the entire install process declaratively.
+        var config = new PipInstallConfig
         {
-            TorchIndex.Mps
-                => new PipInstallArgs()
-                    .WithTorch("==2.3.1")
-                    .WithTorchVision("==0.18.1")
-                    .WithParsedFromRequirementsTxt(
-                        await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                        excludePattern: "torch"
-                    ),
-            _
-                => new PipInstallArgs()
-                    .WithTorch("==2.1.2")
-                    .WithTorchVision("==0.16.2")
-                    .WithTorchExtraIndex(
-                        torchVersion switch
-                        {
-                            TorchIndex.Cpu => "cpu",
-                            TorchIndex.Cuda => "cu121",
-                            TorchIndex.Rocm => "rocm5.6",
-                            TorchIndex.Mps => "cpu",
-                            _ => throw new NotSupportedException($"Unsupported torch version: {torchVersion}")
-                        }
-                    )
-                    .WithParsedFromRequirementsTxt(
-                        await requirements.ReadAllTextAsync(cancellationToken).ConfigureAwait(false),
-                        excludePattern: "torch"
-                    )
+            RequirementsFilePaths = ["requirements_versions.txt"],
+            TorchVersion = torchIndex == TorchIndex.Mps ? "==2.3.1" : (isBlackwell ? "" : "==2.1.2"),
+            TorchvisionVersion = torchIndex == TorchIndex.Mps ? "==0.18.1" : (isBlackwell ? "" : "==0.16.2"),
+            XformersVersion = isBlackwell ? " " : "==0.0.23.post1",
+            CudaIndex = isBlackwell ? "cu128" : "cu121",
+            RocmIndex = "rocm5.6",
+            ExtraPipArgs =
+            [
+                "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
+            ],
         };
 
-        if (torchVersion == TorchIndex.Cuda)
-        {
-            pipArgs = pipArgs.WithXFormers("==0.0.23.post1");
-        }
+        // 2. Execute the standardized installation process.
+        await StandardPipInstallProcessAsync(
+                venvRunner,
+                options,
+                installedPackage,
+                config,
+                onConsoleOutput,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
 
-        if (installedPackage.PipOverrides != null)
-        {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
-        }
-
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
-
+        // 3. Perform any final, package-specific tasks.
         progress?.Report(new ProgressReport(-1f, "Updating configuration", isIndeterminate: true));
-
-        // Create and add {"show_progress_type": "TAESD"} to config.json
-        // Only add if the file doesn't exist
         var configPath = Path.Combine(installLocation, "config.json");
         if (!File.Exists(configPath))
         {
-            var config = new JsonObject { { "show_progress_type", "TAESD" } };
-            await File.WriteAllTextAsync(configPath, config.ToString(), cancellationToken)
+            var configJson = new JsonObject { { "show_progress_type", "TAESD" } };
+            await File.WriteAllTextAsync(configPath, configJson.ToString(), cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -277,7 +263,8 @@ public class A3WebUI(
         CancellationToken cancellationToken = default
     )
     {
-        await SetupVenv(installLocation).ConfigureAwait(false);
+        await SetupVenv(installLocation, pythonVersion: PyVersion.Parse(installedPackage.PythonVersion))
+            .ConfigureAwait(false);
 
         void HandleConsoleOutput(ProcessOutput s)
         {
@@ -298,8 +285,8 @@ public class A3WebUI(
         VenvRunner.RunDetached(
             [
                 Path.Combine(installLocation, options.Command ?? LaunchCommand),
-                ..options.Arguments,
-                ..ExtraLaunchArguments
+                .. options.Arguments,
+                .. ExtraLaunchArguments,
             ],
             HandleConsoleOutput,
             OnExit
@@ -320,7 +307,7 @@ public class A3WebUI(
                     new Uri(
                         "https://raw.githubusercontent.com/AUTOMATIC1111/stable-diffusion-webui-extensions/master/index.json"
                     )
-                )
+                ),
             ];
 
         public override async Task<IEnumerable<PackageExtension>> GetManifestExtensionsAsync(

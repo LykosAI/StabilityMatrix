@@ -294,6 +294,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
 
                             // Preload
                             await newImageSource.GetBitmapAsync();
+                            await newImageSource.GetOrRefreshTemplateKeyAsync();
 
                             sender.ImageSource = newImageSource;
                             sender.LocalImageFile = newImage.ImageFile;
@@ -655,7 +656,8 @@ public partial class OutputsPageViewModel : PageViewModelBase
             .Select(packageFactory.GetPackagePair)
             .WhereNotNull()
             .Where(p =>
-                p.BasePackage.SharedOutputFolders is { Count: > 0 } && p.InstalledPackage.FullPath != null
+                p.BasePackage.SharedOutputFolders is { Count: > 0 }
+                && p.InstalledPackage is { FullPath: not null }
             )
             .Select(pair => new TreeViewDirectory
             {
@@ -665,6 +667,7 @@ public partial class OutputsPageViewModel : PageViewModelBase
                     Path.Combine(pair.InstalledPackage.FullPath!, pair.BasePackage.OutputFolderName)
                 ),
             })
+            .OrderBy(d => d.Name)
             .ToList();
 
         packageCategories.Insert(
@@ -677,9 +680,15 @@ public partial class OutputsPageViewModel : PageViewModelBase
             }
         );
 
-        categoriesCache.EditDiff(packageCategories, (a, b) => a.Path == b.Path);
+        categoriesCache.Edit(updater => updater.Load(packageCategories));
 
-        SelectedCategory = previouslySelectedCategory ?? Categories.First();
+        if (!string.IsNullOrWhiteSpace(previouslySelectedCategory?.Path))
+        {
+            FindAndExpandPathToCategory(Categories, previouslySelectedCategory.Path);
+        }
+
+        SelectedCategory =
+            FindCategoryByPath(Categories, previouslySelectedCategory?.Path) ?? Categories.FirstOrDefault();
     }
 
     private ObservableCollection<TreeViewDirectory> GetSubfolders(string strPath)
@@ -707,6 +716,79 @@ public partial class OutputsPageViewModel : PageViewModelBase
             subfolders.Add(category);
         }
 
+        subfolders = new ObservableCollection<TreeViewDirectory>(subfolders.OrderBy(d => d.Name));
+
         return subfolders;
+    }
+
+    private TreeViewDirectory? FindCategoryByPath(IEnumerable<TreeViewDirectory> nodes, string? path)
+    {
+        // Can't find a category if the path is null or empty
+        if (string.IsNullOrEmpty(path))
+        {
+            return null;
+        }
+
+        foreach (var node in nodes)
+        {
+            // Check if the current node is the one we're looking for
+            if (node.Path == path)
+            {
+                return node;
+            }
+
+            if (node.SubDirectories is not { Count: > 0 })
+                continue;
+
+            // If not, and if this node has children, search within its children
+            var foundInChildren = FindCategoryByPath(node.SubDirectories, path);
+            if (foundInChildren != null)
+            {
+                // Found it in a sub-directory, so return it up the call stack
+                return foundInChildren;
+            }
+        }
+
+        // If we've searched all nodes at this level and their children without success
+        return null;
+    }
+
+    /// <summary>
+    /// Recursively searches for a category by its path and expands all parent nodes along the way.
+    /// </summary>
+    /// <param name="nodes">The collection of nodes to search within.</param>
+    /// <param name="targetPath">The path of the node to find.</param>
+    /// <returns>True if the target node was found in this branch; otherwise, false.</returns>
+    private bool FindAndExpandPathToCategory(IEnumerable<TreeViewDirectory> nodes, string? targetPath)
+    {
+        if (string.IsNullOrEmpty(targetPath))
+        {
+            return false;
+        }
+
+        foreach (var node in nodes)
+        {
+            // First, check if the target is a direct descendant of this node.
+            // This is the recursive part.
+            if (
+                node.SubDirectories is { Count: > 0 }
+                && FindAndExpandPathToCategory(node.SubDirectories, targetPath)
+            )
+            {
+                // If the recursive call returns true, it means the target was found
+                // in this node's children. Therefore, this node is an ancestor and
+                // must be expanded.
+                node.IsExpanded = true;
+                return true; // Bubble "true" up to the parent.
+            }
+
+            // After checking children, check if the current node itself is the target.
+            if (node.Path == targetPath)
+            {
+                return true; // Found it. Start the "bubble up" of true values.
+            }
+        }
+
+        return false; // Target was not found in this collection of nodes.
     }
 }

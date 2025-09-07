@@ -6,10 +6,11 @@ public enum SharedOutputType
     Text2Img,
     Text2Vid,
     Img2Img,
+    Img2Vid,
     Extras,
     Text2ImgGrids,
     Img2ImgGrids,
     SVD,
     Saved,
-    Consolidated
+    Consolidated,
 }

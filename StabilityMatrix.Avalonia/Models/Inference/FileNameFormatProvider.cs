@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using Avalonia.Data;
 using StabilityMatrix.Core.Extensions;
 using StabilityMatrix.Core.Models;
+using StabilityMatrix.Core.Models.Api;
 using StabilityMatrix.Core.Models.Inference;
 
 namespace StabilityMatrix.Avalonia.Models.Inference;
@@ -20,6 +21,10 @@ public partial class FileNameFormatProvider
 
     public string? ProjectName { get; init; }
 
+    public CivitModel? CivitModel { get; init; }
+    public CivitModelVersion? CivitModelVersion { get; init; }
+    public CivitFile? CivitFile { get; init; }
+
     private Dictionary<string, Func<string?>>? _substitutions;
 
     public Dictionary<string, Func<string?>> Substitutions =>
@@ -28,7 +33,10 @@ public partial class FileNameFormatProvider
             { "seed", () => GenerationParameters?.Seed.ToString() },
             { "prompt", () => GenerationParameters?.PositivePrompt },
             { "negative_prompt", () => GenerationParameters?.NegativePrompt },
-            { "model_name", () => Path.GetFileNameWithoutExtension(GenerationParameters?.ModelName) },
+            {
+                "model_name",
+                () => Path.GetFileNameWithoutExtension(GenerationParameters?.ModelName) ?? CivitModel?.Name
+            },
             { "model_hash", () => GenerationParameters?.ModelHash },
             { "sampler", () => GenerationParameters?.Sampler },
             { "cfgscale", () => GenerationParameters?.CfgScale.ToString() },
@@ -38,7 +46,15 @@ public partial class FileNameFormatProvider
             { "project_type", () => ProjectType?.GetStringValue() },
             { "project_name", () => ProjectName },
             { "date", () => DateTime.Now.ToString("yyyy-MM-dd") },
-            { "time", () => DateTime.Now.ToString("HH-mm-ss") }
+            { "time", () => DateTime.Now.ToString("HH-mm-ss") },
+            { "author", () => CivitModel?.Creator.Username },
+            { "base_model", () => CivitModelVersion?.BaseModel },
+            { "file_name", () => Path.GetFileNameWithoutExtension(CivitFile?.Name) },
+            { "file_id", () => CivitFile?.Id.ToString() },
+            { "model_id", () => CivitModel?.Id.ToString() },
+            { "model_version_id", () => CivitModelVersion?.Id.ToString() },
+            { "model_version_name", () => CivitModelVersion?.Name },
+            { "model_type", () => CivitModel?.Type.ToString() },
         };
 
     /// <summary>
@@ -151,7 +167,34 @@ public partial class FileNameFormatProvider
         {
             GenerationParameters = GenerationParameters.GetSample(),
             ProjectType = InferenceProjectType.TextToImage,
-            ProjectName = "Sample Project"
+            ProjectName = "Sample Project",
+        };
+    }
+
+    public static FileNameFormatProvider GetSampleForModelBrowser()
+    {
+        return new FileNameFormatProvider
+        {
+            CivitModel = new CivitModel
+            {
+                Id = 1234,
+                Name = "Sample Model",
+                Creator = new CivitCreator { Username = "SampleUser" },
+                Type = CivitModelType.Checkpoint,
+            },
+            CivitModelVersion = new CivitModelVersion
+            {
+                Id = 5678,
+                Name = "v1.0",
+                BaseModel = "Illustrious",
+            },
+            CivitFile = new CivitFile
+            {
+                Id = 910,
+                Name = "sample_file.ckpt",
+                Type = CivitFileType.Model,
+                Metadata = new CivitFileMetadata { Size = "pruned" },
+            },
         };
     }
 

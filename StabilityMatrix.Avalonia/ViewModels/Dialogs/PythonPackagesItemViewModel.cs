@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Semver;
 using StabilityMatrix.Avalonia.ViewModels.Base;
@@ -84,7 +81,7 @@ public partial class PythonPackagesItemViewModel(ISettingsManager settingsManage
     /// <summary>
     /// Loads the pip show result if not already loaded
     /// </summary>
-    public async Task LoadExtraInfo(DirectoryPath venvPath)
+    public async Task LoadExtraInfo(DirectoryPath venvPath, PyBaseInstall pyBaseInstall)
     {
         if (PipShowResult is not null)
         {
@@ -101,7 +98,7 @@ public partial class PythonPackagesItemViewModel(ISettingsManager settingsManage
             }
             else
             {
-                await using var venvRunner = await PyBaseInstall.Default.CreateVenvRunnerAsync(
+                await using var venvRunner = await pyBaseInstall.CreateVenvRunnerAsync(
                     venvPath,
                     workingDirectory: venvPath.Parent,
                     environmentVariables: settingsManager.Settings.EnvironmentVariables

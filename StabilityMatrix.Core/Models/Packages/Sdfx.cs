@@ -20,8 +20,9 @@ public class Sdfx(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : BaseGitPackage(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "sdfx";
     public override string DisplayName { get; set; } = "SDFX";
@@ -38,9 +39,12 @@ public class Sdfx(
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
         [TorchIndex.Cpu, TorchIndex.Cuda, TorchIndex.DirectMl, TorchIndex.Rocm, TorchIndex.Mps];
 
-    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Expert;
+    public override PackageDifficulty InstallerSortOrder => PackageDifficulty.Impossible;
+    public override bool OfferInOneClickInstaller => false;
     public override SharedFolderMethod RecommendedSharedFolderMethod => SharedFolderMethod.Configuration;
     public override List<LaunchOptionDefinition> LaunchOptions => [LaunchOptionDefinition.Extras];
+    public override string Disclaimer => "This package may no longer receive updates from its author.";
+    public override PackageType PackageType => PackageType.Legacy;
 
     public override SharedFolderLayout SharedFolderLayout =>
         new()
@@ -54,37 +58,37 @@ public class Sdfx(
                 {
                     SourceTypes = [SharedFolderType.StableDiffusion],
                     TargetRelativePaths = ["data/models/checkpoints"],
-                    ConfigDocumentPaths = ["path.models.checkpoints"]
+                    ConfigDocumentPaths = ["path.models.checkpoints"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Diffusers],
                     TargetRelativePaths = ["data/models/diffusers"],
-                    ConfigDocumentPaths = ["path.models.diffusers"]
+                    ConfigDocumentPaths = ["path.models.diffusers"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.VAE],
                     TargetRelativePaths = ["data/models/vae"],
-                    ConfigDocumentPaths = ["path.models.vae"]
+                    ConfigDocumentPaths = ["path.models.vae"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Lora, SharedFolderType.LyCORIS],
                     TargetRelativePaths = ["data/models/loras"],
-                    ConfigDocumentPaths = ["path.models.loras"]
+                    ConfigDocumentPaths = ["path.models.loras"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Embeddings],
                     TargetRelativePaths = ["data/models/embeddings"],
-                    ConfigDocumentPaths = ["path.models.embeddings"]
+                    ConfigDocumentPaths = ["path.models.embeddings"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.Hypernetwork],
                     TargetRelativePaths = ["data/models/hypernetworks"],
-                    ConfigDocumentPaths = ["path.models.hypernetworks"]
+                    ConfigDocumentPaths = ["path.models.hypernetworks"],
                 },
                 new SharedFolderLayoutRule
                 {
@@ -92,40 +96,40 @@ public class Sdfx(
                     [
                         SharedFolderType.ESRGAN,
                         SharedFolderType.RealESRGAN,
-                        SharedFolderType.SwinIR
+                        SharedFolderType.SwinIR,
                     ],
                     TargetRelativePaths = ["data/models/upscale_models"],
-                    ConfigDocumentPaths = ["path.models.upscale_models"]
+                    ConfigDocumentPaths = ["path.models.upscale_models"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.TextEncoders],
                     TargetRelativePaths = ["data/models/clip"],
-                    ConfigDocumentPaths = ["path.models.clip"]
+                    ConfigDocumentPaths = ["path.models.clip"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.ClipVision],
                     TargetRelativePaths = ["data/models/clip_vision"],
-                    ConfigDocumentPaths = ["path.models.clip_vision"]
+                    ConfigDocumentPaths = ["path.models.clip_vision"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.ControlNet, SharedFolderType.T2IAdapter],
                     TargetRelativePaths = ["data/models/controlnet"],
-                    ConfigDocumentPaths = ["path.models.controlnet"]
+                    ConfigDocumentPaths = ["path.models.controlnet"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.GLIGEN],
                     TargetRelativePaths = ["data/models/gligen"],
-                    ConfigDocumentPaths = ["path.models.gligen"]
+                    ConfigDocumentPaths = ["path.models.gligen"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.ApproxVAE],
                     TargetRelativePaths = ["data/models/vae_approx"],
-                    ConfigDocumentPaths = ["path.models.vae_approx"]
+                    ConfigDocumentPaths = ["path.models.vae_approx"],
                 },
                 new SharedFolderLayoutRule
                 {
@@ -133,18 +137,18 @@ public class Sdfx(
                     [
                         SharedFolderType.IpAdapter,
                         SharedFolderType.IpAdapters15,
-                        SharedFolderType.IpAdaptersXl
+                        SharedFolderType.IpAdaptersXl,
                     ],
                     TargetRelativePaths = ["data/models/ipadapter"],
-                    ConfigDocumentPaths = ["path.models.ipadapter"]
+                    ConfigDocumentPaths = ["path.models.ipadapter"],
                 },
                 new SharedFolderLayoutRule
                 {
                     SourceTypes = [SharedFolderType.PromptExpansion],
                     TargetRelativePaths = ["data/models/prompt_expansion"],
-                    ConfigDocumentPaths = ["path.models.prompt_expansion"]
+                    ConfigDocumentPaths = ["path.models.prompt_expansion"],
                 },
-            ]
+            ],
         };
     public override Dictionary<SharedOutputType, IReadOnlyList<string>> SharedOutputFolders =>
         new() { [SharedOutputType.Text2Img] = new[] { "data/media/output" } };
@@ -156,7 +160,7 @@ public class Sdfx(
             PackagePrerequisite.Python310,
             PackagePrerequisite.VcRedist,
             PackagePrerequisite.Git,
-            PackagePrerequisite.Node
+            PackagePrerequisite.Node,
         ];
 
     public override async Task InstallPackage(
@@ -170,7 +174,11 @@ public class Sdfx(
     {
         progress?.Report(new ProgressReport(-1, "Setting up venv", isIndeterminate: true));
         // Setup venv
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
+            .ConfigureAwait(false);
         venvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
         progress?.Report(
@@ -186,7 +194,7 @@ public class Sdfx(
             TorchIndex.DirectMl => "--directml",
             TorchIndex.Cpu => "--cpu",
             TorchIndex.Mps => "--mac",
-            _ => throw new NotSupportedException($"Torch version {torchVersion} is not supported.")
+            _ => throw new NotSupportedException($"Torch version {torchVersion} is not supported."),
         };
 
         await venvRunner
@@ -210,7 +218,11 @@ public class Sdfx(
         CancellationToken cancellationToken = default
     )
     {
-        var venvRunner = await SetupVenv(installLocation).ConfigureAwait(false);
+        var venvRunner = await SetupVenv(
+                installLocation,
+                pythonVersion: PyVersion.Parse(installedPackage.PythonVersion)
+            )
+            .ConfigureAwait(false);
         venvRunner.UpdateEnvironmentVariables(GetEnvVars);
 
         void HandleConsoleOutput(ProcessOutput s)
@@ -230,7 +242,7 @@ public class Sdfx(
         }
 
         venvRunner.RunDetached(
-            [Path.Combine(installLocation, options.Command ?? LaunchCommand), "--run", ..options.Arguments],
+            [Path.Combine(installLocation, options.Command ?? LaunchCommand), "--run", .. options.Arguments],
             HandleConsoleOutput,
             OnExit
         );
@@ -254,10 +266,10 @@ public class Sdfx(
         pathBuilder.AddPath(
             Compat.IsWindows
                 ? Environment.GetFolderPath(Environment.SpecialFolder.System)
-                : Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs", "bin")
+                : Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs-18", "bin")
         );
 
-        pathBuilder.AddPath(Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs"));
+        pathBuilder.AddPath(Path.Combine(SettingsManager.LibraryDir, "Assets", "nodejs-18"));
 
         return env.SetItem("PATH", pathBuilder.ToString());
     }

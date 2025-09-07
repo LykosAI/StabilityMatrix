@@ -5,7 +5,7 @@ using StabilityMatrix.Avalonia.Controls;
 
 namespace StabilityMatrix.Avalonia.ViewModels.Base;
 
-public class ContentDialogViewModelBase : ViewModelBase
+public class ContentDialogViewModelBase : DisposableViewModelBase
 {
     public virtual string? Title { get; set; }
 

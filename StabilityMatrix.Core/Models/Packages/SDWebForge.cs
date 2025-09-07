@@ -1,4 +1,5 @@
-﻿using Injectio.Attributes;
+﻿using System.Text;
+using Injectio.Attributes;
 using StabilityMatrix.Core.Helper;
 using StabilityMatrix.Core.Helper.Cache;
 using StabilityMatrix.Core.Helper.HardwareInfo;
@@ -16,8 +17,9 @@ public class SDWebForge(
     IGithubApiCache githubApi,
     ISettingsManager settingsManager,
     IDownloadService downloadService,
-    IPrerequisiteHelper prerequisiteHelper
-) : A3WebUI(githubApi, settingsManager, downloadService, prerequisiteHelper)
+    IPrerequisiteHelper prerequisiteHelper,
+    IPyInstallationManager pyInstallationManager
+) : A3WebUI(githubApi, settingsManager, downloadService, prerequisiteHelper, pyInstallationManager)
 {
     public override string Name => "stable-diffusion-webui-forge";
     public override string DisplayName { get; set; } = "Stable Diffusion WebUI Forge";
@@ -43,73 +45,98 @@ public class SDWebForge(
                 Name = "Host",
                 Type = LaunchOptionType.String,
                 DefaultValue = "localhost",
-                Options = ["--server-name"]
+                Options = ["--server-name"],
             },
             new()
             {
                 Name = "Port",
                 Type = LaunchOptionType.String,
                 DefaultValue = "7860",
-                Options = ["--port"]
+                Options = ["--port"],
             },
             new()
             {
                 Name = "Share",
                 Type = LaunchOptionType.Bool,
                 Description = "Set whether to share on Gradio",
-                Options = { "--share" }
+                Options = { "--share" },
             },
             new()
             {
                 Name = "Pin Shared Memory",
                 Type = LaunchOptionType.Bool,
-                Options = { "--pin-shared-memory" }
+                Options = { "--pin-shared-memory" },
+                InitialValue =
+                    HardwareHelper.HasNvidiaGpu()
+                    && (
+                        SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() is false
+                        || !HardwareHelper.HasLegacyNvidiaGpu()
+                    ),
             },
             new()
             {
                 Name = "CUDA Malloc",
                 Type = LaunchOptionType.Bool,
-                Options = { "--cuda-malloc" }
+                Options = { "--cuda-malloc" },
+                InitialValue =
+                    HardwareHelper.HasNvidiaGpu()
+                    && (
+                        SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() is false
+                        || !HardwareHelper.HasLegacyNvidiaGpu()
+                    ),
             },
             new()
             {
                 Name = "CUDA Stream",
                 Type = LaunchOptionType.Bool,
-                Options = { "--cuda-stream" }
+                Options = { "--cuda-stream" },
+                InitialValue =
+                    HardwareHelper.HasNvidiaGpu()
+                    && (
+                        SettingsManager.Settings.PreferredGpu?.IsLegacyNvidiaGpu() is false
+                        || !HardwareHelper.HasLegacyNvidiaGpu()
+                    ),
+            },
+            new()
+            {
+                Name = "Skip Install",
+                Type = LaunchOptionType.Bool,
+                InitialValue = true,
+                Options = ["--skip-install"],
             },
             new()
             {
                 Name = "Always Offload from VRAM",
                 Type = LaunchOptionType.Bool,
-                Options = ["--always-offload-from-vram"]
+                Options = ["--always-offload-from-vram"],
             },
             new()
             {
                 Name = "Always GPU",
                 Type = LaunchOptionType.Bool,
-                Options = ["--always-gpu"]
+                Options = ["--always-gpu"],
             },
             new()
             {
                 Name = "Always CPU",
                 Type = LaunchOptionType.Bool,
-                Options = ["--always-cpu"]
+                Options = ["--always-cpu"],
             },
             new()
             {
                 Name = "Skip Torch CUDA Test",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS,
-                Options = ["--skip-torch-cuda-test"]
+                Options = ["--skip-torch-cuda-test"],
             },
             new()
             {
                 Name = "No half-precision VAE",
                 Type = LaunchOptionType.Bool,
                 InitialValue = Compat.IsMacOS,
-                Options = ["--no-half-vae"]
+                Options = ["--no-half-vae"],
             },
-            LaunchOptionDefinition.Extras
+            LaunchOptionDefinition.Extras,
         ];
 
     public override IEnumerable<TorchIndex> AvailableTorchIndices =>
@@ -125,47 +152,55 @@ public class SDWebForge(
     )
     {
         progress?.Report(new ProgressReport(-1f, "Setting up venv", isIndeterminate: true));
-
-        await using var venvRunner = await SetupVenvPure(installLocation).ConfigureAwait(false);
-
-        await venvRunner.PipInstall("--upgrade pip wheel", onConsoleOutput).ConfigureAwait(false);
-
-        progress?.Report(new ProgressReport(-1f, "Installing requirements...", isIndeterminate: true));
-
-        var requirements = new FilePath(installLocation, "requirements_versions.txt");
-        var requirementsContent = await requirements
-            .ReadAllTextAsync(cancellationToken)
+        await using var venvRunner = await SetupVenvPure(
+                installLocation,
+                pythonVersion: options.PythonOptions.PythonVersion
+            )
             .ConfigureAwait(false);
 
-        var pipArgs = new PipInstallArgs("setuptools==69.5.1");
-
-        var isBlackwell =
-            SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu();
-        var torchVersion = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
-
-        pipArgs = pipArgs
-            .WithTorch(isBlackwell ? string.Empty : "==2.3.1")
-            .WithTorchVision(isBlackwell ? string.Empty : "==0.18.1")
-            .WithTorchExtraIndex(
-                torchVersion switch
-                {
-                    TorchIndex.Cpu => "cpu",
-                    TorchIndex.Cuda when isBlackwell => "cu128",
-                    TorchIndex.Cuda => "cu121",
-                    TorchIndex.Rocm => "rocm5.7",
-                    TorchIndex.Mps => "cpu",
-                    _ => throw new ArgumentOutOfRangeException(nameof(torchVersion), torchVersion, null)
-                }
-            );
-
-        pipArgs = pipArgs.WithParsedFromRequirementsTxt(requirementsContent, excludePattern: "torch");
-
-        if (installedPackage.PipOverrides != null)
+        // Dynamically discover all requirements files
+        var requirementsPaths = new List<string> { "requirements_versions.txt" };
+        var extensionsBuiltinDir = new DirectoryPath(installLocation, "extensions-builtin");
+        if (extensionsBuiltinDir.Exists)
         {
-            pipArgs = pipArgs.WithUserOverrides(installedPackage.PipOverrides);
+            requirementsPaths.AddRange(
+                extensionsBuiltinDir
+                    .EnumerateFiles("requirements.txt", EnumerationOptionConstants.AllDirectories)
+                    .Select(f => Path.GetRelativePath(installLocation, f.ToString()))
+            );
         }
 
-        await venvRunner.PipInstall(pipArgs, onConsoleOutput).ConfigureAwait(false);
+        var torchIndex = options.PythonOptions.TorchIndex ?? GetRecommendedTorchVersion();
+        var isBlackwell =
+            torchIndex is TorchIndex.Cuda
+            && (SettingsManager.Settings.PreferredGpu?.IsBlackwellGpu() ?? HardwareHelper.HasBlackwellGpu());
+
+        var config = new PipInstallConfig
+        {
+            PrePipInstallArgs = ["joblib"],
+            RequirementsFilePaths = requirementsPaths,
+            TorchVersion = isBlackwell ? "" : "==2.3.1",
+            TorchvisionVersion = isBlackwell ? "" : "==0.18.1",
+            CudaIndex = isBlackwell ? "cu128" : "cu121",
+            RocmIndex = "rocm5.7",
+            ExtraPipArgs =
+            [
+                "https://github.com/openai/CLIP/archive/d50d76daa670286dd6cacf3bcd80b5e4823fc8e1.zip",
+            ],
+            PostInstallPipArgs = ["numpy==1.26.4"],
+        };
+
+        await StandardPipInstallProcessAsync(
+                venvRunner,
+                options,
+                installedPackage,
+                config,
+                onConsoleOutput,
+                progress,
+                cancellationToken
+            )
+            .ConfigureAwait(false);
+
         progress?.Report(new ProgressReport(1f, "Install complete", isIndeterminate: false));
     }
 }

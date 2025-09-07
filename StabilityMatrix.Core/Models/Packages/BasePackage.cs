@@ -38,10 +38,12 @@ public abstract class BasePackage(ISettingsManager settingsManager)
     /// <summary>
     /// Optional commands (e.g. 'config') that are on the launch button split drop-down.
     /// </summary>
-    public virtual IReadOnlyList<string> ExtraLaunchCommands { get; } = Array.Empty<string>();
+    public virtual IReadOnlyDictionary<string, string> ExtraLaunchCommands { get; } =
+        new Dictionary<string, string>();
 
     public abstract Uri PreviewImageUri { get; }
     public virtual bool ShouldIgnoreReleases => false;
+    public virtual bool ShouldIgnoreBranches => false;
     public virtual bool UpdateAvailable { get; set; }
 
     public virtual bool IsInferenceCompatible => false;
@@ -58,6 +60,7 @@ public abstract class BasePackage(ISettingsManager settingsManager)
     public virtual bool UsesVenv => true;
     public virtual bool InstallRequiresAdmin => false;
     public virtual string? AdminRequiredReason => null;
+    public virtual PyVersion RecommendedPythonVersion => PyInstallationManager.Python_3_10_17;
 
     /// <summary>
     /// Returns a list of extra commands that can be executed for this package.
@@ -299,53 +302,8 @@ public abstract class BasePackage(ISettingsManager settingsManager)
             PackagePrerequisite.Git,
             PackagePrerequisite.Python310,
             PackagePrerequisite.VcRedist,
-            PackagePrerequisite.VcBuildTools
+            PackagePrerequisite.VcBuildTools,
         ];
-
-    protected async Task InstallCudaTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CUDA", isIndeterminate: true));
-
-        await venvRunner
-            .PipInstall(
-                new PipInstallArgs()
-                    .WithTorch("==2.1.2")
-                    .WithTorchVision("==0.16.2")
-                    .WithXFormers("==0.0.23post1")
-                    .WithTorchExtraIndex("cu121"),
-                onConsoleOutput
-            )
-            .ConfigureAwait(false);
-    }
-
-    protected Task InstallDirectMlTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for DirectML", isIndeterminate: true));
-
-        return venvRunner.PipInstall(new PipInstallArgs().WithTorchDirectML(), onConsoleOutput);
-    }
-
-    protected Task InstallCpuTorch(
-        PyVenvRunner venvRunner,
-        IProgress<ProgressReport>? progress = null,
-        Action<ProcessOutput>? onConsoleOutput = null
-    )
-    {
-        progress?.Report(new ProgressReport(-1f, "Installing PyTorch for CPU", isIndeterminate: true));
-
-        return venvRunner.PipInstall(
-            new PipInstallArgs().WithTorch("==2.1.2").WithTorchVision(),
-            onConsoleOutput
-        );
-    }
 
     public abstract Task<DownloadPackageVersionOptions?> GetUpdate(InstalledPackage installedPackage);
 

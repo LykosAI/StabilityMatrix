@@ -1,140 +1,137 @@
-﻿<controls:UserControlBase xmlns="https://github.com/avaloniaui"
-                          xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                          xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-                          xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-                          xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
-                          xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
-                          xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
-                          xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core"
-                          xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
-                          xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
-                          xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
-                          xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
-                          xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
-                          mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-                          x:DataType="packageManager:PackageInstallBrowserViewModel"
-                          d:DataContext="{x:Static mocks:DesignData.NewInstallerDialogViewModel}"
-                          x:Class="StabilityMatrix.Avalonia.Views.PackageManager.PackageInstallBrowserView">
+﻿<controls:UserControlBase
+    x:Class="StabilityMatrix.Avalonia.Views.PackageManager.PackageInstallBrowserView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:StabilityMatrix.Avalonia.Controls"
+    xmlns:controls1="clr-namespace:FluentAvalonia.UI.Controls;assembly=FluentAvalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:dialogs="clr-namespace:StabilityMatrix.Avalonia.ViewModels.Dialogs"
+    xmlns:input="clr-namespace:FluentAvalonia.UI.Input;assembly=FluentAvalonia"
+    xmlns:lang="clr-namespace:StabilityMatrix.Avalonia.Languages"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mocks="clr-namespace:StabilityMatrix.Avalonia.DesignData"
+    xmlns:models="clr-namespace:StabilityMatrix.Core.Models;assembly=StabilityMatrix.Core"
+    xmlns:packageManager="clr-namespace:StabilityMatrix.Avalonia.ViewModels.PackageManager"
+    xmlns:packages="clr-namespace:StabilityMatrix.Core.Models.Packages;assembly=StabilityMatrix.Core"
+    d:DataContext="{x:Static mocks:DesignData.NewInstallerDialogViewModel}"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    x:DataType="packageManager:PackageInstallBrowserViewModel"
+    mc:Ignorable="d">
 
     <controls:UserControlBase.Resources>
-        <input:StandardUICommand x:Key="PackageSelected"
-                                 Command="{Binding OnPackageSelected}" />
+        <input:StandardUICommand x:Key="PackageSelected" Command="{Binding OnPackageSelected}" />
 
-        <DataTemplate x:DataType="packages:BasePackage" x:Key="PackageTemplate">
-            <Button Padding="0"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Stretch"
-                    Margin="4"
-                    Classes="transparent-full"
-                    CornerRadius="8"
-                    Command="{StaticResource PackageSelected}"
-                    CommandParameter="{Binding }">
+        <DataTemplate x:Key="PackageTemplate" x:DataType="packages:BasePackage">
+            <Button
+                Margin="4"
+                Padding="0"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Classes="transparent-full"
+                Command="{StaticResource PackageSelected}"
+                CommandParameter="{Binding}"
+                CornerRadius="8">
                 <controls:Card>
 
                     <Grid ColumnDefinitions="Auto, *, Auto">
                         <controls:BetterAdvancedImage
                             Grid.Column="0"
-                            Height="128"
                             Width="128"
-                            Stretch="UniformToFill"
+                            Height="128"
                             CornerRadius="4"
-                            Source="{Binding PreviewImageUri}" />
+                            Source="{Binding PreviewImageUri}"
+                            Stretch="UniformToFill" />
                         <StackPanel Grid.Column="1" Orientation="Vertical">
-                            <TextBlock Text="{Binding DisplayName}"
-                                       FontWeight="Light"
-                                       Margin="16,0,0,0"
-                                       FontSize="20" />
-                            
-                            <TextBlock Text="{Binding ByAuthor}"
-                                       FontWeight="Light"
-                                       Margin="16,0,0,0"
-                                       FontSize="13" />
+                            <TextBlock
+                                Margin="16,0,0,0"
+                                FontSize="20"
+                                FontWeight="Light"
+                                Text="{Binding DisplayName}" />
 
-                            <TextBlock TextWrapping="Wrap"
-                                       Text="{Binding Blurb}"
-                                       FontWeight="Light"
-                                       Margin="16,8,0,8"
-                                       FontSize="16" />
-                            
-                            <TextBlock TextWrapping="Wrap"
-                                       Text="{Binding Disclaimer}"
-                                       IsVisible="{Binding Disclaimer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                       Foreground="OrangeRed"
-                                       FontWeight="Light"
-                                       Margin="16,-4,0,4"
-                                       FontSize="14" />
+                            <TextBlock
+                                Margin="16,0,0,0"
+                                FontSize="13"
+                                FontWeight="Light"
+                                Text="{Binding ByAuthor}" />
 
-                            <ItemsRepeater Margin="16, 8, 0, 0"
-                                           ItemsSource="{Binding AvailableTorchIndices}">
+                            <TextBlock
+                                Margin="16,8,0,8"
+                                FontSize="16"
+                                FontWeight="Light"
+                                Text="{Binding Blurb}"
+                                TextWrapping="Wrap" />
+
+                            <TextBlock
+                                Margin="16,-4,0,4"
+                                FontSize="14"
+                                FontWeight="Light"
+                                Foreground="OrangeRed"
+                                IsVisible="{Binding Disclaimer, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                Text="{Binding Disclaimer}"
+                                TextWrapping="Wrap" />
+
+                            <ItemsRepeater Margin="16,8,0,0" ItemsSource="{Binding AvailableTorchIndices}">
                                 <ItemsRepeater.Layout>
                                     <StackLayout Orientation="Horizontal" />
                                 </ItemsRepeater.Layout>
                                 <ItemsRepeater.ItemTemplate>
                                     <DataTemplate DataType="{x:Type models:TorchIndex}">
                                         <controls:Card
-                                            Tag="{Binding }"
-                                            HorizontalAlignment="Left"
-                                            Padding="4"
                                             Margin="0,0,8,0"
-                                            VerticalAlignment="Top">
+                                            Padding="4"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            FontWeight="Light"
+                                            Tag="{Binding}">
 
                                             <controls:Card.Styles>
                                                 <Style Selector="controls|Card[Tag=Cuda]">
-                                                    <Setter Property="Background"
-                                                            Value="{DynamicResource ThemeGreenColorTransparent}" />
-                                                    <Setter Property="BorderBrush"
-                                                            Value="{DynamicResource ThemeGreenColorTransparent}" />
-                                                    <Style
-                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                                                        <Setter Property="Foreground"
-                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    <Setter Property="Background" Value="{DynamicResource ThemeGreenColorTransparent}" />
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemeGreenColorTransparent}" />
+                                                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
                                                     </Style>
                                                     <Setter Property="Content">
                                                         <Template>
                                                             <TextBlock
-                                                                FontWeight="Medium"
                                                                 HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                FontWeight="Medium"
                                                                 Text="NVIDIA"
-                                                                TextAlignment="Center"
-                                                                VerticalAlignment="Center" />
+                                                                TextAlignment="Center" />
                                                         </Template>
                                                     </Setter>
                                                 </Style>
                                                 <Style Selector="controls|Card[Tag=Rocm]">
-                                                    <Setter Property="Background"
-                                                            Value="{DynamicResource ThemeDarkRedColor}" />
-                                                    <Setter Property="BorderBrush"
-                                                            Value="{DynamicResource ThemeDarkRedColor}" />
-                                                    <Style
-                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                                                        <Setter Property="Foreground"
-                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    <Setter Property="Background" Value="{DynamicResource ThemeDarkRedColor}" />
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkRedColor}" />
+                                                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
                                                     </Style>
                                                     <Setter Property="Content">
                                                         <Template>
                                                             <TextBlock
-                                                                FontWeight="Medium"
                                                                 HorizontalAlignment="Center"
-                                                                Text="AMD (Linux)"
-                                                                TextAlignment="Center"
                                                                 VerticalAlignment="Center"
+                                                                FontWeight="Medium"
+                                                                Text="ROCm"
+                                                                TextAlignment="Center"
                                                                 ToolTip.Tip="For AMD GPUs that support ROCm on Linux" />
                                                         </Template>
                                                     </Setter>
                                                 </Style>
                                                 <Style Selector="controls|Card[Tag=DirectMl]">
-                                                    <Setter Property="Background"
-                                                            Value="{DynamicResource ThemeDarkBlueColor}" />
-                                                    <Setter Property="BorderBrush"
-                                                            Value="{DynamicResource ThemeDarkBlueColor}" />
+                                                    <Setter Property="Background" Value="{DynamicResource ThemeDarkBlueColor}" />
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkBlueColor}" />
                                                     <Setter Property="Content">
                                                         <Template>
                                                             <TextBlock
-                                                                FontWeight="Medium"
                                                                 HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                FontWeight="Medium"
                                                                 Text="DirectML"
                                                                 TextAlignment="Center"
-                                                                VerticalAlignment="Center"
                                                                 ToolTip.Tip="For any DirectX compatible GPU on Windows" />
                                                         </Template>
                                                     </Setter>
@@ -142,85 +139,71 @@
                                                 <Style Selector="controls|Card[Tag=Mps]">
                                                     <Setter Property="Background" Value="White" />
                                                     <Setter Property="BorderBrush" Value="White" />
-                                                    <Style
-                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                                                        <Setter Property="Foreground"
-                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
                                                     </Style>
                                                     <Setter Property="Content">
                                                         <Template>
                                                             <TextBlock
-                                                                FontWeight="Medium"
                                                                 HorizontalAlignment="Center"
-                                                                Text="macOS"
-                                                                TextAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                FontWeight="Medium"
                                                                 Foreground="Black"
-                                                                VerticalAlignment="Center" />
+                                                                Text="macOS"
+                                                                TextAlignment="Center" />
                                                         </Template>
                                                     </Setter>
                                                 </Style>
                                                 <Style Selector="controls|Card[Tag=Zluda]">
-                                                    <Setter Property="Background"
-                                                            Value="{DynamicResource ThemeDarkDarkRedColor}" />
-                                                    <Setter Property="BorderBrush"
-                                                            Value="{DynamicResource ThemeDarkDarkRedColor}" />
-                                                    <Style
-                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                                                        <Setter Property="Foreground"
-                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    <Setter Property="Background" Value="{DynamicResource ThemeDarkDarkRedColor}" />
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemeDarkDarkRedColor}" />
+                                                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
                                                     </Style>
                                                     <Setter Property="Content">
                                                         <Template>
                                                             <TextBlock
-                                                                FontWeight="Medium"
                                                                 HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                FontWeight="Medium"
                                                                 Text="ZLUDA"
                                                                 TextAlignment="Center"
-                                                                VerticalAlignment="Center"
                                                                 ToolTip.Tip="For AMD GPUs that support ZLUDA" />
                                                         </Template>
                                                     </Setter>
                                                 </Style>
                                                 <Style Selector="controls|Card[Tag=Ipex]">
-                                                    <Setter Property="Background"
-                                                            Value="{DynamicResource ThemeLightBlueColor}" />
-                                                    <Setter Property="BorderBrush"
-                                                            Value="{DynamicResource ThemeLightBlueColor}" />
-                                                    <Style
-                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                                                        <Setter Property="Foreground"
-                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    <Setter Property="Background" Value="{DynamicResource ThemeLightBlueColor}" />
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemeLightBlueColor}" />
+                                                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
                                                     </Style>
                                                     <Setter Property="Content">
                                                         <Template>
                                                             <TextBlock
-                                                                FontWeight="Medium"
                                                                 HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                FontWeight="Medium"
                                                                 Text="IPEX"
                                                                 TextAlignment="Center"
-                                                                VerticalAlignment="Center"
                                                                 ToolTip.Tip="For Intel Arc GPUs" />
                                                         </Template>
                                                     </Setter>
                                                 </Style>
                                                 <Style Selector="controls|Card[Tag=Cpu]">
-                                                    <Setter Property="Background"
-                                                            Value="{DynamicResource ThemeBlueGreyColor}" />
-                                                    <Setter Property="BorderBrush"
-                                                            Value="{DynamicResource ThemeBlueGreyColor}" />
-                                                    <Style
-                                                        Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                                                        <Setter Property="Foreground"
-                                                                Value="{DynamicResource ButtonForeground}" />
+                                                    <Setter Property="Background" Value="{DynamicResource ThemeBlueGreyColor}" />
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource ThemeBlueGreyColor}" />
+                                                    <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                                        <Setter Property="Foreground" Value="{DynamicResource ButtonForeground}" />
                                                     </Style>
                                                     <Setter Property="Content">
                                                         <Template>
                                                             <TextBlock
-                                                                FontWeight="Medium"
                                                                 HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                FontWeight="Medium"
                                                                 Text="CPU"
-                                                                TextAlignment="Center"
-                                                                VerticalAlignment="Center" />
+                                                                TextAlignment="Center" />
                                                         </Template>
                                                     </Setter>
                                                 </Style>
@@ -229,14 +212,15 @@
                                     </DataTemplate>
                                 </ItemsRepeater.ItemTemplate>
                             </ItemsRepeater>
-                        
+
                         </StackPanel>
 
-                        <controls1:SymbolIcon Grid.Column="2"
-                                              HorizontalAlignment="Right"
-                                              VerticalAlignment="Center"
-                                              FontSize="24"
-                                              Symbol="ChevronRight" />
+                        <controls1:SymbolIcon
+                            Grid.Column="2"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            FontSize="24"
+                            Symbol="ChevronRight" />
                     </Grid>
                 </controls:Card>
             </Button>
@@ -245,39 +229,44 @@
 
     <TabControl TabStripPlacement="Top">
         <TabControl.Items>
-            <TabItem Header="Inference" Margin="8,0,0,0">
+            <TabItem Margin="8,0,0,0" Header="Inference">
                 <ScrollViewer Padding="8">
                     <StackPanel Orientation="Vertical">
-                        <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,8">
-                            <TextBox Margin="4, 0,0,0"
-                                     Watermark="{x:Static lang:Resources.Action_Search}"
-                                     Height="36"
-                                     FontSize="16"
-                                     HorizontalAlignment="Stretch"
-                                     VerticalAlignment="Center"
-                                     KeyDown="InputElement_OnKeyDown"
-                                     Text="{Binding SearchFilter, Mode=TwoWay}">
+                        <Grid Margin="0,0,0,8" ColumnDefinitions="*, Auto">
+                            <TextBox
+                                Height="36"
+                                Margin="4,0,0,0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                KeyDown="InputElement_OnKeyDown"
+                                Text="{Binding SearchFilter, Mode=TwoWay}"
+                                Watermark="{x:Static lang:Resources.Action_Search}">
                                 <TextBox.InnerRightContent>
                                     <Grid>
-                                        <Button Classes="transparent-full"
-                                                IsVisible="{Binding SearchFilter.Length}"
-                                                Command="{Binding ClearSearchQuery}">
+                                        <Button
+                                            Classes="transparent-full"
+                                            Command="{Binding ClearSearchQuery}"
+                                            IsVisible="{Binding SearchFilter.Length}">
                                             <controls1:SymbolIcon Symbol="Cancel" />
                                         </Button>
                                         <controls1:SymbolIcon
-                                            IsVisible="{Binding !SearchFilter.Length}"
                                             Margin="0,0,10,0"
                                             FontSize="16"
+                                            IsVisible="{Binding !SearchFilter.Length}"
                                             Symbol="Find" />
                                     </Grid>
                                 </TextBox.InnerRightContent>
                             </TextBox>
-                            <ToggleSwitch Grid.Column="1" OnContent="Show All Packages" OffContent="Show All Packages"
-                                          IsChecked="{Binding ShowIncompatiblePackages}"
-                                          VerticalAlignment="Center"
-                                          HorizontalAlignment="Left"
-                                          Margin="16, 0, 8, 0"
-                                          ToolTip.Tip="Enabling &quot;Show All Packages&quot; will include packages that may not be compatible with your system and may run very slowly as a result." />
+                            <ToggleSwitch
+                                Grid.Column="1"
+                                Margin="16,0,8,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding ShowIncompatiblePackages}"
+                                OffContent="Show All Packages"
+                                OnContent="Show All Packages"
+                                ToolTip.Tip="Enabling &quot;Show All Packages&quot; will include packages that may not be compatible with your system and may run very slowly as a result." />
                         </Grid>
                         <ItemsRepeater ItemsSource="{Binding InferencePackages}">
                             <ItemsRepeater.Layout>
@@ -293,38 +282,93 @@
             <TabItem Header="Training">
                 <ScrollViewer Padding="8">
                     <StackPanel Orientation="Vertical">
-                        <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,8">
-                            <TextBox Margin="4, 0,0,0"
-                                     Watermark="{x:Static lang:Resources.Action_Search}"
-                                     Height="36"
-                                     FontSize="16"
-                                     HorizontalAlignment="Stretch"
-                                     VerticalAlignment="Center"
-                                     KeyDown="InputElement_OnKeyDown"
-                                     Text="{Binding SearchFilter, Mode=TwoWay}">
+                        <Grid Margin="0,0,0,8" ColumnDefinitions="*, Auto">
+                            <TextBox
+                                Height="36"
+                                Margin="4,0,0,0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                KeyDown="InputElement_OnKeyDown"
+                                Text="{Binding SearchFilter, Mode=TwoWay}"
+                                Watermark="{x:Static lang:Resources.Action_Search}">
                                 <TextBox.InnerRightContent>
                                     <Grid>
-                                        <Button Classes="transparent-full"
-                                                IsVisible="{Binding SearchFilter.Length}"
-                                                Command="{Binding ClearSearchQuery}">
+                                        <Button
+                                            Classes="transparent-full"
+                                            Command="{Binding ClearSearchQuery}"
+                                            IsVisible="{Binding SearchFilter.Length}">
                                             <controls1:SymbolIcon Symbol="Cancel" />
                                         </Button>
                                         <controls1:SymbolIcon
-                                            IsVisible="{Binding !SearchFilter.Length}"
                                             Margin="0,0,10,0"
                                             FontSize="16"
+                                            IsVisible="{Binding !SearchFilter.Length}"
                                             Symbol="Find" />
                                     </Grid>
                                 </TextBox.InnerRightContent>
                             </TextBox>
-                            <ToggleSwitch Grid.Column="1" OnContent="Show All Packages" OffContent="Show All Packages"
-                                          IsChecked="{Binding ShowIncompatiblePackages}"
-                                          VerticalAlignment="Center"
-                                          HorizontalAlignment="Left"
-                                          Margin="16, 0, 8, 0"
-                                          ToolTip.Tip="Enabling &quot;Show All Packages&quot; will include packages that may not be compatible with your system and may run very slowly as a result." />
+                            <ToggleSwitch
+                                Grid.Column="1"
+                                Margin="16,0,8,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding ShowIncompatiblePackages}"
+                                OffContent="Show All Packages"
+                                OnContent="Show All Packages"
+                                ToolTip.Tip="Enabling &quot;Show All Packages&quot; will include packages that may not be compatible with your system and may run very slowly as a result." />
                         </Grid>
                         <ItemsRepeater ItemsSource="{Binding TrainingPackages}">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Orientation="Vertical" />
+                            </ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <StaticResource ResourceKey="PackageTemplate" />
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="Legacy">
+                <ScrollViewer Padding="8">
+                    <StackPanel Orientation="Vertical">
+                        <Grid Margin="0,0,0,8" ColumnDefinitions="*, Auto">
+                            <TextBox
+                                Height="36"
+                                Margin="4,0,0,0"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                                FontSize="16"
+                                KeyDown="InputElement_OnKeyDown"
+                                Text="{Binding SearchFilter, Mode=TwoWay}"
+                                Watermark="{x:Static lang:Resources.Action_Search}">
+                                <TextBox.InnerRightContent>
+                                    <Grid>
+                                        <Button
+                                            Classes="transparent-full"
+                                            Command="{Binding ClearSearchQuery}"
+                                            IsVisible="{Binding SearchFilter.Length}">
+                                            <controls1:SymbolIcon Symbol="Cancel" />
+                                        </Button>
+                                        <controls1:SymbolIcon
+                                            Margin="0,0,10,0"
+                                            FontSize="16"
+                                            IsVisible="{Binding !SearchFilter.Length}"
+                                            Symbol="Find" />
+                                    </Grid>
+                                </TextBox.InnerRightContent>
+                            </TextBox>
+                            <ToggleSwitch
+                                Grid.Column="1"
+                                Margin="16,0,8,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding ShowIncompatiblePackages}"
+                                OffContent="Show All Packages"
+                                OnContent="Show All Packages"
+                                ToolTip.Tip="Enabling &quot;Show All Packages&quot; will include packages that may not be compatible with your system and may run very slowly as a result." />
+                        </Grid>
+                        <ItemsRepeater ItemsSource="{Binding LegacyPackages}">
                             <ItemsRepeater.Layout>
                                 <StackLayout Orientation="Vertical" />
                             </ItemsRepeater.Layout>

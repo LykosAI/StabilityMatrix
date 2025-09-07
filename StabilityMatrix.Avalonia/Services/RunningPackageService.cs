@@ -82,9 +82,8 @@ public partial class RunningPackageService(
         {
             var vulns = basePackage
                 .KnownVulnerabilities.Where(v => v.Severity == VulnerabilitySeverity.Critical)
-                .Select(
-                    v =>
-                        $"**{v.Id}**: {v.Title}\n  - Severity: {v.Severity}\n  - Description: {v.Description}"
+                .Select(v =>
+                    $"**{v.Id}**: {v.Title}\n  - Severity: {v.Severity}\n  - Description: {v.Description}"
                 )
                 .ToList();
 
@@ -133,9 +132,8 @@ public partial class RunningPackageService(
         else if (basePackage.HasVulnerabilities)
         {
             var vulns = basePackage
-                .KnownVulnerabilities.Select(
-                    v =>
-                        $"**{v.Id}**: {v.Title}\n  - Severity: {v.Severity}\n  - Description: {v.Description}"
+                .KnownVulnerabilities.Select(v =>
+                    $"**{v.Id}**: {v.Title}\n  - Severity: {v.Severity}\n  - Description: {v.Description}"
                 )
                 .ToList();
 
@@ -239,12 +237,13 @@ public partial class RunningPackageService(
             .ToArray();
 
         var launchProcessArgs = ProcessArgs.FromQuoted(launchArgStrings);
+        var runPackageOptions = new RunPackageOptions { Command = command, Arguments = launchProcessArgs };
 
         // Join with extras, if any
         await basePackage.RunPackage(
             packagePath,
             installedPackage,
-            new RunPackageOptions { Command = command, Arguments = launchProcessArgs },
+            runPackageOptions,
             console.Post,
             cancellationToken
         );
@@ -256,6 +255,7 @@ public partial class RunningPackageService(
             notificationService,
             this,
             runningPackage,
+            runPackageOptions,
             console
         );
         RunningPackages.Add(runningPackage.InstalledPackage.Id, viewModel);
